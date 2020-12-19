@@ -1,6 +1,6 @@
-## Create a new Vue app
+## 新しい Vue アプリを作成
 
-Use the Vue CLI to bootstrap a new Vue app (selecting the defaults will work for this project):
+Vue CLI を使用して新しい Vue アプリを起動します（このプロジェクトでデフォルトを選択すると動作します）：
 
 <amplify-block-switcher> <amplify-block name="NPM">
 
@@ -15,18 +15,18 @@ vue create myamplifyproject
 cd myamplifyproject
 ```
 
-Install required modules:
+必要なモジュールをインストール:
 
 ```bash
 npm install
 ```
 
-Run your app:
+アプリの実行:
 
 ```bash
 npm run serve --open
 ```
-Press `Ctrl + C` to stop the server
+`Ctrl + C` を押してサーバーを停止します
 
 </amplify-block> <amplify-block name="Yarn">
 
@@ -41,44 +41,44 @@ vue create myamplifyproject
 cd myamplifyproject
 ```
 
-Install required modules:
+必要なモジュールをインストール:
 
 ```bash
 yarn
 ```
 
-Run your app:
+アプリの実行:
 
 ```bash
 yarn serve --open
 ```
-Press `Ctrl + C` to stop the server
+`Ctrl + C` を押してサーバーを停止します
 
 </amplify-block> </amplify-block-switcher>
 
-## Initialize a new backend
+## 新しいバックエンドを初期化
 
-Now that we have a running Vue app, it's time to set up Amplify so that we can create the necessary backend services needed to support the app. From the root of the project, run:
+Vueアプリを起動しました Amplifyを設定して、アプリをサポートするために必要なバックエンドサービスを作成しましょう。 プロジェクトのルートから、以下を実行します。
 
 ```bash
-amplify init
+initを増幅する
 ```
 
-When you initialize Amplify you'll be prompted for some information about the app:
+Amplifyを初期化すると、アプリに関する情報が表示されます。
 
-Your backend needs a project name to use when creating resources. Give your backend project the name `todo`
+あなたのバックエンドにはリソースを作成するときに使用するプロジェクト名が必要です。 バックエンドプロジェクトに `todo という名前を与えます`
 ```console
-? Enter a name for the project (myamplifyproject) todo
+?プロジェクトの名前(myamplifyproject)を入力してください
 ```
 
-All AWS services you provision for your app are grouped into an "environment" A common naming convention is dev, staging, and production
+アプリに提供するすべてのAWSサービスは「環境」に分類されます 一般的な命名規則はdev、staging、本番です。
 
-Set the backend environment name to be `dev`
+バックエンドの環境名を `dev` に設定する
 ```console
-? Enter a name for the environment dev
+?環境開発の名前を入力してください
 ```
 
-Sometimes the CLI will prompt you to edit a file, it will use this editor to open those files. Select your preferred code editor software
+時々CLIは、ファイルの編集を求めます、それはそれらのファイルを開くためにこのエディタを使用します。 お好みのコードエディタソフトウェアを選択してください
 ```console
 ? Choose your default editor: (Use arrow keys)
 ❯ Visual Studio Code
@@ -90,7 +90,7 @@ Sometimes the CLI will prompt you to edit a file, it will use this editor to ope
   None
 ```
 
-Amplify will provide configuration files for your frontend application to connect to this backend environment. Since Vue is based on Javascript, we'll select that here. Select the javascript framework for your backend integration
+Amplifyは、フロントエンドアプリケーションがこのバックエンド環境に接続するための設定ファイルを提供します。 VueはJavascriptに基づいているので、ここで選択します。 バックエンド統合用のJavaScriptフレームワークを選択してください。
 ```console
 # Amplify supports JavaScript (Web & React Native), iOS, and Android apps
 ? Choose the type of app that you're building (Use arrow keys)
@@ -100,47 +100,47 @@ Amplify will provide configuration files for your frontend application to connec
 ```
 
 ```console
-? What JavaScript framework are you using (Use arrow keys)
+? どんなJavaScriptフレームワークを使用していますか(矢印キーを使用)
   angular
   ember
   ionic
   react
   react-native
-❯ vue
+<unk> vue
   none
 ```
 
 Vue CLI setup the source files for your project under a `./src` folder. Other tools, such as `Nuxt`, place the source files in the root directory. For this tutorial, we'll go with the default, `src`
 ```console
-? Source Directory Path:  src
+? ソースディレクトリパス: src
 ```
 
-When your project is ready to be hosted, Vue will generate your website, ready for public use, into a folder called `dist`. This is the default, so you can just press enter to continue.
+プロジェクトをホスティングする準備ができたら、Vueはあなたのウェブサイトを生成します。 `dist`というフォルダに公開する準備ができました。 これはデフォルトなので、Enterキーを押すだけで続行できます。
 ```console
-? Distribution Directory Path:  dist
+?配布ディレクトリパス: distt
 ```
 
 <amplify-block-switcher> <amplify-block name="NPM">
 
-Amplify's automated deployment needs to know what steps are needed to build your application for publishing. Here we will set that to be Vue CLI's default build script, found in the `package.json`
+Amplifyの自動デプロイメントは、アプリケーションを公開するために必要なステップを知る必要があります。 ここでは、 `package.json` にある Vue CLI のデフォルトのビルドスクリプトに設定します。
 ```console
-? Build Command:  npm run-script build
+?ビルドコマンド: npm run-script build
 ```
 
-If Amplify needs to run the application in development mode, it needs to know how to start the development server. Again, we'll use Vue CLI's default scripts.
+Amplifyがアプリケーションを開発モードで実行する必要がある場合は、開発サーバーの起動方法を知る必要があります。 ここでも、Vue CLI のデフォルトスクリプトを使用します。
 ```console
-? Start Command:  npm run-script serve
+?Start Command: npm run-script serve
 ```
 </amplify-block> <amplify-block name="Yarn">
 
-Amplify's automated deployment needs to know what steps are needed to build your application for publishing. Here we will set that to be Vue CLI's default build script, found in the `package.json`
+Amplifyの自動デプロイメントは、アプリケーションを公開するために必要なステップを知る必要があります。 ここでは、 `package.json` にある Vue CLI のデフォルトのビルドスクリプトに設定します。
 ```console
-? Build Command:  yarn build
+?Build Command: yarn build
 ```
 
-If Amplify needs to run the application in development mode, it needs to know how to start the development server. Again, we'll use Vue CLI's default scripts.
+Amplifyがアプリケーションを開発モードで実行する必要がある場合は、開発サーバーの起動方法を知る必要があります。 ここでも、Vue CLI のデフォルトスクリプトを使用します。
 ```console
-? Start Command:  yarn serve
+?Start Command: yarn serve
 ```
 </amplify-block> </amplify-block-switcher>
 
@@ -148,56 +148,56 @@ Finally, Amplify needs an AWS account to connect to so that I can begin creating
 
 <amplify-block-switcher> <amplify-block name="With A Profile">
 
-Select "yes" by typing `y` and pressing `enter`.
+`y` と入力して `Enter` を押して「はい」を選択します。
 
 ```console
-? Do you want to use an AWS profile? (Y/n)
+?AWS プロファイルを使用しますか？ (Y/n)
 ```
-Proceed to select your profile from the list and press enter. Amplify will now begin deploying your backend framework.
+リストからプロフィールを選択し、Enterを押します。Amplifyがバックエンドフレームワークをデプロイし始めます。
 
 </amplify-block> <amplify-block name="Without A Profile">
 
-If you have not setup an AWS profile yet, select "no" by typing `n` and pressing `enter`.
+AWSプロファイルをまだ設定していない場合は、 `n` と入力して "no" を選択し、 `Enter` を押します。
 
 ```console
-? Do you want to use an AWS profile? (Y/n)
+?AWS プロファイルを使用しますか？ (Y/n)
 ```
 
-You will now be prompted for an Access Key and Secret Key for your AWS account. Fill in these details and press enter.
+これでAWSアカウントのアクセスキーとシークレットキーが求められます。詳細を入力し、Enterキーを押します。
 
 ```console
 ? accessKeyId:  (<YOUR_ACCESS_KEY_ID>)
 ? secretAccessKey:  (<YOUR_SECRET_ACCESS_KEY>)
 ```
 
-AWS has multiple regions distributed around the world. Select the region that makes sense for your application to run in. For this tutorial, the closer the region is to you, the better your experience will be.
+AWSには世界中に複数のリージョンが存在します。アプリケーションを実行するのに適したリージョンを選択してください。 このチュートリアルでは、リージョンが近づくほど、より良い体験が得られます。
 
 ```console
-? region:  (Use arrow keys)
-❯ us-east-1 
+? region: (矢印キーを使用)
+<unk> us-east-1 
   us-east-2 
   us-west-2 
   eu-west-1 
-  eu-west-2 
+  eu-west-1 
   eu-central-1 
   ap-northeast-1 
-(Move up and down to reveal more choices)
+(上下に移動して選択肢を明らかに)
 ```
 
-Amplify will now begin deploying your backend framework.
+Amplifyがバックエンドフレームワークのデプロイを開始します。
 
 </amplify-block> </amplify-block-switcher>
 
-When you initialize a new Amplify project, a few things happen:
+新しいAmplifyプロジェクトを初期化すると、いくつかのことが起こります。
 
 - It creates a top level directory called `amplify` that stores your backend definition. During the tutorial you'll add capabilities such as authentication, GraphQL API, storage, and set up authorization rules for the API. As you add features, the `amplify` folder will grow with infrastructure-as-code templates that define your backend stack. Infrastructure-as-code is a best practice way to create a replicable backend stack.
 - It creates a file called `aws-exports.js` in the `src` directory that holds all the configuration for the services you create with Amplify. This is how the Amplify client is able to get the necessary information about your backend services.
-- It modifies the `.gitignore` file, adding some generated files to the ignore list
-- A cloud project is created for you in the AWS Amplify Console that can be accessed by running `amplify console`. The Console provides a list of backend environments, deep links to provisioned resources per Amplify category, status of recent deployments, and instructions on how to promote, clone, pull, and delete backend resources
+- `.gitignore` ファイルを変更し、生成されたファイルを無視リストに追加します。
+- AWS Amplifyコンソールで、 `amplifyコンソール`を実行することでアクセスできるクラウドプロジェクトが作成されます。 Consoleは、Amplifyカテゴリごとにプロビジョニングされたリソースへの深いリンクをバックエンド環境のリストを提供します。 最近のデプロイのステータスとバックエンドリソースのプロモーション、クローン、プル、削除方法に関する説明
 
-## Install Amplify libraries
+## Amplifyライブラリのインストール
 
-The first step to using Amplify in the client is to install the necessary dependencies:
+クライアントでAmplifyを使用する最初のステップは、必要な依存関係をインストールすることです。
 
 <amplify-block-switcher> <amplify-block name="NPM">
 
@@ -213,13 +213,13 @@ yarn add aws-amplify @aws-amplify/ui-vue
 
 </amplify-block> </amplify-block-switcher>
 
-The `@aws-amplify/ui-vue` package is a set of Vue-specific UI components that make it easy to integrate functionality like end-to-end authentication flows.
+`@aws-amplify/ui-vue` パッケージは、エンドツーエンドの認証フローのような機能を簡単に統合できる、Vue固有のUIコンポーネントのセットです。
 
-## Set up frontend
+## フロントエンドの設定
 
-Next, we need to configure Amplify on the client so that we can use it to interact with our backend services.
+次に、クライアントで Amplify を設定してバックエンドサービスとやり取りする必要があります。
 
-Open __src/main.js__ and add the following code below the last import:
+__src/main.js__ を開き、最後のインポートの下に次のコードを追加してください。
 
 ```js
 import Amplify from 'aws-amplify';
