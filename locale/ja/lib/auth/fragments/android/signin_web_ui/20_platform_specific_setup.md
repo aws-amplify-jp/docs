@@ -1,4 +1,4 @@
-## Update AndroidManifest.xml
+## AndroidManifest.xmlを更新
 Add the following activity to your app's `AndroidManifest.xml` file, replacing `myapp` with whatever value you used for your redirect URI prefix:
 
   ```xml
@@ -15,10 +15,10 @@ Add the following activity to your app's `AndroidManifest.xml` file, replacing `
   </activity>
   ```
 
-<amplify-callout> These instructions have been updated since version 1.2.0. If you set this up for a version of Amplify prior to 1.2.0, be sure to remove the `intent-filter` with `android:scheme` from your own activity as well as the `singleInstance` launch mode. </amplify-callout>
+<amplify-callout> これらの手順は、バージョン 1.2.0 以降に更新されています。1.2 より前の Amplify のバージョンに対してこれを設定した場合。 では、 `singleInstance` の起動モードと同様に、 `android:scheme` で `intent-filter` を削除してください。 </amplify-callout>
 
-## Add Response Handler
-Add the following result handler to whichever `Activity` you are calling HostedUI from:
+## 応答ハンドラーを追加
+HostedUIを呼び出している `アクティビティ` に次の結果ハンドラを追加します:
 
 <amplify-block-switcher> <amplify-block name="Java">
 
@@ -36,10 +36,10 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
  </amplify-block> <amplify-block name="Kotlin">
 
 ```kotlin
-override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+オーバーライド楽しいonActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     super.onActivityResult(requestCode, resultCode, data)
 
-    if (requestCode == AWSCognitoAuthPlugin.WEB_UI_SIGN_IN_ACTIVITY_CODE) {
+    if (requestCode == AWScognitoAuthPlugin.WEB_UI_SIGN_IN_ACTIVITY_CODE) {
         Amplify.Auth.handleWebUISignInResponse(data)
     }
 }
@@ -60,4 +60,4 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
  </amplify-block> </amplify-block-switcher>
 
-<amplify-callout> If you set this up for a version of Amplify prior to 1.2.0, be sure to remove the `onNewIntent` method code from your `Activity` that was previously specified. </amplify-callout>
+<amplify-callout> Amplifyのバージョンを1.2より前に設定した場合。 で指定した `アクティビティ` から `onNewIntent` メソッドコードを削除してください。 </amplify-callout>
