@@ -1,69 +1,69 @@
-### Overview
+### 概要
 
-Enable your app to store and retrieve user files from cloud storage with the permissions model that suits your purpose. The Amplify CLI will deploy and configures cloud storage buckets using [Amazon Simple Storage Service](http://docs.aws.amazon.com/AmazonS3/latest/dev/).
+アプリケーションを有効にして、目的に合った権限モデルを使用してクラウドストレージからユーザーファイルを保存および取得します。 Amplify CLI は、 [Amazon Simple Storage Service](http://docs.aws.amazon.com/AmazonS3/latest/dev/) を使用してクラウドストレージバケットをデプロイおよび設定します。
 
-### Storage Access
+### ストレージアクセス
 
-The CLI configures three different access levels on the storage bucket: public, protected and private. When you run `amplify add storage`, the CLI will configure appropriate IAM policies on the bucket using an Amazon Cognito Identity Pools IAM Role. You will have the option of adding CRUD (Create, Read, Update, and Delete) permissions as well so that Authenticated and Guest users will be granted different permissions based on these levels.
+CLIは、パブリック、保護、プライベートの3つの異なるアクセスレベルをストレージバケットに設定します。 `を増幅してストレージを追加するとき`、 CLIは、Amazon Cognito Identity Pools IAMロールを使用してバケットに適切なIAMポリシーを設定します。 CRUD (Create, Read, Update) を追加するオプションがあります。 `と`)権限も、認証およびゲストユーザーにこれらのレベルに基づいて異なる権限が付与されるようにします。
 
 If you had previously enabled user sign-in by running `amplify add auth` in your project, the policies will be connected to an `Authenticated Role` within Cognito Identity Pools which has scoped permissions to the objects in the S3 bucket prefixed by a user's Cognito Identity ID. If you haven't configured user sign-in, then an `Unauthenticated Role` will be assigned for each unique user/device combination, which will still have scoped permissions to owned objects.
 
-* **Public**: Accessible by all users of your app. Files are stored with the `public/` prefix in your S3 bucket.
-* **Protected**: Readable by all authenticated users, writable only by the owner. Files are stored with the `protected/{cognito_user_identity_id}/` prefix.
-* **Private**: Only accessible by the owner. Files are stored with the `private/{cognito_user_identity_id}/` prefix.
+* **公開**: アプリのすべてのユーザーがアクセスできます。ファイルは、S3バケットに `公開/` プレフィックスで保存されます。
+* **Protected**: すべての認証済みユーザー、所有者のみが書き込み可能です。ファイルは `protected/{cognito_user_identity_id}/` 接頭辞で保存されます。
+* **プライベート**: 所有者のみアクセスできます。ファイルは `private/{cognito_user_identity_id}/` プレフィックスで保存されます。
 
 > The `cognito_user_identity_id` corresponds to the owner's unique Amazon Cognito Identity ID. See [Authentication](~/sdk/auth/working-with-api.md#utility-properties) for more information on how to get the `cognito_user_identity_id` for a signed in user.
 
-### Set Up Your Backend
+### バックエンドを設定
 
-1. Complete the [Get Started](~/start/start.md) steps before you proceed.
+1. 先に進む前に [はじめに](~/start/start.md) ステップを完了してください。
 
-2. Use the Amplify CLI to add storage to your app.
+2. Amplify CLI を使用してアプリケーションにストレージを追加します。
 
     In a terminal window, navigate to your project root folder (the folder that contains your app's `.xcodeproj` file), and add the SDK to your app.
 
     ```bash
     cd ./YOUR_PROJECT_FOLDER
-    amplify add storage
+    add storage
     ```
 
-3.  Choose `Content` as your storage service.
+3.  ストレージサービスとして `コンテンツ` を選択します。
 
     ```console
-    ❯ Content (Images, audio, video, etc.)
+    <unk> コンテンツ (画像、オーディオ、ビデオなど)
     ```
 
-4. The CLI walks you through the options to enable Auth (if not enabled previously), in order to decide who should have access (select `Auth and guest users` and `read/write` for both auth and guest users).
+4. CLI は、認証を有効にするオプションを表示します (以前に有効にしていない場合) アクセス権限を持つユーザーを決定するために（認証ユーザとゲストユーザの両方に対して `` と `読み取り/書き込み` を選択します）。
 
-5. Confirm that you have storage and auth set up by running `amplify status`:
+5. `増幅ステータス`を実行して、ストレージと認証が設定されていることを確認してください:
 
     ```console
     $ amplify status
-    | Category  | Resource name   | Operation | Provider plugin   |
-    | --------- | --------------- | --------- | ----------------- |
-    | Auth      | cognito2e202b09 | Create    | awscloudformation |
-    | Storage   | sabc0123de      | Create    | awscloudformation |
+    | Resource name | Operation | Provider プラグイン|
+    | ---------------------------- | --------------- |
+    | Auth | cognito2e202b09 | Create | awscloudforming |
+    | Storage | sabc0123de | Create | awscloudforming |
     ```
 
-6. To create your backend run:
+6. バックエンドの実行を作成するには:
 
     ```bash
-    amplify push
+    push を増幅する
     ```
 
     The CLI will create the `awsconfiguration.json` file in your project directory. In the Finder, drag `awsconfiguration.json` into Xcode under the top Project Navigator folder (the folder name should match your Xcode project name). When the `Options` dialog box appears, do the following:
 
-* Clear the `Copy items if needed` check box.
-* Choose `Create groups`, and then choose `Finish`.
+* 必要に応じて `項目をコピー` チェックボックスをクリアします。
+* `グループの作成`を選択し、 `終了` を選択します。
 
 ##### Lambda Triggers
-The Amplify CLI supports associating Lambda triggers for Amazon S3 and DynamoDB events. This can be useful for a use case where you want to invoke a Lambda function after a create or update operation on a DynamoDB table managed by the CLI. [Read More](~/cli/usage/lambda-triggers.md#s3-lambda-triggers)
+AmplifyのCLIは、Lambdaの関連付けをサポートしています。Amazon S3およびDynamoDBイベントのトリガー。 CLI が管理する DynamoDB テーブルで作成または更新操作の後に Lambda 関数を呼び出したい場合に便利です。 [続きを読む](~/cli/usage/lambda-triggers.md#s3-lambda-triggers)
 
-### Connect to Your Backend
+### バックエンドに接続
 
-Use the following steps to add storage services to your app.
+次の手順を使用して、アプリにストレージサービスを追加します。
 
-1. Add the `AWSS3` dependency to the `Podfile` to install the AWS Mobile SDK:
+1. AWS Mobile SDKをインストールするには、 `AWSS3` の依存関係を `Podfile` に追加します。
 
     ```ruby
     platform :ios, '9.0'
@@ -78,14 +78,14 @@ Use the following steps to add storage services to your app.
     end
     ```
 
-Run `pod install --repo-update` before you continue.
+続行する前に `pod install --repo-update` を実行します。
 
-2. Add the following import to the classes that perform user file storage operations:
+2. 次のインポートをユーザーファイルストレージ操作を実行するクラスに追加します。
 
     ```swift
     import AWSS3
     ```
 
-### Mocking and Local Testing
+### モックとローカルテスト
 
-Amplify supports running a local mock server for testing your application with S3. Please see the [CLI Toolchain documentation](~/cli/usage/mock.md) for more details.
+Amplifyは、S3を使用してアプリケーションをテストするためのローカルモックサーバの実行をサポートしています。詳細については、 [CLI Toolchain documentation](~/cli/usage/mock.md) を参照してください。
