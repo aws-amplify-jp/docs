@@ -1,13 +1,13 @@
-If you already have existing resources to add to your application and want to bypass the tutorial, see [Use existing AWS resources](~/lib/project-setup/use-existing-resources.md).
+アプリケーションに追加する既存のリソースがあり、チュートリアルをバイパスしたい場合は、 [既存のAWSリソースを使用する](~/lib/project-setup/use-existing-resources.md) を参照してください。
 
 <amplify-callout warning>
 
-**Amplify libraries should be used for all new cloud connected applications.** If you are currently using the AWS Mobile SDK for Android, you can access the documentation [here](~/sdk/sdk.md).
+**Amplifyライブラリは、すべての新しいクラウド接続アプリケーションに使用する必要があります。 ** 現在 AWS Mobile SDK for Android を使用している場合は、こちら** からドキュメントにアクセスできます。 [](~/sdk/sdk.md)。</p>
 
 </amplify-callout>
 
 ## Amplify Android
 
-This guide shows how to build an app using our Amplify Libraries for Android and the Amplify CLI toolchain.
+このガイドでは、Android向けAmplifyライブラリとAmplifyCLIツールチェーンを使用してアプリを構築する方法を説明します。
 
-<docs-internal-link-button href="~/lib/project-setup/prereq.md"> <span slot="text">Get Started 🚀</span> </docs-internal-link-button>
+<docs-internal-link-button href="~/lib/project-setup/prereq.md"> <span slot="text">始めましょう 🚀</span> </docs-internal-link-button>
