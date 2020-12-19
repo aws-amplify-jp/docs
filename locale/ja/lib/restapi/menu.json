@@ -1,11 +1,11 @@
 {
-  "title": "API (REST)",
+  "title": "API (再起動)",
   "items": [
     "getting-started",
     "fetch",
-    "update",
-    "delete",
-    "cancel",
+    "更新",
+    "削除",
+    "キャンセル",
     "authz",
     "existing-resources"
   ]
