@@ -1,12 +1,12 @@
 {
   "title": "API (GraphQL)",
   "items": [
-    "image-and-file-uploads",
+    "画像とファイルのアップロード",
     "building-a-form-api",
     "subscriptions-by-id",
     "graphql-pagination",
     "query-with-sorting",
-    "lambda-resolvers"
+    "lambdaリゾルバー"
   ]
 }
 
