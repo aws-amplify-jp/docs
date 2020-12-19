@@ -1,6 +1,6 @@
 ---
-title: Storing analytics data
-description: The Amazon Kinesis Firehose analytics provider allows you to send analytics data to an Amazon Kinesis Firehose stream for reliably storing data.
+title: 分析データの保存
+description: Amazon Kinesis Firecose分析プロバイダを使用すると、分析データをAmazon Kinesis Firecoseストリームに送信してデータを確実に保存できます。
 ---
 
 <inline-fragment platform="js" src="~/lib/analytics/fragments/js/storing.md"></inline-fragment>
