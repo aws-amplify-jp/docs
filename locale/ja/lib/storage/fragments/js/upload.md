@@ -1,5 +1,5 @@
 ## Put
-The `Put` method uploads files into Amazon S3.
+`Put` メソッドはファイルを Amazon S3 にアップロードします。
 
 It returns a `{key: S3 Object key}` object on success:
 
@@ -9,7 +9,7 @@ Storage.put('test.txt', 'Hello')
     .catch(err => console.log(err));
 ```
 
-### Public level
+### パブリックレベル
 
 ```javascript
 Storage.put('test.txt', 'Hello')
@@ -17,7 +17,7 @@ Storage.put('test.txt', 'Hello')
     .catch(err => console.log(err));
 ```
 
-### Protected level
+### 保護レベル
 
 ```javascript
 Storage.put('test.txt', 'Protected Content', {
@@ -28,7 +28,7 @@ Storage.put('test.txt', 'Protected Content', {
 .catch(err => console.log(err));
 ```
 
-### Private level
+### プライベートレベル
 
 ```javascript
 Storage.put('test.txt', 'Private Content', {
@@ -39,9 +39,9 @@ Storage.put('test.txt', 'Private Content', {
 .catch(err => console.log(err));
 ```
 
-### Monitor progress of upload
+### アップロードの進捗状況をモニターする
 
-To track the progress of your upload, you can use the `progressCallback`:
+アップロードの進行状況を追跡するには、 `progressCallback` を使用します。
 
 ```javascript
 Storage.put('test.txt', 'File content', {
@@ -50,9 +50,9 @@ Storage.put('test.txt', 'File content', {
   },
 });
 ```
-### Encrypted uploads
+### 暗号化されたアップロード
 
-To utilize Server-Side Encryption with AWS KMS, the following options can be passed in with the Put API like so:
+AWS KMS でサーバー側暗号化を利用するには、Put API で次のようなオプションを渡すことができます。
 
 ```javascript
 const serverSideEncryption = AES256 | aws:kms;
@@ -67,7 +67,7 @@ Storage.put('test.txt', 'File content', {
 .catch (err => console.log(err));
 ```
 
-Other options available are:
+他のオプションは以下のとおりです:
 
 ```javascript
 Storage.put('test.txt', 'My Content', {
@@ -81,8 +81,8 @@ Storage.put('test.txt', 'My Content', {
 .catch(err => console.log(err));
 ```
 
-## Browser uploads
-Upload an image in the browser:
+## ブラウザのアップロード
+ブラウザーに画像をアップロード:
 
 ```javascript
 class S3ImageUpload extends React.Component {
@@ -106,8 +106,8 @@ class S3ImageUpload extends React.Component {
 }
 ```
 
-## React Native uploads
-Upload an image in your React Native app:
+## React Native のアップロード
+React Native アプリに画像をアップロードしてください：
 
 ```javascript
 uploadToStorage = async pathToImageFile => {
@@ -125,4 +125,4 @@ uploadToStorage = async pathToImageFile => {
 }
 ```
 
-When a networking error happens during the upload, Storage module retries upload for a maximum of 4 attempts. If the upload fails after all retries, you will get an error.
+アップロード中にネットワークエラーが発生した場合、Storageモジュールは最大4回のアップロードを再試行します。 すべての再試行後にアップロードに失敗すると、エラーが発生します。
