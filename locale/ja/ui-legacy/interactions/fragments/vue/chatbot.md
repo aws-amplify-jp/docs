@@ -1,34 +1,34 @@
-The Chatbot component allows your users to interact with an Amazon Lex chatbot.
+Chatbotコンポーネントを使用すると、ユーザはAmazon Lexチャットボットとやり取りできます。
 
-Usage: `<amplify-chatbot></amplify-chatbot>`
+使用法: `<amplify-chatbot></amplify-chatbot>`
 
-Config:
+設定:
 ```
 <amplify-chatbot v-bind:chatbotConfig="chatbotConfig"></amplify-chatbot>
 ```
 
 <inline-fragment framework="vue" src="~/ui-legacy/fragments/interactions-attributes.md"></inline-fragment>
 
-Note: In order for voice input to work with Amazon Lex, you may have to enable Output voice in the AWS Console. Under the Amazon Lex service, click on your configured Lex chatbot and go to Settings -> General and pick your desired Output voice. Then, click Build. If you have forgotten to enable Output voice, you will get an error like this:
+注意: Amazon Lexで音声入力を動作させるには、AWSコンソールで音声出力を有効にする必要があります。 Amazon Lexサービスの下で、設定したLexチャットボットをクリックし、設定 -> General に移動し、希望する出力音声を選択します。 次に、format@@0をクリックします。出力音声を有効にし忘れた場合、次のようなエラーが表示されます。
 ```
-ChatBot Error: Invalid Bot Configuration: This bot does not have a Polly voice ID associated with it. For voice interaction with the user, set a voice ID
+ChatBot エラー: 無効なボット設定: このボットにはポリーボイスIDが関連付けられていません。 ユーザーと音声操作を行うには音声IDを設定してください
 ```
 
 
 
-If not in your aws-exports file, the bot can also be defined in the AWS configure method:
+aws-exports ファイルでない場合は、AWS 構成メソッドでボットを定義することもできます。
 ```
  Interactions: {
     bots: {
       "BookTrip": {
         "name": "BookTrip",
-        "alias": "$LATEST",
+        "alias": " name": "$LATEST",
         "region": "us-east-1",
       },
     }
-  }
+}
 ```
 
-Events:
+イベント:
 
-* `AmplifyEventBus.$emit('chatComplete', this.options.botTitle)`: Emitted when a chat session has been completed (only if the clearComplete options is 'true')
+* `AmplifyEventBus.$emit('chatComplete', this.options.botTitle)`: チャットセッションが完了したときに発生します (clearComplete オプションが 'true' の場合にのみ発生します)。
