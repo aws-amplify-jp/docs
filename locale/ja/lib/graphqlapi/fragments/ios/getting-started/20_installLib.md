@@ -1,14 +1,14 @@
 To install the Amplify API to your application, **add `AmplifyPlugins/AWSAPIPlugin` to your `Podfile`**.  Your `Podfile` should look similar to:
 
 ```ruby
-target 'MyAmplifyApp' do
+ターゲット 'MyAmplifyApp' do
   use_frameworks!
   pod 'Amplify'
   pod 'AmplifyPlugins/AWSAPIPlugin'
 end
 ```
 
-To install, download and resolve these pods, **execute the command**:
+ポッドをインストール、ダウンロード、解決するには、 **コマンド** を実行します。
 
 ```ruby
 pod install --repo-update
