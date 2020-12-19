@@ -4,19 +4,19 @@ When using `npx amplify-app` a NPM script named `amplify-modelgen` should be add
 npm run amplify-modelgen
 ```
 
-The following files will be generated.
+次のファイルが生成されます。
 
 ```
 src/
 |_ models/
-   |_ index.d.ts
+   |_ index.dts
    |_ index.js
-   |_ schema.d.ts
+   |_ schema.dts
    |_ schema.js
 ```
 
 <amplify-callout>
 
-The `.d.ts` are [TypeScript declaration files](https://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html). If your project does not use TypeScript, do not worry, those files can still provide most editors a better developer experience, with a more accurate auto-complete and realtime type checking. Worst case scenario they will just be ignored.
+`.d.ts` は [TypeScript 宣言ファイル](https://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html)です。 あなたのプロジェクトが TypeScript を使用していない場合は、心配しないでください。それらのファイルは、大部分のエディタに開発者エクスペリエンスを提供することができます。 より正確なオートコンプリートとリアルタイムの型チェックを行うことができます。 最悪の場合のシナリオでは、彼らはただ無視されます。
 
 </amplify-callout>
