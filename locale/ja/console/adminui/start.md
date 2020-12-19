@@ -1,57 +1,57 @@
 ---
-title: Getting started
-description: Getting started with the Admin UI
+title: はじめに
+description: 管理者 UI を使用して開始
 ---
 
-The Admin UI provides a visual interface to develop app backends and manage app content outside the AWS Management Console. To learn more, see the [Introduction to Admin UI](~/console/adminui/intro.md).
+Admin UI は、AWS 管理コンソール以外のアプリケーションバックエンドを開発し、アプリコンテンツを管理するための視覚的なインターフェイスを提供します。 詳細については、 [管理 UI 入門](~/console/adminui/intro.md) を参照してください。
 
-You can get started with or without an AWS account. Without an AWS account, you can begin modeling data for your backend and testing it locally. If you choose to create an AWS account and deploy your backend to Amplify Console, an expanded set of features becomes available for configuring your backend environment.
+AWSアカウントの有無にかかわらず、開始できます。 AWSアカウントがなければ、バックエンドのモデリングデータをローカルでテストできます。 AWSアカウントを作成し、バックエンドをAmplifyコンソールにデプロイする場合。 バックエンド環境を設定するための拡張された機能が利用可能になります。
 
 <amplify-responsive-grid grid-gap="2" columns="2" class="margin-top-lg margin-bottom-lg"> <docs-card external url="https://sandbox.amplifyapp.com/" container-tag="amplify-external-link">
-  <img slot="graphic" src="~/images/console/adminui.svg" /><h4 slot="heading">Launch Sandbox</h4>
-  <p slot="description">Get started without an AWS account</p>
+  <img slot="graphic" src="~/images/console/adminui.svg" /><h4 slot="heading">サンドボックスを起動</h4>
+  <p slot="description">AWS アカウントなしで始めよう</p>
 </docs-card> <docs-card external url="https://console.aws.amazon.com/amplify/home?#/deploy-backend" container-tag="amplify-external-link">
-  <img slot="graphic" src="~/assets/logo-dark.svg" /><h4 slot="heading">Launch Amplify Console</h4>
-  <p slot="description">Get started with an AWS account</p>
+  <img slot="graphic" src="~/assets/logo-dark.svg" /><h4 slot="heading">Amplifyコンソールを起動</h4>
+  <p slot="description">AWSアカウントで始めよう</p>
 </docs-card> </amplify-responsive-grid>
 
-## Get started without an AWS account
+## AWS アカウントなしで始めよう
 
-If you are new to AWS, you don't need an AWS account to get started. You can still model and test your data before deploying to the cloud. After building your data model, you must connect an AWS account to deploy your backend environment to the Amplify Console using the Admin UI. The sandbox interface lets you perform the following tasks:
-  * Set up your data model. For instructions on creating models and setting relationships, see [Data modeling in the Admin UI](~/console/data/data-model.md#Data-modeling-in-the-Admin-UI).
-  * Test your new data model locally.
-  * Deploy your backend to the cloud. This requires an AWS account.
+AWSを初めて使用する場合は、AWSアカウントを使用する必要はありません。 クラウドにデプロイする前に、データをモデル化してテストすることができます。 データモデルを構築した後、管理UIを使用してAmplifyコンソールにバックエンド環境をデプロイするためにAWSアカウントを接続する必要があります。 Sandbox インターフェイスを使用すると、次のタスクを実行できます。
+  * データモデルを設定します。モデルの作成とリレーションシップの設定方法については、管理 UI の [データモデリング](~/console/data/data-model.md#Data-modeling-in-the-Admin-UI) を参照してください。
+  * 新しいデータモデルをローカルでテストします。
+  * バックエンドをクラウドにデプロイします。AWSアカウントが必要です。
 
-## Get started with your AWS account
+## AWSアカウントを始めましょう
 
-If you already have an AWS account and you want to skip the sandbox experience, deploy the Admin UI to start using all Amplify features, including DataStore, user authentication and authorization, and file storage. After you deploy a backend in Amplify Console, you can launch the Admin UI from your Amplify Console app. Your entire team can use the Admin UI to add new features, update app data, and manage users and groups.
+すでにAWSアカウントを持っていて、Sandboxエクスペリエンスをスキップしたい場合は、AdminのUIをデプロイして、Amplifyのすべての機能を使い始めます。 DataStore、ユーザー認証と承認、ファイルストレージを含みます。 Amplifyコンソールにバックエンドをデプロイしたら、AmplifyコンソールアプリからAdmin UIを起動できます。 チーム全体が管理者 UI を使用して、新機能の追加、アプリデータの更新、ユーザーとグループの管理を行うことができます。
 
-### To get started with a new Amplify app
-1. Sign in to the AWS Management Console and open AWS Amplify. Choose **Create app backend**.
-2. Enter a name for your app and choose **Confirm deployment**. This deploys a default **staging** backend environment.
-3. On the application information page, choose the **Backend environments** tab.
-4. Choose **Open Admin UI**. This automatically logs you in to the Admin UI.
+### 新しいAmplifyアプリで始めるには
+1. AWS管理コンソールにサインインし、AWS Amplifyを開きます。 **アプリバックエンドの作成** を選択します。
+2. アプリケーションの名前を入力し、 **デプロイの確認**を選択します。これはデフォルトの **ステージング** バックエンド環境をデプロイします。
+3. アプリケーション情報ページで、 **バックエンド環境** タブを選択します。
+4. **管理者UIを開く**を選択します。管理者UIに自動的にログインします。
 
-If you already have an existing backend environment, you can enable the Admin UI from the console.
+既存のバックエンド環境がある場合は、コンソールからAdmin UIを有効にできます。
 
-### To get started from an existing Amplify app
+### 既存のAmplifyアプリから始めるには
 
-1. Sign in to the AWS Management Console and open AWS Amplify. Or, enter `amplify console` from the Amplify Command Line Interface (CLI).
-2. In the navigation pane, choose **Admin UI management**
-3. Turn on **Enable Admin UI (All environments)**.
-4. In the **Backend environments** section, choose **Open Admin UI**.  This automatically logs you in to the Admin UI where you can use all the Admin UI capabilities.
+1. AWS管理コンソールにサインインし、AWS Amplifyを開くか、Amplifyコマンドラインインターフェース(CLI)から `anplify console` を入力します。
+2. ナビゲーション ウィンドウで、 **管理者 UI 管理** を選択します
+3. **管理者 UI (すべての環境)** を有効にします。
+4. **バックエンド環境** のセクションで、 **管理者UI を開く**を選択します。 これにより、Admin UI のすべての機能を使用できる、Admin UI に自動的にログインします。
 
-## Next steps
+## 次のステップ
 
-You are ready to start creating and managing your application's backend in the Admin UI. See the following topics to learn more about what you can do.
-  * [Manage team access](~/console/adminui/access-management.md)
-  * [Access Admin UI on a custom domain](~/console/adminui/custom-domain.md)
-  * [Extend with the Amplify CLI ](~/console/adminui/extend-cli.md)
-  * [Data modeling](~/console/data/data-model.md)
-  * [Content management](~/console/data/content-management.md)
-  * [Authentication](~/console/auth/authentication.md)
-  * [Manage authentication for users and groups](~/console/auth/user-management.md)
-  * [Authorization](~/console/authz/authorization.md)
+管理UIでアプリケーションのバックエンドの作成と管理を開始する準備が整いました。 できることの詳細については、以下のトピックを参照してください。
+  * [チームへのアクセスを管理](~/console/adminui/access-management.md)
+  * [カスタムドメインの管理者UIにアクセス](~/console/adminui/custom-domain.md)
+  * [Amplify CLI で拡張 ](~/console/adminui/extend-cli.md)
+  * [データモデリング](~/console/data/data-model.md)
+  * [コンテンツ管理](~/console/data/content-management.md)
+  * [認証](~/console/auth/authentication.md)
+  * [ユーザーとグループの認証を管理する](~/console/auth/user-management.md)
+  * [承認](~/console/authz/authorization.md)
   
   
  
