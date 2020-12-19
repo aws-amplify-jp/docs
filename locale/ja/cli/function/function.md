@@ -1,14 +1,14 @@
 ---
-title: Overview
-description: Use Amplify CLI to add powerful Lambda functions to your cloud-based mobile and web app with a simple guided workflow.
+title: 概要
+description: Amplify CLI を使用して、クラウドベースのモバイルおよびウェブアプリに強力な Lambda 機能を簡単なガイド付きワークフローで追加できます。
 ---
 
-## Set up a function
+## 関数を設定
 
-You can add a Lambda function to your project which you can use alongside a REST API or as a datasource in your GraphQL API using the [`@function` directive](~/cli/graphql-transformer/function.md).
+プロジェクトにLambda関数を追加して、REST APIと一緒に使用したり、GraphQL API のデータソースとして [`@function` ディレクティブ](~/cli/graphql-transformer/function.md) を使用して使用したりできます。
 
 ```bash
-amplify add function
+anmpify add関数
 ```
 
 ```console
@@ -20,13 +20,13 @@ amplify add function
   Serverless express function (Integration with Amazon API Gateway)
 ```
 
-## Function templates
+## 関数テンプレート
 
-* The `Hello World function` will create a basic hello world Lambda function
-* The `CRUD function for Amazon DynamoDB table (Integration with Amazon API Gateway and Amazon DynamoDB)` function would add a predefined [serverless-express](https://github.com/awslabs/aws-serverless-express) Lambda function template for CRUD operations to DynamoDB tables (which you can create by following the CLI prompts or use the tables which you've already configured using the `amplify add storage` command)
-* The `Serverless express function (Integration with Amazon API Gateway)` will add a predefined [serverless-express](https://github.com/awslabs/aws-serverless-express) Lambda function template with routing enabled for your REST API paths.
+* `Hello World 関数` は基本的な hello world Lambda 関数を作ります。
+* Amazon DynamoDBテーブルの `CRUD関数（Amazon API GatewayとAmazon DynamoDBとの統合）` 関数は、あらかじめ定義された [serverless-express](https://github.com/awslabs/aws-serverless-express) ラムダ関数テンプレートをDynamoDBテーブルに追加します（CLIプロンプトに従うか、すでに設定したテーブルを使用して作成することができます。 `増幅ストレージを追加` コマンドを使用して）
+* `サーバーレスエクスプレス関数 (Amazon API Gatewayとの統合)` は、事前に定義された [serverless-express](https://github.com/awslabs/aws-serverless-express) Lambda 関数テンプレートを追加し、REST API パスのルーティングが有効になります。
 
-You can update the Lambda execution role policies for your function to access other resources generated and maintained by the CLI, using the CLI
+CLI を使用して、CLI によって生成およびメンテナンスされた他のリソースにアクセスするために、関数の Lambda 実行ロールポリシーを更新できます。
 
 ```console
 $ amplify update function
@@ -50,32 +50,32 @@ var apiBetatestGraphQLAPIIdOutput = process.env.API_BETATEST_GRAPHQLAPIIDOUTPUT
 var apiBetatestGraphQLAPIEndpointOutput = process.env.API_BETATEST_GRAPHQLAPIENDPOINTOUTPUT
 ```
 
-Behind the scenes, the CLI automates populating of the resource identifiers for the selected resources as Lambda environment variables which you will see in your function code as well. This process additionally configures CRUD level IAM policies on the Lambda execution role to access these resources from the Lambda function. For instance, you might grant permissions to your Lambda function to read/write to a DynamoDB table in the Amplify project by using the above flow and the appropriate IAM policy would be set on that Lambda function's execution policy which is scoped to that table only.
+舞台裏で CLIは、関数コードにも表示されるLambda環境変数として、選択されたリソースのリソース識別子の生成を自動化します。 このプロセスは、ラムダ関数からこれらのリソースにアクセスするために、ラムダ実行ロールに CRUD レベルの IAM ポリシーを設定します。 例えば、 上記のフローを使用して、プロジェクト内のDynamoDBテーブルを読み書きするようにLambda関数に権限を付与し、そのテーブルにのみスコープされるLambda関数の実行ポリシーに適切なIAMポリシーが設定されます。
 
-## Supported Lambda runtimes
+## サポートされているLambda runtime
 
-Amplify CLI enables you to create, test and deploy Lambda functions with the following runtimes:
+Amplify CLI を使用すると、次のランタイムで Lambda 関数を作成、テスト、およびデプロイできます。
 
-| Runtime   | Default Version | Requirements                                                                                                                                                                         |
-| --------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| NodeJS    | 12.x            | - Install [NodeJS](https://nodejs.org/en/)                                                                                                                                           |
-| Java      | 11              | - Install [Java 11 JDK](https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/downloads-list.html) and [Gradle 5+](https://docs.gradle.org/current/userguide/installation.html) |
-| Go        | 1.x             | - Install [Go](https://golang.org/doc/install)                                                                                                                                       |
-| .NET Core | 3.1             | - Install [.NET Core SDK](https://docs.microsoft.com/en-us/dotnet/core/install/sdk)                                                                                                  |
-| Python    | 3.8.x           | - Install [python3](https://www.python.org/downloads/) and [pipenv](https://pypi.org/project/pipenv/)                                                                                |
+| Runtime | デフォルトのバージョン | 要件                                                                                                                                                                                 |
+| ------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| NodeJS  | 12.x        | - Install [NodeJS](https://nodejs.org/en/)                                                                                                                                         |
+| Java    | 11          | - [Java 11 JDK](https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/downloads-list.html) と [Gradle 5+](https://docs.gradle.org/current/userguide/installation.html) をインストール |
+| 移動      | 1.x         | - インストール [Go](https://golang.org/doc/install)                                                                                                                                      |
+| .NETコア  | 3.1         | - [.NET Core SDK](https://docs.microsoft.com/en-us/dotnet/core/install/sdk) をインストール                                                                                                |
+| Python  | 3.8.x       | - [python3](https://www.python.org/downloads/) と [pipenv](https://pypi.org/project/pipenv/) をインストールします。                                                                            |
 
-In order to create and test Lambda functions locally, you need to have the runtime's requirements (table above) fulfilled. You'll be asked to `Choose the runtime you would like to use:` when running `amplify add function`.
+Lambda関数をローカルで作成してテストするには、ランタイムの要件(上記の表)を満たす必要があります。 `使用したいランタイムを選択してください:` `amplify add function`.
 
-Once a runtime is selected, you can select a function template for the runtime to help bootstrap your Lambda function.
+ランタイムが選択されると、ランタイムのファンクションテンプレートを選択して、Lambda関数のブートストラップに役立ちます。
 
-## Schedule recurring Lambda functions
+## 定期的なLambda関数をスケジュールする
 
 Amplify CLI allows you to schedule Lambda functions to be executed periodically (e.g every minute, hourly, daily, weekly, monthly or yearly). You can also formulate more complex schedules using AWS Cron Expressions such as: *“10:15 AM on the last Friday of every month”*. Review the [Schedule Expression for Rules documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions) for more details.
 
 To schedule your Lambda function, answer **Yes** to `Do you want to invoke this function on a recurring schedule?` in the `amplify add function` flow. Once you deploy a function, it'll create a CloudWatch Rule to periodically execute the selected Lambda function.
 
-## GraphQL from Lambda
+## Lambda のGraphQL
 
 <inline-fragment src="~/lib/graphqlapi/fragments/graphql-from-node.md"></inline-fragment>
 
-For more information on files generated in the function resource folder, see [Function Category Files](~/cli/reference/files.md#function-category-files).
+関数リソースフォルダに生成されたファイルの詳細については、 [関数カテゴリファイル](~/cli/reference/files.md#function-category-files) を参照してください。
