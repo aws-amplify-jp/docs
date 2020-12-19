@@ -1,6 +1,6 @@
 ---
-title: Select MFA Type
-description: Select MFA Type component
+title: MFAタイプを選択
+description: MFAタイプコンポーネントを選択
 filterKey: framework
 ---
 
