@@ -1,28 +1,28 @@
 You can use the device related features of Amazon Cognito User Pools by enabling the **Devices** features. Navigate to the Cognito User Pools console, click on **Devices** in Left Navigation Menu and chose one of **User Opt In** or **Always**.
 
-If you chose **Always** every device used by your application users is remembered.
+**Always** を選択した場合、アプリケーションユーザーが使用するすべてのデバイスが記憶されます。
 
-You can read more about the device features in the following [blog](https://aws.amazon.com/blogs/mobile/tracking-and-remembering-devices-using-amazon-cognito-your-user-pools/).
+デバイス機能の詳細については、以下の [ブログ](https://aws.amazon.com/blogs/mobile/tracking-and-remembering-devices-using-amazon-cognito-your-user-pools/) をご覧ください。
 
-## Terminology
+## 用語
 
-* *Tracked*
+* *追跡*
 
-When devices are tracked, a set of device credentials consisting of a key and secret key pair is assigned to every device. You can view all tracked devices for a specific user from the Amazon Cognito console device browser, which you can view by choosing a user from the Users panel. In addition, you can see some metadata (whether it is remembered, time it began being tracked, last authenticated time, etc.) associated with the device and its usage.
-
-
-* *Remembered*
-
-Remembered devices are also tracked. During user authentication, the key and secret pair assigned to a remembered device is used to authenticate the device to verify that it is the same device that the user previously used to sign in to the application. You can also see remembered devices from the Amazon Cognito console.
+デバイスが追跡されると、鍵と秘密鍵のペアからなる一連のデバイス資格情報が各デバイスに割り当てられます。 特定のユーザーの追跡されたすべてのデバイスは、Amazon Cognitoコンソールデバイスブラウザから表示できます。 これは、format@@0パネルからユーザーを選択して表示できます。 加えて、いくつかのメタデータを見ることができます(それが記憶されているかどうか、それが追跡され始めた時間、最後の認証時間など)。 関連付けられています
 
 
-* *Not Remembered*
+* *記憶されている*
 
-A not-remembered device is the flipside of being remembered, though the device is still tracked. The device is treated as if it was never used during the user authentication flow. This means that the device credentials are not used to authenticate the device. The new APIs in the AWS Mobile SDK do not expose these devices, but you can see them in the Amazon Cognito console.
+記憶されたデバイスも追跡されます。 ユーザー認証中 記憶されたデバイスに割り当てられたキーとシークレットのペアは、以前にアプリケーションにサインインしたユーザーと同じデバイスであることを確認するためにデバイスを認証するために使用されます。 また、Amazon Cognitoコンソールから記憶されたデバイスを見ることもできます。
 
-## Remember Device
 
-This option will mark the tracked device as `remembered`
+* *記憶されていません*
+
+記憶されていないデバイスは、デバイスがまだ追跡されているにもかかわらず、記憶されることの裏側です。 デバイスは、ユーザー認証フロー中に使用されなかったかのように扱われます。 これは、デバイスの資格情報がデバイスの認証に使用されないことを意味します。 AWS Mobile SDK の新しい API では、これらのデバイスは公開されませんが、Amazon Cognito コンソールで確認できます。
+
+## デバイスを記憶する
+
+このオプションはトラッキングされたデバイスを `記憶`としてマークします
 
 ```swift
 AWSMobileClient.default().deviceOperations.updateStatus(remembered: true) { (result, error) in
@@ -30,9 +30,9 @@ AWSMobileClient.default().deviceOperations.updateStatus(remembered: true) { (res
 }
 ```
 
-## Update Device
+## デバイスを更新
 
-This option will mark the tracked device as `not remembered`.
+このオプションは、トラッキングされたデバイスを `記憶されていない`とマークします。
 
 ```swift
 AWSMobileClient.default().deviceOperations.updateStatus(remembered: false) { (result, error) in
@@ -40,19 +40,19 @@ AWSMobileClient.default().deviceOperations.updateStatus(remembered: false) { (re
 }
 ```
 
-## Forget Device
+## デバイスを忘れた
 
-This option will stop tracking the device altogether.
+このオプションはデバイスの追跡を完全に停止します。
 
 ```swift
-AWSMobileClient.default().deviceOperations.forget({ (error) in
+AWSMobileClient.default().deviceOperations.forg({ (error) in
     // ...
 })
 ```
 
-> Note: Once you call `forget`, you can update the status of the device in the same auth session. The end user will have to sign in again to remember the device.
+> 注: ``を呼び出したら、同じ認証セッションでデバイスのステータスを更新できます。 エンドユーザーは、デバイスを覚えるために再度サインインする必要があります。
 
-## Get Device Details
+## 端末の詳細を取得する
 
 ```swift
 AWSMobileClient.default().deviceOperations.get { (device, error) in
@@ -67,7 +67,7 @@ AWSMobileClient.default().deviceOperations.get { (device, error) in
 }
 ```
 
-## List Devices
+## デバイス一覧
 
 ```swift
 AWSMobileClient.default().deviceOperations.list(limit: 60) { (result, error) in
