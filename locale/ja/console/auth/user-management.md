@@ -1,49 +1,49 @@
 ---
-title: Manage authentication for users and groups
-description: Manage authentication for users and groups
+title: ユーザーとグループの認証を管理する
+description: ユーザーとグループの認証を管理する
 ---
 
-In the Admin UI, you can create and manage users and groups, edit user attributes, and suspend users.
+Admin UI では、ユーザーとグループを作成および管理したり、ユーザー属性を編集したり、ユーザーを一時停止したりできます。
 
-This topic shows you how to create and manage your app's users and groups. To set authorization rules that allow these users and groups to perform create, read, update, or delete operations on your app data, see [Authorization](~/console/authz/authorization.md).
+このトピックでは、アプリのユーザーとグループを作成および管理する方法を説明します。 これらのユーザーとグループが作成、読み取りを行うことを許可する権限ルールを設定するには アプリのデータを更新または削除するには、 [Authorization](~/console/authz/authorization.md) を参照してください。
 
-## To create a user
-1. Open Admin UI for an app.
-2. On the **Manage** menu, choose **User management**.
-3. On the **User management** page, choose the **Users** tab and then choose **Create user**.
+## ユーザーを作成するには
+1. アプリのAdmin UIを開きます。
+2. **Manage** メニューで **User management** を選択します。
+3. **ユーザー 管理** ページで、 **ユーザー** タブを選択し、 **ユーザー** を選択します。
 4. In the **Create user** window, for **Unique identifer** enter a username, email address, or phone number. For **Temporary password** enter a password.
-5. Choose **Create user**.
+5. **Create user** を選択します。
 
-## To modify access for a user
-1. Open Admin UI for an app.
-2. On the **Manage** menu, choose **User management**.
-3. On the **User management** page, choose the **Users** tab.
-4. Select the name of the user to manage.
-5. On the **Actions** menu, choose the action to perform on the user. The options are **Reset password**, **Delete**, **Suspend**, or **Reactivate**.
-6. For each menu option, a confirmation window is displayed. Follow the instructions in the confirmation window to complete the action on the user.
+## ユーザーのアクセスを変更するには
+1. アプリのAdmin UIを開きます。
+2. **Manage** メニューで **User management** を選択します。
+3. **ユーザー 管理** ページで **ユーザー** タブを選択します。
+4. 管理するユーザーの名前を選択します。
+5. **アクション** メニューで、ユーザーに実行するアクションを選択します。 オプションは**パスワードをリセット**、 **削除**、 **削除**、 **一時停止**、または **再アクティブ化** です。
+6. 各メニューオプションに確認ウィンドウが表示されます。確認ウィンドウの指示に従って、ユーザーのアクションを完了してください。
 
-## To create a group
-1. Open Admin UI for an app.
-2. On the **Manage** menu, choose **User management**.
-3. On the **User management** page, choose the **Groups** tab and then choose **Create group**.
-4. In the **Create group** window, for **Title** enter a name for the group.
-5. Choose **Create group**.
+## グループを作成する
+1. アプリのAdmin UIを開きます。
+2. **Manage** メニューで **User management** を選択します。
+3. **ユーザー管理** ページで **グループ** タブを選択し、 **グループの作成** を選択します。
+4. **グループ作成** ウィンドウで、 **タイトル** にグループの名前を入力します。
+5. **グループ作成** を選択します。
 
-## To add a user to a group
-1. Open Admin UI for an app.
-2. On the **Manage** menu, choose **User management**.
-3. On the **User management** page, choose the **Groups** tab.
-4. Select the name of the group to add users to.
-5. Choose **Add user(s)**.
+## ユーザーをグループに追加するには
+1. アプリのAdmin UIを開きます。
+2. **Manage** メニューで **User management** を選択します。
+3. **ユーザー 管理** ページで **グループ** タブを選択します。
+4. ユーザを追加するグループの名前を選択します。
+5. **Add user(s)** を選択します。
 6. In the **Add users to group** window, choose how you want to search for users to add from the **Search** menu. You can choose *Email*, *Phone number*, or *Username*.
-7. Choose one user or multiple users to add to the group and then choose **Add users**.
+7. グループに追加するユーザーまたは複数のユーザーを1人選択し、 **ユーザーの追加** を選択します。
 
-## To delete a group
-1. Open Admin UI for an app.
-2. On the **Manage** menu, choose **User management**.
-3. On the **User management** page, choose the **Groups** tab.
-4. In the **Groups** section, select the name of the group to delete.
-5. Choose **Delete**.
-6. A confirmation window is displayed. Enter *Delete* and choose, **Confirm deletion**.
+## グループを削除する
+1. アプリのAdmin UIを開きます。
+2. **Manage** メニューで **User management** を選択します。
+3. **ユーザー 管理** ページで **グループ** タブを選択します。
+4. **グループ** セクションで、削除するグループの名前を選択します。
+5. **削除** を選択します。
+6. 確認ウィンドウが表示されます。 *Delete* と入力し、 **Confirm deletion** を選択します。
 
 
