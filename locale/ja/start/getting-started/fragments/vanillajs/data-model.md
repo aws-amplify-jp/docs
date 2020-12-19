@@ -1,18 +1,18 @@
-Now that you’ve initialized a new Amplify project, you can add a feature. The first feature you will add is an API. An API will allow you to save and read data to and from the cloud.
+新しいAmplifyプロジェクトを初期化したので、機能を追加できます。 最初に追加する機能はAPIです。APIを使用すると、クラウドとの間でデータを保存して読み取ることができます。
 
-The Amplify CLI supports creating and interacting with two types of API categories: [REST](~/lib/restapi/getting-started.md) and [GraphQL](~/lib/graphqlapi/getting-started.md).
+Amplify CLI は、 [REST](~/lib/restapi/getting-started.md) と [GraphQL](~/lib/graphqlapi/getting-started.md) の 2 種類の API カテゴリの作成と相互作用をサポートしています。
 
-The API you will be creating in this step is a GraphQL API using AWS AppSync (a managed GraphQL service) and the database will be Amazon DynamoDB (a NoSQL database).
+この手順で作成するAPIは、AWS AppSync(管理されたGraphQLサービス)を使用したGraphQL APIであり、データベースはAmazon DynamoDB(NoSQLデータベース)になります。
 
-## Create GraphQL API and database
+## GraphQL API とデータベースの作成
 
-Add a [GraphQL API](https://docs.aws.amazon.com/appsync/latest/devguide/designing-a-graphql-api.html) to your app and automatically provision a database by running the following command from the root of your application directory:
+[GraphQL API](https://docs.aws.amazon.com/appsync/latest/devguide/designing-a-graphql-api.html) をアプリケーションに追加し、アプリケーションディレクトリのルートから次のコマンドを実行して自動的にデータベースをプロビジョニングします。
 
 ```bash
-amplify add api
+増幅して api を追加
 ```
 
-Accept the **default values** which are highlighted below:
+以下のハイライト表示されている **デフォルト値** を受け入れます。
 
 ```console
 ? Please select from one of the below mentioned services:
@@ -37,9 +37,9 @@ Accept the **default values** which are highlighted below:
 # Yes
 ```
 
-The CLI should open this GraphQL schema in your text editor.
+CLI がテキストエディタでこの GraphQL スキーマを開く必要があります。
 
-__amplify/backend/api/amplifyjsapp/schema.graphql__
+__anplify/backend/api/anplifyjsapp/schema.graphql__
 
 ```graphql
 type Todo @model {
@@ -51,23 +51,23 @@ type Todo @model {
 
 The schema generated is for a Todo app. You'll notice a directive on the `Todo` type of `@model`. This directive is part of the [GraphQL transform](~/cli/graphql-transformer/model.md) library of Amplify.
 
-The GraphQL Transform Library provides custom directives you can use in your schema that allow you to do things like define data models, set up authentication and authorization rules, configure serverless functions as resolvers, and more.
+GraphQL Transform ライブラリには、データモデルの定義などを行うためのスキーマで使用できるカスタムディレクティブが用意されています。 認証と認可ルールの設定、サーバレス機能をリゾルバとして設定するなど。
 
-A type decorated with the `@model` directive will scaffold out the database table for the type (Todo table), the schema for CRUD (create, read, update, delete) and list operations, and the GraphQL resolvers needed to make everything work together.
+`@model` ディレクティブで装飾された型は、タイプ (Todo テーブル) のデータベーステーブルを足場に置きます。 CRUD (作成、読み取り、更新、削除)およびリスト操作のためのスキーマ、およびすべてを一緒に動作させるために必要な GraphQL リゾルバ。
 
-From the command line, press __enter__ to accept the schema and continue to the next steps.
+コマンドラインから __を押して__ を入力し、スキーマを受け入れ、次のステップに進みます。
 
-## Deploy your GraphQL API
+## GraphQL API をデプロイします
 
-Now that the API has been successfully created. We need to push our updated configuration to the cloud so our API can be deployed:
+APIが正常に作成されました。APIをデプロイできるように、更新された構成をクラウドにプッシュする必要があります。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
-## Generate code for the GraphQL API
+## GraphQL API のコードを生成
 
-When you run `amplify push`, you will be presented with the option to have all the GraphQL operations found in your schema generated for you in code. Choose the following options:
+`を増幅して`を実行すると、 コード内でスキーマで生成されたすべてのGraphQL操作を選択することができます。 次のオプションを選択してください:
 
 ```console
 ? Do you want to generate code for your newly created GraphQL API (Yes)
@@ -77,13 +77,13 @@ When you run `amplify push`, you will be presented with the option to have all t
 ? Enter maximum statement depth [increase from default if your schema is deeply nested] (2)
 ```
 
-Next, run the following command to check Amplify's status:
+次に、Amplifyの状態を確認するために次のコマンドを実行します。
 
 ```bash
-amplify status
+増幅の状態
 ```
 
-This will give us the current status of the Amplify project, including the current environment, any categories that have been created, and what state those categories are in. It should look similar to this:
+これにより、現在の環境を含むAmplifyプロジェクトの現在のステータスが得られます。 どのカテゴリーが作成されているかを調べることができます 以下のようになります。
 
 ```console
 Current Environment: dev
@@ -96,17 +96,17 @@ GraphQL endpoint: https://•••••••••••.appsync-api.us-east-
 GraphQL API KEY: ••••••••••
 ```
 
-### Testing your API
+### API のテスト
 
-You can open the AWS console to run Queries, Mutation, or Subscription against your new API at any time directly by running the following command:
+AWSコンソールを開いて、新しいAPIに対していつでもクエリ、変更、またはサブスクリプションを実行するには、次のコマンドを実行します。
 
 ```bash
-amplify console api
+コンソールの api を増幅する
 ```
 
-When prompted, select **GraphQL**. This will open the AWS AppSync console for you to run Queries, Mutations, or Subscriptions at the server and see the changes in your client app.
+プロンプトが表示されたら、 **GraphQL**を選択します。 これにより、AWS AppSync コンソールが開き、クエリ、ミューテーションを実行できます。 またはサーバーでサブスクリプションを行い、クライアントアプリケーションの変更を確認します。
 
-## Connect frontend to API
+## フロントエンドを API に接続
 
 Update your `src/app.js` file to configure the library with `Amplify.configure()` and add data to your database with a mutation by using `API.graphql()`:
 
@@ -228,4 +228,4 @@ Now if you wish to subscribe to data, import the `onCreateTodo` subscription and
  getData();
 ```
 
-After restarting your app using `npm start` go back to your browser and using dev tools you will see data being stored and retrieved in your backend from the console logs.
+`npm start` を使用してアプリを再起動した後、ブラウザーに戻り、開発ツールを使用すると、コンソールログからバックエンドに保存されているデータが表示されます。
