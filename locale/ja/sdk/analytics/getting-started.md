@@ -1,6 +1,6 @@
 ---
-title: Getting Started
-description: Learn more about how to add analytics capabilities in your cloud-based application using AWS Amplify.
+title: はじめに
+description: AWS Amplifyを使用してクラウドベースのアプリケーションに分析機能を追加する方法については、こちらをご覧ください。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>
