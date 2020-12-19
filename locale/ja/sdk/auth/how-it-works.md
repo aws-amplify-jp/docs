@@ -1,6 +1,6 @@
 ---
-title: Overview
-description: The AWSMobileClient provides client APIs and building blocks for developers who want to create user authentication experiences. Learn more about how it works.
+title: 概要
+description: AWSMobileClientは、ユーザー認証エクスペリエンスを作成したい開発者向けにクライアント APIとBuilding Blockを提供します。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>
