@@ -1,72 +1,72 @@
 ---
-title: Overview
-description: Deploy and host your app using either Amplify Console or Amazon CloudFront/S3. The Amplify Console offers fully managed hosting with features such as instant cache invalidation and atomic deploys.
+title: 概要
+description: AmplifyコンソールまたはAmazon CloudFront/S3を使用してアプリをデプロイし、ホストします。 Amplifyコンソールは、インスタントキャッシュの無効化やアトミックデプロイなどの機能を備えた、完全に管理されたホスティングを提供します。
 ---
 
-Deploy and host your app using either Amplify Console or Amazon CloudFront/S3. The Amplify Console offers fully managed hosting with features such as instant cache invalidation and atomic deploys. For more control with setting up a CDN and hosting buckets, use CloudFront and S3.
+AmplifyコンソールまたはAmazon CloudFront/S3を使用してアプリをデプロイし、ホストします。 Amplifyコンソールは、インスタントキャッシュの無効化やアトミックデプロイなどの機能を備えた、完全に管理されたホスティングを提供します。 CDNとホスティングバケットの設定をより詳細にコントロールするには、CloudFrontとS3を使用してください。
 
-## Workflow
+## ワークフロー
 
-- `amplify add hosting`<br/> This adds the hosting resources to the backend. The command will first prompt for environment selection, either DEV or PROD. Upon completion, the CloudFormation template for the resources is placed in the amplify/backend/hosting directory. <br/><br/>
-- `amplify configure hosting`<br/> This command walks through the steps to configure the different sections of the resources used in hosting, including S3, CloudFront, and publish ignore. See below for more details.<br/><br/>
-- `amplify publish`<br/> The `amplify publish` command is designed to build and publish both the backend and the frontend of the project. In the current implementation, the frontend publish functionality is only available for a JavaScript project for static web hosting.<br/><br/>
+- `amplify add hosting`<br/> これは、ホスティングリソースをバックエンドに追加します。 このコマンドはまず、DEVまたはPRODのいずれかの環境選択を求めます。 完了すると、リソースのCloudFormationテンプレートがanplify/backend/hostingディレクトリに配置されます。 <br/><br/>
+- `configure configure hosting`<br/> このコマンドは、ホスティングで使用されるリソースの異なるセクションを設定するための手順を説明します。 S3、CloudFront、およびパブリッシュの無視を含む。 詳細は以下をご覧ください。<br/><br/>
+- `amplify publish`<br/> `amplify publish` コマンドは、バックエンドとプロジェクトのフロントエンドの両方をビルドして公開するように設計されています。 現在の実装では、フロントエンドの公開機能は静的なWebホスティング用のJavaScriptプロジェクトでのみ使用できます。<br/><br/>
 - `amplify remove hosting`<br/> This removes the hosting resources locally from the backend. On your next `amplify push` the provisioned hosting resources will get removed from the cloud. <br/><br/>
 
-## Using AWS Amplify Console
+## AWS Amplifyコンソールの使用
 
 <amplify-callout>
 
-The AWS Amplify Console is a continuous deployment and hosting service for Amplify web apps. [Learn more](https://console.amplify.aws).
+AWS Amplifyコンソールは、Amplifyウェブアプリ用の継続的なデプロイメントとホスティングサービスです。 [詳細はこちら](https://console.amplify.aws)。
 
 </amplify-callout>
 
 The AWS Amplify Console provides a Git-based workflow for building, deploying, and hosting your Amplify web app — both the frontend and backend — from source control. Once you connect a feature branch, all code commits are automatically deployed to an `amplifyapp.com` subdomain or your custom domain. [Get Started](https://docs.aws.amazon.com/amplify/latest/userguide/getting-started.html)
 
-Following are the concepts you would encounter when adding Amplify console as a hosting option for your Amplify app.
+AmplifyアプリのホスティングオプションとしてAmplifyコンソールを追加する際に発生するコンセプトは以下のとおりです。
 
-### Type of deployments
+### デプロイの種類
 
-If you select Amplify Console for hosting your Amplify App in the `amplify add hosting` flow, there are two stages you can select from as a part of the flow:
+`増幅してホスティング` フローでAmplifyアプリをホスティングするためにAmplifyコンソールを選択した場合。 フローの一部として選択できる2つの段階があります
 
 - **Continuous deployment** allows you to publish changes on every code commit by connecting your GitHub, Bitbucket, GitLab, or AWS CodeCommit repositories. Selecting this option would open up your AWS Amplify console where you can connect your Git  repository. Once your repository is connected, run `git push` to deploy changes to both your backend and frontend in a single workflow.
 - **Manual deployment** allows you to publish your web app to the Amplify Console without connecting a Git provider. If you select this option, you will have to run the `amplify publish` command every time you would like to see your changes reflected in the cloud.
 
-In order to change deployment types, you need to run `amplify remove hosting` and then `amplify add hosting` to choose your new preferred deployment type.
+デプロイタイプを変更するには `増幅してホスティングを削除` し、 `ホスティングを追加する` を実行して、新しい優先デプロイタイプを選択する必要があります。
 
-### Custom domain, redirects, and more
+### カスタムドメイン、リダイレクト、その他
 
 The `amplify configure hosting` command for the Amplify Console option, opens up the AWS Amplify Console browser tab for you where you can configure settings such as rewrite/redirect URL's, password protection, custom domain. These settings do not get replicated or cloned between environments and you'd have to configure them on a per-environment basis.
 
-**Note**:
+**メモ**:
 
-Amplify Console automatically handles cache invalidation and there is no additional configurations or commands/command-line parameters required for it.
+Amplify Consoleは自動的にキャッシュの無効化を処理し、追加の設定やコマンド/コマンドラインパラメータは必要ありません。
 
 If you start from the Amplify Console's home page and connect your project's code repository (by clicking `Connect app` button), the frontend environment is created for your project once the workflow successfully completes. After setting up hosting in the Amplify Console, you cannot run the `amplify hosting add` command from your local installation of the Amplify CLI. To disable hosting, please visit the Amplify Console and disconnect the branch from the `App settings > General` page.
 
 If you're hosting a Single Page Web App (SPA) with routing such as [`react-router`](https://reactrouter.com/web/guides/quick-start), you'll need to add a [redirect](https://docs.aws.amazon.com/amplify/latest/userguide/redirects.html#redirects-for-single-page-web-apps-spa) in the Amplify console.
 
-![SPA redirect](~/images/hosting/spa-redirect.png)
+![SPAのリダイレクト](~/images/hosting/spa-redirect.png)
 
-## Amazon S3 and Amazon Cloudfront
+## Amazon S3とAmazon Cloudfront
 
-The Amplify CLI provides you the option to manage the hosting of your static website using Amazon S3 and Amazon Cloudfront directly as well. Following are the concepts you would encounter when adding S3 & Cloudfront as a hosting option for your Amplify app.
+Amplify CLI は、Amazon S3 と Amazon Cloudfront を使用して静的なウェブサイトを直接管理するオプションも提供します。 以下は、AmplifyアプリのホスティングオプションとしてS3 & Cloudfrontを追加するときに発生する概念です。
 
-### Stages
+### ステージ
 If you select Amazon S3 & Amazon Cloudfront for hosting your Amplify App in the `amplify add hosting` flow, there are two stages you can select from as a part of the flow:
-- DEV:  S3 static web hosting
-- PROD: S3 and CloudFront
+- DEV: S3 静的ウェブホスティング
+- PROD: S3とCloudFront
 
-It can take time to provision a CloudFront Distribution across the global CDN footprint, in some cases 15 minutes or more. Therefore the Amplify CLI provides a DEV configuration with an S3 static site only when prototyping your application; and a PROD configuration when you are ready to deploy in production. Note that the DEV stage using S3, your static site would not have HTTPS support and hence **only recommended for prototyping your app**.
+場合によっては、15分以上かかる場合があり、グローバルなCDNフットプリント全体にCloudFrontディストリビューションを提供するのに時間がかかる場合があります。 したがって、Amplify CLI はアプリケーションのプロトタイピング時にのみ、S3 静的サイトを備えた DEV 構成を提供します。 および本番環境にデプロイする準備ができたら、PROD 構成を使用します。 S3を使用したDEVステージに注意してください。 静的サイトではHTTPSをサポートしていないため、 **アプリのプロトタイピングにのみお勧めします**。
 
 Amazon CloudFront service can also be added or removed in your Amplify project later on top of your Amazon S3 bucket by using the `amplify hosting configure` command. Note that if the hosting S3 bucket is newly created in regions other than us-east-1, you might get the `HTTP 307 Temporary Redirect` error in the beginning when you access your published application through CloudFront. This is because CloudFront forwards requests to the default S3 endpoint (s3.amazonaws.com), which is in the us-east-1 region, and it can take up to 24 hours for the new hosting bucket name to propagate globally.
 
-For more  information of the Amazon S3 and Amazon CloudFront, check their docs: [S3 static web hosting](https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteHosting.html) [CloudFront DEV Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html)
+Amazon S3とAmazon CloudFrontの詳細については。 [S3 static web hosting](https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteHosting.html) [CloudFront DEV ガイド](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html)
 
-### Cache Invalidation
+### キャッシュの無効化
 If you select Amazon S3 & Amazon Cloudfront for hosting your Amplify App in the `amplify add hosting` flow, the frontend build artifacts will be uploaded to the S3 hosting bucket, and then if Amazon CloudFront is enabled along with it, the `amplify publish` command executed with the `--invalidateCloudFront` or `-c` flag will send an invalidation request to the Amazon CloudFront service to invalidate its cache.
 
-### Advanced Configurations
-The `amplify configure hosting` command walks through the steps to configure the different sections of the resources used when hosting through Amazon S3 & Amazon Cloudfront. Following are the available configurable options:
+### 詳細設定
+`増幅設定ホスティング` コマンドは、Amazon S3 & Amazon Cloudfrontを介してホスティングするときに使用されるリソースの異なるセクションを設定するための手順を説明します。 設定可能なオプションは次のとおりです。
 - `Website`<br/> Configures the S3 bucket for static web hosting. You can set the index doc and error doc references by configuring this option. Both are set to be `index.html` by default.<br/><br/>
-- `CloudFront`<br/> Configures the CloudFront content delivery network (CDN). You can configure TTLs (Time To Live) for the default cache behavior, and configure custom error responses.<br/><br/>
-- `Publish`<br/> Configures the publish ignore patterns (similar to a .gitignore file in your git based project) for the publish command. The publish command will ignore these set of directories and files in the distribution folder that have names matching the patterns.
+- `CloudFront`<br/> CloudFrontコンテンツ配信ネットワーク(CDN)を設定します。 デフォルトのキャッシュ動作に対してTTL(Time To Live)を設定し、カスタムエラー応答を設定できます。<br/><br/>
+- `公開`<br/> 公開無視パターンを設定します。 publish コマンドの git ベースのプロジェクトのファイルを無視します。 publish コマンドは、パターンに一致する名前を持つ配布フォルダ内のこれらのディレクトリとファイルのセットを無視します。
