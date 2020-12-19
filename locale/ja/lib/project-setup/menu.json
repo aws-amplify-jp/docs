@@ -1,9 +1,9 @@
 {
-  "title": "Project Setup",
+  "title": "プロジェクト設定",
   "items": [
     "prereq",
     "create-application",
-    "combine",
+    "結合",
     "rxjava",
     "use-existing-resources"
   ]
