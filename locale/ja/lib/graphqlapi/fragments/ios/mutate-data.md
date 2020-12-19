@@ -1,6 +1,6 @@
-## Run a mutation
+## 変更を実行
 
-Now that the client is set up, you can run a GraphQL mutation with `Amplify.API.mutate` to create, update, and delete your data.
+クライアントが設定されたので、 `Amplify.API.mutate` を使用して GraphQL 変更を実行して、データを作成、更新、および削除できます。
 
 <amplify-block-switcher>
 
