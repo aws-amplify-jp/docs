@@ -1,10 +1,10 @@
-## Using Amplify GraphQL client
+## AmplifyGraphQLクライアントの使用
 
-### Mutations
+### <unk>
 
-In GraphQL, mutations are used to create, update, or delete data. Here are some examples of creating, updating, and deleting items using the Amplify GraphQL client.
+GraphQL では、データの作成、更新、または削除に変更を使用します。 Amplify GraphQL クライアントを使用して項目を作成、更新、および削除する例をいくつか示します。
 
-#### Creating an item
+#### アイテムを作成しています
 
 ```javascript
 import { API } from "aws-amplify";
@@ -18,17 +18,17 @@ const todoDetails = {
 const newTodo = await API.graphql({ query: mutations.createTodo, variables: {input: todoDetails}}));
 ```
 
-You do not have to pass in `createdAt` and `updatedAt` fields, AppSync manages this for you.
+`createdAt` と `updatedAt` フィールドを渡す必要はありません。AppSync がこれを管理します。
 
-You can optionally import the `graphqlOperation` helper function to help you construct the argument object:
+必要に応じて、引数オブジェクトの構築に役立つ `graphqlOperation` ヘルパー関数をインポートすることができます。
 
 ```javascript
 import { API, graphqlOperation } from 'aws-amplify';
 // ...
-const newTodo = await API.graphql({ query: mutations.createTodo, variables: {input: todoDetails}})); // equivalent to above example
+const newTodo = await API.graphql({ query: mutations.createTodo, variables: {input: todoDetails}})); // 上記の例
 ```
 
-#### Updating an item
+#### アイテムを更新中
 
 ```javascript
 import { API } from "aws-amplify";
@@ -42,12 +42,12 @@ const todoDetails = {
 const updatedTodo = await API.graphql({ query: mutations.updateTodo, variables: {input: todoDetails}}));
 ```
 
-Notes:
+メモ:
 
-- You do not have to pass in `createdAt` and `updatedAt` fields, AppSync manages this for you.
+- `createdAt` と `updatedAt` フィールドを渡す必要はありません。AppSync がこれを管理します。
 - If you pass in *extra* input fields not expected by the AppSync schema, this query will fail. You can see this in the `error` field returned by the query (the query itself does not throw, per GraphQL design).
 
-#### Deleting an item
+#### アイテムを削除しています
 
 ```javascript
 import { API } from "aws-amplify";
@@ -60,13 +60,13 @@ const todoDetails = {
 const deletedTodo = await API.graphql({ query: mutations.deleteTodo, variables: {input: todoDetails}}));
 ```
 
-Only an `id` is needed.
+`id` のみが必要です。
 
-### Custom authorization mode
+### カスタム認証モード
 
-By default, each AppSync API will be set with a default authorization mode when you configure your app. If you would like to override the default authorization mode, you can do so by passing in an `authMode` property.
+デフォルトでは、各AppSync APIは、アプリを設定する際にデフォルトの認証モードで設定されます。 デフォルトの認証モードを上書きしたい場合は、 `authMode` プロパティを指定することで行うことができます。
 
-#### Mutation with custom authorization mode
+#### カスタム認証モードでのミュート
 
 ```js
 import { API } from "aws-amplify";
@@ -85,7 +85,7 @@ const todo = await API.graphql({
 });
 ```
 
-## Using AWS AppSync SDK
+## AWS AppSync SDK の使用
 
 To add data you need to run a GraphQL mutation. The syntax is `client.mutate({ mutation:MUTATION, variables: vars})` which like a query returns a `Promise`. The `MUTATION` is a GraphQL document you can write yourself or use the statements which `amplify codegen` created automatically. `variables` are an optional object if the mutation requires arguments. For example, if you have a `createTodo` mutation, your code will look like the following (using `async/await` in this example):
 
