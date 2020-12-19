@@ -1,11 +1,11 @@
 ---
 title: Python API
-description: How to deploy a Python API using Amplify Functions
+description: Amplify 関数を使用して Python API をデプロイする方法
 ---
 
-In this guide, you will learn how to deploy a Python API.
+このガイドでは、Python API のデプロイ方法を学びます。
 
-## 1. Initialize a new Amplify project
+## 1. 新しいAmplifyプロジェクトを初期化する
 
 ```sh
 amplify init
@@ -14,7 +14,7 @@ amplify init
 # Accept defaults for everything else and choose your AWS Profile.
 ```
 
-## 2. Add the API and function
+## 2. API と関数を追加
 
 ```sh
 amplify add api
@@ -33,11 +33,11 @@ amplify add api
 ? Do you want to add another path? N
 ```
 
-The CLI should have created a new function located at **amplify/backend/function/greetingfunction**.
+CLIは、 **amplify/backend/function/greetingfunction**に新しい関数を作成する必要があります。
 
-## 3. Updating the function code
+## 3. 関数コードの更新
 
-Next, open  **amplify/backend/function/greetingfunction/src/index.py** and update the code to the following:
+次に、  **amplify/backend/function/greetingfunction/src/index.py** を開き、以下のコードを更新します:
 
 ```python
 import json
@@ -63,25 +63,25 @@ def handler(event, context):
   return response
 ```
 
-## 4. Deploy the API
+## 4. API をデプロイ
 
-To deploy the API, run the `push` command:
+API をデプロイするには、 `push` コマンドを実行します。
 
 ```sh
-amplify push
+push を増幅する
 ```
 
-## 5. Using the API
+## 5. API の使用
 
-Here is how you can send a GET request to the API.
+GETリクエストをAPIに送信する方法は次のとおりです。
 
 <inline-fragment platform="js" src="~/guides/api-rest/fragments/js/python-api-call.md"></inline-fragment> <inline-fragment platform="ios" src="~/guides/api-rest/fragments/ios/rest-api-call.md"></inline-fragment> <inline-fragment platform="android" src="~/guides/api-rest/fragments/android/rest-api-call.md"></inline-fragment>
 
-To learn more about interacting with REST APIs using Amplify, check out the complete documentation [here](~/lib//restapi/getting-started.md).
+Amplify を使用した REST API の操作の詳細については、こちら [](~/lib//restapi/getting-started.md) を参照してください。
 
-The API endpoint is located in the `aws-exports.js` folder.
+API エンドポイントは `aws-exports.js` フォルダにあります。
 
-You can also interact directly with the API using this URL and the specified path:
+この URL と指定されたパスを使用して API と直接やり取りすることもできます。
 
 ```sh
 curl https://<api-id>.execute-api.<api-region>.amazonaws.com/<your-env-name>/hello
