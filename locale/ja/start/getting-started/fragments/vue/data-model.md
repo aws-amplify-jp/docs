@@ -1,13 +1,13 @@
-### Data requirements
+### データ要件
 
-For this app, we have the following requirements:
+このアプリには以下の要件があります。
 
-1. A list of todos
-2. Ability to create/update/delete a todo
+1. Todos のリスト
+2. Todoの作成/更新/削除機能
 
-### Model the data with the GraphQL Transform
+### GraphQL 変換を使用してデータをモデル
 
-Given these requirements, we'll need to be able to query the API for a list of todos and also provide a way to send updates to the API to create, update, and delete todos. In GraphQL we would use a `type` to define that entity, like so:
+これらの要件を満たしています。 タスク一覧のAPIをクエリできるようにし、作成するAPIにアップデートを送信する方法を提供する必要があります。 タスクの更新と削除を行います GraphQL では、次のようにエンティティを定義するために `型` を使用します。
 
 ```graphql
 type Todo {
@@ -17,7 +17,7 @@ type Todo {
 }
 ```
 
-Because we're using Amplify, we can use the GraphQL Schema Definition Language (SDL) and custom Amplify directives to define our backend requirements for our API. The GraphQL Transform library then converts your SDL definition into a set of fully descriptive AWS CloudFormation templates that implement your data model.
+Amplifyを使用しているため、GraphQL スキーマ定義言語(SDL)とカスタム Amplifyディレクティブを使用して、API のバックエンド要件を定義できます。 GraphQL Transform ライブラリを使用して、SDL定義を完全に記述的なAWS CloudFormationテンプレートのセットに変換し、データモデルを実装します。
 
 ```graphql
 type Todo @model {
@@ -27,17 +27,17 @@ type Todo @model {
 }
 ```
 
-The `@model` directive lets Amplify know we intend for this type to have data that needs to be stored. This will create a DynamoDB table for us and make all GraphQL operations available in the API.
+`@model` ディレクティブを使用すると、Amplify はこのタイプのデータを格納する必要があることを知ることができます。 これにより、DynamoDBテーブルが作成され、すべてのGraphQL操作がAPIで利用可能になります。
 
-## Create GraphQL API and database
+## GraphQL API とデータベースの作成
 
-Now that the data is modeled, it's time to create the GraphQL API. From the root of the project, run the following:
+データがモデリングされたので、GraphQL API を作成します。プロジェクトのルートから、次の操作を実行します。
 
 ```bash
-amplify add api
+増幅して api を追加
 ```
 
-Select the default values which are highlighted below:
+以下でハイライトされているデフォルト値を選択します。
 
 ```console
 ? Please select from one of the below mentioned services:
@@ -62,9 +62,9 @@ Select the default values which are highlighted below:
 # Yes
 ```
 
-The CLI should open this GraphQL schema in your text editor.
+CLI がテキストエディタでこの GraphQL スキーマを開く必要があります。
 
-__amplify/backend/api/myapi/schema.graphql__
+__anplify/backend/api/myapi/schema.graphql__
 
 ```graphql
 type Todo @model {
@@ -76,23 +76,23 @@ type Todo @model {
 
 The schema generated is for a Todo app. You'll notice a directive on the `Todo` type of `@model`. This directive is part of the [GraphQL transform](~/cli/graphql-transformer/model.md) library of Amplify.
 
-The GraphQL Transform Library provides custom directives you can use in your schema that allow you to do things like define data models, set up authentication and authorization rules, configure serverless functions as resolvers, and more.
+GraphQL Transform ライブラリには、データモデルの定義などを行うためのスキーマで使用できるカスタムディレクティブが用意されています。 認証と認可ルールの設定、サーバレス機能をリゾルバとして設定するなど。
 
-A type decorated with the `@model` directive will scaffold out the database table for the type (Todo table), the schema for CRUD (create, read, update, delete) and list operations, and the GraphQL resolvers needed to make everything work together.
+`@model` ディレクティブで装飾された型は、タイプ (Todo テーブル) のデータベーステーブルを足場に置きます。 CRUD (作成、読み取り、更新、削除)およびリスト操作のためのスキーマ、およびすべてを一緒に動作させるために必要な GraphQL リゾルバ。
 
-From the command line, press __enter__ to accept the schema and continue to the next steps.
+コマンドラインから __を押して__ を入力し、スキーマを受け入れ、次のステップに進みます。
 
-## Deploy your GraphQL API
+## GraphQL API をデプロイします
 
-Now that the API has been successfully created. We need to push our updated configuration to the cloud so our API can be deployed:
+APIが正常に作成されました。APIをデプロイできるように、更新された構成をクラウドにプッシュする必要があります。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
-## Generate frontend code for the GraphQL API
+## GraphQL API のフロントエンドコードを生成
 
-When you run `amplify push`, you will be have the option to have all the GraphQL operations found in your schema generated for you in code. Choose the following options:
+`を増幅して`を実行すると、 コード内で生成されたスキーマ内のすべてのGraphQL操作を選択することができます。 次のオプションを選択してください:
 
 ```console
 Do you want to generate code for your newly created GraphQL API (Yes)
@@ -102,37 +102,37 @@ Do you want to generate/update all possible GraphQL operations - queries, mutati
 Enter maximum statement depth [increase from default if your schema is deeply nested] (2)
 ```
 
-Next, run the following command to check Amplify's status:
+次に、Amplifyの状態を確認するために次のコマンドを実行します。
 
 ```bash
-amplify status
+増幅の状態
 ```
 
-This will give us the current status of the Amplify project, including the current environment, any categories that have been created, and what state those categories are in. It should look similar to this:
+これにより、現在の環境を含むAmplifyプロジェクトの現在のステータスが得られます。 どのカテゴリーが作成されているかを調べることができます 以下のようになります。
 
 ```console
-Current Environment: dev
+現在の環境: dev
 
-| Category | Resource name | Operation | Provider plugin   |
-| -------- | ------------- | --------- | ----------------- |
-| Api      | myapi         | No Change | awscloudformation |
+| Resource name | Operation | Provider プラグイン|
+| --------------- | ------------- | -------------- |
+| Api | myapi | No Change | awscloudforming |
 ```
 
-### Testing your API
+### API のテスト
 
-To view services deployed in your project at any time in the AWS Amplify Console, run the following command.
+AWS Amplifyコンソールでいつでもプロジェクトにデプロイされたサービスを表示するには、以下のコマンドを実行します。
 
 ```bash
-amplify console
+増幅コンソール
 ```
 
-This will open your Amplify app project in the AWS service console. Choose the **API** tab to view your AppSync API. Clicking on the API, will open the AWS AppSync console where you can run Queries, Mutations, or Subscriptions at the server and see the changes in your client app.
+AmplifyアプリプロジェクトがAWSサービスコンソールで開きます。AppSync APIを表示するには、 **API** タブを選択してください。 API をクリックすると、AWS AppSync コンソールが開き、クエリを実行できます。 サーバーでの変更、またはサブスクリプション、クライアントアプリケーションの変更を確認します。
 
-## Connect frontend to API
+## フロントエンドを API に接続
 
-Next, open __App.vue__.
+次に、 __App.vue__ を開きます。
 
-### Writing data with GraphQL mutations
+### GraphQL変異でデータを書く
 
 To create a new todo in the database, use the `API.graphql()` operation with the `createTodo` mutation and pass in the data you'd like to write.
 
@@ -175,7 +175,7 @@ export default {
 </script>
 ```
 
-### Reading data with GraphQL queries
+### GraphQL クエリでデータを読み込み中
 
 To display the data, update `App.vue` to list all the items in the database by importing `listTodos` and then using the `created()` Vue lifecycle method to update the page when a query runs on page load:
 
@@ -234,7 +234,7 @@ export default {
 </script>
 ```
 
-### Real-time data with GraphQL subscriptions
+### GraphQLサブスクリプションによるリアルタイムデータ
 
 Now if you wish to subscribe to data, import the `onCreateTodo` subscription and create a new subscription by adding subscription with `API.graphql()` like so:
 
@@ -266,16 +266,16 @@ export default {
 </script>
 ```
 
-## Using Modular Imports
+## モジュラーインポートの使用
 
-To reduce bundle size, you can also import only specific categories into your app when you are only using specific features, `API` for example.
+バンドルサイズを小さくするには、特定の機能のみを使用しているときに特定のカテゴリのみをアプリにインポートすることもできます。 `API` など。
 
 ```bash
-npm install @aws-amplify/api # Only installs the API category
+npm install @aws-amplify/api # API カテゴリのみインストールします。
 ```
 
-Import only API:
+インポートするAPI:
 
 ```
-import API from '@aws-amplify/api';
+import API from '@aws-amplify/api'
 ```
