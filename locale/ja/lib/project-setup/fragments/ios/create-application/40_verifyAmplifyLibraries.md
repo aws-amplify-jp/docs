@@ -1,9 +1,9 @@
-**Open AppDelegate.swift** and add `import Amplify` at the top of the file:
+**AppDelegate.swift** を開き、 `import Amplify` をファイルの上部に追加します:
 ```swift
 import Amplify
 ```
 
-**Update the following function** to verify that Amplify can be compiled into your project:
+**Amplifyがプロジェクトにコンパイルできることを確認するために、以下の機能** を更新します。
 ```swift
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
     do {
@@ -15,19 +15,19 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
 }
 ```
 
-Build your project (`Cmd+b`), then you have successfully added the Amplify library to your project and you should be able to run the application.
+プロジェクトをビルドする (`Cmd+b`) そうすると、Amplifyライブラリがプロジェクトに追加され、アプリケーションを実行できるようになります。
 
 Optionally, if you'd like to see additional log messages of what amplify is doing during configuration, you can turn on verbose logging before calling `Amplify.configure()`:
 ```swift
 do {
     Amplify.Logging.logLevel = .verbose
-    // Configure Amplify as usual...
+    // Amplify の設定...
     try Amplify.configure()
     // ...
 ```
 
-Re-running the application with verbose logging on, you will see the following messages:
+詳細なログオン時にアプリケーションを再実行すると、次のメッセージが表示されます:
 ```console
-[Amplify] Configuring
-[Amplify] Configuration: nil
+[Amplify]
+[Amplify] 構成: nil
 ```
