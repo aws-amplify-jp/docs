@@ -1,19 +1,19 @@
 ---
-title: GraphQL transform and Storage
-description: The GraphQL Transform, Amplify CLI, and Amplify Library make it simple to add complex object support with Amazon S3 to an application.
+title: GraphQL変換とストレージ
+description: GraphQLトランスフォーム、Amplify CLI、Amplify Libraryを使用すると、Amazon S3を使用した複雑なオブジェクトサポートをアプリケーションに簡単に追加できます。
 ---
 
-The GraphQL Transform, Amplify CLI, and Amplify Library make it simple to add complex object support with Amazon S3 to an application.
+GraphQLトランスフォーム、Amplify CLI、Amplify Libraryを使用すると、Amazon S3を使用した複雑なオブジェクトサポートをアプリケーションに簡単に追加できます。
 
-### Basics
+### 基本
 
-At a minimum the steps to add S3 Object support are as follows:
+S3オブジェクトのサポートを追加する手順は以下のとおりです。
 
-**Create a Amazon S3 bucket to hold files via `amplify add storage`.**
+**`増幅してストレージを追加する`を介してファイルを保持するAmazon S3バケットを作成します。**
 
-**Create a user pool in Amazon Cognito User Pools via `amplify add auth`.**
+**Amazon Cognito でユーザープールを作成する `増幅して auth` を追加します。**
 
-**Create a GraphQL API via `amplify add api` and add the following type definition:**
+**`amplify add api` を使用して GraphQL API を作成し、次の種類の定義を追加します。**
 
 ```
 type S3Object {
@@ -23,7 +23,7 @@ type S3Object {
 }
 ```
 
-**Reference the S3Object type from some `@model` type:**
+**いくつかの `@model` 型から S3Object 型を参照する。**
 
 ```
 type Picture @model @auth(rules: [{allow: owner}]) {
@@ -36,9 +36,9 @@ type Picture @model @auth(rules: [{allow: owner}]) {
 }
 ```
 
-The GraphQL Transform handles creating the relevant input types and will store pointers to S3 objects in Amazon DynamoDB. The AppSync SDKs and Amplify library handle uploading the files to S3 transparently.
+GraphQL Transform は関連する入力タイプの作成を処理し、Amazon DynamoDB の S3 オブジェクトへのポインタを格納します。 AppSync の SDK と Amplify ライブラリのハンドルは、ファイルを S3 に透過的にアップロードします。
 
-**Run a mutation with S3 objects from your client app:**
+**クライアントアプリから S3 オブジェクトを使用して変更を実行します。**
 
 ```
 mutation ($input: CreatePictureInput!) {
