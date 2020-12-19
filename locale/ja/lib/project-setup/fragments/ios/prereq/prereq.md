@@ -1,2 +1,2 @@
-- [Install Xcode](https://developer.apple.com/xcode/downloads/) version 10.2 or later.
-- [Install CocoaPods](https://guides.cocoapods.org/)
+- [Xcode](https://developer.apple.com/xcode/downloads/) バージョン 10.2 以降をインストールします。
+- [CocoaPods をインストール](https://guides.cocoapods.org/)
