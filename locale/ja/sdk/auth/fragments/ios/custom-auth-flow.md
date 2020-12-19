@@ -1,10 +1,10 @@
-Amazon Cognito User Pools supports customizing the authentication flow to enable custom challenge types. These challenge types may include CAPTCHAs or dynamic challenge questions. To define your challenges you need to implement three Lambda triggers.
+Amazon Cognitoユーザープールは、認証フローのカスタマイズをサポートし、カスタムチャレンジタイプを可能にします。 これらのチャレンジタイプにはCAPTCHAまたは動的チャレンジの質問が含まれる場合があります。チャレンジを定義するには、3つのLambdaトリガーを実装する必要があります。
 
-> For more information about working with Lambda Triggers for custom authentication challenges visit [Amazon Cognito Developer Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-challenge.html).
+> カスタム認証チャレンジのための Lambda Trigger の操作の詳細については、 [Amazon Cognito Developer Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-challenge.html) を参照してください。
 
-## Custom Authentication in Amplify
+## Amplifyでのカスタム認証
 
-To enable a custom authentication flow update your `awsconfiguration.json` file and set `authenticationFlowType` to `CUSTOM_AUTH`.
+カスタム認証フローを有効にするには、 `awsconfiguration.json` ファイルを更新し、 `authenticationFlowType` を `CUSTOM_AUTH` に設定します。
 
 ```json
 {
@@ -23,7 +23,7 @@ To enable a custom authentication flow update your `awsconfiguration.json` file 
 }
 ```
 
-In your app code call `signIn` with a dummy password. Custom challenges need to be answered using the `confirmSignIn` method:
+アプリコードで `signIn` をダミーパスワードで呼び出します。カスタムチャレンジは、 `confirmSignIn` メソッドを使用して回答する必要があります。
 
 ```swift
 AWSMobileClient.default().signIn(username: username, password: "dummyPassword") { (signInResult, error) in
@@ -38,7 +38,7 @@ AWSMobileClient.default().signIn(username: username, password: "dummyPassword") 
 
 ```
 
-Get the challenge details from the user and then call `confirmSignIn`
+ユーザーからチャレンジの詳細を取得し、 `confirmSignin` を呼び出します。
 
 ```swift
 AWSMobileClient.default().confirmSignIn(challengeResponse: "<Challenge Response>",
@@ -57,11 +57,11 @@ AWSMobileClient.default().confirmSignIn(challengeResponse: "<Challenge Response>
 })
 ```
 
-### Lambda Trigger Setup
+### Lambda Trigger セットアップ
 
-The Amplify CLI can be used to generate triggers required by a custom authentication flow. See the [CLI Documentation](~/cli/usage/lambda-triggers.md) for details. The CLI will create a custom auth flow skeleton that you can manually edit.
+Amplify CLI は、カスタム認証フローによって必要なトリガーを生成するために使用できます。 詳細は [CLI ドキュメント](~/cli/usage/lambda-triggers.md) を参照してください。CLI は手動で編集できるカスタム認証フロースケルトンを作成します。
 
-> More information on available triggers can be found in the [Cognito documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-challenge.html).
+> 利用可能なトリガーの詳細については、 [Cognito documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-challenge.html) を参照してください。
 
 `AWSMobileClient` assumes the custom auth flow starts with username and password. If you want a passwordless authentication flow, modify your **Define Auth Challenge** Lambda trigger to bypass the initial username/password verification and proceed to the custom challenge:
 
