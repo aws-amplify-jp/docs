@@ -1,56 +1,56 @@
 ---
-title: Extend with the Amplify CLI
-description: Install the CLI without npm and use the CLI without an AWS account
+title: Amplify CLI で拡張
+description: npm なしで CLI をインストールし、AWS アカウントなしで CLI を使用します
 ---
 
-All backends created in the Admin UI are deployed using AWS CloudFormation. The backend infrastructure-as-code definitions can be added to your project with the Amplify Command Line Interface (CLI). Use the Amplify CLI to extend your backend with functionality such as functions, storage, predictions, and analytics.
+Admin UI で作成されたすべてのバックエンドは、AWS CloudFormationを使用してデプロイされます。 Amplifyコマンドラインインターフェイス(CLI)を使用して、バックエンドのインフラストラクチャとしてコード定義をプロジェクトに追加できます。 Amplify CLI を使用して、関数、ストレージ、予測、分析などの機能をバックエンドに拡張します。
 
-With the launch of the Admin UI, a new CLI feature is available that enables the use of the CLI without an AWS account. This allows you to use the Amplify CLI's features without the need to configure it with AWS Identity and Access Management (IAM). Changes made in the Admin UI can be made available in the CLI by running the `amplify pull` command. Similarly, CLI changes to the data model or auth will be visible in the Admin UI. For all other categories, the Admin UI provides links to the relevant service consoles in AWS.
+Admin UI の立ち上げに伴い、AWS アカウントなしで CLI を使用できる新しいCLI 機能が利用可能になりました。 これにより、AWS Identity and Access Management (IAM) で設定することなく、Amplify CLI の機能を使用できます。 管理者 UI で行われた変更は、 `amplify pull` コマンドを実行することで、CLI で利用できます。 同様に、データモデルまたは認証へのCLIの変更はAdmin UIに表示されます。 他のすべてのカテゴリについては、管理UIにAWSの関連するサービスコンソールへのリンクが表示されます。
 
-![autologin](~/images/console/cli-autologin.gif)
+![自動ログイン](~/images/console/cli-autologin.gif)
 
 
-## To install the Amplify CLI
-1. Open a terminal window.
-2. To install a packaged version of the Amplify CLI that is not dependent on Node, run the following command:
+## Amplify CLI をインストールする
+1. ターミナルウィンドウを開きます。
+2. Node に依存しないパッケージバージョンの Amplify CLI をインストールするには、次のコマンドを実行します。
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
+curl -sL https://aws-amplify.github.io/anplify-cli/install | bash && $SHELL
 ```
-3. After the Amplify CLI finishes installing, you can configure the CLI so that you can use it without an AWS account.
+3. Amplify CLIのインストールが終了したら、AWSアカウントなしで使用できるようにCLIを設定できます。
 
-## To configure the Amplify CLI for use without an AWS account
+## AWSアカウントなしで使用するAmplifyのCLIを設定するには
 
-1. Open the Admin UI for an app. Choose **Local setup instructions** in the header and copy the `amplify pull` command.
+1. アプリの管理UIを開きます。ヘッダーの **ローカルセットアップ手順** を選択し、 `増幅プル` コマンドをコピーします。
 
-![autologin](~/images/console/cli-pull.png)
+![自動ログイン](~/images/console/cli-pull.png)
 
-2. Open a terminal window and run the following command, replacing the `xxx` values with your unique `appId` and `envName`.
+2. ターミナルウィンドウを開き、次のコマンドを実行します。 が `xxx` の値をユニークな `appId` と `envName` に置き換えます。
 ```bash
 amplify pull --appId xxx --envName xxx
 ```
-3. A browser window opens and prompts you to continue logging in to the Amplify CLI. Choose **Yes**. ![autologin](~/images/console/cli-autologin.png)
+3. Amplify CLIへのログインを続けるように求められるブラウザウィンドウが開きます。 **はい**を選択します。 ![自動ログイン](~/images/console/cli-autologin.png)
 
-4. Return to the terminal window. You should see the following success statement:
+4. ターミナルウィンドウに戻ります。次の成功文が表示されます。
 ```bash
-Successfully received Amplify Admin tokens.
+Amplify管理者トークンを受け取りました。
 ```
-The Amplify CLI is now configured and you can use it to provision new cloud backend features.
+Amplify CLI が設定され、新しいクラウドバックエンド機能の提供に使用できます。
 
 
-## Adding features with the Amplify CLI
+## Amplify CLI で機能を追加する
 
-The Admin UI **Set up** menu lists cloud backend features such as functions, storage, and APIs that you can add to your app using the CLI. For each backend resource, the Admin UI displays the CLI commands to run in your terminal window.
+管理 UI **** メニューには、関数などのクラウドバックエンド機能が一覧表示されます。 CLIを使用してアプリケーションに追加できるストレージとAPI。 各バックエンドリソースについて、Admin UI はターミナルウィンドウで実行する CLI コマンドを表示します。
 
 
-1. In the Admin UI, on the **Set up** menu, choose **Storage** or **Functions**.
-2. On the **Storage** page, under **Pull your Amplify project**, copy the following command and run it in your terminal window.
-3. After your backend environment has been successfully pulled from the cloud, copy the following command under **Add storage capabilities** and paste it in your terminal window:
+1. 管理者 UI で、 **** メニューの **ストレージ** または **関数** を選択します。
+2. **Storage** ページの **Amplify プロジェクト**の下にある、以下のコマンドをコピーしてターミナルウィンドウで実行します。
+3. バックエンド環境がクラウドから正常に取り込まれた後 次のコマンドを **の下にコピーします。** ストレージ機能を追加し、端末ウィンドウに貼り付けます。
 ```bash
-amplify add storage
+増幅してストレージを追加
 ```
-4. Follow the prompts in the terminal window to configure storage with your desired settings.
-5. Run the following command in your terminal window to build your local backend resources and provision them in the cloud:
+4. ターミナルウィンドウの指示に従って、目的の設定でストレージを構成します。
+5. 次のコマンドをターミナルウィンドウで実行して、ローカルのバックエンドリソースをビルドし、クラウドでプロビジョニングします。
 ```bash
-amplify push
+push を増幅する
 ```
 6. Return to the Admin UI **Storage** page. Confirm that a link to your new storage resource is available in the **Deployed storage resources** section.
