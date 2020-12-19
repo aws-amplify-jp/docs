@@ -1,24 +1,24 @@
-## Create a new JavaScript app
+## 新しいJavaScriptアプリを作成
 
 Create a new ‘plain’ JavaScript <a href="https://babeljs.io/docs/en/learn/" target="_blank">ES2015</a> app with webpack. With the following commands, create the directory (`amplify-js-app`) and files for the app.
 
 ```bash
-mkdir -p amplify-js-app/src && cd amplify-js-app
-touch package.json index.html webpack.config.js src/app.js
+mkdir -p amplify-js-app/src && cd anplify-js-app
+touch package.json index.html webpack.config.js
 ```
 
-The app directory structure should be:
+appディレクトリ構造は次のようにする必要があります：
 
 ```console
 amplify-js-app
 ├── index.html
 ├── package.json
 ├── src
-│   └── app.js
+│   └── app.js
 └── webpack.config.js
 ```
 
-Add the following to the `package.json` file:
+`package.json` ファイルに以下を追加します。
 
 ```json
 {
@@ -41,13 +41,13 @@ Add the following to the `package.json` file:
 }
 ```
 
-### Install local development dependencies
+### ローカル開発の依存関係をインストール
 
 ```bash
 npm install
 ```
 
-Add the following to the `index.html` file:
+`index.html` ファイルに以下を追加します。
 
 ```html
 <!DOCTYPE html>
@@ -100,7 +100,7 @@ Add the following to the `index.html` file:
 </html>
 ```
 
-Add the following to the `webpack.config.js` file:
+`webpack.config.js` ファイルに以下を追加します。
 
 ```js
 const CopyWebpackPlugin = require('copy-webpack-plugin');
@@ -136,25 +136,25 @@ module.exports = {
 };
 ```
 
-Run the app:
+アプリの実行:
 
 ```bash
 npm start
 ```
 
-Open a browser and navigate to <http://localhost:8080>.
+ブラウザを開き、 <http://localhost:8080> に移動します。
 
-_(The `Add data` button does not work yet. We'll work on that next!)_
+_( `データの追加` ボタンはまだ機能しません。次回はそれについて作業します!)_
 
-## Initialize a new backend
+## 新しいバックエンドを初期化
 
-Now that we have a running app, it's time to set up Amplify so that we can create the necessary backend services needed to support the app. From the root of the project, run:
+実行中のアプリが追加されました Amplifyを設定して、アプリをサポートするために必要なバックエンドサービスを作成しましょう。 プロジェクトのルートから、以下を実行します。
 
 ```bash
-amplify init
+initを増幅する
 ```
 
-When you initialize Amplify you'll be prompted for some information about the app:
+Amplifyを初期化すると、アプリに関する情報が表示されます。
 
 ```console
 Enter a name for the project (amplifyjsapp)
@@ -183,9 +183,9 @@ Start command (npm run-script start)
 Do you want to use an AWS profile
 ```
 
-When you initialize a new Amplify project, a few things happen:
+新しいAmplifyプロジェクトを初期化すると、いくつかのことが起こります。
 
 - It creates a top level directory called `amplify` that stores your backend definition. During the tutorial you'll add capabilities such as authentication, GraphQL API, storage, and set up authorization rules for the API. As you add features, the `amplify` folder will grow with infrastructure-as-code templates that define your backend stack. Infrastructure-as-code is a best practice way to create a replicable backend stack.
 - It creates a file called `aws-exports.js` in the `src` directory that holds all the configuration for the services you create with Amplify. This is how the Amplify client is able to get the necessary information about your backend services.
-- It modifies the `.gitignore` file, adding some generated files to the ignore list
-- A cloud project is created for you in the AWS Amplify Console that can be accessed by running `amplify console`. The Console provides a list of backend environments, deep links to provisioned resources per Amplify category, status of recent deployments, and instructions on how to promote, clone, pull, and delete backend resources
+- `.gitignore` ファイルを変更し、生成されたファイルを無視リストに追加します。
+- AWS Amplifyコンソールで、 `amplifyコンソール`を実行することでアクセスできるクラウドプロジェクトが作成されます。 Consoleは、Amplifyカテゴリごとにプロビジョニングされたリソースへの深いリンクをバックエンド環境のリストを提供します。 最近のデプロイのステータスとバックエンドリソースのプロモーション、クローン、プル、削除方法に関する説明
