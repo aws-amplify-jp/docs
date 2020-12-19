@@ -1,19 +1,19 @@
-## Distributed data
+## 分散データ
 
-When working with distributed data, it is important to be mindful about the state of the local and the remote systems. DataStore tries to make that as simple as possible for you; however, some scenarios might require some consideration.
+分散データを扱う場合、ローカルシステムとリモートシステムの状態に注意することが重要です。 DataStoreはそれをできるだけシンプルにしようとしますが、いくつかのシナリオでは考慮が必要になる場合があります。
 
 
-For instance, when updating or deleting data, one has to consider that the state of the local data might be out-of-sync with the backend. This scenario can affect how conditions should be implemented.
+たとえば、データを更新または削除する場合、ローカルデータの状態がバックエンドと不同期になる可能性があることを考慮する必要があります。 このシナリオは、条件をどのように実装するかに影響を与える可能性があります。
 
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/native_common/sync-save-delete-predicate.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/ios/sync/19-sync-save-delete-predicate.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/native_common/sync-save-delete-predicate.md"></inline-fragment>
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/sync/20-savePredicate.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/ios/sync/20-savePredicate.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/android/sync/20-savePredicate.md"></inline-fragment>
 
-There's a difference between the traditional local condition check using `if/else` constructs and the predicate in the aforementioned APIs as you can see in the example below.
+以下の例でわかるように、前述の API での `if/else` 構造と述語を使用して、従来のローカル条件チェックには違いがあります。
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/sync/30-savePredicateComparison.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/ios/sync/30-savePredicateComparison.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/android/sync/30-savePredicateComparison.md"></inline-fragment>
 
-### Conflict detection and resolution
+### 競合の検出と解決
 
-When concurrently updating the data in multiple places, it is likely that some conflict might happen. For most of the cases the default *Auto-merge* algorithm should be able to resolve conflicts. However, there are scenarios where the algorithm won't be able to be resolved, and in these cases, a more advanced option is available and will be described in detail in the next section.
+複数の場所で同時にデータを更新すると、いくつかの競合が発生する可能性があります。 ほとんどの場合、デフォルトの *Auto-merge* アルゴリズムは競合を解決できるはずです。 しかし、アルゴリズムが解決できないシナリオがあります。 より高度なオプションが利用可能で、次のセクションで詳細に説明されています。
