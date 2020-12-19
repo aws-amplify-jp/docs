@@ -1,15 +1,15 @@
 ---
-title: Define your model types
-description: Specify the various types that make up your schema.
+title: あなたのモデルタイプを定義します
+description: スキーマを構成するさまざまなタイプを指定します。
 ---
 
 ## @model
 
 Object types that are annotated with `@model` are top-level entities in the generated API. Objects annotated with `@model` are stored in Amazon DynamoDB and are capable of being protected via `@auth`, related to other objects via `@connection`, and streamed into Amazon Elasticsearch via `@searchable`. You may also apply the `@versioned` directive to instantly add a version field and conflict detection to a model type.
 
-### Definition
+### 定義
 
-The following SDL defines the `@model` directive that allows you to easily define top level object types in your API that are backed by Amazon DynamoDB.
+以下のSDLは、Amazon DynamoDBがサポートするAPI内で `トップレベルのオブジェクトタイプを簡単に定義できる` @model ディレクティブを定義しています。
 
 ```graphql
 directive @model(
@@ -44,9 +44,9 @@ input TimestampConfiguration {
 }
 ```
 
-### Usage
+### 使用法
 
-Define a GraphQL object type and annotate it with the `@model` directive to store objects of that type in DynamoDB and automatically configure CRUDL queries and mutations.
+GraphQL オブジェクトの型を定義し、 `@model` ディレクティブで注釈を付けて、DynamoDB にその型の オブジェクトを格納し、CRUDL クエリと 変更を自動的に設定します。
 
 ```graphql
 type Post @model {
@@ -56,17 +56,17 @@ type Post @model {
 }
 ```
 
-You may also override the names of any generated queries, mutations and subscriptions, or remove operations entirely.
+生成されたクエリ、変更、サブスクリプションの名前を上書きしたり、操作を完全に削除したりすることもできます。
 
 ```graphql
-type Post @model(queries: { get: "post" }, mutations: null, subscriptions: null) {
+type Post @model(queries: { get: "post" }, mutations: null, subscription: null) {
   id: ID!
   title: String!
   tags: [String!]!
 }
 ```
 
-Model directive automatically adds createdAt and updatedAt timestamps to each entities. The timestamp field names can be changed by passing `timestamps` attribute to the directive
+Model ディレクティブは自動的に createdAt と updatedAt タイムスタンプを各エンティティに追加します。 timestamp フィールド名はディレクティブに `timestamps` 属性を渡すことで変更できます。
 
 ```graphql
 type Post @model(timestamps:{createdAt: "createdOn", updatedAt: "updatedOn"}) {
@@ -76,7 +76,7 @@ type Post @model(timestamps:{createdAt: "createdOn", updatedAt: "updatedOn"}) {
 }
 ```
 
-The above schema will generate Post with `createdOn` and `updatedOn` fields as shown
+上のスキーマは、 `createdOn` と `updatedOn` フィールドを表示してポストを生成します。
 
 ```graphql
 type Post {
@@ -100,21 +100,21 @@ type Post @model {
 }
 ```
 
-This would create and configure a single query field `post(id: ID!): Post` and no mutation fields.
+これは、単一のクエリ フィールド `post(id: ID!): ポスト` と の変更フィールドを作成し、設定します。
 
-### Generates
+### 生成
 
-A single `@model` directive configures the following AWS resources:
+単一の `@model` ディレクティブで以下の AWS リソースを設定します。
 
-- An Amazon DynamoDB table with PAY_PER_REQUEST billing mode enabled by default.
-- An AWS AppSync DataSource configured to access the table above.
-- An AWS IAM role attached to the DataSource that allows AWS AppSync to call the above table on your behalf.
+- PAY_PER_REQUEST請求モードを持つAmazon DynamoDBテーブルをデフォルトで有効にしました。
+- 上の表にアクセスするように設定されたAWS AppSync DataSource。
+- AWS AppSync がお客様に代わって上記の表を呼び出すことを可能にするDataSourceに接続されたAWS IAMロール。
 - Up to 8 resolvers (create, update, delete, get, list, onCreate, onUpdate, onDelete) but this is configurable via the `queries`, `mutations`, and `subscriptions` arguments on the `@model` directive.
-- Input objects for create, update, and delete mutations.
-- Filter input objects that allow you to filter objects in list queries and connection fields.
-- For list queries the default number of objects returned is 100. You can override this behavior by setting the **limit** argument.
+- 変更の作成、更新、削除のためのオブジェクトを入力します。
+- リストクエリと接続フィールドのオブジェクトをフィルタリングできる入力オブジェクトをフィルタリングします。
+- リストクエリの場合、デフォルトのオブジェクト数は 100 です。 **limit** 引数を設定することで、この動作を上書きできます。
 
-This input schema document
+この入力スキーマドキュメント
 
 ```graphql
 type Post @model {
@@ -128,7 +128,7 @@ type MetaData {
 enum Category { comedy news }
 ```
 
-would generate the following schema parts
+次のスキーマパーツを生成します
 
 ```graphql
 type Post {
