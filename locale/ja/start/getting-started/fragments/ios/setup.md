@@ -1,66 +1,66 @@
 
-👋 Welcome! In this tutorial, you will:
+👋 ようこそ! このチュートリアルでは、以下を行います。
 
-- Set up an iOS application configured with Amplify
-- Create a data model and persist data to Amplify DataStore
-- Connect your local data to synchronize to a cloud backend
+- Amplifyで設定されたiOSアプリを設定する
+- データモデルを作成し、DataStoreをAmplify
+- クラウドバックエンドに同期するためにローカルデータを接続します
 
-## Prerequisites
+## 前提条件
 
-- Install [Node.js](https://nodejs.org/en/) version 10 or higher
-- Install [Xcode](https://developer.apple.com/xcode/downloads/) version 11.4 or later
-- Install [Cocoapods](https://cocoapods.org/)
-- Install [Amplify CLI](~/cli/cli.md) version 4.22.0 or later by running:
+- [Node.js](https://nodejs.org/en/) バージョン 10 以降をインストールする
+- [Xcode](https://developer.apple.com/xcode/downloads/) バージョン 11.4 以降をインストール
+- [Cocoapods](https://cocoapods.org/) をインストール
+- [Amplify CLI](~/cli/cli.md) バージョン 4.22.0 以降を実行してインストールします。
 
     ```bash
     npm install -g @aws-amplify/cli amplify-app
     ```
 
-## Set up your application
+## アプリケーションの設定
 
-### Create a new iOS application
+### 新しいiOSアプリを作成
 
-1. **Open Xcode.** From the menu bar, select **"File -> New -> Project..."**
+1. **Xcodeを開きます。** メニューバーから **"File -> New -> Project..."**
 
-1. Select **Single View App**, and then select the **Next** button. ![](~/images/lib/getting-started/ios/set-up-ios-select-project-template.png)
+1. **Single View App**を選択し、 **Next** ボタンを選択します。 ![](~/images/lib/getting-started/ios/set-up-ios-select-project-template.png)
 
-1. Fill in the following for your project:
-  * Product Name: **Todo**
-  * Interface: **SwiftUI**
-  * Life Cycle: **SwiftUI App** (only relevant if Xcode 12 is being used)
-  * Language: **Swift**
-  * Select the **Next** button
+1. プロジェクトの以下の内容を入力してください:
+  * 商品名: **Todo**
+  * インターフェイス: **SwiftUI**
+  * ライフサイクル: **SwiftUI App** (Xcode 12 が使用されている場合のみ)
+  * 言語: **Swift**
+  * **次へ** ボタンを選択します
 
   ![](~/images/lib/getting-started/ios/set-up-ios-studio-configure-your-project.png)
 
-1. After selecting **Next**, **select where you would like to save your project**, and then select **Create**.
+1. **次へ**を選択した後、 **プロジェクトを保存する場所を選択し、**を選択し、 **** を選択します。
 
-  You should now have an empty iOS project without Amplify.
+  Amplifyなしで空のiOSプロジェクトがあるはずです。
 
-### Add Amplify to your application
+### Amplifyをアプリケーションに追加
 
-Amplify for iOS is distributed through Cocoapods as a Pod. In this section, you'll setup Cocoapods and add the required Amplify packages.
+iOS用AmplifyはCocoapodsを通じてPodとして配布されます。このセクションではCocoapodsを設定し、必要なAmplifyパッケージを追加します。
 
 1. Before starting this step, **close Xcode**. Now **open a terminal window** and **change to the directory for your Todo project**. For example, if you created your project in the folder `~/Developer`, you can type the following:
   ```bash
   cd ~/Developer/Todo
   ```
 
-1. To create the Amplify app first you will need to use `amplify-app` CLI previously installed, **run the command**:
+1. Amplifyアプリを作成するには、先にインストールした `anplify-app` CLIを使用する必要があります。 **コマンド** を実行します。
   ```bash
-  amplify-app --platform ios
+  anplify-app --platform ios
   ```
 
-1. To initialize your project with the Cocoapods package manager, **run the command**:
+1. Cocoapods パッケージマネージャでプロジェクトを初期化するには、 **コマンド** を実行します。
   ```bash
   pod init
   ```
 
-  After doing this, you should see a newly created file called `Podfile`. This file is used to describe the packages your project depends on.
+  これを行うと、 `Podfile`という名前の新しく作成されたファイルが表示されます。 このファイルは、プロジェクトが依存するパッケージを記述するために使用されます。
 
 1. Open `Podfile` in the file editing tool of your choice, and replace the contents of the file so that your `Podfile` looks like the following:
   ```ruby
-  target 'Todo' do
+  ターゲット 'Todo' do
     use_frameworks!
 
     pod 'Amplify'
@@ -70,7 +70,7 @@ Amplify for iOS is distributed through Cocoapods as a Pod. In this section, you'
   end
   ```
 
-1. To download and install the Amplify pod into your project, **run the command**:
+1. プロジェクトに Amplify ポッドをダウンロードしてインストールするには、 **コマンド** を実行します。
   ```bash
   pod install --repo-update
   ```
@@ -80,4 +80,4 @@ Amplify for iOS is distributed through Cocoapods as a Pod. In this section, you'
   xed .
   ```
 
-You are ready to start building with Amplify! 🎉
+Amplify でビルドを開始する準備ができました! 🎉
