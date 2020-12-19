@@ -1,12 +1,12 @@
-The following API allows you to analyze text for language, entities (places, people), key phrases, sentiment (positive, neutral, negative), and syntax (pronouns, verbs, adjectives).
+以下のAPIでは、言語、エンティティ(場所、人)、キーフレーズ、センチメント (正、中立、負)、および構文(代名詞、動詞、形容詞)のテキストを分析できます。
 
-For analyzing language on iOS we use both AWS backend services as well as Apple's on-device [Natural Language Framework](https://developer.apple.com/documentation/naturallanguage) to provide you with the most accurate results.  If your device is offline, we will return results only Natural Language.  On the other hand, if you are able to connect to AWS Services, we will return a unioned result from both the service and Natural Language.  Switching between backend services and Natural Language is done automatically without any additional configuration required.
+iOSで言語を分析するために、AWSバックエンドサービスとAppleのオンデバイス [Natural Language Framework](https://developer.apple.com/documentation/naturallanguage) を使用して、最も正確な結果を提供します。 お使いのデバイスがオフラインの場合は、自然言語のみ結果を返します。 一方、AWSサービスに接続できる場合。 サービスと自然言語の両方から一体となった結果を返します。 バックエンドサービスと自然言語の切り替えは、追加の設定なしに自動的に行われます。
 
-## Set up your backend
+## バックエンドの設定
 
-This will allow you to determine key phrases, sentiment, language, syntax, and entities from text. If you haven't already done so, run `amplify init` inside your project and then `amplify add auth` (we recommend selecting the *default configuration*).
+これにより、テキストからキーフレーズ、センチメント、言語、構文、エンティティを決定することができます。 まだ実行していない場合 プロジェクト内で `amplify init` を実行し、 `増幅して認証を追加` します(デフォルトの設定 *を選択することをお勧めします*)。
 
-Run `amplify add predictions`, then use the following answers:
+`を増幅して予測を追加する`を実行し、次の答えを使用します。
 
 ```console
 ? Please select from one of the categories below
@@ -35,11 +35,11 @@ Run `amplify add predictions`, then use the following answers:
 ❯ Auth and Guest users
 ```
 
-Run `amplify push` to create the resources in the cloud
+クラウドでリソースを作成するには、 `増幅プッシュ` を実行してください
 
-## Working with the API
+## API の操作
 
-Here is an example of sending text for interpretation such as sentiment analysis or natural language characteristics.
+感情分析や自然言語特性などの解釈用のテキストを送信する例を示します。
 
 <amplify-block-switcher>
 
