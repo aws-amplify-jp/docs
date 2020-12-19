@@ -27,7 +27,7 @@ RxAmplify.Auth.updatePassword("existingPassword", "newPassword")
     .subscribe(
         () -> Log.i("AuthQuickstart", "Updated password successfully"),
         error -> Log.e("AuthQuickstart", error.toString())
-    );
+);
 ```
 
 </amplify-block> </amplify-block-switcher>
