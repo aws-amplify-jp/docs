@@ -1,32 +1,32 @@
 ---
-title: GraphQL Server in Lambda
-description: How to run an Apollo GraphQL server in a Lambda function
+title: LambdaのGraphQLサーバー
+description: Lambda関数でApollo GraphQLサーバーを実行する方法
 ---
 
-In this guide you will learn how to run a GraphQL server in a Lambda function. In this example we will be using [Apollo Server](https://www.apollographql.com/docs/) and [Apollo Server Lambda](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-lambda), but you can use any server implementation you would like.
+このガイドでは、Lambda関数でGraphQLサーバを実行する方法を学びます。 この例では、 [Apollo Server](https://www.apollographql.com/docs/) と [Apollo Server Lambda](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-lambda)を使用します。 でも好きなサーバーの実装を使うことができます
 
 The end goal is to have an API endpoint, like `https://your-api-endpoint.com/graphql`, deployed and integrated with a GraphQL server running in a serverless function.
 
-### Creating the Amplify project
+### Amplifyプロジェクトの作成
 
-To get started, create a new Amplify project.
+始めるには、新しいAmplifyプロジェクトを作成します。
 
 <amplify-callout>
 
-If you already have an Amplify project created, you can jump to the next step - Creating the GraphQL API and function
+Amplifyプロジェクトがすでに作成されている場合は、次のステップにジャンプできます - GraphQL APIと関数の作成
 
 </amplify-callout>
 
 ```sh
 amplify init
 
-# Choose your environment name and default text editor
-# You can answer the defaults for the rest of the questions and then choose the profile you created when you ran amplify configure
+# 環境名とデフォルトのテキストエディタを選択します。
+# 残りの質問に対してデフォルトに答え、増幅を実行したときに作成したプロファイルを選択できます。
 ```
 
-### Creating the GraphQL API and function
+### GraphQL API と関数の作成
 
-Next we need to create the API and the Lambda function. Using the `api` category, the CLI will create a serverless function as well as an http endpoint that we can use for our GraphQL server.
+次に、APIとLambda関数を作成します。 `api` カテゴリの使用 CLIはサーバーレス機能と、GraphQLサーバーに使用できるhttpエンドポイントを作成します。
 
 ```sh
 $ amplify add api
@@ -45,21 +45,21 @@ $ amplify add api
 ? Do you want to add another path? N
 ```
 
-#### Installing the dependencies
+#### 依存関係のインストール
 
-Change into the folder of the Lambda function and install the following dependencies:
+Lambda関数のフォルダに変更し、以下の依存関係をインストールします。
 
 ```sh
-cd amplify/backend/function/apolloserver/src
+cd anplify/backend/function/apolloserver/src
 npm install apollo-server-lambda graphql
-cd ../../../../../
+cd ../../../../../../
 ```
 
-### Function code
+### 関数コード
 
-Now, let's open the code for the function.
+関数のコードを開いてみましょう。
 
-Open __amplify/backend/function/apolloserver/src/index.js__. Here, you will see the main function handler. Update the function with the following code:
+__anplify/backend/function/apolloserver/src/index.js__を開きます。ここでは、メイン関数ハンドラが表示されます。次のコードを使用して関数を更新します。
 
 ```javascript
 const { ApolloServer, gql } = require('apollo-server-lambda');
@@ -95,20 +95,20 @@ exports.handler = server.createHandler({
 })
 ```
 
-Now, we can deploy the function and GraphQL API:
+これで、関数と GraphQL API をデプロイできます。
 
 ```sh
-amplify push
+push を増幅する
 ```
 
-Now the API is deployed and you should be able to start interacting with it.
+これでAPIがデプロイされ、対話を開始できるようになります。
 
 ### API URL
 
-Once the server is up and running, The url is available in the aws-exports.js file. The final GraphQL endpoint will look something like this:
+サーバーが起動して実行されると、url は aws-exports.js ファイルで使用できます。最終的な GraphQL エンドポイントは次のようになります。
 
 ```
 https://6dbg37jfw5.execute-api.us-east-1.amazonaws.com/<env-name>/graphql
 ```
 
-You can also use the GraphQL playground by navigating to the GraphQL endpoint `/graphql` directly in your browser.
+ブラウザでGraphQLエンドポイント `/graphql` に移動することで、GraphQLのプレイグラウンドを使用することもできます。
