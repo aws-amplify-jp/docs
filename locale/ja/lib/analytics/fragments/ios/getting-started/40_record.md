@@ -1,4 +1,4 @@
-To record an event, specify your event using `BasicAnalyticsEvent` and call `Amplify.Analytics.record()`
+イベントを記録するには、 `BasicAnalyticsEvent` を使用してイベントを指定し、 `Amplify.Analytics.record()` を呼び出します。
 
 ```swift
 func recordEvents() {
