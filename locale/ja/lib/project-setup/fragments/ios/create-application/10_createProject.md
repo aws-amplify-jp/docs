@@ -1,16 +1,16 @@
-**Open Xcode.**  From the menu bar, select **"File -> New -> Project..."**
+**Xcodeを開きます。**  メニューバーから **"File -> New -> Project..."**
 
-Select **Single View App**, select **Next**
+**Single View App**を選択し、 **Next** を選択します
 
 ![GSA](~/images/project-setup/20_1_createProject.png)
 
-Fill in the following for your project:
-* Product Name: **MyAmplifyApp**
-* Language: **Swift**
-* **Tap `Next`**
+プロジェクトの以下の内容を入力してください:
+* 製品名: **MyAmplifyApp**
+* 言語: **Swift**
+* **`次へ` をタップ**
 
 ![GSA](~/images/project-setup/20_2_createProject.png)
 
 After tapping Next, **select where you would like to save your project**, then **tap Create**.  In this example, we will choose: **~/Developer** ![GSA](~/images/project-setup/20_3_createProject.png)
 
-You should now have an empty iOS project without Amplify.
+Amplifyなしで空のiOSプロジェクトがあるはずです。
