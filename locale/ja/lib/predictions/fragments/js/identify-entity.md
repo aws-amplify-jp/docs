@@ -1,8 +1,8 @@
-## Identify entities from images
+## 画像からエンティティを識別する
 
 Setup your backend with the following: If you haven't already done so, run `amplify init` inside your project and then `amplify add auth` (we recommend selecting the *default configuration*).
 
-Run `amplify add predictions` and select **Identify**. Then use the following answers:
+`増幅して予測を追加する` を実行し、 **識別**を選択します。その後、次の答えを使用します:
 
 ```console
 ? What would you like to identify? 
@@ -18,17 +18,17 @@ Run `amplify add predictions` and select **Identify**. Then use the following an
 
 Now run `amplify push` which will generate your `aws-exports.js` and create resources in the cloud. You can now either add this to your backend or skip and add more features to your app.
 
-Services used: Amazon Rekognition
+使用されるサービス: Amazon Rekognition
 
-### Advanced configuration
+### 高度な構成
 
-You can enhance your application's ability to identify entities by performing [indexing against a pre-defined collection of images and providing them to Amazon Rekognition](https://docs.aws.amazon.com/rekognition/latest/dg/API_IndexFaces.html). This can be done in one of two ways:
-1. Administrators provide images to be indexed from an S3 bucket
-2. Application users upload files to an S3 bucket which are indexed
+あらかじめ定義された画像のコレクションに対して [インデックスを作成し、Amazon Rekognition](https://docs.aws.amazon.com/rekognition/latest/dg/API_IndexFaces.html)に提供することで、アプリケーションのエンティティを識別する能力を高めることができます。 これは以下のいずれかの方法で行うことができます。
+1. 管理者はS3バケットからインデックスされる画像を提供します
+2. アプリのユーザーはインデックス化されたS3バケットにファイルをアップロードします
 
-Amplify configures Lambda Triggers to automatically perform this indexing when the files are uploaded. As Rekognition does not store any faces, but rather the facial features into a vector which are stored in the backend, these images can be deleted after indexing if you choose to do so. However note that by default the Lambda Triggers will remove the index if you delete an image so you will need to modify their behavior if you desire this functionality.
+Amplifyは、ファイルがアップロードされたときにこのインデックスを自動的に実行するようにLambda Triggersを設定します。 Rekognitionは顔を格納しないので、むしろ顔の特徴はバックエンドに格納されるベクトルに格納されます。 これらの画像は、インデックス作成後に削除できます。 ただし、デフォルトでは、画像を削除すると、Lambda Triggersはインデックスを削除しますので、この機能を使用する場合は動作を変更する必要があります。
 
-To add this functionality into your application choose **advanced** when prompted in the **Identify** flow (if you already enabled `Identify Entities` you will need to run `amplify update predictions`):
+この機能をアプリケーションに追加するには、 **** で **** フローを識別する (既に有効になっている場合 `エンティティを識別する` を実行する必要があります `増幅更新予測`):
 
 ```console
 ? What would you like to identify? Identify Entities
@@ -43,7 +43,7 @@ To add this functionality into your application choose **advanced** when prompte
 
 Note that if you already have an S3 bucket in your project from running `amplify add storage` it would be reused. To upload images from the CLI for administrator indexing, you can run `amplify predictions console` and select `Identify` which will open the S3 bucket location in the AWS console for you to upload your images.
 
-For application users, when they upload images with `Storage.put()` they will specify a prefix which the Lambda functions perform indexing like so:
+アプリケーションユーザーの場合、 `Storage.put()` で画像をアップロードすると、Lambda 関数がインデックス作成を行うプレフィックスを指定します。
 
 ```javascript
 Storage.put('test.jpg', file, 
@@ -57,13 +57,13 @@ Storage.put('test.jpg', file,
 
 In the sample React application code ahead, you will see that to use this functionality you will need to set `collection:true` when calling `Predictions.identify()` and remove `celebrityDetection: true`. The flow is that you will first upload an image to S3 with the `PredictionsUpload` function (which is connected to a button in the app) and after a few seconds you can send this same image to `Predictions.identify()` and it will check if that image has been indexed in the Collection.
 
-## Working with the API
+## API の操作
 
 `Predictions.identify({entities: {...}}) => Promise<>` Detects entities from an image and potentially related information such as position, faces, and landmarks. Can also identify celebrities and entities that were previously added. This function returns a Promise that returns an object with the entities that was identified.
 
-Input can be sent directly from the browser or an Amazon S3 key from project bucket.
+入力はブラウザから直接、またはプロジェクトバケットからAmazon S3キーを送信することができます。
 
-Detect entities directly from image uploaded from the browser. (File object)
+ブラウザーからアップロードされた画像から直接エンティティを検出します。(ファイルオブジェクト)
 
 ```javascript
 Predictions.identify({
@@ -73,11 +73,11 @@ Predictions.identify({
     },
   }
 })
-.then((response) => console.log({ response }))
+. hen((response) => console.log({ response }))
 .catch(err => console.log({ err }));
 ```
 
-From Amazon S3 key
+Amazon S3 キーから
 ```javascript
 Predictions.identify({
   entities: {
@@ -93,7 +93,7 @@ Predictions.identify({
 
 The following options are independent of which `source` is specified. For demonstration purposes it will be used `file` but it can be used S3 Key as well.
 
-Detecting bounding box of faces from an image with its landmarks (eyes, mouth, nose).
+目印(目、口、鼻)のある画像から面の境界ボックスを検出。
 
 ```javascript
 Predictions.identify({
@@ -123,7 +123,7 @@ Predictions.identify({
 .catch(err => console.log({ err }));
 ```
 
-Detecting celebrities on an image. It will return only celebrities the name and urls with related information.
+画像上の有名人を検出します。有名人だけが関連情報を持つ名前とURLを返します。
 
 ```javascript
 Predictions.identify({
@@ -147,7 +147,7 @@ Predictions.identify({
 .catch(err => console.log({ err }));
 ```
 
-Detecting entities from previously uploaded images (e.g. Advanced Configuration for Identify Entities)
+以前にアップロードした画像からエンティティを検出する（エンティティを識別するための詳細設定など）
 
 ```javascript
 Predictions.identify({
