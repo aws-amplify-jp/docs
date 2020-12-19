@@ -1,1 +1,1 @@
-You can create messaging campaigns and send push notifications to your app with Amazon Pinpoint! Just follow these instructions on [Amazon Pinpoint Developer Guide](https://docs.aws.amazon.com/pinpoint/latest/developerguide/getting-started-sampletest.html) for the next steps.
+Amazon Pinpointでメッセージングキャンペーンを作成し、プッシュ通知をアプリに送信できます。 次の手順については、 [Amazon Pinpoint Developer Guide](https://docs.aws.amazon.com/pinpoint/latest/developerguide/getting-started-sampletest.html) の手順に従ってください。
