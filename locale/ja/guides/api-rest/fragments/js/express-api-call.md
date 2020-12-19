@@ -1,4 +1,4 @@
-Now you can start interacting with the API:
+これで、APIとのやり取りを開始できます。
 
 ```js
 // get request
