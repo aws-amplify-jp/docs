@@ -1,0 +1,16 @@
+{
+  "items": [
+    "start",
+    "graphql-transformer",
+    "restapi",
+    "auth",
+    "storage",
+    "function",
+    "hosting",
+    "plugins",
+    "teams",
+    "usage",
+    "migration",
+    "reference"
+  ]
+}
