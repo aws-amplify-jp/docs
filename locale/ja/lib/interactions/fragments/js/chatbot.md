@@ -1,6 +1,6 @@
-## Send messages to bot
+## ボットにメッセージを送信する
 
-You can send a text message to chatbot backend with `send()` command. The method returns a promise that includes the chatbot response.
+`send()` コマンドを使用してテキストメッセージをchatbotバックエンドに送信できます。メソッドはchatbotの応答を含むpromiseを返します。
 
 ```javascript
 import { Interactions } from 'aws-amplify';
@@ -14,9 +14,9 @@ const response = await Interactions.send("BookTrip", userInput);
 console.log(response.message);
 ```
 
-## Display end of chat message
+## チャットメッセージの終了を表示
 
-You can use `onComplete()` method to register a function to catch errors or chatbot confirmations when the session successfully ends.
+`onComplete()` メソッドを使用して、セッションが正常に終了したときにエラーやチャットボットの確認をキャッチする関数を登録できます。
 
 ```javascript
 
