@@ -1,6 +1,6 @@
 ---
 title: Logger
-description: AWS Amplify writes console logs through Logger. You can use Logger in your apps for the same purpose.
+description: AWS AmplifyはLogger経由でコンソールログを書き込みます。アプリでLoggerを使うこともできます。
 ---
 
 <inline-fragment platform="js" src="~/lib/utilities/fragments/logger.md"></inline-fragment>
