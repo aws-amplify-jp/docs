@@ -1,50 +1,50 @@
 ---
-title: Feature Flags
-description: More information about feature flags in Amplify CLI
+title: 機能フラグ
+description: Amplify CLI の機能フラグの詳細情報
 ---
 
-Feature flags makes it possible to fine tune given functionality in the Amplify CLI.
+機能フラグを使用すると、Amplify CLI で特定の機能を微調整することができます。
 
-They are grouped into sections based on the area of the functionality. An area can be a category or some other scope. There are different type of feature flags defined, their lifetime is controlled the lifecycle process.
+それらは機能の領域に基づいてセクションにグループ化されます。領域はカテゴリまたはその他のスコープにすることができます。 さまざまな種類の機能フラグが定義されており、ライフサイクルプロセスのライフサイクルが制御されます。
 
-## Types of feature flags
+## 機能フラグの種類
 
-### Release
+### リリース
 
-These types of feature flags are used to enable or disable a given functionality in Amplify CLI that is under active development. These feature flags are removed and become unsupported once a feature has been shipped.
+これらのタイプの機能フラグは、アクティブな開発中の Amplify CLI で特定の機能を有効または無効にするために使用されます。 これらの機能フラグは削除され、機能が出荷されるとサポートされなくなります。
 
-### Feature
+### 機能
 
-During the history of the Amplify CLI there are enhancements that can benefit for new projects but potentially can cause breaking changes in existing deployments. These feature flags are controlled by the lifecycle process to provide time for mitigation and migration. These type of flags are disabled for existing projects and enabled for new ones.
+Amplify CLI の履歴には、新しいプロジェクトに有益な機能強化がありますが、既存のデプロイメントに壊れた変更を引き起こす可能性があります。 これらの機能フラグは、ライフサイクルプロセスによって制御され、緩和と移行の時間を提供します。 これらのタイプのフラグは、既存のプロジェクトで無効になり、新しいフラグで有効になります。
 
-Examples
+例
 
-- Breaking existing projects by generating different code and would require a backend deployment.
-- The push operation of a changed resource would require a resource recreation that could lead to data loss.
-- The push operation of a changed resource would require data backfill to make the client application operable.
-- The generated code for client applications would require a rebuild and republish to be compatible with the newly pushed backend.
+- 異なるコードを生成することで既存のプロジェクトを破壊し、バックエンドのデプロイが必要になります。
+- 変更されたリソースのプッシュ操作には、データが失われる可能性のあるリソース再作成が必要です。
+- 変更されたリソースのプッシュ操作では、クライアントアプリケーションを動作させるためにデータバックフィルが必要になります。
+- クライアントアプリケーション用に生成されたコードを再構築し、新しくプッシュされたバックエンドと互換性があるように再発行する必要があります。
 
-### Experimental
+### 実験
 
-Experimental feature flags are to enable experimentation with given functionality, to provide feedback to the Amplify CLI team. Enabling these feature in production is highly discouraged.
+実験的な機能フラグは、与えられた機能の実験を可能にし、Amplify CLI チームにフィードバックを提供することです。 本番環境でこれらの機能を有効にすることは非常に推奨されません。
 
-The outcome of experimental features can be:
-- The feature will make into the product so it will be turned into a Release type feature flag.
-- The experimental feature is not making into the product and removed from the codebase together with the code itself.
+実験的な機能の結果は次のとおりです。
+- この機能は製品になりますので、リリースタイプの機能フラグになります。
+- 実験的な機能は、製品を作り、コード自体と一緒にコードベースから削除されていません。
 
-## Lifecycle
+## ライフサイクル
 
-Each type of feature flags are managed under a lifecycle management process. When a feature flag is added to the Amplify CLI it will be mentioned in the release notes and also this page will be updated with the detailed information. After adding a feature flag this page will contain information about what version a feature flag was added, what is the planned deprecation date - if there is one -,  in which version the feature flag was deprecated, in which version the feature flag was removed.
+各タイプの機能フラグは、ライフサイクル管理プロセスで管理されます。 Amplify CLI に機能フラグが追加されると、リリースノートに記載され、このページは詳細情報とともに更新されます。 機能フラグを追加した後、このページには機能フラグが追加されたバージョンに関する情報が含まれます。 予定されている廃止予定日は何ですか? - がある場合は - 、 どのバージョンの機能フラグが廃止されたのか、どのバージョンの機能フラグが削除されました。
 
-When a feature flag is deprecated it still can be used but when used a warning will be printed on the screen during the execution of Amplify CLI commands.
+機能フラグが廃止された場合でも使用できますが、Amplify CLI コマンドの実行中に警告が表示されます。
 
-Before removal a removal date is added to the feature flag, and after a feature flag is removed Amplify CLI will shows an error message about it and the version the feature flag was removed added to the page.
+削除する前に、機能フラグに削除日が追加されます。 機能フラグが削除されると、Amplify CLI にエラーメッセージが表示され、バージョンの機能フラグがページに追加されます。
 
-## Configuration
+## 設定
 
 Configuration of feature flags are primarily done by having an `cli.json` file in the project's `amplify` folder. If the file does not exist Amplify CLI creates it during the `amplify init` command. The emitted values are representing the default values for new projects. This file must be under version control, to make sure that the same features are used locally, in CI/CD environments, between team members. If an environment specific file exists for the currently checked out environment, during `amplify env add` command the same file will be copied for the newly created environment as well.
 
-Example configuration file
+設定ファイルの例
 
 ```json
 {
@@ -66,30 +66,30 @@ Example configuration file
 }
 ```
 
-If for some reason different functionality is needed to be enabled for a given Amplify CLI environment a copy can be made of the project level file with the following naming convention: `cli.{environment name}.json`.
+何らかの理由で、指定された Amplify CLI 環境で異なる機能を有効にする必要がある場合、以下の命名規則を持つプロジェクト レベル ファイルからコピーを作成できます。 `cli。{environment name}.json`.
 
-### Environment variables
+### 環境変数
 
-Amplify CLI supports the definition and override of feature flags values from environment variables and `.env` files as well.
+Amplify CLI は、環境変数や `.env` ファイルからの機能フラグ値の定義とオーバーライドもサポートします。
 
-The environment variables must follow a naming convention, to be picked up by Amplify CLI:
+Amplify CLI で取得するには、環境変数は命名規則に従う必要があります。
 
-- Project level override: `AMPLIFYCLI_{SECTION}__{PROPERTY}`, for example: `AMPLIFYCLI_GRAPHQLTRANSFORMER__TRANSFORMERVERSION`
-- Environment specific override: `AMPLIFYCLI_{ENVNAME}_{SECTION}__{PROPERTY}`, for example: `AMPLIFYCLI_PROD_GRAPHQLTRANSFORMER__TRANSFORMERVERSION`
+- プロジェクト レベルの上書き: `AMPLIFYCLI__{SECTION}__{PROPERTY}`、例: `AMPLIFYCLI_GRAPHQLTRANSFORMORVERSION`
+- 環境特有のオーバーライド: `AMPLIFYCLI_{ENVNAME}__{SECTION}__ __{PROPERTY}`, for example: `AMPLIFYCLI_PROD_GRAPHQLTRANSFORMERVERSION`
 
 If a `.env` file is used in the project's root folder, then it is being merged on top of the current process' environment variables, overwriting those.
 
-### Order of evaluation
+### 評価順
 
-Due to the multiple levels of configuration options and overrides, Amplify CLI does a top-to-bottom evaluation as follows:
+複数の設定オプションとオーバーライドにより、Amplify CLIは以下のように上から下への評価を行います。
 
 - `cli.json`
 - `cli.{environment name}.json`
-- Project level environment variables
-- CLI Environment level environment variables
+- プロジェクト レベルの環境変数
+- CLI 環境レベル 環境変数
 
-## Feature flags
+## 機能フラグ
 
-Currently there are no feature flags defined.
+現在、機能フラグが定義されていません。
 
 <amplify-feature-flags />
