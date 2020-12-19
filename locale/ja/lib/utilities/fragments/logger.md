@@ -1,15 +1,15 @@
-AWS Amplify writes console logs through Logger. You can use Logger in your apps for the same purpose.
+AWS AmplifyはLogger経由でコンソールログを書き込みます。アプリでLoggerを使うこともできます。
 
-## Installation
+## インストール
 
 Import Logger:
 ```javascript
-import { Logger } from 'aws-amplify';
+import { Logger } from 'aws-amply';
 ```
 
-## Working with the API
+## API の操作
 
-You can call logger for different console message modes:
+異なるコンソールメッセージモードでロガーを呼び出すことができます:
 ```javascript
 const logger = new Logger('foo');
 
@@ -19,7 +19,7 @@ logger.warn('warn bar');
 logger.error('error bar');
 ```
 
-When handling an error:
+エラーを処理する場合:
 ```javascript
 try {
     // ...
@@ -28,35 +28,35 @@ try {
 }
 ```
 
-## Setting Logging Levels
+## ロギングレベルの設定
 
-You can set a log level when you create your logger instance:
+ロガーインスタンスを作成するときに、ログレベルを設定できます。
 
 ```javascript
 const logger = new Logger('foo', 'INFO');
 
-logger.debug('callback data', data); // this will not write the message
+logger.debug('callback data', data); // これはメッセージを書き込みません
 ```
 
-Global logger configuration will override your logger instance's configuration:
+グローバルロガー設定はロガーインスタンスの設定を上書きします：
 
 ```javascript
 Amplify.Logger.LOG_LEVEL = 'DEBUG';
 
 const logger = new Logger('foo', 'INFO');
 
-logger.debug('callback data', data); //  this will write the message since the global log level is 'DEBUG'
+logger. ebug('callback data', data); // これはグローバルログレベルが 'DEBUG' であるため、メッセージを書き込みます。
 ```
 
-During web development, you can set global log level in browser console log:
+Web 開発中は、ブラウザーコンソールログでグローバルログレベルを設定できます。
 ```javascript
 window.LOG_LEVEL = 'DEBUG';
 ```
 
-Supported log levels:
+サポートされているログレベル:
 
-* `ERROR`
+* `エラー`
 * `WARN`
-* `INFO`
+* `情報`
 * `DEBUG`
 * `VERBOSE`
