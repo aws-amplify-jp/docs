@@ -1,8 +1,8 @@
-The Amazon Kinesis analytics provider allows you to send analytics data to an [Amazon Kinesis](https://aws.amazon.com/kinesis) stream for real-time processing.
+Amazon Kinesis分析プロバイダでは、リアルタイム処理のために分析データを [Amazon Kinesis](https://aws.amazon.com/kinesis) ストリームに送信できます。
 
-## Installation and Configuration
+## インストールと設定
 
-Register the *AWSKinesisProvider* with the Analytics category:
+*AWSKinesisProvider* を Analytics カテゴリに登録します:
 
 ```javascript
 import { Analytics, AWSKinesisProvider } from 'aws-amplify';
@@ -11,7 +11,7 @@ Analytics.addPluggable(new AWSKinesisProvider());
 
 If you did not use the CLI, ensure you have <a href="https://docs.aws.amazon.com/streams/latest/dev/learning-kinesis-module-one-iam.html" target="_blank">setup IAM permissions</a> for `PutRecords`.
 
-Example IAM policy for Amazon Kinesis:
+Amazon KinesisのIAMポリシー例：
 ```json
 {
     "Version": "2012-10-17",
@@ -28,9 +28,9 @@ Example IAM policy for Amazon Kinesis:
 }
 ```
 
-For more information visit [Amazon Kinesis Developer Documentation](https://docs.aws.amazon.com/streams/latest/dev/learning-kinesis-module-one-iam.html).
+詳細については、 [Amazon Kinesis Developer Documentation](https://docs.aws.amazon.com/streams/latest/dev/learning-kinesis-module-one-iam.html) をご覧ください。
 
-Configure Kinesis:
+Kinesisの設定：
 
 ```javascript
 // Configure the plugin after adding it to the Analytics module
@@ -55,9 +55,9 @@ Analytics.configure({
 });
 ```
 
-## Stream data
+## ストリームデータ
 
-You can send a data to a Kinesis stream with the standard `record()` method:
+標準の `record()` メソッドを使用して、Kinesis ストリームにデータを送信できます。
 
 ```javascript
 Analytics.record({
