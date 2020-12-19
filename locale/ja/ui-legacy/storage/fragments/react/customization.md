@@ -1,6 +1,6 @@
-### Customize Upload Path
+### アップロードパスをカスタマイズ
 
-You can customize your upload path by defining prefixes:
+プレフィックスを定義することで、アップロードパスをカスタマイズできます。
 
 ```javascript
 const customPrefix = {
@@ -17,7 +17,7 @@ Storage.put('test.txt', 'Hello', {
 .catch(err => console.log(err));
 ```
 
-For example, if you want to enable read, write and delete operation for all the objects under path *myPublicPrefix/*,  declare it in your IAM policy:
+たとえば、読み込みを有効にしたい場合。 パス *myPublicPrefix/*のすべてのオブジェクトに対する操作の書き込みと削除、IAMポリシーでそれを宣言します。
 
 ```xml
 "Statement": [
@@ -51,4 +51,4 @@ If you want to have custom *private* path prefix like *myPrivatePrefix/*, you ne
     }
 ]
 ```
-This ensures only the authenticated users has the access to the objects under the path.
+これにより、認証されたユーザのみがパスの下にあるオブジェクトへのアクセスを保証します。
