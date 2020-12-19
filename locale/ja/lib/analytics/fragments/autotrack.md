@@ -1,10 +1,10 @@
-The Amplify analytics plugin records when an application opens and closes. This session information can be viewed either from your local computer's terminal or the AWS Console for Pinpoint.
+Amplify分析プラグインは、アプリケーションが開いたり閉じたりすると記録します。 このセッション情報は、ローカルコンピュータの端末またはAWSコンソールのPinpointから表示できます。
 
-To view this from the Console:
+コンソールからこれを表示するには:
 
 ```bash
-amplify console analytics
+コンソール分析を増幅する
 ```
 
-1. On the Pinpoint Console under **Analytics**, choose **Events**.
-2. Enable filters, you can select `Session Start` and `Session Stop` events to filter on session events.
+1. **分析**の Pinpoint Console で、 **イベント** を選択します。
+2. フィルタを有効にすると、セッションイベントをフィルタリングするために `セッション開始` と `セッション停止` イベントを選択できます。
