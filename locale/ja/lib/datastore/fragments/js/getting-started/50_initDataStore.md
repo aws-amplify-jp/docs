@@ -1,1 +1,1 @@
-When the `@aws-amplify/datastore` dependency is added to  the project, the plugin is automatic initialized when you start using.
+プロジェクトに `@aws-amplify/datastore` 依存性が追加されると、使用を開始するとプラグインは自動的に初期化されます。
