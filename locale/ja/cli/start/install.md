@@ -1,11 +1,11 @@
 ---
-title: Installation
-description: How to install & configure Amplify CLI
+title: インストール
+description: インストール方法 & Amplify CLI を設定
 ---  
 
-## Install the Amplify CLI
+## Amplify CLI をインストール
 
-The Amplify Command Line Interface (CLI) is a unified toolchain to create AWS cloud services for your app. Let's go ahead and install the Amplify CLI.
+Amplifyコマンドラインインターフェース(CLI)は、アプリケーション用のAWSクラウドサービスを作成するための統合ツールチェーンです。 では、AmplifyのCLIをインストールしてみましょう。
 
 <amplify-block-switcher>
 
@@ -20,7 +20,7 @@ npm install -g @aws-amplify/cli
 <amplify-block name="cURL (Mac and Linux)">
 
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
+curl -sL https://aws-amplify.github.io/anplify-cli/install | bash && $SHELL
 ```
 
 </amplify-block>
@@ -28,43 +28,43 @@ curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
 <amplify-block name="cURL (Windows)">
 
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install-win -o install.cmd && install.cmd
+curl -sL https://aws-amplify.github.io/anplify-cli/install-win -o install.cmd && install.cmd
 ```
 
 </amplify-block>
 
 </amplify-block-switcher>
 
-> Because we're installing the Amplify CLI globally, you might need to run the command above with `sudo`.
+> Amplify CLI をグローバルにインストールしているので、上記のコマンドを `sudo` で実行する必要があるかもしれません。
 
 
-### Pre-requisites for installation
+### インストールの前提条件
 
-* [Install Node.js®](https://nodejs.org/en/download/) and [NPM](https://www.npmjs.com/get-npm) if they are not already on your machine.
-* Verify that you are running at least Node.js version 10.x and npm version 6.x or greater by running `node -v` and `npm -v` in a terminal/console window
-* [Create AWS Account](https://portal.aws.amazon.com/billing/signup?redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start). If you don't already have an AWS account, you'll need to create one in order to follow the steps outlined in this tutorial.
+* [Node.js®](https://nodejs.org/en/download/) と [NPM](https://www.npmjs.com/get-npm) をインストールします。
+* 少なくともNode.js バージョン 10.x および npm バージョン 6 が実行されていることを確認します。 または、ターミナル/コンソールウィンドウで `ノード -v` と `npm -v` を実行してください
+* [AWS アカウントを作成](https://portal.aws.amazon.com/billing/signup?redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start). AWSアカウントをまだお持ちでない場合は、このチュートリアルの手順に従って作成する必要があります。
 
 
-## Configure the Amplify CLI
+## Amplify CLI の設定
 
-To set up the Amplify CLI on your local machine, you have to configure it to connect to your AWS account.
+Amplify CLIをローカルマシンに設定するには、AWSアカウントに接続するように設定する必要があります。
 
-### Option 1: Watch the video guide
+### オプション1:ビデオガイドを見る
 
-Watch the video below to learn how to install and configure the Amplify CLI or skip to the next section to follow the step-by-step instructions. <iframe src="https://www.youtube-nocookie.com/embed/fWbM5DLh25U" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen mark="crwd-mark"></iframe>
+Amplify CLI のインストールと設定方法、または次のセクションにスキップしてステップバイステップの指示に従う方法については、以下のビデオをご覧ください。 <iframe src="https://www.youtube-nocookie.com/embed/fWbM5DLh25U" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen mark="crwd-mark"></iframe>
 
-### Option 2: Follow the instructions
+### オプション2:指示に従ってください
 
-Configure Amplify by running the following command:
+次のコマンドを実行してAmplifyを構成します。
 
 ```bash
-amplify configure
+増幅の設定
 ```
 
-`amplify configure` will ask you to sign into the AWS Console.
+`amplify configure` は AWS コンソールへのサインインを要求します。
 
-Once you're signed in, Amplify CLI will ask you to create an IAM user.
-> Amazon IAM (Identity and Access Management) enables you to manage users and user permissions in AWS. You can learn more about Amazon IAM [here](https://aws.amazon.com/iam/).
+サインイン後、Amplify CLIはIAMユーザーを作成するよう求めます。
+> Amazon IAM(Identity and Access Management)では、AWSのユーザとユーザの権限を管理できます。 Amazon IAM [については、こちら](https://aws.amazon.com/iam/) をご覧ください。
 
 ```console
 Specify the AWS Region
@@ -74,11 +74,11 @@ Specify the username of the new IAM user:
 Complete the user creation using the AWS console
 ```
 
-Create a user with `AdministratorAccess` to your account to provision AWS resources for you like AppSync, Cognito etc.
+`AdministratorAccess` でアカウントにユーザーを作成し、AppSync、CognitoなどのAWSリソースをプロビジョニングできます。
 
-![image](../../images/user-creation.gif)
+![画像](../../images/user-creation.gif)
 
-Once the user is created, Amplify CLI will ask you to provide the `accessKeyId` and the `secretAccessKey` to connect Amplify CLI with your newly created IAM user.
+ユーザーが作成されると、 Amplify CLI は `accessKeyId` と `secretAccessKey` を提供して、新しく作成した IAM ユーザーとAmplify CLI を接続するように要求します。
 
 ```console
 Enter the access key of the newly created user:
@@ -91,6 +91,6 @@ Successfully set up the new user.
 ```
 
 
-### Work within your frontend project
+### フロントエンドプロジェクト内での作業
 
-After you install the CLI, navigate to a JavaScript, iOS, or Android project root, initialize AWS Amplify in the new directory by running `amplify init`. After a few configuration questions, you can use amplify help at any time to see the overall command structure. When you’re ready to add a feature, run `amplify add <category>`. 
+CLI をインストールした後、JavaScript、iOS、または Android のプロジェクトルートに移動します。 `amplify init`を実行して、AWS Amplifyを新しいディレクトリで初期化します。 設定に関する質問がいくつかあったら、いつでも増幅ヘルプを使用して全体的なコマンド構造を確認できます。 機能を追加する準備ができたら、`増幅` `を実行します。 <category>`。 
