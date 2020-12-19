@@ -1,6 +1,6 @@
 ---
-title: Getting started
-description: Learn how to integrate connectivity with cloud-based message-oriented middleware using PubSub and AWS Mobile SDK. You can use PubSub to pass messages between your app instances and your app’s backend creating real-time interactive experiences.
+title: はじめに
+description: PubSub および AWS Mobile SDK を使用して、クラウドベースのメッセージ指向ミドルウェアとの接続を統合する方法を学びます。 PubSub を使用して、アプリケーションインスタンスとアプリケーションのバックエンド間のメッセージを渡すことができ、リアルタイムの対話型エクスペリエンスを作成できます。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>
