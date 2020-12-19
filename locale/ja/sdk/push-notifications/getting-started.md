@@ -1,6 +1,6 @@
 ---
-title: Getting started
-description: Enable your users to receive mobile push messages sent from the Apple (APNs) and Google (FCM/GCM) platforms. The Amplify CLI deploys your push notification backend using Amazon Pinpoint. You can also create Amazon Pinpoint campaigns that tie user behavior to push or other forms of messaging.
+title: はじめに
+description: ユーザーがApple(APNs)およびGoogle(FCM/GCM)プラットフォームから送信されるモバイルプッシュメッセージを受信できるようにします。 Amplify CLI は、Amazon Pinpoint を使用してプッシュ通知バックエンドをデプロイします。 また、ユーザーの行動をプッシュやその他のメッセージングと結び付けるキャンペーンを作成することもできます。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>
