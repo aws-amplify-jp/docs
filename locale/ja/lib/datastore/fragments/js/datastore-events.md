@@ -11,7 +11,7 @@ const listener = Hub.listen('datastore', async hubData => {
 listener();
 ```
 
-To wait for the entire sync process to finish, you can listen for the `ready` event:
+同期プロセス全体が終了するまで待機するには、 `準備ができている` イベントをリッスンします。
 
 ```js
 // Create listener
@@ -26,14 +26,14 @@ const listener = Hub.listen("datastore", async hubData => {
 listener();
 ```
 
-Here is an illustrative sample of events and payloads that happen when you start from an empty DataStore and start a sync. If you do:
+空のDataStoreから起動して同期を開始したときに発生するイベントとペイロードの例を示します。
 
 ```js
 await DataStore.clear();
 await DataStore.start();
 ```
 
-This gets logged:
+ログを取得します：
 
 ```bash
 Event:  {"channel":"datastore","payload":{"event":"storageSubscribed"},"source":"","patternInfo":[]}
