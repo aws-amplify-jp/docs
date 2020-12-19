@@ -1,6 +1,6 @@
 ---
-title: Docs
-description: Amplify Framework documentation - Learn how to use Amplify to develop and deploy cloud-powered mobile and web apps.
+title: ドキュメント
+description: Amplify Framework ドキュメント - Amplifyを使い、クラウドを活用したモバイル、Webアプリの開発とデプロイを行う方法をご覧ください。
 noTemplate: true
 disableLinkification: true
 ---
