@@ -1,4 +1,4 @@
-An existing Amazon S3 bucket can be used with the Amplify Libraries by referencing it in your `amplifyconfiguration.json` file.
+既存のAmazon S3バケットは、 `anplifyconfiguration.json` ファイルで参照することで、Amplifyライブラリと一緒に使用できます。
 
 ```json
 {
@@ -13,7 +13,7 @@ An existing Amazon S3 bucket can be used with the Amplify Libraries by referenci
 }
 ```
 
-- **bucket**: Name of the bucket to use for storage
-- **region**: AWS Region where the bucket is provisioned (e.g. *us-east-1*)
+- **bucket**: ストレージに使用する Bucket の名前
+- **region**: Bucket がプロビジョニングされている AWS リージョン(例: *us-east-1*)
 
-Note that before you can add an AWS resource to your application, the application must have the Amplify libraries installed. If you need to perform this step, see [Install Amplify Libraries](~/lib/project-setup/create-application.md#n2-install-amplify-libraries). 
+アプリケーションにAWSリソースを追加する前に、アプリケーションにAmplifyライブラリがインストールされている必要があります。 この手順を実行する必要がある場合は、 [Amplifyライブラリのインストール](~/lib/project-setup/create-application.md#n2-install-amplify-libraries) を参照してください。 
