@@ -5,6 +5,6 @@ try {
     oldPassword: "myoldpassword"
   );
 } on AuthError catch (e) {
-  print(e);
+  print();
 }
 ```
