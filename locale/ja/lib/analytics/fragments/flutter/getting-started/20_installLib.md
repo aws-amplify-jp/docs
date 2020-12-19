@@ -1,8 +1,8 @@
-In your Flutter project directory, open **pubspec.yaml**.
+Flutterプロジェクト・ディレクトリで **pubspec.yaml** を開きます。
 
-> You will already have configured Amplify by following the steps in the project setup.
+> プロジェクトの設定の手順に従って、Amplifyを既に構成しています。
 
-Add Analytics by adding these libraries into your dependencies block:
+依存関係ブロックにこれらのライブラリを追加して、Analytics を追加します。
 
 ```yaml 
 dependencies:
