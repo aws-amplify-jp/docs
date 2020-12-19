@@ -1,11 +1,11 @@
-The XR category enables you to work with augmented reality (AR) and virtual reality (VR) content within your applications. The XR category has built-in support for Amazon Sumerian.
+XRカテゴリを使用すると、アプリケーション内の拡張現実(AR)および仮想現実(VR)コンテンツを使用できます。 XRカテゴリには、Amazon Sumerianのサポートが組み込まれています。
 
-## Publishing a scene
+## シーンを公開
 To download the required scene configuration for your Sumerian scene, visit <a href="https://console.aws.amazon.com/sumerianv2/home" target="_blank">Amazon Sumerian console</a>, create or open the scene you would like to use with AWS Amplify, click *Publish* dropdown from the top right corner of the Sumerian console, then click *Host privately*:
 
 <amplify-callout>
 
-If your scene was already published publicly, you will need to unpublish then publish again using the instructions below.
+シーンがすでに公開されている場合は、以下の手順で公開を解除し、再度公開する必要があります。
 
 </amplify-callout>
 
@@ -13,24 +13,24 @@ If your scene was already published publicly, you will need to unpublish then pu
 
 ![XR](~/images/xr/sumerian_host_privately_button.png)
 
-You will then be prompted with the following dialog. Click the *Publish* button: ![XR](~/images/xr/sumerian_publish_button.png)
+次のダイアログが表示されます。 *公開* ボタンをクリックします。 ![XR](~/images/xr/sumerian_publish_button.png)
 
-Now click the *Download JSON configuration* button to download the scene configuration JSON that will be used for configuring your scene within AWS Amplify: ![XR](~/images/xr/amplify_published_dialog.png)
+次に、 *JSON 設定のダウンロード* ボタンをクリックして、AWS Amplify 内でシーンの設定に使用されるシーン設定 JSON をダウンロードします。 ![XR](~/images/xr/amplify_published_dialog.png)
 
-## Setup backend
+## バックエンドのセットアップ
 
-> Ensure you have [installed and configured the Amplify CLI and library](~/start/start.md)
+> [がインストールされ、Amplify CLIとライブラリが設定されていることを確認してください](~/start/start.md)
 
 ```bash
-amplify add xr
+増幅して xr を追加
 ```
-The CLI will prompt configuration options for the XR category such as a scene name identifier and a Sumerian scene json configuration file.
+CLI はシーン名識別子や Sumerian シーンの json 構成ファイルなどの XR カテゴリの設定オプションをプロンプトします。
 
-The XR category will set up and utilize the Authentication category to setup scene authorization.
+XRカテゴリは認証カテゴリを設定してシーン認証を設定します。
 
-Take note of the scene name you provide in the CLI prompt. This value will be used as an identifier for the scene when using the XR category in the framework.
+CLI プロンプトで指定したシーン名を確認します。 この値は、フレームワークでXRカテゴリを使用する場合にシーンの識別子として使用されます。
 
-After configuring your XR options, update your backend with:
+XRオプションを設定したら、バックエンドを次のように更新します。
 ```
 $ amplify push
 ```
@@ -38,9 +38,9 @@ XR resources shown during `amplify push` represent the IAM policy being created 
 
 A configuration file called `aws-exports.js` will be copied to your configured source directory, for example `./src`. This file will contain a list of all scenes that you configure.
 
-## Import existing XR resource
+## 既存の XR リソースをインポート
 
-Add the following code to your application to configure the XR category:
+XRカテゴリを構成するために、次のコードをアプリケーションに追加してください:
 ```javascript
 import Amplify from 'aws-amplify';
 import awsconfig from './aws-exports';
@@ -59,7 +59,7 @@ Amplify.configure({
 });
 ```
 
-You can add optional publish parameters to the scene configuration:
+オプションのパブリッシュパラメータをシーン設定に追加できます。
 ```javascript
 XR.configure({ // XR category configuration
   region: 'us-west-2', // Sumerian region
@@ -72,18 +72,18 @@ XR.configure({ // XR category configuration
 });
 ```
 
-## Configure frontend
+## フロントエンドの設定
 
 ```javascript
-import Amplify, { XR } from 'aws-amplify';
+import Amplify, { XR } from 'aws-amply';
 import awsconfig from './aws-exports';
 
 Amplify.configure(awsconfig);
 ```
 
-For more information about using `amplify xr` in the Amplify CLI type `amplify xr help` in your Amplify project.
+Amplifyプロジェクトの `amplify xr` をAmplifyタイプで `amplify xr help` を使用する方法の詳細については、こちらをご覧ください。
 
-## Scene Usage
+## シーンの使用
 
 The XR Category allows a Sumerian scene to be rendered into an DIV HTML element with `loadScene` method. When the scene has been loaded the *XR.start()* method will start the scene. To render the scene, pass your scene name and the id of the element in the method call:
 
@@ -98,8 +98,8 @@ async loadAndStartScene() {
 <div id="sumerian-scene-dom-id"></div>
 ```
 
-Additionally, you can use the [Sumerian Scene UI components](~/lib/xr/sceneapi.md#ui-components) for an out-of-the-box UI solution.
+さらに、 [シュメールシーン UI コンポーネント](~/lib/xr/sceneapi.md#ui-components) をすぐに使えるUIソリューションにも使用できます。
 
-## API Reference
+## APIリファレンス
 
-For a complete XR reference visit the [API Reference](https://aws-amplify.github.io/amplify-js/api/classes/xr.html)
+完全な XR リファレンスについては、 [API リファレンス](https://aws-amplify.github.io/amplify-js/api/classes/xr.html) を参照してください。
