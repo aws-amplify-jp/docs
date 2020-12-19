@@ -1,6 +1,6 @@
-To initialize the Amplify Auth and API categories you call `Amplify.addPlugin()` method for each category. To complete initialization call `Amplify.configure()`.
+Amplify AuthとAPIカテゴリを初期化するには、カテゴリごとに `Amplify.addPlugin()` メソッドを呼び出します。初期化を完了するには、 `Amplify.configure()` を呼び出します。
 
-Add the following code to your `onCreate()` method in your application class:
+アプリケーションクラスの `onCreate()` メソッドに次のコードを追加します。
 
 <amplify-block-switcher> <amplify-block name="Java">
 
@@ -8,7 +8,7 @@ Add the following code to your `onCreate()` method in your application class:
 Amplify.addPlugin(new AWSApiPlugin());
 ```
 
-Your class will look like this:
+あなたのクラスは次のようになります：
 
 ```java
 public class MyAmplifyApp extends Application {
@@ -35,7 +35,7 @@ public class MyAmplifyApp extends Application {
 Amplify.addPlugin(AWSApiPlugin())
 ```
 
-Your class will look like this:
+あなたのクラスは次のようになります：
 
 ```kotlin
 class MyAmplifyApp : Application() {
@@ -61,7 +61,7 @@ class MyAmplifyApp : Application() {
 RxAmplify.addPlugin(new AWSApiPlugin());
 ```
 
-Your class will look like this:
+あなたのクラスは次のようになります：
 
 ```java
 public class MyAmplifyApp extends Application {
