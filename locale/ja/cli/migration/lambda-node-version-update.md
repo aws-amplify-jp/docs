@@ -1,56 +1,56 @@
 ---
-title: Node Version Update
-description: Upgrading from NodeJS 8.10 to NodeJS 10.x
+title: ノードバージョンの更新
+description: NodeJS 8.10 から NodeJS 10.x へのアップグレード
 ---
 
-## Node.js 8.10 to Node.js 10.x
-According to AWS Lambda [Runtime Support Policy](https://docs.aws.amazon.com/lambda/latest/dg/runtime-support-policy.html), AWS Lambda deprecates Node.js runtime Node.js 8.10 on January 6th, 2020.
+## Node.js 8.10 から Node.js 10.x
+AWS Lambda [ランタイムサポートポリシー](https://docs.aws.amazon.com/lambda/latest/dg/runtime-support-policy.html)によると、AWS Lambdaは2020年1月6日にNode.jsランタイムNode.js 8.10を廃止しました。
 
-The Amplify CLI code base has been updated to reflect this change. Amplify CLI replaces Node.js 8.10 with Node.js 10 in the Lambda functions that it creates for you. If you use Amplify CLI version 4.10.0 and above to create new aws resources, this does not concern you.
+Amplify CLI コードベースが更新され、この変更が反映されました。Amplify CLI は Node.js 8.10 を Node に置き換えます。 s 10 あなたのために作成されるLambda 関数の中で、Amplify CLI バージョン4を使用する場合。 0.0以上で新しいawsリソースを作成するには、これはあなたに関係ありません。
 
-However, if you have used previous versions of the Amplify CLI to create AWS resources in the following categories, you will need to manually update your project artifacts to avoid NodeJS runtime upgrade issues with AWS Lambda.
-- auth
-- function
-- interactions
+ただし、Amplify CLI の以前のバージョンを使用して以下のカテゴリで AWS リソースを作成した場合。 AWS LambdaでNodeJSランタイムアップグレードの問題を回避するには、プロジェクトのアーティファクトを手動で更新する必要があります。
+- 認証する
+- 関数
+- 相互作用
 
-Before you make the following manual changes, please make sure to back up your entire project.
+以下のマニュアルを変更する前に、必ずプロジェクト全体をバックアップしてください。
 
-After you make the following manual changes, run `amplify push` to update the AWS Lambda functions in the cloud.
+以下の手動で変更を行ったら、 `anmpify push` を実行して、クラウドのAWS Lambda機能を更新します。
 
-### auth
-Auth category allows you to add/configure Lambda Triggers for cognito, such as PostAuthentication and PostConfirmation using amplify add/update auth command. Lambda triggers are stored as a part of the functions category under the `amplify/function/<prefix><TriggerName>/src` directory.
+### 認証する
+Authカテゴリを使用すると、追加/更新認証コマンドを使用してPostAuthenticationやPostConfirmationなど、コグニトのLambdaトリガーを追加/設定できます。 Lambda トリガーは `amplify/function/<prefix><TriggerName>/src` ディレクトリの下に、関数カテゴリの一部として保存されます。
 
-In the index files for the Lambda Triggers, Located in `amplify/function/<prefix><TriggerName>/src/index.js`
+Lambda Triggersのインデックスファイルでは、 `amplify/function/<prefix><TriggerName>/src/index.js` にあります。
 
-Replace
+置換
 ```js
 //...
 const { handler } = require(`${modules[i]}`);
 //...
 ```
-With
+と
 ```js
 //...
 const { handler } = require(`./${modules[i]}`);
 //...
 ```
 
-### function
+### 関数
 If you use NodeJS [`require`](https://nodejs.org/dist/latest-v12.x/docs/api/modules.html#modules_require_id) to import local modules, relative path is needed to specify the local module's location. However, we have noticed that you can just use the module name to require them with `nodejs8.10` runtime on AWS Lambda Functions. But with the `nodejs10.x` runtime, it is not allowed anymore. AWS Lambda Function will throw an error complaining that it can not find the module, and you have to provide the relative path instead of just the module name to require a local module. So, if you added resources in the `function` category, and you did not specify relative path to require local modules, you need to update the code base just like the above section for the auth triggers.
 
-### interactions
-In the `<project-root>/amplify/backend/interactions/<resource-name>/src/index.js` file
+### 相互作用
+`<project-root>/amplify/backend/interactions/<resource-name>/src/index.js` ファイル内
 
-Replace
+置換
 ```js
 const response = require('cfn-response');
 //...
 ```
-With
+と
 ```js
 const response = require('./cfn-response');
 //...
 ```
 
-### runtime string replacement
+### ランタイム文字列の置換
 With the latest version of the Amplify CLI (> 4.7.0), when you execute any `amplify` command on a project initialized by CLI version prior to 4.7.0, it will prompt for your confirmation to automatically upgrade your NodeJS Lambda runtime versions, from `nodejs8.10` to `nodejs10.x` in all the CloudFormation template files under the `amplify/backend` folder. If you do not confirm, you will need to manually carry out such replacements. You can go to each category subdirectory, then each resource subdirectory under it, and locate the template file (it could be either `.yml` or `.json` file), the template file has `template` in its name. Then do a global string replacement of `nodejs8.10` to `nodejs10.x` in the file.
