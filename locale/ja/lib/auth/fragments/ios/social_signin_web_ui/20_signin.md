@@ -1,4 +1,4 @@
-Invoke this api with whatever provider you're using (shown with Facebook below):
+このAPIを使用しているプロバイダ（以下のFacebookで表示）で呼び出します：
 
 <amplify-block-switcher>
 
