@@ -1,34 +1,34 @@
-## Create new AppSync GraphQL API
+## 新しいAppSync GraphQL API を作成します
 
-To create a new GraphQL API, you can use the Amplify CLI `api` category:
-
-```bash
-amplify add api
-```
-
-When prompted, select **GraphQL**.
-
-The CLI prompts will help you to customize the options for your GraphQL API. With the provided options, you can:
-- Choose the API name
-- Choose the default authorization type
-- If using an API key as the authorization type, choose the expiration date for the API key
-- Configure additional authorization types
-- Configure conflict detection (for use with [DataStore](~/lib/datastore/getting-started.md))
-- Choose to either reference an existing GraphQL schema or be given starter GraphQL schema boilerplates
-
-After configuring your GraphQL API options, update your backend:
+新しい GraphQL API を作成するには、Amplify CLI `api` カテゴリを使用できます。
 
 ```bash
-amplify push
+増幅して api を追加
 ```
 
-The `aws-exports.js` configuration file will be updated with the new API details,
+プロンプトが表示されたら、 **GraphQL** を選択します。
 
-## Re-use existing AppSync GraphQL API
+CLI プロンプトは、GraphQL API のオプションをカスタマイズするのに役立ちます。指定されたオプションでは、次のことができます。
+- API名を選択してください
+- デフォルトの認証タイプを選択してください
+- 認証タイプに API キーを使用する場合は、API キーの有効期限を選択してください。
+- 追加の認証タイプを設定
+- 競合検出を設定（ [DataStore](~/lib/datastore/getting-started.md) で使用）
+- 既存のGraphQLスキーマを参照するか、GraphQLスキーマのボイラープレートを指定してください
 
-As an alternative to automatic configuration, you can manually enter AWS AppSync configuration parameters in your app. Authentication type options are `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS` and `OPENID_CONNECT`.
+GraphQL API オプションを設定した後、バックエンドを更新します。
 
-### Using API_KEY
+```bash
+push を増幅する
+```
+
+`aws-exports.js` の設定ファイルが新しいAPIの詳細で更新されます。
+
+## 既存の AppSync GraphQL API を再利用します
+
+自動設定の代わりに、アプリでAWS AppSyncの設定パラメータを手動で入力できます。 認証タイプのオプションは `API_KEY`、 `AWS_IAM`、 `AMAZON_COGNITO_USER_POOLS` および `OPENID_CONNECT` です。
+
+### API_KEY の使用
 
 ```javascript
 const myAppConfig = {
@@ -43,12 +43,12 @@ const myAppConfig = {
 Amplify.configure(myAppConfig);
 ```
 
-### Using AWS_IAM
+### AWS_IAMの使用
 
 ```javascript
 const myAppConfig = {
     // ...
-    'aws_appsync_graphqlEndpoint': 'https://xxxxxx.appsync-api.us-east-1.amazonaws.com/graphql',
+    'aws_appsync_graphqlEndpoint': 'https://xxxxxxxx.appsync-api.us-east-1.amazonaws.com/graphql',
     'aws_appsync_region': 'us-east-1',
     'aws_appsync_authenticationType': 'AWS_IAM',
     // ...
@@ -57,7 +57,7 @@ const myAppConfig = {
 Amplify.configure(myAppConfig);
 ```
 
-### Using AMAZON_COGNITO_USER_POOLS
+### AMAZON_COGNITO_USER_POOLS の使用
 
 ```javascript
 const myAppConfig = {
@@ -71,7 +71,7 @@ const myAppConfig = {
 Amplify.configure(myAppConfig);
 ```
 
-### Using OPENID_CONNECT
+### OPENID_CONNECTの使用
 
 ```javascript
 const myAppConfig = {
@@ -85,9 +85,9 @@ const myAppConfig = {
 Amplify.configure(myAppConfig);
 ```
 
-## Using a non-AppSync GraphQL Server
+## AppSync 以外のGraphQL サーバーの使用
 
-To access a non-AppSync GraphQL API with your app, you need to configure the endpoint URL in your app’s configuration. Add the following line to your setup:
+AppSync 以外の GraphQL API にアプリケーションでアクセスするには、アプリの設定でエンドポイント URL を設定する必要があります。 セットアップに次の行を追加します。
 
 ```js
 import Amplify, { API } from 'aws-amplify';
@@ -104,9 +104,9 @@ Amplify.configure({
 });
 ```
 
-### Set Custom Request Headers for non-AppSync GraphQL APIs
+### AppSync 以外の GraphQL API のカスタム要求ヘッダーを設定します
 
-When working with a non-AppSync GraphQL endpoint, you may need to set request headers for authorization purposes. This is done by passing a `graphql_headers` function into the configuration:
+AppSync 以外の GraphQL エンドポイントを使用する場合は、承認のためにリクエストヘッダーを設定する必要がある場合があります。 これは `graphql_headers` 関数を設定に渡すことで行います。
 
 ```js
 Amplify.configure({
@@ -118,9 +118,9 @@ Amplify.configure({
 });
 ```
 
-### Signing Request with IAM
+### IAMによる署名リクエスト
 
-AWS Amplify provides the ability to sign requests automatically with AWS Identity Access Management (IAM) for GraphQL requests that are processed through AWS API Gateway. Add the `graphql_endpoint_iam_region` parameter to your GraphQL configuration statement to enable signing:
+AWS Amplifyは、AWS APIゲートウェイ経由で処理されるGraphQLリクエストに対して、AWS Identity Access Management(IAM)で自動的にリクエストに署名する機能を提供します。 `graphql_endpoint_iam_region` パラメータを GraphQL 設定文に追加し、署名を有効にします。
 
 ```js
 Amplify.configure({
