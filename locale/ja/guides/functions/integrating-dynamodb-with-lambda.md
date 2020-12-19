@@ -1,17 +1,17 @@
 ---
-title: Integrating DynamoDB with Lambda
-description: How to integrate a DynamoDB table with a Lambda function
+title: DynamoDBとLambdaの統合
+description: DynamoDBテーブルとLambda関数を統合する方法
 ---
 
-In this guide you will learn how to do three things:
+このガイドでは、3つの方法を学びます。
 
-1. Create a new Lambda function and DynamoDB database that are integrated together
-2. Create a new DynamoDB Database and integrate it with an existing Lambda function
-3. Create a new Lambda function and integrate it with an an existing DynamoDB database
+1. 一緒に統合された新しいLambda関数とDynamoDBデータベースを作成
+2. 新しいDynamoDBデータベースを作成し、既存のLambda関数と統合します。
+3. 新しいLambda関数を作成し、既存のDynamoDBデータベースと統合します。
 
-### Creating a new Lambda function and DynamoDB database that are integrated
+### 統合された新しいLambda関数とDynamoDBデータベースの作成
 
-The first thing you will need to do will be to create the DynamoDB table:
+DynamoDBテーブルを作成するには、最初に行う必要があります。
 
 ```sh
 amplify add storage
@@ -30,7 +30,7 @@ amplify add storage
 ? Do you want to add a Lambda Trigger for your Table? N
 ```
 
-Next, create the function:
+次に、関数を作成します。
 
 ```sh
 amplify add function
@@ -46,19 +46,19 @@ amplify add function
 ? Do you want to edit the local lambda function now? N
 ```
 
-Deploy the function and database:
+関数とデータベースをデプロイします。
 
 ```sh
-amplify push
+push を増幅する
 ```
 
-Your function and database are now ready to use!
+関数とデータベースを使用する準備ができました！
 
-To learn how to interact with DynamoDB from Lambda, check out [Calling DynamoDB from Lambda in Node.js](~/guides/functions/dynamodb-from-js-lambda.md).
+LambdaからDynamoDBを操作する方法については、Node.js [でLambdaからDynamoDBを呼び出す](~/guides/functions/dynamodb-from-js-lambda.md) を参照してください。
 
-### Creating a new DynamoDB Database and integrate with an existing Lambda function
+### 新しいDynamoDBデータベースを作成し、既存のLambda関数と統合します
 
-First, create the database using the __storage__ category:
+まず、 __storage__ カテゴリを使用してデータベースを作成します。
 
 ```sh
 amplify add storage
@@ -77,7 +77,7 @@ amplify add storage
 ? Do you want to add a Lambda Trigger for your Table? N
 ```
 
-Next, update the function permissions:
+次に、関数の権限を更新します。
 
 ```sh
 amplify update function
@@ -90,17 +90,17 @@ amplify update function
 ? Do you want to edit the local lambda function now? N
 ```
 
-Deploy the database and updates to the Lambda permissions:
+データベースをデプロイし、Lambdaの権限を更新します。
 
 ```sh
-amplify push
+push を増幅する
 ```
 
-Your function and database are now ready to use!
+関数とデータベースを使用する準備ができました！
 
-### Creating a new Lambda function and integrate with an an existing DynamoDB database
+### 新しいLambda関数を作成し、既存のDynamoDBデータベースと統合します
 
-To create a new Lambda function integrated with an existing DynamoDB database, you need to grant access to the database in the creation process of the function:
+既存のDynamoDBデータベースと統合された新しいLambda関数を作成する 関数の作成プロセスでデータベースへのアクセスを許可する必要があります。
 
 ```sh
 amplify add function
@@ -119,12 +119,12 @@ amplify add function
 ? Do you want to edit the local lambda function now? N
 ```
 
-Deploy the function:
+機能をデプロイします。
 
 ```sh
-amplify push
+push を増幅する
 ```
 
-Your function and database are now ready to use!
+関数とデータベースを使用する準備ができました！
 
-To learn how to interact with DynamoDB from Lambda, check out [Calling DynamoDB from Lambda in Node.js](~/guides/functions/dynamodb-from-js-lambda.md).
+LambdaからDynamoDBを操作する方法については、Node.js [でLambdaからDynamoDBを呼び出す](~/guides/functions/dynamodb-from-js-lambda.md) を参照してください。
