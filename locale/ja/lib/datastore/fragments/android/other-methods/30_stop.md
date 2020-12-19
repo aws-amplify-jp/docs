@@ -3,7 +3,7 @@
 ```java
 Amplify.DataStore.stop(
     () -> Log.i("MyAmplifyApp", "DataStore stopped"),
-    error -> Log.e("MyAmplifyApp", "Error stopped DataStore", error)
+    error -> Log.e("MyAmplifyApp", "Error stop DataStore", error)
 );
 ```
 
@@ -12,7 +12,7 @@ Amplify.DataStore.stop(
 ```kotlin
 Amplify.DataStore.stop(
     { Log.i("MyAmplifyApp", "DataStore stopped") },
-    { Log.e("MyAmplifyApp", "Error stopping DataStore", it) }
+    { Log.e("MyAmplifyApp", "Error stop DataStore", it) }
 )
 ```
 
@@ -22,7 +22,7 @@ Amplify.DataStore.stop(
 RxAmplify.DataStore.stop()
     .subscribe(
         () -> Log.i("MyAmplifyApp", "DataStore stopped"),
-        error -> Log.e("MyAmplifyApp", "Error stopping DataStore", error)
+        error -> Log.e("MyAmplifyApp", "Error stop DataStore", error)
     );
 }
 ```
