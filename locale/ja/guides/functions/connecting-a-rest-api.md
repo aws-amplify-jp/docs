@@ -1,11 +1,11 @@
 ---
-title: Connecting a REST API to a Lambda function
-description: How to connect a REST API to a Lambda function
+title: Lambda関数へのREST APIの接続
+description: REST API をLambda 関数に接続する方法
 ---
 
-In this guide you will learn how to connect a REST API to an existing Lambda function.
+このガイドでは、REST APIを既存のLambda関数に接続する方法を学びます。
 
-To get started, create a new API:
+始めるには、新しいAPIを作成してください。
 
 ```sh
 amplify add api
@@ -19,12 +19,12 @@ amplify add api
 ? Do you want to add another path: N
 ```
 
-Deploy the API:
+APIのデプロイ:
 
 ```sh
-amplify push
+push を増幅する
 ```
 
-Your API is now ready to use!
+APIを使用できるようになりました！
 
-To learn more about how to interact with the API from a client-side application, check out the docs [here](~/lib/restapi/getting-started.md)
+クライアント側アプリケーションからAPIを操作する方法の詳細については、こちらのドキュメント [をご覧ください](~/lib/restapi/getting-started.md)
