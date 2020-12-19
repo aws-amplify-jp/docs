@@ -1,4 +1,4 @@
-Delete an object uploaded to S3 by using `Amplify.Storage.remove` and specify the key:
+`Amplify.Storage.remove` を使用して S3 にアップロードされたオブジェクトを削除し、キーを指定します。
 
 <amplify-block-switcher>
 
