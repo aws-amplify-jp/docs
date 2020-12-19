@@ -1,19 +1,19 @@
 
-Before using any methods in the Amplify Flutter Library, it's important to add all necessary plugins and to call configure once in your app.  The steps below will guide you through configuring Amplify Flutter at the root level of your flutter app.
+Amplify Flutter Libraryのメソッドを使用する前に、必要なすべてのプラグインを追加し、一度アプリで configure を呼び出すことが重要です。 以下の手順で、フラッターアプリのルートレベルにAmplify Flutterを設定できます。
 
-Import the necessary dart dependencies at the top of main.dart:
+main.dartの上部に必要なダーツの依存関係をインポートします。
 
 ```dart
 // Amplify Flutter Packages
-import 'package:amplify_core/amplify_core.dart';
-import 'package:amplify_analytics_pinpoint/amplify_analytics_pinpoint.dart';
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:amplify_core/amply_core.dart';
+import 'package:anplify_analytics_pinpoints/anply_analytics_pinpoints_pinpoints.dart';
+import 'package:anplify_auth_cognito.dart';
 
 // Generated in previous step 
 import 'amplifyconfiguration.dart'; 
 ```
 
-Add the following code to your application's root Stateful Widget, for a blank Flutter app this should be the `class _MyHomePageState extends State<MyHomePage>`.
+アプリケーションのルートステートフル・ウィジェットに次のコードを追加します。 空白の Flutter アプリの場合、これは `クラス _MyHomePageState が状態<MyHomePage>` を拡張する必要があります。
 
 ```dart
 
@@ -54,4 +54,4 @@ class _MyHomePageState extends State<MyHomePage> {
 
 ```
 
-Note that all calls to `addPlugin` are made before `amplify.configure` is called.
+`addPlugin` へのすべての呼び出しは `amplify.configure` が呼ばれる前に行われることに注意してください。
