@@ -1,16 +1,16 @@
-List keys under a specified path, as well as `lastModified` timestamp.
+指定されたパスの下のリストキーと、 `lastModified` タイムスタンプです。
 
-## Public level list
+## 公開レベルリスト
 
 ```javascript
-Storage.list('photos/') // for listing ALL files without prefix, pass '' instead
+Storage.list('photos/') // 接頭辞なしですべてのファイルを一覧表示するには、 '' instead
     .then(result => console.log(result))
     .catch(err => console.log(err));
 ```
 
 Note the trailing slash `/` - if we had requested `Storage.list('photos')` it would also match against files like `photos123.jpg` alongside `photos/123.jpg`.
 
-The format of the result looks like this:
+結果の形式は次のようになります。
 
 ```js
 [
@@ -44,7 +44,7 @@ Manually created folders will show up as files with a `size` of 0, but you can a
   }
 ```
 
-If you need the files and folders in terms of a nested object instead (for example, to build an explorer UI), you could parse it recursively:
+代わりにネストされたオブジェクトの点でファイルとフォルダが必要な場合（例えば、 エクスプローラUIを構築するには、再帰的に解析することができます。
 
 ```js
   function processStorageList(results) {
@@ -65,11 +65,11 @@ If you need the files and folders in terms of a nested object instead (for examp
   }
 ```
 
-This places each item's data inside a special `__data` key.
+これにより、各アイテムのデータは特別な `__data` キーの中に配置されます。
 
-## Protected level list
+## 保護されたレベル リスト
 
-To list current user's objects:
+現在のユーザーのオブジェクトを一覧表示するには:
 
 ```javascript
 Storage.list('photos/', { level: 'protected' })
@@ -77,18 +77,19 @@ Storage.list('photos/', { level: 'protected' })
     .catch(err => console.log(err));
 ```
 
-To get other users' objects:
+他のユーザーのオブジェクトを取得するには:
 
 ```javascript
-Storage.list('photos/', { 
+保管庫。 ist('photos/', { 
     level: 'protected', 
-    identityId: 'xxxxxxx' // the identityId of that user
+ identityId: 'xxxxxxx' // そのユーザの identityId 
+    })
 })
-.then(result => console.log(result))
+. hen(result => console.log(result))
 .catch(err => console.log(err));
 ```
 
-## Private level list
+## プライベートレベルリスト
 
 ```javascript
 Storage.list('photos/', { level: 'private' })
