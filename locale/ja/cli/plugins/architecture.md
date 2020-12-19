@@ -1,56 +1,56 @@
 ---
-title: Architecture
-description: The Amplify CLI has a pluggable architecture. The CLI core provides the pluggable platform, and most of the CLI category functions are implemented as plugins.
+title: 建築
+description: Amplify CLI は、プラグイン可能なアーキテクチャを持っています。CLI コアは、プラグインプラットフォームを提供し、CLI カテゴリのほとんどは、プラグインとして実装されています。
 ---  
 
-The Amplify CLI has a pluggable architecture. The CLI core provides the pluggable platform, and most of the CLI category functions are implemented as plugins.
+Amplify CLI は、プラグイン可能なアーキテクチャを持っています。CLI コアは、プラグインプラットフォームを提供し、CLI カテゴリのほとんどは、プラグインとして実装されています。
 
-## Overview
+## 概要
 
-![Image](~/images/plugin-platform.png)
+![画像](~/images/plugin-platform.png)
 
 The Amplify CLI Core maintains a `plugins.json` file to store the plugin management configuration settings and information of all the installed plugins.  <br/> The Amplify CLI plugins each contain an `amplify-plugin.json` file to manifest themselves as valid plugins.  <br/> The Amplify CLI Core provides a set of utility commands under `amplify plugin` for plugin management and to facilitate the development of plugins.
 
 The Amplify CLI Core does not dynamically scan for plugins at the beginning of each command execution. Instead, information about the installed plugins are retrieved from the `plugins.json` file and only the plugins that are needed for the execution of the command will be loaded.
 
-The `plugins.json` file is stored at path `<os.homedir>/.amplify/plugins.json`. Unless you really know what you are doing, you should NOT manually edit this file, otherwise you run the risk of corrupting your local installation of the Amplify CLI.
+`plugins.json` ファイルは、パス `<os.homedir>/.amplify/plugins.json`に保存されます。 何をしているのかわからない限り、手動でこのファイルを編集してはいけません。 そうでなければ、Amplify CLIのローカルインストールを破損する危険性があります。
 
-The `plugins.json` file will be created or updated in the following situations:
+`plugins.json` ファイルは以下の場合に作成または更新されます。
 
 * If the `plugins.json` file is not found when the Amplify CLI Core tries to access it, the Amplify CLI Core will create this file and scan the local environment for plugins, and then store the information in the file.
-* If the last scan time was more than one day (configurable) ago, the Amplify CLI Core will scan again and update the information.
-* If inaccuracy is detected, e.g. a specified plugin cannot be loaded, the Amplify CLI Core will scan again and update the information.
+* 最後のスキャン時間が1日以上前(設定可能)の場合、Amplify CLI Coreは再びスキャンし、情報を更新します。
+* 不正確さが検出された場合、例えば指定されたプラグインがロードできない場合、Amplify CLI Coreは再度スキャンし、情報を更新します。
 * After the execution of any of the `amplify plugin` commands that could change it, e.g. `amplify plugin scan`, `amplify plugin add/remove`.
 
 By default, the CLI core searches for plugins in its parent directory, its local `node_modules` directory, and the global `node_modules` directory. Plugins are recognized by the `amplify-` prefix in the package names.
 
-Plugins communicate with the CLI core and with each other through the project metadata. The CLI core provides the read and write access to the project metadata for the plugins. The project metadata is stored in file `amplify/backend/amplify-meta.json` in the user project.
+プラグインは、CLI コアと、プロジェクトのメタデータを介して相互に通信します。 CLI コアは、プラグインのプロジェクトメタデータへの読み取りおよび書き込みアクセスを提供します。 プロジェクトのメタデータは、ユーザー プロジェクトの `anplify/backend/anplify-meta.json` ファイルに格納されます。
 
-## Plugin types
-![Image](~/images/AmplifyCliConcept.jpg)
+## プラグインの種類
+![画像](~/images/AmplifyCliConcept.jpg)
 
-There are four types of plugins
-- category
-- provider
-- frontend
+プラグインには4種類あります。
+- カテゴリ
+- プロバイダー
+- フロント
 - util
 
-### Category plugin
+### カテゴリプラグイン
 Amplify maintained category plugins are recognized by the `amplify-category-` prefix in the package name.<br/> A category plugin wraps up the logic to create and manage one category of backend resources in the cloud. It defines the "shape" of the cloud resources based on user (the developer) input, constructs parameters to CRUD cloud resource, and exports relevant cloud resource information to the project metadata.
 
-Categories are managed by AWS and are a functional use case that a client engineer is building as part of their UX, rather than service implementations.
+カテゴリーはAWSによって管理され、クライアントエンジニアがUXの一部として構築している機能的なユースケースです。 サービスの実装ではありません
 
-### Provider plugin
+### プロバイダー プラグイン
 Amplify maintained provider plugins are recognized by the `amplify-provider-` prefix in the package name.<br/> A provider plugin abstracts the actual cloud resource provider. It wraps up communication details such as access credentials, api invoke, wait logic, and response data parsing. It also exposes simple interface methods for the category plugins to CRUD cloud resource.
 
-#### AWS CloudFormation provider
+#### AWS CloudFormationプロバイダー
 Currently, the only official provider plugin, amplify-provider-awscloudformation, uses the AWS CloudFormation to form and update the backend resources in the AWS for the amplify categories. For more information about  AWS CloudFormation, check its user guide: [AWS CloudFormation User Guide](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html). The `amplify-provider-awscloudformation` uses [nested stacks](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-nested-stacks.html).
 
-### Frontend plugin
+### フロントエンドプラグイン
 Amplify maintained frontend plugins are recognized by the `amplify-frontend-` prefix in the package name.<br/> A frontend plugin handles a specific type of frontend projects, such as Javascript, Android or iOS projects. Among other things, it provides the following functionalities:
-- Formats the cloud resource information and writes it to a file at the right location so it can be recognized and consumed by the frontend project
-- Builds and serves the frontend application locally with backend hot-wired to the cloud resources
-- Builds and publishes the application (frontend and backend) to its intended users
+- クラウドリソース情報をフォーマットし、正しい場所のファイルに書き込むことで、フロントエンドプロジェクトで認識および消費されることができます。
+- バックエンドのホットワイヤードをクラウドリソースに接続し、フロントエンドアプリケーションをローカルに構築します。
+- 目的のユーザーにアプリケーション（フロントエンドとバックエンド）をビルドして公開します
 
 ### util plugin
-Official util plugins are recognized by the `amplify-` prefix, without a plugin type decoration in the package name, a util purpose plugin does not manage any backend resources in the cloud, but provides certain CLI commands and/or certain functionalities for the CLI core, and other plugins.
+公式の util プラグインは `anplify-` プレフィックスによって認識されます。パッケージ名のプラグインタイプの装飾はありません。 util houseプラグインはクラウドのバックエンドリソースを管理しません ただし、CLI コアおよびその他のプラグインに特定の CLI コマンドおよび/または特定の機能を提供します。
