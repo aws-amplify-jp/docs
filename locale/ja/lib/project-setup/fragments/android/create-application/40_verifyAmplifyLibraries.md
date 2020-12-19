@@ -1,16 +1,16 @@
-Create an `Application` class and add the Amplify initialization into its `onCreate()` to initialize Amplify once in your application.
+`Application` クラスを作成し、Amplify の初期化を `onCreate()` に追加して、アプリケーションで一度だけAmplify を初期化します。
 
 Right-click on your namespace (e.g. `com.example.MyAmplifyApp`), click **New**, and click **Java Class** or **Kotlin File/Class** depending on which language you choose.
 
 <amplify-block-switcher> <amplify-block name="Java">
 
-Configure the new class in **New Java Class**:
+**New Java Class** で新しいクラスを構成する
 
-- Enter *MyAmplifyApp* in the **Name** field
-- Enter *android.app.Application* in the **Superclass** field
-- Press **OK**
+- *名前* フィールドに **MyAmplifyApp** を入力してください
+- *Superclass* フィールドに **android.app.Application** format@@4 を入力してください
+- **OK** を押します
 
-Initialize Amplify by adding an `onCreate` method with the following code:
+Amplifyを初期化するには、次のコードを使用して `onCreate` メソッドを追加します。
 
 ```java
   public void onCreate() {
@@ -29,13 +29,13 @@ Initialize Amplify by adding an `onCreate` method with the following code:
 
 <amplify-block name="Kotlin">
 
-Configure the new class in **New Kotlin File/Class**:
+**New Kotlin File/Class** で新しいクラスを設定する
 
-- Enter *MyAmplifyApp* in the **Name** field
-- Select *Class* from the types
-- Press enter
+- *名前* フィールドに **MyAmplifyApp** を入力してください
+- タイプから *クラス* を選択する
+- Enter キーを押します
 
-Initialize Amplify by adding an `onCreate` method with the following code:
+Amplifyを初期化するには、次のコードを使用して `onCreate` メソッドを追加します。
 
 ```kotlin
 override fun onCreate() {
@@ -52,7 +52,7 @@ override fun onCreate() {
 
 </amplify-block> </amplify-block-switcher>
 
-This overrides the `onCreate()` to initialize Amplify when your application is launched.
+これは `onCreate()` を上書きし、アプリケーションの起動時にAmplifyを初期化します。
 
 Next, configure your application to use your new custom `Application` class. Open **manifests** > **AndroidManifest.xml**, and add a `android:name` attribute with the value of your new class name:
 
@@ -69,7 +69,7 @@ Next, configure your application to use your new custom `Application` class. Ope
 </manifest>
 ```
 
-Next, build and run the application. In logcat, you'll see a log line indicating success:
+次に、アプリケーションをビルドして実行します。logcatでは、成功を示すログ行が表示されます。
 
 ```console
 com.example.MyAmplifyApp I/MyAmplifyApp: Initialized Amplify
