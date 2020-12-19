@@ -1,3 +1,3 @@
-* [Install and configure Amplify CLI](https://docs.amplify.aws/cli/start/install)
-* An iOS application targeting at least iOS 11.0 with Amplify libraries integrated
-    * For a full example of creating a iOS Xcode project, please follow [project setup walkthrough](~/lib/project-setup/create-application.md)
+* [Amplify CLI をインストールおよび設定](https://docs.amplify.aws/cli/start/install)
+* Amplifyライブラリを統合した少なくともiOS 11.0をターゲットとするiOSアプリケーション
+    * iOS Xcode プロジェクトの完全な例については、 [プロジェクトのセットアップの手順](~/lib/project-setup/create-application.md) に従ってください。
