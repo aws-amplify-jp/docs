@@ -1,9 +1,9 @@
-Congratulations!  You've created a skeleton app and are ready to start adding Amplify categories to your application.  The following are some categories that you can start to build into your application:
+おめでとうございます！ スケルトンアプリを作成し、Amplifyカテゴリをアプリケーションに追加する準備ができました。 以下は、アプリケーションに組み込むために開始できるいくつかのカテゴリです。
 
-* [Analytics](~/lib/analytics/getting-started.md) - for logging metrics and understanding your users
-* [API (GraphQL)](~/lib/graphqlapi/getting-started.md) - for adding a GraphQL endpoint to your app
-* [API (REST)](~/lib/restapi/getting-started.md) - for adding a REST endpoint to your app
-* [Authentication](~/lib/auth/getting-started.md) - for managing your users
-* [DataStore](~/lib/datastore/getting-started.md) - for making it easier to program for a distributed data store for offline and online scenarios
-* [Predictions](~/lib/predictions/getting-started.md) - to detect text, images, and more!
-* [Storage](~/lib/storage/getting-started.md) - store complex objects like pictures and videos to the cloud.
+* [分析](~/lib/analytics/getting-started.md) - メトリックを記録し、ユーザーを理解するためのもの
+* [API (GraphQL)](~/lib/graphqlapi/getting-started.md) - アプリにGraphQLエンドポイントを追加するための
+* [API (REST)](~/lib/restapi/getting-started.md) - RESTエンドポイントをアプリに追加するための
+* [認証](~/lib/auth/getting-started.md) - ユーザーを管理するためのもの
+* [DataStore](~/lib/datastore/getting-started.md) - オフラインおよびオンラインのシナリオのための分散データストアのプログラムを容易にするためのものです。
+* [予測](~/lib/predictions/getting-started.md) - テキスト、画像などを検出する!
+* [ストレージ](~/lib/storage/getting-started.md) - 画像やビデオなどの複雑なオブジェクトをクラウドに保存します。
