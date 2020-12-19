@@ -1,4 +1,4 @@
-**Usage**
+**使用法**
 
 ```html
 <amplify-select-mfa-type></amplify-select-mfa-type>
