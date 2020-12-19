@@ -1,34 +1,34 @@
-## OAuth and Federation Overview
+## OAuthとフェデレーションの概要
 
 [OAuth 2.0](https://en.wikipedia.org/wiki/OAuth) is the common Authorization framework used by web and mobile applications for getting access to user information ("scopes") in a limited manner. Common analogies you will hear in OAuth is that of boarding a plane or staying in a hotel - showing your identification is the Authentication piece (signing into an app) and using the boarding pass/hotel key is what you are Authorized to access.
 
-OAuth support in Amplify uses Cognito User Pools and supports federation with social providers, which will automatically create a corresponding user in the User Pool after a login. [OIDC](https://en.wikipedia.org/wiki/OpenID_Connect) tokens are available in the app after the application has completed this process.
+AmplifyでのOAuthサポートはCognitoユーザープールを使用し、ソーシャルプロバイダとの連盟をサポートしています。 これは、ログイン後に自動的に対応するユーザーをユーザープールに作成します。 [OIDC](https://en.wikipedia.org/wiki/OpenID_Connect) トークンは、アプリケーションがこのプロセスを完了した後にアプリで利用できます。
 
 <inline-fragment src="~/lib/auth/fragments/common/social_signin_web_ui/setup_auth_provider.md"></inline-fragment>
 
-## Configure Auth Category
+## 認証カテゴリの設定
 
-Once you have the social provider configured, run the following in your project’s root folder:
+ソーシャルプロバイダを設定したら、プロジェクトのルートフォルダで以下を実行してください：
 
 ```bash
-amplify add auth     ## "amplify update auth" if already configured
+amplify add auth ## "amplify update auth" already configured
 ```
 
-Select Default configuration with Social Provider (Federation):
+ソーシャルプロバイダ(Federation)でデフォルト設定を選択します。
 
 ```console
-Do you want to use the default authentication and security configuration? 
-  Default configuration 
-❯ Default configuration with Social Provider (Federation) 
-  Manual configuration 
-  I want to learn more.
+デフォルトの認証とセキュリティ設定を使用しますか？ 
+  デフォルト設定 
+<unk> ソーシャルプロバイダ(Federation)によるデフォルト設定 
+  手動設定 
+  詳細を知りたい。
 ```
 
-**Redirect URIs**
+**リダイレクト URI**
 
 For *Sign in Redirect URI(s)* inputs, you can put one URI for local development and one for production. Example: `http://localhost:3000/` in dev and `https://www.example.com/` in production. The same is true for *Sign out redirect URI(s)*.
 
-**Note:** if you have multiple redirect URI inputs, you'll need to handle both of them where you configure your Amplify project. For example:
+**注意:** 複数のリダイレクト URI 入力がある場合は、Amplifyプロジェクトを設定する場合、両方の入力を処理する必要があります。例えば:
 
 ```javascript
 import awsConfig from './aws-exports';
@@ -66,12 +66,12 @@ const updatedAwsConfig = {
 Amplify.configure(updatedAwsConfig);
 ```
 
-**React Native - Redirect URIs**
+**React Native - リダイレクト URI**
 
 For React Native applications, You need to define a custom URL scheme for your application before testing locally or publishing to the app store. This is different for Expo or vanilla React Native. Follow the steps below for React Native iOS & Android or [Expo Linking docs](https://docs.expo.io/versions/latest/workflow/linking/) for more information. After completing those steps, assuming you are using `myapp` as the name of your URL Scheme (or whatever friendly name you have chosen), you will use these URLs as *Sign in Redirect URI(s)* and/or *Sign out redirect URI(s)* inputs. Your URIs could look like any of these:
 
 - `myapp://`
-- `exp://127.0.0.1:19000/--/` (Local development if your app is running [in the Expo client](https://docs.expo.io/versions/latest/workflow/linking/#linking-to-your-app)).
+- `exp://127.0.0.1:19000/-/` (アプリがエキスポクライアント [で実行されている場合は、ローカル開発](https://docs.expo.io/versions/latest/workflow/linking/#linking-to-your-app))。
 
 *React Native - iOS - Info.plist*
 
@@ -100,8 +100,8 @@ For React Native applications, You need to define a custom URL scheme for your a
 
 *React Native - Android - AndroidManifest.xml*
 
-- Set the `launchMode` of MainActivity to `singleTask`
-- Add new intent filter (below) with `scheme="myapp"`
+- MainActivity の `launchMode` を `singleTask` に設定する
+- `scheme="myapp"` で新しいインテントフィルターを追加する
 
 ```xml
 <application>
@@ -122,7 +122,7 @@ For React Native applications, You need to define a custom URL scheme for your a
 
 <inline-fragment src="~/lib/auth/fragments/common/social_signin_web_ui/configure_auth_category.md"></inline-fragment>
 
-### Known Limitations
+### 既知の制限
 When using the federated OAuth flow with Cognito User Pools, the [device tracking and remembering](https://aws.amazon.com/blogs/mobile/tracking-and-remembering-devices-using-amazon-cognito-your-user-pools/) features are currently not available within the library. If you are looking for this feature within the library, please open a feature request [here](https://github.com/aws-amplify/amplify-js/issues/new?assignees=&labels=feature-request&template=feature_request.md&title=) and provide upvotes in order for us to take this into consideration for the future of the library.
 
 ## Setup frontend
@@ -171,11 +171,11 @@ class App extends Component {
 }
 ```
 
-### Deploying to Amplify Console
+### Amplifyコンソールにデプロイ中
 
-To deploy your app to Amplify Console with continuous deployment of the frontend and backend, please follow [these instructions](https://docs.aws.amazon.com/amplify/latest/userguide/environment-variables.html#creating-a-new-backend-environment-with-authentication-parameters).
+フロントエンドとバックエンドの継続的なデプロイでアプリをAmplifyコンソールにデプロイするには、 [以下の手順](https://docs.aws.amazon.com/amplify/latest/userguide/environment-variables.html#creating-a-new-backend-environment-with-authentication-parameters)に従ってください。
 
-### Full Samples
+### 完全なサンプル
 
 <amplify-block-switcher>
 
@@ -237,7 +237,7 @@ export default App;
 
 <amplify-callout>
 
-**Note for iOS Apps**
+**iOS アプリ向けメモ**
 
 In order for Amplify to listen for data from Cognito when linking back to your app, you will need to setup the `Linking` module in `AppDelegate.m` (see [React Native docs](https://reactnative.dev/docs/linking#enabling-deep-links) for more information):
 
@@ -253,11 +253,11 @@ In order for Amplify to listen for data from Cognito when linking back to your a
 ```
 </amplify-callout>
 
-**In-App Browser Setup (optional, but recommended)**
+**アプリ内ブラウザ設定 (オプションですが、推奨)**
 
 By default, Amplify will opened the Cognito Hosted UI in Safari/Chrome, but you can override that behavior by providing a custom `urlOpener`. The sample below uses [react-native-inappbrowser-reborn](https://github.com/proyecto26/react-native-inappbrowser), but you can use any other in-app browser available.
 
-**Sample**
+**サンプル**
 
 ```js
 import React, { useEffect, useState } from 'react';
@@ -338,11 +338,11 @@ export default App;
 
 <amplify-block name="Expo">
 
-**In-App Browser Setup (optional, but recommended)**
+**アプリ内ブラウザ設定 (オプションですが、推奨)**
 
 By default, Amplify will opened the Cognito Hosted UI in Safari/Chrome, but you can override that behavior by providing a custom `urlOpener`. The sample below uses Expo's [WebBrowser.openAuthSessionAsync](https://docs.expo.io/versions/v37.0.0/sdk/webbrowser/).
 
-**Sample**
+**サンプル**
 
 ```js
 import React, { useEffect, useState } from 'react';
