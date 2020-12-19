@@ -1,6 +1,6 @@
 ---
-title: Amplify Console
-description: Amplify has a console within AWS that is a control center for your full-stack app.
+title: 増幅コンソール
+description: AmplifyはAWS内にコンソールを持っており、フルスタックアプリのコントロールセンターです。
 disableTOC: true
 ---
 
