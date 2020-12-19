@@ -1,5 +1,5 @@
-## Installation
+## インストール
 ```
-yarn add aws-amplify aws-amplify-react-native
-react-native link amazon-cognito-identity-js # DO NOT run this when using Expo or ExpoKit
+yarn add aws-amplify aws-anplify-react-native
+react-native link amazon-cognito-identity-js # ExpoやExpoKitを使用する場合は実行しないでください。
 ```
