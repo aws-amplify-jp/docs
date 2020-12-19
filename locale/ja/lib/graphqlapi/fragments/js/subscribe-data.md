@@ -1,6 +1,6 @@
-## Using Amplify GraphQL client
+## AmplifyGraphQLクライアントの使用
 
-Subscriptions is a GraphQL feature allowing the server to send data to its clients when a specific event happens. You can enable real-time data integration in your app with a subscription.
+サブスクリプションは、特定のイベントが発生したときにサーバーがクライアントにデータを送信できるGraphQL機能です。 サブスクリプションを使用すると、アプリケーションでリアルタイムのデータ統合を有効にできます。
 
 ```javascript
 import Amplify, { API, graphqlOperation } from 'aws-amplify';
@@ -18,7 +18,7 @@ subscription.unsubscribe();
 
 ```
 
-When using **AWS AppSync** subscriptions, be sure that your AppSync configuration is at the root of the configuration object, instead of being under API:
+**AWS AppSync** のサブスクリプションを使用する場合 AppSync の設定が API の下にあるのではなく、設定オブジェクトのルートにあることを確認してください。
 
 ```javascript
 Amplify.configure({
@@ -38,7 +38,7 @@ Amplify.configure({
 });
 ```
 
-## Using AWS AppSync SDK
+## AWS AppSync SDK の使用
 
 Finally, it's time to set up a subscription to real-time data. The syntax is `client.subscribe({ query: SUBSCRIPTION })` which returns an `Observable` that you can subscribe to with `.subscribe()` as well as `.unsubscribe()` when the data is no longer necessary in your application. For example, if you have a `onCreateTodo` subscription, your code might look like the following:
 
@@ -66,4 +66,4 @@ setTimeout(() => {
 
 Note that since `client.subscribe` returns an `Observable`, you can use `filter`, `map`, `forEach` and other stream related functions. When you subscribe, you'll get back a subscription object you can use to unsubscribe.
 
-Subscriptions can also take input types like mutations, in which case they will be subscribing to particular events based on the input. To learn more about subscription arguments, see [Real-Time data](https://docs.aws.amazon.com/appsync/latest/devguide/real-time-data.html).
+サブスクリプションは、mutions のような入力型を取ることもできます。その場合、入力に基づいて特定のイベントを購読します。 サブスクリプション引数の詳細については、 [リアルタイムデータ](https://docs.aws.amazon.com/appsync/latest/devguide/real-time-data.html) を参照してください。
