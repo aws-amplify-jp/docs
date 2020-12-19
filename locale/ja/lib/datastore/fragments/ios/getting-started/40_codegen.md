@@ -1,11 +1,11 @@
-On iOS the aforementioned `amplify-app` offers an Xcode integration that automatically adds the Amplify-specific files to your project.
+前述の `増幅アプリ` はiOSで、プロジェクトにAmplify固有のファイルを自動的に追加するXcode統合を提供します。
 
-1. **Run the command**:
+1. **コマンド** を実行:
     ```
-    amplify codegen models && amplify-app
+    コードジェネレーションモデルを増幅 && 増幅アプリ
     ```
 
-1. Once the command finishes, a new group named `AmplifyModels` should be added to your project and contain the following files:
+1. コマンドが終了すると、 `AmplifyModel` という名前の新しいグループがプロジェクトに追加され、次のファイルが含まれているはずです。
 
   - `AmplifyModels/`
     - `AmplifyModels.swift`
@@ -13,4 +13,4 @@ On iOS the aforementioned `amplify-app` offers an Xcode integration that automat
     - `Post+Schema.swift`
     - `PostStatus.swift`
 
-1. **Build the project (`Cmd+b`)**.
+1. **プロジェクトをビルドする (`Cmd+b`)**.
