@@ -1,6 +1,6 @@
-PubSub provides connectivity with cloud-based message-oriented middleware. You can use PubSub to pass messages between your app instances and your app's backend creating real-time interactive experiences.
+PubSub は、クラウドベースのメッセージ指向ミドルウェアとの接続を提供します。 PubSub を使用して、アプリケーションインスタンスとアプリケーションのバックエンド間のメッセージを渡すことができ、リアルタイムのインタラクティブなエクスペリエンスを作成できます。
 
-PubSub is available with **AWS IoT**.
+PubSub は **AWS IoT** で利用可能です。
 
 <amplify-callout>
 
@@ -8,13 +8,13 @@ Starting with version `12.1.1`, iOS requires that publicly-trusted Transport Lay
 
 </amplify-callout>
 
-## Installation and Configuration
+## インストールと設定
 
 ### AWS IoT
 
-When used with `AWSIoTDataManager`, PubSub is capable of signing request according to [Signature Version 4](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html).
+`AWSIoTDataManager`と一緒に使用すると、PubSub は [署名バージョン 4](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html) に従ってリクエストを署名することができます。
 
-The `Podfile` that you configure to install the AWS Mobile SDK must contain the `AWSIoT` pod:
+AWS Mobile SDK をインストールするように設定する `Podfile` には、 `AWSIoT` ポッドが含まれている必要があります。
 
 ```ruby
 platform :ios, '9.0'
@@ -22,21 +22,21 @@ platform :ios, '9.0'
 target :'YOUR-APP-NAME' do
   use_frameworks!
 
-  pod  'AWSIoT'
+  pod 'AWSIoT'
   # other pods
 
 end
 ```
 
-Run `pod install --repo-update` before you continue.
+続行する前に `pod install --repo-update` を実行します。
 
-To use in your app, import the following:
+アプリで使用するには、以下をインポートしてください。
 
 ```swift
 import AWSIoT
 ```
 
-Define your unique client ID and endpoint (incl. region) in your configuration:
+設定内の固有のクライアント ID とエンドポイント (リージョンを含む) を定義します。
 
 ```swift
 // Initialize the AWSIoTDataManager with the configuration
@@ -54,27 +54,27 @@ let iotDataManager = AWSIoTDataManager(forKey: "MyAWSIoTDataManager")
 
 <amplify-callout>
 
-You can get the endpoint information from the IoT Core -> Settings page on the AWS Console.
+AWS コンソールの IoT Core -> 設定ページからエンドポイント情報を取得できます。
 
 </amplify-callout>
 
-**Create IAM policies for AWS IoT**
+**AWS IoT 向けの IAM ポリシーを作成**
 
-To use PubSub with AWS IoT, you will need to create the necessary IAM policies in the AWS IoT Console, and attach them to your Amazon Cognito Identity.
+AWS IoTでPubSubを使用するには、AWS IoTコンソールで必要なIAMポリシーを作成する必要があります。 Amazon Cognito Identityに接続します。
 
 Go to IoT Core and choose *Secure* from the left navigation pane. Then navigate to *Create Policy*. The following `myIOTPolicy` policy will allow full access to all the topics.
 
-![Alt text](~/images/iot_attach_policy.png)
+![Altテキスト](~/images/iot_attach_policy.png)
 
-**Attach your policy to your Amazon Cognito Identity**
+**Amazon Cognito IDにポリシーを添付**
 
-To attach the policy to your *Cognito Identity*, begin by retrieving the `Cognito Identity Id` from `AWSMobileClient`.
+ポリシーを *Cognito Identity*に添付するには、 `AWSMobileClient` から `Cognito Identity Id` を取得します。
 
 ```swift
 AWSMobileClient.default().getIdentityId();
 ```
 
-Then, you need to attach the `myIOTPolicy` policy to the user's *Cognito Identity Id* with the following [AWS CLI](https://aws.amazon.com/cli/) command:
+次に、 `myIOTPolicy` ポリシーを次の *AWS CLI* コマンドでユーザーの [Cognito Identity Id](https://aws.amazon.com/cli/) に添付する必要があります。
 
 ```bash
 aws iot attach-principal-policy --policy-name 'myIOTPolicy' --principal '<YOUR_COGNITO_IDENTITY_ID>'
