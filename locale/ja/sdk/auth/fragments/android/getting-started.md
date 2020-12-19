@@ -1,6 +1,6 @@
-## Install Dependencies
+## 依存関係のインストール
 
-After initialization in your project directory with `amplify init`, update your **App** `build.gradle` with the below:
+プロジェクトディレクトリで `amplify init`を使用して初期化した後、 **App** `build.gradle` を以下のように更新します:
 
 ```groovy
 //For AWSMobileClient only:
@@ -20,35 +20,35 @@ For the `AWSMobileClient` alone you can have a minimum SDK version of **15**, bu
 minSdkVersion 15
 ```
 
-Add the following permissions to the `AndroidManifest.xml` file:
+`AndroidManifest.xml` ファイルに次の権限を追加します。
 
 ```xml
 <uses-permission android:name="android.permission.INTERNET"/>
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 ```
 
-Build your Android Studio project.
+Android Studio プロジェクトをビルドします。
 
-## Automated Setup
+## 自動セットアップ
 
-Run the following command in your project's root folder:
+プロジェクトのrootフォルダで次のコマンドを実行します。
 
 ```bash
-amplify add auth
+増幅して認証を追加
 ```
 
-If you have previously enabled an Amplify category that uses Auth behind the scenes, e.g. API category, you may already have an Auth configuration. In such a case, run `amplify auth update` command to edit your configuration.
+これまでに、API カテゴリなど、舞台裏で Authを使用するAmplifyカテゴリを有効にしている場合は、すでに認証設定を持っている可能性があります。 そのような場合は、設定を編集するために、 `増幅する auth update` コマンドを実行してください。
 
-The CLI prompts will help you to customize your auth flow for your app. With the provided options, you can:
-- Customize sign-in/registration flow
-- Customize email and SMS messages for Multi-Factor Authentication
-- Customize attributes for your users, e.g. name, email
-- Enable 3rd party authentication providers, e.g. Facebook, Twitter, Google and Amazon
+CLI プロンプトは、アプリの認証フローをカスタマイズするのに役立ちます。指定されたオプションを使用すると、次のことができます。
+- サインイン/登録フローを編集する
+- 多要素認証のための電子メールとSMSメッセージを編集する
+- ユーザーの属性をカスタマイズします。例：名前、電子メール
+- Facebook、Twitter、Google、Amazonなどのサードパーティの認証プロバイダを有効にする
 
-After configuring your Authentication options, update your backend:
+認証オプションを設定した後、バックエンドを更新します:
 
 ```bash
-amplify push
+push を増幅する
 ```
 
 A configuration file called `awsconfiguration.json` will be copied to your project `./app/src/main/res/raw` directory. The `AWSMobileClient` will leverage this for communicating with backend services.
@@ -57,11 +57,11 @@ A configuration file called `awsconfiguration.json` will be copied to your proje
 
 The CLI allows you to configure [Lambda Triggers](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html) for your Amazon Cognito User Pool.  These enable you to add custom functionality to your registration and authentication flows. [Read more](~/cli/usage/lambda-triggers.md)
 
-## Manual Setup
+## 手動セットアップ
 
-For manual configuration without the CLI, you must have an `awsconfiguration.json` file with the following:
-- Cognito User Pools: `CognitoUserPool : { Default: ...}`
-- Cognito Identity Pools: `IdentityManager` and `CredentialsProvider: {CognitoIdentity: ...}`
+CLI を使用しない手動設定の場合は、次のような `awsconfiguration.json` ファイルが必要です。
+- Cognitoユーザプール: `CognitoUserPool : { Default: ...}`
+- Cognito Identity Pools: `IdentityManager` と `CredentialsProvider: {CognitoIdentity: ...}`
 
 ```xml
     {
@@ -86,11 +86,11 @@ For manual configuration without the CLI, you must have an `awsconfiguration.jso
     }
 ```
 
-If you are using both Cognito User Pools and Identity Pools, such as in Federated scenarios, you will need all of the keys mentioned above.
+Federated シナリオなど、Cognito User PoolsとIdentity Poolsの両方を使用している場合は、上記のすべてのキーが必要になります。
 
-### Initialization
+### 初期化
 
-Go to your MainActivity and inside the `onCreate()` run the `initialize()` routine:
+MainActivity に移動し、 `onCreate()` 内で `initialize()` ルーチンを実行します。
 
 ```java
 AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
