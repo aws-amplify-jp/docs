@@ -1,8 +1,8 @@
-### Interacting with the API from a client-side application
+### クライアント側のアプリケーションからAPIを操作する
 
-Now that the API has been deployed, you can interact with it from a client-side application.
+API がデプロイされたので、クライアント側のアプリケーションから対話できます。
 
-#### Creating a new contact
+#### 新しい連絡先の作成
 
 ```javascript
 /* First import the API category from Amplify */
@@ -30,7 +30,7 @@ async function submitNewContact() {
 }
 ```
 
-#### Creating a form for dynamic user input
+#### 動的ユーザー入力用のフォームを作成します
 
 ```javascript
 /* First import the API category from Amplify */
@@ -71,7 +71,7 @@ async function submitNewContact() {
 <button onClick={submitNewContact}>Create New Contact</button>
 ```
 
-#### Querying for a list of contacts
+#### 連絡先の一覧を検索中
 
 ```javascript
 /* First import the API category from Amplify */
