@@ -1,25 +1,25 @@
 ---
-title: Test
-description: Testing the REST API.
+title: テスト
+description: REST API のテスト
 ---
 
-## Test the API from the terminal
+## 端末からAPIをテストする
 
-If Guest users have access to your REST API you can test it from the terminal using Curl.
+ゲストユーザーがREST APIにアクセスできる場合は、Curlを使用して端末からテストできます。
 
-[Curl](https://github.com/curl/curl) is a command-line tool that lets you transfer data to and from a server using various protocols.
+[Curl](https://github.com/curl/curl) は、さまざまなプロトコルを使用してサーバーとの間でデータを転送できるコマンドラインツールです。
 
-> Curl is available in many distributions including Mac, Windows and Linux. Follow the install instructions in the [docs](https://curl.haxx.se/docs/install.html).
+> Curlは、Mac、Windows、Linuxなど、多くのディストリビューションで利用できます。 [ドキュメント](https://curl.haxx.se/docs/install.html)のインストール手順に従ってください。
 
 <amplify-block-switcher> <amplify-block name="Mac and Linux">
 
-### GET method example
+### GET メソッドの例
 
 ```console
 curl https://a5b4c3d2e1.execute-api.eu-west-2.amazonaws.com/dev/todos
 ```
 
-### POST method example
+### POST メソッドの例
 
 ```console
 curl -H "Content-Type: application/json" -d '{"name":"todo-1"}' https://a5b4c3d2e1.execute-api.eu-west-2.amazonaws.com/dev/todos
@@ -27,13 +27,13 @@ curl -H "Content-Type: application/json" -d '{"name":"todo-1"}' https://a5b4c3d2
 
 </amplify-block> <amplify-block name="Windows">
 
-### GET method example
+### GET メソッドの例
 
 ```console
 curl https://a5b4c3d2e1.execute-api.eu-west-2.amazonaws.com/dev/todos
 ```
 
-### POST method example
+### POST メソッドの例
 
 ```console
 curl -H "Content-Type: application/json" -d {\"name\":\"todo-1\"} https://a5b4c3d2e1.execute-api.eu-west-2.amazonaws.com/dev/todos
@@ -41,11 +41,11 @@ curl -H "Content-Type: application/json" -d {\"name\":\"todo-1\"} https://a5b4c3
 
 </amplify-block> </amplify-block-switcher>
 
-> Important! Testing methods using production endpoints may result in changes to resources that cannot be undone.
+> 重要! プロダクションエンドポイントを使用してメソッドをテストすると、元に戻すことができないリソースが変更される可能性があります。
 
-## Test the API with Amplify Mock
+## AmplifyモックでAPIをテストする
 
-Amplify CLI allows you to quickly test your REST APIs by using the `amplify mock function` command.
+Amplify CLI は、 `amplify mock 関数` コマンドを使用して REST API をすばやくテストできます。
 
 Let's test your new REST API using the route below with HTTP Method `GET` and path `/todos?limit=10` which includes a `limit` query string parameter.
 
@@ -53,9 +53,9 @@ Let's test your new REST API using the route below with HTTP Method `GET` and pa
  GET /todos?limit=10
 ```
 
-> Important! Testing methods using production endpoints may result in changes to resources that cannot be undone.
+> 重要! プロダクションエンドポイントを使用してメソッドをテストすると、元に戻すことができないリソースが変更される可能性があります。
 
-Before you continue, edit the file at `{project}/amplify/backend/function/todosLambda/src/event.json` and replace its content for the purpose of the test.
+続ける前に、ファイルを `{project}/amplify/backend/function/todosLambda/src/event.json` に編集し、テストの目的でその内容を置き換えます。
 
 ```json
 {
@@ -67,15 +67,15 @@ Before you continue, edit the file at `{project}/amplify/backend/function/todosL
 }
 ```
 
-Make sure you have saved the changes and run
+変更を保存して実行したことを確認してください
 
 ```bash
-amplify mock function todosLambda
+amplifyモック関数 todosLambda
 ```
 
-Select the following options:
+次のオプションを選択します。
 
-- Provide the path to the event JSON object relative to `{project}/amplify/backend/function/todosLambda` __src/event.json__
+- `{project}/amplify/backend/function/todosLambda` __src/event.json__ への相対的なイベントJSONオブジェクトへのパスを提供します
 
 ```console
 Starting execution...
@@ -87,7 +87,7 @@ Result:
 Finished execution.
 ```
 
-## Test the API with API Gateway console
+## APIゲートウェイコンソールでAPIをテストする
 
 Let's test your new REST API using the route below with HTTP Method `GET` and path `/todos?limit=10` which includes a `limit` query string parameter.
 
@@ -95,11 +95,11 @@ Let's test your new REST API using the route below with HTTP Method `GET` and pa
  GET /todos?limit=10
 ```
 
-> Important! Testing methods with the API Gateway console may result in changes to resources that cannot be undone.
+> 重要! API Gateway コンソールでメソッドをテストすると、元に戻すことができないリソースが変更される可能性があります。
 
-- Sign in to the API Gateway console at https://console.aws.amazon.com/apigateway.
-- Choose the `todosApi` REST API.
-- In the Resources pane, choose the method you want to test. Pick `ANY` right under `/todos`.
+- https://console.aws.amazon.com/apigatewayでAPIゲートウェイコンソールにサインインします。
+- `todosApi` REST API を選択します。
+- `ペインで、テストする方法を選択します。` `/todos`の下にあるformat@@4任意のformat@@5を選択します。
 
 ```
 /                        
@@ -113,7 +113,7 @@ Let's test your new REST API using the route below with HTTP Method `GET` and pa
 
 - In the Method Execution pane, in the Client box, choose TEST. Choose the `GET` method. Add `limit=10` to the Query String `{todos}` field.
 
-- Choose Test to run the test for `GET /todos?limit=10`. The following information will be displayed: request, status, latency, response body, response headers and logs.
+- `GET /todos?limit=10`のテストを実行するには、テストを選択します。 以下の情報が表示されます: リクエスト、ステータス、レイテンシー、レスポンスボディ、レスポンスヘッダー、ログ。
 
 ```bash
 Request: /todos?limit=10
