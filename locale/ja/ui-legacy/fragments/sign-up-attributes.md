@@ -1,27 +1,27 @@
 <table>
     <thead>
       <tr>
-        <th>Attribute</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-        <th>Required</th>
+        <th>属性</th>
+        <th>タイプ</th>
+        <th>説明</th>
+        <th>デフォルト</th>
+        <th>必須</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td data-column="Attribute">header</td>
-        <td data-column="Type">string</td>
-        <td data-column="Description">the component header</td>
-        <td data-column="Default">'Confirm Sign Up'</td>
-        <td data-column="Required">no</td>
+        <td data-column="Attribute">ヘッダー</td>
+        <td data-column="Type">文字列</td>
+        <td data-column="Description">コンポーネントヘッダー</td>
+        <td data-column="Default">'サインアップ確認'</td>
+        <td data-column="Required">いいえ</td>
       </tr>
       <tr>
-          <td data-column="Attribute">username</td>
-          <td data-column="Type">string</td>
-          <td data-column="Description">the username of the user who is signing up</td>
+          <td data-column="Attribute">ユーザー名</td>
+          <td data-column="Type">文字列</td>
+          <td data-column="Description">サインアップしているユーザーのユーザー名</td>
           <td data-column="Default">''</td>
-          <td data-column="Required">no</td>
+          <td data-column="Required">いいえ</td>
       </tr>
     </tbody>
 </table>
