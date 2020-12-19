@@ -1,6 +1,6 @@
-Call `Amplify.addPlugin()` to initialize the Amplify API category followed by `Amplify.configure()`.
+`Amplify.addPlugin()` を呼び出して、Amplify API カテゴリの後に `Amplify.configure()` を初期化します。
 
-Add the following code to your `onCreate()` method in your application class:
+アプリケーションクラスの `onCreate()` メソッドに次のコードを追加します。
 
 <amplify-block-switcher> <amplify-block name="Java">
 
@@ -8,7 +8,7 @@ Add the following code to your `onCreate()` method in your application class:
 Amplify.addPlugin(new AWSApiPlugin());
 ```
 
-Your class will look like this:
+あなたのクラスは次のようになります：
 
 ```java
 public class MyAmplifyApp extends Application {
@@ -35,7 +35,7 @@ public class MyAmplifyApp extends Application {
 Amplify.addPlugin(AWSApiPlugin())
 ```
 
-Your class will look like this:
+あなたのクラスは次のようになります：
 
 ```kotlin
 class MyAmplifyApp : Application() {
@@ -61,7 +61,7 @@ class MyAmplifyApp : Application() {
 RxAmplify.addPlugin(new AWSApiPlugin());
 ```
 
-Your class will look like this:
+あなたのクラスは次のようになります：
 
 ```java
 public class MyAmplifyApp extends Application {
