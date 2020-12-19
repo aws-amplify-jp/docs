@@ -1,31 +1,31 @@
 ---
-title: Add relationships between types
-description: Define relationships with other types in your schema.
+title: タイプ間のリレーションシップを追加
+description: スキーマ内の他の型とのリレーションシップを定義します。
 ---
 
-## @connection
+## @connections
 
 The `@connection` directive enables you to specify relationships between `@model` types. Currently, this supports one-to-one, one-to-many, and many-to-one relationships. You may implement many-to-many relationships using two one-to-many connections and a joining `@model` type. See the usage section for details.
 
-[We also provide a fully working schema with 17 patterns related to relational designs](~/cli/graphql-transformer/dataaccess.md).
+[また、リレーショナルデザインに関連する17パターンの完全に機能するスキーマを提供します](~/cli/graphql-transformer/dataaccess.md)。
 
-### Definition
+### 定義
 
 ```graphql
-directive @connection(keyName: String, fields: [String!]) on FIELD_DEFINITION
+@connection(keyName: String, fields: [String!]) on FIELD_DEFINITION
 ```
 
-### Usage
+### 使用法
 
-Relationships between types are specified by annotating fields on an `@model` object type with the `@connection` directive.
+型間のリレーションは、 `@model` オブジェクト・タイプのフィールドに `@connection` ディレクティブに注釈を付けることで指定されます。
 
 The `fields` argument can be provided and indicates which fields can be queried by to get connected objects. The `keyName` argument can optionally be used to specify the name of secondary index (an index that was set up using `@key`) that should be queried from the other type in the relationship.
 
 When specifying a `keyName`, the `fields` argument should be provided to indicate which field(s) will be used to get connected objects. If `keyName` is not provided, then `@connection` queries the target table's primary index.
 
-### Has one
+### 持っている
 
-In the simplest case, you can define a one-to-one connection where a project has one team:
+最も単純なケースでは、プロジェクトに 1 つのチームがある接続を定義できます。
 
 ```graphql
 type Project @model {
@@ -40,7 +40,7 @@ type Team @model {
 }
 ```
 
-You can also define the field you would like to use for the connection by populating the first argument to the fields array and matching it to a field on the type:
+接続に使用するフィールドを定義するには、最初の引数を fields array に入力し、型のフィールドにマッチさせます。
 
 ```graphql
 type Project @model {
@@ -58,7 +58,7 @@ type Team @model {
 
 In this case, the Project type has a `teamID` field added as an identifier for the team that the project belongs to. `@connection` can then get the connected Team object by querying the Team table with this `teamID`.
 
-After it's transformed, you can create projects and query the connected team as follows:
+変換後、次のようにプロジェクトを作成し、接続されているチームに問い合わせることができます:
 
 ```graphql
 mutation CreateProject {
@@ -75,11 +75,11 @@ mutation CreateProject {
 
 > **Note** The **Project.team** resolver is configured to work with the defined connection. This is done with a query on the Team table where `teamID` is passed in as an argument.
 
-A Has One @connection can only reference the primary index of a model (ie. it cannot specify a "keyName" as described below in the Has Many section).
+A Have One @connection can only reference the primary index of a model (すなわち. 以下の Have Manyセクションで説明されているように、"keyName" は指定できません。
 
-### Has many
+### 多数あり
 
-The following schema defines a Post that can have many comments:
+次のスキーマは、多くのコメントを持つことができるポストを定義します。
 
 ```graphql
 type Post @model {
@@ -114,7 +114,7 @@ mutation CreateCommentOnPost {
 }
 ```
 
-And you can query a Post with its comments as follows:
+次のようにコメントを使って投稿をクエリできます。
 
 ```graphql
 query getPost {
@@ -131,9 +131,9 @@ query getPost {
 }
 ```
 
-### Belongs to
+### 以下に属する：
 
-You can make a connection bi-directional by adding a many-to-one connection to types that already have a one-to-many connection. In this case you add a connection from Comment to Post since each comment belongs to a post:
+すでに1対多の接続を持つタイプに多対1の接続を追加することで、接続を双方向にすることができます。 この場合、各コメントは投稿に属しているため、コメントから投稿への接続を追加します:
 
 ```graphql
 type Post @model {
@@ -151,7 +151,7 @@ type Comment @model
 }
 ```
 
-After it's transformed, you can create comments with a post as follows:
+変換後、以下のように投稿でコメントを作成できます。
 
 ```graphql
 mutation CreatePost {
@@ -176,7 +176,7 @@ mutation CreateCommentOnPost2 {
 }
 ```
 
-And you can query a Comment with its Post, then all Comments of that Post by navigating the connection:
+そして、そのポストでコメントをクエリし、接続をナビゲートすることで、そのポストのすべてのコメントをクエリできます:
 
 ```graphql
 query GetCommentWithPostAndComments {
@@ -197,9 +197,9 @@ query GetCommentWithPostAndComments {
 }
 ```
 
-### Many-to-many connections
+### 多数の接続
 
-You can implement many to many using two 1-M @connections, an @key, and a joining @model. For example:
+2つの1-M @connections、@key、@modelを使用して、多くのものを実装できます。例えば:
 
 ```graphql
 type Post @model {
@@ -259,13 +259,13 @@ mutation CreateLinks {
 }
 ```
 
-Note that neither the User type nor the Post type have any identifiers of connected objects. The connection info is held entirely inside the PostEditor objects.
+UserタイプもPostタイプも接続されているオブジェクトの識別子を持っていないことに注意してください。 接続情報は PostEditor オブジェクト内に完全に保持されます。
 
-You can query a given user with their posts:
+特定のユーザーの投稿を照会できます。
 
 ```graphql
 query GetUserWithPosts {
-    getUser(id: "U1") {
+    getUser(id: U1") {
         id
         username
         posts {
@@ -279,7 +279,7 @@ query GetUserWithPosts {
 }
 ```
 
-Also you can query a given post with the editors of that post and can list the posts of those editors, all in a single query:
+また、その投稿のエディターで特定の投稿をクエリでき、それらのエディターの投稿を一覧表示できます。 1つの問い合わせですべてを行います
 
 ```graphql
 query GetPostWithEditorsWithPosts {
@@ -304,19 +304,19 @@ query GetPostWithEditorsWithPosts {
 }
 ```
 
-#### Alternative definition
+#### 代替定義
 
 The above definition is the recommended way to create relationships between model types in your API. This involves defining index structures using `@key` and connection resolvers using `@connection`. There is an older parameterization of `@connection` that creates indices and connection resolvers that is still functional for backwards compatibility reasons. It is recommended to use `@key` and the new `@connection` via the fields argument.
 
 ```
-directive @connection(name: String, keyField: String, sortField: String, limit: Int) on FIELD_DEFINITION
+@connection(name: String, keyField: String, sortField: String, limit: Int) の FIELD_DEFINITION
 ```
 
-This parameterization is not compatible with `@key`. See the parameterization above to use `@connection` with indexes created by @key.
+このパラメータ化は `@key`と互換性がありません。@key によって作成されたインデックスで `@connection` を使用するには、上記のパラメータ化を参照してください。
 
-### Limit
+### 制限
 
-The default number of nested objects is 100. You can override this behavior by setting the **limit** argument. For example:
+ネストされたオブジェクトのデフォルト数は 100 です。 **limit** 引数を設定することで、この動作を上書きできます。例えば:
 
 ```graphql
 type Post @model {
@@ -331,7 +331,7 @@ type Comment @model {
 }
 ```
 
-### Generates
+### 生成
 
 In order to keep connection queries fast and efficient, the GraphQL transform manages global secondary indexes (GSIs) on the generated tables on your behalf. In the future you are investigating using adjacency lists along side GSIs for different use cases that are connection heavy.
 
