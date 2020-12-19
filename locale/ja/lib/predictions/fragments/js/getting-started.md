@@ -1,28 +1,28 @@
-> Prerequisite: [Install and configure the Amplify CLI](~/cli/start/install.md)
+> 前提条件: [Amplify CLI をインストールして構成します](~/cli/start/install.md)
 
-## Create new backend
+## 新しいバックエンドを作成
 
-Run the following command in your project's root folder:
-
-```bash
-amplify add predictions
-```
-
-The CLI will prompt configuration options for the Predictions category such as what type of use case you have (identifying objects from an image, translating text, etc) and default or advanced settings.
-
-The Predictions category utilizes the Auth category behind the scenes to authorize your app to perform AI/ML actions.
-
-The `add` command automatically creates the backend configuration. Once all your configuration is complete run the following:
+プロジェクトのrootフォルダで次のコマンドを実行します。
 
 ```bash
-amplify push
+amplifyの追加予測
 ```
 
-A configuration file called `aws-exports.js` will be copied to your configured source directory, for example `./src`.
+CLIは、どのようなユースケースを持っているか(画像からオブジェクトを識別する)など、予測カテゴリの設定オプションをプロンプトします。 テキストの翻訳など)、デフォルトまたは詳細設定。
 
-## Configure the frontend
+Predictionsカテゴリは、アプリケーションがAI/MLアクションを実行することを認可するために、舞台裏のAuthカテゴリを使用します。
 
-Import and load the configuration file in your app. It's recommended you add the Amplify configuration step to your app's root entry point. For example `App.js` in React or `main.ts` in Angular or Ionic.
+`add` コマンドはバックエンドの設定を自動的に作成します。すべての設定が完了したら、以下を実行します。
+
+```bash
+push を増幅する
+```
+
+`aws-exports.js` と呼ばれる設定ファイルが、 `./src` などの設定されたソースディレクトリにコピーされます。
+
+## フロントエンドの設定
+
+設定ファイルをアプリに読み込みます。Amplify設定ステップをアプリのルートエントリポイントに追加することをお勧めします。 例えば `App.js` 、Angular や Ionic の `main.ts` など。
 
 ```javascript
 import Amplify from 'aws-amplify';
@@ -30,12 +30,12 @@ import Predictions, { AmazonAIPredictionsProvider } from '@aws-amplify/predictio
 import awsconfig from './aws-exports';
 
 Amplify.configure(awsconfig);
-Amplify.addPluggable(new AmazonAIPredictionsProvider());
+Amplify.addPluggable(new AmazonAIPredictsProvider());
 ```
 
-## Import existing backend
+## 既存のバックエンドをインポート
 
-The manual setup enables you to use your existing Amazon AI and ML resources in your app.
+手動設定により、既存のAmazon AIやMLリソースをアプリで使用できます。
 
 ```javascript
 import Amplify from 'aws-amplify';
@@ -113,7 +113,7 @@ Amplify.configure({
 
 ### IAM Policy
 
-The Amplify CLI will set appropriate IAM policy for Roles in your Cognito Identity Pool in order to use an appropriate feature. If you are using the library manually you will need to configure this yourself. The below policy demonstrates setting policy for all services in the Predictions category:
+Amplify CLI は、適切な機能を使用するために、Cognito Identity Pool のロールに適切な IAM ポリシーを設定します。 ライブラリを手動で使用している場合は、これを自分で設定する必要があります。 以下のポリシーは、format@@0カテゴリのすべてのサービスの設定ポリシーを示します。
 
 ```json
 {
@@ -151,4 +151,4 @@ The Amplify CLI will set appropriate IAM policy for Roles in your Cognito Identi
 }
 ```
 
-For `rekognition:SearchFacesByImage` you can scope the Resource down to an individual collection such as `arn:aws:rekognition:<REGION>:<ACCOUNT_ID>:collection/<COLLECTION_ID>`. Amplify CLI automatically does this.
+`rekognition:SearchFacesByImage` では、リソースを `arn:aws:rekognion:<REGION>:<ACCOUNT_ID>:collection/<COLLECTION_ID>`などの個々のコレクションにスコープすることができます。 Amplify CLIはこれを自動的に行います。
