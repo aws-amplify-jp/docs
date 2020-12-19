@@ -1,3 +1,3 @@
-### Update and delete with predicate
+### 述語の更新と削除
 
-For such scenarios both the `save()` and the `delete()` APIs support an optional predicate which will be sent to the backend and executed against the remote state.
+このようなシナリオでは、 `save()` と `delete()` API の両方が バックエンドに送信され、リモートの状態に対して実行されるオプションの 述語をサポートしています。
