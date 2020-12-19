@@ -1,15 +1,15 @@
-To initialize the Amplify Auth and Analytics categories you call `Amplify.addPlugin()` method for each category. To complete initialization call `Amplify.configure()`.
+Amplify Auth および Analytics カテゴリを初期化するには、各カテゴリの `Amplify.addPlugin()` メソッドを呼び出します。初期化を完了するには、 `Amplify.configure()` を呼び出します。
 
-Add the following code to your `onCreate()` method in your application class:
+アプリケーションクラスの `onCreate()` メソッドに次のコードを追加します。
 
 <amplify-block-switcher> <amplify-block name="Java">
 
 ```java
-Amplify.addPlugin(new AWSCognitoAuthPlugin());
+Amplify.addPlugin(new AWScognitoAuthPlugin());
 Amplify.addPlugin(new AWSPinpointAnalyticsPlugin(this));
 ```
 
-Your class will look like this:
+あなたのクラスは次のようになります：
 
 ```java
 public class MyAmplifyApp extends Application {
@@ -34,11 +34,11 @@ public class MyAmplifyApp extends Application {
 </amplify-block> <amplify-block name="Kotlin">
 
 ```kotlin
-Amplify.addPlugin(AWSCognitoAuthPlugin())
+Amplify.addPlugin(AWScognitoAuthPlugin())
 Amplify.addPlugin(AWSPinpointAnalyticsPlugin(this))
 ```
 
-Your class will look like this:
+あなたのクラスは次のようになります：
 
 ```kotlin
 class MyAmplifyApp : Application() {
