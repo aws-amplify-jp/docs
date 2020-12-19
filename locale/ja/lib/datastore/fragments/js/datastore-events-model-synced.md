@@ -1,11 +1,11 @@
-## modelSynced
+## モデル同期済み
 
-Dispatched once for each model after the model instances have been synced from the cloud
+モデルインスタンスがクラウドから同期された後、各モデルに1回ディスパッチを適用しました
 
-HubPayload `modelSyncedEvent` contains:
-- `modelName` (String): the name of the model that was synced
-- `isFullSync` (Bool): `true` if the model was synced with a "full" query to retrieve all models
-- `isDeltaSync` (Bool): `true` if the model was synced with a "delta" query to retrieve only changes since the last sync
-- `new` (Int): the number of new model instances added to the local store
-- `updated` (Int): the number of existing model instances updated in the local store
-- `deleted` (Int): the number of model instances deleted from the local stor
+HubPayload `modelSyncedEvent` には以下が含まれています:
+- `modelName` (String): 同期されたモデルの名前
+- `isFullSync` (Bool): `true` モデルがすべてのモデルを取得するために「完全な」クエリと同期された場合
+- `isDeltaSync` (Bool): `true` モデルが前回の同期以降の変更のみを取得するために「デルタ」クエリと同期された場合
+- `new` (Int): ローカルストアに追加された新しいモデルインスタンスの数
+- `updated` (Int): ローカルストアで更新された既存のモデルインスタンスの数
+- `deleted` (Int): ローカルストーリーから削除されたモデルインスタンスの数
