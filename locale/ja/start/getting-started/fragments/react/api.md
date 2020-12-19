@@ -1,18 +1,18 @@
-Now that you’ve created and configured a React app and initialized a new Amplify project, you can add a feature. The first feature you will add is an API.
+React アプリケーションを作成して設定し、新しいAmplifyプロジェクトを初期化したので、機能を追加できます。 最初に追加する機能はAPIです。
 
-The Amplify CLI supports creating and interacting with two types of API categories: REST and GraphQL.
+Amplify CLIは、RESTとGraphQLの2種類のAPIの作成と操作をサポートしています。
 
-The API you will be creating in this step is a GraphQL API using AWS AppSync (a managed GraphQL service) and the database will be Amazon DynamoDB (a NoSQL database).
+この手順で作成するAPIは、AWS AppSync(管理されたGraphQLサービス)を使用したGraphQL APIであり、データベースはAmazon DynamoDB(NoSQLデータベース)になります。
 
-## Create a GraphQL API and database
+## GraphQL API とデータベースの作成
 
-Add a [GraphQL API](https://docs.aws.amazon.com/appsync/latest/devguide/designing-a-graphql-api.html) to your app and automatically provision a database by running the following command from the root of your application directory:
+[GraphQL API](https://docs.aws.amazon.com/appsync/latest/devguide/designing-a-graphql-api.html) をアプリケーションに追加し、アプリケーションディレクトリのルートから次のコマンドを実行して自動的にデータベースをプロビジョニングします。
 
 ```bash
-amplify add api
+増幅して api を追加
 ```
 
-Accept the **default values** which are highlighted below:
+以下のハイライト表示されている **デフォルト値** を受け入れます。
 
 ```console
 ? Please select from one of the below mentioned services:
@@ -37,9 +37,9 @@ Accept the **default values** which are highlighted below:
 # Yes
 ```
 
-The CLI should open this GraphQL schema in your text editor.
+CLI がテキストエディタでこの GraphQL スキーマを開く必要があります。
 
-__amplify/backend/api/myapi/schema.graphql__
+__anplify/backend/api/myapi/schema.graphql__
 
 ```graphql
 type Todo @model {
@@ -51,18 +51,18 @@ type Todo @model {
 
 The schema generated is for a Todo app. You'll notice a directive on the `Todo` type of `@model`. This directive is part of the [GraphQL transform](~/cli/graphql-transformer/model.md) library of Amplify.
 
-The GraphQL Transform Library provides custom directives you can use in your schema that allow you to do things like define data models, set up authentication and authorization rules, configure serverless functions as resolvers, and more.
+GraphQL Transform ライブラリには、データモデルの定義などを行うためのスキーマで使用できるカスタムディレクティブが用意されています。 認証と認可ルールの設定、サーバレス機能をリゾルバとして設定するなど。
 
-A type decorated with the `@model` directive will scaffold out the database table for the type (Todo table), the schema for CRUD (create, read, update, delete) and list operations, and the GraphQL resolvers needed to make everything work together.
+`@model` ディレクティブで装飾された型は、タイプ (Todo テーブル) のデータベーステーブルを足場に置きます。 CRUD (作成、読み取り、更新、削除)およびリスト操作のためのスキーマ、およびすべてを一緒に動作させるために必要な GraphQL リゾルバ。
 
-From the command line, press __enter__ to accept the schema and continue to the next steps.
+コマンドラインから __を押して__ を入力し、スキーマを受け入れ、次のステップに進みます。
 
-### Deploying the API
+### API のデプロイ
 
-To deploy this backend, run the `push` command:
+このバックエンドをデプロイするには、 `push` コマンドを実行します。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
 ```console
@@ -76,49 +76,49 @@ amplify push
 ? Enter maximum statement depth [increase from default if your schema is deeply nested]: 2
 ```
 
-Now the API is live and you can start interacting with it!
+APIが稼働しているので、対話を始めることができます。
 
-The API you have deployed is for a Todo app, including operations for creating, reading, updating, deleting, and listing todos.
+デプロイした API は、ToDo の作成、読み取り、更新、削除、リストの操作を含む、ToDo アプリケーション用です。
 
-Next, run the following command to check Amplify's status:
+次に、Amplifyの状態を確認するために次のコマンドを実行します。
 
 ```bash
-amplify status
+増幅の状態
 ```
 
-This will give us the current status of the Amplify project, including the current environment, any categories that have been created, and what state those categories are in. It should look similar to this:
+これにより、現在の環境を含むAmplifyプロジェクトの現在のステータスが得られます。 どのカテゴリーが作成されているかを調べることができます 以下のようになります。
 
 ```console
-Current Environment: dev
+現在の環境: dev
 
-| Category | Resource name | Operation | Provider plugin   |
-| -------- | ------------- | --------- | ----------------- |
-| Api      | myapi         | No Change | awscloudformation |
+| Resource name | Operation | Provider プラグイン|
+| --------------- | ------------- | -------------- |
+| Api | myapi | No Change | awscloudforming |
 ```
 
-To view the GraphQL API in the AppSync console at any time, run the following command:
+AppSync コンソールで GraphQL API をいつでも表示するには、次のコマンドを実行します。
 
 ```bash
-amplify console api
+コンソールの api を増幅する
 ```
 
-To view your entire app in the Amplify console at any time, run the following command:
+Amplifyコンソールでいつでもアプリ全体を表示するには、次のコマンドを実行します。
 
 ```bash
-amplify console
+増幅コンソール
 ```
 
-### (Optional) Test your API
+### (オプション) API のテスト
 
-To test this out locally, you can run the `mock` command.
+ローカルでテストするには、 `モック` コマンドを実行します。
 
-> If you'd like to go ahead and connect the front end, you can [jump to the next step](#connect-frontend-to-api).
+> 先に進んでフロントエンドを接続したい場合は、 [次のステップ](#connect-frontend-to-api)にジャンプできます。
 
 ```bash
-amplify mock api
+amplifyモックapiは
 ```
 
-*Note:* `amplify mock api` requires Java.
+*注意:* `はモックAPIを増幅する` にはJavaが必要です。
 
 ```console
 # If you have not already deployed you API, you will be walked through the following steps for GraphQL code generation
@@ -128,9 +128,9 @@ amplify mock api
 ? Enter maximum statement depth [increase from default if your schema is deeply nested] 2
 ```
 
-This will open the GraphiQL explorer on a local port. From the test environment you can try out different operations locally, like queries and mutations.
+これにより、GraphiQL エクスプローラがローカルポート上で開きます。テスト環境では、クエリや変更など、さまざまな操作をローカルで試すことができます。
 
-Try running a couple of mutations locally and then querying for the todos:
+いくつかの変異をローカルで実行してから、todosをクエリしてみてください。
 
 ```graphql
 mutation createTodo {
@@ -155,11 +155,11 @@ query listTodos {
 }
 ```
 
-## Connect frontend to API
+## フロントエンドを API に接続
 
-In this section you will create a way to list and create todos from the React application. To do this, you will create a form with a button to create todos as well as a way to fetch and render the list of todos.
+このセクションでは、React アプリケーションからtodosを一覧表示して作成する方法を作成します。 これを行うには todosを作成するボタンと、todosのリストを取得してレンダリングする方法を含むフォームを作成します。
 
-Open __src/App.js__ and replace it with the following code:
+__src/App.js__ を開き、次のコードで置き換えます。
 
 ```javascript
 /* src/App.js */
@@ -245,17 +245,17 @@ const styles = {
 export default App
 ```
 
-Let's walk through some of the functions:
+いくつかの関数を見てみましょう。
 
-__useEffect__ - When the component loads, the `useEffect` hook is called and it invokes the `fetchTodos` function.
+__useEffect__ - コンポーネントがロードされると、 `useEffect` フックが呼び出され、 `fetchTodos` 関数を呼び出します。
 
 __fetchTodos__ - Uses the Amplify `API` category to call the AppSync GraphQL API with the `listTodos` query. Once the data is returned, the items array is passed in to the `setTodos` function to update the local state.
 
 __addTodo__ - Uses the Amplify `API` category to call the AppSync GraphQL API with the `createTodo` mutation. A difference between the `listTodos` query and the `createTodo` mutation is that `createTodo` accepts an argument containing the variables needed for the mutation.
 
-## Run locally
+## ローカルで実行
 
-Next, run the app and you should see the form rendered to the screen and be able to create and view the list of todos:
+次に、アプリを実行すると、画面にレンダリングされたフォームが表示され、todosのリストを作成して表示できるようになります。
 
 ```bash
 npm start
