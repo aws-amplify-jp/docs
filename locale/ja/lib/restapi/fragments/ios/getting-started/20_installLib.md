@@ -1,15 +1,15 @@
 To install the Amplify API and Authentication to your application, **add both `AmplifyPlugins/AWSAPIPlugin` and `AmplifyPlugins/AWSCognitoAuthPlugin` to your `Podfile`**.  Your `Podfile` should look similar to:
 
 ```ruby
-target 'MyAmplifyApp' do
+ターゲット 'MyAmplifyApp' do
   use_frameworks!
-  pod 'Amplify'
-  pod 'AmplifyPlugins/AWSCognitoAuthPlugin'
+  pod 'AmplifyPlugins/AWScognitoAuthPlugin'
   pod 'AmplifyPlugins/AWSAPIPlugin'
+  pod 'AmplifyPlugin'
 end
 ```
 
-To install, download and resolve these pods, **execute the command**:
+ポッドをインストール、ダウンロード、解決するには、 **コマンド** を実行します。
 
 ```bash
 pod install --repo-update
