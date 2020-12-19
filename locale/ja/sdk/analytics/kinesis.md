@@ -1,6 +1,6 @@
 ---
-title: Using Amazon Kinesis
-description: Learn how to interface with Amazon Kinesis Data Streams and Amazon Kinesis Data Firehose to stream analytics data for real-time processing using Amplify.
+title: Amazon Kinesis の使用
+description: Amazon Kinesis Data StreamsとAmazon Kinesis Data Firecoseとの連携方法を学び、Amplifyを使用してリアルタイム処理のための分析データをストリーミングします。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>
