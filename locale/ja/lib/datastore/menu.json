@@ -2,16 +2,16 @@
   "title": "DataStore",
   "items": [
     "getting-started",
-    "data-access",
+    "データアクセス",
     "relational",
-    "sync",
+    "同期",
     "setup-auth-rules",
-    "conflict",
-    "real-time",
+    "コンフリクト",
+    "リアルタイム",
     "datastore-events",
     "other-methods",
-    "schema-updates",
+    "schema-update",
     "how-it-works",
-    "examples"
+    "例"
   ]
 }
