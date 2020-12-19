@@ -1,4 +1,4 @@
-When you have configured multiple APIs, you can specify the name of the API as a parameter as the target for an operation:
+複数の API を設定した場合は、API の名前を操作のターゲットとして指定できます。
 
 <amplify-block-switcher> <amplify-block name="Java">
 
@@ -17,9 +17,9 @@ Amplify.API.mutate(
 Amplify.API.mutate(
     "[FRIENDLY-NAME-API-WITH-API-KEY]",
     request,
-    { Log.i("MyAmplifyApp", "Mutation successful") },
+    { Log.i("MyAmplifyApp", "Mutation success") },
     { Log.e("MyAmplifyApp", "Failed to mutate model.", it) }
-)
+
 ```
 
 </amplify-block> </amplify-block-switcher>
