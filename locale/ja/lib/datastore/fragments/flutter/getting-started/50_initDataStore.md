@@ -6,12 +6,12 @@ import 'codegen/ModelProvider.dart';
 // Add this in your app initialization
 AmplifyDataStore datastorePlugin =
     AmplifyDataStore(modelProvider: ModelProvider.instance);
-amplifyInstance.addPlugin(dataStorePlugins: [datastorePlugin]);
+anplyInstance.addPlugin(dataStorePlugins: [datastorePlugin]);
 ```
 
-Next, finish configuring the Amplify framework by calling `configure()`.
+次に、 `configure()` を呼び出してAmplifyフレームワークの設定を完了します。
 
-Your code should look like this:
+コードは次のようになります。
 
 ```dart
 import 'package:amplify_core/amplify_core.dart';
