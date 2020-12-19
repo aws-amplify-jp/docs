@@ -1,6 +1,6 @@
-## SignUp
+## サインアップ
 
-Creates a new user in your User Pool:
+ユーザープールに新しいユーザーを作成します:
 
 ```java
 final String username = getInput(R.id.signUpUsername);
@@ -31,9 +31,9 @@ AWSMobileClient.getInstance().signUp(username, password, attributes, null, new C
 });
 ```
 
-## Confirm SignUp
+## サインアップを確認
 
-Confirms a new user after signing up in a User Pool:
+ユーザープールにサインアップした後に新しいユーザーを確認します:
 
 ```java
 final String username = getInput(R.id.confirmSignUpUsername);
@@ -62,7 +62,7 @@ AWSMobileClient.getInstance().confirmSignUp(username, code, new Callback<SignUpR
 });
 ```
 
-## Re-send Confirmation Code
+## 確認コードを再送信する
 
 ```java
 AWSMobileClient.getInstance().resendSignUp("your_username", new Callback<SignUpResult>() {
@@ -83,7 +83,7 @@ AWSMobileClient.getInstance().resendSignUp("your_username", new Callback<SignUpR
 
 ## SignIn
 
-Sign in with user credentials:
+ユーザー資格情報でサインイン:
 
 ```java
 AWSMobileClient.getInstance().signIn(username, password, null, new Callback<SignInResult>() {
@@ -136,9 +136,9 @@ In order to setup multifactor authentication, choose `Manual configuration` whil
 
 Note in the example above that for the `What attributes are required for signing up?` prompt, you need to use the arrow keys to scroll down in the list and select `Phone Number`. Otherwise you will not be able to add a phone number to the user and thus will not be able to sign in since SMS MFA is required.
 
-When signing up a user, be sure to pass an attributes map including both `email` (in the case above where email is used for password recovery) and `phone_number`.
+ユーザーのサインアップ時 `メールアドレス` と `電話番号` の両方を含む属性マップを必ず渡してください。
 
-After you call sign in and get the `SMS_MFA` response back, you can send your user's input of the SMS code they received with the following command:
+サインインを呼び出し、 `SMS_MFA` の応答を取り戻した後。 次のコマンドで受信したSMSコードのユーザー入力を送信できます。
 
 ```java
 AWSMobileClient.getInstance().confirmSignIn(signInChallengeResponse, new Callback<SignInResult>() {
@@ -168,7 +168,7 @@ AWSMobileClient.getInstance().confirmSignIn(signInChallengeResponse, new Callbac
 });
 ```
 
-## Force Change Password
+## パスワードを強制的に変更
 
  If a user is required to change their password on first login, there is a `NEW_PASSWORD_REQUIRED` state returned when `signIn` is called. You need to provide a new password given by the user in that case. It can be done using `confirmSignIn` with the new password.
 
@@ -223,7 +223,7 @@ AWSMobileClient.getInstance().confirmSignIn("NEW_PASSWORD_HERE", new Callback<Si
 });
 ```
 
-## Forgot Password
+## パスワードを忘れた場合
 
 Forgot password is a 2 step process. You need to first call `forgotPassword()` method which would send a confirmation code to user via email or phone number. The details of how the code was sent are included in the response of `forgotPassword()`. Once the code is given by the user, you need to call `confirmForgotPassword()` with the confirmation code to confirm the change of password.
 
@@ -285,9 +285,9 @@ AWSMobileClient.getInstance().confirmForgotPassword("NEW_PASSWORD_HERE", "CONFIR
 AWSMobileClient.getInstance().signOut();
 ```
 
-## Global SignOut
+## グローバルサインアウト
 
-Using global signout, you can signout a user from all active login sessions. By doing this, you are revoking all the OIDC tokens(id token, access token and refresh token) which means the user is signed out from all the devices. However, although the tokens are revoked, the AWS credentials will remain valid until they expire (which by default is 1 hour).
+グローバルサインアウトを使用すると、すべてのアクティブなログインセッションからユーザーにサインアウトできます。 これを行うことで、すべてのOIDCトークン(idトークン)を取り消します。 ユーザーがすべてのデバイスからサインアウトされることを意味するトークンとリフレッシュトークンにアクセスします。 ただし、トークンは取り消されますが、AWSの資格情報は有効期限が切れるまで有効です(デフォルトでは1時間)。
 
 ```java
 AWSMobileClient.getInstance().signOut(SignOutOptions.builder().signOutGlobally(true).build(), new Callback<Void>() {
@@ -303,9 +303,9 @@ AWSMobileClient.getInstance().signOut(SignOutOptions.builder().signOutGlobally(t
 });
 ```
 
-## Utility Properties
+## ユーティリティのプロパティ
 
-The `AWSMobileClient` provides several property "helpers" that are automatically cached locally for you to use in your application.
+`AWSMobileClient` は、アプリケーションで使用するためにローカルに自動的にキャッシュされるいくつかのプロパティ "ヘルパー" を提供します。
 
 ```java
 AWSMobileClient.getInstance().getUsername()       //String
@@ -313,18 +313,18 @@ AWSMobileClient.getInstance().isSignedIn()        //Boolean
 AWSMobileClient.getInstance().getIdentityId()     //String
 ```
 
-## Managing Security Tokens
+## セキュリティトークンの管理
 
-**When using Authentication with `AWSMobileClient`, you don’t need to refresh Amazon Cognito tokens manually. The tokens are automatically refreshed by the library when necessary.**
+**`AWSMobileClient`で認証を使用する場合、Amazon Cognitoトークンを手動で更新する必要はありません。 トークンは必要に応じてライブラリによって自動的に更新されます。**
 
-### OIDC Tokens
+### OIDCトークン
 
 ```java
 AWSMobileClient.getInstance().getTokens();
 AWSMobileClient.getInstance().getTokens().getIdToken().getTokenString();
 ```
 
-### AWS Credentials
+### AWS 資格情報
 
 ```java
 AWSMobileClient.getInstance().getCredentials();
