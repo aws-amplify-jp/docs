@@ -1,4 +1,4 @@
-You can list all of the objects uploaded:
+アップロードされたすべてのオブジェクトを一覧表示できます:
 
 <amplify-block-switcher>
 
