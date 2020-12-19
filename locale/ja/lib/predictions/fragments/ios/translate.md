@@ -1,6 +1,6 @@
-If you haven't already done so, run `amplify init` inside your project and then `amplify add auth` (we recommend selecting the *default configuration*).
+まだ実行していない場合 プロジェクト内で `amplify init` を実行し、 `増幅して認証を追加` します(デフォルトの設定 *を選択することをお勧めします*)。
 
-Run `amplify add predictions`, then use the following answers:
+`を増幅して予測を追加する`を実行し、次の答えを使用します。
 
 ```console
 ? Please select from one of the categories below
@@ -30,11 +30,11 @@ Run `amplify add predictions`, then use the following answers:
 
 ```
 
-Run `amplify push` to create the resources in the cloud
+クラウドでリソースを作成するには、 `増幅プッシュ` を実行してください
 
-## Working with the API
+## API の操作
 
-Here is an example of translating text. In order to override any choices you made in regards to target or source languages while adding this resource using the Amplify CLI, you can pass in them in directly as parameters as shown below.
+ここでは、テキストを翻訳する例を示します。 Amplify CLI を使用してこのリソースを追加しながら、ターゲット言語またはソース言語に関する選択を上書きするために。 次のようにパラメータとして直接渡すことができます
 
 <amplify-block-switcher>
 
@@ -82,4 +82,4 @@ func translateText(text:String) -> AnyCancellable {
 
 </amplify-block-switcher>
 
-As a result of running this code, you will see the translated text printed to the console.
+このコードを実行すると、コンソールに表示される翻訳テキストが表示されます。
