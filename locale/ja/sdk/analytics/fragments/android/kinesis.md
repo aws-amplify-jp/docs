@@ -1,74 +1,74 @@
-The two classes `KinesisRecorder` and `KinesisFirehoseRecorder` allow you to interface with Amazon Kinesis Data Streams and Amazon Kinesis Data Firehose to stream analytics data for real-time processing.
+この 2 つのクラス `KinesisRecorder` と `KinesisFihoseRecorder` を使用すると、Amazon Kinesis Data StreamsとAmazon Kinesis Data Firecoseとインターフェースしてリアルタイム処理のための分析データをストリーミングできます。
 
-## What is Amazon Kinesis Data Streams?
+## Amazon Kinesis Data Streamsとは?
 
-[Amazon Kinesis Data Streams](http://aws.amazon.com/kinesis/) is a fully managed service for real-time processing of streaming data at massive scale. Amazon Kinesis can collect and process hundreds of terabytes of data per hour from hundreds of thousands of sources, so you can write applications that process information in real-time. With Amazon Kinesis applications, you can build real-time dashboards, capture exceptions and generate alerts, drive recommendations, and make other real-time business or operational decisions. You can also easily send data to other services such as Amazon Simple Storage Service, Amazon DynamoDB, and Amazon Redshift.
+[Amazon Kinesis Data Streams](http://aws.amazon.com/kinesis/) は、大規模な規模でストリーミングデータをリアルタイムに処理するための完全管理サービスです。 Amazon Kinesisは、数十万のソースから1時間あたり数百テラバイトのデータを収集して処理することができます。 リアルタイムで情報を処理するアプリケーションを書くことができます Amazon Kinesisアプリケーションを使用すると、リアルタイムのダッシュボードを構築し、例外を取得し、アラートを生成し、推奨を駆動し、その他のリアルタイムのビジネスや運用上の意思決定を行うことができます。 また、Amazon Simple Storage Service、Amazon DynamoDB、Amazon Redshiftなどの他のサービスにも簡単にデータを送信できます。
 
 The Kinesis Data Streams `KinesisRecorder` client lets you store your Kinesis requests on disk and then send them all at once using the [PutRecords](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecords.html) API call of Kinesis. This is useful because many mobile applications that use Kinesis Data Streams will create multiple requests per second. Sending an individual request under `PutRecord` action could adversely impact battery life. Moreover, the requests could be lost if the device goes offline. Thus, using the high-level Kinesis Data Streams client for batching can preserve both battery life and data.
 
-## What is Amazon Kinesis Data Firehose?
+## Amazon Kinesis Data Firehoseとは?
 
-[Amazon Kinesis Data Firehose](http://aws.amazon.com/kinesis/firehose/) is a fully managed service for delivering real-time streaming data to destinations such as Amazon Simple Storage Service (Amazon S3) and Amazon Redshift. With Kinesis Data Firehose, you do not need to write any applications or manage any resources. You configure your data producers to send data to Firehose and it automatically delivers the data to the destination that you specified.
+[Amazon Kinesis Data Firehose](http://aws.amazon.com/kinesis/firehose/) は、Amazon Simple Storage Service (Amazon S3) や Amazon Redshift などの目的地にリアルタイムストリーミングデータを配信するための完全管理サービスです。 Kinesis Data Firehoseでは、アプリケーションを書いたり、リソースを管理する必要はありません。 ファイアローズにデータを送信するようにデータ生成者を設定し、指定した宛先にデータを自動的に送信します。
 
-The Amazon Kinesis Data Firehose `KinesisFirehoseRecorder` client lets you store your Kinesis Data Firehose requests on disk and then send them using the [PutRecordBatch](https://docs.aws.amazon.com/firehose/latest/APIReference/API_PutRecordBatch.html) API call of Kinesis Data Firehose.
+Amazon Kinesis Data Firehose `KinesisFirehoseRecorder` クライアントは、Kinesis Data Firehose のリクエストをディスクに保存し、 [PutRecordBatch](https://docs.aws.amazon.com/firehose/latest/APIReference/API_PutRecordBatch.html) の API コールを使用して送信できます。
 
-For more information about Amazon Kinesis Data Firehose, see [Amazon Kinesis Data Firehose](http://docs.aws.amazon.com/firehose/latest/dev/what-is-this-service.html).
+Amazon Kinesis Data Firehose の詳細については、 [Amazon Kinesis Data Firehose](http://docs.aws.amazon.com/firehose/latest/dev/what-is-this-service.html) を参照してください。
 
-## Integrating Amazon Kinesis
+## Amazonキネシスの統合
 
-Set up AWS Mobile SDK components by including the following libraries in your `app/build.gradle` dependencies list.
+`app/build.gradle` の依存関係リストに次のライブラリを含めることで、AWS Mobile SDKコンポーネントを設定します。
 
 ```groovy
 dependencies {
-  implementation 'com.amazonaws:aws-android-sdk-kinesis:2.15.+'
-  implementation ('com.amazonaws:aws-android-sdk-mobile-client:2.15.+@aar') { transitive = true }
+  implementation 'com.<unk> s:aws-android-sdk-kinesis:2.15.+)
+  implementation ('com.<unk> s:aws-android-sdk-mobile-client:2.15.+@aar') { transitive = true }
 }
 ```
 
-* `aws-android-sdk-kinesis` library enables sending analytics to Amazon Kinesis.
-* `aws-android-sdk-mobile-client` library gives access to the AWS credentials provider and configurations.
+* `aws-android-sdk-kinesis` ライブラリを使用すると、分析結果を Amazon Kinesis に送信できます。
+* `aws-android-sdk-mobile-client` ライブラリは AWS 資格情報プロバイダと設定へのアクセスを提供します。
 
-Add the following imports to the main activity of your app.
+アプリのメインアクティビティに以下のインポートを追加します。
 
 ```java
-import com.amazonaws.mobileconnectors.kinesis.kinesisrecorder.*;
-import com.amazonaws.mobile.client.AWSMobileClient;
-import com.amazonaws.regions.Regions;
+import com.amazonaws.com.mobileconnectors.kinesis.kinesisisrecorder.*;
+import com.amazonaws.com.mobile.client.AWSMIClient;
+import com.amazonaws.com.amazonawsregions;
 ```
 
-To use Kinesis Data Streams in an application, you must set the correct permissions. The following IAM policy allows the user to submit records to a specific data stream, which is identified by [ARN](http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
+アプリケーションでKinesis Data Streamsを使用するには、正しい権限を設定する必要があります。 次の IAM ポリシーでは、ユーザーが特定のデータ ストリームにレコードを送信することができます。 これは、 [ARN](http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) によって識別されます。
 
 ```json
 {
     "Statement": [{
         "Effect": "Allow",
         "Action": "kinesis:PutRecords",
-        "Resource": "arn:aws:kinesis:us-west-2:111122223333:stream/mystream"
+        "Resource": "arn:aws:kinesis:us-west-2:1111222233:stream/mystream"
     }]
 }
 ```
 
-The following IAM policy allows the user to submit records to a specific  Kinesis Data Firehose delivery stream.
+次の IAM ポリシーでは、特定の Kinesis Data Firecose 配信ストリームにレコードを送信できます。
 
 ```json
 {
     "Statement": [{
         "Effect": "Allow",
         "Action": "firehose:PutRecordBatch",
-        "Resource": "arn:aws:firehose:us-west-2:111122223333:deliverystream/mystream"
+        "Resource": "arn:aws:firecose:us-west-west-2:11112222333:deliverystream/mystream"
     }]
 }
 ```
 
 This policy should be applied to roles assigned to the Amazon Cognito identity pool, but you need to replace the `Resource` value with the correct ARN for your Amazon Kinesis or Amazon Kinesis Data Firehose stream. You can apply policies at the [IAM console](https://console.aws.amazon.com/iam/). To learn more about IAM policies, see [Using IAM](http://docs.aws.amazon.com/IAM/latest/UserGuide/IAM_Introduction.html).
 
-To learn more about Amazon Kinesis Data Streams policies, see [Controlling Access to Amazon Kinesis Data Streams Resources with IAM](http://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-iam.html).
+Amazon Kinesis Data Streams ポリシーの詳細については、 [IAM を使用した Amazon Kinesis Data Streams リソースへのアクセスの制御](http://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-iam.html) を参照してください。
 
-To learn more about Amazon Kinesis Data Firehose policies, see [Controlling Access with Amazon Kinesis Data Firehose](http://docs.aws.amazon.com/firehose/latest/dev/controlling-access.html).
+Amazon Kinesis Data Firehose ポリシーの詳細については、 [Amazon Kinesis Data Firecose によるアクセスの制御](http://docs.aws.amazon.com/firehose/latest/dev/controlling-access.html) を参照してください。
 
-## Working with the API
+## API の操作
 
-You can use `AWSMobileClient` to setup the Cognito credentials that are required to authenticate your requests with Amazon Kinesis.
+`AWSMobileClient` を使用して、Amazon Kinesisでリクエストを認証するために必要な Cognito 資格情報を設定できます。
 
 ```java
 AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
@@ -98,44 +98,44 @@ KinesisRecorder recorder = new KinesisRecorder(
 // KinesisRecorder uses synchronous calls, so you shouldn't call KinesisRecorder methods on the main thread.
 ```
 
-To use `KinesisFirehoseRecorder`, you need to pass the object in a directory where streaming data is saved. We recommend you use an app private directory because the data is not encrypted.
+`KinesisFirehoseRecorder`を使用するには、ストリーミングデータが保存されるディレクトリにオブジェクトを渡す必要があります。 データが暗号化されていないので、アプリのプライベートディレクトリを使用することをお勧めします。
 
 ```java
-KinesisFirehoseRecorder firehoseRecorder = new KinesisFirehoseRecorder(
-    context.getCachedDir(), 
+KinesisFirehoseRecorder firehoseRecorder = new KinesisFirecoseRecorder(
+    context.getCachedDir() ), 
     Regions.<YOUR-AWS-REGION>,
-    AWSMobileClient.getInstance());
+    AWSMTP.getInstance());
 ```
 
-Configure Kinesis:
+Kinesisの設定：
 
-You can configure `KinesisRecorder` or `KinesisFirehoseRecorder` through their properties:
+プロパティから `KinesisRecorder` または `KinesisFirehoseRecorder` を設定できます。
 
-You can configure the maximum allowed storage via the `withMaxStorageSize()` method of `KinesisRecorderConfig`.
+`KinesisRecorderConfig` の `withMaxStorageSize()` メソッドを使用して、許可される最大ストレージを設定できます。
 
-You can retrieve the same information by getting the `KinesisRecorderConfig` object for the recorder and calling `getMaxStorageSize():`
+同じ情報を取得するには、レコーダーの `KinesisRecorderConfig` オブジェクトを取得し、 `getMaxStorageSize():` を呼び出します。
 
 ```java
 KinesisRecorderConfig kinesisRecorderConfig = recorder.getKinesisRecorderConfig();
 Long maxStorageSize = kinesisRecorderConfig.getMaxStorageSize();
-// Do something with maxStorageSize
+// maxStorageSize で何かを行う
 ```
 
-To check the number of bytes currently stored in the directory passed in to the `KinesisRecorder` constructor, call `getDiskBytesUsed()`:
+`KinesisRecorder` コンストラクタに渡されたディレクトリに現在格納されているバイト数を確認するには、 `getDiskBytesUsed()` を呼び出してください。
 
 ```java
 Long bytesUsed = recorder.getDiskBytesUsed();
-// Do something with bytesUsed
+// bytesUsed で何かをする
 ```
 
-To see how much space the `KinesisRecorder` client is allowed to use, you can call `getDiskByteLimit()`.
+`KinesisRecorder` クライアントの使用が許可されている領域を確認するには、 `getDiskByteLimit()` を呼び出すことができます。
 
 ```java
 Long byteLimit = recorder.getDiskByteLimit();
-// Do something with byteLimit
+// byteLimit で何かを行う
 ```
 
-With `KinesisRecorder` created and configured, you can use `saveRecord()` to save records and then send them in a batch.
+`KinesisRecorder` を作成して設定すると、 `saveRecord()` を使用してレコードを保存し、バッチで送信できます。
 
 ```java
 recorder.saveRecord(
@@ -148,7 +148,7 @@ For the `saveRecord()` request above to work, you would have to have created a s
 
 If `submitAllRecords()` is called while the app is online, requests will be sent and removed from the disk. If `submitAllRecords()` is called while the app is offline, requests will be kept on disk until `submitAllRecords()` is called while online. This applies even if you lose your internet connection midway through a submit. So if you save ten requests, call `submitAllRecords()`, send five, and then lose the Internet connection, you have five requests left on disk. These remaining five will be sent the next time `submitAllRecords()` is invoked online.
 
-Here is a similar snippet for Amazon Kinesis Data Firehose:
+ここでは、Amazon Kinesis Data Firehoseと同様のスニペットを示します。
 
 ```java
 // Start to save data, either a String or a byte array
@@ -169,8 +169,8 @@ new AsyncTask<Void, Void, Void>() {
 }.execute();
 ```
 
-To learn more about working with Kinesis Data Streams, see the [Amazon Kinesis Data Streams resources](http://aws.amazon.com/kinesis/developer-resources/).
+Kinesis Data Streamsの操作の詳細については、 [Amazon Kinesis Data Streams resources](http://aws.amazon.com/kinesis/developer-resources/) を参照してください。
 
-To learn more about the Kinesis Data Streams classes, see the [class reference for KinesisRecorder](https://aws-amplify.github.io/aws-sdk-android/docs/reference/com/amazonaws/mobileconnectors/kinesis/kinesisrecorder/KinesisRecorder.html).
+Kinesis Data Streamsクラスの詳細については、KinesisRecorderの [クラスのリファレンス](https://aws-amplify.github.io/aws-sdk-android/docs/reference/com/amazonaws/mobileconnectors/kinesis/kinesisrecorder/KinesisRecorder.html)を参照してください。
 
-To learn more about the Kinesis Data Firehose classes, see the [class reference for KinesisFirehoseRecorder](https://aws-amplify.github.io/aws-sdk-android/docs/reference/com/amazonaws/mobileconnectors/kinesis/kinesisrecorder/KinesisFirehoseRecorder.html).
+Kinesis Data Firehoseクラスの詳細については、KinesisFirecoseRecorder [クラスの参照](https://aws-amplify.github.io/aws-sdk-android/docs/reference/com/amazonaws/mobileconnectors/kinesis/kinesisrecorder/KinesisFirehoseRecorder.html) を参照してください。
