@@ -1,8 +1,8 @@
-## Set up the backend
+## バックエンドの設定
 
-If you haven't already done so, run `amplify init` inside your project and then `amplify add auth` (we recommend selecting the *default configuration*).
+まだ実行していない場合 プロジェクト内で `amplify init` を実行し、 `増幅して認証を追加` します(デフォルトの設定 *を選択することをお勧めします*)。
 
-Run `amplify add predictions` and select **Convert**. Then use the following answers:
+`増幅して予測を追加する` を実行し、 **変換**を選択します。その後、以下の解答を使用します:
 
 ```console
 ? What would you like to convert?
@@ -21,9 +21,9 @@ Run `amplify add predictions` and select **Convert**. Then use the following ans
 ❯ Auth and Guest users
 ```
 
-## Working with the API
+## API の操作
 
-Here is an example of converting speech to text. In order to override any choices you made while adding this resource using the Amplify CLI, you can pass in a language in the options object as shown below.
+ここでは、音声をテキストに変換する例を示します。 Amplify CLI を使用してこのリソースを追加中に行った選択を上書きするには、次の手順を実行します。 オプションオブジェクトの言語を以下に示すように渡すことができます。
 
 <amplify-block-switcher>
 
