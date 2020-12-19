@@ -1,4 +1,4 @@
-Models with one-to-many connections are lazy-loaded when accessing the connected property, so accessing a relation is as simple as:
+接続されたプロパティにアクセスすると、1対多の接続を持つモデルは遅延ロードされるため、リレーションへのアクセスは以下のように簡単になります:
 
 <amplify-block-switcher>
 
