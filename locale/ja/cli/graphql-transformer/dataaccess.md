@@ -1,40 +1,40 @@
 ---
-title: Data access patterns
-description: Learn how to support these 17 common database access patterns using GraphQL, AWS Amplify, and the GraphQL Transform library
+title: データアクセスパターン
+description: GraphQL、AWS Amplify、GraphQL Transform ライブラリを使用して、これらの 17 の一般的なデータベースアクセスパターンをサポートする方法を学びます。
 ---
 
 In the [DynamoDB documentation for modeling relational data in a NoSQL database](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-modeling-nosql.html), there is an in depth example of 17 access patterns from the [First Steps for Modeling Relational Data in DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-modeling-nosql.html) page.
 
-|    | Most common/import access patterns in our organization              |
-| -- | ------------------------------------------------------------------- |
-| 1  | Look up employee details by employee ID                             |
-| 2  | Query employee details by employee name                             |
-| 3  | Find an employee's phone number(s)                                  |
-| 4  | Find a customer's phone number(s)                                   |
-| 5  | Get orders for a given customer within a given date range           |
-| 6  | Show all open orders within a given date range across all customers |
-| 7  | See all employees recently hired                                    |
-| 8  | Find all employees working in a given warehouse                     |
-| 9  | Get all items on order for a given product                          |
-| 10 | Get current inventories for a given product at all warehouses       |
-| 11 | Get customers by account representative                             |
-| 12 | Get orders by account representative and date                       |
-| 13 | Get all items on order for a given product                          |
-| 14 | Get all employees with a given job title                            |
-| 15 | Get inventory by product and warehouse                              |
-| 16 | Get total product inventory                                         |
-| 17 | Get account representatives ranked by order total and sales period  |
+|    | 私たちの組織で最も一般的な/インポートのアクセスパターン    |
+| -- | ------------------------------- |
+| 1  | 従業員IDで従業員情報を検索                  |
+| 2  | 従業員名で従業員情報を問い合わせます              |
+| 3  | 従業員の電話番号を検索                     |
+| 4  | 顧客の電話番号を検索                      |
+| 5  | 指定された日付範囲内で特定の顧客の注文を取得する        |
+| 6  | 指定された日付範囲内のすべての注文をすべての顧客に表示     |
+| 7  | 最近雇ったすべての従業員を見る                 |
+| 8  | 特定の倉庫で働くすべての従業員を見つける            |
+| 9  | 特定の商品をすべて注文する                   |
+| 10 | すべての倉庫で特定の製品の現在の在庫を取得します        |
+| 11 | アカウント担当者でお客様を取得                 |
+| 12 | アカウント担当者と日付で注文する                |
+| 13 | 特定の商品をすべて注文する                   |
+| 14 | 与えられた役職名を持つすべての従業員を取得           |
+| 15 | 商品と倉庫で在庫を取得する                   |
+| 16 | 合計商品在庫数を取得する                    |
+| 17 | 注文合計と販売期間でランク付けされたアカウント担当者を取得する |
 
-In this example, you will learn how to support these data access patterns using GraphQL, AWS Amplify, and the GraphQL Transform library. This example has the following types:
+この例では、GraphQL、AWS Amplify、GraphQL Transform ライブラリを使用して、これらのデータアクセスパターンをサポートする方法を学習します。 この例には以下のタイプがあります。
 
-- Warehouse
-- Product
-- Inventory
-- Employee
+- 倉庫
+- 商品
+- 棚卸し
+- 従業員数
 - AccountRepresentative
-- Customer
+- 顧客
 
-The [following schema](https://gist.github.com/dabit3/e0af16db09b6e206292d1c5cfc0d0a07) introduces the required keys and connections so that we can support these access patterns:
+[次のスキーマ](https://gist.github.com/dabit3/e0af16db09b6e206292d1c5cfc0d0a07) は、これらのアクセスパターンをサポートするために必要なキーと接続を導入します:
 
 
 ```graphql
@@ -108,7 +108,7 @@ type Product @model {
 }
 ```
 
-Now that we have the schema created, let's create the items in the database that we will be operating against:
+スキーマが作成されたので、対して動作するデータベース内のアイテムを作成しましょう:
 
 ```graphql
 # first
@@ -212,8 +212,8 @@ mutation createOrder {
 }
 ```
 
-## 1. Look up employee details by employee ID:
-This can simply be done by querying the employee model with an employee ID, no `@key` or `@connection` is needed to make this work.
+## 1. 従業員IDで従業員の詳細を調べます。
+これは、従業員IDを使用して従業員モデルをクエリするだけで行うことができます。 この作業を行うには、 `@key` または `@connection` が必要ありません。
 
 ```graphql
 query getEmployee($id: ID!) {
@@ -227,8 +227,8 @@ query getEmployee($id: ID!) {
 }
 ```
 
-## 2. Query employee details by employee name:
-The `@key` `byName` on the `Employee` type makes this access-pattern feasible because under the covers an index is created and a query is used to match against the name field. We can use this query:
+## 2. 従業員名で従業員の詳細を問い合わせます:
+`@key` `byName` の `Employee` 型は、インデックスが作成され、クエリが name 項目と一致するため、このアクセスパターンを実現可能にします。 このクエリを使用できます:
 
 ```graphql
 query employeeByName($name: String!) {
@@ -244,11 +244,11 @@ query employeeByName($name: String!) {
 }
 ```
 
-## 3. Find an Employee’s phone number:
-Either one of the previous queries would work to find an employee’s phone number as long as one has their ID or name.
+## 3. 従業員の電話番号を検索:
+以前のいずれかのクエリは、IDまたは名前がある限り、従業員の電話番号を見つけるのに役立ちます。
 
-## 4. Find a customer’s phone number:
-A similar query to those given above but on the Customer model would give you a customer’s phone number.
+## 4. お客様の電話番号を検索:
+上記のクエリと似ていますが、Customerモデルでは顧客の電話番号が表示されます。
 
 ```graphql
 query getCustomer($customerID: ID!) {
@@ -258,14 +258,14 @@ query getCustomer($customerID: ID!) {
 }
 ```
 
-## 5. Get orders for a given customer within a given date range:
-There is a one-to-many relation that lets all the orders of a customer be queried.
+## 5. 指定された日付範囲内で特定の顧客の注文を取得:
+顧客のすべての注文を照会できる1対多のリレーションがあります。
 
-This relationship is created by having the `@key` name `byCustomerByDate` on the Order model that is queried by the connection on the orders field of the Customer model.
+このリレーションシップは、 `@key` 名 `byCustomerByDate` を、顧客モデルの注文欄の接続によって照会される注文モデルに設定することによって作成されます。
 
 A sort key with the date is used. What this means is that the GraphQL resolver can use predicates like `Between` to efficiently search the date range rather than scanning all records in the database and then filtering them out.
 
-The query one would need to get the orders to a customer within a date range would be:
+クエリは、日付範囲内の顧客に注文を取得する必要があります：
 
 ```graphql
 query getCustomerWithOrdersByDate($customerID: ID!) {
@@ -283,8 +283,8 @@ query getCustomerWithOrdersByDate($customerID: ID!) {
 }
 ```
 
-## 6. Show all open orders within a given date range across all customers:
-The `@key` `byCustomerByStatusByDate` enables you to run a query that would work for this access pattern.
+## 6. 指定された日付範囲内にすべてのオープン注文をすべての顧客に表示:
+`@key` `byCustomerByStatusByDate` を使用すると、このアクセス パターンで動作するクエリを実行できます。
 
 In this example, a composite sort key (combination of two or more keys) with the `status` and `date` is used. What this means is that the unique identifier of a record in the database is created by concatenating these two fields (status and date) together, and then the GraphQL resolver can use predicates like `Between` or `Contains` to efficiently search the unique identifier for matches rather than scanning all records in the database and then filtering them out.
 
@@ -306,12 +306,12 @@ query getCustomerWithOrdersByStatusDate($customerID: ID!) {
 }
 ```
 
-## 7. See all employees hired recently:
+## 7. すべての従業員が最近雇われたのを参照してください:
 Having `@key(name: "newHire", fields: ["newHire", "id"])` on the `Employee` model allows one to query by whether an employee has been hired recently.
 
 ```graphql
-query employeesNewHire {
-  employeesNewHire(newHire: "true") {
+query employeeNewHire {
+  employeeNewHire(newHire: "true") {
     items {
       id
       name
@@ -323,11 +323,11 @@ query employeesNewHire {
 }
 ```
 
-We can also query and have the results returned by start date by using the `employeesNewHireByStartDate` query:
+`employeeNewHireByStartDate` クエリを使用することで、開始日までに結果をクエリして返すこともできます。
 
 ```graphql
-query employeesNewHireByDate {
-  employeesNewHireByStartDate(newHire: "true") {
+query employeeNewHireByDate {
+  employeeNewHireByDate(newHire: "true") {
     items {
       id
       name
@@ -339,7 +339,7 @@ query employeesNewHireByDate {
 }
 ```
 
-## 8. Find all employees working in a given warehouse:
+## 8. 指定された倉庫で働くすべての従業員を見つけます:
 This needs a one to many relationship from warehouses to employees. As can be seen from the @connection in the `Warehouse` model, this connection uses the `byWarehouse` key on the `Employee` model. The relevant query would look like this:
 
 ```graphql
@@ -359,8 +359,8 @@ query getWarehouse($warehouseID: ID!) {
 }
 ```
 
-## 9. Get all items on order for a given product:
-This access-pattern would use a one-to-many relation from products to orders. With this query we can get all orders of a given product:
+## 9. すべての商品を注文する:
+このアクセスパターンは、商品から注文までの1対多のリレーションを使用します。このクエリを使用すると、特定の商品のすべての注文を取得できます:
 
 ```graphql
 query getProductOrders($productID: ID!) {
@@ -378,9 +378,9 @@ query getProductOrders($productID: ID!) {
 }
 ```
 
-## 10. Get current inventories for a product at all warehouses:
+## 10. すべての倉庫で製品の現在の在庫を取得します:
 
-The query needed to get the inventories of a product in all warehouses would be:
+すべての倉庫で製品の在庫を取得するために必要なクエリは次のとおりです。
 
 ```graphql
 query getProductInventoryInfo($productID: ID!) {
@@ -396,10 +396,10 @@ query getProductInventoryInfo($productID: ID!) {
 }
 ```
 
-## 11. Get customers by account representative:
-This uses a one-to-many connection between account representatives and customers:
+## 11. アカウント担当者による顧客獲得:
+これにより、アカウント担当者と顧客間の1対多の接続が使用されます。
 
-The query needed would look like this:
+必要なクエリは次のようになります:
 
 ```graphql
 query getCustomersForAccountRepresentative($representativeId: ID!) {
@@ -415,10 +415,10 @@ query getCustomersForAccountRepresentative($representativeId: ID!) {
 }
 ```
 
-## 12. Get orders by account representative and date:
+## 12. アカウント担当者と日付で注文を取得:
 
 
-As can be seen in the AccountRepresentative model this connection uses the `byRepresentativebyDate` field on the `Order` model to create the connection needed. The query needed would look like this:
+AccountRepresentative モデルで見られるように、この接続は、 `注文` モデルの `byRepresentativeDate` 欄を使用して必要な接続を作成します。 必要なクエリは次のようになります:
 
 ```graphql
 query getOrdersForAccountRepresentative($representativeId: ID!) {
@@ -440,15 +440,15 @@ query getOrdersForAccountRepresentative($representativeId: ID!) {
 }
 ```
 
-## 13. Get all items on order for a given product:
-This is the same as number 9.
+## 13.すべての商品を特定の商品で注文する：
+これは9番と同じです。
 
-## 14. Get all employees with a given job title:
-Using the `byTitle` `@key` makes this access pattern quite easy.
+## 14. すべての従業員に与えられた役職名を割り当てます:
+`byTitle` `@key` を使用すると、このアクセスパターンは非常に簡単になります。
 
 ```graphql
-query employeesByJobTitle {
-  employeesByJobTitle(jobTitle: "Manager") {
+query employeeByJobTitle{
+  employeeByJobTitle(jobTitle: "Manager") {
     items {
       id
       name
@@ -459,10 +459,10 @@ query employeesByJobTitle {
 }
 ```
 
-## 15. Get inventory by product by warehouse:
-Here having the inventories be held in a separate model is particularly useful since this model can have its own partition key and sort key such that the inventories themselves can be queried as is needed for this access-pattern.
+## 15. 倉庫別に在庫を手に入れる:
+このモデルは、独自のパーティションキーとソートキーを持つことができるため、インベントリを別のモデルで保持することは特に有用であり、このアクセスパターンに必要とされるようにインベントリ自身を照会することができます。
 
-A query on this model would look like this:
+このモデルのクエリは次のようになります。
 
 ```graphql
 query inventoryByProductAndWarehouse($productID: ID!, $warehouseID: ID!) {
@@ -475,7 +475,7 @@ query inventoryByProductAndWarehouse($productID: ID!, $warehouseID: ID!) {
 
 ```
 
-We can also get all inventory from an individual warehouse by using the `itemsByWarehouseID` query created by the `byWarehouseID` key:
+`byWarehouseID` キーによって作成された `itemsByWarehouseID` クエリを使用して、個々の倉庫からすべてのインベントリを取得することもできます。
 
 ```graphql
 query byWarehouseId($warehouseID: ID!) {
@@ -488,8 +488,8 @@ query byWarehouseId($warehouseID: ID!) {
 }
 ```
 
-## 16. Get total product inventory:
-How this would be done depends on the use case. If one just wants a list of all inventories in all warehouses, one could just run a list inventories on the Inventory model:
+## 16.商品の総在庫数を取得:
+これがどのように行われるかは、使用事例によって異なります。 すべての倉庫内のすべての在庫リストを欲しい場合は、在庫モデルで在庫リストを実行するだけです。
 
 ```graphql
 query listInventorys {
@@ -503,7 +503,7 @@ query listInventorys {
 }
 ```
 
-## 17. Get sales representatives ranked by order total and sales period:
+## 17. 注文総額と販売期間でランク付けされた営業担当者を取得します:
 The sales period is either a date range or maybe even a month or week. Therefore we can set the sales period as a string and query using the combination of `salesPeriod` and `orderTotal`. We can also set the `sortDirection` in order to get the return values from largest to smallest:
 
 ```graphql
