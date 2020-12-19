@@ -1,48 +1,48 @@
 ---
-title: Introduction
-description: Introduction to Admin UI
+title: はじめに
+description: 管理者 UI の紹介
 ---
 
-The Amplify Admin UI is a visual interface for frontend web and mobile developers to develop app backends and manage app content outside the AWS Management Console. Teams can use the Admin UI to create and manage enterprise-ready, scalable, and secure cloud backends for their apps.
+Amplify管理UIは、AWS管理コンソールの外でアプリケーションバックエンドを開発し、アプリコンテンツを管理するためのフロントエンドウェブとモバイル開発者のためのビジュアルインターフェースです。 チームは、Admin UIを使用して、アプリケーション用のエンタープライズ対応、スケーラブル、およびセキュアなクラウドバックエンドを作成および管理できます。
 
-<docs-internal-link-button href="~/console/adminui/start.md"> <span slot="text">Get started with the Admin UI</span> </docs-internal-link-button>
+<docs-internal-link-button href="~/console/adminui/start.md"> <span slot="text">管理者 UI で始めましょう</span> </docs-internal-link-button>
 
-## Key capabilities
+## キー機能
 
-### Access outside the AWS Management Console
+### AWS管理コンソールの外部からのアクセス
 
-The Admin UI provides a visual interface to manage your app backend that is hosted externally, outside the AWS Management Console. It provides a contextual view of your Amplify app backend and enables access to developers and non-developers (such as QA testers, and PMs) to manage app content and to users without creating AWS Identity and Access Management (IAM) users. Each Admin UI is hosted at `https://region.admin.amplifyapp.com/appid/envname`.
+Admin UI は、AWS 管理コンソール以外で外部でホストされているアプリケーションバックエンドを管理するための視覚的なインターフェイスを提供します。 Amplifyアプリバックエンドのコンテキストビューを提供し、開発者や非開発者(QAテスターなど)へのアクセスを可能にします。 および PMs) は、AWS Identity and Access Management (IAM) ユーザを作成せずに、アプリのコンテンツとユーザを管理します。 各Admin UI is hosted at `https://region.admin.anplifyapp.com/appid/envname`.
 
 ![adminui](~/images/console/adminui.png)
 
-### Admin UI and CLI access without an AWS account
+### AWS アカウントのない管理者 UI と CLI アクセス
 
-Only the *first* backend deployment to Amplify Console requires an AWS account. After that, you can invite team members to use the Admin UI and the Amplify Command Line Interface (CLI) via email. All Admin UI users with full access can use the Amplify CLI without an AWS account.
+Amplifyコンソールへの *最初の* バックエンドデプロイのみがAWSアカウントを必要とします。 その後、管理者UIとAmplifyコマンドラインインターフェース(CLI)を電子メールで使用するようチームメンバーを招待できます。 フルアクセス権を持つすべてのAdmin UIユーザーは、AWSアカウントなしでAmplifyのCLIを使用できます。
 
-![access](~/images/console/access.png)
+![アクセス](~/images/console/access.png)
 
-### Visual data modeling
+### ビジュアルデータモデリング
 
-The Admin UI's data model designer enables you to build a backend by focusing on your domain specifics (for example, a product with a descriptions and price), relationships (for example, products have many orders), and authorization rules (for example, only signed in users can order a product) instead of setting up database tables, and APIs.
+Admin UI のデータモデルデザイナーは、ドメインの詳細に焦点を当ててバックエンドを構築することができます(例えば、 説明と価格を持つ製品 リレーションシップ(例えば、製品には多くの注文があります)、および認証ルール (例えば、製品には多くの注文があります) データベーステーブルと API をセットアップする代わりに、サインインしたユーザーのみが製品を注文できます。
 
 ![datamodel](~/images/console/datamodel.gif)
 
-### Content management
+### コンテンツ管理
 
-After deploying your data model, all app data is available in the Admin UI's content management view. This enables app admins to manage content, for example, to update a product price or add a new blog post.
+データ モデルをデプロイした後、すべてのアプリ データは Admin UI のコンテンツ管理ビューで使用できます。 これにより、アプリ管理者はコンテンツを管理することができます。例えば、商品価格を更新したり、新しいブログ投稿を追加したりできます。
 
 ![cms](~/images/console/cms.png)
 
-### Authentication, authorization, and user management
+### 認証、承認、およびユーザー管理
 
-Set up authentication (powered by Amazon Cognito) by defining login methods and sign-up attributes. After you deploy authentication, you can create users, add users to groups, and view login activity. Use your Amazon Cognito user pool to define authorization rules on your data model.
+ログイン方法とサインアップ属性を定義して認証(Amazon Cognitoを搭載)を設定します。 認証をデプロイした後、ユーザーを作成したり、グループにユーザーを追加したり、ログインアクティビティを表示したりできます。 Amazon Cognitoユーザープールを使用して、データモデルの認証ルールを定義します。
 
-![auth](~/images/console/auth.png)
+![認証する](~/images/console/auth.png)
 
 
-### Infrastructure-as-code that works with the Amplify CLI
+### Amplify CLI で動作するInfrastructure-as-code
 
-The Admin UI uses AWS CloudFormation and nested stacks to deploy backend resources. These AWS CloudFormation stacks enable you to keep your backend infrastructure definition as code. You can pull all stack definitions locally using the Amplify CLI. Changes made in the Admin UI can be made available in the CLI by running the `amplify pull` command. Similarly, changes made to the data model or auth using the Amplify CLI are visible in the Admin UI.
+Admin UI uses AWS CloudFormation and nested stacks to deploy backend resources. AWS CloudFormationスタックを使用すると、バックエンドのインフラストラクチャ定義をコードとして保持できます。Amplify CLIを使用して、すべてのスタック定義をローカルにプルできます。 管理者 UI で行われた変更は、 `amplify pull` コマンドを実行することで、CLI で利用できます。 同様に、Amplify CLIを使用したデータモデルまたは認証に加えられた変更はAdmin UIに表示されます。
 
 
 
