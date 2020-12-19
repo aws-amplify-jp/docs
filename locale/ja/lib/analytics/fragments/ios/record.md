@@ -1,6 +1,6 @@
-## Record Event
+## イベントを記録
 
-The Amplify Analytics plugin provides a simple interface to record custom events within your app. The plugin handles retry logic in the event the device looses network connectivity, and automatically batches requests to reduce network bandwidth.
+Amplify Analytics プラグインは、カスタム イベントをアプリケーション内で記録するためのシンプルなインターフェイスを提供します。 このプラグインは、デバイスがネットワーク接続を解除した場合の再試行ロジックを処理し、ネットワーク帯域幅を削減するための要求を自動的にバッチ処理します。
 
 ```swift
 func recordEvents() {
@@ -15,9 +15,9 @@ func recordEvents() {
 }
 ```
 
-## Flush Events
+## イベントをフラッシュする
 
-Events have default configuration to flush out to the network every 60 seconds. If you would like to change this, update `amplifyconfiguration.json` with the value you would like for `autoFlushEventsInterval` like so:
+イベントは60秒ごとにネットワークにフラッシュするためのデフォルトの設定を持っています。これを変更したい場合は、 `amplifyconfigurationを更新してください。 son <code> は` のように `autoFlushEventsInterval` に設定します。
 
 ```json
 {
@@ -42,36 +42,36 @@ Events have default configuration to flush out to the network every 60 seconds. 
 
 > **Note**: If you set `autoFlushEventsInterval` to 0, you are responsible for calling `Amplify.Analytics.flushEvents()` to submit the recorded events to the backend.
 
-## Global Properties
+## グローバルプロパティ
 
-You can register properties which will be used across all `Amplify.Analytics.record(event:)` calls.
+`Amplify.Analytics.record(event:)` のすべての呼び出しで使用するプロパティを登録できます。
 
 ```swift
 let globalProperties: AnalyticsProperties = ["globalPropertyKey": "value"]
 Amplify.Analytics.registerGlobalProperties(globalProperties)
 ```
 
-To unregister global properties call `Amplify.Analytics.unregisterGlobalProperties()`:
+グローバルプロパティの登録を解除するには、 `Amplify.Analytics.unregisterGlobalProperties()`:
 
 ```swift
-// when called with no arguments, it unregisters all global properties
+// 引数なしで呼び出されたとき、すべてのグローバルプロパティを登録解除します
 Amplify.Analytics.unregisterGlobalProperties()
 
-// or you can specify properties to unregister
+// または、登録解除するプロパティを指定できます。
 Amplify.Analytics.unregisterGlobalProperties(["globalPropertyKey1", "globalPropertyKey2"])
 ```
 
-## Disable Analytics
+## 分析を無効にする
 
-Analytics are sent to the backend automatically (i.e. it's enabled by default). To disable it call:
+アナリティクスはバックエンドに自動的に送信されます（デフォルトでは有効）。コールを無効にするには:
 
 ```swift
 Amplify.Analytics.disable()
 ```
 
-## Enable Analytics
+## 分析を有効にする
 
-To re-enable it call:
+通話を再度有効にするには:
 
 ```swift
 Amplify.Analytics.enable()
