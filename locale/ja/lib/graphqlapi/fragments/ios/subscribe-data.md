@@ -1,6 +1,6 @@
-Subscribe to mutations for creating real-time clients.
+リアルタイムクライアントを作成するための変更を購読します。
 
-Because the lifetime of the subscription will last longer than the lifetime of a single function, you can create an instance variable at the top of your class:
+サブスクリプションの有効期間は単一の機能の有効期間より長くなりますので。 クラスの上部にインスタンス変数を作成できます。
 
 <amplify-block-switcher>
 
@@ -24,7 +24,7 @@ var dataSink: AnyCancellable?
 </amplify-block-switcher>
 
 
-To listen to creation updates, you can use the following code sample:
+作成の更新をリッスンするには、次のコードサンプルを使用できます。
 
 <amplify-block-switcher>
 
@@ -83,22 +83,22 @@ func createSubscription() {
 
 </amplify-block-switcher>
 
-### Unsubscribing from updates
+### アップデートの購読を解除
 
-#### Listener (iOS 11+)
+#### リスナー（iOS 11+)
 
-To unsubscribe from updates, you can call `cancel()` on the subscription
+更新を解除するには、サブスクリプションで `cancel()` を呼び出すことができます。
 
 ```swift
 func cancelSubscription() {
-    // Cancel the subscription listener when you're finished with it
+    // サブスクリプションリスナーが終わったらキャンセルする
     subscription?.cancel();
 }
 ```
 
-#### Combine (iOS 13+)
+#### 結合 (iOS 13以上)
 
-With the Combine flavor of the `subscribe()` API, you have the option of canceling just the downstream Combine subscriber, or the entire GraphQL subscription.
+`subscribe()` API のフレーバーを結合します。 下流の結合サブスクリプションまたはGraphQLサブスクリプション全体のみをキャンセルすることができます。
 
 Calling `cancel()` on the subscription will disconnect the subscription from the backend. Any downstream subscribers will also be cancelled. On the other hand, calling `cancel()` on the Combine subscriber (e.g., the `AnyCancellable` returned from `sink()` will cause that Combine subscriber to stop receiving updates, but any other attached subscribers will continue to receive subscription data. For example:
 
