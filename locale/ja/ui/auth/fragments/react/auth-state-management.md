@@ -1,6 +1,6 @@
 <amplify-block-switcher> <amplify-block name="JavaScript">
 
-> Make sure not to return the result of `onAuthUIStateChange` within `useEffect` hook.
+> `useEffect` フック内で `onAuthUIStateChange` の結果を返さないようにしてください。
 
 ```jsx
 import React from 'react';
