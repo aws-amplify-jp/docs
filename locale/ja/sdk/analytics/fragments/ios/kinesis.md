@@ -1,80 +1,80 @@
-The two classes `AWSKinesisRecorder` and `AWSFirehoseRecorder` allow you to interface with Amazon Kinesis and Amazon Kinesis Firehose to stream analytics data for real-time processing.
+2つのクラス `AWSKinesisRecorder` と `AWSFihoseRecorder` を使用すると、Amazon Kinesis と Amazon Kinesis Firecose をインターフェースしてリアルタイム処理のための分析データをストリーミングできます。
 
-## What is Amazon Kinesis?
+## Amazon Kinesisとは?
 
-[Amazon Kinesis](http://aws.amazon.com/kinesis/) is a fully managed service for real-time processing of streaming data at massive scale. Amazon Kinesis can collect and process hundreds of terabytes of data per hour from hundreds of thousands of sources, so you can write applications that process information in real-time. With Amazon Kinesis applications, you can build real-time dashboards, capture exceptions and generate alerts, drive recommendations, and make other real-time business or operational decisions. You can also easily send data to other services such as Amazon Simple Storage Service, Amazon DynamoDB, and Amazon Redshift.
+[Amazon Kinesis](http://aws.amazon.com/kinesis/) は、大規模なストリーミングデータをリアルタイムに処理するための完全管理サービスです。 Amazon Kinesisは、数十万のソースから1時間あたり数百テラバイトのデータを収集して処理することができます。 リアルタイムで情報を処理するアプリケーションを書くことができます Amazon Kinesisアプリケーションを使用すると、リアルタイムのダッシュボードを構築し、例外を取得し、アラートを生成し、推奨を駆動し、その他のリアルタイムのビジネスや運用上の意思決定を行うことができます。 また、Amazon Simple Storage Service、Amazon DynamoDB、Amazon Redshiftなどの他のサービスにも簡単にデータを送信できます。
 
 The Amazon Kinesis `AWSKinesisRecorder` client lets you store [PutRecord](http://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecord.html) requests on disk and then send them all at once. This is useful because many mobile applications that use Amazon Kinesis will create multiple `PutRecord` requests per second. Sending an individual request for each `PutRecord` action could adversely impact battery life. Moreover, the requests could be lost if the device goes offline. Thus, using the high-level Amazon Kinesis client for batching can preserve both battery life and data.
 
-## What is Amazon Kinesis Firehose?
+## Amazon Kinesis Firehoseとは何ですか?
 
-[Amazon Kinesis Firehose](http://aws.amazon.com/kinesis/firehose/) is a fully managed service for delivering real-time streaming data to destinations such as Amazon Simple Storage Service (Amazon S3) and Amazon Redshift. With Firehose, you do not need to write any applications or manage any resources. You configure your data producers to send data to Firehose and it automatically delivers the data to the destination that you specified.
+[Amazon Kinesis Firecose](http://aws.amazon.com/kinesis/firehose/) は、Amazon Simple Storage Service (Amazon S3) や Amazon Redshift などの宛先にリアルタイムストリーミングデータを配信するための完全管理サービスです。 ファイアオースでは、アプリケーションを書いたり、リソースを管理したりする必要はありません。 ファイアローズにデータを送信するようにデータ生成者を設定し、指定した宛先にデータを自動的に送信します。
 
-The Amazon Kinesis Firehose `AWSFirehoseRecorder` client lets you store [PutRecords](http://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecords.html) requests on disk and then send them using Kinesis Data Firehose`PutRecordBatch`.
+Amazon Kinesis Firecose `AWSFihoseRecorder` クライアントは、ディスクに [PutRecords](http://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecords.html) リクエストを保存し、Kinesis Data Firecose`PutRecordBatch` を使用してそれらを送信することができます。
 
-For more information about Amazon Kinesis Firehose, see [Amazon Kinesis Firehose](http://docs.aws.amazon.com/firehose/latest/dev/what-is-this-service.html).
+Amazon Kinesis Firehose の詳細については、 [Amazon Kinesis Firecose](http://docs.aws.amazon.com/firehose/latest/dev/what-is-this-service.html) を参照してください。
 
-## Integrating Amazon Kinesis and Amazon Kinesis Firehose
+## Amazon Kinesis と Amazon Kinesis Firecose の統合
 
-Add the following to your `Podfile`:
+`Podfile` に以下を追加:
 
 ```ruby
 pod 'AWSKinesis'
 ```
 
-The instructions direct you to import the headers for the services you'll be using. For this example, you need the following import.
+この手順では、使用するサービスのヘッダーをインポートするように指示します。この例では、次のインポートが必要です。
 
 ```swift
 import AWSKinesis
 ```
 
-To use Amazon Kinesis in an application, you must set the correct permissions. The following IAM policy allows the user to submit records to a specific Amazon Kinesis stream, which is identified by [ARN](http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
+アプリケーションでAmazon Kinesisを使用するには、正しい権限を設定する必要があります。 次の IAM ポリシーでは、特定の Amazon Kinesis ストリームにレコードを送信することができます。これは [ARN](http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) によって識別されます。
 
 ```json
 {
     "Statement": [{
         "Effect": "Allow",
         "Action": "kinesis:PutRecords",
-        "Resource": "arn:aws:kinesis:us-west-2:111122223333:stream/mystream"
+        "Resource": "arn:aws:kinesis:us-west-2:1111222233:stream/mystream"
     }]
 }
 ```
 
-The following IAM policy allows the user to submit records to a specific Amazon Kinesis Firehose stream.
+次の IAM ポリシーでは、特定の Amazon Kinesis Firecose ストリームにレコードを送信できます。
 
 ```json
 {
     "Statement": [{
         "Effect": "Allow",
         "Action": "firehose:PutRecordBatch",
-        "Resource": "arn:aws:firehose:us-west-2:111122223333:deliverystream/mystream"
+        "Resource": "arn:aws:firecose:us-west-west-2:11112222333:deliverystream/mystream"
     }]
 }
 ```
 
 This policy should be applied to roles assigned to the Amazon Cognito identity pool, but you need to replace the `Resource` value with the correct ARN for your Amazon Kinesis or Amazon Kinesis Firehose stream. You can apply policies at the [IAM console](https://console.aws.amazon.com/iam/). To learn more about IAM policies, see [Using IAM](http://docs.aws.amazon.com/IAM/latest/UserGuide/IAM_Introduction.html).
 
-To learn more about Amazon Kinesis-specific policies, see [Controlling Access to Amazon Kinesis Resources with IAM](http://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-iam.html).
+Amazon Kinesis 固有のポリシーの詳細については、 [IAM を使用した Amazon Kinesis リソースへのアクセスの制御](http://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-iam.html) を参照してください。
 
-To learn more about Amazon Kinesis Firehose policies, see [Controlling Access with Amazon Kinesis Firehose](http://docs.aws.amazon.com/firehose/latest/dev/controlling-access.html).
+Amazon Kinesis Firehose ポリシーの詳細については、 [Amazon Kinesis Firehose によるアクセスの制御](http://docs.aws.amazon.com/firehose/latest/dev/controlling-access.html) を参照してください。
 
-## Working with the API
+## API の操作
 
-Once you have credentials, you can use `AWSKinesisRecorder` with Amazon Kinesis. The following snippet returns a shared instance of the Amazon Kinesis service client:
+資格情報を取得したら、Amazon Kinesisで `AWSKinesisRecorder` を使用できます。 次のスニペットは、Amazon Kinesisサービスクライアントの共有インスタンスを返します。
 
 ```swift
 let kinesisRecorder = AWSKinesisRecorder.default()
 ```
 
-You can use `AWSFirehoseRecorder` with Amazon Kinesis Firehose. The following snippet returns a shared instance of the Amazon Kinesis Firehose service client:
+Amazon Kinesis Firehose と `AWSFirehoseRecorder` を使用できます。次のスニペットは、Amazon Kinesis Firehose サービス クライアントの共有インスタンスを返します。
 
 ```swift
 let firehoseRecorder = AWSFirehoseRecorder.default()
 ```
 
-Configure Kinesis:
+Kinesisの設定：
 
-You can configure `AWSKinesisRecorder` or `AWSFirehoseRecorder` through their properties:
+`AWSKinesisRecorder` または `AWSFirehoseRecorder` をプロパティから設定できます。
 
 ```swift
 kinesisRecorder.diskAgeLimit = TimeInterval(30 * 24 * 60 * 60); // 30 days
@@ -84,9 +84,9 @@ kinesisRecorder.notificationByteThreshold = UInt(5 * 1024 * 1024); // 5MB
 
 The `diskAgeLimit` property sets the expiration for cached requests. When a request exceeds the limit, it's discarded. The default is no age limit. The `diskByteLimit` property holds the limit of the disk cache size in bytes. If the storage limit is exceeded, older requests are discarded. The default value is 5 MB. Setting the value to 0 means that there's no practical limit. The `notificationByteThreshold` property sets the point beyond which Kinesis issues a notification that the byte threshold has been reached. The default value is 0, meaning that by default Amazon Kinesis doesn't post the notification.
 
-To see how much local storage is being used for Amazon Kinesis `PutRecord` requests, check the `diskBytesUsed` property.
+Amazon Kinesis `PutRecord` リクエストでローカルストレージが使用されているかを確認するには、 `diskBytesUsed` プロパティを確認してください。
 
-With `AWSKinesisRecorder` created and configured, you can use `saveRecord()` to save records to local storage.
+`AWSKinesisRecorder` を作成して設定すると、 `saveRecord()` を使用してレコードをローカルストレージに保存できます。
 
 ```swift
 let yourData = "Test_data".data(using: .utf8)
@@ -97,7 +97,7 @@ kinesisRecorder.saveRecord(
 
 In the preceding example, we create an NSData object and save it locally. `YourStreamName` should be a string corresponding to the name of your Kinesis stream. You can create new streams in the [Amazon Kinesis console](https://console.aws.amazon.com/kinesis/).
 
-Here is a similar snippet for Amazon Kinesis Firehose:
+ここでは、Amazon Kinesis Firehoseについて同様のスニペットを示します。
 
 ```swift
 let yourData = "Test_data".data(using: .utf8)
@@ -106,14 +106,14 @@ firehoseRecorder.saveRecord(
     streamName: "YourStreamName")
 ```
 
-To submit all the records stored on the device, call `submitAllRecords`.
+デバイスに保存されているすべてのレコードを送信するには、 `submitAllRecords` を呼び出します。
 
 ```swift
 kinesisRecorder.submitAllRecords()
 firehoseRecorder.submitAllRecords()
 ```
 
-`submitAllRecords` sends all locally saved requests to the Amazon Kinesis service. Requests that are successfully sent will be deleted from the device. Requests that fail because the device is offline will be kept and submitted later. Invalid requests are deleted.
+`submitAllRecords` はローカルに保存されたすべてのリクエストを Amazon Kinesis サービスに送信します。 正常に送信されたリクエストはデバイスから削除されます。 デバイスがオフラインであるために失敗したリクエストは保持され、後で送信されます。無効なリクエストは削除されます。
 
 Both `saveRecord` and `submitAllRecords` are asynchronous operations, so you should ensure that `saveRecord` is complete before you invoke `submitAllRecords`. The following code sample shows the methods used correctly together.
 
@@ -134,8 +134,8 @@ AWSTask(forCompletionOfAllTasks: tasks).continueOnSuccessWith(block: { (task:AWS
 })
 ```
 
-To learn more about working with Amazon Kinesis, see the [Amazon Kinesis Developer Resources](http://aws.amazon.com/kinesis/developer-resources/).
+Amazon Kinesisでの作業の詳細については、 [Amazon Kinesis Developer Resources](http://aws.amazon.com/kinesis/developer-resources/) を参照してください。
 
 To learn more about the Amazon Kinesis classes, see the [class reference for AWSKinesisRecorder](https://aws-amplify.github.io/aws-sdk-ios/docs/reference/Classes/AWSKinesisRecorder.html).
 
-To learn more about the Amazon Kinesis Firehose classes, see the [class reference for AWSFirehoseRecorder](https://aws-amplify.github.io/aws-sdk-ios/docs/reference/Classes/AWSFirehoseRecorder.html).
+Amazon Kinesis Firecoseクラスの詳細については、AWSFirecoseRecorder の [クラスのリファレンスを参照してください](https://aws-amplify.github.io/aws-sdk-ios/docs/reference/Classes/AWSFirehoseRecorder.html)。
