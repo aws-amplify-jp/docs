@@ -1,12 +1,12 @@
-The following APIs will enable you to identify entities (faces and/or celebrities) from images.
+以下の API により、イメージからエンティティ(顔や有名人)を識別することができます。
 
-For identifying entities on iOS we use both AWS backend services as well as Apple's on-device Core ML [Vision Framework](https://developer.apple.com/documentation/vision) to provide you with the most accurate results. If your device is offline, we will return results only from Core ML. On the other hand, if you are able to connect to AWS Services, we will return a unioned result from both the service and Core ML. Switching between backend services and Core ML is done automatically without any additional configuration required.
+iOS上でエンティティを識別するために、AWSバックエンドサービスとAppleのオンデバイスCore ML [Vision Framework](https://developer.apple.com/documentation/vision) を使用して、最も正確な結果を提供します。 デバイスがオフラインの場合は、Core MLからのみ結果を返します。 一方、AWSサービスに接続できる場合。 サービスとコアMLの両方からユニオン結果を返します。 バックエンドサービスとCore MLの切り替えは、追加の設定なしに自動的に行われます。
 
-## Set up your backend
+## バックエンドの設定
 
-If you haven't already done so, run `amplify init` inside your project and then `amplify add auth` (we recommend selecting the *default configuration*).
+まだ実行していない場合 プロジェクト内で `amplify init` を実行し、 `増幅して認証を追加` します(デフォルトの設定 *を選択することをお勧めします*)。
 
-Run `amplify add predictions`, then use the following answers:
+`を増幅して予測を追加する`を実行し、次の答えを使用します。
 
 ```console
 ? Please select from one of the categories below (Use arrow keys)
@@ -33,14 +33,14 @@ Run `amplify add predictions`, then use the following answers:
 ❯ Auth and Guest users
 ```
 
-Run `amplify push` to create the resources in the cloud
+クラウドでリソースを作成するには、 `増幅プッシュ` を実行してください
 
 
-## Working with the API
+## API の操作
 
 In order to match entities from a pre-created [Amazon Rekognition Collection](https://docs.aws.amazon.com/rekognition/latest/dg/collections.html), ensure that both `collectionId` and `maxEntities` are set in your `amplifyconfiguration.json` file. The value of `collectionId` should be the name of your collection that you created either with the CLI or the SDK. The value of `maxEntities` should be a number greater than `0` or less than `51` (50 is the max number of entities Rekognition can detect from a collection). If both `collectionId` and `maxEntities` do not have valid values in the `amplifyconfiguration.json` file, then this call will just detect entities in general with facial features, landmarks, etc. Bounding boxes for entities are returned as ratios so make sure if you would like to place the bounding box of your entity on an image that you multiple the x by the width of the image, the y by the height of the image, and both height and width ratios by the image's respective height and width.
 
-You can identify entity matches from your Rekognition Collection in your app using the following code sample:
+次のコードサンプルを使用して、アプリ内でRekognition Collectionからエンティティ一致を特定できます。
 
 <amplify-block-switcher>
 
@@ -84,7 +84,7 @@ func detectEntities(_ image: URL) -> AnyCancellable {
 
 </amplify-block-switcher>
 
-To detect general entities like facial features, landmarks etc, you can use the following call pattern. Results are mapped to `IdentifyEntityResult`. For example:
+顔の特徴、ランドマークなどの一般的なエンティティを検出するには、次の呼び出しパターンを使用できます。 結果は `IdentifyEntityResult`にマッピングされます。例えば:
 
 <amplify-block-switcher>
 
@@ -128,7 +128,7 @@ func detectEntities(_ image: URL) -> AnyCancellable {
 
 </amplify-block-switcher>
 
-### Detecting Celebrities
+### 有名人を検出
 
 To detect celebrities you can pass in `.detectCelebrity` in the `type:` field. Results are mapped to `IdentifyCelebritiesResult`. For example:
 
@@ -180,4 +180,4 @@ func detectCelebs(_ image: URL) -> AnyCancellable {
 
 </amplify-block-switcher>
 
-As a result of passing in a URL of an image of a well known celebrity, you will see the corresponding celebrity name printed to the screen along with additional metadata.
+よく知られている有名人の画像のURLを渡した結果として、 それに対応する有名人の名前と追加のメタデータが表示されます
