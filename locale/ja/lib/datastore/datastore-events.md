@@ -1,81 +1,81 @@
 ---
-title: DataStore Events
-description: Listening to DataStore events
+title: DataStoreイベント
+description: DataStoreイベントを再生中
 ---
 
-DataStore periodically publishes state notifications onto Amplify's Hub. You can subscribe to the Hub to gain insight into the internal state of the DataStore. Events are published when:
-* Your device loses or regains network connectivity;
-* Data is synchronized with the Cloud;
-* There are new, pending changes that have not yet been synchronized.
+DataStoreは定期的にAmplifyのハブに状態通知を公開します。 Hub に登録すると、DataStore の内部状態に関する洞察を得ることができます。イベントが公開されたとき:
+* お使いのデバイスはネットワーク接続を失ったり復旧したりします。
+* データはクラウドと同期されています。
+* 同期されていない保留中の新しい変更があります。
 
-The following nine DataStore events are defined:
+次の9つのDataStoreイベントが定義されています:
 
 ## networkStatus
 
-Dispatched when DataStore starts and every time network status changes
+DataStoreが起動し、ネットワークの状態が変更されるたびにディスパッチされます
 
-HubPayload `NetworkStatusEvent` contains:
-- `active` (Bool): true if the DataStore is on a network that can connect the Cloud; false, otherwise
+HubPayload `NetworkStatusEvent` には以下が含まれています:
+- `active` (Bool): Cloudに接続できるネットワークにDataStoreがある場合は true、false、それ以外の場合は
 
-## subscriptionsEstablished
+## 登録が完了しました
 
-Dispatched when DataStore has finished establishing its subscriptions to all models
+DataStoreがすべてのモデルへのサブスクリプションの確立を終了するとディスパッチが適用されます
 
 HubPayload: N/A
 
 ## syncQueriesStarted
 
-Dispatched when DataStore is about to perform its initial sync queries
+DataStoreが最初の同期クエリを実行しようとしているときにディスパッチされます
 
-HubPayload `syncQueriesStartedEvent` contains:
-- `models` ([String]): an array of each model's `name`
+HubPayload `syncQueriesStartedEvent` には以下が含まれています:
+- `モデル` ([String]): 各モデルの `名前の配列`
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/datastore-events-model-synced.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/native_common/datastore-events.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/datastore/fragments/native_common/datastore-events.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/native_common/datastore-events.md"></inline-fragment>
 
 ## syncQueriesReady
 
-Dispatched when all models have been synced from the cloud
+すべてのモデルがクラウドから同期されたときに送信されました
 
 HubPayload: N/A
 
-## ready
+## 準備完了
 
-Dispatched when DataStore as a whole is ready, at this point all data is available
+DataStore全体が準備ができたときにディスパッチされ、この時点ですべてのデータが利用可能です
 
 HubPayload: N/A
 
 ## outboxMutationEnqueued
 
-Dispatched when a local change has been newly staged for synchronization with the Cloud
+ローカルの変更がクラウドとの同期のために新たにステージングされたときにディスパッチを適用しました
 
-HubPayload `outboxMutationEvent` contains:
-- `modelName` (String): the name of the model that is awaiting publication to the Cloud
-- `element`:
-    - `model` (Model): the model instance that will be published
+HubPayload `outboxMutationEvent` には以下が含まれています:
+- `modelName` (String): クラウドへの公開を待っているモデルの名前
+- `要素`:
+    - `モデル` (モデル): 公開されるモデルインスタンス
 
 ## outboxMutationProcessed
 
-Dispatched when a local change has finished synchronization with the Cloud and is updated locally
+ローカルの変更がクラウドとの同期が完了し、ローカルで更新されたときにディスパッチされます
 
-HubPayload `outboxMutationEvent` contains:
-- `modelName` (String): the name of the model that has finished processing
-- `element`:
-    - `model` (Model): the model instance that is processed
-    - `_version` (Int): version of the model instance
-    - `_lastChangedAt` (Int): last change time of model instance (unix time)
-    - `_deleted` (Bool): true if the model instance has been deleted in Cloud
+HubPayload `outboxMutationEvent` には以下が含まれています:
+- `modelName` (String): 処理が完了したモデルの名前
+- `要素`:
+    - `モデル` (モデル): 処理されたモデルインスタンス
+    - `_version` (Int): モデルインスタンスのバージョン
+    - `_lastChangedAt` (Int): モデルインスタンスの最後の変更時間 (unix time)
+    - `_deleted` (Bool): クラウドでモデルインスタンスが削除された場合は true
 
 ## outboxStatus
 
-Dispatched when:
-- the DataStore starts
-- each time a local mutation is enqueued into the outbox
-- each time a local mutation is finished processing
+配送日時:
+- データストアの開始
+- 局所的な突然変異がアウトボックスにキューイングされるたびに
+- 局所変異が処理されるたびに
 
-HubPayload `OutboxStatusEvent` contains:
-- `isEmpty` (Bool): a boolean value indicating that there are no local changes still pending upload to the Cloud
+HubPayload `OutboxStatusEvent` には以下が含まれています:
+- `isEmpty` (Boole): クラウドへのアップロード待ちのローカル変更がないことを示す真偽値。
 
-## Usage
-To see if the network status is active, you could set up the following listener:
+## 使用法
+ネットワークの状態がアクティブかどうかを確認するには、次のリスナーを設定できます。
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/datastore-events.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/android/datastore-events.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/ios/datastore-events.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/datastore/fragments/flutter/datastore-events.md"></inline-fragment>
