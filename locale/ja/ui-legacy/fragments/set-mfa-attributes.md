@@ -1,70 +1,70 @@
 <table>
     <thead>
       <tr>
-        <th>Attribute</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-        <th>Possible Values</th>
-        <th>Required</th>
+        <th>属性</th>
+        <th>タイプ</th>
+        <th>説明</th>
+        <th>デフォルト</th>
+        <th>可能な値</th>
+        <th>必須</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td data-column="Attribute">mfaDescription</td>
-        <td data-column="Type">string</td>
-        <td data-column="Description">description of MFA for your users</td>
-        <td data-column="Default">AWS Multi-Factor Authentication (MFA) adds an extra layer of protection on top of your user name and password.</td>
-        <td data-column="Possible Values">N/A</td>
-        <td data-column="Required">no</td>
+        <td data-column="Type">文字列</td>
+        <td data-column="Description">ユーザー用のMFAの説明</td>
+        <td data-column="Default">AWS Multi-Factor Authentication (MFA) は、ユーザー名とパスワードに追加の保護レイヤーを追加します。</td>
+        <td data-column="Possible Values">該当なし</td>
+        <td data-column="Required">いいえ</td>
       </tr>
       <tr>
         <td data-column="Attribute">mfaTypes</td>
-        <td data-column="Type">array</td>
-        <td data-column="Description">an array of MFA types which will result in a radio button selection</td>
+        <td data-column="Type">配列</td>
+        <td data-column="Description">ラジオボタンの選択を引き起こすMFAタイプの配列</td>
         <td data-column="Default">[]</td>
-        <td data-column="Possible Values">‘SMS’, ‘TOTP’, ‘None’</td>
-        <td data-column="Required">no</td>
+        <td data-column="Possible Values">‘SMS’、‘TOTP’、‘None’</td>
+        <td data-column="Required">いいえ</td>
       </tr>
       <tr>
-        <td data-column="Attribute">tokenInstructions</td>
-        <td data-column="Type">string</td>
-        <td data-column="Description">instructions for decoding the QR code used with TOTP</td>
-        <td data-column="Default">‘Scan the QR Code with your phone camera or authentication app to get the MFA code.’  </td>
-        <td data-column="Possible Values">N/A</td>
-        <td data-column="Required">no</td>
+        <td data-column="Attribute">トークン説明</td>
+        <td data-column="Type">文字列</td>
+        <td data-column="Description">TOTP で使用する QR コードをデコードするための手順</td>
+        <td data-column="Default">「携帯電話のカメラまたは認証アプリでQRコードをスキャンしてMFAコードを取得します。」  </td>
+        <td data-column="Possible Values">該当なし</td>
+        <td data-column="Required">いいえ</td>
       </tr>
       <tr>
         <td data-column="Attribute">smsDescription</td>
-        <td data-column="Type">string</td>
-        <td data-column="Description">label for SMS radio button</td>
-        <td data-column="Default">‘SMS text messaging (receive a code on your mobile device)’</td>
-        <td data-column="Possible Values">N/A</td>
-        <td data-column="Required">no</td>
+        <td data-column="Type">文字列</td>
+        <td data-column="Description">SMSラジオボタンのラベル</td>
+        <td data-column="Default">「SMSテキストメッセージ（モバイルデバイスでコードを受信）」</td>
+        <td data-column="Possible Values">該当なし</td>
+        <td data-column="Required">いいえ</td>
       </tr>
       <tr>
         <td data-column="Attribute">totpDescription</td>
-        <td data-column="Type">string</td>
-        <td data-column="Description">label for TOTP radio button</td>
-        <td data-column="Default">‘One-time password (use a QR code and MFA app to save a token on your mobile device)’</td>
-        <td data-column="Possible Values">N/A</td>
-        <td data-column="Required">no</td>
+        <td data-column="Type">文字列</td>
+        <td data-column="Description">TOTP ラジオボタンのラベル</td>
+        <td data-column="Default">「ワンタイムパスワード（QRコードとMFAアプリを使用して、モバイルデバイスにトークンを保存してください）</td>
+        <td data-column="Possible Values">該当なし</td>
+        <td data-column="Required">いいえ</td>
       </tr>
       <tr>
         <td data-column="Attribute">noMfaDescription</td>
-        <td data-column="Type">string</td>
-        <td data-column="Description">label for None radio button</td>
-        <td data-column="Default">‘Do not enable MFA’</td>
-        <td data-column="Possible Values">N/A</td>
-        <td data-column="Required">no</td>
+        <td data-column="Type">文字列</td>
+        <td data-column="Description">ラジオボタンなしラベル</td>
+        <td data-column="Default">「MFAを有効にしない」</td>
+        <td data-column="Possible Values">該当なし</td>
+        <td data-column="Required">いいえ</td>
       </tr>
       <tr>
           <td data-column="Attribute">cancelHandler</td>
-          <td data-column="Type">function</td>
-          <td data-column="Description">function called when user clicks on ‘Cancel’ button</td>
-          <td data-column="Default">N/A</td>
-          <td data-column="Possible Values">N/A</td>
-          <td data-column="Required">no</td>
+          <td data-column="Type">関数</td>
+          <td data-column="Description">ユーザーが「キャンセル」ボタンをクリックしたときに呼び出される関数です</td>
+          <td data-column="Default">該当なし</td>
+          <td data-column="Possible Values">該当なし</td>
+          <td data-column="Required">いいえ</td>
         </tr>
     </tbody>
   </table>
