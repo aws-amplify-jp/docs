@@ -1,51 +1,51 @@
-The API category provides a solution for making HTTP requests to REST and GraphQL endpoints. For building GraphQL APIs please visit the [GraphQL Getting Started](~/lib/graphqlapi/getting-started.md) section of our documentation.
+APIカテゴリは、RESTおよびGraphQLエンドポイントにHTTPリクエストを行うためのソリューションを提供します。 GraphQL API の構築については、ドキュメントの [GraphQL Getting Started](~/lib/graphqlapi/getting-started.md) セクションを参照してください。
 
-The REST API category can be used for creating signed requests against Amazon API Gateway when the API Gateway Authorization is set to `AWS_IAM`.
+REST API カテゴリは、API Gateway Authorization が `AWS_IAM` に設定されている場合に、Amazon API Gateway に対する署名済みリクエストを作成するために使用できます。
 
-> Ensure you have [installed and configured the Amplify CLI and library](~/cli/start/install.md).
+> [がインストールされ、Amplify CLIおよびライブラリ](~/cli/start/install.md)が設定されていることを確認してください。
 
-## Automated Setup: Create new REST API
+## 自動設定：新しい REST API を作成
 
-Run the following command in your project's root folder:
+プロジェクトのrootフォルダで次のコマンドを実行します。
 
 ```bash
-amplify add api
+増幅して api を追加
 ```
 
-Select `REST` as the service type.
+サービス タイプとして `REST` を選択します。
 
 ```console
-? Please select from one of the below mentioned services
+?以下のサービスのいずれかから選択してください
   GraphQL
-❯ REST
+<unk> REST
 ```
 
-The CLI will prompt several options to create your resources. With the provided options you can create:
-- REST endpoints that triggers Lambda functions
-- REST endpoints which enables CRUD operations on an Amazon DynamoDB table
+CLIはあなたのリソースを作成するためのいくつかのオプションを要求します。提供されたオプションを使用して作成できます。
+- Lambda関数をトリガーするRESTエンドポイント
+- Amazon DynamoDBテーブルでCRUD操作を可能にするRESTエンドポイント。
 
-During setup you can use existing Lambda functions and DynamoDB tables or create new ones by following the CLI prompts. After your resources have been created update your backend with the `push` command:
+セットアップ中に、既存のLambda関数とDynamoDBテーブルを使用するか、CLIプロンプトに従って新しいテーブルを作成することができます。 リソースが作成されたら、 `push` コマンドでバックエンドを更新します。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
-A configuration file called `aws-exports.js` will be copied to your configured source directory, for example `./src`.
+`aws-exports.js` と呼ばれる設定ファイルが、 `./src` などの設定されたソースディレクトリにコピーされます。
 
-### Configure your application
+### アプリケーションの設定
 
-Import and load the configuration file in your app. It's recommended you add the Amplify configuration step to your app's root entry point. For example `App.js` in React or `main.ts` in Angular.
+設定ファイルをアプリに読み込みます。Amplify設定ステップをアプリのルートエントリポイントに追加することをお勧めします。 例えば `App.js` 、Angularの `main.ts` など。
 
 ```javascript
-import Amplify, { API } from 'aws-amplify';
+import Amplify, { API } from 'aws-amply';
 import awsconfig from './aws-exports';
 
 Amplify.configure(awsconfig);
 ```
 
-## Manual Setup: Import existing REST API
+## 手動設定: 既存の REST API をインポート
 
-For manual configuration you need to provide your AWS Resource configuration and optionally configure authentication.
+手動設定の場合は、AWS リソースの設定を提供し、必要に応じて認証を設定する必要があります。
 
 ```javascript
 import Amplify, { API } from 'aws-amplify';
@@ -78,7 +78,7 @@ Amplify.configure({
 });
 ```
 
-### AWS Regional Endpoints
+### AWSリージョナルエンドポイント
 
 You can utilize regional endpoints by passing in the *service* and *region* information to the configuration. See [AWS Regions and Endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html). The example below defines a [Lambda invocation](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html) in the `us-east-1` region:
 
@@ -96,7 +96,7 @@ API: {
 ```
 <amplify-callout warning>
 
-**THIS IS NOT A RECOMMENDED ARCHITECTURE** and we highly recommend you leverage AWS AppSync or API Gateway as the endpoint to invoke your Lambda functions.
+**これは推奨される建築ではありません** そして、Lambda関数を呼び出すためのエンドポイントとしてAWS AppSyncまたはAPIゲートウェイを利用することを強くお勧めします。
 
 </amplify-callout>
 
@@ -106,7 +106,7 @@ API: {
 
  </amplify-callout>
 
-## Modular imports
+## モジュールインポート
 
 <amplify-callout>
 
@@ -114,14 +114,14 @@ If you only need to use API, you can run: `npm install @aws-amplify/api` which w
 
 </amplify-callout>
 
-Then in your code, you can import the Api module by:
+次にコードで、API モジュールをインポートすることができます。
 
 ```javascript
-import API, { graphqlOperation } from '@aws-amplify/api';
+import API, { graphqlOperation } from '@aws-amplify/api' ;
 
 API.configure();
 ```
 
-## API Reference
+## APIリファレンス
 
-For the complete API documentation for API module, visit our [API Reference](https://aws-amplify.github.io/amplify-js/api/classes/apiclass.html).
+API モジュールの完全な API ドキュメントについては、 [API リファレンス](https://aws-amplify.github.io/amplify-js/api/classes/apiclass.html) を参照してください。
