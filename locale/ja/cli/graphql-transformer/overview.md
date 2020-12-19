@@ -1,11 +1,11 @@
 ---
-title: Overview
-description: With Amplify CLI and GraphQL Transform, you define your application's data model using the GraphQL Schema Definition Language (SDL) and the library converts your SDL schema into a set of fully descriptive AWS CloudFormation templates that implement your data model.
+title: 概要
+description: Amplify CLI と GraphQL 変換を使用します。 GraphQL スキーマ定義言語(SDL)を使用してアプリケーションのデータモデルを定義し、ライブラリによりSDLスキーマがデータモデルを実装する完全に記述的なAWS CloudFormationテンプレートのセットに変換されます。
 ---
 
-The GraphQL Transform provides a simple to use abstraction that helps you quickly create backends for your web and mobile applications on AWS. With the GraphQL Transform, you define your application's data model using the GraphQL Schema Definition Language (SDL) and the library handles converting your SDL definition into a set of fully descriptive AWS CloudFormation templates that implement your data model.
+GraphQL Transformは、AWS上のWebおよびモバイルアプリケーションのバックエンドを迅速に作成するための簡単な抽象化を提供します。 GraphQL変換で GraphQL スキーマ定義言語(SDL)を使用してアプリケーションのデータモデルを定義し、ライブラリはSDL定義をデータモデルを実装する完全に記述的なAWS CloudFormationテンプレートのセットに変換します。
 
-For example you might create the backend for a blog like this:
+たとえば、以下のようなブログのバックエンドを作成できます。
 
 ```graphql
 type Blog @model {
@@ -28,28 +28,28 @@ type Comment @model {
 
 The GraphQL Transform simplifies the process of developing, deploying, and maintaining GraphQL APIs. With it, you define your API using the [GraphQL Schema Definition Language (SDL)](https://facebook.github.io/graphql/June2018/) and can then use automation to transform it into a fully descriptive cloudformation template that implements the spec. The transform also provides a framework through which you can define your own transformers as `@directives` for custom workflows.
 
-## Create a GraphQL API
+## GraphQL API の作成
 
-Navigate into the root of a JavaScript, iOS, or Android project and run:
-
-```bash
-amplify init
-```
-
-Follow the wizard to create a new app. After finishing the wizard run:
+JavaScript、iOS、またはAndroidプロジェクトのルートに移動し、以下を実行します。
 
 ```bash
-amplify add api
+initを増幅する
 ```
 
-Select the following options:
+ウィザードに従って新しいアプリを作成します。ウィザードを終了したら、次を実行します。
 
-- Select GraphQL
-- When asked if you have a schema, say No
-- Select one of the default samples; you can change this later
-- Choose to edit the schema and it will open the new `schema.graphql` in your editor
+```bash
+増幅して api を追加
+```
 
-You can leave the sample as is or try this schema.
+次のオプションを選択します。
+
+- GraphQLを選択
+- スキーマがあるかどうか尋ねられたら、「いいえ」と言います。
+- デフォルトのサンプルのいずれかを選択します。後で変更できます。
+- スキーマを編集することを選択すると、新しい `schema.graphql` が エディタで開きます
+
+サンプルはそのままにしておくことも、このスキーマを試すこともできます。
 
 ```graphql
 type Blog @model {
@@ -73,12 +73,12 @@ type Comment @model {
 Once you are happy with your schema, save the file and hit enter in your terminal window. if no error messages are thrown this means the transformation was successful and you can deploy your new API.
 
 ```bash
-amplify push
+push を増幅する
 ```
 
-## Test the API
+## API をテスト
 
-Once the API is finished deploying, go to the AWS AppSync console or run `amplify mock api` to try some of these queries in your new API's query page.
+APIのデプロイが完了したら、 AWS AppSync コンソールにアクセスするか、 `amplify mock api` を実行して、新しい API のクエリページでこれらのクエリのいくつかを試してみてください。
 
 ```graphql
 # Create a blog. Remember the returned id.
@@ -179,23 +179,23 @@ query ListBlogs {
   }
 }
 ```
-## Update schema
+## スキーマの更新
 
 If you want to update your API, open your project's `backend/api/~apiname~/schema.graphql` file (NOT the one in the `backend/api/~apiname~/build` folder) and edit it in your favorite code editor. You can compile the `backend/api/~apiname~/schema.graphql` by running:
 
 ```bash
-amplify api gql-compile
+api gqlコンパイルを増幅する
 ```
 
-and view the compiled schema output in `backend/api/~apiname~/build/schema.graphql`.
+そして、コンパイルされたスキーマの出力を `backend/api/~apiname~/build/schema.graphql` で確認します。
 
-You can then push updated changes with:
+その後、以下の変更をプッシュできます。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
-## API Category Project Structure
+## API カテゴリ プロジェクトの構造
 
 At a high level, the transform libraries take a schema defined in the GraphQL Schema Definition Language (SDL) and converts it into a set of AWS CloudFormation templates and other assets that are deployed as part of `amplify push`. The full set of assets uploaded can be found at *amplify/backend/api/YOUR-API-NAME/build*.
 
