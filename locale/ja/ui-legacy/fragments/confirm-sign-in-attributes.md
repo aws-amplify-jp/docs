@@ -1,27 +1,27 @@
 <table>
     <thead>
       <tr>
-        <th>Attribute</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-        <th>Required</th>
+        <th>属性</th>
+        <th>タイプ</th>
+        <th>説明</th>
+        <th>デフォルト</th>
+        <th>必須</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td data-column="Attribute">header</td>
-        <td data-column="Type">string</td>
-        <td data-column="Description">the component header</td>
-        <td data-column="Default">'Confirm Sign In'</td>
-        <td data-column="Required">no</td>
+        <td data-column="Attribute">ヘッダー</td>
+        <td data-column="Type">文字列</td>
+        <td data-column="Description">コンポーネントヘッダー</td>
+        <td data-column="Default">'ログイン確認'</td>
+        <td data-column="Required">いいえ</td>
       </tr>
       <tr>
-          <td data-column="Attribute">user</td>
-          <td data-column="Type">object</td>
-          <td data-column="Description">the user who is stepping through the signin process</td>
-          <td data-column="Default">N/A</td>
-          <td data-column="Required">yes</td>
+          <td data-column="Attribute">ユーザー</td>
+          <td data-column="Type">オブジェクト</td>
+          <td data-column="Description">サインインプロセスをステップ進んでいるユーザー</td>
+          <td data-column="Default">該当なし</td>
+          <td data-column="Required">はい</td>
       </tr>
     </tbody>
   </table>
