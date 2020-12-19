@@ -1,6 +1,6 @@
 ---
-title: GraphQL - Realtime and Offline
-description: AWS AppSync helps you build data-driven apps with real-time and offline capabilities. The AppSync Android SDK enables you to integrate your app with the AWS AppSync service and is based off of the Apollo project found here.
+title: GraphQL - リアルタイムとオフライン
+description: AWS AppSync を使用すると、リアルタイムおよびオフラインの機能を備えたデータドリブンなアプリケーションを構築できます。 AppSync Android SDK を使用すると、アプリを AWS AppSync サービスと統合でき、ここにある Apollo プロジェクトに基づいています。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>
