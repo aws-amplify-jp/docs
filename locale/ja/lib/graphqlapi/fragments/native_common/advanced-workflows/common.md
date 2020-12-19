@@ -1,13 +1,13 @@
-This section describes different use cases for constructing your own custom GraphQL requests and how to approach it. You may want to construct your own GraphQL request if you want to
-- retrieve only a subset of the data to reduce data transfer
-- retrieve nested objects at a depth that you choose
-- combine multiple operations into a single request
+このセクションでは、独自のカスタム GraphQL リクエストを構築するためのさまざまなユースケースと、そのアプローチ方法について説明します。 必要に応じて、独自のGraphQLリクエストを作成することができます。
+- データ転送を減らすためにデータのサブセットのみを取得します
+- 選択した深さでネストされたオブジェクトを取得します
+- 複数の操作を1つのリクエストに組み合わせます
 
-A GraphQL request is automatically generated for you when using AWSAPIPlugin with the existing workflow. For example, if you have a Todo model, a mutation request to save the Todo will look like this:
+AWSAPIPluginを既存のワークフローで使用する場合は、GraphQLリクエストが自動的に生成されます。 たとえば、Todo モデルがある場合、変更要求で保存されるTodo は以下のようになります。
 
 <inline-fragment platform="ios" src="~/lib/graphqlapi/fragments/ios/advanced-workflows/10_example.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/graphqlapi/fragments/android/advanced-workflows/10_example.md"></inline-fragment>
 
-Underneath the covers, a request is generated with a GraphQL document and variables and sent to the AppSync service.
+カバーの下には、GraphQL ドキュメントと変数を使用してリクエストが生成され、AppSync サービスに送信されます。
 
 ```json
 { 
@@ -28,28 +28,28 @@ Underneath the covers, a request is generated with a GraphQL document and variab
 }
 ```
 
-The different parts of the document is described as follows
-- `mutation` - the operation type to be performed, other operation types are `query` and `subscription`
-- `createTodo($input: CreateTodoInput!)` - the name and input of the operation.
-- `$input: CreateTodoInput!` - the input of type `CreateTodoInput!` referencing the variables containing JSON input
-- `createTodo(input: $input)` - the mutation operation which takes a variable input from `$input`
-- the selection set containing `id`, `name`, and `description` are fields specified to be returned in the response
+ドキュメントの異なる部分については、次のように説明されています。
+- `mution` - 実行される操作タイプ、他の操作タイプは `クエリ` と `サブスクリプション`
+- `createTodo($input: CreateTodoInput!)` - 操作の名前と入力。
+- `$input: CreateTodoInput!` - 型の入力 `CreateTodoInput!` JSON入力を含む変数を参照する
+- `createTodo(input: $input)` - `$inputからの変更操作`
+- `id`、 `name`、および `description` を含む選択セットは、レスポンスで指定されたフィールドです。
 
 You can learn more about the structure of a request from [GraphQL Query Language](https://graphql.org/learn/) and [AppSync documentation](https://docs.aws.amazon.com/appsync/latest/devguide/graphql-overview.html). To test out constructing your own requests, open the AppSync console using `amplify console api` and navigate to the Queries tab.
 
-## Subset of data
+## データのサブセット
 
-The selection set of the document specifies which fields are returned in the response. For example, if you are displaying a view of the Todo without the description, you can construct the document to omit the field. You can learn more about selection sets [here](https://spec.graphql.org/draft/#sec-Selection-Sets).
+ドキュメントの選択セットは、応答で返されるフィールドを指定します。 たとえば、説明なしでTodoのビューを表示する場合は、フィールドを省略するためにドキュメントを作成できます。 選択セット [](https://spec.graphql.org/draft/#sec-Selection-Sets) について詳しくはこちらをご覧ください。
 
 ```
 query getTodo($id: ID!) {
   getTodo(id: $id) {
-    id
+    id name
     name
   }
 }
 ```
-The response data will look like this
+応答データは次のようになります
 ```json
 {
   "data": {
@@ -60,12 +60,12 @@ The response data will look like this
   }
 }
 ```
-First, create your own `GraphQLRequest`
+まず、独自の `GraphQLRequest` を作成します。
 
 <inline-fragment platform="ios" src="~/lib/graphqlapi/fragments/ios/advanced-workflows/20_custom.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/graphqlapi/fragments/android/advanced-workflows/20_custom.md"></inline-fragment>
 
-## Nested Data
-If you have a relational model, you can retrieve the nested object by creating a `GraphQLRequest` with a selection set containing the nested object's fields. For example, in this schema, the Post can contain multiple comments and notes.
+## ネストされたデータ
+関係モデルがあれば ネストされたオブジェクトのフィールドを含む選択セットで `GraphQLRequest` を作成することで、ネストされたオブジェクトを取得できます。 例えば、このスキーマでは、Postには複数のコメントとメモを含めることができます。
 ```graphql
 enum PostStatus {
   ACTIVE
@@ -94,13 +94,13 @@ type Note @model
   content: String!
 }
 ```
-If you only want to retrieve the comments, without the notes, create a `GraphQLRequest` for the Post with nested fields only containing the comment fields.
+メモなしでコメントを取得したいだけの場合。 コメントフィールドのみを含むネストされたフィールドを持つPost用に `GraphQLRequest` を作成します。
 
 <inline-fragment platform="ios" src="~/lib/graphqlapi/fragments/ios/advanced-workflows/30_nested.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/graphqlapi/fragments/android/advanced-workflows/30_nested.md"></inline-fragment>
 
-## Combining Multiple Operations
+## 複数操作の結合
 
-When you want to perform more than one operation in a single request, you can place them within the same document. For example, to retrieve a Post and a Todo
+1つのリクエストで複数の操作を実行したい場合は、同じドキュメント内にそれらを配置できます。 たとえば、ポストとタスクを取得するには
 
 <inline-fragment platform="ios" src="~/lib/graphqlapi/fragments/ios/advanced-workflows/40_multiple.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/graphqlapi/fragments/android/advanced-workflows/40_multiple.md"></inline-fragment>
 
