@@ -3,7 +3,7 @@
 ```java
 Amplify.Auth.confirmResetPassword(
    "NewPassword123",
-   "confirmation code you received",
+   "受け取った確認コード",
    () -> Log.i("AuthQuickstart", "New password confirmed"),
    error -> Log.e("AuthQuickstart", error.toString())
 );
@@ -14,8 +14,8 @@ Amplify.Auth.confirmResetPassword(
 ```kotlin
 Amplify.Auth.confirmResetPassword(
    "NewPassword123",
-   "confirmation code you received",
-   { Log.i("AuthQuickstart", "New password confirmed") },
+   "受け取った確認コード",
+   { Log.i("AuthQuickstart", "新しいパスワード確認") },
    { error -> Log.e("AuthQuickstart", error.toString()) }
 )
 ```
