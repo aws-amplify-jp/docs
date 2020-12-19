@@ -1,14 +1,14 @@
-The `aws-amplify-angular` package is a set of Angular components and an Angular provider which helps integrate your application with the AWS-Amplify library.  It supports Angular 5.0 and above.
+`aws-amplify-angular` パッケージは、Angularコンポーネントのセットであり、アプリケーションとAWS-Amplifyライブラリを統合するのに役立ちます。 Angular 5.0以上に対応しています。
 
 <amplify-callout>
 
-Angular 9 is not supported in the legacy version of the Angular UI Components. If you app in using Angular 9, please see our new [Angular UI Component package](~/ui/ui.md/q/framework/angular).
+Angular 9 は、Angular UI Components の旧バージョンではサポートされていません。 Angular 9を使ってアプリをお使いの場合は、新しい [Angular UI Component package](~/ui/ui.md/q/framework/angular) をご覧ください。
 
 </amplify-callout>
 
-## Installation
+## インストール
 
-Install `aws-amplify` and `aws-amplify-angular` npm packages into your Angular app.
+Angular アプリに `aws-amplify` と `aws-amplify-angular` npm パッケージをインストールします。
 
 ```bash
 npm install aws-amplify aws-amplify-angular 
@@ -16,7 +16,7 @@ npm install aws-amplify aws-amplify-angular
 
 ### Angular 6-8 Support
 
-Currently, the newest versions of Angular (6+) do not include shims for 'global' or 'process' which were provided in previous versions. Add the following to your `polyfills.ts` file to recreate them:
+現在、Angular(6+)の最新バージョンでは、以前のバージョンで提供されていた「global」または「プロセス」のシムは含まれていません。 以下を `polyfills.ts` ファイルに追加して再作成します。
 
 ```javascript
 (window as any).global = window;
@@ -25,26 +25,26 @@ Currently, the newest versions of Angular (6+) do not include shims for 'global'
 };
 ```
 
-Please also note that the AWS Amplify Angular components do not yet support Ivy.
+また、AWS Amplify Angular コンポーネントは Ivy をまだサポートしていないことに注意してください。
 
-### Setup
+### セットアップ
 
-Create a backend configuration with the Amplify CLI and import the generated configuration file.
+Amplify CLI を使用してバックエンド設定を作成し、生成された設定ファイルをインポートします。
 
-In this example we will enable Authentication with Amazon Cognito User Pools as well as Amazon S3 Storage. This will create an `aws-exports.js` configuration file under your projects `src` directory.
+この例では、Amazon CognitoユーザプールとAmazon S3ストレージでの認証を有効にします。 これにより `aws-exports.js` の設定ファイルがプロジェクトの `src` ディレクトリの下に作成されます。
 
-Ensure you have installed and configured the [Amplify CLI](~/cli/start/install.md)
+[Amplify CLI](~/cli/start/install.md) がインストールされていることを確認してください
 
 ```bash
-amplify init
-amplify add auth
-amplify add storage
-amplify push
+増幅init
+増幅して認証を追加
+増幅してストレージを追加
+プッシュを増幅する
 ```
 
-Visit the [Authentication Guide](~/lib/auth/getting-started.md) and [Storage Guide](~/lib/storage/getting-started.md) to learn more about enabling and configuring these categories.
+[認証ガイド](~/lib/auth/getting-started.md) および [ストレージガイド](~/lib/storage/getting-started.md) をご覧ください。これらのカテゴリの有効化と構成についての詳細はこちらをご覧ください。
 
-After creating your backend a configuration file will be generated in your configured source directory you identified in the `amplify init` command.
+バックエンドを作成すると、 `amplify init` コマンドで指定した設定済みのソースディレクトリに設定ファイルが生成されます。
 
 When working with underlying `aws-js-sdk`, the "node" package should be included in *types* compiler option. update your `src/tsconfig.app.json`:
 ```json
@@ -53,19 +53,19 @@ When working with underlying `aws-js-sdk`, the "node" package should be included
 }
 ```
 
-## Importing the Amplify Angular Module and the Amplify Provider
+## Amplify角度モジュールとAmplifyプロバイダのインポート
 
-The 'aws-amplify-angular' package allows you to access the Amplify JS library as an Angular provider.  You have two options to choose from:
+「aws-amplify-angular」パッケージでは、AngularプロバイダとしてAmplify-JSライブラリにアクセスできます。選択肢は2つあります:
 
-1. Configure the provider with the entire Amplify JS library
-2. Configure the provider with only select Amplify JS library.
+1. Amplify JSライブラリ全体でプロバイダを構成する
+2. Amplify JSライブラリのみを選択してプロバイダを構成します。
 
-Option 1 is appropriate when you plan to use every Amplify JS module or if you are not concerned about bundle size.  Option 2 is appropriate when bundle size is a concern.
+オプション1は、すべてのAmplifyJSモジュールを使用する場合や、バンドルサイズに関心がない場合に適しています。 オプション2は、バンドルサイズが懸念される場合に適切です。
 
 
-### Option 1: Configuring the Amplify provider with every Amplify JS module
+### オプション 1: Amplify JSモジュールごとにAmplifyプロバイダを設定する
 
-Import the configuration file and load it in `main.ts`:
+設定ファイルをインポートし、 `main.ts` に読み込む:
 
 ```javascript
 import Amplify from 'aws-amplify';
@@ -74,7 +74,7 @@ Amplify.configure(awsconfig);
 ```
 
 
-In your [app module](https://angular.io/guide/bootstrapping) `src/app/app.module.ts` import the Amplify Module and Service:
+[app module](https://angular.io/guide/bootstrapping) `src/app/app.module.ts` で Amplify Module and Service:
 
 ```javascript
 import { AmplifyAngularModule, AmplifyService } from 'aws-amplify-angular';
@@ -94,9 +94,9 @@ import { AmplifyAngularModule, AmplifyService } from 'aws-amplify-angular';
 });
 ```
 
-### Option 2: Configuring the Amplify provider with specified Amplify JS modules
+### オプション2:指定されたAmplifyJSモジュールを使用してAmplifyプロバイダを構成する
 
-Import the configuration file and load it in `main.ts`:
+設定ファイルをインポートし、 `main.ts` に読み込む:
 
 ```javascript
 import Amplify from '@aws-amplify/core';
@@ -104,9 +104,9 @@ import awsconfig from './aws-exports';
 Amplify.configure(awsconfig);
 ```
 
-In your [app module](https://angular.io/guide/bootstrapping) `src/app/app.module.ts` import the Amplify Module, Service, and Amplify Modules helper.  Additionally, import the amplify modules that you want to access via your Amplify provider.
+[appモジュール](https://angular.io/guide/bootstrapping) `src/app/app.module.ts` では、Amplify Module、Service、Amplify Moduleヘルパーをインポートします。 さらに、Amplifyプロバイダ経由でアクセスしたい増幅モジュールをインポートします。
 
-These modules will then be passed into the AmplifyModules helper.
+これらのモジュールはAmplifyModulesヘルパーに渡されます。
 
 ```javascript
 import { AmplifyAngularModule, AmplifyService, AmplifyModules } from 'aws-amplify-angular';
@@ -137,13 +137,13 @@ import Storage from '@aws-amplify/storage';
 });
 ```
 
-## Using Amplify Service
+## Amplifyサービスの使用
 
-The `AmplifyService` provides AWS Amplify core categories and authentication state through dependency injection and observers.
+`AmplifyService` は、AWS Amplifyコアカテゴリと、依存性注入とオブザーバーを通じて認証状態を提供します。
 
-### Using Dependency Injection
+### 依存性注入の使用
 
-To use *AmplifyService* with [dependency injection](https://angular.io/guide/dependency-injection-in-action), inject it into the constructor of any component or service anywhere in your application.
+*依存性インジェクション* で [AmplifyService](https://angular.io/guide/dependency-injection-in-action)を使用するには、アプリケーション内の任意のコンポーネントまたはサービスのコンストラクタに注入します。
 
 ```javascript
 import { Component } from '@angular/core';
@@ -161,9 +161,9 @@ export class AppComponent {
 }
 ```
 
-### Using Categories
+### カテゴリの使用
 
-You can access Categories via the built-in service provider:
+組み込みのサービスプロバイダからカテゴリにアクセスできます:
 
 ```javascript
 import { Component } from '@angular/core';
@@ -193,8 +193,8 @@ export class AppComponent {
 
 ## Styles
 
-To use the aws-amplify-angular components you will need to install '@aws-amplify/ui'.
+aws-amplify-angular コンポーネントを使用するには、'@aws-amplify/ui' をインストールする必要があります。
 
-Add the following to your styles.css file to use the default styles: `@import '~aws-amplify-angular/Theme.css';`
+デフォルトのスタイルを使用するには、styles.cssファイルに以下を追加してください: `@import '~aws-amplify-angular/Theme.css';`
 
-You can use custom styling for components by importing your custom *styles.css* that overrides the <a href="https://github.com/aws-amplify/amplify-js/blob/main/packages/aws-amplify-angular/theme.css" target="_blank">default styles</a>.
+*default styles.css* を上書きするカスタム <a href="https://github.com/aws-amplify/amplify-js/blob/main/packages/aws-amplify-angular/theme.css" target="_blank">styles.css</a> をインポートすることで、コンポーネントにカスタムスタイルを使用できます。
