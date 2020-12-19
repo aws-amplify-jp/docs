@@ -1,6 +1,6 @@
 ---
-title: Automatically track sessions
-description: The Amplify analytics plugin records when an application opens and closes. This session information can be viewed either from your local computer’s terminal or the AWS Console for Pinpoint.
+title: セッションを自動的に追跡
+description: Amplify分析プラグインは、アプリケーションが開いたり閉じたりすると記録します。 このセッション情報は、ローカルコンピュータの端末またはAWSコンソールのPinpointから表示できます。
 ---
 
 <inline-fragment platform="js" src="~/lib/analytics/fragments/js/autotrack.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/analytics/fragments/autotrack.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/analytics/fragments/autotrack.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/analytics/fragments/autotrack.md"></inline-fragment>
