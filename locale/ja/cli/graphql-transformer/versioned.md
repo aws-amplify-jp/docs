@@ -1,21 +1,21 @@
 ---
-title: Versioning and conflict resolution
-description: The @versioned directive adds object versioning and conflict resolution to a type.
+title: バージョン管理と競合解像度
+description: '@versioned ディレクティブはオブジェクトのバージョン管理と競合の解決を型に追加します。'
 ---
 
-## @versioned
+## @バージョニング
 
 The `@versioned` directive adds object versioning and conflict resolution to a type. Do not use this directive when leveraging DataStore as the conflict detection and resolution features are automatically handled inside AppSync and are incompatible with the `@versioned` directive.
 
-### Definition
+### 定義
 
 ```graphql
-directive @versioned(versionField: String = "version", versionInput: String = "expectedVersion") on OBJECT
+OBJECTの@versioned(versionField: String = "version", versionInput: String = "expectedVersion")
 ```
 
-### Usage
+### 使用法
 
-Add `@versioned` to a type that is also annotate with `@model` to enable object versioning and conflict detection for a type.
+`@versioned` を、 `@model` とともに注釈付けられた型に追加して、オブジェクトのバージョン管理と型の競合検出を可能にします。
 
 ```graphql
 type Post @model @versioned {
@@ -25,7 +25,7 @@ type Post @model @versioned {
 }
 ```
 
-**Creating a Post automatically sets the version to 1**
+**投稿を自動的に作成すると、バージョンが 1 に設定されます。**
 
 ```graphql
 mutation Create {
@@ -39,9 +39,9 @@ mutation Create {
 }
 ```
 
-**Updating a Post requires passing the "expectedVersion" which is the object's last saved version**
+**ポストを更新するには、オブジェクトの最後の保存バージョンである「expectedVersion」を渡す必要があります。**
 
-> Note: When updating an object, the version number will automatically increment.
+> 注意: オブジェクトを更新する場合、バージョン番号は自動的に増分されます。
 
 ```graphql
 mutation Update($postId: ID!) {
@@ -59,10 +59,10 @@ mutation Update($postId: ID!) {
 }
 ```
 
-**Deleting a Post requires passing the "expectedVersion" which is the object's last saved version**
+**ポストを削除するには、オブジェクトの最後の保存バージョンである「expectedVersion」を渡す必要があります。**
 
 ```graphql
-mutation Delete($postId: ID!) {
+matterDelete($postId: ID!) {
   deletePost(
     input: {
       id: $postId,
@@ -78,6 +78,6 @@ mutation Delete($postId: ID!) {
 
 Update and delete operations will fail if the **expectedVersion** does not match the version stored in DynamoDB. You may change the default name of the version field on the type as well as the name of the input field via the **versionField** and **versionInput** arguments on the `@versioned` directive.
 
-### Generates
+### 生成
 
-The `@versioned` directive manipulates resolver mapping templates and will store a `version` field in versioned objects.
+`@versioned` ディレクティブはリゾルバのマッピングテンプレートを操作し、バージョン管理されたオブジェクトに `version` フィールドを保存します。
