@@ -1,10 +1,10 @@
-## Selectively syncing a subset of your data
+## データのサブセットを選択的に同期
 
-By default, DataStore downloads the entire contents of your cloud data source to your local device. The max number of records that will be stored is configurable [here](https://docs.amplify.aws/lib/datastore/conflict/q/platform/js#example).
+デフォルトでは、DataStoreはクラウドデータソースの内容全体をローカルデバイスにダウンロードします。 保存されるレコードの最大数は、ここ [](https://docs.amplify.aws/lib/datastore/conflict/q/platform/js#example) で設定可能です。
 
-You can utilize selective sync to only persist a subset of your data instead.
+選択的な同期を使用して、データのサブセットのみを保持することができます。
 
-Selective sync works by applying predicates to the base and delta sync queries, as well as to incoming subscriptions.
+選択同期は、基本およびデルタ同期クエリおよび受信サブスクリプションに述語を適用することによって機能します。
 
 ```js
 import { DataStore, syncExpression } from 'aws-amplify';
@@ -22,18 +22,18 @@ DataStore.configure({
 });
 ```
 
-When DataStore starts syncing, only Posts with `rating > 5` and Comments with `status === 'active'` will be synced down to the user's local store.
+DataStoreが同期を開始したとき `rating > 5` と `status === 'active'` のコメントのみがユーザーのローカルストアに同期されます。
 
 <amplify-callout>
 
-Developers should only specify a single `syncExpression` per model. Any subsequent expressions for the same model will be ignored.
+開発者は、モデルごとに単一の `syncExpression` を指定する必要があります。同じモデルの後続の式はすべて無視されます。
 
 </amplify-callout>
 
-### Reevaluate expressions at runtime
+### 実行時に式を再評価
 Sync expressions get evaluated whenever DataStore starts. In order to have your expressions reevaluated, you can execute `DataStore.clear()` or `DataStore.stop()` followed by `DataStore.start()`.
 
-If you have the following expression and you want to change the filter that gets applied at runtime, you can do the following:
+次の式があり、実行時に適用されるフィルタを変更する場合は、次の操作を行うことができます。
 ```js
 let rating = 5;
 
@@ -56,11 +56,11 @@ Upon calling `DataStore.start()` (or executing a DataStore operation, e.g., `que
 
 In the above case, the predicate will contain the value `1`, so all Posts with `rating > 1` will get synced down.
 
-Keep in mind: `DataStore.stop()` will retain the local store's existing content. Run `DataStore.clear()` to clear the locally-stored contents.
+覚えておいてください: `DataStore.stop()` はローカルストアの既存のコンテンツを保持します。 `DataStore.clear()` を実行してローカルに保存されたコンテンツをクリアします。
 
 <amplify-callout>
 
-When applying a more restrictive filter, clear the local records first by running `DataStore.clear()` instead:
+より制約的なフィルタを適用する場合、代わりに `DataStore.clear()` を実行することで、最初にローカルレコードをクリアします。
 
 </amplify-callout>
 
@@ -71,9 +71,9 @@ async function changeSync() {
   await DataStore.start();
 }
 ```
-This will clear the contents of your local store, reevaluate your sync expressions and re-sync the data from the cloud, applying all of the specified predicates to the sync queries.
+ローカルストアの内容をクリアし、同期式を再評価し、クラウドからデータを再同期します 指定されたすべての述語を同期クエリに適用します。
 
-You can also have your sync expression return `Predicates.ALL` in order to remove any filtering for that model. This will have the same effect as the default sync behavior.
+同期式に `を戻すこともできます。 LL <code>` は、そのモデルのフィルタリングを削除するために使用されます。これは、デフォルトの同期動作と同じ効果を持ちます。
 
 ```js
 let rating = null;
@@ -92,12 +92,12 @@ DataStore.configure({
 ```
 <amplify-callout warning>
 
-`DataStore.configure()` should only by called once at the root of your file.
+`DataStore.configure()` はファイルのルートに一度だけ呼び出されるべきです。
 
 </amplify-callout>
 
-### Async expressions
-You can pass a Promise to `syncExpression`:
+### 非同期式
+Promiseを `syncExpression` に渡すことができます。
 ```js
 DataStore.configure({
   syncExpressions: [
@@ -108,10 +108,10 @@ DataStore.configure({
   ]
 });
 ```
-DataStore will wait for the Promise to resolve before applying the expression to the sync. Async expressions can also be reevaluated at runtime, just like synchronous expressions (see previous section).
+DataStoreは、式を同期に適用する前にPromiseが解決するのを待機します。 非同期式は、同期式と同様に実行時に再評価することもできます (前のセクションを参照)。
 
-### Shorthand
-If you don't need to add any logic to your `syncExpression`, you can use the following shorthand, returning the predicate directly:
+### ショートランド
+`syncExpression`にロジックを追加する必要がない場合は、以下の略式で、述語を直接返すことができます。
 ```js
 DataStore.configure({
   syncExpressions: [
@@ -120,12 +120,12 @@ DataStore.configure({
 });
 ```
 
-### Advanced use case - Query instead of Scan
+### 高度な使用例 - スキャンの代わりにクエリ
 You can configure selective sync to retrieve items from DynamoDB with a [query operation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html) against a GSI. By default, the base sync will perform a [scan](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html). Query operations enable a highly efficient and cost-effective data retrieval for customers running DynamoDB at scale. Learn about creating GSIs with the `@key` directive [here](https://docs.amplify.aws/cli/graphql-transformer/key).
 
-In order to do that, your `syncExpression` should return a predicate that maps to a query expression.
+そのために、 `syncExpression` はクエリ式にマップする述語を返す必要があります。
 
-For example, for the following schema:
+例えば、次のスキーマの場合:
 ```graphql
 type User @model
   @key(name: "byLastName", fields: ["lastName", "createdAt"]) {
@@ -136,7 +136,7 @@ type User @model
 }
 ```
 
-Both of these sync expressions will result in AWS AppSync retrieving records from Amazon DynamoDB via a query operation:
+両方の同期式は、AWS AppSync クエリ操作を介して Amazon DynamoDB からレコードを取得します。
 
 ```js
 DataStore.configure({
@@ -160,10 +160,10 @@ DataStore.configure({
 });
 ```
 
-To construct a query expression, return a predicate with the primary key of the GSI. You can only use the `eq` operator with this predicate.
+クエリ式を構築するには、GSIのプライマリキーで述語を返します。 この述語では、 `eq` 演算子のみを使用できます。
 
-For the schema defined above `(c) => c.lastName('eq', 'Bobby')` is a valid query expression.
+`(c) => c.lastName('eq', 'Bobby') 上で定義されたスキーマに対して、` は有効なクエリ式です。
 
-Optionally, you can also chain the sort key to this expression, using any of the following operators: `eq | ne | le | lt | ge | gt | beginsWith | between`.
+オプションで、この式にソートキーを連鎖させることもできます。 以下のいずれかの演算子を使用します: `eq | ne | le | lt | ge | gt | beginsWith | between`.
 
 E.g., `(c) => c.lastName('eq', 'Bobby').createdAt('gt', '2020-10-10')`.
