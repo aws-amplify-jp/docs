@@ -1,40 +1,40 @@
 ---
-title: Overview
-description: Every Amplify backend environment is a container for the categories added to your project. For multiple environments, Amplify matches the standard Git workflow where you switch between different branches using familiar commands.
+title: 概要
+description: Amplifyバックエンド環境はすべて、プロジェクトに追加されたカテゴリのコンテナです。 複数の環境では、Amplifyは、使い慣れたコマンドを使用して異なるブランチを切り替える標準のGitワークフローと一致します。
 ---
 
 When you initialize a project, you create an Amplify backend environment. Every Amplify backend environment is a container for the categories added to your project. To deploy updates to an environment, run `amplify push`. In teams where multiple members are working on the same backend, it is good practice to run `amplify pull` to fetch changes from upstream before beginning work on new backend features. View the list of backend environments in your cloud project by visiting the [Amplify Console](https://console.aws.amazon.com/amplify).
 
 For multiple environments, Amplify matches the standard Git workflow where you switch between different branches using the `env checkout` command - similar to running `git checkout BRANCHNAME`, run `amplify env checkout ENVIRONMENT_NAME` to switch between environments. The diagram below shows a workflow of how to initialize new environments when creating new git branches.
 
-![Image](~/images/AmplifyEnvSwitching.jpg)
+![画像](~/images/AmplifyEnvSwitching.jpg)
 
-You can independently add features to each environment which allows you to develop and test before moving them to different stages. Using the same example above of **Dev** being the base which **Test** and **Prod** were derived, you could add (or remove) features and merge & deploy accordingly once you are comfortable with your setup.
+各環境に個別に機能を追加することで、開発およびテストを行うことができます。 上記の **Dev** の同じ例を使用して、 **Test** と **Prod** が導出されたベースとしています。 設定に慣れれば、機能を追加(または削除)して & デプロイをマージできます。
 
-![Image](~/images/AmplifyEnvAddDeploy.jpg)
+![画像](~/images/AmplifyEnvAddDeploy.jpg)
 
-This can be done in an iterative manner as you work through your deployment pipeline:
+これは、配備パイプラインを通して作業するときに繰り返し行うことができます。
 
-![Image](~/images/AmplifyEnvAddDeploySwitching.jpg)
+![画像](~/images/AmplifyEnvAddDeploySwitching.jpg)
 
 Multiple developers on a team can also share and manipulate the environment as well by using the credentials in the account. For instance suppose they wanted to test a change to the API without impacting the **Test** or **Prod** deployments. This will allow them to test the configured resources and, if they have been granted appropriate CloudFormation permissions, they can push resources as well to the backend with `amplify push`.
 
-![Image](~/images/AmplifyEnvMultDevelopers.jpg)
+![画像](~/images/AmplifyEnvMultDevelopers.jpg)
 
-You can alternatively, have developers setup their own isolated replica of these environments in different AWS account. To do this simply:
-1. Clone the existing project
-2. Run `amplify env add` and set up a new environment (e.g. "mydev") with that developer's account and AWS profile
-3. Deploy with `amplify push`
+別の方法として、開発者に異なるAWSアカウントでこれらの環境の独立したレプリカを設定してもらうこともできます。
+1. 既存のプロジェクトを複製
+2. `amplify env add` を実行し、その開発者のアカウントと AWS プロファイルを使用して新しい環境 (例: "mydev") を設定します。
+3. `増幅プッシュ`でデプロイする
 
 This workflow can be used to share complete Amplify projects with people outside of your organization as well by committing the project into a Git repository. If you are doing this remove (or add to the .gitignore) the **team-provider-info.json** which is located in the `amplify` directory. You can learn more about this file [here](~/cli/teams/shared.md#sharing-projects-outside-the-team).
 
-### Continuous deployment and Hosting
+### 継続的なデプロイとホスティング
 
-The Amplify CLI supports basic web application hosting with Amazon S3 and CloudFront. You can use the multi-environments feature with the Amplify Console for a fully managed web application hosting and continuous deployment solution. For more information please learn more in the [official documentation](https://docs.aws.amazon.com/amplify/latest/userguide/multi-environments.html).
+Amplify CLIはAmazon S3とCloudFrontで基本的なWebアプリケーションホスティングをサポートしています。 Amplify Consoleと共にマルチ環境機能を使用して、完全に管理されたWebアプリケーションのホスティングおよび継続的なデプロイメントソリューションを使用できます。 詳細については、 [公式ドキュメント](https://docs.aws.amazon.com/amplify/latest/userguide/multi-environments.html) をご覧ください。
 
-### Setting up prod and dev environments
+### prod 環境と dev 環境の設定
 
-Create a Git repository for your project if you haven't already. It is recommended managing separate Git branches for different environments (try to have the same branch name as your environment name to avoid confusion). From the root of your project, execute the following commands:
+まだプロジェクト用の Git リポジトリを作成していない場合。 異なる環境で個別の Git ブランチを管理することをお勧めします(混乱を避けるために、環境名と同じブランチ名を持つようにしてください)。 プロジェクトのルートから、次のコマンドを実行します。
 
 ```
 $ amplify init
@@ -48,9 +48,9 @@ $ git remote add origin git@github.com:<repo-name>
 $ git push -u origin prod
 ```
 
-**Note**: When you initialize a project using the Amplify CLI, it appends (if a gitignore file exists at the root of the project) or creates one for you (if a gitignore file doesn't exist at the root of your project), with a list of recommended files to check in from the Amplify CLI generated list of files, into your Git repository.
+**注**: Amplify CLI を使用してプロジェクトを初期化する場合。 プロジェクトのルートにgitignoreファイルが存在する場合や、プロジェクトのルートにgitignoreファイルが存在しない場合などに追加されます。 と、Amplify CLI から生成されたファイルのリストを Git リポジトリにチェックインするための推奨ファイルのリストが表示されます。
 
-Once you have your 'prod' branch setup in Git, set up a 'dev' environment in your Amplify project (which would be based on your 'prod' environment), and then walk through the following steps to create a corresponding git branch for it.
+Gitに「prod」ブランチをセットアップしたら、 Amplifyプロジェクト（あなたの「prod」環境に基づく）で「dev」環境を設定します 次のステップを踏んで対応する git ブランチを作成します
 
 ```
 $ amplify env add
@@ -59,9 +59,9 @@ $ amplify env add
 // Provide AWS Profile info
 ```
 
-This will set up another environment for the project in the cloud. The backend-configs and resources are now cloned from the 'prod' environment. Run `amplify push` to provision all the AWS resources for your new environment (dev).
+これにより、プロジェクトの別の環境がクラウドに設定されます。バックエンドの設定とリソースは 'prod' 環境から複製されます。 `amplify push` を実行して、新しい環境 (dev) 用のすべての AWS リソースをプロビジョニングします。
 
-Now push the changes to the 'prod' branch (you would just see changes to the team-provider-info.json file - when running a `git status` command, which has cumulative stack information for all the project environments which are useful when you want to share the same backend within a team). After this, let's create a new git branch - 'dev' corresponding to the new environment we just created.
+変更を 'prod' ブランチにプッシュします(チームプロバイダ情報への変更が表示されるだけです)。 son file - `git status` コマンドを実行したとき これは、チーム内で同じバックエンドを共有したい場合に役立つ、すべてのプロジェクト環境でスタック情報を蓄積しています)。 この後は、先ほど作成した新しい環境に対応する新しいgit ブランチ「dev」を作成しましょう。
 
 ```
 $ git add .
