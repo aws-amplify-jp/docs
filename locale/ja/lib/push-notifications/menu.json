@@ -1,9 +1,9 @@
 {
-	"title": "Push Notifications",
+	"title": "プッシュ通知",
 	"items": [
-		"overview",
+		"概要",
 		"getting-started",
 		"working-with-api",
-		"testing"
+		"テスト中"
 	]
 }
