@@ -1,11 +1,11 @@
-The API category provides React Native components for working with GraphQL data using the Amplify GraphQL client.
+APIカテゴリは、Amplify GraphQLクライアントを使用してGraphQLデータを操作するためのReact Nativeコンポーネントを提供します。
 
 The `<Connect/>` component is used to execute a GraphQL query or mutation. You can execute GraphQL queries by passing your queries in `query` or `mutation` attributes
 
-## Subscription
+## サブスクリプション
 
-For subscriptions, you can use the `subscription` and `onSubscriptionMsg` attributes to enable subscriptions
+サブスクリプションの場合、 `サブスクリプション` および `onSubscriptionMsg` 属性を使用してサブスクリプションを有効にできます。
 
-## Mutations
+## <unk>
 
 For mutations, a `mutation` function needs to be provided with the `Connect` component. A `mutation` returns a promise that resolves with the result of the GraphQL mutation.
