@@ -2,7 +2,7 @@
 
 ```java
 Amplify.Auth.forgetDevice(
-    () -> Log.i("AuthQuickStart", "Forget device succeeded"),
+    () -> Log.i("AuthQuickStart", "Forget device successed"),
     error -> Log.e("AuthQuickStart", "Forget device failed with error " + error.toString()));
 ```
 
@@ -10,7 +10,7 @@ Amplify.Auth.forgetDevice(
 
  ```kotlin
 Amplify.Auth.forgetDevice(
-    { Log.i("AuthQuickStart", "Forget device succeeded") },
+    { Log.i("AuthQuickStart", "Forget device successed") },
     { error -> Log.e("AuthQuickStart", "Forget device failed with error: $error") })
 ```
 
