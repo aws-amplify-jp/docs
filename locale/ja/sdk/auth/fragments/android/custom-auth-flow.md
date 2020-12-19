@@ -1,10 +1,10 @@
-Amazon Cognito User Pools supports customizing the authentication flow to enable custom challenge types, in addition to a password in order to verify the identity of users. These challenge types may include CAPTCHAs or dynamic challenge questions.
+Amazon Cognitoユーザープールは認証フローのカスタマイズをサポートし、カスタムチャレンジタイプを有効にします。 利用者の身元を確認するためのパスワードに加えて。 これらのチャレンジタイプには、CAPTCHAまたは動的チャレンジ問題が含まれます。
 
-To define your challenges for custom authentication flow, you need to implement three Lambda triggers for Amazon Cognito.
+カスタム認証フローの課題を定義するには、Amazon Cognitoに対して3つのLambdaトリガーを実装する必要があります。
 
-For more information about working with Lambda Triggers for custom authentication challenges, please visit [Amazon Cognito Developer Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-challenge.html).
+カスタム認証課題の Lambda Triggers の操作についての詳細は、 [Amazon Cognito Developer Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-challenge.html) をご覧ください。
 
-## Custom Authentication in Amplify
+## Amplifyでのカスタム認証
 
 To initiate a custom authentication flow in your app, specify `authenticationFlowType` as `CUSTOM_AUTH` in the awsconfiguration.json file. Note that is not currently supported by the CLI and developers must manually update the awsconfiguration.json to specify `authenticationFlowType` as follows :
 
@@ -100,7 +100,7 @@ public void confirmSignIn() {
 }
 ```
 
-### Lambda trigger setup
+### Lambda trigger 設定
 
 Amplify CLI can be used generate lambda triggers required by a custom authentication flow. See [documentation](~/cli/usage/lambda-triggers.md) for details. Amplify CLI creates a custom auth flow skeleton that you can manually edit. More information on each of the triggers can be found in [Cognito documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-challenge.html).
 
