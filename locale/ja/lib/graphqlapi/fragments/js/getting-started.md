@@ -1,13 +1,13 @@
-> Prerequisite: [Install, configure and init an Amplify project](~/cli/start/install.md) with Amplify CLI
+> 前提条件: [Amplify CLI で Amplify プロジェクト](~/cli/start/install.md) をインストール、構成、初期化
 
-In this section, you'll learn how to deploy an AWS AppSync GraphQL API and connect to it from a JavaScript client application.
+このセクションでは、AWS AppSync GraphQL API をデプロイし、JavaScript クライアントアプリケーションからそれに接続する方法について説明します。
 
-## Create the GraphQL API
+## GraphQL API の作成
 
-To create a GraphQL API, use the Amplify `add` command:
+GraphQL API を作成するには、Amplify `add` コマンドを使用します。
 
 ```bash
-amplify add api
+増幅して api を追加
 ```
 
 ```console
@@ -23,9 +23,9 @@ amplify add api
 ? Do you want to edit the schema now?  Yes
 ```
 
-The CLI should open this GraphQL schema in your text editor.
+CLI がテキストエディタでこの GraphQL スキーマを開く必要があります。
 
-__amplify/backend/api/myapi/schema.graphql__
+__anplify/backend/api/myapi/schema.graphql__
 
 ```graphql
 type Todo @model {
@@ -35,10 +35,10 @@ type Todo @model {
 }
 ```
 
-To deploy the API, you can use the Amplify `push` command:
+API をデプロイするには、Amplify `push` コマンドを使用します。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
 ```console
@@ -51,37 +51,37 @@ amplify push
 ? Enter maximum statement depth [increase from default if your schema is deeply nested]: 2
 ```
 
-Now the API has been deployed and you can start using it.
+これでAPIがデプロイされ、使用を開始できます。
 
-Because the `Todo` type was decorated with an `@model` directive of the [GraphQL Transform](~/cli/graphql-transformer/model.md) library, the CLI created the additional schema and resolvers for queries, mutations, and subscriptions as well as a DynamoDB table to hold the Todos.
+`Todo` 型は `GraphQL Transform` ライブラリの [@model](~/cli/graphql-transformer/model.md) ディレクティブで飾られていたので。 CLI はクエリ、変更、サブスクリプション用の追加のスキーマとリゾルバ、および Todoist を保持する DynamoDB テーブルを作成しました。
 
-To view the deployed services in your project at any time, go to Amplify Console by running the Amplify `console` command:
+プロジェクトにデプロイされたサービスをいつでも表示するには、Amplify `console` コマンドを実行して、Amplify Console に移動します。
 
 ```bash
-amplify console
+増幅コンソール
 ```
 
-## Configure your application
+## アプリケーションの設定
 
-Add Amplify to your app with `yarn` or `npm`:
+Amplifyを `yarn` または `npm` でアプリに追加します。
 
 ```bash
 npm install aws-amplify
 ```
 
-In your app's entry point i.e. App.js, import and load the configuration file:
+アプリのエントリポイント、すなわちApp.jsで、設定ファイルをインポートしてロードします。
 
 ```javascript
-import Amplify, { API, graphqlOperation } from 'aws-amplify';
+import Amplify, { API, graphqlOperation } from 'aws-amply';
 import awsconfig from './aws-exports';
 Amplify.configure(awsconfig);
 ```
 
-## Enable queries, mutations, and subscriptions
+## クエリ、変更、サブスクリプションを有効にする
 
-Now that the GraphQL API has deployed, it’s time to learn how to interact with it from a JavaScript client application. With GraphQL, you typically have the following types of operations:
+GraphQL API がデプロイされたので、JavaScript クライアント アプリケーションからそれを操作する方法を学ぶ時間です。 GraphQL では、通常、次の種類の操作を行います。
 
-- __Mutations__ - write data to the API (create, update, delete operations)
+- __Mutations__ - API へのデータの書き込み (create, update, delete operations)
 
 ```js
 import { API } from 'aws-amplify';
@@ -98,7 +98,7 @@ await API.graphql(graphqlOperation(updateTodo, { input: { id: todoId, name: "Upd
 /* delete a todo */
 await API.graphql(graphqlOperation(deleteTodo, { input: { id: todoId }}));
 ```
-- __Queries__ - read data from the API (list, get operations)
+- __クエリ__ - API からのデータの読み取り (リスト, 操作を取得)
 
 ```js
 import { API } from 'aws-amplify';
@@ -107,7 +107,7 @@ import { listTodos } from './graphql/queries';
 const todos = await API.graphql(graphqlOperation(listTodos));
 ```
 
-- __Subscriptions__ - subscribe to changes in data for real-time functionality (onCreate, onUpdate, onDelete)
+- __Subscriptions__ - リアルタイム機能のためのデータの変更を購読する (onCreate, onUpdate, oneDelete)
 
 ```js
 import { API } from 'aws-amplify';
@@ -127,16 +127,16 @@ const subscription = API.graphql(
 subscription.unsubscribe();
 ```
 
-### Updating Your GraphQL Schema
+### GraphQLスキーマの更新
 
-When you create a GraphQL backend with the CLI, the schema definition for your backend data structure is saved in one of two places:
+CLI を使用して GraphQL バックエンドを作成する場合、バックエンドデータ構造のスキーマ定義が 2 つの場所のいずれかに保存されます。
 
-1. By default, schemas are saved in *amplify/backend/api/YOUR-API-NAME/schema.graphql*. If the `schema.graphql` file exists, it will take precedence over option 2.
+1. デフォルトでは、スキーマは *amplify/backend/api/YOUR-API-NAME/schema.graphql*に保存されます。 `schema.graphql` ファイルが存在する場合は、オプション 2 より優先されます。
 2. Optionally, schemas may be saved as a set of `.graphql` files stored in the *amplify/backend/api/YOUR-API-NAME/schema/* directory. E.g. you might have files `Query.graphql`, `User.graphql`, and `Post.graphql`.
 
-Once your API is deployed, updating the schema is easy with the CLI. You can edit the schema file(s) and run *amplify push* command to update your GraphQL backend.
+API がデプロイされると、CLI でスキーマを簡単に更新できます。 スキーマファイルを編集し、 *増幅プッシュ* コマンドを実行してGraphQL バックエンドを更新できます。
 
-For example, a sample GraphQL schema will look like this:
+例えば、サンプル GraphQL スキーマは次のようになります。
 
 ```graphql
 type Todo @model {
@@ -146,7 +146,7 @@ type Todo @model {
 }
 ```
 
-Add a *priority* field to your Todo type:
+Todo タイプに *priority* フィールドを追加します。
 
 ```graphql
 type Todo @model {
@@ -157,65 +157,65 @@ type Todo @model {
 }
 ```
 
-Save your schema file and update your GraphQL backend:
+スキーマファイルを保存し、GraphQL バックエンドを更新します。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
-When you run the *push* command, you will notice that your schema change is automatically detected, and your backend will be updated respectively.
+*push* コマンドを実行すると、スキーマの変更が自動的に検出され、バックエンドがそれぞれ更新されます。
 
 ```console
-| Category | Resource name   | Operation | Provider plugin   |
-| -------- | --------------- | --------- | ----------------- |
-| Api      | myapi           | Update    | awscloudformation |
+| Category | リソース名 | Operation | Provider プラグイン |
+| -------------- | ------------ | ---------------- | ----------------- |
+| Api | myapi | Update | awscloudforming |
 ```
 
-When the update is complete, you can see the changes to your backend by running the following command and select GraphQL option.
+アップデートが完了したら、次のコマンドを実行してGraphQLオプションを選択することで、バックエンドへの変更を確認できます。
 
 ```bash
-amplify api console
-? Please select from one of the below mentioned services: (Use arrow keys)
-❯ GraphQL
+api コンソール
+? 以下のサービスから選択してください: (矢印キーを使用)
+<unk> GraphQL
   REST
 ```
 
-### Using GraphQL Transformers
+### GraphQLトランスフォーマーの使用
 
 As you can notice in the sample schema file above, the schema has a `@model` directive. The `@model` directive leverages a set of libraries that can help simplify the process of bootstrapping highly scalable, serverless GraphQL APIs on AWS. The `@model` directive tells the GraphQL Transform that we would like to store Todo objects in an Amazon DynamoDB table and configure CRUD operations for it. When you create or update your backend with *push* command, the CLI will automatically create and configure a new DynamoDB table that works with your AppSync API. The `@model` directive is just one of multiple transformers that can be used by annotating your *schema.graphql*.
 
-The following directives are available to be used when defining your schema:
+スキーマを定義する際には、以下のディレクティブを使用できます:
 
-| Directive                                                         | Description                                                           |
-| ----------------------------------------------------------------- | --------------------------------------------------------------------- |
-| [@model](~/cli/graphql-transformer/model.md) on Object            | Store objects in DynamoDB and configure CRUD resolvers.               |
-| [@auth](~/cli/graphql-transformer/auth.md) on Object              | Define authorization strategies for your API.                         |
-| [@connection](~/cli/graphql-transformer/connection.md) on Field   | Specify relationships between @model object types.                    |
-| [@searchable](~/cli/graphql-transformer/searchable.md) on Object  | Stream data of an @model object type to Amazon Elasticsearch Service. |
-| [@versioned](~/cli/graphql-transformer/versioned.md) on Object    | Add object versioning and conflict detection to a @model.             |
-| [@key](~/cli/graphql-transformer/key.md) on Object                | Index your data with keys.                                            |
-| [@function](~/cli/graphql-transformer/function.md) on Field       | Connect Lambda resolvers to your API.                                 |
-| [@predictions](~/cli/graphql-transformer/predictions.md) on Field | Connect machine learning services.                                    |
-| [@http](~/cli/graphql-transformer/http.md) on Field               | Configure HTTP resolvers within your API.                             |
+| Directive                                                         | 説明                                                     |
+| ----------------------------------------------------------------- | ------------------------------------------------------ |
+| [@model](~/cli/graphql-transformer/model.md) on Object            | DynamoDBにオブジェクトを格納し、CRUDリゾルバを設定します。                    |
+| [@auth](~/cli/graphql-transformer/auth.md) on Object              | API の認証戦略を定義します。                                       |
+| [@connection](~/cli/graphql-transformer/connection.md) on Field   | @model オブジェクト タイプ間のリレーションシップを指定します。                    |
+| [@searchable](~/cli/graphql-transformer/searchable.md) on Object  | @modelオブジェクトタイプのデータをAmazon Elasticsearchサービスにストリームします。 |
+| [@versioned](~/cli/graphql-transformer/versioned.md) on Object    | @modelにオブジェクトのバージョン管理と競合検出を追加します。                      |
+| [@key](~/cli/graphql-transformer/key.md) on Object                | データをキーでインデックスします。                                      |
+| [@function](~/cli/graphql-transformer/function.md) on Field       | LambdaリゾルバをAPIに接続します。                                  |
+| [@predections](~/cli/graphql-transformer/predictions.md) on Field | 機械学習サービスを接続します。                                        |
+| [@http](~/cli/graphql-transformer/http.md) on Field               | API 内で HTTP リゾルバを設定します。                                |
 
-You may also write your own transformers to implement reproducible patterns that you find useful.
+また、有用と思われる再現可能なパターンを実装するために、独自の変換器を書くこともできます。
 
-### Mocking and Local Testing
+### モックとローカルテスト
 
-Amplify supports running a local mock server for testing your application with AWS AppSync, including debugging of resolvers, before pushing to the cloud. Please see the [CLI Toolchain documentation](~/cli/usage/mock.md) for more details.
+Amplifyは、クラウドにプッシュする前に、AWS AppSyncでアプリケーションをテストするためのローカルモックサーバの実行をサポートしています。 詳細は [CLI ツールチェーン ドキュメント](~/cli/usage/mock.md) を参照してください。
 
-### Generate client types from a GraphQL schema
+### GraphQLスキーマからクライアント型を生成
 
-When working with GraphQL data it is useful to import types from your schema for type safety. You can do this with the Amplify CLI's automated code generation feature. The CLI automatically downloads GraphQL Introspection Schemas from the defined GraphQL endpoint and generates TypeScript or Flow classes for you. Every time you push your GraphQL API, the CLI will provide you the option to generate types and statements.
+GraphQL データを使用している場合、型安全のためにスキーマから型をインポートすることが便利です。 Amplify CLIの自動コード生成機能でこれを行うことができます。 CLIは定義されたGraphQLエンドポイントからGraphQL Introspection Schemaを自動的にダウンロードし、TypeScriptまたはFlowクラスを生成します。 GraphQL API をプッシュするたびに、CLI が型とステートメントを生成するオプションを提供します。
 
-If you want to generate your GraphQL statements and types, run:
+GraphQL ステートメントとタイプを生成する場合は、次を実行します。
 
 ```bash
-amplify codegen
+コードゲンを増幅する
 ```
 
-A TypeScript or Flow type definition file will be generated in your target folder.
+ターゲット フォルダーに TypeScript または Flow 型定義ファイルが生成されます。
 
-### API configuration in the amplify folder
+### 増幅フォルダ内の API 構成
 
 The Amplify CLI will create an `amplify/backend/api` folder that will hold the existing GraphQL schema, resolvers, and additional configuration around the API. To learn more about how the CLI manages this configuration, check out the documentation [here](~/cli/graphql-transformer/overview.md). To learn how to configure custom GraphQL resolvers, check out the documentation [here](~/cli/graphql-transformer/resolvers.md).
