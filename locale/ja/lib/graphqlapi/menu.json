@@ -2,16 +2,16 @@
   "title": "API (GraphQL)",
   "items": [
     "getting-started",
-    "concepts",
+    "コンセプト",
     "create-or-re-use-existing-backend",
     "authz",
     "mutate-data",
     "query-data",
-    "subscribe-data",
-    "cancel-request",
-    "offline",
+    "購読データ",
+    "キャンセルリクエスト",
+    "オフライン",
     "graphql-from-nodejs",
-    "advanced-workflows",
+    "advanced-ワークフロー",
     "existing-resources"
   ]
 }
