@@ -21,4 +21,4 @@ In terminal, navigate to your project, run `amplify add auth` (or if you've alre
     `<hit enter>`
 ```
 
-Once finished, run `amplify push` to publish your changes.
+終了したら、 `amplify push` を実行して変更を公開します。
