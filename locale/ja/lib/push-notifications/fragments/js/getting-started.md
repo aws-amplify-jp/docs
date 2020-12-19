@@ -1,69 +1,69 @@
-Setup instructions are provided for Android and iOS, and configuration for both platforms can be included on the same React Native project.
+Android と iOS 用にセットアップ手順が提供されており、両方のプラットフォームの設定は同じ React Native プロジェクトに含めることができます。
 
-## Requirements
-1. In order to use Amazon Pinpoint you need to setup credentials (keys or certificates) for your targeted mobile platform, e.g. Android and/or iOS.
-2. Testing Push Notifications requires a physical device, because simulators or emulators won't be able to handle push notifications.
+## 要件
+1. Amazon Pinpointを使用するには、AndroidやiOSなどの対象となるモバイルプラットフォームの資格情報(キーまたは証明書)を設定する必要があります。
+2. プッシュ通知のテスト シミュレータやエミュレータはプッシュ通知を処理できないため、物理的なデバイスが必要です。
 
 <amplify-callout>
 
-Push Notifications category is integrated with [AWS Amplify Analytics category](~/lib/analytics/getting-started.md) to be able to track notifications. Make sure that you have configured the Analytics category in your app before configuring the Push Notifications category.
+プッシュ通知カテゴリは [AWS Amplify Analytics category](~/lib/analytics/getting-started.md) と統合され、通知を追跡できます。 プッシュ通知カテゴリを設定する前に、アプリで Analytics カテゴリを設定していることを確認します。
 
 </amplify-callout>
 
-## Setup for Android
+## Android 用のセットアップ
 
-1. Make sure you have a [Firebase Project](https://console.firebase.google.com) and app setup.
+1. [Firebase プロジェクト](https://console.firebase.google.com) とアプリのセットアップがあることを確認してください。
 
-2. Get your push messaging credentials for Android in Firebase console. [Click here for instructions](~/sdk/push-notifications/setup-push-service.md/q/platform/android).
+2. Firebase コンソールで Android 向けプッシュメッセージの認証情報を取得します。 [手順は こちら](~/sdk/push-notifications/setup-push-service.md/q/platform/android) をクリックしてください。
 
-3. Install dependencies:
+3. 依存関係のインストール:
 
     ```bash
     npm install aws-amplify @aws-amplify/pushnotification
     ```
 
-4. Add your push messaging credentials (Server key) with Amplify CLI by using the following commands:
+4. Amplify CLI を使用して、プッシュメッセージングの認証情報(サーバーキー)を追加します。
 
     ```bash
-    amplify add notifications
+    増幅して通知を追加
     ```
 
-    Choose *FCM* when promoted:
+    プロモーション時に *FCM* を選択:
 
     ```console
-    ? Choose the push notification channel to enable.
+    ? 有効にするプッシュ通知チャンネルを選択します。
     APNS
-    ❯ FCM
-    Email
+    <unk> FCM
+    メール
     SMS
     ```
 
-    The CLI will prompt for your *Firebase credentials*, enter them respectively.
+    CLI は *Firebase 資格情報*を要求し、それぞれ入力します。
 
 
     You can find said *Firebase credentials* by visiting https://console.firebase.google.com/project/[your-project-id]/settings/cloudmessaging or by navigating to (gear-next-to-project-name) > Project Settings > Cloud Messaging on the Firebase Console.
 
-    Alternatively, you can set up Android push notifications in Amazon Pinpoint Console. [Click here for instructions](https://docs.aws.amazon.com/pinpoint/latest/developerguide/mobile-push-android.html).
+    あるいは、Amazon Pinpoint ConsoleでAndroidのプッシュ通知を設定できます。 [ここをクリックして手順](https://docs.aws.amazon.com/pinpoint/latest/developerguide/mobile-push-android.html)。
 
-5. Enable your app in Firebase. To do that, follow those steps:
+5. Firebaseでアプリを有効にします。これを行うには、次の手順に従ってください。
 
-    <amplify-callout> If you don't have an existing Firebase project, you need to create one in order to continue. </amplify-callout>
+    <amplify-callout> 既存の Firebase プロジェクトをお持ちでない場合は、続行するには作成する必要があります。 </amplify-callout>
 
-    * Visit the [Firebase console](https://console.firebase.google.com), and click the Gear icon next to **Project Overview** and click **Project Settings**.
-    * Click **Add App**, if you have an existing app you can skip this step
-    * Choose **Add Firebase to your Android App**
-    * Add your package name i.e. **com.myProjectName** and click **Register App**
-    * Download  *google-services.json* file and copy it under your `android/app` project folder.
+    * [Firebase コンソール](https://console.firebase.google.com)にアクセスし、 **プロジェクト概要** の横にあるギアアイコンをクリックし、 **プロジェクト設定** をクリックします。
+    * **Add App**をクリックします。既存のアプリがある場合は、この手順をスキップできます。
+    * **FirebaseをAndroidアプリに追加**
+    * パッケージ名、例えば **com.myProjectName** を追加し、 **アプリを登録** をクリックします。
+    * *google-services.json* ファイルをダウンロードし、 `android/app` プロジェクトフォルダの下にコピーします。
 
     <amplify-callout warning>
 
-    Make sure you have *google-services.json* file in place or you won't pass the build process.
+    *google-services.json* ファイルが用意されているか、ビルドプロセスに合格しないことを確認してください。
 
     </amplify-callout>
 
-6. Open *android/build.gradle* file and perform following edits:
+6. *android/build.gradle* ファイルを開き、次の編集を行います:
 
-    - Add `classpath("com.google.gms:google-services:4.3.3")` in the `dependencies` under `buildscript`:
+    - `classpath("com.google.gms:google-services:4.3.3")` `buildscript` の下の `依存関係に追加`:
 
     ```gradle
     buildscript {
@@ -73,34 +73,34 @@ Push Notifications category is integrated with [AWS Amplify Analytics category](
             classpath("com.google.gms:google-services:4.3.3")
             ...
         }
-    }
+}
     ```
 
-7. Open *android/app/build.gradle* and perform following edits:
+7. *android/app/build.gradle* を開き、以下の編集を行います:
 
-    - Add firebase libs to the `dependencies` section:
+    - Firebase libs を `依存関係` セクションに追加します。
 
     ```gradle
     dependencies {
         ...
-        implementation "com.google.firebase:firebase-core:15.0.2"
+        implement "com.google.firebase:firebase-core:15.0.2"
         implementation "com.google.firebase:firebase-messaging:15.0.2"
         ...
-    }
+}
     ```
-    - Add following configuration to the bottom of the file:
+    - 以下の設定をファイルの一番下に追加します:
 
     ```gradle
     apply plugin: "com.google.gms.google-services"
     ```
 
-8. Open *android/gradle/wrapper/gradle-wrapper.properties* update the Gradle `distributionUrl`:
+8. *android/gradle/wrapper/gradle-wrapper.properties* Gradle を更新する `distributionUrl`:
 
     ```properties
     distributionUrl=https\://services.gradle.org/distributions/gradle-6.3-all.zip
     ```
 
-9. Open *android/app/src/main/AndroidManifest.xml* file and add the following configuration into `application` element.
+9. *android/app/src/main/AndroidManifest.xml* ファイルを開き、 `アプリケーション` 要素に次の設定を追加します。
 
     ```xml
     <application ... >
@@ -133,21 +133,21 @@ Push Notifications category is integrated with [AWS Amplify Analytics category](
     </application>
     ```
 
-10. Configure Push Notifications category for your app as shown in [Configure your App](#configure-your-app) section.
+10. [アプリの設定](#configure-your-app) セクションに示すように、アプリのプッシュ通知カテゴリを設定します。
 
-11. Run your app:
+11. アプリの実行:
 
     ```bash
     npx react-native run-android
     ```
 
-## Setup for iOS
+## iOS用のセットアップ
 
-1. For setting up iOS push notifications, you need to download and install Xcode from [Apple Developer Center](https://developer.apple.com/xcode/).
+1. iOS のプッシュ通知を設定するには、 [Apple Developer Center](https://developer.apple.com/xcode/) から Xcode をダウンロードしてインストールする必要があります。
 
-2. Setup iOS Push Notifications and create a p12 certificate as instructed here in [Amazon Pinpoint Developer Guide](https://docs.aws.amazon.com/pinpoint/latest/developerguide/apns-setup.html).
+2. [Amazon Pinpoint Developer Guide](https://docs.aws.amazon.com/pinpoint/latest/developerguide/apns-setup.html) で指示されているように、iOS プッシュ通知を設定し、p12 証明書を作成します。
 
-3. Install dependencies and CocoaPods:
+3. 依存関係と CocoaPods のインストール:
 
     ```bash
     npm install aws-amplify @aws-amplify/pushnotification @react-native-community/push-notification-ios
@@ -156,56 +156,56 @@ Push Notifications category is integrated with [AWS Amplify Analytics category](
     npx pod-install
     ```
 
-4. Enable notifications and add your p12 certificate with Amplify CLI by using the following commands:
+4. 次のコマンドを使用して、通知を有効にし、Amplify CLI を使用してp12 証明書を追加します。
 
     ```bash
-    amplify add notifications
+    増幅して通知を追加
     ```
 
-    Choose *APNS* when promoted:
+    プロモーション時に *APNS* を選択:
 
     ```console
-    ? Choose the push notification channel to enable.
+    ? 有効にするプッシュ通知チャンネルを選択してください。
     > APNS
     FCM
-    Email
+    メール
     SMS
     ```
 
-    Choose *Certificate* when promoted:
+    プロモーション時に *証明書* を選択:
 
     ```console
-    ? Choose authentication method used for APNs
+    ? APNs
     > Certificate
-    Key
+    Key に使用される認証方法を選択してください
     ```
 
-    The CLI will prompt for your *p12 certificate path*, enter it respectively.
+    CLI は *p12 証明書パス*をプロンプトし、それぞれ入力します。
 
-5. Open project in Xcode and make updates for `@react-native-community/push-notification-ios`:
-    - [Add Capabilities : Background Mode - Remote Notifications](https://github.com/react-native-community/push-notification-ios#add-capabilities--background-mode---remote-notifications)
+5. Xcode でプロジェクトを開き、 `@react-native-community/push-notification-ios`:
+    - [機能を追加: バックグラウンドモード - リモート通知](https://github.com/react-native-community/push-notification-ios#add-capabilities--background-mode---remote-notifications)
     - [Augment `AppDelegate`](https://github.com/react-native-community/push-notification-ios#augment-appdelegate)
 
-6. Update General App settings:
+6. 一般的なアプリ設定を更新:
 
-    - Set bundle identifier (with the one you create on your Apple Developer Account)
-    - Make sure you have logged in with your Apple Developer account on Xcode and have a Team selected for the target.
+    - バンドル識別子を設定 (Apple Developer Accountで作成した識別子)
+    - Xcode の Apple Developer アカウントでログインし、ターゲット用の Team が選択されていることを確認してください。
 
-7.  Configure Push Notification module for your app as shown in [Configure your App](#configure-your-app) section.
+7.  [アプリの設定](#configure-your-app) セクションに示すように、アプリのプッシュ通知モジュールを設定します。
 
-8. Run your app:
+8. アプリの実行:
 
     ```bash
     npx react-native run-ios --device
     ```
 
-## Configure your App
+## アプリの設定
 
-The Push Notifications category is integrated with `Analytics` module to be able to track notifications. Make sure that you have configured the Analytics module in your app before configuring Push Notification module.
+プッシュ通知カテゴリは `Analytics` モジュールと統合され、通知を追跡できます。 プッシュ通知モジュールを設定する前に、アプリで Analytics モジュールを設定していることを確認してください。
 
 <amplify-callout>
 
-If you don't have Analytics already enabled, see our [Analytics Developer Guide](~/lib/analytics/getting-started.md) to add Analytics to your app.
+Analytics がまだ有効になっていない場合は、 [Analytics Developer Guide](~/lib/analytics/getting-started.md) を参照して、アプリケーションに Analytics を追加してください。
 
 </amplify-callout>
 
@@ -218,7 +218,7 @@ import awsconfig from './aws-exports';
 Amplify.configure(awsconfig);
 ```
 
-### Configuration Options
+### 設定オプション
 
 - `requestIOSPermissions` is an optional boolean flag which specifies whether or not to automatically request push notifications permissions in iOS when calling `PushNotification.configure` for the first time. If not provided, it defaults to `true`. When set to `false`, you may later call the method `PushNotification.requestIOSPermissions` at the explicit point in your application flow when you want to prompt the user for permissions.
 - `appId` is optional and *only* needed if `aws-exports` doesn't contain `aws_mobile_analytics_app_id` or you are manually configuring each category inside `Amplify.configure()`.
