@@ -1,6 +1,6 @@
 ---
-title: Sign Out
-description: Sign Out component
+title: サインアウト
+description: コンポーネントをサインアウトする
 filterKey: framework
 ---
 
