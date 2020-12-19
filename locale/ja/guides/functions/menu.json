@@ -1,7 +1,7 @@
 {
-  "title": "Functions",
+  "title": "関数",
   "items": [
-    "appsync-operations-to-lambda-layer",
+    "appsync-operations-to-lambda-Layer",
     "connecting-a-rest-api",
     "integrating-dynamodb-with-lambda",
     "dynamodb-from-js-lambda",
