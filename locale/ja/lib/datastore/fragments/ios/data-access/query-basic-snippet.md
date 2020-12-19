@@ -33,9 +33,9 @@ receiveValue: { result in
 
 </amplify-block-switcher>
 
-### Query by `id`
+### `id` でクエリ
 
-Query has an alternative signature that allows to fetch a single item by its `id`:
+クエリには、 `id` で単一のアイテムを取得することができる代替の署名があります:
 
 <amplify-block-switcher>
 
