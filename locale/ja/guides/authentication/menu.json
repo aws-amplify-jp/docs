@@ -1,8 +1,8 @@
 {
-  "title": "Authentication",
+  "title": "認証",
   "items": [
     "custom-auth-flow",
-    "email-only-authentication",
+    "email-only-認証",
     "listening-for-auth-events",
     "managing-user-attributes"
   ]
