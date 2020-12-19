@@ -1,8 +1,8 @@
-Instead of requiring users to create a username, many apps will use the email address of the user for authentication purposes. In this guide you'll learn how to enable this functionality using the Amplify CLI and libraries.
+ユーザー名を作成する代わりに、多くのアプリは認証のためにユーザーのメールアドレスを使用します。 このガイドでは、Amplify CLI とライブラリを使用してこの機能を有効にする方法を学びます。
 
-## Getting started - Creating the service
+## はじめに - サービスの作成
 
-To enable authentication specifying `email` as the primary authentication property, follow these steps:
+`メールアドレス` を主認証プロパティとして指定する認証を有効にするには、以下の手順に従ってください。
 
 ```sh
 amplify add auth
@@ -12,19 +12,19 @@ amplify add auth
 ? Do you want to configure advanced settings? No, I am done.
 ```
 
-Next, deploy the authentication service:
+次に、認証サービスをデプロイします。
 
 ```sh
-amplify push
+push を増幅する
 ```
 
-## Client-side integration
+## クライアント側の統合
 
-Now that the service has been deployed, you will configure the client application to interact with the authentication service. You will learn how to interact with the service using both the UI components as well as the `Auth` class of the Amplify JavaScript library.
+サービスがデプロイされたので、クライアントアプリケーションが認証サービスとやり取りするように構成します。 Amplify JavaScriptライブラリの `Auth` クラスとUIコンポーネントの両方を使用してサービスとやり取りする方法を学びます。
 
-### UI Components
+### UI コンポーネント
 
-In the UI component you need to specify that you'd like to use the email address as the sign up and sign in property for users. To do so, you'll set the `usernameAlias` to `email`.
+UI コンポーネントでは、メールアドレスをユーザーのサインアップとサインインプロパティとして使用するように指定する必要があります。 これを行うには、 `usernameAlias` に `email` を設定します。
 
 <amplify-block-switcher>
 
@@ -83,11 +83,11 @@ export default withAuthenticator(App2, { usernameAttributes: 'email' });
 
 </amplify-block-switcher>
 
-### Calling directly from Auth API
+### 認証APIから直接通話
 
-You can also call the Authentication service directly using the `Auth` category:
+`認証` カテゴリを使用して直接認証サービスを呼び出すこともできます。
 
-**Signing up**
+**サインアップ**
 
 ```js
 import { Auth } from 'aws-amplify';
@@ -101,7 +101,7 @@ await Auth.signUp({
 });
 ```
 
-**Confirming sign up**
+**サインアップ確認**
 
 ```js
 import { Auth } from 'aws-amplify';
@@ -109,7 +109,7 @@ import { Auth } from 'aws-amplify';
 await Auth.confirmSignUp("youremail@yourdomain.com", "123456");
 ```
 
-**Signing in**
+**サインイン中**
 
 ```js
 import { Auth } from 'aws-amplify';
