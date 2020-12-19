@@ -1,8 +1,8 @@
-## Setup the backend
+## バックエンドのセットアップ
 
-If you haven't already done so, run `amplify init` inside your project and then `amplify add auth` (we recommend selecting the *default configuration*).
+まだ実行していない場合 プロジェクト内で `amplify init` を実行し、 `増幅して認証を追加` します(デフォルトの設定 *を選択することをお勧めします*)。
 
-Run `amplify add predictions` and select **Identify**. Then use the following answers:
+`増幅して予測を追加する` を実行し、 **識別**を選択します。その後、次の答えを使用します:
 
 ```console
 ? What would you like to identify? 
@@ -18,15 +18,15 @@ Run `amplify add predictions` and select **Identify**. Then use the following an
 ? Who should have access? Auth and Guest users
 ```
 
-The Advanced Configuration will allow you to select moderation for unsafe content or all of the identified labels. Default uses both.
+高度な設定では、安全でないコンテンツまたは特定されたラベルのすべてのモデレーションを選択できます。デフォルトでは両方を使用します。
 
 Now run `amplify push` which will generate your `aws-exports.js` and create resources in the cloud. You can now either add this to your backend or skip and add more features to your app.
 
-Services used: Amazon Rekognition
+使用されるサービス: Amazon Rekognition
 
-## Working with the API
+## API の操作
 
-Detect labels, such if an image has a desk or a chair in it
+画像に机や椅子がある場合など、ラベルを検出します。
 
 ```javascript
 Predictions.identify({
@@ -46,7 +46,7 @@ Predictions.identify({
 .catch(err => console.log({ err }));
 ```
 
-Detect unsafe content in an image
+画像内の安全でないコンテンツを検出する
 
 ```javascript
 Predictions.identify({
@@ -63,7 +63,7 @@ Predictions.identify({
 .catch(err => console.log({ err }));
 ```
 
-for both labels and unsafe content
+ラベルと安全でないコンテンツの両方に
 ```javascript
 Predictions.identify({
     labels: {
