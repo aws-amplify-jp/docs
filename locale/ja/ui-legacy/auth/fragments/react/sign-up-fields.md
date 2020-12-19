@@ -1,48 +1,48 @@
 <table>
   <thead>
     <tr>
-      <th>Attribute</th>
-      <th>Type</th>
-      <th>Description</th>
-      <th>Possible Values</th>
+      <th>属性</th>
+      <th>タイプ</th>
+      <th>説明</th>
+      <th>可能な値</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td data-column="Attribute">label</td>
-      <td data-column="Type">string</td>
-      <td data-column="Description">label for the input field</td>
-      <td data-column="Possible Values">N/A</td>
+      <td data-column="Attribute">ラベル</td>
+      <td data-column="Type">文字列</td>
+      <td data-column="Description">入力フィールドのラベル</td>
+      <td data-column="Possible Values">該当なし</td>
     </tr>
     <tr>
-        <td data-column="Attribute">key</td>
-        <td data-column="Type">string</td>
-        <td data-column="Description">key name for the attribute as defined in the User Pool</td>
-        <td data-column="Possible Values">N/A</td>
+        <td data-column="Attribute">キー</td>
+        <td data-column="Type">文字列</td>
+        <td data-column="Description">ユーザープールで定義されている属性のキー名</td>
+        <td data-column="Possible Values">該当なし</td>
     </tr>
     <tr>
-        <td data-column="Attribute">required</td>
+        <td data-column="Attribute">必須</td>
         <td data-column="Type">boolean</td>
-        <td data-column="Description">whether or not the field is required</td>
-        <td data-column="Possible Values">N/A</td>
+        <td data-column="Description">フィールドが必須かどうか</td>
+        <td data-column="Possible Values">該当なし</td>
     </tr>
     <tr>
         <td data-column="Attribute">displayOrder</td>
-        <td data-column="Type">number</td>
-        <td data-column="Description">number indicating the order in which fields will be displayed</td>
-        <td data-column="Possible Values">N/A</td>
+        <td data-column="Type">数値</td>
+        <td data-column="Description">フィールドを表示する順序を示す数値</td>
+        <td data-column="Possible Values">該当なし</td>
     </tr>
     <tr>
-        <td data-column="Attribute">type</td>
-        <td data-column="Type">string</td>
-        <td data-column="Description">the type attribute for the html input element</td>
-        <td data-column="Possible Values">‘string’, ‘number’, ‘password’, etc</td>
+        <td data-column="Attribute">タイプ</td>
+        <td data-column="Type">文字列</td>
+        <td data-column="Description">html 入力要素の type 属性</td>
+        <td data-column="Possible Values">‘string’, ‘number’, ‘password’ など</td>
     </tr>
     <tr>
-        <td data-column="Attribute">custom</td>
+        <td data-column="Attribute">カスタム</td>
         <td data-column="Type">boolean</td>
-        <td data-column="Description">flag which indicates whether or not the field is ‘custom’ in the User Pool</td>
-        <td data-column="Possible Values">N/A</td>
+        <td data-column="Description">ユーザプール内でフィールドが「カスタム」であるかどうかを示すフラグ</td>
+        <td data-column="Possible Values">該当なし</td>
     </tr>
   </tbody>
 </table>
