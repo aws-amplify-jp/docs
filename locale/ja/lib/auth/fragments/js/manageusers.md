@@ -1,8 +1,8 @@
-This section covers the client-side development experience for password and user management. To learn more about exposing administration actions to your application, click [here](~/cli/auth/admin.md).
+このセクションでは、パスワードとユーザー管理のためのクライアント側の開発経験について説明します。 アプリケーションに管理アクションを公開する方法については、ここをクリックしてください [](~/cli/auth/admin.md).
 
-## Password operations
+## パスワード操作
 
-### Change password
+### パスワードの変更
 
 ```javascript
 import { Auth } from 'aws-amplify';
@@ -15,7 +15,7 @@ Auth.currentAuthenticatedUser()
     .catch(err => console.log(err));
 ```
 
-### Forgot password
+### パスワードを忘れた場合
 
 ```javascript
 import { Auth } from 'aws-amplify';
@@ -31,9 +31,9 @@ Auth.forgotPasswordSubmit(username, code, new_password)
     .catch(err => console.log(err));
 ```
 
-### Complete new password
+### 新しいパスワードを入力
 
-The user is asked to provide the new password and required attributes during the first sign-in attempt if a valid user directory is created in Amazon Cognito. During this scenario, the following method can be called to process the new password entered by the user.
+ユーザーは、Amazon Cognitoで有効なユーザーディレクトリが作成された場合、最初のサインイン時に新しいパスワードと必須属性を提供するよう求められます。 このシナリオでは、ユーザーが入力した新しいパスワードを処理するために、以下の方法が呼び出されます。
 
 ```js
 import { Auth } from 'aws-amplify';
@@ -64,9 +64,9 @@ Auth.signIn(username, password)
 });
 ```
 
-## Account recovery verification
+## アカウントリカバリーの確認
 
-Either the phone number or the email address is required for account recovery. You can let the user verify those attributes by:
+アカウントの復旧には電話番号または電子メールアドレスが必要です。以下により、ユーザーがそれらの属性を確認できます：
 ```javascript
 // To initiate the process of verifying the attribute like 'phone_number' or 'email'
 Auth.verifyCurrentUserAttribute(attr)
@@ -85,9 +85,9 @@ Auth.verifyCurrentUserAttributeSubmit(attr, 'the_verification_code')
 });
 ```
 
-## Retrieve current authenticated user
+## 現在の認証済みユーザーを取得
 
-You can call `Auth.currentAuthenticatedUser()` to get the current authenticated user object.
+`Auth.currentAuthenticatedUser()` を呼び出して現在の認証済みユーザオブジェクトを取得できます。
 
 ```javascript
 import { Auth } from 'aws-amplify';
@@ -99,7 +99,7 @@ Auth.currentAuthenticatedUser({
 ```
 This method can be used to check if a user is logged in when the page is loaded. It will throw an error if there is no user logged in. This method should be called after the Auth module is configured or the user is logged in. To ensure that you can listen on the auth events `configured` or `signIn`. [Learn how to listen on auth events.](~/lib/utilities/hub.md#authentication-events)
 
-### Retrieve attributes for current authenticated user
+### 現在の認証済みユーザーの属性を取得します
 
 You can also access the user's attributes like their email address, phone number, sub, or any other attributes that are associated with them from the user object returned by `Auth.currentAuthenticatedUser`.
 
@@ -107,11 +107,11 @@ You can also access the user's attributes like their email address, phone number
 const { attributes } = await Auth.currentAuthenticatedUser();
 ```
 
-## Retrieve current session
+## 現在のセッションを取得
 
-`Auth.currentSession()` returns a `CognitoUserSession` object which contains JWT `accessToken`, `idToken`, and `refreshToken`.
+`Auth.currentSession()` は、JWT `accessToken` を含む `CognitoUserSession`オブジェクトを返します。 `idToken`、 `refreshToken`。
 
-This method will automatically refresh the `accessToken` and `idToken` if tokens are expired and a valid `refreshToken` presented. So you can use this method to refresh the session if needed.
+このメソッドは、トークンが期限切れで有効な `リフレッシュトークン` が提示された場合、 `アクセストークン` と `idToken` を自動的に更新します。 したがって、必要に応じてセッションを更新するためにこのメソッドを使用できます。
 
 
 ```javascript
@@ -122,9 +122,9 @@ Auth.currentSession()
   .catch(err => console.log(err));
 ```
 
-## Managing user attributes
+## ユーザー属性の管理
 
-You can pass user attributes during sign up:
+サインアップ中にユーザー属性を渡すことができます:
 
 ```javascript
 Auth.signUp({
@@ -140,7 +140,7 @@ Auth.signUp({
 });
 ```
 
-You can retrieve user attributes:
+ユーザー属性を取得できます:
 
 ```javascript
 let user = await Auth.currentAuthenticatedUser();
@@ -148,7 +148,7 @@ let user = await Auth.currentAuthenticatedUser();
 const { attributes } = user;
 ```
 
-You can update user attributes:
+ユーザー属性を更新できます:
 
 ```javascript
 let user = await Auth.currentAuthenticatedUser();
@@ -160,21 +160,21 @@ let result = await Auth.updateUserAttributes(user, {
 console.log(result); // SUCCESS
 ```
 
-> You can find a <a href="https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes" target="_blank">list of all custom attributes here</a>.
+> すべてのカスタム属性の <a href="https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes" target="_blank">リストはこちら</a>にあります。
 
-If you change the email address, the user will receive a confirmation code. In your app, you can confirm the verification code:
+メールアドレスを変更すると、ユーザーは確認コードを受け取ります。アプリで確認コードを確認できます。
 
 ```javascript
 let result = await Auth.verifyCurrentUserAttributeSubmit('email', 'abc123');
 ```
 
-## Managing security tokens
+## セキュリティトークンの管理
 
-> When using Authentication with AWS Amplify, you don't need to refresh Amazon Cognito tokens manually. The tokens are automatically refreshed by the library when necessary.
+> AWS Amplifyで認証を使用する場合は、Amazon Cognitoトークンを手動でリフレッシュする必要はありません。トークンは必要に応じてライブラリによって自動的にリフレッシュされます。
 
 Security Tokens like *IdToken* or *AccessToken* are stored in *localStorage* for the browser and in *AsyncStorage* for React Native. If you want to store those tokens in a more secure place or you are using Amplify in server side, then you can provide your own `storage` object to store those tokens.
 
-For example:
+例:
 ```ts
 class MyStorage {
     // the promise returned from sync function
@@ -203,7 +203,7 @@ Auth.configure({
 });
 ```
 
-Here is the example of how to use AsyncStorage as your storage object which will show you how to sync items from AsyncStorage into Memory:
+ここでは、AsyncStorage をストレージオブジェクトとして使用する方法の例を示します。これにより、AsyncStorage からメモリにアイテムを同期する方法が示されます。
 ```javascript
 import { AsyncStorage } from 'react-native';
 
@@ -276,4 +276,4 @@ Auth.configure({
 });
 ```
 
-To learn more about tokens, please visit [Amazon Cognito Developer Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-with-identity-providers.html).
+トークンの詳細については、 [Amazon Cognito Developer Documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-with-identity-providers.html) をご覧ください。
