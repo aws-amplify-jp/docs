@@ -1,4 +1,4 @@
-To update a single user attribute, call `updateUserAttribute`:
+単一のユーザー属性を更新するには、 `updateUserAttribute` を呼び出します。
 
 <amplify-block-switcher> <amplify-block name="Java">
 
@@ -35,7 +35,7 @@ RxAmplify.Auth.updateUserAttribute(userEmail)
 
 </amplify-block> </amplify-block-switcher>
 
-To update multiple user attributes at a time, call `updateUserAttributes`:
+一度に複数のユーザー属性を更新するには、 `updateUserAttributes` を呼び出します。
 
 <amplify-block-switcher> <amplify-block name="Java">
 
