@@ -1,14 +1,14 @@
-You can list all of the objects uploaded under a given prefix. This will list all public files:
+指定されたプレフィックスの下にアップロードされたすべてのオブジェクトを一覧表示できます。これはすべての公開ファイルを一覧表示します:
 
 ```dart
 try {
-  ListResult res = await Amplify.Storage.list();
+  ListResult = await Amplify.Storage.list();
 } catch (e) {
   print(e.toString());
 }
 ```
 
-You can also list private or protected files by passing options. For example, to list all protected files owned by a user identified by the ID `otherUserID`:
+オプションを渡すことによってプライベートまたは保護されたファイルをリストすることができる。 例えば、ID `otherUserID` によって識別されたユーザーが所有するすべての保護されたファイルを一覧表示するには:
 
 ```dart
 try {
