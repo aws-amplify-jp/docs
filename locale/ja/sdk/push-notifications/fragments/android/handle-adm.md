@@ -1,80 +1,80 @@
-## Handling Amazon Device Messaging Push Notifications
+## Amazon Device Messaging Push Notifications の処理
 
-Amazon Device Messaging (ADM) is a service used to send push notifications to apps running on Amazon devices, such as Kindle Fire tablets. By integrating ADM with your app, you can use Amazon Pinpoint to send notifications to your app through the ADM mobile push channel.
+Amazon Device Messaging (ADM) は、Kindle FireタブレットなどのAmazonデバイスで動作するアプリにプッシュ通知を送信するために使用されるサービスです。 ADMとアプリを統合することで、Amazon Pinpointを使用してADMモバイルプッシュチャネルを通じてアプリに通知を送信できます。
 
-**Prerequisites**
+**前提条件**
 
-To send push notifications to your app using Amazon Pinpoint and ADM, you need the following:
+Amazon PinpointとADMを使用してアプリにプッシュ通知を送信するには、次の手順が必要です。
 
-1. Amazon Developer account.
+1. Amazon Developer Account.
 
-1. Client ID and client secret from Amazon Device Messaging.
+1. Amazon Device MessagingからのクライアントIDとクライアントシークレット。
 
-1. ADM registration ID (provided by the end device that contains the ADM platform).
+1. ADM 登録 ID (ADM プラットフォームを含むエンドデバイスによって提供されます)。
 
-**Integrating ADM with Your App**
+**ADMとアプリの統合**
 
 If you are already familiar with ADM and have ADM credentials, you can follow the steps for [Integrating Your App with Amazon Device Messaging](https://developer.amazon.com/public/apis/engage/device-messaging/tech-docs/adm-integrating-your-app) in the Amazon Developer documentation. Otherwise, for an introduction to ADM, see [Understanding Amazon Device Messaging](https://developer.amazon.com/docs/adm/overview.html).
 
-To integrate with Amazon Pinpoint, your subclass implementation of `com.amazon.device.messaging.ADMMessageHandlerBase` should include the following methods and perform the corresponding calls:
+Amazon Pinpoint と統合するには、 `com.amazon.device.messaging.ADMMessageHandlerBase` のサブクラス実装には、次のメソッドが含まれており、対応する呼び出しを実行する必要があります。
 
 **`onRegistered`**
 
-Called when the device is registered with the ADM service. Provides the ADM registration ID that is needed to register the device with Amazon Pinpoint. Include the following call as part of this method:
+デバイスが ADM サービスに登録されたときに呼び出されます。 Amazon Pinpointでデバイスを登録するために必要なADM登録IDを提供します。このメソッドの一部として次の呼び出しを含めます：
 
 ```java
 pinpointManager.getNotificationClient().registerDeviceToken(registrationId)
 ```
 
-**`onUnregistered`**
+**`onUnregistred`**
 
-Called when the device is no longer registered with the ADM service.
+デバイスが ADM サービスに登録されなくなったときに呼び出されます。
 
 **`onMessage`**
 
-Called when the device receives a message notification from ADM. Include the following as part of this method:
+デバイスがADMからメッセージ通知を受け取ったときに呼び出されます。このメソッドの一部として以下を含めてください。
 
 ```java
-NotificationDetails details = NotificationDetailsBuilder.builder()
+NotificationDetails = NotificationDetailsBuilder.builder()
                                 .intent(intent);
-                                .intentAction(NotificationClient.ADM_INTENT_ACTION)
+                                .intentAction(NotificationClient.ADM_INTEN_ACTION)
                                 .build();
 
 pinpointManager.getNotificationClient().handleCampaignPush(details)
 ```
 
-**Testing ADM Push Notifications**
+**ADM プッシュ通知のテスト**
 
-To test, you need an Amazon Pinpoint project, an ADM client ID, and an ADM client secret.
+テストには、Amazon Pinpoint プロジェクト、ADM クライアントID、ADM クライアントシークレットが必要です。
 
-Before you begin, augment your app to display the device token after registration. The device token can be retrieved by calling:
+始める前に、登録後にデバイストークンを表示するアプリを増強してください。デバイストークンは以下のように呼び出すことで取得できます。
 
 ```java
 pinpointManager.getNotificationClient().getDeviceToken()
 ```
 
-Complete the following steps using the Amplify CLI and Amazon Pinpoint console to test ADM push notifications
+Amplify CLI と Amazon Pinpoint コンソールを使用して、以下の手順を完了し、ADM プッシュ通知をテストします。
 
-Register ADM as a channel with your Amazon Pinpoint project. Provide the ADM client ID and the ADM client secret.
+Amazon Pinpoint プロジェクトでチャンネルとして ADM を登録します。ADM クライアント ID と ADM クライアントシークレットを提供します。
 
-Run the following command to navigate to the Amazon Pinpoint console.
+次のコマンドを実行して、Amazon Pinpoint コンソールに移動します。
 
 ```bash
-amplify console analytics
+コンソール分析を増幅する
 ```
 
-* On the left pane, select `Settings` and `Push notifications`.
-* Click `Edit` and select `Show more push notification services` and click `Amazon Device Messaging`.
-* Enter the `Client ID` and the `Client Secret` and click `Save` at the right bottom of the page.
+* 左側のペインで、 `設定` と `プッシュ通知` を選択します。
+* `Edit` をクリックして `Show more push notification services` を選択し、 `Amazon Device Messaging` をクリックします。
+* `Client ID` と `Client Secret` を入力し、ページの右下にある `Save` をクリックします。
 
-Now `ADM` is registered as a push notification service.
+現在、 `ADM` がプッシュ通知サービスとして登録されています。
 
-Install your app on a device that has ADM enabled, and capture the generated device token.
+ADMが有効なデバイスにアプリをインストールし、生成されたデバイストークンをキャプチャします。
 
-Send a direct message to the device specifying the device token as the address.
+アドレスとしてデバイストークンを指定してデバイスにダイレクトメッセージを送信します。
 
-* On the Amazon Pinpoint console, go to `Test messaging`.
-* Select `Push notifications` as the channel.
-* Enter the endpoint ID or the device token in the `Destinations`.
-* Select `ADM` as the push notifications service.
-* Create a message and click `Send message` at the bottom right corner of the page to send a direct message.
+* Amazon Pinpoint コンソールで、 `Test messages` に移動します。
+* `Push notifications` をチャンネルとして選択します。
+* エンドポイントIDまたはデバイストークンを `デスティネーション`に入力します。
+* プッシュ通知サービスとして `ADM` を選択します。
+* メッセージを作成し、ダイレクトメッセージを送信するには、ページ右下の `メッセージを送信` をクリックします。
