@@ -1,9 +1,9 @@
-## Install Amplify Libraries
+## Amplifyライブラリのインストール
 
-Add the following dependencies to your `pubspec.yaml` file and install dependencies when asked:
+以下の依存関係を `pubspec.yaml` ファイルに追加し、尋ねられたら依存関係をインストールします。
 
 ```yaml
-dependencies:
+依存関係:
   flutter:
     sdk: flutter
   amplify_datastore: '<1.0.0'
