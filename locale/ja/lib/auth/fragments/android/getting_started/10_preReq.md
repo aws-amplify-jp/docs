@@ -1,2 +1,2 @@
-* An Android application targeting at least Android SDK API level 16 with Amplify libraries integrated
-    * For a full example of please follow the [project setup walkthrough](~/lib/project-setup/create-application.md)
+* Amplifyライブラリを統合した少なくともAndroid SDK APIレベル16を対象としたAndroidアプリケーション。
+    * 完全な例については、 [プロジェクト設定の手順](~/lib/project-setup/create-application.md)に従ってください。
