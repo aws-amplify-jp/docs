@@ -1,6 +1,6 @@
 ---
 title: IAM Policy
-description: The Amplify CLI requires several IAM policies for performing actions across all categories. You can grant or restrict category permissions by including or removing items from the `Action` section as appropriate.
+description: Amplify CLI は、すべてのカテゴリにわたってアクションを実行するためのいくつかの IAM ポリシーを必要とします。 必要に応じて、`Action`セクションから項目を含めたり削除したりすることで、カテゴリの権限を許可または制限することができます。
 ---
 
 The Amplify CLI requires the below IAM policies for performing actions across all categories. You can grant or restrict category permissions by including or removing items from the `Action` section as appropriate. For example, if you wish to restrict operations on the `Auth` category you can remove any of the lines starting with `cognito`.
