@@ -4,7 +4,7 @@
 
 ```swift
 Amplify.DataStore.query(Post.self, paginate: .page(0, limit: 100)) {
-    // handle result
+    // result を処理
 }
 ```
 
@@ -14,7 +14,7 @@ Amplify.DataStore.query(Post.self, paginate: .page(0, limit: 100)) {
 
 ```swift
 let sink = Amplify.DataStore.query(Post.self, paginate: .page(0, limit: 100)).sink {
-    // handle result
+    // result を処理
 }
 ```
 
@@ -22,8 +22,8 @@ let sink = Amplify.DataStore.query(Post.self, paginate: .page(0, limit: 100)).si
 
 </amplify-block-switcher>
 
-The `paginate` arguments takes an object of type [`QueryPaginationInput`](https://aws-amplify.github.io/amplify-ios/docs/Structs/QueryPaginationInput.html). That object can be created with the following factory functions:
+`paginate` 引数は、 [`QueryPaginationInput`](https://aws-amplify.github.io/amplify-ios/docs/Structs/QueryPaginationInput.html)型のオブジェクトを取ります。 そのオブジェクトは以下のファクトリ関数で作成できます。
 
 - [`.page(_ page: UInt, limit: UInt)`](https://aws-amplify.github.io/amplify-ios/docs/Structs/QueryPaginationInput.html#/s:7Amplify20QueryPaginationInputV4page_5limitACSu_SutFZ): the page number (starting at `0`) and the page size, defined by `limit` (defaults to `100`)
-- [`.firstPage`](https://aws-amplify.github.io/amplify-ios/docs/Structs/QueryPaginationInput.html#/s:7Amplify20QueryPaginationInputV9firstPageACvpZ): an idiomatic shortcut to `.page(0, limit: 100)`
-- [`.firstResult`](https://aws-amplify.github.io/amplify-ios/docs/Structs/QueryPaginationInput.html#/s:7Amplify20QueryPaginationInputV11firstResultACvpZ): an idiomatic shortcut to `.page(0, limit: 1)`
+- [`.firstPage`](https://aws-amplify.github.io/amplify-ios/docs/Structs/QueryPaginationInput.html#/s:7Amplify20QueryPaginationInputV9firstPageACvpZ): `.page(0, limit: 100) への慣用的なショートカット`
+- [`.firstResult`](https://aws-amplify.github.io/amplify-ios/docs/Structs/QueryPaginationInput.html#/s:7Amplify20QueryPaginationInputV11firstResultACvpZ): `.page(0, limit: 1) の慣用的なショートカット`
