@@ -1,6 +1,6 @@
-## CANCEL API requests
+## APIリクエストをキャンセル
 
-You may cancel any request made through API category by keeping a reference to the promise returned.
+返されたpromiseへの参照を保持することで、APIカテゴリを通じて行われたリクエストをキャンセルできます。
 
 ```javascript
 const promise = API.get(myApiName, myPath, myInit);
@@ -22,15 +22,16 @@ try {
 API.cancel(promise, "my message for cancellation");
 ```
 
-You need to ensure that the promise returned from `API.get()` or any other API calls has not been modified. Typically async functions wrap the promise being returned into another promise. For example, the following will not work
+`API.get()` または他のAPI呼び出しから返されたpromiseが変更されていないことを確認する必要があります。 通常非同期関数は、他のプロミスに戻される Promise をラップします。例えば、次のようには動作しません。
 
 ```javascript
 async function makeAPICall() {
-    return API.get(myApiName, myPath, myInit);
+    return API. et(myApiName, myPath, myInit); 
+ }
 }
 const promise = makeAPICall();
 
 
-// The following will NOT cancel the request.
+// 以下はリクエストをキャンセルしません。
 API.cancel(promise, "my error message");
 ```
