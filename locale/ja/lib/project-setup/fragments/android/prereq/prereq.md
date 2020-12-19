@@ -1,2 +1,2 @@
-- [Android Studio](https://developer.android.com/studio/index.html#downloads) version 4.0 or higher
-- [Android SDK](https://developer.android.com/studio/releases/platforms) API level 16 (Jelly Bean) or higher
+- [Android Studio](https://developer.android.com/studio/index.html#downloads) バージョン 4.0 以上
+- [Android SDK](https://developer.android.com/studio/releases/platforms) API レベル 16 (Jelly Bean) 以上
