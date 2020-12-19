@@ -1,27 +1,27 @@
 ---
-title: Monorepo project structure
-description: Learn how to set up monorepo workflows with Amplify CLI
+title: Monorepoプロジェクトの構造
+description: Amplify CLI でmonorepoワークフローを設定する方法を学ぶ
 ---
 
-For a monorepo setup, it is recommended to have the Amplify CLI initialize a new backend at the root of on of your frontend projects. In a different frontend directory, you can run `amplify pull` and select the Amplify app you want to associate your frontend with.
+monorepoの設定では、Amplify CLIにフロントエンドプロジェクトのルートに新しいバックエンドを初期化させることをお勧めします。 別のフロントエンドディレクトリに `増幅プル` を実行し、フロントエンドに関連付けるAmplifyアプリを選択します。
 
-## Example
-In this guide, you will learn the recommended Amplify project setup for monorepo.
+## 例
+このガイドでは、monorepoの推奨Amplifyプロジェクトの設定について説明します。
 
-### Step 1: Set up your monorepo project
+### ステップ 1: Monorepoプロジェクトを設定
 
-To get started, have a monorepo setup with a couple of frontends. For our example, we'll have a monorepo setup with a React and an Angular app.
+始めるには、いくつかのフロントエンドでmonorepoをセットアップします。 この例では、React と Angular アプリケーションを使用した monorepo のセットアップを行います。
 
-This project contains the frontend code for an angular and react Todo app. The repository has the following structure:
+このプロジェクトには、角度と反応するTodoアプリのフロントエンドコードが含まれています。リポジトリには次の構造があります。
 ```
 > monorepo-amplify
   > react
   > angular
 ```
 
-### Step 2: Set up the Amplify backend
+### ステップ 2: Amplifyバックエンドを設定
 
-To set up a backend on AWS, we are going to use the Amplify CLI. The Amplify CLI is a command-line toolchain that simplifies provisioning AWS services.
+AWSでバックエンドを設定するには、Amplify CLIを使用します。 Amplify CLI は、AWS サービスのプロビジョニングを簡素化するコマンドラインツールチェーンです。
 
 <amplify-block-switcher>
 
@@ -36,7 +36,7 @@ npm install -g @aws-amplify/cli
 <amplify-block name="cURL (Mac and Linux)">
 
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
+curl -sL https://aws-amplify.github.io/anplify-cli/install | bash && $SHELL
 ```
 
 </amplify-block>
@@ -44,7 +44,7 @@ curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
 <amplify-block name="cURL (Windows)">
 
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install-win -o install.cmd && install.cmd
+curl -sL https://aws-amplify.github.io/anplify-cli/install-win -o install.cmd && install.cmd
 ```
 
 </amplify-block>
@@ -75,7 +75,7 @@ https://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html
 ? Please choose the profile you want to use #enter the profile you created
 ```
 
-Add api and database
+APIとデータベースを追加
 ```
 > amplify add api
 ? Please select from one of the below mentioned services: GraphQL
@@ -90,7 +90,7 @@ Add api and database
 ? Do you want to edit the schema now? (Y/n) Y
 ```
 
-Deploy to cloud
+クラウドにデプロイする
 ```
 amplify push
 ✔ Successfully pulled backend environment dev from the cloud.
@@ -117,23 +117,23 @@ Edit your schema at /Users/nsswamin/workspace/Experiments/monorepo-amplify/react
 ? Enter maximum statement depth [increase from default if your schema is deeply nested] 2
 ```
 
-### Step 3a: Integrate backend with React app
+### ステップ3a：バックエンドを React アプリと統合する
 
-Test the React app locally. Create a new to-do..
+React アプリケーションをローカルでテストします。新しいTo-Doを作成します。
 ```
 npm start
 ```
 
 To verify the Todos got created, run `amplify console`. This will open up your backend env in the Amplify Console. Choose the **API** tab and under Data Sources click **View** on the Todotable. You should see the to-do record you just created.
 
-### Step 3b: Integrate backend with Angular app
+### ステップ3b: Angularアプリとバックエンドを統合
 
-Now pivot to the Angular app.
+今Angularアプリにピボット。
 ```
 cd ../angular
 ```
 
-Let's reference the same backend in the Angular app. In order to do so, run the following commands
+Angularアプリで同じバックエンドを参照しましょう。そのためには以下のコマンドを実行してください。
 ```
 amplify pull
 ? Do you want to use an AWS profile? Yes
@@ -148,7 +148,7 @@ amplify pull
 ? Do you plan on modifying this backend? No
 ```
 
-Generate client-side code for your other frontend
+他のフロントエンドのクライアント側のコードを生成する
 
 ```
 cp ../react/src/graphql/schema.json .
