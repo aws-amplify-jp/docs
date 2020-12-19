@@ -1,3 +1,3 @@
-### Update with predicate
+### 述語で更新
 
-For such scenarios the `save()` API support an optional predicate which will be sent to the backend and executed against the remote state.
+このようなシナリオでは、 `save()` API はバックエンドに送信され、リモート状態に対して実行されるオプションの 述語をサポートします。
