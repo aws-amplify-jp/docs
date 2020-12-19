@@ -1,6 +1,6 @@
-## Set up the backend
+## バックエンドの設定
 
-Run `amplify add predictions`, then use the following answers:
+`を増幅して予測を追加する`を実行し、次の答えを使用します。
 
 ```console
 ? Please select from one of the categories below
@@ -17,13 +17,13 @@ Run `amplify add predictions`, then use the following answers:
   `Auth and Guest users`
 ```
 
-Run `amplify push` to create the resources in the cloud.
+クラウドにリソースを作成するには、 `増幅プッシュ` を実行します。
 
-## Working with the API
+## API の操作
 
 <amplify-block-switcher> <amplify-block name="Java">
 
-Open `MainActivity.java` and add the following code:
+`MainActivity.java` を開き、次のコードを追加します。
 
 ```java
 private final MediaPlayer mp = new MediaPlayer();
@@ -61,7 +61,7 @@ private void playAudio(InputStream data) {
 
 </amplify-block> <amplify-block name="Kotlin">
 
-Open `MainActivity.kt` and add the following code:
+`MainActivity.kt` を開き、次のコードを追加します。
 
 ```kotlin
 private val mp = MediaPlayer()
@@ -98,7 +98,7 @@ private fun playAudio(data: InputStream) {
 
 </amplify-block> <amplify-block name="RxJava">
 
-Open `MainActivity.java` and add the following code:
+`MainActivity.java` を開き、次のコードを追加します。
 
 ```java
 private final MediaPlayer mp = new MediaPlayer();
@@ -138,4 +138,4 @@ private void playAudio(InputStream data) {
 
 This example works on all supported versions of Android. Android API 23 added support for [`MediaDataSource`](https://developer.android.com/reference/android/media/MediaDataSource), which allows for `InputStream` from Amplify to be read directly without writing to a file.
 
-As a result of running this code, you will hear audio of the text being emitted from your device.
+このコードを実行すると、デバイスから発せられたテキストの音声が聞こえます。
