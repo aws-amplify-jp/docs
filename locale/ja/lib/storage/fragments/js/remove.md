@@ -1,6 +1,6 @@
-Delete stored data from the storage bucket.
+ストレージバケットから保存されたデータを削除します。
 
-## Public level remove
+## パブリックレベルの削除
 
 ```javascript
 Storage.remove('test.txt')
@@ -8,7 +8,7 @@ Storage.remove('test.txt')
     .catch(err => console.log(err));
 ```
 
-## Protected level remove
+## 保護されたレベル削除
 
 ```javascript
 Storage.remove('test.txt', { level: 'protected' })
@@ -16,7 +16,7 @@ Storage.remove('test.txt', { level: 'protected' })
     .catch(err => console.log(err));
 ```
 
-## Private level remove
+## プライベートレベル削除
 
 ```javascript
 Storage.remove('test.txt', { level: 'private' })
