@@ -1,4 +1,4 @@
-To make it easy to upload and download objects from Amazon S3, we provide a TransferUtility component with built-in support for background transfers, progress tracking, and MultiPart uploads. The Transfer Utility component set includes a Service called the TransferService, which monitors network connectivity changes. When the device goes offline, the TransferService will pause all ongoing transfers; when the device is back online, the Transfer Service will resume paused transfers.
+Amazon S3からオブジェクトを簡単にアップロードおよびダウンロードできるようにします。 TransferUtilityコンポーネントには、背景転送、進捗管理、MultiPartアップロードのサポートが組み込まれています。 転送ユーティリティコンポーネントセットには、ネットワーク接続の変更を監視するTransferServiceというサービスが含まれています。 デバイスがオフラインになると、転送サービスは継続中のすべての転送を一時停止します。デバイスがオンラインになった場合、転送サービスは一時停止を再開します。
 
 
 Starting with version 2.7.0, the `TransferService` will not be automatically started or stopped by `TransferUtility`. You have to start `TransferService` manually from your application. A recommended way is to start the service upon Application startup, by including the following line in the `onCreate` method of your app's Application class.
@@ -7,7 +7,7 @@ Starting with version 2.7.0, the `TransferService` will not be automatically sta
 getApplicationContext().startService(new Intent(getApplicationContext(), TransferService.class));
 ```
 
-This section explains how to implement upload and download functionality and a number of additional storage use cases.
+このセクションでは、アップロードとダウンロード機能の実装方法と、追加のストレージ使用事例について説明します。
 
 <amplify-callout>
 
@@ -15,11 +15,11 @@ This section explains how to implement upload and download functionality and a n
 
 </amplify-callout>
 
-## Upload a File
+## ファイルをアップロード
 
 The following example shows how to use the TransferUtility to upload a file. Instantiate the TransferUtility object using the provided TransferUtility builder function. Use the `AWSMobileClient` to get the `AWSConfiguration` and `AWSCredentialsProvider` to pass into the builder. See [Authentication](~/sdk/auth/getting-started.md) for more details.
 
-The TransferUtility checks the size of the file being uploaded and automatically switches over to using multi-part uploads if the file size exceeds 5 MB.
+TransferUtilityはアップロードされるファイルのサイズをチェックし、ファイルサイズが5MBを超える場合、マルチパートアップロードに自動的に切り替わります。
 
 ```java
 import android.app.Activity;
@@ -129,11 +129,11 @@ public class MainActivity extends Activity {
 }
 ```
 
-If you run this code, login to your AWS console, and go to the S3 service, you'll see a bucket and file structure like this (in this example the friendly name specified was `dev` and the bucket name was `storagedemo`):
+このコードを実行する場合は、AWS コンソールにログインし、S3 サービスに進みます。 このような Bucket とファイル構造が表示されます(この例では、フレンドリー名は `dev` で、Bucket 名は `storageemo` でした):
 
-![Image](~/images/SampleStorageS3.png)
+![画像](~/images/SampleStorageS3.png)
 
-## Download a File
+## ファイルをダウンロード
 
 The following example shows how to use the TransferUtility to download a file. Instantiate the TransferUtility object using the provided TransferUtility builder function. Use the `AWSMobileClient` to get the `AWSConfiguration` and `AWSCredentialsProvider` to pass into the builder. See [Authentication](~/sdk/auth/getting-started.md) for more details.
 
@@ -234,14 +234,14 @@ public class MainActivity extends Activity {
 }
 ```
 
-## Track Transfer Progress
+## 転送の進行状況を追跡する
 
-With the TransferUtility, the `download` and `upload` methods return a `TransferObserver` object. This object gives access to:
+TransferUtilityでは、 `ダウンロード` と `アップロード` メソッドは `TransferObserver` オブジェクトを返します。このオブジェクトは以下にアクセスできます:
 
-1.  The transfer state, as an `enum`
-2.  The total bytes that have been transferred so far
-3.  The total bytes remaining to transfer
-4.  A unique ID that you can use to keep track of each transfer
+1.  `列挙型`としての転送状態
+2.  これまで転送された総バイト数
+3.  転送する残りのバイト数
+4.  送金の追跡に使用できるユニークなID
 
 Given the transfer ID, the `TransferObserver` object can be retrieved from anywhere in your app, even if the app was terminated during a transfer. It also lets you create a `TransferListener`, which will be updated on changes to transfer state, progress, and when an error occurs.
 
@@ -273,118 +273,118 @@ transferObserver.setTransferListener(new TransferListener(){
 The transfer ID can be retrieved from the `TransferObserver` object that is returned from the upload or download function.  You can also query for `TransferObservers` using the `getTransfersWithType(transferType)` or the `getTransfersWithTypeAndState(transferType, transferState)` method.
 
 ```java
-// Gets id of the transfer.
+// 転送の id を取得します。
 int transferId = transferObserver.getId();
 ```
 
-## Pause a Transfer
+## 送金を一時停止する
 
-Transfers can be paused using the `pause(transferId)` method. If your app is terminated, crashes, or loses Internet connectivity, transfers are automatically paused.
+転送は `pause(transferId)` メソッドを使用して一時停止できます。アプリが終了、クラッシュ、またはインターネット接続が失われた場合、転送は自動的に一時停止されます。
 
-To pause a single transfer:
+転送を一時停止するには:
 ```java
 transferUtility.pause(idOfTransferToBePaused);
 ```
 
-To pause all uploads:
+すべてのアップロードを一時停止するには:
 
 ```java
 transferUtility.pauseAllWithType(TransferType.UPLOAD);
 ```
 
-To pause all downloads:
+すべてのダウンロードを一時停止するには:
 
 ```java
 transferUtility.pauseAllWithType(TransferType.DOWNLOAD);
 ```
 
-To pause all transfers of any type:
+任意のタイプのすべての送金を一時停止するには:
 
 ```java
 transferUtility.pauseAllWithType(TransferType.ANY);
 ```
 
-## Resume a Transfer
+## 転送を再開
 
-In the case of a loss in network connectivity, transfers will automatically resume when network connectivity is restored. If the app crashed or was terminated by the operating system, transfers can be resumed with the `resume(transferId)` method.
+ネットワーク接続が失われた場合、ネットワーク接続が復元されると転送は自動的に再開されます。 アプリがクラッシュまたはオペレーティングシステムによって終了した場合、 `resume(transferId)` メソッドで転送を再開できます。
 
 
-To resume a single transfer:
+転送を再開するには:
 
 ```java
 transferUtility.resume(idOfTransferToBeResumed);
 ```
-To resume all uploads:
+すべてのアップロードを再開するには:
 
 ```java
 transferUtility.resumeAllWithType(TransferType.UPLOAD);
 ```
 
-To resume all downloads:
+すべてのダウンロードを再開するには:
 
 ```java
 transferUtility.resumeAllWithType(TransferType.DOWNLOAD);
 ```
 
-To resume all transfers of any type:
+すべてのタイプの転送を再開するには:
 
 ```java
 transferUtility.resumeAllWithType(TransferType.ANY);
 ```
 
-## Cancel a Transfer
+## 送金をキャンセル
 
-To cancel an upload, call cancel() or cancelAllWithType() on the `TransferUtility` object.
+アップロードをキャンセルするには、 `TransferUtility` オブジェクトのcancel()またはcancelAllWithType()を呼び出します。
 
-To cancel a single transfer, use:
+単一の送金をキャンセルするには、以下を使用してください:
 
 ```java
 
 transferUtility.cancel(idToBeCancelled);
 ```
 
-To cancel all transfers of a certain type, use:
+特定の種類のすべての送金をキャンセルするには、以下を使用してください:
 
 ```java
 
 transferUtility.cancelAllWithType(TransferType.DOWNLOAD);
 ```
 
-## Background Transfers
+## 背景の転送
 
-The SDK uploads and downloads objects from Amazon S3 using background threads. These transfers will continue to run regardless of whether your app is running in the foreground or background.
+SDK はバックグラウンドスレッドを使用して Amazon S3 からオブジェクトをアップロードおよびダウンロードします。 これらの転送は、アプリがフォアグラウンドで実行されているかバックグラウンドで実行されているかにかかわらず、引き続き実行されます。
 
-## Long-running Transfers
+## 長時間稼動している送金
 
-When you want your app to perform long-running transfers in the background, you can initiate the transfers from a background service that you can implement within your app. A recommended way to use a service to initiate the transfer is demonstrated in the [Transfer Utility sample application](https://github.com/awslabs/aws-sdk-android-samples/tree/master/S3TransferUtilitySample).
+アプリにバックグラウンドで長時間の転送を実行させたい場合 アプリ内で実装できるバックグラウンドサービスから送金を開始できます。 転送を開始するためにサービスを使用する推奨方法は、 [Transfer Utilityサンプルアプリケーション](https://github.com/awslabs/aws-sdk-android-samples/tree/master/S3TransferUtilitySample) で示されています。
 
-## Supporting TransferService on Oreo and above
+## Oreo以上のTransferWiseをサポートしています
 
 `TransferNetworkLossHandler`, a broadcast receiver that listens for network connectivity changes is introduced in `2.11.0`. `TransferNetworkLossHandler` pauses the on-going transfers when the network goes offline and resumes the transfers that were paused when the network comes back online. `TransferService` registers the `TransferNetworkLossHandler` when the service is created and de-registers the handler when the service is destroyed.
 
-* `TransferService` will be moved to the foreground state when the device is running Android Oreo (API Level 26) and above.
-  * Transitioning to the foreground state requires a valid on-going `Notification` object, identifier for on-going notification and the flag that determines the ability to remove the on-going notification when the service transitions out of foreground state. If a valid notification object is not passed in, the service will not be transitioned into the foreground state.
-  * The `TransferService` can now be started using `startForegroundService` method to move the service to foreground state. The service can be invoked in the following way to transition the service to foreground state.
+* `TransferService` は、Android Oreo (API レベル 26) 以上を実行している場合、フォアグラウンドに移動されます。
+  * フォアグラウンド状態への移行には、有効な `通知` オブジェクトが必要です。 継続中の通知の識別子と、サービスがフォアグラウンド状態から移行中の通知を削除する機能を決定するフラグ。 有効な通知オブジェクトが渡されない場合、サービスはフォアグラウンド状態に移行されません。
+  * `TransferService` は、 `startForegroundService` メソッドを使用してサービスをフォアグラウンド状態に移動できるようになりました。 サービスは、サービスをフォアグラウンド状態に移行する次の方法で呼び出すことができます。
 
 ```java
 Intent tsIntent = new Intent(getApplicationContext(), TransferService.class);
 tsIntent.putExtra(TransferService.INTENT_KEY_NOTIFICATION, <notification-object>);
 tsIntent.putExtra(TransferService.INTENT_KEY_NOTIFICATION_ID, <notification-id>);
-tsIntent.putExtra(TransferService.INTENT_KEY_REMOVE_NOTIFICATION, <remove-notification-when-service-stops-foreground>);
-getApplicationContext().startForegroundService(tsIntent);
+tsIntent.putExtra(TransferService.INTENT_KE_REMOVE_NOTIFICATION, <remove-notification-when-service-stops-foreground>);
+getApplicationContext().startgroundService(tsent);
 ```
 
-## Supporting Unicode characters in key-names
+## Unicode文字をキー名でサポート
 
-**Upload/download objects**
+**オブジェクトのアップロード/ダウンロード**
 
 * Since `2.4.0` version of the SDK, the key name containing characters that require special handling are URL encoded and escaped `( space, %2A, ~, /, :, ', (, ), !, [, ] )` by the `AmazonS3Client`, after which the AWS Android Core Runtime encodes the URL resulting in double encoding of the key name.
 
 * Starting `2.11.0`, the additional layer of encoding and escaping done by `AmazonS3Client` is removed. The key name will not be encoded and escaped by `AmazonS3Client`. Now, the key name that is given to `AmazonS3Client` or `TransferUtility` will appear on the Amazon S3 console as is.
 
-**List Objects**
+**オブジェクトの一覧**
 
-* When a S3 bucket contains objects with key names containing characters that require special handling, and since the SDK has an XML parser,  (XML 1.0 parser) which cannot parse some characters, the SDK is required to request that Amazon S3 encode the keys in the response. This can be done by passing in `url` as `encodingType` in the `ListObjectsRequest`.
+* S3 バケットに 特別な処理が必要な文字を含むキー名のオブジェクトが含まれている場合 そしてSDKにはXMLパーサ(XML 1)があるので。 一部の文字を解析できないパーサー) SDKは、Amazon S3がレスポンス内のキーをエンコードするよう要求する必要があります。 これは `ListObjectsRequest` 内の `encodingType` として `url` を渡すことで行うことができます。
 
 ```java
 AmazonS3Client s3 = new AmazonS3Client(credentials);
@@ -395,10 +395,10 @@ final ObjectListing objectListing = s3.listObjects(
 
 * Since `2.4.0`, there was a bug where the SDK did not decode the key names which are encoded by S3 when `url` is requested as the `encodingType`. This is fixed in `2.11.0`, where the SDK will decode the key names in the `ListObjectsResponse` sent by S3.
 
-* If you have objects in S3 bucket that has a key name containing characters that require special handling, you need to pass the `encodingType` as `url` in the `ListObjectsRequest`.
+* S3 バケット内に特別な処理が必要な文字を含むキー名のオブジェクトがある場合。 `listObjectsRequest` 内の `url` として `encodingType` を渡す必要があります。
 
 
-## Transfer with Object Metadata
+## オブジェクトメタデータで転送
 
 
 To upload a file with metadata, use the `ObjectMetadata` object. Create a `ObjectMetadata` object and add in the metadata headers and pass it to the upload function.
@@ -416,7 +416,7 @@ userMetadata.put("myKey","myVal");
 myObjectMetadata.setUserMetadata(userMetadata);
 ```
 
-Then, upload an object along with its metadata:
+次に、メタデータと一緒にオブジェクトをアップロードします。
 
 ```java
 
@@ -430,33 +430,33 @@ TransferObserver observer = transferUtility.upload(
 
 To download the metadata, use the S3 `getObjectMetadata` method. See the [API Reference](http://docs.aws.amazon.com/AWSAndroidSDK/latest/javadoc/com/amazonaws/services/s3/AmazonS3Client.html#getObjectMetadata%28com.amazonaws.services.s3.model.GetObjectMetadataRequest%29) and [Object Key and Metadata](https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html) for more information.
 
-## Transfer Utility Options
+## 転送ユーティリティオプション
 
-You can use the `TransferUtilityOptions` object to customize the operations of the TransferUtility.
+`TransferUtilityOptions` オブジェクトを使用して、TransferUtilityの操作をカスタマイズできます。
 
 ### TransferThreadPoolSize
-This parameter allows you to specify the number of transfers that can run in parallel. By increasing the number of threads, you will be able to increase the number of parts of a multi-part upload that will be uploaded in parallel. By default, this is set to 2 * (N + 1), where N is the number of available processors on the mobile device. The minimum allowed value is 2.
+このパラメーターでは、並列に実行できる転送数を指定できます。 スレッドの数を増やすことで 並行してアップロードされるマルチパートアップロードのパーツ数を増やすことができます。 デフォルトでは、これは 2 * (N + 1) に設定されており、N はモバイルデバイスで利用可能なプロセッサの数です。 最小許容値は 2 です。
 
 ```java
-TransferUtilityOptions options = new TransferUtilityOptions();
+TransferUtilityOptions = new TransferUtilityOptions();
 options.setTransferThreadPoolSize(8);
 
 TransferUtility transferUtility = TransferUtility.builder()
-    // Pass-in S3Client, Context, AWSConfiguration/DefaultBucket Name
+    // Passin S3Client, Context, AWSConfiguration/DefaultBucket Name
     .transferUtilityOptions(options)
     .build();
 ```
 
 ### TransferNetworkConnectionType
-The `TransferNetworkConnectionType` option allows you to restrict the type of network connection (WiFi / Mobile / ANY) over which the data can be transferred to Amazon S3.
+`TransferNetworkConnectionType` オプションを使用すると、Amazon S3 にデータを転送できるネットワーク接続の種類(WiFi / モバイル / ANY)を制限できます。
 
 ```java
-TransferUtilityOptions options = new TransferUtilityOptions(10, TransferNetworkConnectionType.WIFI);
+TransferUtilityOptions = new TransferUtilityOptions(10, TransferNetworkConnectionType.WIFI);
 
 TransferUtility transferUtility = TransferUtility.builder()
-    // Pass-in S3Client, Context, AWSConfiguration/DefaultBucket Name
+    // Passin S3Client, Content, AWSConfiguration/DefaultBucket Name
     .transferUtilityOptions(options)
     .build();
 ```
 
-By specifying `TransferNetworkConnectionType.WIFI` , data transfers to and from S3 will only happen when the device is on a WiFi connection
+`TransferNetworkConnectionType.WIFI` を指定すると、デバイスが WiFi 接続されている場合にのみ、S3 との間のデータ転送が行われます。
