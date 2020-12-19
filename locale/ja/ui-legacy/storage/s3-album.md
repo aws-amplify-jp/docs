@@ -1,6 +1,6 @@
 ---
-title: S3 Album
-description: S3 Album UI Component
+title: S3 アルバム
+description: S3アルバムUIコンポーネント
 filterKey: framework
 ---
 
