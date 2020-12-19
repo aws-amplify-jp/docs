@@ -1,28 +1,28 @@
-## Recording Custom Events
+## カスタムイベントの記録
 
-To record custom events call the `record` method:
+カスタムイベントを記録するには、 `レコード` メソッドを呼び出します。
 
 ```javascript
 Analytics.record({ name: 'albumVisit' });
 ```
 
-## Record a Custom Event with Attributes
+## 属性を持つカスタムイベントを記録
 
 The `record` method lets you add additional attributes to an event. For example, to record *artist* information with an *albumVisit* event:
 
 ```javascript
 Analytics.record({
     name: 'albumVisit', 
-    // Attribute values must be strings
-    attributes: { genre: '', artist: '' }
+    // 属性値は文字列でなければなりません
+    属性: { genre: '', artist: '' }
 });
 ```
 
-Attribute values must have the type `String` or be an array of strings.
+属性値は `String` 型または文字列の配列でなければなりません。
 
-## Record Engagement Metrics
+## レコードエンゲージメントメトリック
 
-Data can also be added to an event:
+イベントにデータを追加することもできます。
 
 ```javascript
 Analytics.record({
@@ -32,11 +32,11 @@ Analytics.record({
 });
 ```
 
-Metric values must be a `Number` type such as a float or integer.
+メトリック値は、float や integer のような `数値` 型でなければなりません。
 
-## Disable Analytics
+## 分析を無効にする
 
-You can also disable or re-enable Analytics:
+解析の無効化または再度有効化することもできます。
 ```javascript
 // to disable Analytics
 Analytics.disable();
