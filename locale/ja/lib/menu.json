@@ -1,21 +1,21 @@
 {
   "items": [
     "project-setup",
-    "analytics",
+    "分析",
     "graphqlapi",
     "restapi",
-    "auth",
+    "認証する",
     "datastore",
-    "interactions",
-    "predictions",
+    "相互作用",
+    "予測",
     "pubsub",
-    "push-notifications",
-    "storage",
+    "push-notification",
+    "ストレージ",
     "xr",
-    "utilities",
-    "client-configuration",
-    "debugging",
-    "info",
+    "ユーティリティ",
+    "クライアント設定",
+    "デバッグ",
+    "情報",
     "ssr"
   ]
 }
