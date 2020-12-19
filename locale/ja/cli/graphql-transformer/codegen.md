@@ -1,15 +1,15 @@
 ---
 title: Client code generation
-description: Amplify's codegen capabilities generates native code for iOS and Android, as well as the generation of types for Flow and TypeScript. It can also generate GraphQL statements(queries, mutations, and subscriptions).
+description: Amplifyのコードジェネレーション機能は、iOSとAndroid用のネイティブコードを生成し、FlowとTypeScript用の型を生成します。 GraphQL ステートメント(クエリ、変更、およびサブスクリプション)を生成することもできます。
 ---
 
-Codegen helps you generate native code for iOS and Android, as well as the generation of types for Flow and TypeScript. It can also generate GraphQL statements (queries, mutations, and subscriptions) so that you don't have to hand code them.
+Codegen は、iOS および Android 用のネイティブコードの生成、および Flow と TypeScript 用の型の生成に役立ちます。 また、GraphQL ステートメント(クエリ、変更、およびサブスクリプション)を生成し、コードを手渡す必要がないようにすることもできます。
 
-Codegen `add` workflow triggers automatically when an AppSync API is pushed to the cloud. You will be prompted if you want to configure codegen when an AppSync API is created and if you opt-in for codegen, subsequent pushes prompt you if they want to update the generated code after changes get pushed to the cloud.
+Codegen `` のワークフローは、AppSync API がクラウドにプッシュされると自動的にトリガーされます。 AppSync APIが作成されたときとcodegenを選択した場合は、コードジェネを設定するように求められます。 変更がクラウドにプッシュされた後に生成されたコードを更新するように求められます。
 
 When a project is configured to generate code with codegen, it stores all the configuration `.graphqlconfig.yml` file in the root folder of your project. When generating types, codegen uses GraphQL statements as input. It will generate only the types that are being used in the GraphQL statements.
 
-## Statement depth
+## ステートメントの深さ
 
 In the below schema there are connections between `Comment` -> `Post` -> `Blog` -> `Post` -> `Comments`. When generating statements codegen has a default limit of 2 for depth traversal. But if you need to go deeper than 2 levels you can change the max-depth parameter either when setting up your codegen or by passing  `--max-depth` parameter to `codegen`
 
@@ -67,120 +67,120 @@ query GetComment($id: ID!) {
 }
 ```
 
-### General Usage
+### 一般的な使い方
 
-### amplify add codegen
+### 増幅してコードゲンを追加
 
 ```bash
-amplify add codegen
+増幅してコードゲンを追加
 ```
 
 The `amplify add codegen` allows you to add AppSync API created using the AWS console. If you have your API is in a different region then that of your current region, the command asks you to choose the region. If you are adding codegen outside of an initialized amplify project, provide your introspection schema named `schema.json` in the same directory that you make the add codegen call from. __Note__: If you use the --apiId flag to add an externally created AppSync API, such as one created in the AWS console, you will not be able to manage this API from the Amplify CLI with commands such as amplify api update when performing schema updates. You cannot add an external AppSync API when outside of an initialized project.
 
-### amplify configure codegen
+### 設定コードを増幅する
 
 ```bash
-amplify configure codegen
+設定コードを増幅する
 ```
 
-The `amplify configure codegen` command allows you to update the codegen configuration after it is added to your project. When outside of an initialized project, you can use this to update your project configuration as well as the codegen configuration.
+`amplify configure codegen` コマンドを使用すると、プロジェクトにコードジェネレーションを追加後に更新できます。 初期化されたプロジェクト以外では、これを使用して、プロジェクトの構成とコードジェネレーションの構成を更新できます。
 
-#### amplify codegen statements
+#### codegenステートメントを増幅する
 
 ```bash
-amplify codegen statements [--nodownload] [--max-depth <int>]
+codegen ステートメントを増幅する [--nodownload] [--max-depth <int>]
 ```
 
 The `amplify codegen statements` command  generates GraphQL statements(queries, mutation and subscription) based on your GraphQL schema. This command downloads introspection schema every time it is run, but it can be forced to use previously downloaded introspection schema by passing `--nodownload` flag.
 
-#### amplify codegen types
+#### コード原型を増幅する
 
 ```bash
-amplify codegen types
+コード原型を増幅する
 ```
 
 The `amplify codegen types [--nodownload]` command generates GraphQL `types` for Flow and typescript and Swift class in an iOS project. This command downloads introspection schema every time it is run, but it can be forced to use previously downloaded introspection schema by passing `--nodownload` flag.
 
-#### amplify codegen
+#### コードゲンを増幅する
 
 ```bash
-amplify codegen [--max-depth <int>]
+ampify codegen [--max-depth <int>]
 ```
 
 The `amplify codegen [--nodownload]` generates GraphQL `statements` and `types`. This command downloads introspection schema every time it is run but it can be forced to use previously downloaded introspection schema by passing `--nodownload` flag. If you are running codegen outside of an initialized amplify project, the introspection schema named `schema.json` must be in the same directory that you run amplify codegen from. This command will not download the introspection schema when outside of an amplify project - it will only use the introspection schema provided.
 
-## Workflows
+## ワークフロー
 
-The design of codegen functionality provides mechanisms to run at different points in your app development lifecycle, including when you create or update an API as well as independently when you want to just update the data fetching requirements of your app but leave your API alone. It additionally allows you to work in a team where the schema is updated or managed by another person. Finally, you can also include the codegen in your build process so that it runs automatically (such as from in Xcode).
+コードジェネレーション機能の設計は、アプリケーション開発のライフサイクルのさまざまな点で実行するメカニズムを提供します。 例えば、アプリケーションのデータ取得要件を更新するだけでなく、API を単独で作成または更新する場合も含まれます。 さらに、スキーマが他のユーザーによって更新または管理されるチームで作業することができます。 最後に、(Xcode などからのように) 自動的に実行されるように、ビルドプロセスにコード生成を含めることもできます。
 
-**Flow 1: Create API then automatically generate code**
+**フロー 1: API を作成し、自動的にコードを生成します**
 
 ```bash
 amplify init
-amplify add api (select GraphQL)
-amplify push
+increify add api (GraphQLを選択)
+push
 ```
 
 You’ll see questions as before, but now it will also automatically ask you if you want to generate GraphQL statements and do codegen. It will also respect the `./app/src/main` directory for Android projects. After the AppSync deployment finishes the Swift file will be automatically generated (Android you’ll need to kick off a [Gradle Build step](#androiduse)) and you can begin using in your app immediately.
 
-**Flow 2: Modify GraphQL schema, push, then automatically generate code**
+**フロー 2: GraphQL スキーマを変更し、プッシュして自動的にコードを生成**
 
-During development, you might wish to update your GraphQL schema and generated code as part of an iterative dev/test cycle. Modify & save your schema in `./amplify/backend/api/<apiname>/schema.graphql` then run:
-
-```bash
-amplify push
-```
-
-Each time you will be prompted to update the code in your API and also ask you if you want to run codegen again as well, including regeneration of the GraphQL statements from the new schema.
-
-**Flow 3: No API changes, just update GraphQL statements & generate code**
-
-One of the benefits of GraphQL is the client can define it's data fetching requirements independently of the API. Amplify codegen supports this by allowing you to modify the selection set (e.g. add/remove fields inside the curly braces) for the GraphQL statements and running type generation again. This gives you fine-grained control over the network requests that your application is making. Modify your GraphQL statements (default in the `./graphql` folder unless you changed it) then save the files and run:
+開発中に、GraphQLスキーマと生成されたコードを反復開発/テストサイクルの一部として更新したい場合があります。 変更 & スキーマを `./amplify/backend/api/<apiname>/schema.graphql` で保存してから実行します。
 
 ```bash
-amplify codegen types
+push を増幅する
 ```
-A new updated Swift file will be created (or run Gradle Build on Android for the same). You can then use the updates in your application code.
 
-**Flow 4: Shared schema, modified elsewhere (e.g. console or team workflows)**
+API内のコードを更新するように求められるたびに、コード生成を再実行するかどうかも尋ねられます。 新しいスキーマからのGraphQL文の再生成を含む。
 
-Suppose you are working in a team and the schema is updated either from the AWS AppSync console or on another system. Your types are now out of date because your GraphQL statement was generated off an outdated schema. The easiest way to resolve this is to regenerate your GraphQL statements, update them if necessary, and then generate your types again. Modify the schema in the console or on a separate system, then run:
+**フロー 3: API の変更はありません。GraphQL 文を更新するだけです & コードを生成します**
+
+GraphQLの利点の1つは、クライアントがAPIとは独立してデータ取得要件を定義できることです。 Amplify codegen は選択セットを変更することでこれをサポートします(例: GraphQLステートメントと実行中型生成のための中括弧内のフィールドの追加/削除)。 これにより、アプリケーションが行っているネットワーク要求を詳細に制御できます。 GraphQL ステートメントを変更し(変更されていない限り、 `./graphql` フォルダ内の既定)、ファイルを保存して実行します。
 
 ```bash
-amplify codegen statements
-amplify codegen types
+コード原型を増幅する
+```
+新しい更新されたSwiftファイルが作成されます(または同じためにAndroid上でGradle Buildを実行します)。 その後、アップデートをアプリケーションコードで使用できます。
+
+**フロー 4: 共有スキーマ、他の場所で変更されました (例: コンソールワークフローまたはチームワークフロー)**
+
+チーム内で作業していて、AWS AppSync コンソールまたは別のシステムからスキーマが更新されたとします。 時代遅れのスキーマからGraphQLステートメントが生成されたため、タイプが古くなっています。 これを解決する最も簡単な方法は、GraphQL文を再生成し、必要に応じて更新し、タイプを再度生成することです。 コンソールまたは別のシステムでスキーマを変更し、次を実行します。
+
+```bash
+codegenステートメントを増幅する
+コードgenタイプを増幅する
 ```
 
-You should have newly generated GraphQL statements and Swift code that matches the schema updates. If you ran the second command your types will be updated as well. Alternatively, if you run `amplify codegen` alone it will perform both of these actions.
+スキーマの更新に一致する新たに生成されたGraphQL文とSwiftコードが必要です。 2番目のコマンドを実行すると、型も同様に更新されます。 あるいは、 `増幅コードジェネレーション` だけを実行すると、これらの両方のアクションが実行されます。
 
-**Flow 5: Introspection Schema outside of an initialized project**
+**フロー 5: 初期化されたプロジェクトの外側のイントロスペクションスキーマ**
 
 If you would like to generate statements and types without initializing an amplify project, you can do so by providing your introspection schema named `schema.json` in your project directory and adding codegen from the same directory. To download your introspection schema from an AppSync api, in the AppSync console go to the schema editor and under "Export schema" choose `schema.json`.
 
 ```bash
-amplify add codegen
+増幅してコードゲンを追加
 ```
 
-Once codegen has been added you can update your introspection schema, then generate statements and types again without re-entering your project information.
+コードジェネレーションが追加されると、イントロスペクションスキーマを更新し、プロジェクト情報を再入力せずにステートメントとタイプを再度生成できます。
 
 ```bash
-amplify codegen
+コードゲンを増幅する
 ```
 
-You can update your project and codegen configuration if required.
+必要に応じて、プロジェクトとコードジェネレーションの構成を更新できます。
 
 ```bash
-amplify configure codegen
-amplify codegen
+codegen
+の設定を増幅する
 ```
 
-## iOS usage
+## iOSの使用法
 
-This section will walk through the steps needed to take an iOS project written in Swift and add Amplify to it along with a GraphQL API using AWS AppSync. If you are a first time user, we recommend starting with a new Xcode project and a single View Controller.
+このセクションでは、Swiftで記述されたiOSプロジェクトを取得し、AmplifyとAWS AppSyncを使用したGraphQL APIを追加するために必要な手順を説明します。 初めて使用する場合は、新しい Xcode プロジェクトと単一の View Controller を使用することをお勧めします。
 
-### Setup
+### セットアップ
 
-After completing the [Amplify Getting Started](~/start/start.md) navigate in your terminal to an Xcode project directory and run the following:
+[Amplify Getting Started](~/start/start.md) を完了した後、端末で Xcode プロジェクト・ディレクトリに移動し、以下を実行します:
 
 ```bash
 amplify init       ## Select iOS as your platform
@@ -192,10 +192,10 @@ The `add api` flow above will ask you some questions, like if you already have a
 
 Since you added an API the `amplify push` process will automatically prompt you to enter the codegen process and walk through the configuration options. Accept the defaults and it will create a file named `API.swift` in your root directory (unless you choose to name it differently) as well as a directory called `graphql` with your documents. You also will have an `awsconfiguration.json` file that the AppSync client will use for initialization.
 
-Next, modify your **Podfile** with a dependency of the AWS AppSync SDK:
+次に、AWS AppSync の SDK の依存性を使用して **Podfile** を変更します。
 
 ```ruby
-target 'PostsApp' do
+ターゲット 'PostsApp' do
   use_frameworks!
   pod 'AWSAppSync'
 end
@@ -203,7 +203,7 @@ end
 
 Run `pod install` from your terminal and open up the `*.xcworkspace` Xcode project. Add the `API.swift` and `awsconfiguration.json` files to your project (_File->Add Files to ..->Add_) and then build your project ensuring there are no issues.
 
-### Initialize the AppSync client
+### AppSync クライアントを初期化
 Inside your application delegate is the best place to initialize the AppSync client. The `AWSAppSyncServiceConfig` represents the configuration information present in awsconfiguration.json file. By default, the information under the `Default` section will be used. You will need to create an `AWSAppSyncClientConfiguration` and `AWSAppSyncClient` like below:
 
 ```swift
@@ -249,7 +249,7 @@ class Todos: UIViewController{
 }
 ```
 
-### Queries
+### クエリ
 Now that the backend is configured, you can run a GraphQL query. The syntax is `appSyncClient?.fetch(query: <NAME>Query() {(result, error)})` where `<NAME>` comes from the GraphQL statements that `amplify codegen types` created. For example, if you have a `ListTodos` query your code will look like the following:
 
 ```swift
@@ -263,15 +263,15 @@ appSyncClient?.fetch(query: ListTodosQuery())  { (result, error) in
 }
 ```
 
-Optionally, you can set a cache policy on the query like so:
+必要に応じて、次のようにクエリのキャッシュポリシーを設定できます。
 
 ```swift
-appSyncClient?.fetch(query: ListTodosQuery(), cachePolicy: .returnCacheDataAndFetch)  { (result, error) in
+appSyncClient?.fetch(query: ListTodosQuery(), cachePolicy: .returnCacheDataAndFetch) { (result, error)
 ```
 
-`returnCacheDataAndFetch` will pull results from the local cache first before retrieving data over the network. This gives a snappy UX as well as offline support.
+`returnCacheDataAndFetch` はネットワーク経由でデータを取得する前に、最初にローカルキャッシュから結果を取得します。 これにより、オフラインのサポートと同様に、スムーズなUXを提供します。
 
-### Mutations
+### <unk>
 For adding data now you will need to run a GraphQL mutation. The syntax `appSyncClient?.perform(mutation: <NAME>Mutation() {(result, error)})` where `<NAME>` comes from the GraphQL statements that `amplify codegen types` created. However, most GraphQL schemas organize mutations with an `input` type for maintainability, which is what the Amplify CLI does as well. Therefore you'll pass this as a parameter called `input` as in the example below:
 
 ```swift
@@ -288,8 +288,8 @@ appSyncClient?.perform(mutation: CreateTodoMutation(input: mutationInput)) { (re
 }
 ```
 
-### Subscriptions
-Finally it's time to setup a subscription to realtime data. The syntax `appSyncClient?.subscribe(subscription: <NAME>Subscription() {(result, transaction, error)})` where `<NAME>` comes from the GraphQL statements that `amplify codegen types` created.
+### サブスクリプション
+最後に、リアルタイムデータのサブスクリプションを設定します。構文 `appSyncClient?。 ubscribe(subscribe: <code> Subscription() {(result, transaction) error)}) <code> where <NAME>` `<NAME>` は、 `増幅コード生成型` が作成したGraphQL文に由来します。
 
 ```swift
 // Subscription notifications will only be delivered as long as this is retained
@@ -311,7 +311,7 @@ do {
 
 Subscriptions can also take `input` types like mutations, in which case they will be subscribing to particular events based on the input. Learn more about Subscription arguments in AppSync [here](https://docs.aws.amazon.com/appsync/latest/devguide/real-time-data.html).
 
-### Complete Sample
+### サンプルを完了
 **AppDelegate.swift**
 
 ```swift
@@ -413,12 +413,12 @@ class ViewController: UIViewController {
 }
 ```
 
-## Android usage
+## Androidの使用状況
 
-This section will walk through the steps needed to take an Android Studio project written in Java and add Amplify to it along with a GraphQL API using AWS AppSync. If you are a first time user, we recommend starting with a new Android Studio project and a single Activity class.
+このセクションでは、Java で記述された Android Studio プロジェクトを取得し、AWS AppSync を使用した GraphQL API と一緒にAmplify を追加するために必要な手順を説明します。 初めてご利用の場合は、新しいAndroid Studioプロジェクトと単一のアクティビティクラスから始めることをお勧めします。
 
-### Setup
-After completing the [Amplify Getting Started](~/start/start.md) navigate in your terminal to an Android Studio project directory and run the following:
+### セットアップ
+[Amplify Getting Started](~/start/start.md) を完了した後、端末で Android Studio プロジェクトディレクトリに移動し、以下を実行します。
 
 ```bash
 amplify init       ## Select iOS as your platform
@@ -430,9 +430,9 @@ The `add api` flow above will ask you some questions, like if you already have a
 
 Since you added an API the `amplify push` process will automatically enter the codegen process and prompt you for configuration. Accept the defaults and it will create a file named `awsconfiguration.json` in the `./app/src/main/res/raw`  directory that the AppSync client will use for initialization. To finish off the build process there are Gradle and permission updates needed.
 
-First, in the project's `build.gradle`, add the following dependency in the build script:
+まず、プロジェクトの `build.gradle`では、ビルドスクリプトに次の依存関係を追加します。
 ```gradle
-classpath 'com.amazonaws:aws-android-sdk-appsync-gradle-plugin:2.6.+'
+classpath 'com.<unk> s:aws-android-sdk-appsync-gradle-plugin:2.6.+)
 ```
 
 Next, in the app's `build.gradle` add in a plugin of `apply plugin: 'com.amazonaws.appsync'` and a dependency of `implementation 'com.amazonaws:aws-android-sdk-appsync:2.6.+'`. For example:
@@ -477,9 +477,9 @@ Finally, update your `AndroidManifest.xml` with updates to `<uses-permissions>`f
     </application>
 ```
 
-Build your project ensuring there are no issues.
+問題がないようにプロジェクトを構築してください。
 
-### Initialize the AppSync client
+### AppSync クライアントを初期化
 Inside your application code, such as the `onCreate()` lifecycle method of your activity class, you can initialize the AppSync client using an instance of `AWSConfiguration()` in the `AWSAppSyncClient` builder. This reads configuration information present in the `awsconfiguration.json` file. By default, the information under the Default section will be used.
 
 ```java
@@ -497,7 +497,7 @@ Inside your application code, such as the `onCreate()` lifecycle method of your 
     }
 ```
 
-### Queries
+### クエリ
 Now that the backend is configured, you can run a GraphQL query. The syntax of the callback is `GraphQLCall.Callback<{NAME>Query.Data>` where `{NAME}` comes from the GraphQL statements that `amplify codegen types` created. You will invoke this from an instance of the AppSync client with a similar syntax of `.query(<NAME>Query.builder().build())`. For example, if you have a `ListTodos` query your code will look like the following:
 
 ```java
@@ -520,9 +520,9 @@ Now that the backend is configured, you can run a GraphQL query. The syntax of t
     };
 ```
 
-You can optionally change the cache policy on `AppSyncResponseFetchers` but we recommend leaving `CACHE_AND_NETWORK` as it will pull results from the local cache first before retrieving data over the network. This gives a snappy UX as well as offline support.
+必要に応じて、 `AppSyncResponseFetchers` でキャッシュポリシーを変更することができますが、ネットワーク経由でデータを取得する前に、最初にローカルキャッシュから結果を取得するため、 `CACHE_AND_NETWORK` のままにすることをお勧めします。 これにより、オフラインのサポートと同様に、スムーズなUXを提供します。
 
-### Mutations
+### <unk>
 For adding data now you will need to run a GraphQL mutation. The syntax of the callback is `GraphQLCall.Callback<{NAME}Mutation.Data>` where `{NAME}` comes from the GraphQL statements that `amplify codegen types` created. However, most GraphQL schemas organize mutations with an `input` type for maintainability, which is what the Amplify CLI does as well. Therefore you'll pass this as a parameter called `input` created with a second builder. You will invoke this from an instance of the AppSync client with a similar syntax of `.mutate({NAME}Mutation.builder().input({Name}Input).build())` like so:
 
 ```java
@@ -549,7 +549,7 @@ private GraphQLCall.Callback<CreateTodoMutation.Data> mutationCallback = new Gra
 };
 ```
 
-### Subscriptions
+### サブスクリプション
 Finally, it's time to set up a subscription to real-time data. The callback is just `AppSyncSubscriptionCall.Callback` and you invoke it with a client `.subscribe()` call and pass in a builder with the syntax of `{NAME}Subscription.builder()` where `{NAME}` comes from the GraphQL statements that `amplify codegen types` created. Note that the Amplify GraphQL transformer has a common nomenclature of putting the word `On` in front of a subscription like the below example:
 
 ```java
@@ -582,7 +582,7 @@ private AppSyncSubscriptionCall subscriptionWatcher;
 
 Subscriptions can also take `input` types like mutations, in which case they will be subscribing to particular events based on the input. Learn more about Subscription arguments in AppSync [here](https://docs.aws.amazon.com/appsync/latest/devguide/real-time-data.html).
 
-### Sample
+### サンプル
 **MainActivity.java**
 
 ```java
