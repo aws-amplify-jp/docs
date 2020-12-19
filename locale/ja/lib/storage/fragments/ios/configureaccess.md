@@ -1,6 +1,6 @@
-## Protected access
+## 保護されたアクセス
 
-Create an `Options` object with the `.protected` access level to restrict access for your key.
+`オプション` オブジェクトを `.protected` アクセスレベルで作成し、キーのアクセスを制限します。
 
 ```swift
 let dataString = "My Data"
@@ -11,11 +11,11 @@ Amplify.Storage.uploadData(key: "userProtectedKey", data: data, options: options
 }
 ```
 
-When uploading a file with `.protected` access level:
-* Owners have the ability to read, write, and delete access
-* Other users only have read access
+`.protected` のアクセスレベルを持つファイルをアップロードするとき:
+* 所有者はアクセスを読み取り、書き込み、削除することができます
+* 他のユーザーのみ読み取りアクセス権を持っています
 
-If another user wants to read the file, you will need to include the `targetIdentityId` parameter:
+別のユーザーがファイルを読み込みたい場合は、 `targetIdentityId` パラメータを含める必要があります。
 
 ```swift
 let options = StorageDownloadDataRequest.Options(accessLevel: .protected,
