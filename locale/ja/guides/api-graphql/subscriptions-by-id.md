@@ -1,13 +1,13 @@
 ---
-title: How to create GraphQL subscriptions by id
-description: How to create a custom GraphQL subscription that will listen by id
+title: IDでGraphQLサブスクリプションを作成する方法
+description: IDでリッスンするカスタムGraphQLサブスクリプションを作成する方法
 ---
 
-In this guide you will learn how to create a custom GraphQL subscription that will only by connected and triggered by a mutation containing a specific ID as an argument.
+このガイドでは、特定のIDを引数として含む変異によってのみ接続され、トリガーされるカスタムGraphQLサブスクリプションを作成する方法を学びます。
 
-When using the Amplify GraphQL transform library, there will often be times when you need to expand the GraphQL schema and operations created by the `@model` directive. A common use case is when fine grained control is needed for GraphQL subscriptions.
+AmplifyGraphQL変換ライブラリを使用する場合 GraphQL スキーマを展開し、 `@model` ディレクティブで作成された操作を展開する必要がある場合がよくあります。 GraphQL サブスクリプションでは、細かいグレイン制御が必要な場合が一般的な使用例です。
 
-Take for example the following GraphQL schema:
+以下のGraphQLスキーマを例に挙げます:
 
 ```graphql
 type Post @model {
@@ -23,7 +23,7 @@ type Comment @model {
 }
 ```
 
-By default, subscriptions will be created for the following mutations:
+デフォルトでは、以下の変更に対してサブスクリプションが作成されます。
 
 ```graphql
 # Post type
@@ -37,11 +37,11 @@ onUpdateComment
 onDeleteComment
 ```
 
-One operation that is not covered is if you wanted to only subscribe to comments for a specific post.
+該当しない操作の1つは、特定の投稿のコメントのみを購読したい場合です。
 
-Because the schema has a one to many relationship enabled between posts and comments, you can use the auto-generated field `postCommentsId` that defines the relationship between the post and the comment to set this up in a new Subscription definition.
+なぜなら、スキーマは投稿とコメントの間に1対多のリレーションシップを持っているからです。 自動生成された項目 `postCommentsId` を使用して、投稿とコメントの関係を定義し、新しいサブスクリプション定義でこれを設定できます。
 
-To implement this, you could update the schema with the following:
+これを実装するには、次のようにスキーマを更新します。
 
 ```graphql
 type Post @model {
