@@ -1,4 +1,4 @@
-The Album component will display a list of images from the configured S3 Storage bucket. Use the *amplify-s3-album* component in your Angular view:
+アルバムコンポーネントは、設定されたS3ストレージバケットからの画像のリストを表示します。Angularビューの *anplify-s3-album* コンポーネントを使用してください。
 
 ```html
 <amplify-s3-album 
@@ -6,8 +6,8 @@ The Album component will display a list of images from the configured S3 Storage
     (selected)="onAlbumImageSelected($event)">
 </amplify-s3-album>
 ```
-- `options` - object which is passed as the 'options' parameter to the .get request.  This can be used to set the 'level' of the objects being requested (i.e. 'protected', 'private', or 'public')
-- `(selected)` - event used to retrieve the S3 signed URL of the clicked image:
+- `options` - .get 要求に「options」パラメーターとして渡されるオブジェクト。 これは、要求されるオブジェクトの「レベル」を設定するために使用することができます（例：「保護」、「プライベート」、または「公開」）
+- `(selected)` - クリックした画像の S3 署名URL を取得するために使用されるイベント:
 
 ```javascript
 onAlbumImageSelected( event ) {
