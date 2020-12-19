@@ -1,8 +1,8 @@
-### Add the API plugin
+### API プラグインを追加
 
-DataStore's cloud synchronization uses the [API category](~/lib/graphqlapi/getting-started.md) behind the scenes. Therefore, the first step is to add an API plugin.
+DataStoreのクラウド同期は、舞台裏にある [API カテゴリ](~/lib/graphqlapi/getting-started.md) を使用します。そのため、最初のステップは、APIプラグインを追加することです。
 
-Make sure that you declare a dependency on the API plugin in your app-level `build.gradle`:
+アプリレベル `build.gradle のAPIプラグインに依存関係を宣言していることを確認してください`:
 
 ```groovy
 dependencies {
@@ -11,14 +11,14 @@ dependencies {
 }
 ```
 
-Next, add the plugin in your Amplify initialization code alongside with the previously added `AWSDataStorePlugin`.
+次に、Amplify初期化コードにプラグインを追加し、以前に追加した `AWSDataStorePlugin` を追加します。
 
 
 <amplify-block-switcher> <amplify-block name="Java">
 
 ```java
 Amplify.addPlugin(new AWSDataStorePlugin());
-// Add this line.
+// この行を追加する
 Amplify.addPlugin(new AWSApiPlugin());
 Amplify.configure(getApplicationContext());
 ```
@@ -27,7 +27,7 @@ Amplify.configure(getApplicationContext());
 
 ```kotlin
 Amplify.addPlugin(AWSDataStorePlugin())
-// Add this line.
+// この行を追加
 Amplify.addPlugin(AWSApiPlugin())
 Amplify.configure(applicationContext)
 ```
