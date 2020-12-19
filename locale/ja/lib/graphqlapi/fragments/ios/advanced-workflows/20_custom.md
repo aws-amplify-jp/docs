@@ -17,10 +17,10 @@ extension GraphQLRequest {
     }
 }
 ```
-The decode path specifies which part of the response to deserialize to the `responseType`. You'll need to specify the operation name to deserialize the object at "data.getTodo" successfully into a Todo model.
+decode パスは `responseType`にデシリアライズするレスポンスのどの部分を指定します。 「data.getTodo」でオブジェクトをデシリアライズする操作名をTodoモデルに正常に指定する必要があります。
 
-Then, query for the Todo by a todo id
+次に、Todo ID で Todo をクエリします
 ```swift
 Amplify.API.query(request: .getWithoutDescription(byId: "[UNIQUE_ID]")) { 
-  // handle result
+  // result を処理する
 ```  
