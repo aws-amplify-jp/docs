@@ -1,46 +1,46 @@
-You've successfully built an Amplify app with Next.js! Now that you've built something, it's time to deploy it to the web!
+Next.jsでAmplifyアプリの構築に成功しました！何かを構築したので、ウェブにデプロイしましょう！
 
 > **Note**: Amplify Console is adding support for Server-Side Rendering (SSR). [Vote & comment on this issue](https://github.com/aws-amplify/amplify-console/issues/412) to show your support!
 
-## Using [Serverless Next.js Component](https://github.com/serverless-nextjs/serverless-next.js)
+## [サーバーレス Next.js コンポーネント](https://github.com/serverless-nextjs/serverless-next.js) を使用する
 
-> _For more information, read the [Serverless Next.js Component announcement](https://www.serverless.com/blog/serverless-nextjs)_
+> _詳細については、 [Serverless Next.js コンポーネントの発表](https://www.serverless.com/blog/serverless-nextjs) を参照してください。_
 
-### Option 1: Watch the video guide
+### オプション1:ビデオガイドを見る
 
-Watch the video below to learn how to deploy a Next.js application with the Serverless framework, or skip to the next section to follow the step-by-step instructions. <iframe src="https://www.youtube-nocookie.com/embed/2SwlDpfGkXM" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen mark="crwd-mark"></iframe>
+次への展開方法については、以下のビデオをご覧ください。 s サーバレスフレームワークを使用するか、次のセクションにスキップしてステップバイステップの指示に従ってください。 <iframe src="https://www.youtube-nocookie.com/embed/2SwlDpfGkXM" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen mark="crwd-mark"></iframe>
 
-### Options 2: Follow the instructions
+### オプション 2: 指示に従ってください
 
-Create __serverless.yml__ with the following content:
+以下の内容で __serverless.yml__ を作成します。
 
 ```yaml
 # serverless.yml
-nextamplified:
+nextanmped:
   component: "@sls-next/serverless-component@1.17.0"
 ```
 
-Finally, deploy with the following command:
+最後に、次のコマンドでデプロイします。
 
 ```bash
 npx serverless
 ```
 
-You'll see a link to your app in the output:
+アプリケーションへのリンクが出力に表示されます。
 
 ```console
-  nextamplified:
-    appUrl:         https://••••••••••.cloudfront.net
-    bucketName:     XXXXXX-XXXXXXX
-    distributionId: XXXXXXXXXXXXXX
+  nextアンプ:
+    appUrl: https://••••••••••••••.cloudfront.net
+    bucketName: XXXXXXXX-XXXXXXXXXXX
+    distributionId: XXXXXXXXXXXXXXXXXXX
 ```
 
 > **Note**: Your CloudFront Distribution may take several minutes to go from "In Progress" to "Active".  Visit your [CloudFront Console](https://console.aws.amazon.com/cloudfront/home) to monitor progress.
 
-👏 Congratulations, your app is online!
+👏 おめでとうございます。あなたのアプリはオンラインです！
 
-To delete the app, run the following:
+アプリを削除するには、次の手順を実行します。
 
 ```bash
-npx serverless remove
+npx サーバーレス削除
 ```
