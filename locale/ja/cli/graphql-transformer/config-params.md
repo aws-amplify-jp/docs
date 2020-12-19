@@ -1,13 +1,13 @@
 ---
-title: Configurable Parameters
-description: Additional configurable parameters for GraphQL Transform can be passed to the CloudFormation template itself. This provides escape hatches without leaking too many implementation details into the SDL definition
+title: 設定可能なパラメータ
+description: GraphQL Transform用の追加設定可能なパラメータは、CloudFormationテンプレート自体に渡すことができます。 これにより、SDL定義にあまりにも多くの実装詳細を漏らすことなく、エスケープハッチが提供されます。
 ---
 
-Much of the behavior of the GraphQL Transform logic is configured by passing arguments to the directives in the GraphQL SDL definition. However, certain other things are configured by passing parameters to the CloudFormation template itself. This provides escape hatches without leaking too many implementation details into the SDL definition. You can pass values to these parameters by adding them to the `parameters.json` file in the API directory of your amplify project.
+GraphQL Transform ロジックのほとんどの動作は、GraphQL SDL 定義のディレクティブに引数を渡すことによって設定されます。 ただし、CloudFormationテンプレート自体にパラメータを渡すことによって、他の特定のものが構成されます。 これにより、SDLの定義にあまりにも多くの実装の詳細を漏らすことなく、エスケープハッチが提供されます。 これらのパラメータに `パラメータを追加することで、値を渡すことができます。 son<code>` ファイルは、プロジェクトの増幅ディレクトリにあります。
 
 ## AppSyncApiName
 
-**Override the name of the generated AppSync API**
+**生成された AppSync API の名前を上書きする**
 
 ```
 {
@@ -17,15 +17,15 @@ Much of the behavior of the GraphQL Transform logic is configured by passing arg
 
 ## CreateAPIKey
 
-`CreateAPIKey` takes value of either `1` or `0`.
+`CreateAPIKey` は `1` または `0` のいずれかの値をとります。
 
-It gives you the mechanism to rotate the API Key, in scenarios such as to handle API Key expiration.
+API キーの有効期限を処理するなどのシナリオで API キーを回転させるメカニズムを提供します。
 
-Follow these two steps when you need to rotate an API Key
+API キーを回転させる必要がある場合は、次の 2 つの手順に従ってください。
 - Delete the existing API key by setting `CreateAPIKey` to `0` in the `amplify/backend/api/<apiName>/parameters.json` file and execute `amplify push`.
 - Create a new API key by setting `CreateAPIKey` to `1` in the `amplify/backend/api/<apiName>/parameters.json` file and execute `amplify push`.
 
-**Delete the existing API Key**
+**既存の API キーを削除します**
 
 ```
 {
@@ -33,7 +33,7 @@ Follow these two steps when you need to rotate an API Key
 }
 ```
 
-**Create new API Key**
+**新しいAPIキーを作成**
 
 ```
 {
@@ -43,7 +43,7 @@ Follow these two steps when you need to rotate an API Key
 
 ## APIKeyExpirationEpoch
 
-**Resets the API Key to expire 1 week after the next `amplify push`**
+**次の `増幅プッシュ`から1週間後にAPIキーをリセットします。**
 
 ```
 {
@@ -51,7 +51,7 @@ Follow these two steps when you need to rotate an API Key
 }
 ```
 
-**Do not create an API key**
+**API キーを作成しない**
 
 ```
 {
@@ -59,7 +59,7 @@ Follow these two steps when you need to rotate an API Key
 }
 ```
 
-**Set a custom API key expiration date**
+**カスタム API キーの有効期限を設定します**
 
 ```
 {
@@ -67,11 +67,11 @@ Follow these two steps when you need to rotate an API Key
 }
 ```
 
-> The value specified is the expiration date in seconds since Epoch
+> 指定された値は、Epoch からの有効期限です。
 
 ## DynamoDBBillingMode
 
-**Set the DynamoDB billing mode for the API. One of "PROVISIONED" or "PAY_PER_REQUEST".**
+**API の DynamoDB 課金モードを設定します。"PROVISIONED" または "PAY_PER_REQUEST" のいずれかです。**
 
 ```
 {
@@ -81,9 +81,9 @@ Follow these two steps when you need to rotate an API Key
 
 ## DynamoDBModelTableReadIOPS
 
-**Override the default read IOPS provisioned for each @model table**
+**各@modelテーブルに対してプロビジョニングされたデフォルトの読み取りIOPSを上書きする**
 
-**Only valid if the "DynamoDBBillingMode" is set to "PROVISIONED"**
+**「DynamoDBBillingMode」が「規定」に設定されている場合にのみ有効です**
 
 ```
 {
@@ -93,9 +93,9 @@ Follow these two steps when you need to rotate an API Key
 
 ## DynamoDBModelTableWriteIOPS
 
-**Override the default write IOPS provisioned for each @model table**
+**各@modelテーブルにプロビジョニングされたIOPSのデフォルト書き込みを上書きする**
 
-**Only valid if the "DynamoDBBillingMode" is set to "PROVISIONED"**
+**「DynamoDBBillingMode」が「規定」に設定されている場合にのみ有効です**
 
 ```
 {
@@ -105,7 +105,7 @@ Follow these two steps when you need to rotate an API Key
 
 ## ElasticSearchStreamingFunctionName
 
-**Override the name of the AWS Lambda searchable streaming function**
+**AWS Lambda 検索可能なストリーミング機能の名前を上書きする**
 
 ```
 {
@@ -115,7 +115,7 @@ Follow these two steps when you need to rotate an API Key
 
 ## ElasticSearchInstanceCount
 
-**Override the number of instances launched into the Elasticsearch domain created by @searchable**
+**@searchableによって作成されたElasticsearchドメインに起動したインスタンス数を上書きする**
 
 ```
 {
@@ -125,7 +125,7 @@ Follow these two steps when you need to rotate an API Key
 
 ## ElasticSearchInstanceType
 
-**Override the type of instance launched into the Elasticsearch domain created by @searchable**
+**@searchableによって作成されたElasticsearchドメインに起動されたインスタンスの種類を上書きする**
 
 ```
 {
@@ -135,7 +135,7 @@ Follow these two steps when you need to rotate an API Key
 
 ## ElasticSearchEBSVolumeGB
 
-**Override the amount of disk space allocated to each instance in the Elasticsearch domain created by @searchable**
+**@searchableによって作成されたElasticsearchドメイン内の各インスタンスに割り当てられたディスク容量を上書きする**
 
 ```
 {
@@ -144,7 +144,7 @@ Follow these two steps when you need to rotate an API Key
 ```
 
 
-**Note: To use the @auth directive, the API must be configured to use Amazon Cognito user pools.**
+**注: @auth ディレクティブを使用するには、Amazon Cognito ユーザプールを使用するように API を設定する必要があります。**
 
 ```graphql
 type Task
