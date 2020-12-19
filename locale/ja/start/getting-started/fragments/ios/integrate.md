@@ -1,8 +1,8 @@
-Next you'll use the generated model to create, update, query, and delete data. In this section you'll initialize DataStore, and then manipulate Todo items.
+次に生成されたモデルを使用して、データの作成、更新、クエリ、および削除を行います。このセクションでは、DataStore を初期化し、Todo アイテムを操作します。
 
-## Configure Amplify and DataStore
+## AmplifyとDataStoreの設定
 
-First, we'll add the DataStore plugin and configure Amplify.
+まず、DataStoreプラグインを追加し、Amplifyを設定します。
 
 1. Open the main file of the application - `AppDelegate.swift` or `TodoApp.swift` depending on the Life Cycle previously chosen - and **add the following** import statements at the top of the file:
   ```swift
@@ -10,7 +10,7 @@ First, we'll add the DataStore plugin and configure Amplify.
   import AmplifyPlugins
   ```
 
-1. In the same file, **create a function** to configure Amplify:
+1. 同じファイルで、 **Amplify を設定するための関数** を作成します。
   ```swift
   func configureAmplify() {
       let dataStorePlugin = AWSDataStorePlugin(modelRegistration: AmplifyModels())
@@ -25,16 +25,16 @@ First, we'll add the DataStore plugin and configure Amplify.
   }
   ```
 
-1. Now **call the `configureAmplify()` function** in the starting point of your application. <amplify-block-switcher> <amplify-block name="SwiftUI App">
+1. **では、アプリケーションの開始点で `configureAmplify()` 関数** を呼び出します。 <amplify-block-switcher> <amplify-block name="SwiftUI App">
 
     ```swift
     @main
     struct TodoApp: App {
-        // add a default initializer and configure Amplify
+        // デフォルトの初期化子を追加し、Amplify
         public init() {
             configureAmplify()
         }
-    }
+}
     ```
 
     </amplify-block> <amplify-block name="UIKit App Delegate">
@@ -54,10 +54,10 @@ First, we'll add the DataStore plugin and configure Amplify.
 
     </amplify-block> </amplify-block-switcher>
 
-1. **Build and run** the application. In the Xcode console window, you'll see a log line indicating success:
+1. **** アプリケーションをビルドして実行します。Xcode コンソールウィンドウで、成功を示すログ行が表示されます。
 
     ```console
-    Initialized Amplify
+    Amplifyを初期化しました
     ```
 
     Optionally, if you'd like to adjust the log level, you can do this by updating the `Amplify.Logging.logLevel` variable. For example, you can add the following line of code to the `configureAmplify()` function:
@@ -65,24 +65,24 @@ First, we'll add the DataStore plugin and configure Amplify.
     Amplify.Logging.logLevel = .info
     ```
 
-    Setting the log level to `.info`, re-building and re-running the application should render additional log statements:
+    ログレベルを `.info`に設定すると、アプリケーションを再構築して再実行すると、追加のログステートメントがレンダリングされます。
     ```console
-    [Amplify] Configuring
-    Initialized Amplify
-    [AWSDataStorePlugin] Unable to find suitable API plugin for syncEngine.  syncEngine will not be started
+    [Amplify] 設定
+    Amplify
+    [AWSDataStorePlugin] syncEngineに適したAPIプラグインが見つかりません。syncEngineは起動しません。
     ```
 
-## Create a Todo
+## Todoを作成
 
-Next, you'll create a Todo and save it to DataStore.
+次に、Todo を作成して DataStore に保存します。
 
-1. Open `ContentView.swift` and **add the following** import statements at the top of the file:
+1. `ContentView.swift` を開き、 **ファイルの先頭に次の** import 文を追加します:
   ```swift
   import Amplify
   import AmplifyPlugins
   ```
 
-1. In the same file (`ContentView.swift`), **update the body view**  to call a function called `performOnAppear()`:
+1. 同じファイル (`ContentView.swift`), **body view**  を更新して、 `performOnAppear()` と呼ばれる関数を呼び出します。
 
   ```swift
     var body: some View {
@@ -90,20 +90,20 @@ Next, you'll create a Todo and save it to DataStore.
             .onAppear {
                 self.performOnAppear()
         }
-    }
+}
   ```
 
-1. In the same file (`ContentView.swift`), **add a function** called `performOnAppear()`:
+1. 同じファイル (`ContentView.swift`), **** と呼ばれる関数 `performOnAppear()`:
 
   ```swift
   func performOnAppear() {
       let item = Todo(name: "Build iOS Application",
                       description: "Build an iOS application using Amplify")
-  }
+}
   ```
-  This code creates a Todo item with two properties: a name and a description. This is a plain object that isn't stored in DataStore yet.
+  このコードは、2 つのプロパティを持つ Todo アイテムを作成します。名前と説明です。これは、DataStore にまだ保存されていないプレーンオブジェクトです。
 
-1. Below the creation of the item, **add the code** to save the item to DataStore:
+1. 項目の作成の下に、 **コード** を追加して、項目をDataStoreに保存します。
 
   ```swift
   Amplify.DataStore.save(item) { result in
@@ -115,7 +115,7 @@ Next, you'll create a Todo and save it to DataStore.
       }    
   }
   ```
-1. After making the preceding updates to the `ContentView.swift` file, your code should look like the following:
+1. `ContentView.swift` ファイルを先行して更新した後、コードは次のようになります:
 
 ```swift
 import SwiftUI
@@ -153,31 +153,31 @@ struct ContentView_Previews: PreviewProvider {
 }
 ```
 
-1. **Build and run** the application. In the console output, you'll see an indication that the item was saved successfully:
+1. **** アプリケーションをビルドして実行します。コンソール出力には、項目が正常に保存されたことを示すものが表示されます。
 
   ```console
-  Initialized Amplify
-  Saved item: Build iOS Application
+  初期化されたAmplify
+  保存された項目: iOS アプリケーションをビルド
   ```
 
-1. **Replace the item** with a new Todo to save an additional item. Let's change the name and description, and add a priority:
+1. **追加の項目を保存するには、** を新しいタスクに置き換えます。名前と説明を変更し、優先順位を追加しましょう。
 
   ```swift
-  let item = Todo(name: "Finish quarterly taxes",
+  let item = Todo(name: "四半期ごとの税金を終了する",
                   priority: .high,
-                  description: "Taxes are due for the quarter next week")
+                  description: "税金は来週四半期の税金に相当する")
   ```
 
-1. **Build and run** the application. In the console output, you'll see an indication that the item was saved successfully:
+1. **** アプリケーションをビルドして実行します。コンソール出力には、項目が正常に保存されたことを示すものが表示されます。
 
   ```console
-  Initialized Amplify
-  Saved item: Finish quarterly taxes
+  初期化されたAmplify
+  保存されたアイテム: 四半期ごとの税金を完了する
   ```
 
 ## Query Todos
 
-Now that you have some data in DataStore, you can run queries to retrieve those records.
+DataStoreにデータがあるので、クエリを実行してレコードを取得できます。
 
 1. Edit your `performOnAppear()` method to remove the item creation and save operations, and replace them with the following code.  Your entire `performOnAppear` function should look like this:
 
@@ -203,35 +203,35 @@ Now that you have some data in DataStore, you can run queries to retrieve those 
   }
   ```
 
-1. **Build and run** the application. In the console output, you'll see both items returned:
+1. **** アプリケーションをビルドして実行します。コンソールの出力には、以下のように返された項目が表示されます。
 
   ```console
-  Initialized Amplify
+  初期化された Amplify
   ==== Todo ====
-  Name: Build an iOS application using Amplify
+  名前: Amplify を使用して iOS アプリケーションを構築する
   ==== Todo ====
-  Name: Finish quarterly taxes
-  Description: Taxes are due for the quarter next week
-  Priority: high
+  名前: 四半期ごとの税金を終了する
+  説明: 税金は来週四半期ごとに支払われます
+  優先順位: 高い
   ```
 
-1. Queries can also contain predicate filters. These will query for specific objects matching a certain condition.
+1. クエリには、述語フィルタを含めることもできます。これらは特定の条件に一致する特定のオブジェクトをクエリします。
 
-  The following predicates are supported:
+  次の述語がサポートされています:
 
-  **Strings**
+  **文字列**
 
   `eq` `ne` `le` `lt` `ge` `gt` `contains` `notContains` `beginsWith` `between`
 
-  **Numbers**
+  **数値**
 
   `eq` `ne` `le` `lt` `ge` `gt` `between`
 
-  **Lists**
+  **リスト**
 
-  `contains` `notContains`
+  `には` `が含まれており、` は含まれていません
 
-  To use a predicate, pass an additional argument into your query. For example, you can use the following code to see all high priority items:
+  述語を使用するには、クエリに追加の引数を渡します。例えば、次のコードを使用して、すべての優先度の高い項目を表示できます。
 
   ```swift
   Amplify.DataStore.query(Todo.self,
@@ -253,22 +253,22 @@ Now that you have some data in DataStore, you can run queries to retrieve those 
       }
   }
   ```
-  In the above code, notice the addition of the predicate parameter as the second argument.
+  上記のコードでは、述語パラメータを 2 番目の引数に追加することに注意してください。
 
-1. Run the application. In the console output, you'll see only the high priority item returned:
+1. アプリケーションを実行します。コンソール出力では、返される優先度の高い項目だけが表示されます。
 
   ```console
-  Initialized Amplify
+  初期化された Amplify
   ==== Todo ====
-  Name: Finish quarterly taxes
-  Description: Taxes are due for the quarter next week
-  Priority: high
+  名前: 四半期ごとの税金を終了します。
+  説明: 税金は来週四半期の予定です。
+  優先順位: 高い
   ```
 
-## Update a Todo
+## Todoを更新
 
-You may want to change the contents of a record. Below, we'll query for a record, create a copy of it, modify it, and save it back to DataStore.
-1. Edit your `performOnAppear()` method to remove anything related to datastore and **add the following** instead of it:
+レコードの内容を変更することができます。 以下では、レコードをクエリし、コピーを作成し、変更してDataStoreに保存します。
+1. `performOnAppear()` メソッドを編集してデータストアに関連するものを削除し、 **以下の** を追加します。
 
     ```swift
     Amplify.DataStore.query(Todo.self,
@@ -294,18 +294,18 @@ You may want to change the contents of a record. Below, we'll query for a record
     }
     ```
 
-1. **Build and run** the application. In your console output, you'll see an indication that the item was updated successfully:
+1. **** アプリケーションをビルドして実行します。コンソール出力には、アイテムが正常に更新されたことを示すものが表示されます:
 
     ```console
     Initialized Amplify
-    Updated item: File quarterly taxes
+    Updated item: ファイル四半期税
     ```
 
-## Delete a Todo
+## Todo を削除する
 
-To round out our CRUD operations, we'll query for a record and delete it from DataStore.
+CRUD操作を削除するには、レコードをクエリしてDataStoreから削除します。
 
-1. Edit your `performOnAppear()` method to remove anything related to datastore and **add the following** instead of it:
+1. `performOnAppear()` メソッドを編集してデータストアに関連するものを削除し、 **以下の** を追加します。
 
     ```swift
     Amplify.DataStore.query(Todo.self,
@@ -330,14 +330,14 @@ To round out our CRUD operations, we'll query for a record and delete it from Da
   }
   ```
 
-1. **Build and run** the application. In the console output, you'll see an indication that the item was deleted successfully:
+1. **** アプリケーションをビルドして実行します。コンソール出力には、項目が正常に削除されたことを示すものが表示されます。
   ```console
   Initialized Amplify
-  Deleted item: File quarterly taxes
+  Deleted item: File 四半期税
   ```
 
-## Almost done
+## ほぼ完了しました
 
 We just reached a *very cool* checkpoint. We have a fully featured CRUD application that saves and retrieves data in the local device, which means the app **works without an AWS account and even without internet connection**.
 
-Next, let's connect it to AWS and make sure the data available in the cloud.
+次に、AWSに接続し、クラウドで利用可能なデータを確認します。
