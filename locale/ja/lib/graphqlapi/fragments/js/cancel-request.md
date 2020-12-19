@@ -1,6 +1,6 @@
-## CANCEL API requests
+## APIリクエストをキャンセル
 
-You may cancel any query or mutation request made through API category by keeping a reference to the promise returned.
+返されたpromiseへの参照を保持することにより、APIカテゴリを介して行われたクエリや変更リクエストをキャンセルすることができます。
 
 ```javascript
 const promise = API.graphql(graphqlOperation(...));
@@ -22,15 +22,16 @@ try {
 API.cancel(promise, "my message for cancellation");
 ```
 
-You need to ensure that the promise returned from `API.graphql()` has not been modified. Typically async functions wrap the promise being returned into another promise. For example, the following will not work
+`API.graphql()` から返された promiseが変更されていないことを確認する必要があります。 通常非同期関数は、他のプロミスに戻される Promise をラップします。例えば、次のようには動作しません。
 
 ```javascript
 async function makeAPICall() {
-    return API.graphql(graphqlOperation(...));
+    return API.graphql(graphqlOperation(... ); 
+ }
 }
 const promise = makeAPICall();
 
 
-// The following will NOT cancel the request.
+// 次の要求はキャンセルされません。
 API.cancel(promise, "my error message");
 ```
