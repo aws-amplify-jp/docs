@@ -1,10 +1,10 @@
 An application’s backend is built with cloud resources such as AWS AppSync GraphQL APIs, Amazon S3 storage, and Amazon Cognito authentication. The Amplify CLI simplifies the provisioning of new backend resources across these different categories. However, you can alternatively use the Amplify libraries to add or re-use existing AWS resources that you provisioned without the CLI. The Amplify libraries support configuration through the *amplifyconfiguration.json* file which defines all the regions and service endpoints for your backend AWS resources.
 
-## Add an existing AWS resource to an iOS application
+## iOSアプリケーションに既存のAWSリソースを追加
 
-Before you can add an existing AWS resource to an iOS application, the application must have the Amplify libraries installed. For detailed instructions, see [Install Amplify Libraries](~/lib/project-setup/create-application.md#n2-install-amplify-libraries).
+iOSアプリケーションに既存のAWSリソースを追加する前に、アプリケーションにAmplifyライブラリがインストールされている必要があります。 詳細な手順については、 [Amplifyライブラリのインストール](~/lib/project-setup/create-application.md#n2-install-amplify-libraries) を参照してください。
 
-### 1. Manually create the Amplify configuration file for your iOS project
+### 1. iOSプロジェクト用のAmplify設定ファイルを手動で作成する
 
 Create a file named `amplifyconfiguration.json` in your project’s main directory. At this point the contents of your `amplifyconfiguration.json` file can be an empty object, `{}`.
 
@@ -12,9 +12,9 @@ For example, if the name of your project is *MyAmplifyApp*, you will create the 
 
 ![GSA](~/images/project-setup/1_useExistingResources.png)
 
-### 2. Initialize Amplify in the application
+### 2. アプリケーションでAmplifyを初期化
 
-To initialize Amplify in your iOS application, open the `AppDelegate.swift` file and add `import Amplify` at the top of the file.
+AmplifyをiOSアプリケーションで初期化するには、 `AppDelegate.swift` ファイルを開き、ファイルの上部に `import Amplify` を追加します。
 ```swift
 import Amplify
 ```
@@ -31,19 +31,19 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
    return true
 }
 ```
-### 3. Edit the configuration file to use an existing AWS resource
+### 3. 既存のAWSリソースを使用するように設定ファイルを編集します
 
-Now you’re ready to customize your application’s `amplifyconfiguration.json` file to specify an existing AWS resource to use.
+これで、アプリケーションの `amplifyconfiguration.json` ファイルをカスタマイズして、使用する既存のAWSリソースを指定する準備が整いました。
 
-Note that before you can add an AWS resource to your application, the application must have the Amplify libraries installed. If you need to perform this step, see [Install Amplify Libraries](~/lib/project-setup/create-application.md#n2-install-amplify-libraries).
+アプリケーションにAWSリソースを追加する前に、アプリケーションにAmplifyライブラリがインストールされている必要があります。 この手順を実行する必要がある場合は、 [Amplifyライブラリのインストール](~/lib/project-setup/create-application.md#n2-install-amplify-libraries) を参照してください。
 
-Select a category from the following list to view an example `amplifyconfiguration.json` file you can use as a template to author your own `amplifyconfiguration.json` file:
+以下のリストからカテゴリを選択して、 `の例を表示します。 son <code> ファイル` をテンプレートとして使用して、独自の `amplifyconfiguration.json` ファイルを作成できます。
 
-* See the [Analytics category](~/lib/analytics/existing-resources.md) to use existing AWS Pinpoint resources.
-* See the [API (GraphQL) category](~/lib/graphqlapi/existing-resources.md) to use existing AWS AppSync resources.
-* See the [API (REST) category](~/lib/restapi/existing-resources.md) to use existing Amazon API Gateway and AWS Lambda resources.
-* See the [Authentication category](~/lib/auth/existing-resources.md) to use existing Amazon Cognito resources.
-* See the [Storage category](~/lib/storage/existing-resources.md) to use existing Amazon S3 resources.
+* 既存の AWS Pinpoint リソースを使用するには [Analytics カテゴリ](~/lib/analytics/existing-resources.md) を参照してください。
+* 既存の AWS AppSync リソースを使用する [API (GraphQL) カテゴリ](~/lib/graphqlapi/existing-resources.md) を参照してください。
+* 既存の Amazon API Gateway および AWS Lambda リソースを使用するには、 [API (REST) カテゴリ](~/lib/restapi/existing-resources.md) を参照してください。
+* 既存の Amazon Cognito リソースを使用するには [認証カテゴリ](~/lib/auth/existing-resources.md) を参照してください。
+* 既存の Amazon S3 リソースを使用するには [ストレージカテゴリ](~/lib/storage/existing-resources.md) を参照してください。
 
 
 
