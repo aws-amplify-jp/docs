@@ -1,4 +1,4 @@
-`S3Image` component renders an *Amazon S3 object key* as an image:
+`S3Image` コンポーネントは、 *Amazon S3 オブジェクトキー* を画像としてレンダリングします。
 
 ```jsx
 import { S3Image } from 'aws-amplify-react';
@@ -8,19 +8,19 @@ render() {
 }
 ```
 
-For private images, supply the `level` property:
+プライベートイメージの場合、 `レベル` プロパティを指定してください。
 
 ```jsx
-return <S3Image level="private" imgKey={key} />
+<S3Image level="private" imgKey={key} /> を返す
 ```
 
-To show another user's protected image, supply that user's `identityId` property as well:
+他のユーザーの保護された画像を表示するには、そのユーザーの `identityId` プロパティを指定してください。
 
 ```jsx
-return <S3Image level="protected" identityId={identityId} imgKey={key} />
+<S3Image level="protected" identityId={identityId} imgKey={key} /> を返す
 ```
 
-To initiate an upload, set the `body` property:
+アップロードを開始するには、 `body` プロパティを設定します。
 
 ```jsx
 import { S3Image } from 'aws-amplify-react';
@@ -31,7 +31,7 @@ render() {
 
 ```
 
-To hide the image shown in the S3Image, set `hidden`:
+S3Imageに表示されている画像を非表示にするには、 `hidden` を設定してください。
 
 ```jsx
 import { S3Image } from 'aws-amplify-react';
@@ -41,15 +41,15 @@ render() {
 }
 ```
 
-**Image URL**
+**画像URL**
 
-`S3Image` converts path to actual URL. To get the URL, listen to the `onLoad` event:
+`S3Image` は実際の URL にパスを変換します。URL を取得するには、 `onLoad` イベントを待ちます。
 
 ```jsx
 <S3Image imgKey={key} onLoad={url => console.log(url)} />
 ```
 
-**Photo Picker**
+**写真の選択**
 
 Set `picker` property to true on `S3Image`. A `PhotoPicker` let the user pick a picture from the device. After users picks an image, the image will be uploaded with `imgKey`.
 
@@ -63,7 +63,7 @@ When you set `path`, the *key* for the image will be the combination of `path` a
 <S3Image path={path} picker />
 ```
 
-To generate a custom key value, you can provide a callback:
+カスタムキー値を生成するには、以下のようにコールバックを提供できます。
 
 ```jsx
 function fileToKey(data) {
@@ -77,6 +77,6 @@ function fileToKey(data) {
 
 <amplify-callout>
 
-`S3Image` will escape all spaces in key values to underscore. For example, 'a b' will be converted to 'a_b'.
+`S3Image` は、アンダースコアにするためにキー値のすべてのスペースをエスケープします。例えば、'a b' は 'a_b' に変換されます。
 
 </amplify-callout>
