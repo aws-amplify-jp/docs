@@ -1,49 +1,49 @@
 ---
-title: Overview
-description: The Amplify CLI supports configuring many different Authentication and Authorization workflows, including simple and advanced configurations of the login options, triggering Lambda functions during different lifecycle events, and administrative actions which you can optionally expose to your applications.
+title: 概要
+description: Amplify CLI は、ログインオプションのシンプルで高度な構成を含む、さまざまな認証および承認ワークフローの設定をサポートしています。 さまざまなライフサイクルイベント中に Lambda 関数をトリガーし、必要に応じてアプリケーションに公開できる管理アクションを実行します。
 ---
 
 
-The Amplify CLI supports configuring many different Authentication and Authorization workflows, including simple and advanced configurations of the login options, triggering Lambda functions during different lifecycle events, and administrative actions which you can optionally expose to your applications.
+Amplify CLI は、ログインオプションのシンプルで高度な構成を含む、さまざまな認証および承認ワークフローの設定をサポートしています。 さまざまなライフサイクルイベント中に Lambda 関数をトリガーし、必要に応じてアプリケーションに公開できる管理アクションを実行します。
 
-## Configuring auth without social providers
+## ソーシャルプロバイダなしで認証を設定する
 
-The easiest way to get started is to leverage the default configuration which is optimized for the most common use cases and choices.
+最も簡単な方法は、最も一般的なユースケースや選択肢に最適化されたデフォルトの設定を活用することです。
 
 ```bash
-amplify add auth     ##"amplify update auth" if already configured
+amplify add auth ##"amplify update auth" がすでに設定されている場合、認証を追加
 ```
 
 ```console
-Do you want to use the default authentication and security configuration? 
-❯ Default configuration 
+デフォルトの認証とセキュリティ設定を使用しますか？ 
+<unk> Default configuration 
   Default configuration with Social Provider (Federation) 
   Manual configuration 
-  I want to learn more.
+  詳細を知りたい。
 ```
 
-## Configuring auth with social providers
+## ソーシャルプロバイダで認証を設定する
 
-Once your User Pool is functioning, you can enable more configurations such as federation with Facebook, Google, or Login with Amazon. You can also configure more advanced settings by selecting *Manual Configuration*.
+ユーザープールが機能すると、Facebook、Google、Amazonでログインなどのより多くの設定を有効にできます。 *手動設定* を選択することで、より詳細な設定を行うこともできます。
 
 ```bash
-amplify add auth     ##"amplify update auth" if already configured
+amplify add auth ##"amplify update auth" がすでに設定されている場合、認証を追加
 ```
 
-Select Default configuration with Social Provider (Federation):
+ソーシャルプロバイダ(Federation)でデフォルト設定を選択します。
 
 ```console
-Do you want to use the default authentication and security configuration?
-  Default configuration
-❯ Default configuration with Social Provider (Federation)
-  Manual configuration
-  I want to learn more.
+デフォルトの認証とセキュリティ設定を使用しますか？
+  デフォルト設定
+<unk> ソーシャルプロバイダ(Federation)によるデフォルト設定
+  手動設定
+  詳細を知りたい。
 ```
 
-You can find [more documentation on adding each social provider in the Libraries section](https://docs.amplify.aws/lib/auth/social/q/platform/js#setup-your-auth-provider) of the docs.
+各ソーシャルプロバイダの追加については、 [ドキュメントの Librariesセクション](https://docs.amplify.aws/lib/auth/social/q/platform/js#setup-your-auth-provider) に詳細が記載されています。
 
-## Re-use an existing Cognito User Pool and Identity Pool
+## 既存の Cognito ユーザプールとアイデンティティプールを再利用する
 
-Instead of letting Amplify CLI create a new set of auth resources, you can also import your existing Cognito resources. These resources can be used to auto-generate the Amplify library configuration files, used as an auth dependency for other categories and provided access permissions from within Lambda functions.
+Amplify CLI に新しい認証リソースのセットを作成させる代わりに、既存の Cognito リソースをインポートすることもできます。 これらのリソースは、Amplifyライブラリ構成ファイルを自動生成するために使用できます。 他のカテゴリの認証依存性として使用され、Lambda関数内からのアクセス許可を提供しました。
 
-Run `amplify import auth` or read the [guide on how to import existing Cognito resources](~/cli/auth/import.md).
+`を実行する import auth` を増幅するか、既存の Cognito リソース [をインポートする方法については](~/cli/auth/import.md) ガイドを参照してください。
