@@ -1,8 +1,8 @@
-## API Components
+## API コンポーネント
 
-### Connect
+### 接続する
 
-The Connect component can be used to execute a GraphQL query, subscription, or mutation. You can execute GraphQL queries by passing your queries in `query` or `mutation` attributes. For example:
+Connect コンポーネントは、GraphQL クエリ、契約、または変更の実行に使用できます。 `クエリ` または `変更` 属性でクエリを渡すことで、GraphQLクエリを実行できます。例えば：
 
 ```html
 <template>
@@ -48,7 +48,7 @@ export default {
 </script>
 ```
 
-You can also subscribe to changes in query data via the `subscription` and `onSubscriptionMsg` attributes:
+`サブスクリプション` および `onSubscriptionMsg` 属性を使用して、クエリデータの変更をサブスクライブすることもできます。
 
 ```html
 <template>
