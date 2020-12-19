@@ -3,7 +3,7 @@ const todelete = await DataStore.query(Post, "1234567");
 DataStore.delete(todelete);
 ```
 
-You can also pass predicate operators to delete multiple items. For example will delete all draft posts:
+複数の項目を削除するために述語演算子を渡すこともできます。例えば、すべての下書きを削除します。
 
 ```js
 await DataStore.delete(Post, post => post.status("eq", PostStatus.DRAFT));
@@ -16,7 +16,7 @@ const todelete = await DataStore.query(Post, "123");
 DataStore.delete(todelete, post => post.status("eq", PostStatus.DRAFT));
 ```
 
-Also to delete all items for a model you can use `Predicates.ALL`:
+また、モデルのすべてのアイテムを削除するには、 `Predicates.ALL`:
 
 ```js
 await DataStore.delete(Post, Predicates.ALL);
