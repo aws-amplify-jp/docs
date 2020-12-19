@@ -1,42 +1,42 @@
-## Create new authentication resource
+## 新しい認証リソースを作成
 
-If you have previously enabled an Amplify category that uses Auth behind the scenes, e.g. API category, you may already have an Auth configuration. In such a case, run `amplify auth update` command to edit your configuration. To start from scratch, run the following command in your project's root folder:
-
-```bash
-amplify add auth
-```
-
-The CLI prompts will help you to customize your auth flow for your app. With the provided options, you can:
-- Customize sign-in/registration flow
-- Customize email and SMS messages for Multi-Factor Authentication
-- Customize attributes for your users, e.g. name, email
-- Enable 3rd party social providers, e.g. Facebook, Twitter, Google and Amazon
-
-If you wish to federate with social providers [you will need to configure them first](~/lib/auth/social.md#social-providers-and-federation).
-
-After configuring your Authentication options, update your backend:
+これまでに、API カテゴリなど、舞台裏で Authを使用するAmplifyカテゴリを有効にしている場合は、すでに認証設定を持っている可能性があります。 そのような場合は、設定を編集するために、 `増幅する auth update` コマンドを実行してください。 最初から起動するには、プロジェクトのrootフォルダで次のコマンドを実行します。
 
 ```bash
-amplify push
+増幅して認証を追加
 ```
 
-A configuration file called `aws-exports.js` will be copied to your configured source directory, for example `./src`.
+CLI プロンプトは、アプリの認証フローをカスタマイズするのに役立ちます。指定されたオプションを使用すると、次のことができます。
+- サインイン/登録フローを編集する
+- 多要素認証のための電子メールとSMSメッセージを編集する
+- ユーザーの属性をカスタマイズします。例：名前、電子メール
+- Facebook、Twitter、Google、Amazonなどのサードパーティのソーシャルプロバイダを有効にする
 
-> If your Authentication resources were created with Amplify CLI version 1.6.4 and below, you will need to manually update your project to avoid Node.js runtime issues with AWS Lambda. [Read more](~/cli/migration/lambda-node-version-update.md)
+ソーシャルプロバイダと連携したい場合は、 [最初に設定する必要があります。](~/lib/auth/social.md#social-providers-and-federation)
 
-### Configure your application
+認証オプションを設定した後、バックエンドを更新します:
 
-Add Amplify to your app with `yarn` or `npm`:
+```bash
+push を増幅する
+```
+
+`aws-exports.js` と呼ばれる設定ファイルが、 `./src` などの設定されたソースディレクトリにコピーされます。
+
+> Amplify CLI バージョン 1.6 で認証リソースが作成された場合。 以下では、AWS LambdaでNode.jsランタイムの問題を回避するために、プロジェクトを手動で更新する必要があります。 [詳しくはこちら](~/cli/migration/lambda-node-version-update.md)
+
+### アプリケーションの設定
+
+Amplifyを `yarn` または `npm` でアプリに追加します。
 
 ```bash
 yarn add aws-amplify
 ```
 
-For React Native applications, install `aws-amplify-react-native` and link:
+React Native アプリケーションの場合、 `aws-amplify-react-native` とリンクをインストールしてください：
 
 ```bash
-yarn add aws-amplify aws-amplify-react-native
-react-native link amazon-cognito-identity-js # DO NOT run this when using Expo or ExpoKit
+yarn add aws-amplify aws-anplify-react-native
+react-native link amazon-cognito-identity-js # ExpoやExpoKitを使用する場合は実行しないでください。
 ```
 
 If you are using React Native 0.60.0+, iOS and using Auth methods e.g. `Auth.signIn`, `Auth.signUp`, etc., please run the following commands instead of linking:
@@ -47,17 +47,17 @@ cd ios
 pod install --repo-update
 ```
 
-In your app's entry point i.e. App.js, import and load the configuration file:
+アプリのエントリポイント、すなわちApp.jsで、設定ファイルをインポートしてロードします。
 
 ```javascript
-import Amplify, { Auth } from 'aws-amplify';
+import Amplify, { Auth } from 'aws-amply';
 import awsconfig from './aws-exports';
 Amplify.configure(awsconfig);
 ```
 
-## Re-use existing authentication resource
+## 既存の認証リソースを再利用する
 
-If you want to re-use an existing authentication resource from AWS (e.g. Amazon Cognito UserPool or Identity Pool), update `Amplify.configure()` method with the following information.
+AWSから既存の認証リソースを再利用したい場合(例: Amazon Cognito UserPool または Identity Pool), upd `Amplify.configure()` メソッドを以下の情報で更新する.
 
 ```javascript
 import Amplify, { Auth } from 'aws-amplify';
