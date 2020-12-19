@@ -1,39 +1,39 @@
 ---
-title: Usage Data in Amplify CLI
-description: More information about usage data in Amplify CLI
+title: Amplify CLI での使用データ
+description: Amplify CLI での使用状況の詳細情報
 ---  
 
-At AWS, we develop and launch services based on what we learn from interactions with our customers. We use customer feedback to iterate on our product. Anonymized usage data helps us to better understand our customers’ needs, diagnose issues, and deliver features that improve the customer experience.
+AWSでは、お客様とのやり取りから学んだことに基づいたサービスを開発・提供しています。 私たちはお客様のフィードバックを使用して製品を反復します。 匿名化された使用データは、お客様のニーズ、問題の診断、およびカスタマーエクスペリエンスを向上させる機能の提供をよりよく理解するのに役立ちます。
 
-Amplify CLI sends anonymized information such as system metadata, usage metrics and errors. The data is marked for deletion in a year from the point of it being collected. Amplify CLI does **not** collect personally identifiable information such as email addresses, usernames, keys, ARNs or any project - level information.
+Amplify CLI は、システムメタデータ、使用量メトリック、エラーなどの匿名化された情報を送信します。 データは、収集された時点から1年間で削除されるとマークされています。 Amplify CLI は **ではありません** 電子メールアドレス、ユーザー名、キー、ARN、または任意のプロジェクトレベルの情報など、個人を特定できる情報を収集します。
 
-### Manage usage data collection for your Amplify CLI Instance
+### Amplify CLI インスタンスの使用データ収集を管理します
 
-**Disable usage data collection**
-
-
-Run the following command to turn off Amplify CLI usage data collection
-
-```
-amplify configure --usage-data-off
-```
-
-**Enable usage data collection**
+**使用データの収集を無効にする**
 
 
-Run the following command to turn on Amplify CLI usage data collection
+Amplify CLI の使用状況データ収集をオフにするには、次のコマンドを実行します。
 
 ```
-amplify configure --usage-data-on
+configure --usage-data-off
 ```
 
-**Usage data collection is managed on a machine per installation basis enabling/disabling will change it for all the projects on that instance*
+**使用状況データの収集を有効にする**
 
-## Learn More
 
-The usage data that's collected adheres to the AWS data privacy policies. For more information, see the following:
+Amplify CLI の使用状況データ収集を有効にするには、次のコマンドを実行します
 
-*   [AWS Service Terms](https://aws.amazon.com/service-terms/)
-*   [Data Privacy](https://aws.amazon.com/compliance/data-privacy-faq/)
+```
+configure --usage-data-on
+```
+
+**使用状況のデータ収集は、インストールごとにマシン上で管理されています。有効化/無効化は、そのインスタンス上のすべてのプロジェクトに対して変更されます*
+
+## もっと詳しく
+
+収集された利用データは、AWSデータプライバシーポリシーに準拠しています。詳細については、次を参照してください。
+
+*   [AWSサービス利用規約](https://aws.amazon.com/service-terms/)
+*   [データプライバシー](https://aws.amazon.com/compliance/data-privacy-faq/)
 
 
