@@ -1,4 +1,4 @@
-However, if needed you can directly access the credentials as follows:
+ただし、必要に応じて資格情報に直接アクセスすることができます:
 
 ```dart
   void _fetchSession() async {
