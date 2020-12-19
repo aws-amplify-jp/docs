@@ -1,4 +1,4 @@
-If you need functionality in the AWS services used by the Amplify Predictions category that isn't available, we provide an escape hatch so you can get a reference to that service.  For example, to get a reference to `AWSRekognition`:
+利用できないAmplify予測カテゴリで使用されているAWSサービスの機能が必要な場合。 我々は脱出ハッチを提供しますあなたはそのサービスへの参照を得ることができます。 例えば、 `AWSRekognition` への参照を取得するには:
 
 ```swift
 guard let predictionsPlugin = try Amplify.Predictions.getPlugin(for: "awsPredictionsPlugin") as? AWSPredictionsPlugin else {
@@ -45,10 +45,10 @@ guard let textractService = predictionsPlugin.getEscapeHatch(key: .textract) as?
 }
 ```
 
-**API Documentation Resources**
+**APIドキュメントのリソース**
 * [Amazon Rekognition API Reference](https://docs.aws.amazon.com/rekognition/latest/dg/API_Reference.html)
-* [Amazon Translate API Reference](https://docs.aws.amazon.com/translate/latest/dg/API_Reference.html)
-* [Amazon Polly API Reference](https://docs.aws.amazon.com/polly/latest/dg/API_Reference.html)
-* [Amazon Transcribe API Reference](https://docs.aws.amazon.com/transcribe/latest/dg/API_Reference.html)
-* [Amazon Comprehend API Reference](https://docs.aws.amazon.com/comprehend/latest/dg/API_Reference.html)
+* [Amazon Translate API リファレンス](https://docs.aws.amazon.com/translate/latest/dg/API_Reference.html)
+* [Amazon Polly APIリファレンス](https://docs.aws.amazon.com/polly/latest/dg/API_Reference.html)
+* [Amazon Transscribe API Reference](https://docs.aws.amazon.com/transcribe/latest/dg/API_Reference.html)
+* [Amazon Compreview API Reference](https://docs.aws.amazon.com/comprehend/latest/dg/API_Reference.html)
 * [Amazon Textract API Reference](https://docs.aws.amazon.com/textract/latest/dg/API_Reference.html)
