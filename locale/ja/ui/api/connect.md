@@ -1,6 +1,6 @@
 ---
-title: Connect
-description: Connect UI Component
+title: 接続する
+description: UIコンポーネントを接続
 filterKey: framework
 ---
 
