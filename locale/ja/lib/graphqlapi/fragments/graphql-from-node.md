@@ -1,4 +1,4 @@
-You can call an AppSync GraphQL API from a Node.js app or a Lambda function. Take a basic `Todo` app as an example:
+Node.js アプリまたは Lambda 関数から、AppSync GraphQL API を呼び出すことができます。基本的な `Todo` アプリを例として取ります。
 
 ```graphql
 type Todo @model {
@@ -10,7 +10,7 @@ type Todo @model {
 
 This API will have operations available for `create`, `read`, `update`, and `delete`. Let's take a look at how to perform both a __query__ as well as a __mutation__ from a Lambda function using Node.js.
 
-## Query
+## クエリ
 
 ```javascript
 const axios = require('axios');
@@ -58,9 +58,9 @@ exports.handler = async (event) => {
 }
 ```
 
-## Mutation
+## <unk>
 
-In this example we create a mutation showing how to pass in variables as arguments.
+この例では、変数を引数として渡す方法を示す変異を作成します。
 
 ```js
 const axios = require('axios');
@@ -112,9 +112,9 @@ exports.handler = async (event) => {
 }
 ```
 
-## Signing a request from Lambda
+## Lambdaからのリクエストに署名中
 
-What about working with custom signing of the request? Let's take a look at another example schema that uses `iam` authorization.
+リクエストのカスタム署名で作業することはどうでしょうか? `iam` の認証を使用する別のスキーマ例を見てみましょう。
 
 ```graphql
 type Todo @model @auth (
@@ -128,9 +128,9 @@ type Todo @model @auth (
 }
 ```
 
-Create a Lambda function with `amplify add function` and make sure to give access to your GraphQL API when prompted for in the `amplify add function` flow.
+`amplify add 関数` を使用して Lambda 関数を作成し、 `amplify add 関数` フローでプロンプトが表示されたら、GraphQL API にアクセスできるようにしてください。
 
-The CLI will automatically configure the Lambda execution IAM role required by the Lambda function to call the GraphQL API. The following function will sign the request and use environment variables for the AppSync and Region that `amplify add function` created for you.
+GraphQL API を呼び出すためにLambda 関数に必要な Lambda 実行の IAM ロールを自動的に設定します。 以下の関数はリクエストに署名し、AppSyncとRegionの環境変数を使用します。 `増幅によって作成された関数` を増幅します。
 
 ```javascript
 const https = require('https');
@@ -187,7 +187,7 @@ exports.handler = async (event) => {
 };
 ```
 
-Finally you can define the GraphQL operation you're running, in this case the `createTodo` mutation, in a separate `query.js` file:
+最後に、実行しているGraphQL操作を定義することができます。この場合、 `createTodo` 変更は、別の `query.js` ファイル内で定義します。
 
 ```javascript
 module.exports = {
