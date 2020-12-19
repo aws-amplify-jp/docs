@@ -1,10 +1,10 @@
-Add the Auth plugin before calling `Amplify.configure`. Update [the code you added](~/lib/project-setup/create-application.md#n4-initialize-amplify-in-the-application) in **Prerequisites**:
+`Amplify.configure`を呼び出す前に認証プラグインを追加します。 更新 [あなたが追加したコード](~/lib/project-setup/create-application.md#n4-initialize-amplify-in-the-application) **前提条件**:
 
 <amplify-block-switcher> <amplify-block name="Java">
 
 ```java
 // Add this line, to include the Auth plugin.
-Amplify.addPlugin(new AWSCognitoAuthPlugin());
+Amplify.addPlugin(new AWScognitoAuthPlugin());
 Amplify.configure(getApplicationContext());
 ```
 
@@ -12,7 +12,7 @@ Amplify.configure(getApplicationContext());
 
 ```kotlin
 // Add this line, to include the Auth plugin.
-Amplify.addPlugin(AWSCognitoAuthPlugin())
+Amplify.addPlugin(AWScognitoAuthPlugin())
 Amplify.configure(applicationContext)
 ```
 
@@ -20,7 +20,7 @@ Amplify.configure(applicationContext)
 
 ```java
 // Add this line, to include the Auth plugin.
-RxAmplify.addPlugin(new AWSCognitoAuthPlugin());
+RxAmplify.addPlugin(new AWScognitoAuthPlugin());
 RxAmplify.configure(getApplicationContext());
 ```
 
