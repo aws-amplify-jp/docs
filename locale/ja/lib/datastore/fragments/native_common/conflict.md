@@ -1,7 +1,7 @@
 
 If data synchronization is enabled via [AppSync](https://aws.amazon.com/appsync/), there can be different versions of the same object on the client and server. Multiple clients may have updated their respective copies of an object. DataStore will converge different object versions by applying conflict detection and resolution strategies. The default resolution is called `Auto Merge`. This strategy allows collections to grow, and prefers server-side versions of single-field data. Other strategies include `Optimistic Concurrency` control and `Custom Lambda` functions. For more information, see the [AWS AppSync documentation on conflict handling](https://docs.aws.amazon.com/appsync/latest/devguide/conflict-detection-and-sync.html).
 
-## Custom conflict resolution
+## カスタムの競合解決
 
 To select a different conflict resolution strategy, navigate into your project from a terminal and run `amplify update api`. Choose *Yes* when prompted to change the conflict detection and resolution strategies.
 
@@ -22,9 +22,9 @@ To select a different conflict resolution strategy, navigate into your project f
   Learn More
 ```
 
-### Per model configuration
+### モデル構成ごと
 
-Note that this flow will also allow you to change the strategy on each individual GraphQL type, though it is recommended to use the same strategy for your whole schema unless you have an advanced use case:
+このフローでは、個々のGraphQLタイプごとに戦略を変更することもできます。 高度なユースケースがない限り、スキーマ全体に同じ戦略を使用することをお勧めします。
 
 ```
 ? Do you want to override default per model settings? Yes
@@ -39,6 +39,6 @@ Note that this flow will also allow you to change the strategy on each individua
   Existing Lambda Function 
 ```
 
-## Custom configuration
+## カスタム構成
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/conflict.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/ios/conflict.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/android/conflict.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/datastore/fragments/flutter/conflict.md"></inline-fragment>
