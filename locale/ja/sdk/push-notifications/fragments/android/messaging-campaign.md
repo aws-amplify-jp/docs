@@ -1,12 +1,12 @@
 The [Amazon Pinpoint console](https://console.aws.amazon.com/pinpoint/) enables you to target your app users with push messaging. You can send individual messages or configure campaigns that target a group of users that match a profile that you define. For instance, you could email users that have not used the app in 30 days, or send an SMS to those that frequently use a given feature of your app.
 
-The following steps show how to receive push notifications targeted for your app.
+次の手順では、アプリを対象としたプッシュ通知を受信する方法を示します。
 
-1. Add a push listener service to your app.
+1. アプリにプッシュリスナーサービスを追加します。
 
     The name of the class must match the push listener service name used in the app manifest. `pinpointManager` is a reference to the static `PinpointManager` variable declared in the `MainActivity` shown in a previous step. Use the following steps to detect and display Push Notification in your app.
 
-1. The following push listener code assumes that the app's `MainActivity` is configured using the manifest setup described in a previous section.
+1. 以下のプッシュ・リスナーのコードは、アプリの `MainActivity` が前のセクションで説明されているマニフェスト・セットアップを使用して設定されていることを前提としています。
 
     ```java
     import android.content.Intent;
@@ -90,28 +90,28 @@ The following steps show how to receive push notifications targeted for your app
     }
     ```
 
-1. To create a new campaign to send notifications to your app from the Amazon Pinpoint console run the following command from your app project folder.
+1. Amazon Pinpointコンソールからアプリに通知を送信する新しいキャンペーンを作成するには、アプリのプロジェクトフォルダから次のコマンドを実行します。
 
     ```bash
-    amplify notifications console
+    通知コンソールを増幅する
     ```
 
 1. Provide a campaign name, choose `Next`, choose `Filter by standard attributes`, and then choose `android` as the platform.
 
-1. You should see 1 device as a targeted endpoint, which is the app we are running on the Android device. Choose the option and then choose `Next Step`.
+1. 私たちがAndroidデバイス上で実行しているアプリであるターゲットエンドポイントとして、1つのデバイスが表示されるはずです。 オプションを選択し、 `次のステップ` を選択します。
 
-1. Provide text for a sample title and body for push notification, and then choose `Next Step`.
+1. プッシュ通知のサンプルタイトルと本文のテキストを入力し、 `次のステップ` を選択します。
 
-1. Choose `Immediate`, and then choose `Next Step`.
+1. `即時`を選択し、 `次のステップ` を選択します。
 
-1. Review the details on the screen, and then choose `Launch Campaign`.
+1. 画面の詳細を確認し、 `キャンペーンを開始` を選択します。
 
-1. A notification should appear on the Android device. You may want to try testing your app receiving notifications when it is in the foreground and when closed.
+1. Androidデバイスに通知が表示されます。 前面にあるときと閉じたときに通知を受け取るアプリをテストすることができます。
 
-## Next Steps
+## 次のステップ
 
-* [Handling FCM / GCM Push Notifications](~/sdk/push-notifications/setup-push-service.md#handling-fcmgcm-push-notifications)
+* [FCM / GCM プッシュ通知の処理](~/sdk/push-notifications/setup-push-service.md#handling-fcmgcm-push-notifications)
 
-* [Handling Amazon Device Messaging Push Notifications](~/sdk/push-notifications/setup-push-service.md#handling-amazon-device-messaging-push-notifications)
+* [Amazon Device Messaging Push Notifications の処理](~/sdk/push-notifications/setup-push-service.md#handling-amazon-device-messaging-push-notifications)
 
-* [Handling Baidu Push Notifications](~/sdk/push-notifications/setup-push-service.md#handling-baidu-push-notifications)
+* [Baiduプッシュ通知の処理](~/sdk/push-notifications/setup-push-service.md#handling-baidu-push-notifications)
