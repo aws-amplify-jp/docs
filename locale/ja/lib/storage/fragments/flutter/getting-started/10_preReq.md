@@ -1,8 +1,8 @@
-* A Flutter application targeting Flutter SDK >= 1.20 with Amplify libraries integrated
-    * An iOS configuration targeting at least iOS 11.0
-    * An Android configuration targeting at least Android API level 21 (Android 5.0) or above
-    * [Amplify Init](https://docs.amplify.aws/lib/project-setup/create-application/q/platform/flutter) and [Amplify Auth already set up](https://docs.amplify.aws/lib/auth/getting-started/q/platform/flutter)
-    * For instructions on how to set up Amplify, please follow the [project setup walkthrough](~/lib/project-setup/create-application.md)
+* Amplifyライブラリを統合したFlutter SDK >= 1.20をターゲットとするFlutterアプリケーション
+    * 少なくともiOS 11.0を対象としたiOS設定。
+    * 少なくとも Android API レベル 21 (Android 5.0) 以上を対象とする Android の設定。
+    * [Amplify init](https://docs.amplify.aws/lib/project-setup/create-application/q/platform/flutter) と [Amplify Authはすでに設定されています](https://docs.amplify.aws/lib/auth/getting-started/q/platform/flutter)
+    * Amplifyの設定方法については、 [プロジェクトセットアップの手順](~/lib/project-setup/create-application.md)に従ってください。
 
 
-You can see [an example Amplify Auth + Flutter application here](https://github.com/aws-amplify/amplify-flutter/tree/master/packages/amplify_storage_s3/example).
+Amplify Auth+Flutterアプリケーションの例 [をここで見ることができます](https://github.com/aws-amplify/amplify-flutter/tree/master/packages/amplify_storage_s3/example)。
