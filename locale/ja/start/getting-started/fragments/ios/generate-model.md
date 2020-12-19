@@ -2,7 +2,7 @@ With the basic setup complete, next you will model the data your application wil
 
 1. In Xcode, make sure the project navigator is displayed. You can use **Cmd+1** to switch to this view. **Open the schema file** located at **Todo** > **AmplifyConfig** > **schema.graphql**. In your project folder, this file is located at `"amplify/backend/api/amplifyDatasource/schema.graphql"`.
 
-    Replace the contents of the file with the following schema:
+    ファイルの内容を以下のスキーマに置き換えます:
 
     ```graphql
     enum Priority {
@@ -19,16 +19,16 @@ With the basic setup complete, next you will model the data your application wil
     }
     ```
 
-    This schema creates a model called `Todo` with four properties:
+    このスキーマは、4つのプロパティを持つ `Todo` という名前のモデルを作成します。
 
-    - **id** an auto-generated identifier field for a Todo item
-    - **name** a non-optional string field that is the title of the Todo item
+    - **ID** Todo アイテムの自動生成識別子フィールド
+    - **名前** Todoアイテムのタイトルである任意でない文字列フィールド
     - **priority** an optional enumeration type field that indicates the importance of a Todo item; the value of priority can be only *LOW*, *NORMAL*, or *HIGH*
-    - **description** an optional string field that holds more information about a Todo item
+    - **説明** Todo アイテムの詳細情報を保持する任意の文字列フィールド。
 
-1. Next, generate the classes for these models and add them to your Xcode project. **Run the command**:
+1. 次に、これらのモデルのクラスを生成し、Xcode プロジェクトに追加します。 **コマンド** を実行します。
   ```bash
-  amplify codegen models && amplify-app
+  コードジェネレーションモデルを増幅 && 増幅アプリ
   ```
 
-1. Now that the generated models has been added to your project, you will need to **build (`Cmd+b`)** to compile the newly generated files.
+1. 生成されたモデルがプロジェクトに追加されました。 新しく生成されたファイルをコンパイルするには、 **build (`Cmd+b`)** する必要があります。
