@@ -1,6 +1,6 @@
-## Update data
+## データを更新
 
-Put data to the API endpoint:
+API エンドポイントにデータを配置:
 
 <amplify-block-switcher>
 
