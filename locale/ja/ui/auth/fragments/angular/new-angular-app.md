@@ -1,4 +1,4 @@
-Use the [Angular CLI](https://github.com/angular/angular-cli) to bootstrap a new Angular app:
+新しいAngularアプリを起動するには、 [Angular CLI](https://github.com/angular/angular-cli) を使用してください。
 
 ```bash
 npm install -g @angular/cli
@@ -8,7 +8,7 @@ cd myAmplifyProject
 
 ### Angular 6+ Support
 
-Currently, the newest versions of Angular (6+) do not include shims for 'global' or 'process' which were provided in previous versions. Add the following to your `polyfills.ts` file to recreate them:
+現在、Angular(6+)の最新バージョンでは、以前のバージョンで提供されていた「global」または「プロセス」のシムは含まれていません。 以下を `polyfills.ts` ファイルに追加して再作成します。
 
 ```javascript
 (window as any).global = window;
