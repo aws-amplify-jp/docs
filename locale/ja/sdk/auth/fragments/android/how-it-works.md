@@ -1,23 +1,23 @@
-The `AWSMobileClient` provides client APIs and building blocks for developers who want to create user authentication experiences. This includes declarative methods for performing authentication actions, a simple "drop-in auth" UI for performing common tasks, automatic token and credentials management, and state tracking with notifications for performing workflows in your application when users have authenticated.
+`AWSMobileClient` は、ユーザー認証エクスペリエンスを作成したい開発者にクライアント API とビルディングブロックを提供します。 これには、認証アクションを実行するための宣言型メソッド、一般的なタスクを実行するためのシンプルな「ドロップイン認証」UIが含まれます。 自動トークンと資格情報の管理、およびユーザーが認証したときにアプリケーションでワークフローを実行するための通知による状態の追跡。
 
 **Amazon Cognito**
 
 [Amazon Cognito User Pools](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html) is a full-featured user directory service to handle user registration, storage, authentication, and account recovery. Cognito User Pools returns JWT tokens to your app and does not provide temporary AWS credentials for calling authorized AWS Services. [Amazon Cognito Federated Identities](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-identity.html) on the other hand, is a way to authorize your users to use AWS services. With an identity pool, you can obtain temporary AWS credentials with permissions you define to access other AWS services directly or to access resources through Amazon API Gateway.
 
-When working together, Cognito User Pools acts as a source of user identities (identity provider) for the Cognito Federated Identities. Other sources can be OpenID, Facebook, Google, etc. AWS Amplify uses User Pools to store your user information and handle authorization, and it leverages Federated Identities to manage user access to AWS Resources, for example allowing a user to upload a file to an S3 bucket.
+Cognitoユーザープールは、Cognito Federated Identitiesのユーザーアイデンティティ(アイデンティティプロバイダ)のソースとして機能します。 その他のソースはOpenID、Facebook、Googleなどです。 AWS Amplifyはユーザプールを使用してユーザ情報と権限を保存します。 また、Federated Identities を使用して、AWS Resources へのユーザアクセスを管理します。たとえば、ユーザが S3 バケットにファイルをアップロードできるようにします。
 
-**Prerequisite:** [Install and configure the Amplify CLI](~/cli/cli.md)<br> **Recommendation:** [Complete the Getting Started guide](~/start/start.md)
+**前提条件:** [Amplify CLI](~/cli/cli.md)<br> **推奨:** [Getting Startedガイドを完了](~/start/start.md)
 
-## How it works
+## 仕組み
 
 The AWSMobileClient manages your application session for authentication related tasks. The credentials it pulls in can be used by other AWS services when you call a `.getInstance()` constructor. The Amplify category examples in this documentation use this by default, however [you can also use this with any AWS service via the generated SDK clients](~/sdk/configuration/setup-options.md).
 
-### State tracking
+### 状態追跡
 
-`AWSMobileClient` offers on-demand querying for the "login state" of a user in the application. For instance, you can check if the user is signed-in or not and present an appropriate screen. This is done through a couple of mechanisms:
+`AWSMobileClient` は、アプリケーション内のユーザーの「ログイン状態」に対するオンデマンドクエリを提供します。 例えば、ユーザーがサインインしているかどうかを確認し、適切な画面を表示することができます。これはいくつかのメカニズムを介して行われます。
 
-- `isSignedIn` property defined as a BOOLEAN for the most simple use cases
-- `currentUserState` used for more advanced scenarios, such as determining if the user has Guest credentials, Authenticated with User Pools, has Federated credentials, or has signed out.
+- `isSignedIn` プロパティは、最もシンプルなユースケースの BOOLEAN として定義されています
+- `currentUserState` は、ユーザーがゲストの資格情報を持っているかどうかを判断するなど、より高度なシナリオに使用されます。 ユーザープールで認証され、Federated資格情報を持っているか、またはサインアウトしました。
 
 This allows you to write workflows in your application based on the state of the user and what you would like to present on different screens. The `AWSMobileClient` also offers realtime notifications on user state changes which you can register for in your application using `.addUserStateListener()` as in the code below.
 
@@ -50,9 +50,9 @@ AWSMobileClient.getInstance().addUserStateListener(new UserStateListener() {
 
 
 
-### Token fetch and refresh
+### トークンの取得と更新
 
-#### Cognito User Pool tokens
+#### Cognitoユーザープールトークン
 The `AWSMobileClient` will return valid JWT tokens from your cache immediately if they have not expired. If they have expired it will look for a **Refresh** token in the cache. If it is available and not expired it will be used to fetch a valid **IdToken** and **AccessToken** and store them in the cache.
 
 If the Refresh tokens have expired and you then make call to any AWS service, such as a AppSync GraphQL request or S3 upload, the `AWSMobileClient` will dispatch a state notification that a re-login is required. At this point you can choose to present the user with a login screen, call `AWSMobileClient.default().signIn()`, or perform custom business logic. For example:
@@ -82,11 +82,11 @@ AWSMobileClient.getInstance().addUserStateListener(new UserStateListener() {
 
 You can register to listen for this state change anywhere in your app with `.addUserStateListener()`, such as in `onCreate()` in the above example. If you want to cancel the re-login process, for instance if your application is shared among multiple users of the device or a user clicks "cancel" on the re-login attempt, you can call `releaseSignInWait()` to terminate the call and then call a `signOut()`.
 
-#### AWS Credentials
+#### AWS 資格情報
 
-AWS Credentials are used for signing requests to services that use AWS IAM, and for mobile clients they are provided by Amazon Cognito Identity Pools. Similar to JWT tokens, `AWSMobileClient` will return valid AWS Credentials from your cache immediately if they have not expired. If they are expired they will be refreshed using the JWT token that has been federated if the session is authenticated. For Guest scenarios they will be automatically refreshed.
+AWS 資格情報は、AWS IAMを使用するサービスへのリクエストへの署名に使用され、モバイルクライアントにはAmazon Cognito Identity Poolsが提供します。 JWT トークンと同様に、 `AWSMobileClient` は、有効期限が切れていない場合、すぐにキャッシュから有効な AWS 資格情報を返します。 期限切れの場合は、セッションが認証された場合に連合された JWT トークンを使用して更新されます。 ゲストのシナリオでは、自動的に更新されます。
 
-### Offline support
+### オフラインサポート
 
 `AWSMobileClient` is optimized to account for applications transitioning from offline to online connectivity, and refreshing credentials at the appropriate time so that errors do not occur when actions are taken and connectivity is not available. In no cases will the `AWSMobileClient` automatically sign out a user if connectivity is not available. You must always make an explicit `signOut()` call for a user to be signed out of a session.
 
