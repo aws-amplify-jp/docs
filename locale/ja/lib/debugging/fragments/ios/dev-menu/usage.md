@@ -1,1 +1,1 @@
-Long press the screen to access the developer menu during a debug build of your app.
+画面を長押しすると、アプリのデバッグビルド中に開発者メニューにアクセスできます。
