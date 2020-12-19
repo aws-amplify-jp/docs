@@ -1,4 +1,4 @@
-Add the following code to your app:
+アプリに次のコードを追加します。
 
 <amplify-block-switcher> <amplify-block name="Java">
 
