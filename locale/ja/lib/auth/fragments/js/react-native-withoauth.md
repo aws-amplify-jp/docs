@@ -1,30 +1,30 @@
-**withOAuth Higher-Order Component (HOC)**
+**with OAuth Higher-Order Component (HOC)**
 
 With React Native & Expo, you can also use the `withOAuth` HOC to launch the Cognito Hosted UI experience. Just wrap your app's main component with our HOC. Doing so, will pass the following `props` available to your component:
 
-- `oAuthUser`: If the sign was successful, this object will have the user from the user pool.
-- `oAuthError`: In case of an error, the string with the error as given by the Cognito Hosted UI.
-- `hostedUISignIn`: A callback function to trigger the hosted UI sign in flow, this will show the Cognito Hosted UI.
-- `signOut`: A callback function to trigger the hosted UI sign out flow.
+- `oAuthUser`: 署名が成功した場合、このオブジェクトはユーザプールからユーザを取得します。
+- `oAuthError`: エラーが発生した場合、Cognito Hosted UI で指定されたエラーのある文字列。
+- `hostedUISignIn`: ホストされた UI サインインをフローでトリガーするコールバック関数、これは Cognito Hosted UI を表示します。
+- `signOut`: ホストされた UI サインアウトフローをトリガーするコールバック関数。
 
 <amplify-callout>
 
-The following `props` are used for building a custom UI with buttons if you do not want to show the Cognito UI, however it will still create a User Pool entry once the OAuth flow has completed.
+Cognito UI を表示したくない場合は、次の `props` を使用して、ボタン付きのカスタム UI を構築します。 ただし、OAuth フローが完了すると、ユーザープールエントリは引き続き作成されます。
 
 </amplify-callout>
 
-- `facebookSignIn`: A callback function to trigger the hosted UI sign in flow for Facebook, this will show the Facebook login page.
-- `googleSignIn`: A callback function to trigger the hosted UI sign in flow for Google, this will show the Google login page.
-- `amazonSignIn`: A callback function to trigger the hosted UI sign in flow for LoginWithAmazon, this will show the LoginWithAmazon login page.
+- `facebookSignIn`: Facebook でホストされている UI サインインをトリガーするコールバック関数、Facebook ログインページが表示されます。
+- `googleSignIn`: Google 用にホストされた UI サインインをトリガーするコールバック関数、Google ログインページが表示されます。
+- `amazonSignIn`: LoginWithAmazonのフローでホストされているUIサインインをトリガーするコールバック関数。
 - `customProviderSignIn`: A callback function to trigger the hosted UI sign in flow for an OIDC provider, this will show the OIDC provider login page. This function expects a string with the **provider name** specified when [adding the OIDC  IdP to your User Pool](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-oidc-idp.html#cognito-user-pools-oidc-idp-step-2).
 
-To use `withOAuth` in your React Native application first install the appropriate dependencies:
+React Native アプリケーションで `withOAuth` を使用するには、まず適切な依存関係をインストールします。
 
 ```terminal
 yarn add aws-amplify-react-native aws-amplify 
 ```
 
-The following code snippet shows an example of its possible usage:
+次のコードスニペットは、その使用可能な例を示しています:
 
 <amplify-callout>
 
