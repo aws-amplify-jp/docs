@@ -1,60 +1,60 @@
 Enable your users to receive mobile push messages sent from the Apple (APNs) and Google (FCM/GCM) platforms. The Amplify CLI deploys your push notification backend using [Amazon Pinpoint](http://docs.aws.amazon.com/pinpoint/latest/developerguide/). You can also create Amazon Pinpoint campaigns that tie user behavior to push or other forms of messaging.
 
-## Set Up Your Backend
+## バックエンドを設定
 
-### Prerequisites
+### 前提条件
 
-1. Complete the [Get Started](~/start/start.md) steps before you proceed.
+1. 先に進む前に [はじめに](~/start/start.md) ステップを完了してください。
 
 1. On Xcode, under the target, select "Signing & Capabilities", make sure the `Bundle Identifier` is unique. Make sure `Automatically manage signing` is enabled and your apple developer team is chosen.
 
-1. Plug in the device and make sure it is registered and there are no errors on this page provisioning the profile.
+1. デバイスを接続し、それが登録されていることを確認し、このページでプロファイルをプロビジョニングする際にエラーが発生しません。
 
 1. Click on `+ Capability`, and add `Push Notification` and `Background Modes`. For `Background Modes`, have `Remote notifications` checked.
 
-### Step-by-step
+### ステップバイステップ
 
-1. Set up a new Amplify project, you can skip this step if you are using an existing one:
-
-    ```
-    amplify init
-    ```
-
-1. Add analytics to your app to allow guests and unauthenticated users to send analytics events:
+1. 新しいAmplifyプロジェクトを設定します。既存のプロジェクトを使用している場合は、このステップをスキップできます。
 
     ```
-    amplify add analytics
+    initを増幅する
     ```
 
-1. Provision the backend:
+1. ゲストと認証されていないユーザーが分析イベントを送信できるように、アプリに分析機能を追加します。
 
     ```
-    amplify push
+    anmpify add analytics
     ```
 
-## Connect to Your Backend
+1. バックエンドの提供:
 
-Use the following steps to connect push notification backend services to your app.
+    ```
+    push を増幅する
+    ```
 
-1. Add the following pods to your `Podfile`:
+## バックエンドに接続
+
+プッシュ通知バックエンドサービスをアプリに接続するには、次の手順を実行します。
+
+1. `Podfile` に以下のポッドを追加します:
 
     ```ruby
     target :'YOUR-APP-NAME' do
       use_frameworks!
-      pod  'AWSPinpoint'
-      pod  'AWSMobileClient'
+      pod 'AWSPinpoint'
+      pod 'AWSMIClient'
     end
     ```
 
-    Run `pod install --repo-update` before you continue.
+    続行する前に `pod install --repo-update` を実行します。
 
-1. Open the `.xcworkspace` file.
+1. `.xcworkspace` ファイルを開きます。
 
 1. Make sure the project contains the `awsconfiguration.json` file and it is added to Xcode (by dragging it in with `copy as needed` checked). It should be generated when you [set up your backend](#set-up-your-backend).
 
-1. Make sure the app builds.
+1. アプリがビルドされていることを確認してください。
 
-1. Add the following import statements to your AppDelegate file:
+1. AppDelegate ファイルに次のインポート ステートメントを追加します。
 
     ```swift
     import UserNotifications
@@ -112,7 +112,7 @@ Use the following steps to connect push notification backend services to your ap
     }
     ```
 
-    Make sure the app builds, runs and prompts the user for notification authorization.
+    アプリがビルドされ、実行され、ユーザーに通知の承認を求めるように促します。
 
 1. Add the AppDelegate methods to listen on the callbacks from [`UIApplication.shared.registerForRemoteNotifications()`](https://developer.apple.com/documentation/uikit/uiapplication/1623078-registerforremotenotifications). Either [`application(_:didRegisterForRemoteNotificationsWithDeviceToken:)`](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1622958-application) will be called indicating successfully registering with APNS or [`application(_:didFailToRegisterForRemoteNotificationsWithError:)`](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1622962-application) indicating a failure. On successfully registering with APNS, pass the device token to AWS pinpoint to register the endpoint
 
@@ -135,9 +135,9 @@ Use the following steps to connect push notification backend services to your ap
     }
     ```
 
-1. Build and run the app. You should see the device token printed out.
+1. アプリをビルドして実行します。出力されたデバイストークンが表示されます。
 
-1. To handle push notifications, add [`application(_:didReceiveRemoteNotification:fetchCompletionHandler:)`](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1623013-application).
+1. プッシュ通知を処理するには、 [`application(_:didReceiveRemoteNotification:fetchCompletionHandler:)`](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1623013-application) を追加します。
 
     ```swift
     func application(_ application: UIApplication,
@@ -166,7 +166,7 @@ Use the following steps to connect push notification backend services to your ap
         completionHandler(.newData)
     }
     ```
-    For iOS 10 and above, pass the notification event to pinpoint SDK in `userNotificationCenter(_:willPresent:withCompletionHandler:)` and `userNotificationCenter(_:didReceive:withCompletionHandler:)`
+    iOS 10 以降では、 `userNotificationCenter(_:willPresent:withCompletionHandler:)` と `userNotificationCenter(_:didReceive:withCompletionHandler:) の SDK に通知イベントを渡してください。`
     ```swift
     extension AppDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: (UNNotificationPresentationOptions) -> Void) {
@@ -189,18 +189,18 @@ Use the following steps to connect push notification backend services to your ap
 }
     ```
 
-1. (Optional) Enable verbose logging for AWSPinpoint SDK. The `endpointId` will be printed out when verbose logging is turned on. It will be useful when testing push notification events with AWS Pinpoint campaigns but not required.
+1. (オプション) AWSPinpoint SDK の詳細なログを有効にします。詳細なログを有効にすると、 `endpointId` が出力されます。 AWS Pinpointキャンペーンでプッシュ通知イベントをテストする場合に便利です。
 
-    Add this to [`application(_:didFinishLaunchingWithOptions:)`](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1622921-application)
+    これを [`application(_:didFinishLaunchingWithOptions:) に追加します。`](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/1622921-application)
 
     ```swift
     AWSDDLog.sharedInstance.logLevel = .verbose
     AWSDDLog.add(AWSDDTTYLogger.sharedInstance)
     ```
 
-### Manual Configuration
+### 手動設定
 
-As an alternative to automatic configuration using the Amplify CLI, you can manually enter the necessary configurations. Here is a snippet of the relevant sections of the `awsconfiguration.json` file:
+Amplify CLI を使用した自動構成の代替として、必要な構成を手動で入力できます。 次に、 `awsconfiguration.json` ファイルの関連するセクションの抜粋を示します。
 
 ```json
 {
@@ -237,37 +237,37 @@ As an alternative to automatic configuration using the Amplify CLI, you can manu
 }
 ```
 
-Make the following changes to the configuration file. The values are available in the [AWS Console](https://console.aws.amazon.com).
+設定ファイルに次の変更を加えます。値は [AWS コンソール](https://console.aws.amazon.com) で使用できます。
 
 * **CognitoIdentity**
-    * Replace `COGNITO-IDENTITY-POOL-ID` with the identity pool ID.
-    * Replace `COGNITO-IDENTITY-POOL-REGION` with the Region the identity pool was created in.
+    * `COGNITO-IDENTITY-POOL-ID` を ID プールの ID に置き換えます。
+    * 識別プールが作成されたリージョンに `COGNITY-POOL-REGION` を置き換えます。
 * **CognitoUserPool**
-    * Replace `COGNITO-USER-POOL-ID` with the user pool ID.
-    * Replace `COGNITO-USER-POOL-REGION` with the Region the user pool was created in.
-    * Replace `COGNITO-USER-APP-CLIENT-ID` with the app client id that has access to the user pool.
-    * Replace `COGNITO-USER-POOL-APP-CLIENT-SECRET` with the app client secret for the app client id.
-    * Replace `COGNITO-USER-POOL-REGION` with the Region the user pool was created in.
+    * `COGNITO-USER-POOL-ID` をユーザプール ID に置き換えます。
+    * ユーザープールが作成されたリージョンに `COGNITO-USER-POOL-REGION` を置き換えます。
+    * `COGNITO-USER-APP-CLIENT-ID` を、ユーザプールへのアクセス権を持つアプリクライアントIDに置き換えます。
+    * `COGNITO-USER-POOL-APP-CLIENT-SECRET` をアプリクライアントIDのアプリクライアントシークレットに置き換えます。
+    * ユーザープールが作成されたリージョンに `COGNITO-USER-POOL-REGION` を置き換えます。
 * **PinpointAnalytics**
-    * Replace `PINPOINT-APP-ID` with the Project Id of the Pinpoint project.
-    * Replace `PINPOINT-REGION` with the Region the Pinpoint project was created in.
-* **PinpointTargeting**
-    * Replace `PINPOINT-REGION` with the Region the Pinpoint project was created in.
+    * `PINPOINT-APP-ID` を Pinpoint プロジェクトのプロジェクト ID に置き換えます。
+    * Pinpoint プロジェクトが作成されたリージョンに `PINPOINT-REGION` を置き換えます。
+* **ターゲットのピンポイント**
+    * Pinpoint プロジェクトが作成されたリージョンに `PINPOINT-REGION` を置き換えます。
 
 
-## Add Amazon Pinpoint Targeted and Campaign Push Messaging
+## Amazonピンポイントターゲットとキャンペーンプッシュメッセージを追加
 
 The [Amazon Pinpoint console](https://console.aws.amazon.com/pinpoint/) enables you to target your app users with push messaging. You can send individual messages or configure campaigns that target a group of users that match a profile that you define. For instance, you could email users that have not used the app in 30 days, or send an SMS to those that frequently use a given feature of your app.
 
-The following steps show how to send push notifications targeted for your app.
+次の手順では、アプリを対象としたプッシュ通知を送信する方法を示します。
 
-1. Go to https://developer.apple.com/account/
+1. https://developer.apple.com/account/ に移動
 
-1. Under "Certificates, Identifiers & Profiles", on the left side click on "Keys", click +, type in a name like "Push Notification Key", check off Apple Push Notification Service (APNs). Register and download the file. It should be in the format of `AuthKey_<Key ID>.p8`
+1. 「証明書、識別子 & プロファイル」の下で、左側の「キー」をクリックして+をクリックしてください。 「プッシュ通知キー」のような名前を入力し、Apple Push Notification Service (APNs) をチェックしてください。 ファイルを登録してダウンロードします。format@@0 AuthKey_ `<Key ID>.p8` の形式である必要があります。
 
-1. Go to your "Membership details" page to get the "Team ID"
+1. 「チームID」を取得するには、「メンバーシップの詳細」ページに移動してください。
 
-1. Run `amplify notifications add`
+1. `増幅通知を追加`を実行する
 
     ```
     ? Choose the push notification channel to enable. `APNS`
@@ -279,26 +279,26 @@ The following steps show how to send push notifications targeted for your app.
     ✔ The APNS channel has been successfully enabled.
     ```
 
-1. Open the AWS Pinpoint console with `amplify console analytics`
+1. AWSピンポイントコンソールを `増幅コンソール解析`で開く
 
-1. Go to Campaign, click Create Campaign, provide a campaign name, and select Push Notifications as the channel, and click next.
+1. 「キャンペーン」に移動し、「キャンペーンの作成」をクリックし、キャンペーン名を指定し、チャンネルとして「プッシュ通知」を選択し、「次へ」をクリックします。
 
 1. In the segment section, select `Create a segment` and you should see 1 device as a targeted endpoint, which is the app we are running on the device. Choose this option and then choose **Next Step**.
 
-1. Provide text for a sample title and body for the push notification, enter the device token or endpoint ID retrieved from the app.
+1. プッシュ通知のサンプルタイトルと本文のテキストを入力し、アプリから取得したデバイストークンまたはエンドポイントIDを入力します。
 
-    - Make sure the app is in the foreground, click on Test message and you should see an alert modal pop up with your test message wrapped in push notification data.
-    - Make sure the app is in the background, click on Test message and you should see push notification slide down from the top.
+    - アプリがフォアグラウンドにあることを確認してください Test messageをクリックすると、テストメッセージがプッシュ通知データにラップされたアラートモーダルが表示されます。
+    - アプリがバックグラウンドにあることを確認し、テストメッセージをクリックすると、上から下にプッシュ通知が表示されます。
 
 
-## Campaign Push messaging events
+## キャンペーンメッセージングイベント
 
-When a user receives an notification and taps on it, the AWS Pinpoint SDK will send a corresponding event that you can filter on in the AWS Pinpoint console.
+ユーザーが通知を受け取ってタップしたとき AWS Pinpoint SDK は、AWS Pinpoint コンソールでフィルタリングできる対応するイベントを送信します。
 
-`_campaign.opened_notification` event will be sent when the notification is opened from an app Inactive or Terminated state.
+`_campaign.opened_notification` イベントは、アプリの非アクティブ状態または終了状態から通知を開いたときに送信されます。
 
-`_campaign.received_foreground` when the app is received while it is in the foreground
+`_campaign.received_foreground` アプリがフォアグラウンドで受信されたとき。
 
-`_campaign.received_background` when the notification is tapped on while the app is in the background
+`_campaign.received_background` アプリがバックグラウンドでタップされたときの通知
 
-If the developer never taps on the notification even though it was received on the device, the App will not submit an event for that since there is no way for the App to know that the notification was received by the device.
+開発者がデバイス上で受信しても通知をタップしない場合。 アプリは、その通知がデバイスによって受信されたことを知る方法がないため、そのためのイベントを送信しません。
