@@ -1,21 +1,21 @@
-## Delta Sync
+## デルタ同期
 
-DeltaSync allows you to perform automatic synchronization with an AWS AppSync GraphQL server. The client will perform reconnection, exponential backoff, and retries when network errors take place for simplified data replication to devices. It does this by taking the results of a GraphQL query and caching it in the local Apollo cache. The DeltaSync API manages writes to the Apollo cache for you, and all rendering in your app (such as from React components, Angular bindings) should be done through a read-only fetch.
+DeltaSyncでは、AWS AppSync GraphQLサーバーとの自動同期を実行できます。 クライアントは再接続、指数的なバックオフを実行し、デバイスへのデータ複製を簡素化するためにネットワークエラーが発生したときに再試行します。 これを行うには、GraphQL クエリの結果を取得し、ローカルの Apollo キャッシュでキャッシュします。 DeltaSync APIはApolloキャッシュへの書き込みを管理します。 そして、(React コンポーネントからのような) アプリケーション内のすべてのレンダリングは、読み取り専用のフェッチを介して行う必要があります。
 
-In the most basic form, you can use a single query with the API to replicate the state from the backend to the client. This is referred to as a "Base Query" and could be a list operation for a GraphQL type which might correspond to a DynamoDB table. For large tables where the content changes frequently and devices switch between offline and online frequently as well, pulling all changes for every network reconnect can result in poor performance on the client. In these cases you can provide the client API a second query called the "Delta Query" which will be merged into the cache. When you do this the Base Query is run an initial time to hydrate the cache with data, and on each network reconnect the Delta Query is run to just get the changed data. The Base Query is also run on a regular bases as a "catch-up" mechanism. By default this is every 24 hours however you can make it more or less frequent.
+最も基本的なフォームでは、API で単一のクエリを使用してバックエンドから state をクライアントにレプリケートできます。 これは「Base Query」と呼ばれ、DynamoDBテーブルに対応するGraphQL型のリスト操作になります。 コンテンツが頻繁に変更され、デバイスがオフラインとオンラインの間で頻繁に切り替わる大きなテーブルの場合。 ネットワークの再接続ごとにすべての変更を引くと、クライアントのパフォーマンスが低下する可能性があります。 この場合、クライアント API に、キャッシュにマージされる「Delta Query」という2番目のクエリを指定できます。 これを行うと、Base Queryが最初に実行され、データを使用してキャッシュをハイドレートします。 そして、各ネットワークでデルタクエリを再接続し、変更されたデータを取得するために実行されます。 ベースクエリは、「キャッチアップ」メカニズムとして、通常のベース上でも実行されます。 デフォルトでは、これは24時間ごとですが、多かれ少なかれ頻繁にすることができます。
 
-By allowing clients to separate the base hydration of the cache using one query and incremental updates in another query, you can move the computation from your client application to the backend. This is substantially more efficient on the clients when regularly switching between online and offline states. This could be implemented in your AWS AppSync backend in different ways such as using a DynamoDB Query on an index along with a conditional expression. You can also leverage Pipeline Resolvers to partition your records to have the delta responses come from a second table acting as a journal. [A full sample with CloudFormation is available in the AppSync documentation](https://docs.aws.amazon.com/appsync/latest/devguide/tutorial-delta-sync.html). The rest of this documentation will focus on the client usage.
+クライアントが1つのクエリと別のクエリのインクリメンタルアップデートを使用してキャッシュの基本ハイドレーションを分離できるようにすることにより、 クライアントアプリケーションからバックエンドに計算を移動できます。 これは、オンラインとオフラインの状態を定期的に切り替える際に、クライアントにとって大幅に効率的です。 これをAWS AppSync バックエンドで実装することができます。例えば、インデックスでDynamoDB Queryを条件式と一緒に使用するなど、さまざまな方法です。 また、Pipeline Resolversを活用して、レコードを分割してデルタ応答をジャーナルとして動作させることもできます。 [CloudFormationの完全なサンプルは、AppSyncドキュメント](https://docs.aws.amazon.com/appsync/latest/devguide/tutorial-delta-sync.html)で入手できます。 このドキュメントの残りの部分は、クライアントの使用状況に焦点を当てます。
 
-You can also use Delta Sync functionality with GraphQL subscriptions, taking advantage of both only sending changes to the clients when they switch network connectivity but also when they are online. In this case you can pass a third query called the "Subscription Query" which is a standard GraphQL subscription statement. When the device is connected, these are processed as normal and the client API simply helps make setting up realtime data easy. However, when the device transitions from offline to online, to account for high velocity writes the client will execute the resubscription along with synchronization and message processing in the following order:
+GraphQL サブスクリプションでデルタ同期機能を使用することもできます。 ネットワーク接続を切り替えたときだけでなくネット上でも変更を送信する この場合、標準のGraphQLサブスクリプションステートメントである「Subscription Query」と呼ばれる3つ目のクエリを渡すことができます。 デバイスが接続されると、これらは通常どおりに処理され、クライアント API は、リアルタイムのデータを簡単に設定するのに役立ちます。 ただし、デバイスがオフラインからオンラインに切り替わったとき。 高速を考慮して、クライアントは次の順序で同期とメッセージ処理と共に再購読を実行します:
 
-1. Subscribe to any queries defined and store results in an incoming queue
-2. Run the appropriate query (If `baseRefreshIntervalInSeconds` has elapsed, run the Base Query otherwise only run the Delta Query)
-3. Update the cache with results from the appropriate query
-4. Drain the subscription queue and continue processing as normal
+1. 定義されたクエリを購読し、結果を受信キューに保存します
+2. 適切なクエリを実行します( `baseRefreshIntervalInSeconds` が経過した場合、それ以外の場合はDelta Queryのみを実行します)
+3. 適切なクエリの結果を使用してキャッシュを更新します
+4. サブスクリプションキューを削除し、通常通り処理を続ける
 
 Finally, you might have other queries which you wish to represent in your application other than the base cache hydration. For instance a `getItem(id:ID)` or other specific query. If your alternative query corresponds to items which are already in the normalized cache, you can point them at these cache entries with the `cacheUpdates` function which returns an array of queries and their variables. The DeltaSync client will then iterate through the items and populate a query entry for each item on your behalf. If you wish to use additional queries which don't correspond to items in your base query cache, you can always create another instance of the `client.sync()` process.
 
-## Usage
+## 使用法
 
 ```typescript
 // Start DeltaSync
@@ -27,34 +27,34 @@ Under the covers, this is actually an Observable<T> that the AppSync client auto
 subscription.unsubscribe();
 ```
 
-**The `options` object**
+**`オプション` オブジェクト**
 
 **baseQuery**
   - `query`: A `DocumentNode` for the base data (e.g. as returned by [`gql`](https://github.com/apollographql/graphql-tag#gql))
-  - `variables` [optional]: An object with the query variables, if any.
-  - `baseRefreshIntervalInSeconds` [optional]: Number of seconds after which the base query will be run again. Default value: `86400` (24 hrs)
-  - `update` [optional]: A function to update the cache, see: [Apollo's `update` function](https://www.apollographql.com/docs/react/api/react-apollo.html#graphql-mutation-options-update)
+  - `変数` [optional]: もしあればクエリ変数を持つオブジェクト。
+  - `baseRefreshIntervalInSeconds` [optional]: ベースクエリを再実行する秒数。デフォルト値: `600` (24時間)
+  - `update` [optional]: キャッシュを更新する関数, 参照: [Apolloの `update` function](https://www.apollographql.com/docs/react/api/react-apollo.html#graphql-mutation-options-update)
 
-**subscriptionQuery**
+**サブスクリプションクエリ**
   - `query`: A `DocumentNode` for the subscription (e.g. as returned by [`gql`](https://github.com/apollographql/graphql-tag#gql))
-  - `variables` [optional]: An object with the query variables, if any.
-  - `update` [optional]: A function to update the cache, see: [Apollo's `update` function](https://www.apollographql.com/docs/react/api/react-apollo.html#graphql-mutation-options-update)
+  - `変数` [optional]: もしあればクエリ変数を持つオブジェクト。
+  - `update` [optional]: キャッシュを更新する関数, 参照: [Apolloの `update` function](https://www.apollographql.com/docs/react/api/react-apollo.html#graphql-mutation-options-update)
 
 **deltaQuery**
-  - `query`: A `DocumentNode` for the deltas (e.g. as returned by [`gql`](https://github.com/apollographql/graphql-tag#gql))
-  - `variables` [optional]: An object with the query variables, if any.
-  - `update` [optional]: A function to update the cache, see: [Apollo's `update` function](https://www.apollographql.com/docs/react/api/react-apollo.html#graphql-mutation-options-update)
+  - `クエリ`: デルタの `DocumentNode` (例: [`gql`](https://github.com/apollographql/graphql-tag#gql) によって返される)
+  - `変数` [optional]: もしあればクエリ変数を持つオブジェクト。
+  - `update` [optional]: キャッシュを更新する関数, 参照: [Apolloの `update` function](https://www.apollographql.com/docs/react/api/react-apollo.html#graphql-mutation-options-update)
 
-## The buildSync helper
+## buildSyncヘルパー
 
 The quickest way to get started with the DeltaSync feature is by using the `buildSync` helper function. This helper function will build an `options` object with the appropriate `update` functions that will update the cache for you in a similar fashion to the [offline helpers](https://github.com/awslabs/aws-mobile-appsync-sdk-js/blob/master/OFFLINE_HELPERS.md).
 
 The first argument you need to pass is the GraphQL `__typename` for your base query. The second argument is the `options` object from the previous section (without the `update` keys, since those will be generated for you by this helper function).
 
 You can **optionally** pass a `cacheUpdates` parameter to the second argument with the following structure:
-- **deltaRecord**: A function which receives a `deltaRecord` (e.g. an individual item in the cache populated by the base/delta/subscription query) and returns an array of GraphQL queries and it's variables to be written to the cache.
+- **deltaRecord**: `deltaRecord` を受け取る関数(例: base/delta/subscription queryによって設定されたキャッシュ内の個々のアイテムと、GraphQL クエリの配列を返し、キャッシュに書き込む変数です。
 
-Example:
+例
 
 ```typescript
   client.sync(
@@ -76,14 +76,14 @@ Example:
   )
 ```
 
-### Requirements for helper function
-- Your `baseQuery` returns a list, not a nested type
+### ヘルパー関数の要件
+- `baseQuery` は、入れ子の型ではなくリストを返します。
 - Your `deltaQuery` expects a parameter called `lastSync` of type `AWSTimestamp` and returns a list with the same fields as your `baseQuery` (an optionally, an `aws_ds` field with a value of `'DELETE'` for deletions, any other value for insert/update)
 - The mutations that trigger the subscription in your `subscriptionQuery` should return a single record with the same fields as the items from your `baseQuery`, (an optionally, an `aws_ds` field with a value of `'DELETE'` for deletions, any other value for insert/update)
 
-### Example
+### 例
 
-The schema for this sample is below. [A full sample with CloudFormation is available in the AppSync documentation](https://docs.aws.amazon.com/appsync/latest/devguide/tutorial-delta-sync.html).
+このサンプルのスキーマは以下のとおりです。 [CloudFormationの完全なサンプルは、AppSyncドキュメント](https://docs.aws.amazon.com/appsync/latest/devguide/tutorial-delta-sync.html) にあります。
 
 ```graphql
 input CreatePostInput {
@@ -145,7 +145,7 @@ schema {
 }
 ```
 
-### Sample queries
+### サンプル クエリ
 
 ```graphql
 query Base {
@@ -181,7 +181,7 @@ subscription Subscription {
 ```
 
 
-Define the queries from above in a `./graphql/DeltaSync.js` file to import in your app:
+アプリにインポートする `./graphql/DeltaSync.js` ファイルで上記のクエリを定義します。
 
 ```javascript
 import gql from "graphql-tag";
@@ -245,13 +245,13 @@ const subscription = client.sync(
 );
 ```
 
-### React example
+### React の例
 
-Suppose you have an app created with [Create React App](https://github.com/facebook/create-react-app) with the following structure:
+[Create React App](https://github.com/facebook/create-react-app) で以下の構造を持つアプリケーションが作成されたとします：
 
 - App.js
-  - Sets up `AWSAppSyncClient` and `client.sync` as above
-  - Renders `<AllPosts />` and `<SinglePost item={2}>`
+  - 上記のように `AWSAppSyncClient` と `client.sync` を設定します
+  - `<AllPosts />` と `<SinglePost item={2}>` をレンダリング
 - AllPosts.jsx exports `<AllPosts />`
 - GetPost.jsx exports `<SinglePost item={id}>`
 
@@ -299,7 +299,7 @@ const App = () => (
 );
 ```
 
-In `AllPosts.jsx` you would have code like so:
+`AllPosts.jsx` には以下のようなコードがあります:
 
 ```typescript
 const AllPosts = ({ postsList }) => (
@@ -320,7 +320,7 @@ export default graphql(DeltaSync.BaseQuery, {
 })(AllPosts);
 ```
 
-In `GetPost.jsx` you would have:
+`GetPost.jsx` には以下のものがあります:
 
 ```typescript
 const OnePost = ({ post }) => (
@@ -342,9 +342,9 @@ export default graphql(DeltaSync.GetItem, {
 
 **Note**: The `fetchPolicy` is `cache-only` as all of the network requests are handled automatically by the `client.sync()` operation. You should use this if using different queries in other components as the `client.sync()` API manages the cache lifecycle. If you use another `fetch-policy` such as `cache-and-network` then extra network requests may take place negating the Delta Sync benefits.
 
-## Writing update functions
+## 更新関数の書き込み
 
-If you do not want to use the `buildSync` helper then you are responsible for managing cache updates in your application code. Note that this can be a complex process as you will need to manage create, update, and deletes appropriately. An example of this would be updating the cache with a delta record as below, noting that you must update the returned type to match the type from your base query.
+`buildSync` ヘルパーを使用したくない場合は、アプリケーションコード内のキャッシュ更新を管理する責任があります。 これは、作成、更新、および適切な削除を管理する必要があるため、複雑なプロセスになる可能性があることに注意してください。 例として、以下のようにデルタレコードを使用してキャッシュを更新します。 ベースクエリの型に一致するように戻された型を更新する必要があることに注意してください。
 
 ```javascript
 client.sync({
