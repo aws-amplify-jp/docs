@@ -1,6 +1,6 @@
-## Get
+## 取得
 
-Get a presigned URL of a stored file. You can specify some options: mainly [file access `level`](https://docs.amplify.aws/lib/storage/configureaccess/q/platform/js) and whether to `download` the file:
+保存されたファイルの URL を事前に取得します。 いくつかのオプションを指定できます: 主に [ファイルアクセス `レベル`](https://docs.amplify.aws/lib/storage/configureaccess/q/platform/js) と `ファイルをダウンロード` するかどうか:
 
 ```typescript
 await Storage.get(key: string, config: {
@@ -15,31 +15,34 @@ await Storage.get(key: string, config: {
 `Storage.get` returns a signed URL `string` to your file, if `download` is false, which is the default. You can use this to create a download link for people to click on. This is our recommended option. Note that this method **does not check if the file actually exists** as that would involve an extra API call.
 
 ```js
-// get the signed URL string
+// signed URL string
 const signedURL = await Storage.get(key) // get key from Storage.list
 
-// inside your template or JSX code. Note <a download> doesn't work here because it is not same origin
+// inside your template or JSX code. メモ 
+ は同じ原点ではないため、ここでは動作しません 
+
+ <a download>
 <a href={signedURL} target="_blank">{fileName}</a>
 ```
 
 If `download` is true, `Storage.get` returns an object with a `Body` field of type [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob). It is up to you to programmatically save it to disk (we suggest a method below) or do whatever else you need with it.
 
-### File download option
+### ファイルダウンロードオプション
 
-The `download` option send you the object data for download or programmatic manipulation:
+`ダウンロード` オプションは、ダウンロードまたはプログラム操作のためのオブジェクト データを送信します。
 
 ```javascript
 const data = await Storage.get(`filename.txt`, { download: true })
 
 // data.Body is a Blob
-data.Body.text().then(string => { 
-  // handle the String data return String 
+data. ody.text().then(string => { 
+  // String data return String 
 })
 ```
 
 Note that the `Blob` methods like `.text()` are not supported on [IE/Opera/Safari](https://developer.mozilla.org/en-US/docs/Web/API/Blob/text); in those cases you can [parse manually](https://developer.mozilla.org/en-US/docs/Web/API/Blob#JavaScript).
 
-You can programmatically download Blobs using JavaScript:
+JavaScriptを使用してBlobsをプログラム的にダウンロードできます。
 
 ```js
 export function downloadBlob(blob, filename) {
@@ -63,7 +66,7 @@ Storage.get(fileKey, { download: true })
         .then(res => downloadBlob(res.Body, downloadFileName)) // derive downloadFileName from fileKey if you wish
 ```
 
-The full return signature of `Storage.get(key, { download: true })` looks like this:
+`Storage.get(key, { download: true })` の完全な戻り値の署名は次のようになります。
 
 ```js
 {
@@ -84,9 +87,9 @@ The full return signature of `Storage.get(key, { download: true })` looks like t
 }
 ```
 
-### File Access Levels
+### ファイルアクセスレベル：
 
-You can choose to configure access level ahead of time, or at the point of calling `Storage.get`:
+事前にアクセスレベルを設定するか、 `Storage.get` を呼び出す時点で設定できます。
 
 ```javascript
 // Option 1: configure access ahead of time
@@ -98,7 +101,7 @@ await Storage.get('welcome.png'); // Gets the welcome.png belonging to current u
 await Storage.get('welcome.png', { level: 'private' }); // same effect
 ```
 
-Here is a quick guide to the access levels - [see the docs](https://docs.amplify.aws/lib/storage/configureaccess/q/platform/js) for more detail:
+アクセスレベルのクイックガイドはこちらです - [詳細はドキュメント](https://docs.amplify.aws/lib/storage/configureaccess/q/platform/js) を参照してください：
 
 - `public`: Accessible by all users of your app. Files are stored under the `public/` path in your S3 bucket.
 - `protected`: Readable by all users, but writable only by the creating user. Files are stored under `protected/{user_identity_id}/` where the `user_identity_id` corresponds to the unique Amazon Cognito Identity ID for that user. **:**
@@ -115,24 +118,24 @@ Here is a quick guide to the access levels - [see the docs](https://docs.amplify
 - `private`: **Only accessible for the signed in user**. Files are stored under `private/{user_identity_id}/` where the `user_identity_id` corresponds to the unique Amazon Cognito Identity ID for that user.
 
 
-### Download expiry
+### ダウンロードの有効期限
 
-You can use `expires` option to limit the availability of your URLs. This configuration returns the pre-signed URL that expires in 60 seconds:
+`expires` オプションを使用して、URL の可用性を制限できます。この設定は、60 秒後に有効期限が切れる事前署名 URL を返します:
 
 ```javascript
 await Storage.get('filename.txt', { expires: 60 })
 ```
 
 
-### Frequently Asked Questions
+### よく寄せられる質問
 
-Users can run into unexpected issues, so we are giving you advance notice in documentation with links to open issues - please vote for what you need, to help the team prioritize.
+ユーザーは予期しない問題に遭遇する可能性があります。 オープンな問題へのリンクが記載されているドキュメントに事前通知します - 必要なものに投票してください チームの優先順位を高めるために
 
 - Very common issue: Calling `Storage.get` for a nonexistent file, or incorrect credentials, **does not throw an error** because that would involve an extra API call. [Active issue here](https://github.com/aws-amplify/amplify-js/issues/1145). If you are having trouble accessing a file, make sure to check that you have the right filename, bucket, region, and auth configs. You can get a current list of files from `Storage.list`.
 - `Storage.get` is cached; if you have recently modified a file you may not get the most recent version right away. [There is an active issue for a new option to enable cache busting.](https://github.com/aws-amplify/amplify-js/issues/6413)
-- `Storage.get` only returns the latest cached version of the file; there is [not yet an API to view prior versions](https://github.com/aws-amplify/amplify-js/issues/2131).
-- Download progress tracking is not yet possible. [Active issue here](https://github.com/aws-amplify/amplify-js/issues/4734).
-- You cannot [only get file metadata](https://github.com/aws-amplify/amplify-js/issues/6157) yet.
-- [Image compression](https://github.com/aws-amplify/amplify-js/issues/6081) or CloudFront CDN caching for your S3 buckets is not yet possible.
-- There is no API for [Cognito Group-based access to files](https://github.com/aws-amplify/amplify-js/issues/3388).
+- `Storage.get` は最新のキャッシュされたファイルのみを返します。 [以前のバージョンを表示する API はまだありません](https://github.com/aws-amplify/amplify-js/issues/2131)。
+- ダウンロードの進捗状況の追跡はまだできません。 [](https://github.com/aws-amplify/amplify-js/issues/4734).
+- [ファイルメタデータ](https://github.com/aws-amplify/amplify-js/issues/6157) のみを取得できません。
+- [画像圧縮](https://github.com/aws-amplify/amplify-js/issues/6081) または S3バケット用のCloudFront CDNキャッシュはまだ不可能です。
+- [Cognito グループベースのファイル](https://github.com/aws-amplify/amplify-js/issues/3388) へのアクセス用 API はありません。
 - There is currently [no API for getting the identityId of other users](https://github.com/aws-amplify/amplify-js/issues/5177); you have to retrieve this from elsewhere before calling `Storage.get`.
