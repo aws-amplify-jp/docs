@@ -1,6 +1,6 @@
-## SignUp
+## サインアップ
 
-Creates a new user in Cognito User Pools:
+Cognitoユーザープールに新しいユーザーを作成します:
 
 ```swift
 AWSMobileClient.default().signUp(username: "your_username",
@@ -29,9 +29,9 @@ AWSMobileClient.default().signUp(username: "your_username",
 }
 ```
 
-## User Attributes
+## ユーザー属性
 
-You can provide custom user attributes in the `signUp()` method by passing them into the `userAttributes` argument as key-value pairs. For example:
+`signUp()` メソッドで、 `userAttributes` 引数をキーと値のペアとして渡すことで、カスタムユーザー属性を提供できます。 例:
 
 ```swift
 AWSMobileClient.default().signUp(
@@ -45,9 +45,9 @@ AWSMobileClient.default().signUp(
         }
 ```
 
-## Confirm SignUp
+## サインアップを確認
 
-Confirms a new user after signing up (MFA):
+サインアップ後に新規ユーザーを確認します:
 
 ```swift
 AWSMobileClient.default().confirmSignUp(username: "your_username", confirmationCode: signUpCodeTextField.text!) { (signUpResult, error) in
@@ -66,7 +66,7 @@ AWSMobileClient.default().confirmSignUp(username: "your_username", confirmationC
 }
 ```
 
-## Re-send a Confirmation Code (MFA)
+## 確認コード（MFA）を再送信する
 
 ```swift
 AWSMobileClient.default().resendSignUpCode(username: "your_username", completionHandler: { (result, error) in
@@ -80,7 +80,7 @@ AWSMobileClient.default().resendSignUpCode(username: "your_username", completion
 
 ## SignIn
 
-Sign in with user credentials:
+ユーザー資格情報でサインイン:
 
 ```swift
 AWSMobileClient.default().signIn(username: "your_username", password: "Abc@123!") { (signInResult, error) in
@@ -116,7 +116,7 @@ AWSMobileClient.default().confirmSignIn(challengeResponse: "code_here") { (signI
 }
 ```
 
-## Force a Password Reset
+## パスワードを強制的にリセットする
 
 If a user is required to change their password on first login, a `newPasswordRequired` state will be returned when `signIn` is called and you will need to provide a new password. This can be done by using `confirmSignIn`:
 
@@ -160,11 +160,11 @@ AWSMobileClient.default().confirmSignIn(challengeResponse: "NEW_PASSWORD_HERE") 
 AWSMobileClient.default().signOut()
 ```
 
-## Global SignOut
+## グローバルサインアウト
 
-Using global signout, you can signout a user from all active login sessions. By doing this, you are invalidating all tokens (id token, access token and refresh token) which means the user is signed out from **all** devices.
+グローバルサインアウトを使用すると、すべてのアクティブなログインセッションからユーザーにサインアウトできます。 これにより、あなたはすべてのトークンを無効にしています（IDトークン） アクセストークンとリフレッシュトークンは、ユーザーが **すべての** デバイスからサインアウトされていることを意味します。
 
-> **Note** Although the tokens are revoked the temporary AWS credentials (Access and Secret Keys) will remain valid until they expire, which by default is 1 hour.
+> **メモ** トークンは一時的な AWS 資格情報 (Access and Secret Keys) が失効するまで有効です。 デフォルトでは1時間です
 
 ```swift
 AWSMobileClient.default().signOut(options: SignOutOptions(signOutGlobally: true)) { (error) in
@@ -172,12 +172,12 @@ AWSMobileClient.default().signOut(options: SignOutOptions(signOutGlobally: true)
 }
 ```
 
-## Forgot Password
+## パスワードを忘れた場合
 
-Forgot password is a 2 step process.
+パスワードを忘れた2ステップのプロセスです。
 
 1. Call a `forgotPassword()` method which sends a confirmation code via email or phone number. The details of how the code was sent are included in the response of `forgotPassword()`.
-2. Once the code is given call `confirmForgotPassword()` with the confirmation code.
+2. コードが `confirmForgotPassword()` を呼び出すと確認コードが表示されます。
 
 ```swift
 AWSMobileClient.default().forgotPassword(username: "my_username") { (forgotPasswordResult, error) in
@@ -209,23 +209,23 @@ AWSMobileClient.default().confirmForgotPassword(username: "my_username", newPass
 }
 ```
 
-## Utility Properties
+## ユーティリティのプロパティ
 
-AWSMobileClient provides several property helpers that are automatically cached locally.
+AWSMobileClient は、ローカルに自動的にキャッシュされるいくつかのプロパティヘルパーを提供します。
 
 ```swift
-AWSMobileClient.default().username       //String
-AWSMobileClient.default().isSignedIn     //Boolean
-AWSMobileClient.default().identityId     //String
+AWSMobileClient.default().username //String
+AWSMobileClient.default().isSignedIn //Boolean
+AWSMobileClient.default().identityId //String
 ```
 
-> Note: The property `username` is available only when using username-password based auth with Cognito User Pools.
+> 注: プロパティ `username` は、Cognito User Pools でユーザー名ベースの認証を使用している場合にのみ使用できます。
 
-## Managing Security Tokens
+## セキュリティトークンの管理
 
-When using Authentication with AWSMobileClient, you do not need to refresh Amazon Cognito tokens manually. The tokens are automatically refreshed by the SDK when necessary.
+AWSMobileClientで認証を使用する場合、Amazon Cognitoトークンを手動で更新する必要はありません。トークンは必要に応じてSDKによって自動的にリフレッシュされます。
 
-### OIDC Tokens
+### OIDCトークン
 
 ```swift
 AWSMobileClient.default().getTokens { (tokens, error) in
@@ -237,7 +237,7 @@ AWSMobileClient.default().getTokens { (tokens, error) in
 }
 ```
 
-### AWS Credentials
+### AWS 資格情報
 
 ```swift
 AWSMobileClient.default().getAWSCredentials { (credentials, error) in
