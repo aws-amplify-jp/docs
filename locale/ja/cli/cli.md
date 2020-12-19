@@ -1,41 +1,41 @@
 ---
 title: Amplify CLI
-description: The Amplify Command Line Interface (CLI) is a unified toolchain to create, integrate, and manage the AWS cloud services for your app. The Amplify CLI makes it easy to provision a cloud backend with features such as Authentication, APIs (REST and GraphQL), Storage, Functions and Hosting.
+description: Amplifyコマンドラインインターフェース(CLI)は、アプリケーションのAWSクラウドサービスを作成、統合、管理するための統合ツールチェーンです。 Amplify CLI は、認証、API (REST、GraphQL)、ストレージ、関数、ホスティングなどの機能を備えたクラウド バックエンドを簡単にプロビジョニングできます。
 ---
 
-The Amplify Command Line Interface (CLI) is a unified toolchain to create, integrate, and manage the AWS cloud services for your app.
+Amplifyコマンドラインインターフェース(CLI)は、アプリケーションのAWSクラウドサービスを作成、統合、管理するための統合ツールチェーンです。
 
-![Amplify CLI feature carousel](~/assets/cli-b-roll.gif)
+![Amplify CLI feature カルーセル](~/assets/cli-b-roll.gif)
 
-<docs-internal-link-button href="~/cli/start/install.md"> <span slot="text">Install Amplify CLI</span> </docs-internal-link-button>
+<docs-internal-link-button href="~/cli/start/install.md"> <span slot="text">Amplify CLI のインストール</span> </docs-internal-link-button>
 
-## Key capabilities
+## キー機能
 
-### Data modeling with GraphQL
-At the core of most applications is one thing - the data. Easily being able to model and access data in your app allows you to focus on delivering core features and business value instead of architecting and re-architecting your back end.
+### GraphQLによるデータモデリング
+ほとんどのアプリケーションの中心には、データというものがあります。 アプリ内のデータのモデル化やアクセスが容易になることで、バックエンドの設計や再構築を行うのではなく、コア機能とビジネス価値を提供することに集中できます。
 
-The GraphQL Transform library allows you to deploy AWS AppSync GraphQL APIs with features like NoSQL databases, authentication, elasticsearch engines, lambda function resolvers, relationships, authorization, and more using GraphQL schema directives. [Learn more](~/cli/graphql-transformer/overview.md)
+GraphQL Transform ライブラリでは、NoSQL データベース、認証、などの機能を備えた AWS AppSync GraphQL API をデプロイできます。 elasticsearchエンジン、lambda関数リゾルバ、リレーションシップ、承認などはGraphQLスキーマディレクティブを使用しています。 [詳細](~/cli/graphql-transformer/overview.md)
 
-### Multiple environments
+### 複数の環境
 
-Amplify CLI has support for multiple environments (e.g. dev, qa, and prod). When you initialize a project with the CLI, you create an Amplify backend environment. Every Amplify backend environment is a container for the categories added to your project. You can view all the backend environments as well as the categories added in the Amplify Console. [Learn more](~/cli/teams/overview.md)
+Amplify CLI は、複数の環境 (例えば、dev、qa、prod) に対応しています。 CLI でプロジェクトを初期化するときは、Amplify バックエンド環境を作成します。 Amplifyバックエンド環境はすべて、プロジェクトに追加されたカテゴリのコンテナです。 Amplifyコンソールに追加されたカテゴリと同様、すべてのバックエンド環境を表示できます。 [詳細はこちら](~/cli/teams/overview.md)
 
 ### Infrastructure as code
 
-The AWS Amplify CLI uses AWS CloudFormation and nested stacks. This allows you to add or modify configurations locally before you push them for execution in your account. It also takes any “magic” away and allows full transparency in the process of customizing your resources. To see the status of the deployment at any time, run amplify status.
+AWS Amplify CLIはAWS CloudFormationとネストされたスタックを使用します。 これにより、アカウントで実行するためにプッシュする前に、設定をローカルに追加または変更できます。 それはまたあらゆる「魔法」を取り除き、リソースをカスタマイズする過程で完全な透明性を可能にします。 デプロイの状況をいつでも確認するには、anplify ステータスを実行します。
 
-For example, running `amplify add auth` will bootstrap a CloudFormation template in the `amplify>auth` folder. The infrastructure template can be re-used in CI/CD processes (either with the Amplify Console or your own build process), and can be used to replicate stacks.
+例えば、 `amplify add auth` を実行すると、CloudFormationテンプレートが `amplify>auth` フォルダにブートストラップされます。 インフラストラクチャテンプレートは、CI/CDプロセス(Amplify Consoleまたは独自のビルドプロセス)で再利用できます。 スタックの複製にも使えます
 
 **Note:** We strongly advise against manually updating or deleting resources created by AWS CloudFormation; it may cause the stack to be stuck in a state that can no longer be updated. Among those operations, manually updating or deleting **Cognito** resources (created by the Amplify Auth category) are considered especially dangerous and you may lose user data or break auth-related functionalities in your app.
 
-### Local mocking
+### ローカルのモック
 
-Amplify supports running a local server for mocking and testing your application before pushing to the cloud with certain categories, including API (AWS AppSync), Storage (Amazon DynamoDB and Amazon S3), Functions (AWS Lambda), and Hosting. After running amplify init you can run the following to start a mock server. [Learn more](~/cli/usage/mock.md)
+Amplifyは、特定のカテゴリでクラウドにプッシュする前に、アプリケーションをモックしたりテストしたりするためのローカルサーバーの実行をサポートしています。 API(AWS AppSync)、ストレージ(Amazon DynamoDB、Amazon S3)、関数(AWS Lambda)、ホスティングなど。 増幅initを実行した後、モックサーバーを起動するために以下を実行することができます。 [詳細はこちら](~/cli/usage/mock.md)
 
 ```
-amplify mock
+amplifyモックを増幅する
 ```
 
-### Serverless containers
+### サーバーレスコンテナ
 
 Amplify supports AWS Lambda and AWS Fargate compute options for building applications giving a full spectrum of control and integration within your infrastructure. Lambda Functions can be used in your GraphQL and REST APIs in addition to triggers from event sources such as S3 and DynamoDB. Similarly you can bring a [Dockerfile](https://docs.docker.com/engine/reference/builder/) or a [Docker Compose file](https://docs.docker.com/compose/compose-file/) to automatically build and deploy Serverless containers into Amazon Elastic Container Service. [Learn more](~/cli/usage/containers.md).
