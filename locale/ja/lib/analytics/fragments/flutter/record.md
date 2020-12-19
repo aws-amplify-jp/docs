@@ -1,19 +1,19 @@
-## Record event
+## イベントを記録
 
-The Amplify analytics plugin also makes it easy to record custom events within the app. The plugin handles retry logic in the event the device looses network connectivity and automatically batches requests to reduce network bandwidth.
+Amplify分析プラグインを使用すると、アプリ内でカスタムイベントを簡単に記録できます。 このプラグインは、デバイスがネットワーク接続を解放し、ネットワーク帯域幅を削減するための要求を自動的にバッチ処理した場合の再試行ロジックを処理します。
 
 
 ```dart
-AnalyticsEvent event = AnalyticsEvent("PasswordReset");
-event.properties.addStringProperty("Channel", "SMS"); 
+AnalyticsEvent = AnalyticsEvent("PasswordReset");
+event.properties.addStringProperty("Channel", SMS"); 
 event.properties.addBoolProperty("Successful", true);
-event.properties.addIntProperty("ProcessDuration", 792); 
+event.properties.addIntProperty("Processation", 792); 
 event.properties.addDoubleProperty("doubleKey", 120.3);
 
 Amplify.Analytics.recordEvent(event: event);
 ```
 
-## Flush events
+## イベントをフラッシュする
 
 Events have default configuration to flush out to the network every 30 seconds. If you would like to change this, update `amplifyconfiguration.json` with the value in milliseconds you would like for `autoFlushEventsInterval`. This configuration will flush events every 10 seconds:
 
@@ -38,7 +38,7 @@ Events have default configuration to flush out to the network every 30 seconds. 
 }
 ```
 
-To manually flush events, call:
+イベントを手動でフラッシュするには、以下を呼び出します:
 
 
 ```dart
@@ -46,26 +46,26 @@ Amplify.Analytics.flushEvents();
 ```
 
 
-## Global Properties
+## グローバルプロパティ
 
-You can register global properties which will be sent along with all invocations of `Amplify.Analytics.recordEvent`.
+`Amplify.Analytics.recordEvent` のすべての呼び出しと一緒に送信されるグローバルプロパティを登録できます。
 
 ```dart
-AnalyticsProperties properties = new AnalyticsProperties();
+AnalyticsProperties = new AnalyticsProperties();
 properties.addStringProperty("AppStyle", "DarkMode"); 
 Amplify.Analytics.registerGlobalProperties(globalProperties: properties);
 ```
 
-To unregister a global property, call `Amplify.Analytics.unregisterGlobalProperties()`:
+グローバルプロパティの登録を解除するには、 `Amplify.Analytics.unregisterGlobalProperties()`:
 
 
 ```dart
 Amplify.Analytics.unregisterGlobalProperties(propertyName: ["AppStyle", "OtherProperty"]);
 ```
 
-## Disable Analytics
+## 分析を無効にする
 
-To disable analytics, call:
+分析を無効にするには、以下を呼び出します。
 
 
 ```dart
@@ -73,9 +73,9 @@ Amplify.Analytics.disable();
 ```
 
 
-## Enable Analytics
+## 分析を有効にする
 
-To re-enable, call:
+再び有効化するには、以下のように呼び出します。
 
 
 ```dart
