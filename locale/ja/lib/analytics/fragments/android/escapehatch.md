@@ -1,4 +1,4 @@
-For advanced use cases where Amplify does not provide the functionality, you can retrieve the escape hatch to access the underlying Amazon Pinpoint client.
+Amplifyが機能を提供していない高度なユースケースでは、エスケープハッチを取得して、基礎となるAmazon Pinpointクライアントにアクセスできます。
 
 <amplify-block-switcher> <amplify-block name="Java">
 
