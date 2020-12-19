@@ -1,32 +1,32 @@
-You've successfully built your first app with Amplify! Now that you've built something, it's time to deploy it to the web with Amplify Console!
+Amplifyで初めてのアプリを構築しました！何かを構築したので、AmplifyコンソールでWebにデプロイしましょう！
 
-## Add hosting to your app
-You can manually deploy your web app or setup automatic continuous deployment. In this guide we'll cover how to manually deploy and host your static web app to quickly share with others. If you want to learn about continuous deployment instead, please follow [this guide](https://docs.aws.amazon.com/amplify/latest/userguide/multi-environments.html#standard).
+## アプリにホスティングを追加
+Webアプリを手動でデプロイするか、自動連続デプロイメントを設定することができます。 このガイドでは、静的Webアプリを手動でデプロイしてホストし、他の人とすばやく共有する方法について説明します。 継続的な展開について知りたい場合は、 [このガイド](https://docs.aws.amazon.com/amplify/latest/userguide/multi-environments.html#standard) に従ってください。
 
-From the root of your project, run the following command and select the **bolded options**.
+プロジェクトのルートから、次のコマンドを実行し、 **太字オプション**を選択します。
 ```bash
 amplify add hosting
 ```
 
 ```console
-? Select the plugin module to execute: # Hosting with Amplify Console (Managed hosting with custom domains, Continuous deployment)
-? Choose a type: # Manual Deployment
+? 実行するプラグインモジュールを選択します: # Amplify コンソールでホスティング(カスタムドメインで管理されたホスティング、継続的デプロイメント)
+? タイプを選択してください: # 手動デプロイ
 ```
 
-## Publish your app
+## アプリを公開
 
-Run the following command to publish your app.
+アプリを公開するには、次のコマンドを実行します。
 
 ```bash
 amplify publish
 ```
 
-👏 Congratulations, your app is online!
+👏 おめでとうございます。あなたのアプリはオンラインです！
 
-![image](~/images/browser-published.png)
+![画像](~/images/browser-published.png)
 
 After publishing, your terminal will display your app URL hosted on a `amplifyapp.com` domain. Whenever you have additional changes to publish, just re-run the `amplify publish` command.
 
 If you get an "AccessDenied" error within an XML document, ensure that `DistributionDir` is set to the correct directory in `amplify/.config/project-config.json` and then re-run `amplify publish`
 
-To view your app and hosting configuration in the Amplify Console, run the `amplify console` command.
+Amplifyコンソールでアプリとホスティング設定を表示するには、 `anplify console` コマンドを実行します。
