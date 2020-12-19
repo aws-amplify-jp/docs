@@ -1,7 +1,7 @@
 To initialize the Amplify DataStore, use the `Amplify.addPlugin()` method to add the AWS DataStore Plugin. Next, finish configuring the Amplify framework by calling `Amplify.configure()`.
 
 
-Add the following code to the bottom of your MainActivity `onCreate` method. (Ideally, this code would live in an Application subclass. But, this works for getting started quickly.)
+MainActivity `onCreate` メソッドの一番下に次のコードを追加します。 (つまり、このコードはアプリケーションサブクラスに含まれていますが、これはすぐに始めるために機能します。
 
 <amplify-block-switcher> <amplify-block name="Java">
 
@@ -9,7 +9,7 @@ Add the following code to the bottom of your MainActivity `onCreate` method. (Id
 Amplify.addPlugin(new AWSDataStorePlugin());
 ```
 
-Your class will look like this:
+あなたのクラスは次のようになります：
 
 ```java
 public class MyAmplifyApp extends Application {
@@ -35,7 +35,7 @@ public class MyAmplifyApp extends Application {
 Amplify.addPlugin(AWSDataStorePlugin())
 ```
 
-Your class will look like this:
+あなたのクラスは次のようになります：
 
 ```kotlin
 class MyAmplifyApp : Application() {
@@ -60,7 +60,7 @@ class MyAmplifyApp : Application() {
 RxAmplify.addPlugin(new AWSDataStorePlugin());
 ```
 
-Your class will look like this:
+あなたのクラスは次のようになります：
 
 ```java
 public class MyAmplifyApp extends Application {
@@ -82,8 +82,8 @@ public class MyAmplifyApp extends Application {
 
 </amplify-block> </amplify-block-switcher>
 
-Upon building and running this application you should see the following in your console window:
+このアプリケーションをビルドして実行すると、コンソールウィンドウに次のようなものが表示されます:
 
 ```console
-Initialized Amplify
+Amplifyを初期化しました
 ```
