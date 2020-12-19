@@ -1,4 +1,4 @@
-## DELETE requests
+## 削除リクエスト
 
 <amplify-block-switcher> <amplify-block name="Java">
 
@@ -21,7 +21,7 @@ val options = RestOptions.builder()
     .build()
 
 Amplify.API.delete(options,
-    { Log.i("MyAmplifyApp", "DELETE succeeded: $it") },
+    { Log. ("MyAmplifyApp", "DELETE成功: $it") },
     { Log.e("MyAmplifyApp", "DELETE failed.", it) }
 )
 ```
