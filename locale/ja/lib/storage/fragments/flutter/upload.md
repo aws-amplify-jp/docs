@@ -1,4 +1,4 @@
-To upload to S3 from a data object, specify the key and the file to be uploaded.
+データオブジェクトから S3 にアップロードするには、アップロードするキーとファイルを指定します。
 
 ```dart
 `import 'dart:io'; // to add the File class
