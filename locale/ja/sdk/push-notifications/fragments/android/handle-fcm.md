@@ -1,14 +1,14 @@
-## Handling FCM/GCM Push Notifications
+## FCM/GCM プッシュ通知の処理
 
-You can enable your Android to receive push notifications that you send through by using Amazon Pinpoint. With Amazon Pinpoint, you can send push notifications through Firebase Cloud Messaging (FCM) or its predecessor, Google Cloud Messaging (GCM).
+Amazon Pinpointを使用すると、Androidが送信したプッシュ通知を受信できるようになります。 Amazon Pinpointを使用すると、Firebase Cloud Messaging (FCM) またはその前身であるGoogle Cloud Messaging (GCM) 経由でプッシュ通知を送信できます。
 
-Amazon Pinpoint campaigns can take one of three actions when a user taps a notification: Open your app, Go to a URL, or Open a deep link.
+Amazon Pinpoint キャンペーンは、ユーザーが通知をタップしたときに 3 つのアクションのうちの 1 つを実行できます。 URLに移動するか、ディープリンクを開きます。
 
-### Open your app
+### アプリを開く
 
-By specifying this action, you can open the app when the user taps on the notification.
+この操作を指定することで、ユーザーが通知をタップしたときにアプリを開くことができます。
 
-**Adding a Receiver**
+**受信者の追加**
 
 The SDK provides `PinpointNotificationReceiver` which handles the notification to open your app. In order to use this action, you must register this receiver in your `AndroidManifest.xml` file. For example:
 
@@ -21,15 +21,15 @@ The SDK provides `PinpointNotificationReceiver` which handles the notification t
 </receiver>
 ```
 
-### Open a deep link
+### ディープリンクを開く
 
-This action opens the app to a specified activity.
+このアクションは指定されたアクティビティにアプリを開きます。
 
-To specify a destination activity for deep links, the app must have set up deep linking. This setup requires an intent filter that registers a URL scheme the deep links will use. After the app creates an intent filter, the data provided by the intent determines the activity to render.
+ディープリンクの宛先アクティビティを指定するには、アプリがディープリンクを設定している必要があります。 このセットアップには、ディープリンクが使用する URL スキームを登録するインテントフィルタが必要です。 アプリケーションがインテントフィルタを作成した後、インテントによって提供されたデータによってレンダリングするアクティビティが決定されます。
 
-**Creating an Intent Filter**
+**インテントフィルタの作成**
 
-Begin to set up deep linking by creating an intent filter in your `AndroidManifest.xml` file. For example:
+`AndroidManifest.xml` ファイルにインテントフィルタを作成してディープリンクの設定を開始します。例:
 
 ```xml
 <!-- This activity allows your application to receive a deep link
@@ -50,9 +50,9 @@ that navigates directly to the "Deeplink Page" -->
 
 The data element in the previous example registers a URL scheme, `pinpoint://`, as well as the host, `deeplink`. As a result, when given a URL in the form of `pinpoint://deeplink`, the manifest is prepared to execute the action.
 
-**Handling the Intent**
+**インテントの処理**
 
-Next, set up an intent handler to present the screen associated with the registered URL scheme and host. Intent data is retrieved in the onCreate() method, which then can use `Uri` data to create an activity. The following example shows an alert and tracks an event.
+次に、登録されたURLスキームとホストに関連付けられている画面を表示するインテントハンドラを設定します。 Intent data は onCreate() メソッドで取得され、 `Uri` データを使用してアクティビティを作成できます。 次の例はアラートを表示し、イベントを追跡します。
 
 ```java
 public class DeepLinkActivity extends Activity {
