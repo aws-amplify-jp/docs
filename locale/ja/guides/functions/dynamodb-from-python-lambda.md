@@ -1,15 +1,15 @@
 ---
-title: Calling DynamoDB from a Lambda function in Python
-description: How to interact with a DynamoDB database from a Lambda function in Python
+title: Python の Lambda 関数から DynamoDB を呼び出す
+description: PythonのLambda関数からDynamoDBデータベースを操作する方法
 ---
 
-The easiest way to interact with DynamoDB from Lambda in a Python environment is to use the [boto3 DynamoDB client](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html). In this guide you will learn how to interact with a DynamoDB database from a Lambda function using the Python runtime.
+Python 環境で Lambda から DynamoDB を操作する最も簡単な方法は、 [boto3 DynamoDB クライアント](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html)を使用することです。 このガイドでは、Pythonランタイムを使ってLambda関数からDynamoDBデータベースを操作する方法を学びます。
 
-You will learn how to perform [put_item](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html#DynamoDB.Client.put_item), [get_item](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html#DynamoDB.Client.get_item), [scan](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html#DynamoDB.Client.scan), and [query](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html#DynamoDB.Client.query) operations.
+[put_item](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html#DynamoDB.Client.put_item), [get_item](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html#DynamoDB.Client.get_item), [scan](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html#DynamoDB.Client.scan), and [query](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html#DynamoDB.Client.query) の操作を実行する方法を学びます。
 
-### Creating an item in DynamoDB from Lambda
+### Lambda から DynamoDB にアイテムを作成する
 
-To create an item in DynamoDB you can use the `put` method:
+DynamoDBでアイテムを作成するには、 `put` メソッドを使用します。
 
 ```python
 import boto3
@@ -44,7 +44,7 @@ def handler(event, context):
   return response
 ```
 
-### Getting an item by primary key in DynamoDB from Lambda
+### LambdaからDynamoDBのプライマリキーでアイテムを取得する
 
 To get an item by primary key in DynamoDB you can use the `get` method. A `get` request returns a single item given the primary key of that item:
 
@@ -76,9 +76,9 @@ def handler(event, context):
   return response
 ```
 
-### Scanning a table
+### テーブルをスキャン中
 
-A `scan` returns one or more items and item attributes by accessing every item in a table or a secondary index (limit of 1 MB of data).
+`スキャン` は、テーブル内のすべての項目またはセカンダリインデックス (1 MB のデータの制限) にアクセスすることで、1 つ以上の項目および項目属性を返します。
 
 ```python
 import json
@@ -103,9 +103,9 @@ def handler(event, context):
   return response
 ```
 
-### Querying a table
+### テーブルのクエリ
 
-A `query` returns one or more items and item attributes by querying items from a table by primary key or secondary index.
+`クエリ` は、プライマリキーまたはセカンダリインデックスでテーブルからアイテムをクエリすることによって、1 つ以上のアイテムとアイテムの属性を返します。
 
 ```python
 import json
