@@ -1,0 +1,21 @@
+{
+  "items": [
+    "project-setup",
+    "analytics",
+    "graphqlapi",
+    "restapi",
+    "auth",
+    "datastore",
+    "interactions",
+    "predictions",
+    "pubsub",
+    "push-notifications",
+    "storage",
+    "xr",
+    "utilities",
+    "client-configuration",
+    "debugging",
+    "info",
+    "ssr"
+  ]
+}
