@@ -1,4 +1,4 @@
-* Install [Amplify CLI](~/cli/cli.md) version 4.21.0 or later by running:
+* [Amplify CLI](~/cli/cli.md) バージョン 4.21.0 以降を実行してインストールします。
 
 <amplify-block-switcher>
 
@@ -13,7 +13,7 @@ npm install -g @aws-amplify/cli
 <amplify-block name="cURL (Mac and Linux)">
 
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
+curl -sL https://aws-amplify.github.io/anplify-cli/install | bash && $SHELL
 ```
 
 </amplify-block>
@@ -21,7 +21,7 @@ curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
 <amplify-block name="cURL (Windows)">
 
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install-win -o install.cmd && install.cmd
+curl -sL https://aws-amplify.github.io/anplify-cli/install-win -o install.cmd && install.cmd
 ```
 
 </amplify-block>
