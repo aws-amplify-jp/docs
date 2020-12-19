@@ -1,8 +1,8 @@
 {
-    "title": "Authentication",
+    "title": "認証",
     "items": [
-        "authenticator",
-        "sign-out",
+        "認証",
+        "サインアウト",
         "select-mfa-type"
     ]
 }
