@@ -1,6 +1,6 @@
-In this tutorial, you will integrate basic functionality for **Analytics**.
+このチュートリアルでは、 **Analytics** の基本機能を統合します。
 
-First, delete the contents of your app's *main.dart* file and paste in this starter boilerplate UI code.
+まず、アプリの *main.dart* ファイルの内容を削除し、このスターターボイラープレート UI コードに貼り付けます。
 
 ```dart
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
@@ -66,10 +66,10 @@ class _MyAppState extends State<MyApp> {
 ```
 
 
-## Initializing the Amplify Flutter Library
-Before using any methods in the Amplify Flutter Library, it's important to add all necessary plugins and to call configure.  These init methods should only be called once at the root level of your flutter app.
+## Amplifyフラッタライブラリの初期化
+Amplify Flutter Libraryのメソッドを使用する前に、必要なすべてのプラグインを追加し、configure を呼び出すことが重要です。 これらの init メソッドは、フラッターアプリのルートレベルで一度だけ呼び出される必要があります。
 
-Add the following to your *_configureAmplify* method:
+*_configureAmplify* メソッドに以下を追加します。
 
 ```dart
 void _configureAmplify() async {
@@ -94,13 +94,13 @@ void _configureAmplify() async {
 }
 ```
 
-Note that all calls to `addPlugin` are made before `amplify.configure` is called.
+`addPlugin` へのすべての呼び出しは `amplify.configure` が呼ばれる前に行われることに注意してください。
 
-`amplify.configure` should only be called once.  Calling it multiple times will result in an error.
+`amplify.configure` は一度だけ呼び出すべきです。複数回呼び出すとエラーが発生します。
 
-## Recording a simple event with Analytics
+## Analytics で簡単なイベントを記録する
 
-Now that modules are initialized, modify the *_recordEvent* method to send events to Amazon Pinpoint.
+モジュールが初期化されたので、 *_recordEvent* メソッドを変更して Amazon Pinpoint にイベントを送信します。
 
 ```dart
 // Send an event to Pinpoint
@@ -114,4 +114,4 @@ void _recordEvent() async {
 }
 ```
 
-At this point you are almost ready to run your app.  In the next section, we will use Amplify CLI to configure your backend AWS resources.
+この時点で、ほぼアプリを実行する準備ができています。 次のセクションでは、Amplify CLI を使用してバックエンドの AWS リソースを設定します。
