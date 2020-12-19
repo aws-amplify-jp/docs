@@ -1,0 +1,6 @@
+files:
+  - source: /docs/**/*.md
+    translation: /locale/%two_letters_code%/**/%original_file_name%
+    content_segmentation: 0
+  - source: /docs/**/*.json
+    translation: /locale/%two_letters_code%/**/%original_file_name%
