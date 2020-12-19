@@ -1,7 +1,7 @@
 
-## Update the schema
+## スキーマを更新
 
-Edit the schema and re-run `amplify codegen models`.
+スキーマを編集し、 `コード化モデル` を増幅します。
 
 ```graphql
 enum PostStatus {
@@ -18,13 +18,13 @@ type Post @model {
 }
 ```
 
-This will evaluate the changes and create a versioned hash if any changes are detected which impact the underlying on-device storage structure. For example, types being added/deleted or fields becoming required/optional. DataStore evaluates this version on startup and if there are changes the **local items on device will be removed and a full sync from AppSync will take place** if you are syncing with the cloud.
+これにより、変更が評価され、元のデバイス上のストレージ構造に影響を与える変更が検出された場合、バージョン管理されたハッシュが作成されます。 例えば、追加/削除されるタイプ、またはフィールドが必要/オプションになります。 DataStoreは起動時にこのバージョンを評価し、変更がある場合は、デバイス上の **ローカルアイテムが削除され、クラウドと同期している場合はAppSyncからの完全な同期が行われます**。
 
-## Local migrations
+## ローカル移行
 
-Local migrations (i.e. migrations controlled by the developer) on device are not currently supported. Therefore, your local data will be lost when the schema changes.
+デバイス上のローカルマイグレーション(開発者によって制御されたマイグレーション)は現在サポートされていません。そのため、スキーマが変更されるとローカルデータは失われます。
 
-If you are syncing with the cloud the structure and items of that **data in your AppSync backend will not be touched** as part of this process.
+クラウドと同期している場合、AppSync バックエンドの **データの構造とアイテムは、このプロセスの一部として** には触れられません。
 
 <amplify-callout warning>
 
