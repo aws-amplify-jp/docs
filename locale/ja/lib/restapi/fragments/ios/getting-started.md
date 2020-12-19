@@ -1,17 +1,17 @@
-The Amplify CLI deploys REST APIs and handlers using [Amazon API Gateway](http://docs.aws.amazon.com/apigateway/latest/developerguide/) and [AWS Lambda](http://docs.aws.amazon.com/lambda/latest/dg/).
+Amplify CLI は、 [Amazon API Gateway](http://docs.aws.amazon.com/apigateway/latest/developerguide/) および [AWS Lambda](http://docs.aws.amazon.com/lambda/latest/dg/) を使用して REST API とハンドラをデプロイします。
 
-The API category will perform SDK code generation which, when used with the `AWSMobileClient` can be used for creating signed requests for Amazon API Gateway when the service Authorization is set to `AWS_IAM` or when using a [Cognito User Pools Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-integrate-with-cognito.html).
+API カテゴリは、SDK コードの生成を実行します。 `AWSMobileClient` と一緒に使用した場合、サービス認証が `AWS_IAM` に設定されている場合、または [Cognito User Pools Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-integrate-with-cognito.html) に設定されている場合、Amazon API Gateway の署名済みリクエストを作成するために使用できます。
 
-## Create new REST API
+## 新しい REST API を作成
 
 In a terminal window, navigate to your project folder (the folder that contains your app `.xcodeproj` file), and add the SDK to your app.
 
 ```console
 cd ./YOUR_PROJECT_FOLDER
-amplify add api
+増幅して api を追加
 ```
 
-When prompted select the following options:
+プロンプトが表示されたら、次のオプションを選択します。
 
 ```console
 > REST
@@ -21,15 +21,15 @@ When prompted select the following options:
 > Who should have access? Authenticated and Guest users
 ```
 
-When configuration of your API is complete, the CLI displays a message confirming that you have configured local CLI metadata for this category. You can confirm this by running `amplify status`. Finally deploy your changes to the cloud:
+API の設定が完了すると、CLI はこのカテゴリのローカル CLI メタデータを設定したことを確認するメッセージを表示します。 これを確認するには、 `増幅ステータス`を実行します。最後に、変更をクラウドにデプロイします：
 
 ```bash
-amplify push
+push を増幅する
 ```
 
-## Connect to Your Backend
+## バックエンドに接続
 
-Add `AWSAPIPlugin` to your Podfile:
+`AWSAPIPlugin` をポッドファイルに追加します:
 
 ```ruby
 target :'YOUR-APP-NAME' do
@@ -43,7 +43,7 @@ end
 
 Run `pod install --repo-update` and then add `awsconfiguration.json` and `amplifyconfiguration.json` file to your project **(File->Add Files to ..->Add)** and then build your project, ensuring there are no issues.
 
-Add the following code to your app:
+アプリに次のコードを追加します。
 
 ```swift                                
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -71,8 +71,8 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
 }
 ```
 
-## IAM authorization
+## IAM 認証
 
-To invoke an API Gateway endpoint from your application, For AWS IAM authorization use the `AWSMobileClient` as outlined in the authentication section.
+アプリケーションからAPI Gatewayエンドポイントを呼び出すには、AWS IAM認証の場合は、認証セクションの概要に従って `AWSMobileClient` を使用します。
 
-**Update this to have authorization mode included here rather than link**
+**リンクではなくここに許可モードが含まれるように更新してください**
