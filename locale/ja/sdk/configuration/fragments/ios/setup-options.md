@@ -1,6 +1,6 @@
-The AWS SDK contains [high level client interfaces](~/start/start.md) for quickly adding common features and functionality to your app. You can also manually add the generated AWS service interfaces for direct interaction if you have custom or advanced requirements.
+AWS SDKには、アプリケーションに共通の機能と機能をすばやく追加するための、 [ハイレベルのクライアントインターフェイス](~/start/start.md) が含まれています。 カスタムまたは高度な要件がある場合は、生成された AWS サービスインターフェイスを手動で追加して直接操作することもできます。
 
-## CocoaPods setup
+## CocoaPods のセットアップ
 
 The AWS Mobile SDK for iOS is available through [CocoaPods](https://cocoapods.org). Install CocoaPods by running the following commands from the folder containing your projects `*.xcodeproj` file:
 
@@ -56,13 +56,13 @@ end
 
 Once complete, run `pod install` and open the `*.xcworkspace` with Xcode and **build** your project to start using the SDK. Once you have created a workspace, always use `*.xcworkspace` to open the project instead of `*.xcodeproj`.
 
-Whenever a new version of the SDK is released you can update by running `pod update` and rebuilding your project to use the new features.
+SDK の新しいバージョンがリリースされるたびに、 `pod update` を実行し、プロジェクトを再構築して新機能を使用することで更新できます。
 
-## Carthage setup
+## Carthage のセットアップ
 
-The AWS Mobile SDK for iOS is available through [Carthage](https://github.com/Carthage/Carthage). Install the latest version of [Carthage](https://github.com/Carthage/Carthage#installing-carthage).
+AWS Mobile SDK for iOS は [Carthage](https://github.com/Carthage/Carthage)から入手できます。 [Carthage](https://github.com/Carthage/Carthage#installing-carthage) の最新バージョンをインストールします。
 
-Add the following to your `Cartfile`:
+`カートファイル`に以下を追加:
 
 ```
 github "aws-amplify/aws-sdk-ios"
@@ -86,20 +86,20 @@ Choose the `Add Other` button, navigate to the `AWS<#ServiceName#>.framework` fi
 * AWSEC2
 * AWSElasticLoadBalancing
 * AWSFacebookSignIn
-* AWSGoogleSignIn
+* AWSGoogleサインイン
 * AWSIoT
 * AWSKMS
 * AWSKinesis
 * AWSLambda
 * AWSLex
-* AWSLogs
-* AWSMachineLearning
+* AWSログ
+* AWSmachineLearning
 * AWSMobileClient
 * AWSPinpoint
 * AWSPolly
 * AWSRekognition
 * AWSS3
-* AWSSES
+* AWSES
 * AWSSNS
 * AWSSQS
 * AWSSimpleDB
@@ -107,7 +107,7 @@ Choose the `Add Other` button, navigate to the `AWS<#ServiceName#>.framework` fi
 
 Under the `Build Phases` tab in your `Target`, choose the `+` button on the top left and then select `New Run Script Phase`.
 
-Setup the build phase as follows. Make sure this phase is below the Embed Frameworks phase.
+ビルドフェーズを以下のように設定します。このフェーズが「埋め込みフレームワーク」フェーズの下にあることを確認します。
 
 ```
 Shell /bin/sh
@@ -123,7 +123,7 @@ Output Files: Empty
 
 Now **build** your project to start using the SDK. Whenever a new version of the SDK is released you can update by running `carthage update` and rebuilding your project to use the new features.
 
-> Note: The AWS SDK for iOS builds the Carthage binaries using the latest released version of Xcode. To consume the pre-built binaries your Xcode version needs to be the same, else you have to build the frameworks on your machine by passing `--no-use-binaries` flag to `carthage update` command.
+> 注意:AWS SDK for iOSは、最新バージョンのXcodeを使用してCarthageバイナリをビルドします。 ビルド済みのバイナリを使用するには、Xcode のバージョンが同じである必要があります。 そうでなければ、 `--no-use-binaries` フラグを `cartage update` コマンドに渡すことで、マシン上でフレームワークを構築する必要があります。
 
 ## Frameworks setup
 
@@ -142,7 +142,7 @@ Click the `Add Other...` button, navigate to the `AWS<#ServiceName#>.framework` 
 * `AWSCognitoAuth.framework`
 * `AWSCognitoIdentityProvider.framework`
 * `AWSCognitoIdentityProviderASF.framework`
-* `AWSCore.framework`
+* `AWScore.framework`
 * `AWSDynamoDB.framework`
 * `AWSEC2.framework`
 * `AWSElasticLoadBalancing.framework`
@@ -180,21 +180,21 @@ Under the `Build Phases` tab in your `Target`, click the `+` button on the top l
 
 Now **build** your project to start using the SDK. Whenever a new version of the SDK is released you can update by selecting the previously imported AWS frameworks in `Project Navigator` in Xcode and pressing 'delete' on your keyboard. Then select `Move to Trash` and follow the installation process above to include the new version of the SDK.
 
-## AWS SDK Version vs. Semantic Versioning
+## AWS SDKバージョンvs. セマンティックバージョン管理
 
-The AWS SDK for iOS does not follow semantic versioning. Instead, it increments the patch-level version for both backward-compatible bug fixes *and* non-breaking changes, and increments the minor version for breaking changes. Major version changes are rare, and usually indicate a dramatically different programming model.
+AWS SDK for iOS は、セマンティックバージョンに従っていません。 代わりに、後方互換性のあるバグ修正 *と* 壊れない変更の両方について、パッチレベルのバージョンが増加します。 をクリックして、変更を破るマイナーバージョンを増やします。 主なバージョン変更はまれであり、通常は劇的に異なるプログラミングモデルを示します。
 
-For comparison, Semantic versioning increments the patch level for backward-compatible bug fixes, the minor version for backward-compatible new features, and the major version for breaking changes.
+比較のために、Semantic バージョン管理は、後方互換性のあるバグ修正のパッチレベルを増加させます。 後方互換性のある新機能のマイナーバージョンと、互換性のない変更のためのメジャーバージョンです。
 
-## Direct AWS Service access
+## 直接AWSサービスへのアクセス
 
 You can call AWS service interface objects directly via the generated SDK clients. You can use the client credentials provided by the [AWSMobileClient](~/sdk/auth/getting-started.md) when using the `.default()` method on a service object (e.g. `AWSSQS.default()`). This will leverage short term AWS credentials from Cognito Identity. Alternatively, you can call the constructors manually.
 
-**Note:** If you are relying on the AWSMobileClient as the credentials provider, then initialize the AWSMobileClient before constructing any other service client. The AWSMobileClient will attach itself as the credentials provider for all default clients. However, if you attach a default credentials provider before initializing the AWSMobileClient, then you cannot rely on the AWSMobileClient to vend credentials used to authenticate the service client's API calls.
+**注意:** 認証情報プロバイダとして AWSMobileClient に依存している場合。 その後、他のサービスクライアントを構築する前に AWSMobileClient を初期化します。 AWSMobileClient は、すべてのデフォルトクライアントの資格情報プロバイダーとして自身をアタッチします。 しかし、AWSMobileClientを初期化する前にデフォルトの資格情報プロバイダを添付する場合。 サービスクライアントの API 呼び出しを認証するために使用される資格情報を AWSMobileClient に依存させることはできません。
 
 <amplify-callout warning>
 
-To work with service interface objects, your Amazon Cognito users' [IAM role](https://docs.aws.amazon.com/cognito/latest/developerguide/iam-roles.html) must have the appropriate permissions to call the requested services.
+サービス インターフェイス オブジェクトを使用するには、Amazon Cognito ユーザの [IAM ロール](https://docs.aws.amazon.com/cognito/latest/developerguide/iam-roles.html) には、要求されたサービスを呼び出すための適切な権限が必要です。
 
 </amplify-callout>
 
@@ -205,12 +205,12 @@ For example, if you were using [Amazon Simple Queue Service (SQS)](https://aws.a
         "Default": {
             "Region": "XX-XXXX-X"
         }
-    }
+}
 ```
 
 **Note**: The key is `SQS` and not `AWSSQS` as the `awsconfiguration.json` file does not prefix keys with `AWS`.
 
-Next, import `AWSSQS` in your Xcode project and create the client:
+次に、Xcode プロジェクトに `AWSSQS` をインポートし、クライアントを作成します。
 
 ```swift
 import AWSSQS
@@ -231,21 +231,21 @@ func addItemSQS() {
     }
 ```
 
-You could then call `self.addItemSQS()` to invoke this action from your app.
+`self.addItemSQS()` を呼び出して、アプリケーションからこのアクションを呼び出すことができます。
 
-## Logging
+## ログ
 
-As of version 2.5.4 of this SDK, logging utilizes [CocoaLumberjack SDK](https://github.com/CocoaLumberjack/CocoaLumberjack), a flexible, fast, open source logging framework. It supports many capabilities including the ability to set logging level per output target, for instance, concise messages logged to the console and verbose messages to a log file.
+このSDKのバージョン2.5.4以降では、ログ収集は [CocoaLumberjack SDK](https://github.com/CocoaLumberjack/CocoaLumberjack)を利用しており、柔軟で高速なオープンソースのログフレームワークです。 出力ターゲットあたりのログレベルを設定する機能を含む、多くの機能をサポートしています。 例えば、コンソールに記録された簡潔なメッセージと、ログファイルに詳細なメッセージを表示します。
 
-CocoaLumberjack logging levels are additive such that when the level is set to verbose, all messages from the levels below verbose are logged. It is also possible to set custom logging to meet your needs. For more information, see [CocoaLumberjack Logging Levels](https://github.com/CocoaLumberjack/CocoaLumberjack/blob/master/Documentation/CustomLogLevels.md).
+CocoaLumberjackのロギングレベルは、レベルがverboseに設定されている場合、verbose以下のレベルからのすべてのメッセージがログに記録されるような加算機能です。 必要に応じてカスタムロギングを設定することもできます。詳細については、 [CocoaLumberjack ロギングレベル](https://github.com/CocoaLumberjack/CocoaLumberjack/blob/master/Documentation/CustomLogLevels.md) を参照してください。
 
-You can change the logging level to suit the phase of your development cycle by importing AWSCore and calling:
+AWSCoreをインポートして呼び出しすることで、開発サイクルの段階に合わせてログレベルを変更できます。
 
 ```swift
 AWSDDLog.sharedInstance.logLevel = .verbose
 ```
 
-The following logging level options are available:
+次のログレベルオプションが使用できます。
 
 - `.off`
 - `.error`
@@ -254,9 +254,9 @@ The following logging level options are available:
 - `.debug`
 - `.verbose`
 
-We recommend setting the log level to  `.off` before publishing to the App Store.
+App Store に公開する前に、ログレベルを  `.off` に設定することをお勧めします。
 
-CocoaLumberjack can direct logs to file or used as a framework that integrates with the Xcode console. For example:
+CocoaLumberjackはファイルに直接ログを記録したり、Xcodeコンソールと統合するフレームワークとして使用することができます。例えば：
 
 ```swift
 //File Logger example
@@ -270,7 +270,7 @@ AWSDDLog.add(fileLogger)
 AWSDDLog.add(AWSDDTTYLogger.sharedInstance) // TTY = Xcode console
 ```
 
-## Configure using an in-memory object
+## インメモリ オブジェクトを使用して構成
 
 As an alternative to the `awsconfiguration.json` file, since version `2.11.0` a configuration object can also be used for configuring the client. This approach can be useful for resolving configuration in runtime instead of the pre-defined JSON file:
 
