@@ -1,15 +1,15 @@
-Amazon Personalize can create recommendations by using event data, historical data, or a combination of both. The event data can then be used to create recommendations.
+Amazon Personalizeでは、イベントデータ、履歴データ、またはその両方を組み合わせておすすめを作成することができます。 イベントデータを使用して、おすすめを作成することができます。
 
 
-To record event data, you need the following:
+イベントデータを記録するには、次の手順が必要です。
 
-* [A dataset group](https://docs.aws.amazon.com/personalize/latest/dg/recording-events.html#event-dataset-group)
-* [An event tracker](https://docs.aws.amazon.com/personalize/latest/dg/recording-events.html#event-get-tracker).
+* [データセットグループ](https://docs.aws.amazon.com/personalize/latest/dg/recording-events.html#event-dataset-group)
+* [イベントトラッカー](https://docs.aws.amazon.com/personalize/latest/dg/recording-events.html#event-get-tracker)。
 
-For more information, see [Record Events](https://docs.aws.amazon.com/personalize/latest/dg/recording-events.html).
+詳細については、 [イベントの記録](https://docs.aws.amazon.com/personalize/latest/dg/recording-events.html) を参照してください。
 
 
-### Installation and Configuration
+### インストールと設定
 
 Register the *AmazonPersonalizeProvider* with the Analytics category: You need the tracking ID of your event tracker. For more information, see [Get a Tracking ID](https://docs.aws.amazon.com/personalize/latest/dg/recording-events.html#event-get-tracker).
 
@@ -18,7 +18,7 @@ import { Analytics, AmazonPersonalizeProvider } from 'aws-amplify';
 Analytics.addPluggable(new AmazonPersonalizeProvider());
 ```
 
-Configure Amazon Personalize:
+Amazon Personalizeを設定:
 
 ```javascript
 // Configure the plugin after adding it to the Analytics module
@@ -39,14 +39,14 @@ Analytics.configure({
     }
 });
 ```
-### Working with the API
+### API の操作
 
 You can use the `Identify` event type to track a user identity. This lets you connect a user to their actions and record traits about them. To identify a user, specify a unique identifier for the userId property. Consider the following user interactions when choosing when and how often to call record with the  Identify eventType:
 
-* After a user registers.
-* After a user logs in.
-* When a user updates their information (For example, changing or adding or adding a new address).
-* Upon loading any pages that are accessible by a logged in user (optional).
+* ユーザーが登録した後。
+* ユーザーがログインした後。
+* ユーザーが自分の情報を更新する場合 (例えば、新しいアドレスを変更または追加または追加)。
+* ログインしたユーザーがアクセス可能なページをロードする際(オプション)。
 
 ```javascript
 Analytics.record({
