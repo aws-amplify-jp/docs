@@ -1,3 +1,3 @@
-* An Android application targeting Android API level 16 (Android 4.1) or above
-    * For a full example of creating Android project, please follow the [project setup walkthrough](~/lib/project-setup/create-application.md)
+* Android API レベル 16 (Android 4.1) 以上を対象とした Android アプリケーション
+    * Androidプロジェクトの完全な例については、 [プロジェクトのセットアップの手順](~/lib/project-setup/create-application.md)に従ってください。
 
