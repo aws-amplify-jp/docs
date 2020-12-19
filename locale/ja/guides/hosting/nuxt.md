@@ -1,6 +1,6 @@
 ---
 title: Nuxt.js
-description: How to deploy a Nuxt site to Amplify Console Hosting
+description: AmplifyコンソールホスティングにNuxtサイトをデプロイする方法
 ---
 
 <inline-fragment platform="js" src="~/guides/hosting/fragments/nuxt.md"></inline-fragment>
