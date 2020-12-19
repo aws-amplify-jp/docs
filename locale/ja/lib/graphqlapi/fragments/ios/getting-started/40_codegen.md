@@ -1,7 +1,7 @@
-The generated files will be under the `amplify/generated/models` directory.
+生成されたファイルは `amplify/generated/models` ディレクトリの下にあります。
 ```
 AmplifyModels.swift
 Todo.swift
 Todo+Schema.swift
 ```
-Drag and place the entire `models` directory into Xcode to add them to your project.
+プロジェクトに追加するために、 `モデル` ディレクトリ全体を Xcode にドラッグして配置します。
