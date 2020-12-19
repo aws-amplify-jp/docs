@@ -1,21 +1,21 @@
-The AWS Mobile SDK for iOS enables you to build mobile apps by providing simplified APIs for AWS services such as Amazon Cognito, Amazon S3, AWS AppSync and more.
+AWS Mobile SDK for iOSでは、Amazon CognitoなどのAWSサービス向けに簡略化されたAPIを提供することで、モバイルアプリを構築できます。 Amazon S3、AWS AppSyncなど。
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>
 
-## FAQs
+## よくある質問
 
-### How is the SDK different from the Amplify Libraries for iOS?
+### このSDKとiOS用Amplifyライブラリの違いは?
 
-Amplify Libraries are part of the Amplify Framework, an opinionated set of Libraries, UI Components, and CLI Toolchain that mobile and web developers can use to build applications. Instead of focusing on service implementations, they have a “category” based design focusing on use cases that you would use for your application. Categories have declarative APIs allowing developers to focus on application design and business use cases.
+Amplifyライブラリは、Amplifyフレームワークの一部であり、ライブラリの独自のセットです。 UIコンポーネントとCLIツールチェーンは、モバイルおよびWeb開発者がアプリケーションを構築するために使用できます。 サービスの実装に焦点を当てるのではなく、アプリケーションで使用するユースケースに焦点を当てた「カテゴリ」ベースのデザインがあります。 カテゴリには宣言型の API があり、開発者はアプリケーション設計やビジネスユースケースに集中することができます。
 
-While Amplify aims to build in best practices with sensible defaults, there are times you may need a lower level interface and have more imperative control over how your applications interact with backend services. For these situations Amplify offers “escape hatches”. You can use certain categories with escape hatches, such as credentials from the Auth category, to interact directly with the services using the lower-level interfaces.
+Amplifyは良識的なデフォルトでベストプラクティスを構築することを目指しています。 アプリケーションがバックエンドサービスとどのように相互作用するかを制御するためには、低レベルのインターフェイスが必要な場合があります。 このような状況で、Amplifyは「脱出ハッチ」を提供します。 認証カテゴリからの資格情報など、特定のカテゴリをエスケープハッチで使用して、下位レベルのインターフェイスを使用してサービスと直接やり取りできます。
 
-We use the term “library” to refer to programming interfaces that have been hand authored for these category based use cases, and use “SDK” to refer to lower-level programming interfaces which have largely been auto-generated from underlying backend service interfaces and are implementation specific. The existing AWS Mobile SDK contains helper classes, utilities, and a set of code-generated, implementation specific APIs defined by AWS service interfaces. You can use it in your app via an escape hatch if you need lower level control.
+「ライブラリ」という用語は、これらのカテゴリベースのユースケースで作成されたプログラミングインターフェースを指します。 「SDK」を使用して、バックエンドサービスインターフェイスから自動生成され、実装固有の下位レベルのプログラミングインターフェイスを参照します。 既存のAWS Mobile SDKには、ヘルパークラス、ユーティリティ、およびAWSサービスインターフェースで定義されたコード生成の実装固有のAPIのセットが含まれています。 低レベルのコントロールが必要な場合は、脱出ハッチを介してアプリで使用できます。
 
-This guide shows how to build an app using the AWS Mobile SDK for iOS and the Amplify CLI toolchain. To use our new developer experience refer to the [Amplify Libraries for iOS guide](~/lib/lib.md).
+このガイドでは、AWS Mobile SDK for iOSとAmplify CLIツールチェーンを使用してアプリケーションを構築する方法を説明します。 私たちの新しい開発者エクスペリエンスを利用するには、 [iOS用ライブラリ](~/lib/lib.md) を参照してください。
 
-### Should I use the Amplify libraries or AWS Mobile SDK?
+### AmplifyライブラリまたはAWS Mobile SDKを使用する必要がありますか?
 
-Amplify libraries should be used for all new applications.
+Amplifyライブラリは、すべての新しいアプリケーションに使用する必要があります。
 
-For existing applications, we recommend you evaluate migration to the Amplify libraries. The AWS Mobile SDK will continue be maintained with bug fixes and security updates.
+既存のアプリケーションでは、Amplifyライブラリへの移行を評価することをお勧めします。 AWS Mobile SDKは引き続きバグ修正とセキュリティアップデートにより維持されます。
