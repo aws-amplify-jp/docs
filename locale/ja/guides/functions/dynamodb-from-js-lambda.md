@@ -1,15 +1,15 @@
 ---
-title: Calling DynamoDB from Lambda in Node.js
-description: How to interact with a DynamoDB database from a Lambda function in Node.js
+title: Node.js の Lambda から DynamoDB を呼び出す
+description: Node.jsのLambda関数からDynamoDBデータベースを操作する方法
 ---
 
-The easiest way to interact with DynamoDB from Lambda in a Node.js environment is to use the [DynamoDB document client](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html). In this guide you will learn how to interact with a DynamoDB database from a Lambda function using the Node.js runtime.
+Node.js 環境で Lambda から DynamoDB を操作する最も簡単な方法は、 [DynamoDB ドキュメント クライアント](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html)を使用することです。 このガイドでは、Node.js ランタイムを使用して Lambda 関数からDynamoDB データベースとやりとりする方法を学びます。
 
-You will learn how to perform [put](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#put-property), [get](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#get-property), [scan](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property), and [query](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#query-property) operations.
+[put](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#put-property), [get](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#get-property), [scan](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property), [query](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#query-property) の操作を実行する方法を学びます。
 
-### Creating an item in DynamoDB from Lambda
+### Lambda から DynamoDB にアイテムを作成する
 
-To create an item in DynamoDB you can use the `put` method:
+DynamoDBでアイテムを作成するには、 `put` メソッドを使用します。
 
 ```js
 const AWS = require('aws-sdk');
@@ -42,7 +42,7 @@ exports.handler = async (event) => {
 };
 ```
 
-### Getting an item by primary key in DynamoDB from Lambda
+### LambdaからDynamoDBのプライマリキーでアイテムを取得する
 
 To get an item by primary key in DynamoDB you can use the `get` method. A `get` request returns a single item given the primary key of that item:
 
@@ -77,9 +77,9 @@ exports.handler = async (event, context) => {
 }
 ```
 
-### Scanning a table
+### テーブルをスキャン中
 
-A `scan` returns one or more items and item attributes by accessing every item in a table or a secondary index (limit of 1 MB of data).
+`スキャン` は、テーブル内のすべての項目またはセカンダリインデックス (1 MB のデータの制限) にアクセスすることで、1 つ以上の項目および項目属性を返します。
 
 ```js
 const AWS = require('aws-sdk');
@@ -108,9 +108,9 @@ exports.handler = async (event, context) => {
 }
 ```
 
-### Querying a table
+### テーブルのクエリ
 
-A `query` returns one or more items and item attributes by querying items from a table by primary key or secondary index.
+`クエリ` は、プライマリキーまたはセカンダリインデックスでテーブルからアイテムをクエリすることによって、1 つ以上のアイテムとアイテムの属性を返します。
 
 ```js
 const AWS = require('aws-sdk');
