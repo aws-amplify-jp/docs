@@ -1,23 +1,23 @@
-## Overview
+## 概要
 
-[Amazon Location Service](http://aws.amazon.com/location) is a geolocation service that lets you add location information to your applications. With Amazon Location Service, you can build applications that provide maps and points of interest, track resources, trigger actions based on location, and convert street addresses into geographic coordinates. This guide provides you with the following information:
+[Amazon Location Service](http://aws.amazon.com/location) は、アプリケーションに位置情報を追加できる位置情報サービスです。 Amazon Location Service では、地図や興味のあるポイントを提供するアプリケーションを構築できます。 リソースを追跡し、場所に基づいてアクションを実行し、通りの住所を地理座標に変換します。 このガイドでは、以下の情報を提供します。
 
-- How to setup and configure your iOS app with the Amazon Location Service SDK
-- How to add authentication to your application
-- Example of how to access the Amazon Location Service APIs
+- Amazon Location Service SDK を使用して iOS アプリをセットアップおよび構成する方法
+- アプリケーションに認証を追加する方法
+- Amazon Location Service API へのアクセス方法
 
-To learn more about the service, see the [Amazon Location Service Developer Guide](https://docs.aws.amazon.com/location/latest/developerguide/).
+サービスの詳細については、 [Amazon Location Service Developer Guide](https://docs.aws.amazon.com/location/latest/developerguide/) を参照してください。
 
-## Prerequisites
+## 前提条件
 
-When using the Amazon Location Service within your iOS app, your application must target iOS 9 or later.
+iOSアプリ内でAmazon Location Serviceを使用する場合は、iOS 9以降をターゲットにする必要があります。
 
-## Adding authentication to your App using the Amplify CLI
+## Amplify CLI を使用してアプリに認証を追加する
 
-The Amplify Framework uses [Amazon Cognito](https://aws.amazon.com/cognito/) as its primary authentication provider. Amazon Cognito is a robust user directory service that handles user registration, authentication, account recovery, and other operations. Use the following procedure to add authentication to your app using Amazon Cognito and Amplify CLI.
+Amplify Frameworkは、主要認証プロバイダとして [Amazon Cognito](https://aws.amazon.com/cognito/) を使用しています。 Amazon Cognitoは、ユーザー登録、認証、アカウント復旧などの操作を行う堅牢なユーザーディレクトリサービスです。 Amazon CognitoとAmplify CLIを使用してアプリに認証を追加するには、次の手順を使用します。
 
-1. Open a terminal window.
-1. Install the [Amplify CLI](https://docs.amplify.aws/cli/start/install) by running the following command:
+1. ターミナルウィンドウを開きます。
+1. 次のコマンドを実行して、 [Amplify CLI](https://docs.amplify.aws/cli/start/install) をインストールします。
 
     <amplify-block-switcher>
 
@@ -32,7 +32,7 @@ The Amplify Framework uses [Amazon Cognito](https://aws.amazon.com/cognito/) as 
     <amplify-block name="cURL (Mac and Linux)">
 
     ```bash
-    curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
+    curl -sL https://aws-amplify.github.io/anplify-cli/install | bash && $SHELL
     ```
 
     </amplify-block>
@@ -40,26 +40,26 @@ The Amplify Framework uses [Amazon Cognito](https://aws.amazon.com/cognito/) as 
     <amplify-block name="cURL (Windows)">
 
     ```bash
-    curl -sL https://aws-amplify.github.io/amplify-cli/install-win -o install.cmd && install.cmd
+    curl -sL https://aws-amplify.github.io/anplify-cli/install-win -o install.cmd && install.cmd
     ```
 
     </amplify-block>
 
     </amplify-block-switcher>
 
-1. Initialize a new Amplify project by running the following command from the root directory of your app:
+1. アプリのルートディレクトリから次のコマンドを実行して、Amplifyプロジェクトを初期化します。
 
     ```bash
-    amplify init
+    initを増幅する
     ```
 
-1. Create a Cognito Identity Pool. It will be used to authenticate your app users and authorize their access to Amazon Location Service. To start provisioning authentication resources in the backend, go to your project directory and run the following command:
+1. Cognito Identity Poolを作成します。アプリユーザーを認証し、Amazon Location Service へのアクセスを許可するために使用されます。 バックエンドで認証リソースのプロビジョニングを開始するには、プロジェクトディレクトリに移動して次のコマンドを実行します。
 
     ```bash
-    amplify add auth
+    増幅して認証を追加
     ```
 
-1. When prompted, provide the following information:
+1. プロンプトが表示されたら、以下の情報を入力してください。
 
     ```console
     ? Do you want to use the default authentication and security configuration? 
@@ -73,34 +73,34 @@ The Amplify Framework uses [Amazon Cognito](https://aws.amazon.com/cognito/) as 
 1. Run the following command to push your changes to the cloud. When completed, the `awsconfiguration.json` file will be updated to reference your newly provisioned backend auth resources.
 
     ```bash
-    amplify push
+    push を増幅する
     ```
 
-## Installing dependencies
+## 依存関係のインストール
 
-Then you will need to install the necessary Amazon Location Service SDK dependencies in your iOS app.
+次に、必要な Amazon Location Service SDK をiOSアプリにインストールする必要があります。
 
-**To install dependencies:**
+**依存関係をインストールするには:**
 
-1. In Terminal, navigate to your app’s project directory.
-1. Initialize your project with the CocoaPods package manager by running the following command:
+1. ターミナルで、アプリのプロジェクトディレクトリに移動します。
+1. 以下のコマンドを実行して、CocoaPods パッケージマネージャでプロジェクトを初期化します。
 
     ```bash
     pod init 
     ```
 
-1. A new file named **Podfile** will be created. This file is used to describe your project’s packages dependency.
+1. **Podfile** という名前の新しいファイルが作成されます。このファイルはプロジェクトのパッケージ依存性を説明するために使用されます。
 1. Open the **Podfile** in a file editor, and add `AWSLocation` and `AWSMobileClient` SDKs as pod dependencies. When you’re done, your Podfile will look similar to this example:
 
     ```ruby
-    target 'MyAmplifyApp' do 
+    ターゲット 'MyAmplifyApp' do 
       use_frameworks! 
       pod 'AWSLocation' 
       pod 'AWSMobileClient'
     end
     ```
 
-1. Run the following command to install, download, and resolve these pods.
+1. 以下のコマンドを実行して、ポッドをインストール、ダウンロード、および解決します。
 
     ```bash
     pod install --repo-update
@@ -112,31 +112,31 @@ Then you will need to install the necessary Amazon Location Service SDK dependen
     xed .
     ```
 
-1. Open Finder and locate the `awsconfiguration.json` file. Drag this file to the Xcode window, under your project’s folder to add this configuration file to your project, as referenced in the following screenshot:
+1. Finderを開き、 `awsconfiguration.json` ファイルを探します。 次のスクリーンショットで参照されているように、このファイルをプロジェクトに追加するには、プロジェクトのフォルダの下のXcode ウィンドウにドラッグします。
 
-    ![Amazon Location Service - Copy iOS project files](~/images/als/ios-copy-project-files.png)
+    ![Amazon Location Service - iOS プロジェクトファイルをコピー](~/images/als/ios-copy-project-files.png)
 
-    1. Enable **Copy items if needed** if not already enabled
+    1. 必要に応じて **アイテムをコピー** を有効にする
 
-    1. For “Added folders”, have **Create groups** selected.
+    1. 「追加されたフォルダ」の場合、 **グループの作成** が選択されています。
 
-    1. For “Add to targets”, make sure the app target (For example, **MyAmplifyApp**) is checked.
+    1. 「ターゲットに追加」の場合は、アプリのターゲット(例えば、 **MyAmplifyApp**)がチェックされていることを確認してください。
 
-    Choose **Finish** to add these files to your project as shown in the following screenshot:
+    次のスクリーンショットに示すように、これらのファイルをプロジェクトに追加するには、 **終了** を選択します。
 
-    ![Amazon Location Service - Adding files options](~/images/als/ios-adding-files-options.png)
+    ![Amazon Location Service - ファイルオプションの追加](~/images/als/ios-adding-files-options.png)
 
-## Initializing Amazon Location Service SDK
+## Amazon Location Service SDK の初期化
 
 The following procedure details how to initialize the `AWSMobileClient` and the `AWSLocation` client. The `AWSLocation` client is the low level SDK you need to access the Amazon Location Service APIs.
 
-1. Add the following imports to the top of your `AppDelegate` file:
+1. `AppDelegate` ファイルの先頭に以下のインポートを追加します:
 
     ```swift
-    import AWSMobileClient
+    AWSMobileClient をインポート
     ```
 
-1. Add the following code to initialize `AWSMobileClient` in your `AppDelegate`'s `application(_:didFinishLaunchingWithOptions:)` method:
+1. `AWSMobileClient` を、 `AppDelegate`の `アプリケーション(_:didFinishLaunchingWithOptions:)` メソッドに初期化するコードを追加します。
 
       ```swift
       func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -225,14 +225,14 @@ Now create an inline policy that will give guest users of your application acces
     amplify console auth
     ```
 
-1. Select **Identity Pool** for **Which console?** when prompted.
-1. You will be directed to the Amazon Cognito console. Click on **Edit identity pool** in the top right corner of the page.
+1. **どのコンソール** の **アイデンティティプール** を選択するプロンプトが表示されたら。
+1. Amazon Cognitoコンソールに移動します。ページの右上隅にある **Edit Identity pool** をクリックします。
 1. Open the drop down for **Unauthenticated identities**, choose **Enable access to unauthenticated identities**, and then press **Save Changes**.
 1. Click on **Edit identity pool** once more. Make a note of the name of the Unauthenticated role. For example, `amplify-<project_name>-<env_name>-<id>-unauthRole`.
-1. Open the [AWS Identity and Access Management (IAM) console](https://console.aws.amazon.com/iam/home#/roles) to manage Roles.
-1. In the **Search** field, enter the name of your Unauthenticated role noted above and click on it.
-1. Click **+Add inline policy**, then click on the **JSON** tab.
-1. Fill in the `[ARN]` placeholder with the ARN of your place index which you noted above and replace the contents of the policy with the below.
+1. [AWS Identity and Access Management (IAM) コンソール](https://console.aws.amazon.com/iam/home#/roles) を開き、ロールを管理します。
+1. **Search** フィールドに、上記の未認証ロールの名前を入力してクリックします。
+1. **+ Add インラインポリシー**をクリックし、 **JSON** タブをクリックします。
+1. `[ARN]` プレースホルダに、上記のプレースインデックスのARNを入力し、ポリシーの内容を以下に置き換えます。
 
     ```json
 {
@@ -247,13 +247,13 @@ Now create an inline policy that will give guest users of your application acces
 }
     ```
 
-1. Click on the **Review policy** button.
-2. In the **Name** field, enter *LocationTracker*.
-3. Click on the **Create policy** button. You have now successfully added authentication to your iOS app.
+1. **Review Policy** ボタンをクリックします。
+2. **名前** フィールドに、 *LocationTracker* と入力します。
+3. **ポリシーの作成** ボタンをクリックします。iOS アプリに認証が正常に追加されました。
 
-### Searching for places
+### 場所を検索中
 
-Here is how you can search for places using the place index you just created:
+作成した場所のインデックスを使用して場所を検索する方法は次のとおりです。
 
 ```swift
 // Add the following import to the top of your class
