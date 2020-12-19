@@ -1,6 +1,6 @@
 ---
-title: Events
-description: You can use the AWS Android SDK for Pinpoint to report usage data, or events, to Amazon Pinpoint. You can report events to capture information such as session times, users’ purchasing behavior, sign-in attempts, or any custom event type that you need.
+title: イベント
+description: AWS Android SDK for Pinpoint を使用して、使用状況のデータやイベントを Amazon Pinpoint に報告できます。 セッション時間、ユーザーの購買行動、サインインの試行、必要なカスタムイベントタイプなどの情報を取得するためにイベントを報告できます。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>
