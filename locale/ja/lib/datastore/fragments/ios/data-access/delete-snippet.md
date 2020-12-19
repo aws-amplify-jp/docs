@@ -32,7 +32,7 @@ receiveValue: {
 
 </amplify-block-switcher>
 
-A delete can also be achieved by a `type` and its `id`.
+削除は `タイプ` と `id` によっても達成できます。
 
 <amplify-block-switcher>
 
