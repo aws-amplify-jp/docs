@@ -1,5 +1,5 @@
 
-The Amplify library for Android ships with APIs that return results via callbacks, as in:
+Android向けAmplifyライブラリには、以下のようにコールバックを介して結果を返すAPIが付属しています。
 
 ```java
 Post post = Post.builder()
@@ -12,7 +12,7 @@ Amplify.DataStore.save(post,
 );
 ```
 
-Amplify also provides APIs that expose [Reactive Extensions](http://reactivex.io/), a cross-platform library for asynchronous and event-based programs:
+Amplifyは非同期およびイベントベースのプログラムのためのクロスプラットフォームライブラリである [Reactive Extensions](http://reactivex.io/)を公開するAPIも提供しています。
 
 ```java
 Post post = Post.builder()
@@ -26,7 +26,7 @@ RxAmplify.DataStore.save(post)
     );
 ```
 
-While this doesn't save much for a single invocation, it provides great readability benefits when chaining asynchronous calls, since you can use standard RxJava operators to compose complex functionality into readable chunks.
+これは単一の呼び出しではあまり節約されませんが、非同期呼び出しをチェーンするときに大きな可読性の利点を提供します。 標準の RxJava 演算子を使用して、読み取り可能なチャンクに複雑な機能を構成することができます。
 
 Consider a relational model where the creation of a `Post` also requires the creation of a `User` for the editor, and a `PostEditor` object to link the two together:
 
@@ -45,7 +45,7 @@ PostEditor postEditor = PostEditor.builder()
     .build();
 ```
 
-Using callbacks, you can save these objects via:
+コールバックを使用して、以下のオブジェクトを保存できます。
 
 ```java
 Amplify.DataStore.save(post,
@@ -66,7 +66,7 @@ Amplify.DataStore.save(post,
 );
 ```
 
-With Amplify's RxJava interface we can merge these operations together:
+AmplifyのRxJavaインターフェースを使用すると、以下の操作をマージできます。
 
 ```java
 Completable.mergeArray(
@@ -80,30 +80,30 @@ Completable.mergeArray(
 );
 ```
 
-Compared to nesting these dependent calls in callbacks, this provides a much more readable pattern.
+これらの依存する呼び出しをコールバックでネストするのと比較すると、これははるかに読みやすいパターンを提供します。
 
-## Installation
+## インストール
 
-Amplify's RxJava bindings are included with Amplify. To use them, add the dependency to your application's gradle file.
+AmplifyのRxJavaバインディングはAmplifyに含まれています。これらを使用するには、アプリケーションのgradleファイルに依存性を追加します。
 
-Under **Gradle Scripts**, open **build.gradle (Module: [YourApplicationName])**.
+**Gradle Scripts**の下で **build.gradle (Module: [YourApplicationName])** を開きます。
 
-Add the following line in `dependencies`:
+`依存関係` に次の行を追加する
 
 ```groovy
 dependencies {
-    // Add the below line in `dependencies`
+    // `dependencies` に以下の行を追加
     implementation 'com.amplifyframework:rxbindings:1.6.4'
 }
 ```
 
-## Usage
+## 使用法
 
-Amplify strives to provide an intuitive interface for APIs that expose RxJava functionality by using the counterpart callback API signature, minus the result callbacks. The majority of APIs return an RxJava `Single`, `Observable`, or `Completable`.
+Amplifyは、RxJava機能を公開する直感的なインターフェースを提供するために、対応するコールバックAPIシグネチャを除く結果コールバックを使用します。 APIの大部分は、RxJava `Single`、 `Observable`、または `Complettable` を返します。
 
-### Special cases
+### 特別なケース
 
-Some APIs return an operation which is cancellable such as subscribing to an API or uploading or downloading objects from Storage.
+API の中には、API の購読や、ストレージからオブジェクトのアップロードやダウンロードなどの操作をキャンセルできるものもあります。
 
 #### `API.subscribe()`
 
@@ -128,7 +128,7 @@ subscription
       );
 ```
 
-#### `Storage` upload & download operations
+#### `ストレージ` アップロード & ダウンロード操作
 
 Similarly, `Storage.download()` and `Storage.upload()` return an operation which provide two `Observable` objects for download/upload progress and for the result of the operation.
 
