@@ -1,6 +1,6 @@
 ---
-title: Customize UI components
-description: Learn how to customize the Amplify auth UI components.
+title: UIコンポーネントのカスタマイズ
+description: Amplifyの認証UIコンポーネントをカスタマイズする方法をご覧ください。
 ---
 
 <inline-fragment platform="js" src="~/lib/auth/fragments/js/customui.md"></inline-fragment>
