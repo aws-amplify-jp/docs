@@ -1,7 +1,7 @@
-## What we'll build
+## 何を作ろうか？
 
-This tutorial guides you through setting up a backend and integrating that backend with a new [Next.js](https://nextjs.org/) app.
+このチュートリアルでは、バックエンドを設定し、そのバックエンドを新しい [Next.js](https://nextjs.org/) アプリと統合する方法を説明します。
 
-You will create a simple blog with a GraphQL API and to store and retrieve items in a cloud database. In addition, we’ll demonstrate how to authenticate users, communicate with our API, and deploy to AWS.
+GraphQL API を使用して簡単なブログを作成し、クラウドデータベースに項目を保存して取得します。 さらに、ユーザー認証、APIとの通信、AWSへの展開方法をご紹介します。
 
-[GraphQL](http://graphql.org) is a data language that was developed to enable apps to fetch data from APIs. It has a declarative, self-documenting style. In a GraphQL operation, the client specifies how to structure the data when it is returned by the server. This makes it possible for the client to query only for the data it needs, in the format that it needs it in.
+[GraphQL](http://graphql.org) は、アプリが API からデータを取得できるように開発されたデータ言語です。 それは宣言的な、自己文書化スタイルを持っています。 GraphQL 操作では、クライアントはサーバーからデータが返されたときにデータを構造化する方法を指定します。 これにより、クライアントは必要なデータのみを必要とする形式でクエリすることができます。
