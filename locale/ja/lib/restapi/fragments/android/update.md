@@ -1,6 +1,6 @@
-## PUT requests
+## PUTリクエスト
 
-To update an item via the API endpoint:
+API エンドポイント経由で項目を更新するには:
 
 <amplify-block-switcher> <amplify-block name="Java">
 
