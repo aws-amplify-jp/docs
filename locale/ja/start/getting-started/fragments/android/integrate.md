@@ -1,14 +1,14 @@
-Next you'll use the generated model to read and write data. In this section you'll initialize DataStore, and create and query for Todo items.
+次に、生成されたモデルを使用してデータを読み書きします。このセクションでは、DataStore を初期化し、Todo アイテムを作成してクエリします。
 
-## Configure Amplify and DataStore
+## AmplifyとDataStoreの設定
 
-First, we'll add the DataStore plugin and configure Amplify by creating an Application class and overriding the `onCreate()` method.
+最初にDataStoreプラグインを追加し、アプリケーションクラスを作成し、 `onCreate()` メソッドをオーバーライドしてAmplifyを設定します。
 
 1. Navigate to **Todo** > **app** > **src** > **main** > **java/kotlin** > **com** > **example.todo**
 
-1. Open **MainActivity**
+1. **MainActivity** を開く
 
-1. Add the following code in `onCreate` to initialize Amplify:
+1. Amplifyを初期化するには、 `onCreate` に次のコードを追加してください。
 
   <amplify-block-switcher> <amplify-block name="Java">
 
@@ -34,26 +34,26 @@ First, we'll add the DataStore plugin and configure Amplify by creating an Appli
       Log.i("Tutorial", "Initialized Amplify")
   } catch (failure: AmplifyException) {
       Log.e("Tutorial", "Could not initialize Amplify", failure)
-  }
+}
   ```
 
   </amplify-block> </amplify-block-switcher>
 
-1. In the Gradle Task dropdown menu in the toolbar, select **app**, and run the application. In logcat, you'll see a log line indicating success:
+1. ツールバーの **アプリ**を選択し、アプリケーションを実行します。 logcat には、成功を示すログ行が表示されます。
 
     ```console
-    com.example.todo I/Tutorial: Initialized Amplify
+    com.example.todo I/Tutorial: Initialized Ampliify
     ```
 
     To make this easier to find, select the **Verbose** logging level, and enter the string **Tutorial** into the search field (denoted by the magnifying glass icon):
 
     ![](~/images/lib/getting-started/android/set-up-android-studio-logcat-setup.gif)
 
-## Create a Todo
+## Todoを作成
 
-Next, you'll create a Todo and save it to DataStore.
+次に、Todo を作成して DataStore に保存します。
 
-1. Open `MainActivity` and add the following code to the bottom of the `onCreate()` method:
+1. `MainActivity` を開き、 `onCreate()` メソッドの一番下に次のコードを追加します。
 
   <amplify-block-switcher> <amplify-block name="Java">
 
@@ -77,9 +77,9 @@ Next, you'll create a Todo and save it to DataStore.
 
   </amplify-block> </amplify-block-switcher>
 
-  This code creates a Todo item with two properties: a name and a description. This is a plain object that isn't stored in DataStore yet.
+  このコードは、2 つのプロパティを持つ Todo アイテムを作成します。名前と説明です。これは、DataStore にまだ保存されていないプレーンオブジェクトです。
 
-1. Below that, add the code to save the item to DataStore:
+1. その下にコードを追加して、項目を DataStore に保存します。
 
   <amplify-block-switcher> <amplify-block name="Java">
 
@@ -105,22 +105,22 @@ Next, you'll create a Todo and save it to DataStore.
 
   </amplify-block> </amplify-block-switcher>
 
-1. Run the application. In logcat, you'll see an indication that the item was saved successfully:
+1. アプリケーションを実行します。logcat では、項目が正常に保存されたことを示すものが表示されます。
 
   ```console
   com.example.todo I/Tutorial: Initialized Amplify
   com.example.todo I/Tutorial: Saved item: Build application
   ```
 
-1. Replace the item with a new Todo to save an additional item. Let's change the name and description, and add a priority:
+1. 追加の項目を保存するには、項目を新しいTodoに置き換えてください。名前と説明を変更し、優先順位を追加してください:
 
   <amplify-block-switcher> <amplify-block name="Java">
 
   ```java
   Todo item = Todo.builder()
-          .name("Finish quarterly taxes")
+          .name("Finish quaretly taxes")
           .priority(Priority.HIGH)
-          .description("Taxes are due for the quarter next week")
+          .description("Taxes are due for the quaretic next week")
           .build();
   ```
 
@@ -130,28 +130,28 @@ Next, you'll create a Todo and save it to DataStore.
 
   ```kotlin
   val item = Todo.builder()
-        .name("Finish quarterly taxes")
+        .name("Finish quaretly taxes")
         .priority(Priority.HIGH)
-        .description("Taxes are due for the quarter next week")
+        .description("Taxes are due for the quaretic next week")
         .build()
   ```
 
   </amplify-block> </amplify-block-switcher>
 
-1. Run the application. In logcat, you'll see an indication that the item was saved successfully:
+1. アプリケーションを実行します。logcat では、項目が正常に保存されたことを示すものが表示されます。
 
   ```console
   com.example.todo I/Tutorial: Initialized Amplify
-  com.example.todo I/Tutorial: Saved item: Finish quarterly taxes
+  com.example.todo I/Tutorial: Saved item: Finish 四半期税
   ```
 
 ## Query Todos
 
-Now that you have some data in DataStore, you can run queries to retrieve those records.
+DataStoreにデータがあるので、クエリを実行してレコードを取得できます。
 
 1. Edit your `onCreate` method to remove the item creation and save. Your `onCreate()` should only include the code required to initialize Amplify and not calls to `Todo.builder()` or `Amplify.DataStore.save()`.
 
-1. Below the initialization code, add the following:
+1. 初期化コードの下に、以下を追加します。
 
   <amplify-block-switcher> <amplify-block name="Java">
 
@@ -210,7 +210,7 @@ Now that you have some data in DataStore, you can run queries to retrieve those 
 
   </amplify-block> </amplify-block-switcher>
 
-1. Run the application. In logcat, you'll see both items returned:
+1. アプリケーションを実行します。logcatでは、返された両方のアイテムが表示されます。
 
   ```console
   com.example.todo I/Tutorial: Initialized Amplify
@@ -223,23 +223,23 @@ Now that you have some data in DataStore, you can run queries to retrieve those 
   com.example.todo I/Tutorial: Priority: HIGH
   ```
 
-1. Queries can also contain predicate filters. These will query for specific objects matching a certain condition.
+1. クエリには、述語フィルタを含めることもできます。これらは特定の条件に一致する特定のオブジェクトをクエリします。
 
-  The following predicates are supported:
+  次の述語がサポートされています:
 
-  **Strings**
+  **文字列**
 
   `eq` `ne` `le` `lt` `ge` `gt` `contains` `notContains` `beginsWith` `between`
 
-  **Numbers**
+  **数値**
 
   `eq` `ne` `le` `lt` `ge` `gt` `between`
 
-  **Lists**
+  **リスト**
 
-  `contains` `notContains`
+  `には` `が含まれており、` は含まれていません
 
-  To use a predicate, pass an additional argument into your query. For example, the following code queries for all high priority items:
+  述語を使用するには、クエリに追加の引数を渡します。例えば、すべての優先度の高い項目に対する次のコードクエリです。
 
   <amplify-block-switcher> <amplify-block name="Java">
 
@@ -304,9 +304,9 @@ Now that you have some data in DataStore, you can run queries to retrieve those 
 
   </amplify-block> </amplify-block-switcher>
 
-  In the above code, notice the addition of the predicate parameter as the second argument.
+  上記のコードでは、述語パラメータを 2 番目の引数に追加することに注意してください。
 
-1. Run the application. In logcat, you'll see only the high priority item returned:
+1. アプリケーションを実行します。logcatでは、返される優先度の高い項目だけが表示されます。
 
   ```console
   com.example.todo I/Tutorial: Initialized Amplify
