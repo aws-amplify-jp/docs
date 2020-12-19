@@ -1,2 +1,2 @@
-* An iOS application targeting at least iOS 13.0 with Amplify libraries integrated
-    * For a full example of please follow the [project setup walkthrough](~/lib/project-setup/create-application.md)
+* Amplifyライブラリを統合した少なくともiOS 13.0を対象としたiOSアプリケーション
+    * 完全な例については、 [プロジェクト設定の手順](~/lib/project-setup/create-application.md)に従ってください。
