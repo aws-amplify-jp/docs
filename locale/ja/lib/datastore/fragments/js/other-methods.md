@@ -1,6 +1,6 @@
-## Clear
+## クリア
 
-To clear local data from DataStore, use the `clear` method:
+DataStoreからローカルデータを消去するには、 `clear` メソッドを使用します。
 
 ```js
 import { DataStore } from '@aws-amplify/datastore';
@@ -10,13 +10,13 @@ await DataStore.clear();
 
 <amplify-callout>
 
-If your app is has authentication implemented, it is recommended to call `DataStore.clear()` on signin/signout to remove any user-specific data. This method is often important to use for shared device scenarios or where you need to purge the local on-device storage of records for security/privacy concerns.
+アプリが認証を実装している場合は、サインイン/サインアウト時に `DataStore.clear()` を呼び出して、ユーザー固有のデータを削除することをお勧めします。 この方法は、共有デバイスのシナリオで使用する場合や、セキュリティ/プライバシーの懸念のためにレコードのローカルオンデバイスストレージを削除する必要がある場合に重要です。
 
 </amplify-callout>
 
-## Start
+## 開始
 
-To manually start the sync process, use the `start` method:
+同期プロセスを手動で開始するには、 `start` メソッドを使用します。
 
 ```js
 import { DataStore } from '@aws-amplify/datastore';
@@ -24,4 +24,4 @@ import { DataStore } from '@aws-amplify/datastore';
 await DataStore.start();
 ```
 
-Synchronization starts automatically whenever you run `DataStore.query()` however you can explicitly begin the process with `DataStore.start()`.
+`DataStore.query()` を実行すると、自動的に同期が開始されます。ただし、 `DataStore.start()` でプロセスを明示的に開始できます。
