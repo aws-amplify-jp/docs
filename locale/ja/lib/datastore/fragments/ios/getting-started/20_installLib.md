@@ -1,16 +1,16 @@
-## Install Amplify Libraries
+## Amplifyライブラリのインストール
 
-To install the Amplify DataStore to your application, add `AmplifyPlugins/AWSDataStorePlugin`. Your `Podfile` should look similar to:
+Amplify DataStoreをアプリケーションにインストールするには、 `AmplifyPlugins/AWSDataStorePlugin`を追加します。 `Podfile` は次のようになります:
 
 ```ruby
-target 'MyAmplifyApp' do
+ターゲット 'MyAmplifyApp' do
   use_frameworks!
-  pod 'Amplify'
   pod 'AmplifyPlugins/AWSDataStorePlugin'
+  pod 'AmplifyPlugin'
 end
 ```
 
-To install, download and resolve these pods, **execute the command**:
+ポッドをインストール、ダウンロード、解決するには、 **コマンド** を実行します。
 
 ```bash
 pod install --repo-update
