@@ -1,17 +1,18 @@
-## Install Dependencies
+## 依存関係のインストール
 
-After initialization in your project directory with `amplify init`, edit your `Podfile` with the following:
+`amplify init`を使用してプロジェクトディレクトリに初期化後、 `Podfile` を次のように編集します:
 
 ```ruby
-target 'MyApp' do            ##Replace MyApp with your application name
-  use_frameworks!
-  pod 'AWSMobileClient'      # Required dependency
-  pod 'AWSAuthUI'            # Optional dependency required to use drop-in UI
-  pod 'AWSUserPoolsSignIn'   # Optional dependency required to use drop-in UI
+'MyApp' をターゲットにする ##MyAppをアプリケーション名
+  use_frameworksに置き換えます! 
+ pod 'AWSMobileClient' # 必要な依存関係
+  pod 'AWSAuthUI' # ドロップインUIを使用するために必要なオプションの依存関係
+  pod 'AWSUserPoolsSignIn' # ドロップインUIを使用するために必要なオプションの依存関係
+  pod 'AWSUserPoolsSignIn' # 必要なオプションの依存関係
 end
 ```
 
-Next run the following command:
+次に、次のコマンドを実行します。
 
 ```bash
 pod install --repo-update
@@ -19,40 +20,40 @@ pod install --repo-update
 
 Open the **.xcworkspace** file for your project (close the **.xcodeproj** file if you already have it open). The CLI will create the `awsconfiguration.json` file in your project directory. In the Finder, drag `awsconfiguration.json` into Xcode under the top Project Navigator folder (the folder name should match your Xcode project name). When the `Options` dialog box appears, do the following:
 
-* Clear the `Copy items if needed` check box.
-* Choose `Create groups`, and then choose `Finish`.
+* 必要に応じて `項目をコピー` チェックボックスをクリアします。
+* `グループの作成`を選択し、 `終了` を選択します。
 
-Build your project once to ensure all frameworks are pulled in and compile.
+プロジェクトを一度ビルドすると、すべてのフレームワークが確実に取り込まれ、コンパイルされます。
 
-## Automated Setup
+## 自動セットアップ
 
-Run the following command in your project's root folder:
+プロジェクトのrootフォルダで次のコマンドを実行します。
 
 ```bash
-amplify add auth
+増幅して認証を追加
 ```
 
-> If you have previously enabled an Amplify category that uses Auth behind the scenes, e.g. Storage category, you may already have an Auth configuration. In such a case, run `amplify auth update` command to edit your configuration.
+> これまでにAmplifyカテゴリを有効にしており、例えばストレージカテゴリなど、舞台裏でAuthを使用している場合は、すでに認証設定を行っている可能性があります。 そのような場合は、設定を編集するために、 `増幅する auth update` コマンドを実行してください。
 
-The Amplify CLI prompts will help you to customize your auth configuration:
-- Customize sign-in/registration flow
-- Customize email and SMS messages for Multi-Factor Authentication
-- Customize attributes for your users, e.g. name, email
-- Enable 3rd party authentication providers like Facebook, Twitter, Google and Amazon
+Amplify CLI プロンプトは、認証設定をカスタマイズするのに役立ちます。
+- サインイン/登録フローを編集する
+- 多要素認証のための電子メールとSMSメッセージを編集する
+- ユーザーの属性をカスタマイズします。例：名前、電子メール
+- Facebook、Twitter、Google、Amazonなどのサードパーティの認証プロバイダを有効にする
 
-After configuring your Authentication options, update your backend:
+認証オプションを設定した後、バックエンドを更新します:
 
 ```bash
-amplify push
+push を増幅する
 ```
 
 ### Lambda Triggers
 
 The CLI allows you to configure [Lambda Triggers](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html) for your Amazon Cognito User Pool. These enable you to add custom functionality to your registration and authentication flows. [Read more](~/cli/usage/lambda-triggers.md)
 
-## Manual Setup
+## 手動セットアップ
 
-For manual configuration without the CLI, you must have an `awsconfiguration.json` file with the following:
+CLI を使用しない手動設定の場合は、次のような `awsconfiguration.json` ファイルが必要です。
 
 ```json
     {
@@ -77,11 +78,11 @@ For manual configuration without the CLI, you must have an `awsconfiguration.jso
     }
 ```
 
-If you are using both Cognito User and Identity Pools you will need all of the keys mentioned above.
+Cognitoユーザーとアイデンティティプールの両方を使用している場合は、上記のすべてのキーが必要です。
 
-### Initialization
+### 初期化
 
-Open the `AppDelegate.swift` file in your Xcode project, import `AWSMobileClient` and add to the `application` function:
+Xcode プロジェクトで `AppDelegate.swift` ファイルを開き、 `AWSMobileClient` をインポートして `アプリケーション` 機能に追加します。
 
 ```swift
 import AWSMobileClient
