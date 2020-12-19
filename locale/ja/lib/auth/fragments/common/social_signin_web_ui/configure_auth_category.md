@@ -1,90 +1,90 @@
-<amplify-callout> Sign in with Apple is not yet added to the CLI, follow the steps below to enable it. </amplify-callout>
+<amplify-callout> Apple でサインインする CLI にはまだ追加されていません。以下の手順に従って有効にしてください。 </amplify-callout>
 
-Once finished, run `amplify push` to publish your changes. Once finished, it will display an auto generated URL for your web UI.
+完了したら、 `amplify push` を実行して変更を公開します。完了すると、WebUI用に自動生成されたURLが表示されます。
 
-You need to now inform your auth provider of this URL:
+このURLの認証プロバイダを通知する必要があります：
 
 <amplify-block-switcher> <amplify-block name="Facebook Login">
 
-1. [Sign In](https://developers.facebook.com/) with your Facebook credentials.
-2. From the *My Apps* menu, choose *Your App*. ![Image](~/images/cognitoHostedUI/facebook1.png)
-3. On the left navigation bar, choose *Settings* and then *Basic*. ![Image](~/images/cognitoHostedUI/facebook3.png)
-4. Choose *+ Add Platform* from the bottom of the page and then choose *Website*. ![Image](~/images/cognitoHostedUI/facebook4.png)
-5. Under Website, type your user pool domain with the /oauth2/idpresponse endpoint into *Site URL*
+1. [Facebook の認証情報で](https://developers.facebook.com/) にサインインします。
+2. *My Apps* メニューから *Your App* を選択します。 ![画像](~/images/cognitoHostedUI/facebook1.png)
+3. 左のナビゲーションバーで、 *設定* を選択し、 *Basic* を選択します。 ![画像](~/images/cognitoHostedUI/facebook3.png)
+4. ページ下部から *+ Add Platform* を選択し、 *Website* を選択します。 ![画像](~/images/cognitoHostedUI/facebook4.png)
+5. *サイトのURL*に/oauth2/idpponseエンドポイントでユーザプールドメインを入力してください。
 
-    `https://<your-user-pool-domain>/oauth2/idpresponse`
+    `https://<your-user-pool-domain>/oauth2/idpponse`
 
-    ![Image](~/images/cognitoHostedUI/facebook5.png)
-6. Save changes.
-7. Type your user pool domain into *App Domains*:
+    ![画像](~/images/cognitoHostedUI/facebook5.png)
+6. 変更を保存
+7. *App Domains* にユーザープールドメインを入力してください:
 
     `https://<your-user-pool-domain>`
 
-    ![Image](~/images/cognitoHostedUI/facebook6.png)
-8. Save changes.
-9. From the navigation bar choose *Products* and then *Set up* from *Facebook Login*. ![Image](~/images/cognitoHostedUI/facebook7.png)
-10. From the navigation bar choose *Facebook Login* and then *Settings*.
-11. Type your redirect URL into *Valid OAuth Redirect URIs*. It will consist of your user pool domain with the /oauth2/idpresponse endpoint.
+    ![画像](~/images/cognitoHostedUI/facebook6.png)
+8. 変更を保存
+9. ナビゲーションバーから *Products* を選択し、 *Set up* from *Facebook Login*. ![画像](~/images/cognitoHostedUI/facebook7.png)
+10. ナビゲーションバーから *Facebook Login* を選択し、 *Settings* を選択します。
+11. リダイレクトURLを *有効なOAuthリダイレクト URI*に入力します。/oauth2/idpressポンスエンドポイントを持つユーザープールドメインで構成されます。
 
-    `https://<your-user-pool-domain>/oauth2/idpresponse`
+    `https://<your-user-pool-domain>/oauth2/idpponse`
 
-    ![Image](~/images/cognitoHostedUI/facebook8.png)
-12. Save changes.
+    ![画像](~/images/cognitoHostedUI/facebook8.png)
+12. 変更を保存
 
 </amplify-block> <amplify-block name="Google Sign-In">
 
-1. Go to [Google Developer Console](https://developers.google.com/identity/sign-in/web/sign-in)
-2. Click *CONFIGURE A PROJECT* ![Image](~/images/cognitoHostedUI/google1.png)
-3. Type in a project name and choose *NEXT*. ![Image](~/images/cognitoHostedUI/google2.png)
-4. Type in your product name and choose *NEXT*.
-5. Choose *Web browser* from the *Where are you calling from?* drop-down list. ![Image](~/images/cognitoHostedUI/google3.png)
-6. Click *CREATE*. You will NOT use the *Client ID* and *Client Secret* from this step.
-7. Click Done.
-8. Go to the [Google developer console](https://console.developers.google.com).
-9. On the left navigation bar, choose *Credentials*. ![Image](~/images/cognitoHostedUI/google5.png)
-10. Select the client you created in the first step and choose the edit option.
-11. Type your user pool domain into Authorized Javascript origins.
-12. Type your user pool domain with the `/oauth2/idpresponse` endpoint into *Authorized Redirect URIs*.
+1. [Google Developer Console](https://developers.google.com/identity/sign-in/web/sign-in) に移動
+2. *CONFIGURE A PROJECT* をクリックする ![画像](~/images/cognitoHostedUI/google1.png)
+3. プロジェクト名を入力し、 *NEXT* を選択します。 ![画像](~/images/cognitoHostedUI/google2.png)
+4. 製品名を入力し、 *次* を選択します。
+5. *から* Web ブラウザー *を選択します。* ドロップダウン リストから呼び出します。 ![画像](~/images/cognitoHostedUI/google3.png)
+6. *CREATE*をクリックします。このステップから *Client ID* と *Client Secret* を使用しません。
+7. 完了をクリックします。
+8. [Google 開発者コンソール](https://console.developers.google.com) に移動します。
+9. 左のナビゲーションバーで、 *資格情報* を選択します。 ![画像](~/images/cognitoHostedUI/google5.png)
+10. 最初のステップで作成したクライアントを選択し、編集オプションを選択します。
+11. Authorized Javascript オリジンにユーザープールドメインを入力します。
+12. `/oauth2/idpponse` エンドポイントで *Authorized Redirect URI* を入力します。
 
-    ![Image](~/images/cognitoHostedUI/google7.png)
+    ![画像](~/images/cognitoHostedUI/google7.png)
 
-    Note: If you saw an error message `Invalid Redirect: domain must be added to the authorized domains list before submitting.` when adding the endpoint, please go to the *authorized domains list* and add the domain.
-13. Click *Save*.
+    注意: エラーメッセージが表示された場合 `無効なリダイレクト: 送信する前にドメインを許可されたドメインリストに追加する必要があります。 <code> エンドポイントを追加する場合は、` *許可されたドメインリスト* に移動してドメインを追加してください。
+13. *保存* をクリックします。
 
 </amplify-block> <amplify-block name="Login with Amazon">
 
-1. [Sign in](https://developer.amazon.com/loginwithamazon/console/site/lwa/overview.html) with your Amazon credentials.
-2. Hover over the gear and choose Web Settings associated with the security profile you created in the previous step, and then choose Edit. ![Image](~/images/cognitoHostedUI/amazon4.png)
-3. Type your user pool domain into Allowed Origins and type your user pool domain with the /oauth2/idpresponse endpoint into Allowed Return URLs. ![Image](~/images/cognitoHostedUI/amazon5.png)
-5. Choose Save.
+1. [Amazon の認証情報で](https://developer.amazon.com/loginwithamazon/console/site/lwa/overview.html) にサインインします。
+2. 歯車にカーソルを合わせて、前のステップで作成したセキュリティプロファイルに関連付けられているWeb設定を選択し、編集を選択します。 ![画像](~/images/cognitoHostedUI/amazon4.png)
+3. 許可されたオリジンにユーザプールドメインを入力し、/oauth2/idpressポンスエンドポイントを使用してユーザプールドメインを許可された返りURLに入力します。 ![画像](~/images/cognitoHostedUI/amazon5.png)
+5. 保存を選択します。
 
 </amplify-block> <amplify-block name="Sign in with Apple">
 
-1. [Sign In](https://developer.apple.com/account/) with your Apple developer credentials.
-2. On the main developer portal page, select **Certificates, IDs, & Profiles**.
-3. On the left navigation bar, select **Identifiers** and then select **Service IDs** from the drop down list on the right.
-4. Select the service id created in `Setup your auth provider` step above.
-5. Enabled **Sign In with Apple** and select **Configure**.
-6. Under **Primary App ID** select the app id that was created before.
-7. Type your user pool domain into **Domains and Subdomains**.
-8. Type your user pool domain with the `/oauth2/idpresponse` endpoint into **Return URLs**. ![Image](~/images/cognitoHostedUI/apple3.png)
-9. Click **Next**, review the information, then select **Done**.
-10. On *Edit your Services ID Configuration* click **Continue**, review the information, then select **Save**.
-11. On the main Certificates, Identifiers & Profiles, select **Keys**.
-12. On the Keys page, select the **+** icon.
-13. Provide a name for the key under **Key Name**.
-14. Enable **Sign in with Apple** and select **Configure** ![Image](~/images/cognitoHostedUI/apple4.png)
-15. Under **Primary App ID** select the app id that was created before.
-16. Click on **Save**
-17. On **Register a New Key** click **Continue**, review the information, then select **Register**.
-18. On the page you are redirected to take note of the Key ID and download the .p8 file containing the private key. ![Image](~/images/cognitoHostedUI/apple5.png)
+1. [Apple 開発者の資格情報で](https://developer.apple.com/account/) にサインインします。
+2. メインの開発者ポータルページで、 **証明書、ID、 & Profiles** を選択します。
+3. 左ナビゲーションバーで **Identifiers** を選択し、右側のドロップダウンリストから **Service ID** を選択します。
+4. 上記の `認証プロバイダの設定` ステップで作成されたサービス ID を選択します。
+5. **Apple** でサインインし、 **Configure** を選択します。
+6. **Primary App ID** の下で、以前に作成されたアプリ ID を選択します。
+7. **ドメインとサブドメイン**にユーザープールドメインを入力します。
+8. `/oauth2/idpponse` エンドポイントを **Return URL**に入力します。 ![画像](~/images/cognitoHostedUI/apple3.png)
+9. **次へ**をクリックし、情報を確認し、 **完了** を選択します。
+10. *サービス ID 設定を編集* **続行**をクリックし、情報を確認し、 **保存** を選択します。
+11. メインの証明書、識別子 & プロファイルで、 **キー** を選択します。
+12. Keysページで、 **+** アイコンを選択します。
+13. **キー名** の下にキーの名前を入力します。
+14. **Apple** でサインインを有効にし、 **設定** を選択します ![画像](~/images/cognitoHostedUI/apple4.png)
+15. **Primary App ID** の下で、以前に作成されたアプリ ID を選択します。
+16. **保存** をクリックします
+17. **新しいキーを登録する** をクリックして **続ける**, 情報を確認し、 **Register** を選択します。
+18. ページ上でKey IDをメモするようにリダイレクトされ、秘密鍵を含む.p8ファイルをダウンロードします。 ![画像](~/images/cognitoHostedUI/apple5.png)
 
-### Amazon Cognito User pool setup
-1. In your terminal type `amplify auth console` and select `User Pool` to open the AWS console for the Amazon Cognito User Pool.
-2. Under Federation, under the Identity providers tab, select Sign in with Apple.
-3. Provide the Apple Services ID, Team ID, Key ID, and the downloaded private key for the Sign in with Apple application along with the desired scopes.
-4. Select the Attribute mapping tab, and then select the Apple tab.
-5. Select the checkboxes under Capture next to the Apple attributes, and select the user pool attribute under User pool attribute that will receive the value from the Apple attribute and that you would like to receive in the tokens from Amazon Cognito.
-6. To enable your app client to allow federation through the Sign in with Apple IdP, under App Integration, select App client settings, find the App client that you want to allow Sign in with Apple, and select the Sign in with Apple check box.
+### Amazon Cognitoユーザープールのセットアップ
+1. 端末のタイプ `で認証コンソール` を増幅し、 `ユーザー プール` を選択して Amazon Cognito ユーザー プールの AWS コンソールを開きます。
+2. format@@0 の [Identity providers] タブで format@@1 を選択します。
+3. Apple サービス ID、チーム ID、キー IDを入力してください そして、目的のスコープと共に、Appleアプリケーションでサインインするためのダウンロードされた秘密キー。
+4. 属性マッピングタブを選択し、Apple タブを選択します。
+5. Apple 属性の横にある format@@0 のチェックボックスをオンにします。 として、Apple 属性から値を受け取るユーザープール属性と、Amazon Cognitoからトークンを受け取るユーザープール属性を選択します。
+6. 「App Integration」で「App Client設定」を選択し、Apple IdPでサインインすることで、App Clientにフェデレーションを許可するようにします。 「Apple でサインイン」を許可する App クライアントを探し、「Apple でサインイン」チェックボックスをオンにします。
 
 </amplify-block> </amplify-block-switcher>
