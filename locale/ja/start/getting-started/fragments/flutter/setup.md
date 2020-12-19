@@ -1,98 +1,98 @@
 
-👋 Welcome! In this tutorial, you will:
+👋 ようこそ! このチュートリアルでは、以下を行います。
 
-- Setup your Flutter development environment
-- Add the Amplify Flutter Library dependencies
-- Create a basic app that records an analytics event
-- Use Amplify CLI to setup your AWS backend resources
+- Flutter開発環境のセットアップ
+- Amplify Flutter Libraryの依存関係を追加
+- 分析イベントを記録する基本的なアプリを作成
+- Amplify CLIを使用してAWSバックエンドリソースをセットアップする
 
-## Prerequisites
+## 前提条件
 
-- [Install Flutter](https://flutter.dev/docs/get-started/install) version 1.20.0 or higher
+- [Flutter のインストール](https://flutter.dev/docs/get-started/install) バージョン 1.20.0 以上
 
-- [Setup your IDE](https://flutter.dev/docs/get-started/editor?tab=androidstudio)
+- [IDE のセットアップ](https://flutter.dev/docs/get-started/editor?tab=androidstudio)
 
-    This tutorial assumes you are using AndroidStudio to develop your app.
+    このチュートリアルでは、AndroidStudio を使用してアプリを開発していることを前提としています。
 
-- Install the [Amplify CLI](~/cli/cli.md) by running:
+- [Amplify CLI](~/cli/cli.md) を以下を実行してインストールします。
 
     ```bash
     npm install -g @aws-amplify/cli
     ```
 
-- Sign up for an AWS account
+- AWS アカウントにサインアップ
 
-    If you don't already have an AWS account, you'll need to create one in order to follow the steps outlined in this tutorial.
+    AWSアカウントをまだお持ちでない場合は、このチュートリアルの手順に従って作成する必要があります。
 
-    [Create AWS Account](https://portal.aws.amazon.com/billing/signup?redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start)
+    [AWS アカウントを作成](https://portal.aws.amazon.com/billing/signup?redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start)
 
-    > There are no upfront charges or any term commitments to create an AWS account and signing up gives you immediate access to the AWS Free Tier.
+    > 先行料金やAWSアカウントを作成し、サインアップすることでAWSFree Tierに即座にアクセスすることができます。
 
 
-## Set up your application
+## アプリケーションの設定
 
-### Create a new Flutter application
+### 新しいFlutterアプリケーションを作成
 
-1. Create a new project using Flutter CLI:
+1. Flutter CLI を使用して新しいプロジェクトを作成:
 
     ```bash
-    flutter create todo
+    フラッターがTODOを作る
     ```
 
-1. Or using **Android Studio**. Select **+ Start a new Flutter project**.
+1. または、 **Android Studio**を使用して、 **+ Flutter プロジェクトを開始する** を選択します。
 
     ![](~/images/lib/getting-started/flutter/set-up-android-studio-welcome.png)
 
-1. In **Select a Project Template**, select **Flutter Application**. Press **Next**.
+1. **プロジェクトテンプレート**を選択し、 **Flutter Application**を選択します。 **次へ** を押します。
 
     ![](~/images/lib/getting-started/flutter/set-up-android-studio-select-project-template.png)
 
 
-1. Next, configure your project:
+1. 次に、プロジェクトを構成します。
 
-    - Enter *todo* in the **Name** field
-    - Make sure your Flutter SDK path is set correctly to where it is installed on your machine
-    - Press **Next**.  On the next screen, press **Finish**.
+    - *名前* フィールドに **タスク** を入力します
+    - Flutter SDK パスがマシンにインストールされている場所に正しく設定されていることを確認してください
+    - 次の ****を押します。次の画面で、 **完了** を押します。
 
   ![](~/images/lib/getting-started/flutter/set-up-android-studio-configure-your-project.png)
 
-Android Studio will open your project with a tab opened to *main.dart*
+Android Studioは *main.dart*のタブを開いてプロジェクトを開きます。
 
-1. Lastly, modify your Podfile to target iOS platform 11.0 or higher.  Within your project open `ios/Podfile` and change the second line to be `platform :ios, '11.0'.
+1. 最後に、PodfileをiOSプラットフォーム11.0以上に変更します。 プロジェクト内で `ios/Podfile` を開き、2 行目を `platform :ios, '11.0' に変更します。
 
-You now have an empty Flutter project into which you’ll add Amplify in the next steps.
+空のFlutterプロジェクトがあり、次のステップでAmplifyを追加します。
 
-### Add Amplify to your application
+### Amplifyをアプリケーションに追加
 
-Amplify for Flutter is distributed via **pub.dev**.
+Flutter の Amplify は **pub.dev** を介して配布されます。
 
 
-1. Open your **app**'s `pubspec.yaml` and add the following 3 dependencies below the line "sdk:flutter".
+1. **app**の `pubspec.yaml` を開き、"sdk:flutter" という行の下に次の 3 つの依存関係を追加します。
 
 ```yaml
-dependencies:
+依存関係:
   flutter:
     sdk: flutter
 
   amplify_core: '<1.0.0'
   amplify_auth_cognito: '<1.0.0'
-  amplify_analytics_pinpoint: '<1.0.0'
+  anplify_analytics_pinpoint: '<1.0.0'
 ```
 
-1. Run **Flutter Pub Get**
+1. **Flutter Pub Get** を実行する
 
-    Android Studio requires you to sync your project with your new configuration. To do this, you can click **Flutter** in the notification bar above the file editor.
+    Android Studio では、プロジェクトを新しい構成と同期させる必要があります。 これを行うには、ファイルエディタの上部にある通知バーの **Flutter** をクリックします。
 
     ![](~/images/lib/getting-started/flutter/set-up-android-studio-pub-get.png)
 
-    Alternatively, you can open a terminal window, cd into your project's root directory (where your pubspec.yaml is) and run:
+    あるいは、ターミナルウィンドウを開いてプロジェクトのルートディレクトリ(pubspec.yamlがある場所)にCDを開き、以下を実行することもできます。
 
     ```bash
-    flutter pub get 
+    フラッターパブは 
     ```
 
     When complete, you will see *Process finished with exit code 0* in the output of the *Messages* tab at the bottom of your screen.
 
     ![](~/images/lib/getting-started/flutter/set-up-android-studio-configure-successful.png)
 
-You are ready to start building with Amplify! 🎉
+Amplify でビルドを開始する準備ができました! 🎉
