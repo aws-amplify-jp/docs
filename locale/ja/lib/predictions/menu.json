@@ -1,16 +1,16 @@
 {
-  "title": "Predictions",
+  "title": "予測",
   "items": [
     "intro",
     "getting-started",
-    "text-speech",
-    "transcribe",
-    "translate",
-    "identify-text",
-    "identify-entity",
+    "テキストスピーカー",
+    "文字起こし",
+    "翻訳する",
+    "識別テキスト",
+    "識別-エンティティ",
     "label-image",
-    "interpret",
-    "escapehatch",
-    "sample"
+    "translate",
+    "エスケープハッチ",
+    "サンプル"
   ]
 }
