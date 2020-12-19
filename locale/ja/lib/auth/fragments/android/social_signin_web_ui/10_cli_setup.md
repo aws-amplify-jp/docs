@@ -1,4 +1,4 @@
-In terminal, navigate to your project, run `amplify add auth`, and choose the following options (the last steps are specific to Facebook here but are similar for other providers):
+ターミナルで、プロジェクトに移動し、 `amplify add auth`を実行してください。 を選択し、以下のオプションを選択します(最後の手順はFacebookに固有ですが、他のプロバイダーには似ています)。
 
 ```terminal
 ? Do you want to use the default authentication and security configuration? 
