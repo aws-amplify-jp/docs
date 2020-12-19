@@ -1,13 +1,13 @@
-For advanced use cases where Amplify does not provide the functionality, you can retrieve the escape hatch to access the [AWSS3](https://aws-amplify.github.io/aws-sdk-ios/docs/reference/AWSS3/Classes/AWSS3.html) instance.
+Amplifyが機能を提供していない高度なユースケースの場合は、エスケープハッチを取得して [AWSS3](https://aws-amplify.github.io/aws-sdk-ios/docs/reference/AWSS3/Classes/AWSS3.html) インスタンスにアクセスできます。
 
-Add the following imports:
+次のインポートを追加:
 
 ```swift
 import AmplifyPlugins
 import AWSS3
 ```
 
-Then retrieve the escape hatch with this code
+このコードでエスケープハッチを取得します。
 
 ```swift
 func getEscapeHatch() {
