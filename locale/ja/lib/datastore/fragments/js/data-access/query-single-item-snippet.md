@@ -1,6 +1,6 @@
-### Querying for a single item
+### 単一の項目についてクエリ中
 
-To query for a single item, pass in the ID of the item as the second argument to the query.
+単一のアイテムをクエリするには、アイテムの ID をクエリの 2 番目の引数として渡します。
 
 ```js
 const post = await DataStore.query(Post, "1234567");
