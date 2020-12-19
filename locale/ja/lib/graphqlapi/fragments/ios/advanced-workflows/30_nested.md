@@ -25,4 +25,4 @@ extension GraphQLRequest {
 }
 
 ```
-Query with `Amplify.API.query(request: .getCommentWithPost(byId: "[COMMENT_ID]"))`. 
+`Amplify.API.query(request: .getCommentWithPost(byId: "[COMMENT_ID]"))` でクエリします。 
