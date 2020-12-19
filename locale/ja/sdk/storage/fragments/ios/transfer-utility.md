@@ -1,4 +1,4 @@
-To make it easy to upload and download objects from Amazon S3, we provide a TransferUtility component with built-in support for background transfers, progress tracking, and MultiPart uploads. This section explains how to implement upload and download functionality and a number of additional storage use cases.
+Amazon S3からオブジェクトを簡単にアップロードおよびダウンロードできるようにします。 TransferUtilityコンポーネントには、背景転送、進捗管理、MultiPartアップロードのサポートが組み込まれています。 このセクションでは、アップロードとダウンロード機能の実装方法と、追加のストレージ使用事例について説明します。
 
 <amplify-callout>
 
@@ -6,14 +6,14 @@ To make it easy to upload and download objects from Amazon S3, we provide a Tran
 
 </amplify-callout>
 
-## Transfer Utility Options
+## 転送ユーティリティオプション
 
-You can use the `AWSS3TransferUtilityConfiguration` object to configure the operations of the `TransferUtility`.
+`AWSS3TransferUtilityConfiguration` オブジェクトを使用して、 `TransferUtility` の操作を設定できます。
 
 ### isAccelerateModeEnabled
-The isAccelerateModeEnabled option allows you to upload and download content from a S3 bucket that has Transfer Acceleration enabled. This option is set to false by default. See [Transfer Acceleration](https://docs.aws.amazon.com/AmazonS3/latest/dev/transfer-acceleration.html) for information on how to enable transfer acceleration for your bucket.
+isAccelerateModeEnabledオプションを使用すると、転送アクセラレーションが有効になっているS3バケットからコンテンツをアップロードしてダウンロードできます。 このオプションはデフォルトで false に設定されています。 バケットの転送加速を有効にする方法については、 [Transfer Acceleration](https://docs.aws.amazon.com/AmazonS3/latest/dev/transfer-acceleration.html) を参照してください。
 
-_The code sample below manually sets up credentials for the TransferUtility. The best practice is to use the AWSMobileClient. See [Authentication](~/sdk/auth/how-it-works.md) for more details_
+_以下のコードサンプルは、TransferUtilityの認証情報を手動で設定します。 ベストプラクティスはAWSMobileClientを使用することです。詳細については [認証](~/sdk/auth/how-it-works.md) を参照してください。_
 
 ```swift
 //Setup credentials, see your awsconfiguration.json for the "YOUR-IDENTITY-POOL-ID"
@@ -42,31 +42,31 @@ let transferUtility:(AWSS3TransferUtility?) = AWSS3TransferUtility.s3TransferUti
 ```
 
 ### retryLimit
-The retryLimit option allows you to specify the number of times the TransferUtility will retry a transfer when it encounters an error. By default it is set to `0`.
+retryLimitオプションでは、エラーが発生したときにTransferUtilityが転送を再試行する回数を指定できます。 デフォルトでは、 `0` に設定されています。
 
 ```swift
 tuConf.retryLimit = 5
 ```
 
 ### multiPartConcurrencyLimit
-The multiPartConcurrencyLimit option allows you to specify the number of parts that will be uploaded in parallel for a MultiPart upload request. By default, this is set to `5`.
+multiPartConcurrencyLimitオプションを使用すると、MultiPartアップロード要求に並行してアップロードされる部品の数を指定できます。 デフォルトでは、これは `5` に設定されています。
 
 ```swift
 tuConf.multiPartConcurrencyLimit = 3
 ```
 
 ### timeoutIntervalForResource
-The timeoutIntervalForResource parameter allows you to specify the maximum duration the transfer will run. The default value for this parameter is `50` minutes. This value is important if you use Amazon Cognito temporary credential because it aligns with the maximum span of time that those credentials are valid.
+timeoutIntervalForResourceパラメーターを使用すると、転送が実行される最大期間を指定できます。 このパラメータのデフォルト値は `50` 分です。 この値は、Amazon Cognitoの一時的な資格情報を使用する場合に重要です。
 
 ```swift
-tuConf.timeoutIntervalForResource = 15*60 //15 minutes
+tuConf.timeoutIntervalForResource = 15*60 //15分
 ```
 
-## Upload a File
+## ファイルをアップロード
 
- The transfer utility provides methods for both single-part and multipart uploads. When a transfer uses multipart upload, the data is chunked into a number of 5 MB parts which are transferred in parallel for increased speed.
+ 転送ユーティリティは、シングルパートとマルチパートの両方のアップロード方法を提供します。 転送がマルチパートアップロードを使用する場合、データは5MBの数に分割され、速度を上げるために並行して転送されます。
 
- The following example shows how to upload a file to an S3 bucket.
+ 次の例は、ファイルを S3 バケットにアップロードする方法を示しています。
 
 ```swift
 func uploadData() {
@@ -109,7 +109,7 @@ func uploadData() {
 }
 ```
 
-The following example shows how to upload a file to an S3 bucket using multipart uploads.
+以下の例は、マルチパートアップロードを使用して S3 バケットにファイルをアップロードする方法を示しています。
 
 ```swift
 func uploadData() {
@@ -152,9 +152,9 @@ func uploadData() {
 }
 ```
 
-## Download a File
+## ファイルをダウンロード
 
-The following example shows how to download a file from an S3 bucket.
+次の例は、S3バケットからファイルをダウンロードする方法を示しています。
 
 ```swift
 func downloadData() {
@@ -192,11 +192,11 @@ func downloadData() {
 }
 ```
 
-## Track Transfer Progress
+## 転送の進行状況を追跡する
 
-Implement progress and completion actions for transfers by passing a `progressBlock` and `completionHandler` blocks to the call to `AWSS3TransferUtility` that initiates the transfer.
+`progressBlock` と `completionHandler` ブロックを `AWSS3TransferUtility` の呼び出しに渡すことで、転送の進行状況と完了アクションを実装します。
 
-The following example of initiating a data upload, shows how progress and completion handling is typically done for all transfers. The `AWSS3TransferUtilityUploadExpression`, `AWSS3TransferUtilityMultiPartUploadExpression` and `AWSS3TransferUtilityDownloadExpression` contains the `progressBlock` that gives you the progress of the transfer which you can use to update the progress bar.
+以下の例では、すべての転送で進捗状況と完了の処理がどのように行われるかを示しています。 `AWSS3TransferUtilityUploadExpression`, ` AWSS3TransferUtilityMultiPartUploadExpression ` と `AWSS3TransferUtilityDownloadExpression` と `AWSS3TransferUtilityDownloadExpression` には、 `progressBlock` が含まれており、プログレスバーを更新するために使用できる転送の進行状況が表示されます。
 
 ```swift
 // For example, create a progress bar
@@ -246,39 +246,39 @@ transferUtility.uploadData(data,
             }
 ```
 
-## Pause a Transfer
+## 送金を一時停止する
 
-To pause a transfer, retain references to `AWSS3TransferUtilityUploadTask`, `AWSS3TransferUtilityMultiPartUploadTask` or `AWSS3TransferUtilityDownloadTask` .
+転送を一時停止するには、 `AWSS3TransferUtilityUploadTask`への参照を保持します。 `AWSS3TransferUtilityMultiPartUploadTask` または `AWSS3TransferUtilityDownloadTask`.
 
 As described in the previous section :ref:`native-track-progress-and-completion-of-a-transfer`, the variable `refUploadTask` is a reference to the `UploadTask` object that is retrieved from the `continueWith` block of an upload operation that is invoked through `transferUtility.uploadData`.
 
-To pause a transfer, use the `suspend` method:
+送金を一時停止するには、 `一時停止` メソッドを使用します。
 
 ```swift
 refUploadTask.suspend()
 ```
 
-## Resume a Transfer
+## 転送を再開
 
-To resume a transfer, use the `resume` method:
+転送を再開するには、 `resume` メソッドを使用します。
 
 ```swift
 refUploadTask.resume()
 ```
 
-## Cancel a Transfer
+## 送金をキャンセル
 
-To cancel a transfer, use the `cancel` method:
+送金をキャンセルするには、 `cancel` メソッドを使用します。
 
 ```swift
 refUploadTask.cancel()
 ```
 
-## Background Transfers
+## 背景の転送
 
-All transfers performed by TransferUtility for iOS happen in the background using NSURLSession background sessions. Once a transfer is initiated, it will continue regardless of whether the initiating app moves to the foreground, moves to the background, is suspended, or is terminated by the system. Note that this doesn't apply when the app is force-closed. Transfers initiated by apps that are force-closed are terminated by the operating system at the NSURLSession level. For regular uploads and downloads you will have to re-initiate the transfer. For multi-part uploads, the TransferUtility will resume automatically and will continue the transfer.
+iOS用TransferUtilityで行われるすべての転送は、NSURLSessionのバックグラウンドセッションを使用してバックグラウンドで行われます。 転送が開始されると、開始するアプリがフォアグラウンドに移動するかどうかに関係なく続行されます。 背景に移動するか、停止されるか、システムによって終了します。 これはアプリが強制終了されている場合には適用されないことに注意してください。 強制クローズされたアプリケーションによって開始される転送は、NSURLSession レベルのオペレーティングシステムによって終了されます。 通常のアップロードとダウンロードを行うには、転送を再開する必要があります。複数のアップロードを行う場合、TransferWiseは自動的に再開され、転送を継続します。
 
-To wake an app that is suspended or in the background when a transfer is completed, implement the handleEventsForBackgroundURLSession method in the AppDelegate and have it call the interceptApplication method of AWSS3TransferUtility as follows.
+転送が完了したときに一時停止またはバックグラウンドでアプリをスリープ解除する AppDelegate の handleEventsForBackgroundURLSession メソッドを実装し、以下のように AWSS3TransferUtility の interceptApplication メソッドを呼び出してください。
 
 ```swift
 func application(_ application: UIApplication, handleEventsForBackgroundURLSession identifier: String, completionHandler: @escaping () -> Void) {
@@ -287,15 +287,15 @@ func application(_ application: UIApplication, handleEventsForBackgroundURLSessi
 }
 ```
 
-## Managing Transfers When an App Restarts
+## アプリの再起動時に転送を管理する
 
 When an app that has initiated a transfer restarts (if it has been terminated by the system and not force-closed), it is possible that the transfer may still be in progress or completed. To make the restarting app aware of the status of transfers, instantiate the transfer utility using the `AWSS3TransferUtility.s3TransferUtility(forKey: "YOUR_KEY")` method. AWSS3TransferUtility uses the key to uniquely identify the NSURLSession of the transfers initiated by the app, so it is important to always use the same identifier. AWSS3TransferUtility will automatically reconnect to the transfers that were in progress the last time the app was running.
 
-Though it can be called anywhere in the app, we recommend that you instantiate the AWSS3TransferUtility in the `appDidFinishLaunching` lifecycle method.
+アプリのどこからでも呼び出すことができますが、AWSS3TransferUtilityを `appDidFinishLaunching` ライフサイクルメソッドでインスタンス化することをお勧めします。
 
-## Manage a Transfer when a Suspended App Returns to the Foreground
+## 一時停止時に転送を管理する フォアグラウンドに戻る
 
-When an app that has initiated a transfer becomes suspended and then returns to the foreground, the transfer may still be in progress or may have completed. In both cases, use the following code to re-establish the progress and completion handler blocks of the app.
+転送を開始したアプリが一時停止され、フォアグラウンドに戻ったとき。 転送がまだ進行中か完了している可能性があります どちらの場合も、アプリの進行・完了ハンドラブロックを再確立するために次のコードを使用します。
 
 ```swift
 let uploadTasks = transferUtility.getUploadTasks().result
@@ -321,7 +321,7 @@ let multiPartUploadTasks = transferUtility.getMultiPartUploadTasks().result
  }
 ```
 
-## Transfer with Object Metadata
+## オブジェクトメタデータで転送
 
 The `AWSS3TransferUtilityUploadExpression` and `AWSS3TransferUtilityMultiPartUploadExpression` classes contain the method `setValue:forRequestHeader` where you can pass in metadata to Amazon S3. This example demonstrates passing in the Server-side Encryption Algorithm as a request header in uploading data to S3 using MultiPart. See [Object Key and Metadata](https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html) for more information.
 
@@ -352,26 +352,26 @@ transferUtility.uploadUsingMultiPart(data:data,
             }
 ```
 
-## Working with access levels in your app code
+## アプリコードのアクセスレベルを操作する
 
-All Amazon S3 resources are private by default. If you want your users to have access to S3 buckets or objects, you can assign appropriate permissions with an [IAM policy](http://docs.aws.amazon.com/IAM/latest/UserGuide/PoliciesOverview.html).
+すべてのAmazon S3リソースはデフォルトでプライベートです。 ユーザーにS3バケットやオブジェクトへのアクセス権を持たせたい場合 [IAM ポリシー](http://docs.aws.amazon.com/IAM/latest/UserGuide/PoliciesOverview.html) で適切な権限を割り当てることができます。
 
-### IAM Policy Based Permissions
+### IAM ポリシーに基づく権限
 
 When you upload objects to the S3 bucket the Amplify CLI creates, you must manually prepend the appropriate access-level information to the `key`. The correct prefix - `public/`, `protected/` or `private/` - will depend on the access level of the object as documented in the [Storage Access section](~/sdk/storage/getting-started.md#storage-access).
 
-## Transfer Utility and Pre-Signed URLS
+## 転送ユーティリティと事前に署名された URL
 
-The TransferUtility generates Amazon S3 pre-signed URLs to use for background data transfer. The best practice is to use Amazon Cognito for credentials with Transfer Utility. With Amazon Cognito Identity, you receive AWS temporary credentials that are valid for up to 60 minutes. The pre-signed URLs built using these credentials are bound by the same time limit, after which the URLs will expire.
+転送ユーティリティは、バックグラウンドデータ転送に使用するAmazon S3の事前署名付きURLを生成します。 最善の方法は、Amazon Cognitoを転送ユーティリティとの認証情報に使用することです。 Amazon Cognito Identityでは、最大60分間有効なAWSの一時認証情報を受け取ります。 これらの資格情報を使用して構築された事前に署名された URL は、同じ時間制限によって束縛されます。その後、URL は期限切れになります。
 
 Because of this limitation, when you use TransferUtility with Amazon Cognito, the expiry on the Pre-Signed URLs generated internally is set to **50 minutes**. Transfers that run longer than the 50 minutes will fail.  If you are transferring a large enough file where this becomes a constraint, you should create static credentials using AWSStaticCredentialsProvider ( _see [Authentication](~/sdk/auth/how-it-works.md) for more details on how to do this_)  and increase the expiry time on the Pre-Signed URLs by increasing the value for the `timeoutIntervalForResource` in the Transfer Utility Options.  Note that the max allowed expiry value for a Pre-Signed URL is 7 days.
 
 
-## Additional Resources
+## 追加リソース
 
 * [Amazon Simple Storage Service Getting Started Guide](http://docs.aws.amazon.com/AmazonS3/latest/gsg/GetStartedWithS3.html)
 * [Amazon Simple Storage Service API Reference](http://docs.aws.amazon.com/AmazonS3/latest/API/Welcome.html)
 * [Amazon Simple Storage Service Developer Guide](http://docs.aws.amazon.com/AmazonS3/latest/dev/Welcome.html)
-* [Identity and Access Management Console](https://console.aws.amazon.com/iam/home)
-* [Granting Access to an Amazon S3 Bucket](http://blogs.aws.amazon.com/security/post/Tx3VRSWZ6B3SHAV/Writing-IAM-Policies-How-to-grant-access-to-an-Amazon-S3-bucket)
-* [Protecting data using customer provided encryption keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html)
+* [アイデンティティとアクセス管理コンソール](https://console.aws.amazon.com/iam/home)
+* [Amazon S3 バケットへのアクセスを許可する](http://blogs.aws.amazon.com/security/post/Tx3VRSWZ6B3SHAV/Writing-IAM-Policies-How-to-grant-access-to-an-Amazon-S3-bucket)
+* [顧客から提供された暗号化キーを使用したデータの保護](https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html)
