@@ -1,6 +1,6 @@
-A simple way to add a conversational UI into your app is to use our ChatBot Component.
+会話型 UI をアプリケーションに追加する簡単な方法は、ChatBot Components を使用することです。
 
-ChatBot automatically renders a complete chat messaging interface that can be used out-of-the-box, or it can be customized using theming support.
+ChatBotは完全なチャットメッセージングインターフェースを自動的にレンダリングし、すぐに使えるようにします。また、テーマサポートを使用してカスタマイズできます。
 
 <inline-fragment src=~/ui/interactions/fragments/web/chatbot/installation.md></inline-fragment>
 
