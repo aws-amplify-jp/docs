@@ -1,8 +1,8 @@
 {
-    "title": "Plugins",
+    "title": "プラグイン",
     "items": [
-        "plugins",
-        "architecture",
-        "authoring"
+        "プラグイン",
+        "アーキテクチャ",
+        "オーサリング"
     ]
 }
