@@ -1,6 +1,6 @@
-## What we'll build
+## 何を作ろうか？
 
-This tutorial guides you through setting up a backend and integrating that backend with your React app. You will create a “Todo app” with a GraphQL API and to store and retrieve items in a cloud database. In addition, we’ll demonstrate how to authenticate users, communicate with our API, and set up continuous deployment and hosting.
+このチュートリアルでは、バックエンドのセットアップと React アプリケーションとそのバックエンドを統合する方法について説明します。 GraphQL API を使用して "Todo アプリ" を作成し、クラウドデータベースに項目を保存して取得します。 さらに、ユーザーの認証方法、APIとの通信方法、継続的なデプロイメントとホスティングの設定方法について説明します。
 
 
-[GraphQL](http://graphql.org) is a data language that was developed to enable apps to fetch data from APIs. It has a declarative, self-documenting style. In a GraphQL operation, the client specifies how to structure the data when it is returned by the server. This makes it possible for the client to query only for the data it needs, in the format that it needs it in.
+[GraphQL](http://graphql.org) は、アプリが API からデータを取得できるように開発されたデータ言語です。 それは宣言的な、自己文書化スタイルを持っています。 GraphQL 操作では、クライアントはサーバーからデータが返されたときにデータを構造化する方法を指定します。 これにより、クライアントは必要なデータのみを必要とする形式でクエリすることができます。

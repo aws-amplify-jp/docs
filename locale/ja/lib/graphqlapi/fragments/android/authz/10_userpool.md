@@ -1,16 +1,16 @@
-Add the following code to your app:
+アプリに次のコードを追加します。
 
 <amplify-block-switcher> <amplify-block name="Java">
 
 ```java
-Amplify.addPlugin(new AWSCognitoAuthPlugin());
+Amplify.addPlugin(new AWScognitoAuthPlugin());
 Amplify.addPlugin(new AWSApiPlugin());
 ```
 
 </amplify-block> <amplify-block name="Kotlin">
 
 ```kotlin
-Amplify.addPlugin(AWSCognitoAuthPlugin())
+Amplify.addPlugin(AWScognitoAuthPlugin())
 Amplify.addPlugin(AWSApiPlugin())
 ```
 

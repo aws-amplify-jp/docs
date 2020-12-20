@@ -1,29 +1,29 @@
-Amplify gives you the ability to limit which individuals or groups should have access to create, read, update, or delete data on your types by specifying an `@auth` directive.
+Amplifyは、作成する個人またはグループにアクセスできるようにする機能を提供します。 `@auth` ディレクティブを指定することで、型のデータの読み取り、更新、削除を行うことができます。
 
-Here's a high-level overview of the authorization scenarios we support in the Amplify libraries. Each scenario has options you can tune to fit the needs of your application.
+Amplifyライブラリでサポートされている認可シナリオの概要を以下に示します。 各シナリオには、アプリケーションのニーズに合わせて調整できるオプションがあります。
 
-* [**Owner Based Authorization**](#owner-based-authorization): Limit a model instance's access to an "owner" and defines authorization rules for those owners. Backed by Cognito User Pool.
-* [**Static Group Authorization**](#static-group-authorization): Limit a model instance's access to a specific group of users and define authorization rules for that group. Backend by Cognito User Pool.
-* [**Owner and Static Group Combined**](#owner-and-static-group-combined): Uses a combination of both *Owner Based Authorization* and *Static Group Authorization* to control ownership and access.
-* [**Public Authorization**](#public-authorization): Allow public access to your model instances. Backed by an API Key or IAM.
-* [**Private Authorization**](#private-authorization): Allow any signed-in user to access your model instances. Backed by IAM or Cognito User Pool.
-* [**Owner based Authorization with OIDC provider**](#owner-based-authorization-with-oidc-provider): Use a 3rd party OIDC Provider to achieve *Owner based authorization*.
-* [**Static Group Authorization with OIDC provider**](#static-group-authorization-with-oidc-provider): Use a 3rd party OIDC Provider to achieve *Static group authorization* using a custom `groupClaim`.
+* [**Owner Based Authorization**](#owner-based-authorization): モデルインスタンスのアクセスを "owner" に制限し、それらの所有者に対する認可ルールを定義する。 Backed by Cognito User Pool.
+* [**Static Group Authorization**](#static-group-authorization): モデルインスタンスの特定のユーザーグループへのアクセスを制限し、そのグループの認可ルールを定義する。 Cognitoユーザープールによるバックエンド。
+* [**Owner and Static Group Combined**](#owner-and-static-group-combined): *Owner Based Authorization* と *Static Group Authorization* を組み合わせて、所有権とアクセスを制御します。
+* [**公開承認**](#public-authorization): モデルインスタンスへの公開アクセスを許可する。APIキーまたはIAMによってバックアップされる。
+* [**プライベート認証**](#private-authorization): サインインしたすべてのユーザーがモデルインスタンスにアクセスできるようにします。
+* [**OIDC プロバイダー**](#owner-based-authorization-with-oidc-provider): サードパーティーの OIDC プロバイダーを使用して、 *オーナーベースの承認* を達成します。
+* [**OIDC プロバイダー**](#static-group-authorization-with-oidc-provider): カスタム *groupClaim* を使用して、サードパーティの OIDC プロバイダーを使用して、 `静的グループの承認` を達成します。
 
-## Commonly used `@auth` rule patterns
+## 一般的に使用されている `@auth` ルールパターン
 
-### Owner Based Authorization
+### 所有者による承認
 
-The following are commonly used patterns for owner based authorization.  For more information on how to tune these examples, please see the [CLI documentation on owner based authorization](~/cli/graphql-transformer/auth.md#owner-authorization).
+以下は、所有者による承認のための一般的なパターンです。 これらの例をチューニングする方法の詳細については、 [CLI ドキュメントを参照してください owner based authorization](~/cli/graphql-transformer/auth.md#owner-authorization).
 
-* Create/Read/Update/Delete mutations are private to the owner.
+* 変更の作成/読み取り/更新/削除は所有者には非公開です。
 ```graphql
 type YourModel @model @auth(rules: [{ allow: owner }]) {
   ...
 }
 ```
 
-* Owners can create & delete; others can update and read.
+* オーナーは & 削除することができます。他のユーザーは更新や読むことができます。
 ```graphql
 type YourModel @model @auth(rules: [{ allow: owner,
                                    operations: [create, delete]}]) {
@@ -31,10 +31,10 @@ type YourModel @model @auth(rules: [{ allow: owner,
 }
 ```
 
-### Static Group Authorization
-The following are commonly used patterns for static group authorization.  For more information on how to tune these examples, please see the [CLI documentation on static group authorization](~/cli/graphql-transformer/auth.md#static-group-authorization).
+### 静的グループ認証
+以下は一般的に静的グループ承認のパターンです。 これらの例をチューニングする方法の詳細については、静的グループ承認に関する [CLI ドキュメント](~/cli/graphql-transformer/auth.md#static-group-authorization) を参照してください。
 
-* Users belonging to the "Admin" group can CRUD (create, read, update, and delete), others can not access anything.
+* 「管理者」グループに所属するユーザーは、CRUD (作成、読み取り、更新、および削除)、他のユーザーは何もアクセスできません。
 ```graphql
 type YourModel @model @auth(rules: [{ allow: groups,
                                       groups: ["Admin"] }]) {
@@ -42,7 +42,7 @@ type YourModel @model @auth(rules: [{ allow: groups,
 }
 ```
 
-* Users belonging to the "Admin" group can CRUD, others query and update.
+* 「管理者」グループに属するユーザーはCRUD、他のユーザーは問い合わせおよび更新できます。
 ```graphql
 type YourModel @model @auth(rules: [{ allow: groups,
                                        groups: ["Admin"],
@@ -51,54 +51,54 @@ type YourModel @model @auth(rules: [{ allow: groups,
 }
 ```
 
-### Owner and Static Group Combined
-The following are commonly used patterns for combining owner and static group authorization.  For more information on how to tune these examples, please see the [CLI documentation on static group authorization](~/cli/graphql-transformer/auth.md#static-group-authorization).
+### オーナーとスタティックグループの結合
+オーナーと静的グループの承認を組み合わせるために、以下のパターンが一般的に使用されます。 これらの例をチューニングする方法の詳細については、静的グループ承認に関する [CLI ドキュメント](~/cli/graphql-transformer/auth.md#static-group-authorization) を参照してください。
 
 * Users have their own data, but users who belong to the `Admin` group have access to their data and anyone else in that group.  Users in the `Admin` group have the ability to make mutation on behalf of users not in the `Admin` group
 ```graphql
 type YourModel @model @auth(rules: [{ allow: owner },
-                                      { allow: groups, groups: ["Admin"]}]) {
+                                      { allow: groups: ["Admin"]}]) {
   ...
 }
 ```
 
-### Public Authorization
-The following are commonly used patterns for public CRUD authorization.  For more information on how to tune these examples, please see the [CLI documentation on static group authorization](~/cli/graphql-transformer/auth.md#static-group-authorization#public-authorization).
+### パブリック認証
+以下は一般的に公開CRUD認証のパターンです。 これらの例をチューニングする方法の詳細については、静的グループ承認に関する [CLI ドキュメント](~/cli/graphql-transformer/auth.md#static-group-authorization#public-authorization) を参照してください。
 
-* Auth provider is API Key, and all data is public CRUD
+* 認証プロバイダはAPIキーで、すべてのデータはパブリックCRUD
 ```graphql
 type YourModel @model @auth(rules: [{ allow: public }]) {
   ...
 }
 ```
 
-* Auth provider is IAM, and all data is public CRUD
+* 認証プロバイダはIAMであり、すべてのデータはパブリックCRUD
 ```graphql
 type YourModel @model @auth(rules: [{ allow: public, provider: iam }]) {
   ...
 }
 ```
 
-### Private Authorization
-The following are commonly used patterns for private authorization. For more information on how to tune these examples, please see the [CLI documentation on static group authorization](~/cli/graphql-transformer/auth.md#static-group-authorization#private-authorization).
+### プライベート認証
+以下は私的承認のための一般的なパターンである。 これらの例をチューニングする方法の詳細については、静的グループ承認に関する [CLI ドキュメント](~/cli/graphql-transformer/auth.md#static-group-authorization#private-authorization) を参照してください。
 
-* Cognito user pool authenticated users can CRUD all posts, regardless of who created it. Guest users do not have access.
+* Cognitoユーザープール認証済みユーザーは、誰が作成したかにかかわらず、すべての投稿をCRUDすることができます。ゲストユーザーはアクセス権を持っていません。
 ```graphql
 type YourModel @model @auth(rules: [{ allow: private }]) {
   ...
 }
 ```
-* IAM authenticated users can CRUD all posts, regardless of who created it. Guest users do not have access:
+* IAM 認証されたユーザーは、誰が作成したかにかかわらず、すべての投稿をCRUD することができます。ゲストユーザーにはアクセス権がありません。
 ```graphql
 type YourModel @model @auth(rules: [{ allow: private, provider: iam }]) {
   ...
 }
 ```
 
-### Owner based Authorization with OIDC provider
-The following are commonly used patterns for owner based authorization using a 3rd party OIDC provider (e.g. Facebook, Google, etc...). For more information on how to tune these examples, please see the [CLI documentation on static group authorization](~/cli/graphql-transformer/auth.md#authorization-using-an-oidc-provider).
+### OIDCプロバイダーによるオーナーベースの承認
+以下は、サードパーティ製のOIDCプロバイダー(Facebook、Googleなど)を使用した所有者による認証のために一般的に使用されるパターンです。 これらの例をチューニングする方法の詳細については、静的グループ承認に関する [CLI ドキュメント](~/cli/graphql-transformer/auth.md#authorization-using-an-oidc-provider) を参照してください。
 
-* Using a 3rd party OIDC provider to achieve owner based authorization.
+* サードパーティ製のOIDCプロバイダを使用して、所有者に基づく承認を達成します。
 ```graphql
 type YourModel @model @auth(rules: [{ allow: owner,
                                      provider: oidc,
@@ -109,15 +109,15 @@ type YourModel @model @auth(rules: [{ allow: owner,
 
 <inline-fragment platform="android" src="~/lib/datastore/fragments/android/setup-auth-rules/owner_based_auth_oidc.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/ios/setup-auth-rules/owner_based_auth_oidc.md"></inline-fragment>
 
-### Static Group Authorization with OIDC provider
+### OIDCプロバイダーによる静的グループ認証
 The following are commonly used patterns for using `groupClaims` to achieve group based authorization using a 3rd party OIDC provider. For more information on how to tune these examples, please see the [CLI documentation on static group authorization](~/cli/graphql-transformer/auth.md#custom-claims).
 
-* Using a custom value for `groupClaim` to achieve static group authorization with a 3rd party OIDC provider.
+* `groupClaim` のカスタム値を使用して、サードパーティ製の OIDC プロバイダによる静的なグループ承認を実現します。
 ```graphql
 type YourModel @model @auth(rules: [{ allow: groups
                                      provider: oidc
                                        groups: ["Admin"]
-                                   groupClaim: "https://myapp.com/claims/groups"
+                                   groupClaim: "https://myapp.com/curs/groups"
                                       }]) {
   ...
 }

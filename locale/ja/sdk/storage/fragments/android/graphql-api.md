@@ -1,8 +1,8 @@
-Note: Please review the documentation for [API](~/sdk/api/graphql.md) before you proceed with the rest of this section.
+注意: このセクションの残りの部分を進める前に、 [API](~/sdk/api/graphql.md) のドキュメントを確認してください。
 
 You can also upload and download Amazon S3 Objects using AWS AppSync, a GraphQL based solution to build data-driven apps with real-time and offline capabilities. Sometimes you might want to create logical objects that have more complex data, such as images or videos, as part of their structure.  _For example, you might create a Person type with a profile picture or a Post type that has an associated image_. You can use AWS AppSync to model these as GraphQL types. If any of your mutations have a variable with bucket, key, region, mimeType, and localUri fields, the SDK uploads the file to Amazon S3 for you.
 
-Attach the following policy to your IAM role to grant it programmatic read-write access to your bucket:
+以下のポリシーを IAM ロールに添付して、プログラムによるバケットへの読み書きアクセスを許可します。
 
 ```
 {
@@ -28,13 +28,13 @@ Attach the following policy to your IAM role to grant it programmatic read-write
 ## Schema Setup
 If any mutations have an input type `S3ObjectInput` with fields `bucket`, `key`, `region`, `mimeType` and `localUri` fields, the SDK will upload the file to S3.
 ```
-  input S3ObjectInput {
+  input {
     bucket: String!
     key: String!
     region: String!
     localUri: String
     mimeType: String
-  }
+}
 ```
 For example, to add a photo field in the `Post` type. Update `Post` type, add the new `S3ObjectInput` type and add a new mutation, `putPostWithPhoto`.
 ```
@@ -80,8 +80,8 @@ Next, update the putPostWithPhoto mutation resolver to use `PutItemWithS3Object`
 ```
 $util.toJson($util.dynamodb.fromS3ObjectJson($context.source.file))
 ```
-## Client Code
-To use complex objects, you need AWS Identity and Access Management credentials for reading and writing to Amazon S3. These can be separate from the other authentication credentials used in the AWS AppSync client. Credentials for complex objects are set in the `S3ObjectManagerImplementation` builder parameter, which you can use like the following:
+## クライアント コード
+複雑なオブジェクトを使用するには、Amazon S3 への読み書きには AWS Identity and Access Management クレデンシャルが必要です。 これらはAWS AppSync クライアントで使用される他の認証資格情報とは別にすることができます。 複雑なオブジェクトの資格情報は `S3ObjectManager実装` ビルダーパラメータで設定されます。以下のように使用できます:
 ```java
 public class ClientFactory {
     // ...other code...
@@ -122,7 +122,7 @@ The SDK uploads the file found at the `localUri` when the bucket, key, region, l
 ```xml
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 ```
-Then, in your activity where you are adding a post, update the code as follows:
+次に、投稿を追加するアクティビティで、次のようにコードを更新します。
 ```java
 public class AddPostActivity extends AppCompatActivity {
     // ...other code...

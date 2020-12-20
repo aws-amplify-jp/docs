@@ -1,4 +1,4 @@
-🎉 Congratulations! Your app is built, with a realtime backend.
+🎉 おめでとうございます! リアルタイムバックエンドでアプリが構築されました。
 
-What next? Here are some things to add to your app:
+次は何をしますか？アプリに追加するいくつかの項目は次のとおりです。
 

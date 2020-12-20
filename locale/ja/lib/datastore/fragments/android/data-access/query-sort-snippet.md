@@ -39,9 +39,9 @@ Amplify.DataStore.query(Post::class.java,
 RxAmplify.DataStore.query(Post.class,
     Where.sorted(Post.RATING.ascending())
     .subscribe(
-        post -> Log.i("MyAmplifyApp", "Post: " +  post),
-        failure -> Log.e("MyAmplifyApp", "Query failed.", failure)
-    );
+        post -> Log.i("MyAmplifyApp", "Post: " + post),
+        failure -> Log.e("MyAmplifyApp", "Query failure)
+);
 ```
 
 </amplify-block>

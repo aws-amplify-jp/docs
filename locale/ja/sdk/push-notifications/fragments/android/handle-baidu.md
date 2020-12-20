@@ -1,30 +1,30 @@
-## Handling Baidu Push Notifications
+## Baiduプッシュ通知の処理
 
-Baidu Cloud Push is the push notification service provided by Baidu, a Chinese cloud service. By integrating Baidu Cloud Push with your mobile app, you can use Amazon Pinpoint to send notifications to your app through the Baidu mobile push channel.
+Baidu Cloud Pushは、中国のクラウドサービスであるBaiduが提供するプッシュ通知サービスです。 Baidu Cloud Pushをモバイルアプリに統合することで、 Amazon Pinpointを使用すると、Baiduモバイルプッシュチャネルを通じてアプリに通知を送信できます。
 
-**Prerequisites**
+**前提条件**
 
-To send push notifications to mobile devices using Amazon Pinpoint and Baidu, you need the following:
+Amazon PinpointとBaiduを使用してモバイルデバイスにプッシュ通知を送信するには、以下が必要です。
 
-* Baidu account.
+* Baiduアカウント。
 
-* Registration as a Baidu developer.
+* Baidu開発者として登録します。
 
-* Baidu Cloud Push project.
+* Baidu Cloud Pushプロジェクト。
 
-* API key and secret key from a Baidu Cloud Push project.
+* Baidu Cloud PushプロジェクトのAPIキーとシークレットキー。
 
-* Baidu user ID and channel ID.
+* BaiduのユーザーIDとチャンネルID。
 
-The following procedure is based on version `5.7.1.65` of the Baidu push service jar.
+以下の手順は、Baidu プッシュサービス jar のバージョン `5.7.1.65` に基づいています。
 
-**To integrate Baidu with your app**
+**Baiduをアプリと統合するには**
 
-Download the latest Baidu Cloud Push SDK Android client from http://push.baidu.com/.
+最新のBaidu Cloud Push SDK Androidクライアントをhttp://push.baidu.com/からダウンロードしてください。
 
-Extract the zip file and import the `pushservice-x.x.xx.jar` file from the `Baidu-Push-SDK-Android` libs folder into your Android app’s lib folder.
+ZIP ファイルを抽出し、 `pushservice-x.xx.jar` ファイルを `Baidu-Push-SDK-Android` libs フォルダから Android アプリの libフォルダにインポートします。
 
-The `Baidu-Push-SDK-Android` libs folder should also include the following folders:
+`Baidu-Push-SDK-Android` libs フォルダには以下のフォルダも含める必要があります:
 
 * arm64-v8a
 
@@ -40,9 +40,9 @@ The `Baidu-Push-SDK-Android` libs folder should also include the following folde
 
 * x86_64
 
-Add each complete folder to your Android app’s `src/main/jniLibs` folder.
+Android アプリの `src/main/jniLibs` フォルダにそれぞれ完全なフォルダを追加します。
 
-In the Android app’s `AndroidManifest.xml` file, declare the following permissions:
+Android アプリの `AndroidManifest.xml` ファイル内で、次の権限を宣言してください：
 
 ```xml
 <uses-permission android:name="android.permission.INTERNET" />
@@ -63,7 +63,7 @@ In the Android app’s `AndroidManifest.xml` file, declare the following permiss
 <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
 ```
 
-Under `<application>`, specify the following receivers and intent filters:
+`<application>`の下に、以下の受信機とインテントフィルタを指定します。
 
 ```xml
 <!-- Baidu settings -->
@@ -134,7 +134,7 @@ Inside your Android application, create a `MessageReceiver` class that subclasse
 
 **`onBind`**
 
-Called when the device is registered with Baidu Cloud Push. Provides the Baidu user ID and channel ID that are needed to register the device with Amazon Pinpoint. Include the following call as part of this method:
+デバイスがBaidu Cloud Pushに登録されたときに呼び出されます。 Amazon Pinpointでデバイスを登録するために必要なBaiduのユーザーIDとチャンネルIDを提供します。 このメソッドの一部として次の呼び出しを含めます:
 
 ```java
 pinpointManager.getNotificationClient().registerDeviceToken(userId, channelId);
@@ -142,14 +142,14 @@ pinpointManager.getNotificationClient().registerDeviceToken(userId, channelId);
 
 **`onUnbind`**
 
-Called when the device is no longer registered with Baidu Cloud Push.
+デバイスがBaidu Cloud Pushに登録されなくなったときに呼び出されます。
 
 **`onMessage`**
 
-Called when the device receives a raw message from Baidu Cloud Push. Amazon Pinpoint transmits campaign push notifications with the Baidu Cloud Push raw message format. Include the following call as part of this method:
+デバイスがBaidu Cloud Pushから生メッセージを受信したときに呼び出されます。 Amazon Pinpoint は、Baidu Cloud Push raw メッセージ形式でキャンペーンプッシュ通知を送信します。このメソッドの一部として次のコールを含めます。
 
 ```java
-NotificationDetails details = NotificationDetailsBuilder.builder()
+NotificationDetails = NotificationDetailsBuilder.builder()
                               .message(message);
                               .intentAction(NotificationClient.BAIDU_INTENT_ACTION)
                               .build();
@@ -157,7 +157,7 @@ NotificationDetails details = NotificationDetailsBuilder.builder()
 pinpointManager.getNotificationClient().handleCampaignPush(details)
 ```
 
-Only the message parameter contains data. The `customContentString` is not used with raw messages.
+message パラメータのみデータを含んでいます。 `customContentString` は生のメッセージでは使用されません。
 
 After creating the subclass, modify the `AndroidManifest.xml` file to register it as a receiver. In the following example, the `PushMessageReceiver` subclass is named `com.baidu.push.example.MyPushMessageReceiver`.
 
@@ -171,7 +171,7 @@ After creating the subclass, modify the `AndroidManifest.xml` file to register i
 </receiver>
 ```
 
-To start the Baidu listener service, in your Android app’s main activity, add the following code to the onCreate method:
+Baiduリスナーサービスを開始するには、Androidアプリのメインアクティビティで、以下のコードをonCreateメソッドに追加してください。
 
 ```java
 // ATTENTION：You need to modify the value of api_key to your own !!
@@ -205,7 +205,7 @@ final PinpointConfiguration config =
 Application.pinpointManager = new PinpointManager(config);
 ```
 
-Or, you can define a configuration file to be consumed by `AWSConfiguration`:
+または、 `AWSConfiguration` で使用する構成ファイルを定義することもできます。
 
 ```
 "PinpointAnalytics": {
@@ -217,36 +217,36 @@ Or, you can define a configuration file to be consumed by `AWSConfiguration`:
 }
 ```
 
-**Testing Baidu Push Notifications**
+**Baiduプッシュ通知のテスト**
 
-To test, you need an Amazon Pinpoint project, a Baidu API key, and a Baidu Secret key.
+テストには、Amazon Pinpoint プロジェクト、Baidu API キー、Baidu Secret キーが必要です。
 
-Before you begin, augment your app to display the device token after registration. The device token can be retrieved by calling:
+始める前に、登録後にデバイストークンを表示するアプリを増強してください。デバイストークンは以下のように呼び出すことで取得できます。
 
 ```java
 pinpointManager.getNotificationClient().getDeviceToken()
 ```
 
-Complete the following steps using the Amplify CLI and Amazon Pinpoint console to test Baidu push notifications.
+Amplify CLI と Amazon Pinpoint コンソールを使用して、Baidu のプッシュ通知をテストします。
 
-Run the following command to navigate to the Amazon Pinpoint console.
+次のコマンドを実行して、Amazon Pinpoint コンソールに移動します。
 
 ```bash
-amplify console analytics
+コンソール分析を増幅する
 ```
 
-* On the left pane, select `Settings` and `Push notifications`.
-* Click `Edit` and select `Show more push notification services` and click `Baidu Cloud Push`.
-* Enter the `Baidu API Key` and the `Baidu Secret Key` and click `Save` at the right bottom of the page.
+* 左側のペインで、 `設定` と `プッシュ通知` を選択します。
+* `Edit` をクリックして `Show more push services` を選択し、 `Baidu Cloud Push` をクリックします。
+* `Baidu API Key` と `Baidu Secret Key` を入力し、ページの右下にある `Save` をクリックします。
 
-Now `Baidu Cloud Push` is registered as a push notification service.
+現在、 `Baidu Cloud Push` がプッシュ通知サービスとして登録されています。
 
-Install your app on to a `Baidu-enabled` device and capture the generated device token.
+`Baidu対応の` デバイスにアプリをインストールし、生成されたデバイストークンをキャプチャします。
 
-Send a direct message to the device specifying the device token as the address.
+アドレスとしてデバイストークンを指定してデバイスにダイレクトメッセージを送信します。
 
-* On the Amazon Pinpoint console, go to `Test messaging`.
-* Select `Push notifications` as the channel.
-* Enter the endpoint ID or the device token in the `Destinations`.
-* Select `Baidu` as the push notifications service.
-* Create a message and click `Send message` at the bottom right corner of the page to send a direct message.
+* Amazon Pinpoint コンソールで、 `Test messages` に移動します。
+* `Push notifications` をチャンネルとして選択します。
+* エンドポイントIDまたはデバイストークンを `デスティネーション`に入力します。
+* プッシュ通知サービスとして `Baidu` を選択します。
+* メッセージを作成し、ダイレクトメッセージを送信するには、ページ右下の `メッセージを送信` をクリックします。

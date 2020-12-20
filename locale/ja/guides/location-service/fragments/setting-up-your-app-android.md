@@ -1,39 +1,39 @@
-## Overview
+## 概要
 
-[Amazon Location Service](http://aws.amazon.com/location) is a geolocation service that lets you add location information to your applications. With Amazon Location Service, you can build applications that provide maps and points of interest, track resources, trigger actions based on location, and convert street addresses into geographic coordinates. This guide provides you with the following information:
+[Amazon Location Service](http://aws.amazon.com/location) は、アプリケーションに位置情報を追加できる位置情報サービスです。 Amazon Location Service では、地図や興味のあるポイントを提供するアプリケーションを構築できます。 リソースを追跡し、場所に基づいてアクションを実行し、通りの住所を地理座標に変換します。 このガイドでは、以下の情報を提供します。
 
-- How to setup and configure your Android app with the Amazon Location Service SDK
-- How to add authentication to your application
-- Example of how to access the Amazon Location Service APIs
+- Amazon Location Service SDK を使用して Android アプリをセットアップおよび構成する方法
+- アプリケーションに認証を追加する方法
+- Amazon Location Service API へのアクセス方法
 
-To learn more about the service, see the [Amazon Location Service Developer Guide](https://docs.aws.amazon.com/location/latest/developerguide/).
+サービスの詳細については、 [Amazon Location Service Developer Guide](https://docs.aws.amazon.com/location/latest/developerguide/) を参照してください。
 
-## Prerequisites
+## 前提条件
 
-When using the Amazon Location Service within your Android app, your application must target API level 16 or later.
+Android アプリ内で Amazon Location Service を使用する場合は、API レベル 16 以降をターゲットにする必要があります。
 
-## Installing dependencies
+## 依存関係のインストール
 
-The following procedure defines how to install the necessary Amazon Location Service SDK dependencies in your Android app.
+次の手順では、必要な Amazon Location Service SDK を Android アプリにインストールする方法を定義します。
 
-**To install dependencies:**
+**依存関係をインストールするには:**
 
-1. In Android Studio, expand **Gradle Scripts** in the project viewer and open **build.gradle (Module: YourApp).**
-1. In the **dependencies** block, add the following lines:
+1. Android Studio で、プロジェクト ビューアーで **Gradle スクリプト** を展開し、 **build.gradle (Module: YourApp) を開きます。**
+1. **dependencies** ブロックに、次の行を追加します。
 
     ```groovy
-    implementation 'com.amazonaws:aws-android-sdk-mobile-client:2.20.+'
-    implementation 'com.amazonaws:aws-android-sdk-location:2.20.+'
+    implementation 'com.<unk> s:aws-android-sdk-mobile-client:2.20.+'
+    implementation 'com.<unk> s:aws-android-sdk-location:2.20.+)
     ```
 
-1. Click **Sync Now** in the notification bar above the file editor to update your project’s configuration. You have now successfully added the Amazon Location Service SDK dependencies to your Android app.
+1. ファイルエディタの上部にある通知バーの **Sync Now** をクリックして、プロジェクトの設定を更新します。 Android アプリに Amazon Location Service SDK の依存関係が正常に追加されました。
 
-## Adding authentication to your App using the Amplify CLI
+## Amplify CLI を使用してアプリに認証を追加する
 
-The Amplify Framework uses [Amazon Cognito](https://aws.amazon.com/cognito/) as its primary authentication provider. Amazon Cognito is a robust user directory service that handles user registration, authentication, account recovery, and other operations. Use the following procedure to add authentication to your app using Amazon Cognito and Amplify CLI.
+Amplify Frameworkは、主要認証プロバイダとして [Amazon Cognito](https://aws.amazon.com/cognito/) を使用しています。 Amazon Cognitoは、ユーザー登録、認証、アカウント復旧などの操作を行う堅牢なユーザーディレクトリサービスです。 Amazon CognitoとAmplify CLIを使用してアプリに認証を追加するには、次の手順を使用します。
 
-1. Open a terminal window in Android Studio by clicking Terminal.
-1. Install the [Amplify CLI](https://docs.amplify.aws/cli/start/install) by running the following command:
+1. ターミナルをクリックして Android Studio でターミナルウィンドウを開きます。
+1. 次のコマンドを実行して、 [Amplify CLI](https://docs.amplify.aws/cli/start/install) をインストールします。
 
     <amplify-block-switcher>
 
@@ -48,7 +48,7 @@ The Amplify Framework uses [Amazon Cognito](https://aws.amazon.com/cognito/) as 
     <amplify-block name="cURL (Mac and Linux)">
 
     ```bash
-    curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
+    curl -sL https://aws-amplify.github.io/anplify-cli/install | bash && $SHELL
     ```
 
     </amplify-block>
@@ -56,26 +56,26 @@ The Amplify Framework uses [Amazon Cognito](https://aws.amazon.com/cognito/) as 
     <amplify-block name="cURL (Windows)">
 
     ```bash
-    curl -sL https://aws-amplify.github.io/amplify-cli/install-win -o install.cmd && install.cmd
+    curl -sL https://aws-amplify.github.io/anplify-cli/install-win -o install.cmd && install.cmd
     ```
 
     </amplify-block>
 
     </amplify-block-switcher>
 
-1. Initialize a new Amplify project by running the following command from the root directory of your app:
+1. アプリのルートディレクトリから次のコマンドを実行して、Amplifyプロジェクトを初期化します。
 
     ```bash
-    amplify init
+    initを増幅する
     ```
 
-1. Create a Cognito Identity Pool. It will be used to authenticate your app users and authorize their access to Amazon Location Service. To start provisioning authentication resources in the backend, go to your project directory and run the following command:
+1. Cognito Identity Poolを作成します。アプリユーザーを認証し、Amazon Location Service へのアクセスを許可するために使用されます。 バックエンドで認証リソースのプロビジョニングを開始するには、プロジェクトディレクトリに移動して次のコマンドを実行します。
 
     ```bash
-    amplify add auth
+    増幅して認証を追加
     ```
 
-1. When prompted, provide the following information:
+1. プロンプトが表示されたら、以下の情報を入力してください。
 
     ```console
     ? Do you want to use the default authentication and security configuration? 
@@ -89,12 +89,12 @@ The Amplify Framework uses [Amazon Cognito](https://aws.amazon.com/cognito/) as 
 1. Run the following command to push your changes to the cloud. When completed, the `awsconfiguration.json` file will be updated to reference your newly provisioned backend auth resources.
 
     ```bash
-    amplify push
+    push を増幅する
     ```
 
-## Initializing the SDK
+## SDK の初期化
 
-To use your new Amazon Cognito identity pool, add the following code to initialize AWSMobileClient in your Activity's onCreate method:
+新しい Amazon Cognito ID プールを使用するには、Activity の onCreate メソッドで AWSMobileClient を初期化するために次のコードを追加してください。
 
 <amplify-block-switcher>
 
@@ -130,46 +130,46 @@ AWSMobileClient.getInstance().initialize(applicationContext, object : Callback<U
 
 </amplify-block> </amplify-block-switcher>
 
-This allows guest users access to your backend resources.
+ゲストユーザがバックエンドリソースにアクセスできるようにします。
 
-You have now successfully setup and configured your app to use Amazon Location Service!
+Amazon 位置情報サービスを使用するようにアプリのセットアップと設定が完了しました！
 
-## Using the Amazon Location Service APIs
+## Amazon Location Service API の使用
 
 In order to access Amazon Location Service APIs you will need to create resources. You can create resources using the [Amazon Location Service console](http://console.aws.amazon.com/location/home) or using the [AWS Command Line Interface (CLI)](https://aws.amazon.com/cli/). Once you have created the resources, you can use these resources by calling the [APIs](https://aws-amplify.github.io/aws-sdk-android/docs/reference/).
 
-This section provides you an example of using the Amazon Location Service APIs. In this example, we will first create a Place Index in the Amazon Location Service console and use the APIs to search for places.
+このセクションでは、Amazon Location Service API の使用例を示します。 この例では、最初に Amazon Location Service コンソールで Place Index を作成し、API を使用して場所を検索します。
 
-### Creating a new place index
+### 新しい場所インデックスの作成
 
-1. Open the [Amazon Location Service console](https://console.aws.amazon.com/location/places/home#/create) to create a place index.
-1. Enter **MyPlaceIndex** in **Name**.
-1. Press **Create place index**
+1. [Amazon Location Service コンソール](https://console.aws.amazon.com/location/places/home#/create) を開き、インデックスを作成します。
+1. **名前** に **MyPlaceIndex** を入力します。
+1. **Create place index** を押します
 
-    ![Amazon Location Service - Create place index](~/images/als/create-place-index.png)
+    ![アマゾンロケーションサービス - 場所のインデックスを作成](~/images/als/create-place-index.png)
 
-1. Note the Amazon Resource Name (ARN) of your place index. This will start with *arn:aws:geo* as in the below screenshot.
+1. 以下のスクリーンショットのように、 *arn:aws:geo* から始まります。
 
     ![Amazon Location Service - Place index](~/images/als/my-place-index.png)
 
-### Allow Guest users access to the place index
+### ゲストユーザーに場所のインデックスへのアクセスを許可する
 
-Now create an inline policy that will give guest users of your application access to the Place Index resource you just created in Amazon Location Service.
+次に、アプリケーションのゲストユーザーに、Amazon Location Service で作成したPlace Indexリソースへのアクセス権を付与するインラインポリシーを作成します。
 
-1. Navigate to the root of your project and run the following command:
+1. プロジェクトのルートに移動し、次のコマンドを実行します。
 
     ```bash
-    amplify console auth
+    コンソールの認証を増幅する
     ```
 
-1. Select **Identity Pool** for **Which console?** when prompted.
-1. You will be directed to the Amazon Cognito console. Click on **Edit identity pool** in the top right corner of the page.
+1. **どのコンソール** の **アイデンティティプール** を選択するプロンプトが表示されたら。
+1. Amazon Cognitoコンソールに移動します。ページの右上隅にある **Edit Identity pool** をクリックします。
 1. Open the drop down for **Unauthenticated identities**, choose **Enable access to unauthenticated identities**, and then press **Save Changes**.
 1. Click on **Edit identity pool** once more. Make a note of the name of the Unauthenticated role. For example, `amplify-<project_name>-<env_name>-<id>-unauthRole`.
-1. Open the [AWS Identity and Access Management (IAM) console](https://console.aws.amazon.com/iam/home#/roles) to manage Roles.
-1. In the **Search** field, enter the name of your Unauthenticated role noted above and click on it.
-1. Click **+Add inline policy**, then click on the **JSON** tab.
-1. Fill in the `[ARN]` placeholder with the ARN of your place index which you noted above and replace the contents of the policy with the below.
+1. [AWS Identity and Access Management (IAM) コンソール](https://console.aws.amazon.com/iam/home#/roles) を開き、ロールを管理します。
+1. **Search** フィールドに、上記の未認証ロールの名前を入力してクリックします。
+1. **+ Add インラインポリシー**をクリックし、 **JSON** タブをクリックします。
+1. `[ARN]` プレースホルダに、上記のプレースインデックスのARNを入力し、ポリシーの内容を以下に置き換えます。
 
     ```json
 {
@@ -184,13 +184,13 @@ Now create an inline policy that will give guest users of your application acces
 }
     ```
 
-1. Click on the **Review policy** button.
-1. In the **Name** field, enter *LocationTracker*.
-1. Click on the **Create policy** button. You have now successfully added authentication to your Android app.
+1. **Review Policy** ボタンをクリックします。
+1. **名前** フィールドに、 *LocationTracker* と入力します。
+1. **ポリシーの作成** ボタンをクリックします。Android アプリに認証が正常に追加されました。
 
-### Searching for places
+### 場所を検索中
 
-Here is how you can search for places using the place index you just created:
+作成した場所のインデックスを使用して場所を検索する方法は次のとおりです。
 
 <amplify-block-switcher>
 

@@ -1,6 +1,6 @@
 ---
-title: Working with the API
-description: Learn how to establish a connection, subscribe to a topic, publish to a topic, unsubscribe from a topic and close a connection with PubSub on AWS Mobile SDK.
+title: API の操作
+description: 接続の確立、トピックの購読、トピックへの公開方法を学びます。 トピックの購読を解除し、AWS Mobile SDK の PubSub との接続を閉じます。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

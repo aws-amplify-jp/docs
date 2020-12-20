@@ -1,6 +1,6 @@
-## Querying from a JavaScript application
+## JavaScript アプリケーションからのクエリ
 
-The `listTodos` query should have been created for you automatically by the CLI, but for reference purposes it should look something like this:
+`listTodos` クエリは CLI によって自動的に作成されている必要がありますが、参照目的では以下のようになります。
 
 ```js
 const listTodos = `
@@ -17,7 +17,7 @@ const listTodos = `
 `
 ```
 
-To pass in a `limit` in a query from a JavaScript application, you can use the following code by setting the limit as a variable:
+JavaScriptアプリケーションからのクエリで `制限` を渡すには 制限値を変数として設定することで、次のコードを使用できます。
 
 ```js
 import { API } from 'aws-amplify';
@@ -33,7 +33,7 @@ async function fetchTodos() {
 }
 ```
 
-The data returned from the API request should look like this (with the items array containing however many items have been created):
+API リクエストから返されるデータは、次のようになります(項目が多い配列が作成されている場合)。
 
 ```graphql
 {
@@ -46,7 +46,7 @@ The data returned from the API request should look like this (with the items arr
 }
 ```
 
-To set the `nextToken` in a query from a JavaScript application, you can use the following code:
+JavaScriptアプリケーションからクエリに `nextToken` を設定するには、次のコードを使用します。
 
 ```js
 import { API } from 'aws-amplify';

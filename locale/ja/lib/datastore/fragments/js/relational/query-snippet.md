@@ -2,7 +2,7 @@
 const comments = (await DataStore.query(Comment)).filter(c => c.postID === "123");
 ```
 
-Alternatively:
+その他の方法:
 
 ```js
 const post = await DataStore.query(Post, "123");

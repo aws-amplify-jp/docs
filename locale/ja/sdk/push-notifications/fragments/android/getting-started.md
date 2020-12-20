@@ -1,21 +1,21 @@
 Enable your users to receive mobile push messages sent from the Apple (APNs) and Google (FCM/GCM) platforms. The CLI deploys your push notification backend using [Amazon Pinpoint](http://docs.aws.amazon.com/pinpoint/latest/developerguide/). You can also create Amazon Pinpoint campaigns that tie user behavior to push or other forms of messaging.
 
-## Set Up Your Backend
+## バックエンドを設定
 
-1. Complete the [Get Started](~/start/start.md) steps before you proceed.
+1. 先に進む前に [はじめに](~/start/start.md) ステップを完了してください。
 
-1. Use the CLI to add storage to your cloud-enabled backend and app.
+1. CLI を使用して、クラウド対応のバックエンドとアプリにストレージを追加します。
 
     In a terminal window, navigate to your project folder (the folder that typically contains your project level `build.gradle`), and add the SDK to your app.
 
     ```bash
     cd ./YOUR_PROJECT_FOLDER
-    amplify add notifications
+    増幅して通知を追加
     ```
 
-1. Set up your backend to support receiving push notifications:
+1. プッシュ通知の受信をサポートするバックエンドを設定:
 
-    - Choose Firebase Cloud Messaging (FCM).
+    - Firebase Cloud Messaging (FCM) を選択します。
 
         ```console
         > FCM
@@ -23,11 +23,11 @@ Enable your users to receive mobile push messages sent from the Apple (APNs) and
 
     - Provide your ApiKey. The FCM console refers to this value as `ServerKey`. For information on getting an FCM ApiKey, see the section [Setting Up FCM/GCM Guide](~/sdk/push-notifications/setup-push-service.md). Use the steps in the next section to connect your app to your backend.
 
-## Connect to Your Backend
+## バックエンドに接続
 
-Use the following steps to connect your app to the push notification backend services.
+アプリをプッシュ通知バックエンドサービスに接続するには、次の手順を実行します。
 
-1. Add the following dependencies and plugin to your `app/build.gradle`:
+1. 次の依存関係とプラグインを `app/build.gradle`に追加します:
 
     ```groovy
     dependencies {
@@ -43,7 +43,7 @@ Use the following steps to connect your app to the push notification backend ser
     apply plugin: 'com.google.gms.google-services'
     ```
 
-1. Add the following to your project level `build.gradle`. Make sure that you specify the `google` repository:
+1. 以下をプロジェクト レベル `build.gradle`に追加します。 `google` リポジトリを指定してください:
 
     ```groovy
     buildscript {
@@ -52,14 +52,14 @@ Use the following steps to connect your app to the push notification backend ser
         }
     }
 
-    allprojects {
+    allproject {
         repositories {
             google()
         }
-    }
+}
     ```
 
-1. `AndroidManifest.xml` must contain the definition of the following service for `PushListenerService` in the application tag:
+1. `AndroidManifest.xml` は `PushListenerService` の次のサービスの定義をアプリケーション タグに含める必要があります。
 
     ```xml
     <service
@@ -70,7 +70,7 @@ Use the following steps to connect your app to the push notification backend ser
     </service>
     ```
 
-1. Create an Amazon Pinpoint client in the location of your push notification code.
+1. プッシュ通知コードの場所に Amazon Pinpoint クライアントを作成します。
 
     ```java
     import android.content.BroadcastReceiver;

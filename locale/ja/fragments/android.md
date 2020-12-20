@@ -1,13 +1,13 @@
-## What we'll build
+## 何を作ろうか？
 
-In this tutorial, we'll use Java to create a "Notes app" with a GraphQL API to store and retrieve items in a cloud database, as well as receive updates over a realtime subscription.
+このチュートリアルでは、クラウドデータベースに項目を保存して取得するために、GraphQL API を使用して Java を使用して「Notes アプリ」を作成します。 リアルタイムのサブスクリプションで更新を受け取ることができます。
 
-[GraphQL](http://graphql.org) is a data language that was developed to enable apps to fetch data from APIs. It has a declarative, self-documenting style. In a GraphQL operation, the client specifies how to structure the data when it is returned by the server. This makes it possible for the client to query only for the data it needs, in the format that it needs it in.
+[GraphQL](http://graphql.org) は、アプリが API からデータを取得できるように開発されたデータ言語です。 それは宣言的な、自己文書化スタイルを持っています。 GraphQL 操作では、クライアントはサーバーからデータが返されたときにデータを構造化する方法を指定します。 これにより、クライアントは必要なデータのみを必要とする形式でクエリすることができます。
 
-## Prerequisites
+## 前提条件
 
-These steps currently only work on Mac. If you have a Windows machine, follow the steps on one of our categories such as [API here](./api).
+これらのステップは現在Macでのみ動作します。 Windowsマシンをお持ちの場合は、 [API](./api) などのいずれかのカテゴリの手順に従ってください。
 
-- [Install Node](https://nodejs.org/en/)
-- [Install Android Studio](https://developer.android.com/studio/index.html#downloads) version 3.1 or higher.
-- [Install Android SDK with a minimum API level of 15 (Ice Cream Sandwich).](https://developer.android.com/studio/releases/platforms)
+- [ノードのインストール](https://nodejs.org/en/)
+- [Android Studio](https://developer.android.com/studio/index.html#downloads) のバージョン 3.1 以上をインストールします。
+- [APIの最小レベルが15(Ice Cream Sandwich)のAndroid SDKをインストールします。](https://developer.android.com/studio/releases/platforms)

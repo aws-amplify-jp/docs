@@ -1,5 +1,5 @@
 ---
-title: Chatbot
+title: チャットボット
 description: Chatbot UI Component
 filterKey: framework
 ---

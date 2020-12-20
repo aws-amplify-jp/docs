@@ -1,8 +1,8 @@
-## Subscribing Events
+## イベントを購読中
 
-You can take specific actions when users sign-in or sign-out by subscribing authentication events in your app. Please see our [Hub Module Developer Guide](~/lib/utilities/hub.md) for more information.
+アプリで認証イベントを購読することで、ユーザーがサインインまたはサインアウトしたときに特定のアクションを実行できます。 詳細については、 [Hub Module Developer Guide](~/lib/utilities/hub.md) を参照してください。
 
-## Identity Pool Federation
+## アイデンティティプール連盟
 
 You can alternatively use `Auth.federatedSignIn()` to get AWS credentials directly from Cognito Federated Identities and not use User Pool federation. If you have logged in with `Auth.signIn()` you **can not** call  `Auth.federatedSignIn()` as Amplify will perform this federation automatically for you in the background.
 
@@ -40,9 +40,9 @@ Auth.federatedSignIn(
 });
 ```
 
-<amplify-callout> Note that this isn't from a Cognito User Pool so the user you get after calling this method is not a *Cognito User*. </amplify-callout>
+<amplify-callout> これは Cognito User Pool ではないため、このメソッドを呼び出した後に取得するユーザは *Cognito User* ではないことに注意してください。 </amplify-callout>
 
-### Facebook sign-in (React)
+### Facebook のサインイン (React)
 
 ```js
 import React, { useEffect } from 'react';
@@ -131,7 +131,7 @@ const SignInWithFacebook = () => {
     );
 }
 ```
-### Facebook Sign-in (React Native - Expo)
+### Facebook サインイン (React Native - Expo)
 
 ```javascript
 import Expo from 'expo';
@@ -165,7 +165,7 @@ const App = () => {
 }
 ```
 
-### Google sign-in (React)
+### Google サインイン (React)
 
 ```js
 import React, { useEffect } from 'react';
@@ -238,7 +238,7 @@ const SignInWithGoogle = () => {
 }
 ```
 
-### Using Amplify UI components
+### Amplify UIコンポーネントの使用
 
 To enable social sign-in in your app with Identity Pools, add `Google client_id`, `Facebook app_id` and/or `Amazon client_id` properties to `Authenticator` component. This will create a sign in button when rendering the `Authenticator` in your app.
 
@@ -256,7 +256,7 @@ return (
 )
 ```
 
-Or you can use it with `withAuthenticator`:
+`withAuthenticator` で使用することもできます:
 ```js
 const AppWithAuth = withAuthenticator(App);
 
@@ -269,17 +269,17 @@ const federated = {
 ReactDOM.render(<AppWithAuth federated={federated}/>, document.getElementById('root'));
 ```
 
-### Retrieve JWT Tokens
+### JWTトークンの取得
 
-After the federated login, you can retrieve related JWT tokens from the local cache using the *Cache* module:
+連合ログイン後、 *Cache* モジュールを使用して、関連する JWT トークンをローカルキャッシュから取得できます。
 
-#### Browser sample
+#### ブラウザサンプル
 
 ```javascript
 import { Cache } from 'aws-amplify';
 
 // Run this after the sign-in
-const federatedInfo = Cache.getItem('federatedInfo');
+const fedatedInfo = Cache.getItem('federatedInfo');
 const { token } = federatedInfo;
 ```
 
@@ -294,13 +294,13 @@ const federatedInfo = await Cache.getItem('federatedInfo');
 const { token } = federatedInfo;
 ```
 
-### Token Refresh
+### トークンの更新
 
-By default, Amplify will automatically refresh the tokens for Google and Facebook, so that your AWS credentials will be valid at all times. But if you are using another federated provider, you will need to provide your own token refresh method:
+デフォルトでは、Amplifyは自動的にGoogleとFacebookのトークンを更新し、AWSの資格情報が常に有効になります。 しかし、他の連合プロバイダを使用している場合は、独自のトークン更新メソッドを提供する必要があります。
 
-<amplify-callout> Note: Automatic token refresh is not supported in React Native. </amplify-callout>
+<amplify-callout> Note: React Native では自動トークンリフレッシュはサポートされていません。 </amplify-callout>
 
-#### JWT Token Refresh sample
+#### JWT トークンの更新サンプル
 
 ```javascript
 import { Auth } from 'aws-amplify';
@@ -327,11 +327,11 @@ Auth.configure({
 ```
 
 
-### Federate with Auth0
+### Auth0でフェデレーション
 
-You can use `Auth0` as one of the providers of your Cognito Identity Pool. This will allow users authenticated via Auth0 have access to your AWS resources.
+`Auth0` をCognito Identity Poolのプロバイダーの1つとして使用できます。 これにより、Auth0で認証されたユーザがAWSリソースにアクセスできるようになります。
 
-Step 1. [Follow Auth0 integration instructions for Cognito Federated Identity Pools](https://auth0.com/docs/integrations/integrating-auth0-amazon-cognito-mobile-apps)
+Step 1. [Cognito Federated Identity PoolsのAuth0統合手順に従ってください](https://auth0.com/docs/integrations/integrating-auth0-amazon-cognito-mobile-apps)
 
 Step 2. Login with `Auth0`, then use the id token returned to get AWS credentials from `Cognito Federated Identity Pools` using `Auth.federatedSignIn`:
 
@@ -360,15 +360,15 @@ Auth.federatedSignIn(
 });
 ```
 
-Step 3. Get the current user and current Credentials:
+ステップ 3. 現在のユーザーと現在の資格情報を取得します:
 
 ```js
 Auth.currentAuthenticatedUser().then(user => console.log(user));
 Auth.currentCredentials().then(creds => console.log(creds));
-// Auth.currentSession() does not currently support federated identities. Please store the auth0 session info manually(for example, store tokens into the local storage).
+// Auth. urrentSession()は現在、連合IDをサポートしていません。手動でauth0セッション情報を保存してください(例えば、ストアトークンをローカルストレージに格納してください)。
 ```
 
-Step 4. You can pass a refresh handler to the Auth module to refresh the id token from `Auth0`:
+ステップ 4. Auth0 `からIDトークンを更新するために、Authモジュールにリフレッシュハンドラを渡すことができます`:
 
 ```js
 function refreshToken() {
@@ -392,7 +392,7 @@ Auth.configure({
 })
 ```
 
-This feature is also integrated into `aws-amplify-react`:
+この機能は `aws-amplify-react` にも統合されています:
 ```js
 import { withAuthenticator } from 'aws-amplify-react';
 import { Auth } from 'aws-amplify';
@@ -415,9 +415,9 @@ const App = () => { //... }
 export default withAuthenticator(App);
 ```
 
-Note: The code grant flow is not supported when using Auth0 with `aws-amplify-react` per [Auth0 documentation](https://auth0.com/docs/api-auth/tutorials/authorization-code-grant#2-exchange-the-authorization-code-for-an-access-token).
+注: Auth0 で `Auth0 ドキュメント` に [aws-amplify-react](https://auth0.com/docs/api-auth/tutorials/authorization-code-grant#2-exchange-the-authorization-code-for-an-access-token) を使用する場合、コード付与フローはサポートされません。
 
-Alternatively you can use the `withAuth0` HOC:
+あるいは、 `withAuth0` HOC を使用することもできます。
 ```js
 import { withAuth0 } from 'aws-amplify-react';
 import { Auth } from 'aws-amplify';
@@ -450,9 +450,9 @@ export default withAuth0(Button);
 
 The CLI allows you to configure [Lambda Triggers](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html) for your AWS Cognito User Pool.  These enable you to add custom functionality to your registration and authentication flows. [Read more](~/cli/function/function.md)
 
-### Pre Authentication and Pre Sign-up Lambda triggers
+### 事前認証と事前登録ラムダトリガー
 
-If you have a Pre Sign-up or Pre Authentication Lambda trigger enabled, you can pass `validationData` as one the properties for `signUp` or `signIn`. This metadata can be used to implement additional validations around authentication, such as restricting the types of user accounts that can be registered.
+事前サインアップまたは事前認証ラムダトリガーが有効になっている場合 `validationData` を `signUp` または `signIn`のプロパティとして渡すことができます。 このメタデータは、登録できるユーザアカウントのタイプを制限するなど、認証に関する追加の検証を実装するために使用できます。
 
 ```js
 Auth.signIn({
@@ -463,17 +463,17 @@ Auth.signIn({
   .catch(err => console.log(err));
 ```
 
-### Passing metadata to other Lambda triggers
+### 他のLambdaトリガーにメタデータを渡しています
 
 Many Cognito Lambda Triggers also accept unsanitized key/value pairs in the form of a `clientMetadata` attribute.  To configure a static set of key/value pairs, you can define a `clientMetadata` key in the `Auth.configure` function.  You can also pass a `clientMetadata` parameter to the various `Auth` functions which result in Cognito Lambda Trigger execution.
 
-These functions include:
+これらの関数は次のとおりです。
 
 - `Auth.changePassword`
 - `Auth.completeNewPassword`
-- `Auth.confirmSignIn`
-- `Auth.confirmSignUp`
-- `Auth.forgotPasswordSubmit`
+- `Auth.confirm signin`
+- `Auth.confirmサインアップ`
+- `Auth.fordedPasswordSubmit`
 - `Auth.resendSignUp`
 - `Auth.sendCustomChallengeAnswer`
 - `Auth.signIn`
@@ -483,7 +483,7 @@ These functions include:
 
 Please note that some of triggers which accept a `validationData` attribute will use `clientMetadata` as the value for `validationData`.  Exercise caution with using `clientMetadata` when you are relying on `validationData`.
 
-## Working with AWS service objects
+## AWSサービスオブジェクトの操作
 
 You can use AWS *Service Interface Objects* to work AWS Services in authenticated State. You can call methods on any AWS Service interface object by passing your credentials from `Auth` object to the service call constructor:
 
@@ -502,25 +502,25 @@ Auth.currentCredentials()
   })
 ```
 
-Full API Documentation for Service Interface Objects is available [here](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/_index.html).
+サービス インターフェイス オブジェクトの完全な API ドキュメント [はこちら](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/_index.html) で入手できます。
 
 <amplify-callout warning>
 
-Note: To work with Service Interface Objects, your Amazon Cognito users' [IAM role](https://docs.aws.amazon.com/cognito/latest/developerguide/iam-roles.html) must have the appropriate permissions to call the requested services.
+注: サービスインターフェースオブジェクトを使用するには、Amazon Cognitoユーザーの [IAM ロール](https://docs.aws.amazon.com/cognito/latest/developerguide/iam-roles.html) には、要求されたサービスを呼び出すための適切な権限が必要です。
 
 </amplify-callout>
 
-## Using modular imports
+## モジュラーインポートの使用
 
-If you only need to use Auth, you can do: `npm install @aws-amplify/auth` which will only install the Auth module for you.
+Authのみを使用する必要がある場合は、以下を行うことができます: `npm install @aws-amplify/auth` これは認証モジュールのみをインストールします。
 
-Then in your code, you can import the Auth module by:
+次にコードで認証モジュールをインポートできます:
 ```javascript
 import Auth from '@aws-amplify/auth';
 
 Auth.configure();
 ```
 
-## API reference
+## API リファレンス
 
-For the complete API documentation for Authentication module, visit our [API Reference](https://aws-amplify.github.io/amplify-js/api/classes/authclass.html)
+認証モジュールの完全な API ドキュメントについては、 [API リファレンス](https://aws-amplify.github.io/amplify-js/api/classes/authclass.html) を参照してください。

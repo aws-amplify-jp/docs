@@ -1,59 +1,59 @@
 ---
-title: Relational Databases
-description: The Amplify CLI currently supports importing serverless Amazon Aurora MySQL 5.6 databases running in the us-east-1 region. Learn how to create an Amazon Aurora Serverless database, import this database as a GraphQL data source and test it.
+title: リレーショナルデータベース
+description: Amplify CLI は現在、us-east-1 リージョンで実行されているサーバーレスの Amazon Aurora MySQL 5.6 データベースのインポートをサポートしています。 Amazon Aurora Serverless データベースの作成方法を学び、GraphQL データソースとしてこのデータベースをインポートしてテストします。
 ---
 
-The Amplify CLI currently supports importing serverless Amazon Aurora MySQL 5.6 databases running in the us-east-1 region. The following instruction show how to create an Amazon Aurora Serverless database, import this database as a GraphQL data source and test it.
+Amplify CLI は現在、us-east-1 リージョンで実行されているサーバーレスの Amazon Aurora MySQL 5.6 データベースのインポートをサポートしています。 次の手順では、Amazon Aurora Serverless データベースの作成、GraphQL データソースとしてインポートしてテストする方法を示します。
 
-**First, if you do not have an Amplify project with a GraphQL API create one using these simple commands.**
+**まず、GraphQL API を使用してAmplifyプロジェクトを持っていない場合は、これらの簡単なコマンドを使用して作成します。**
 
 ```bash
-amplify init
-amplify add api
+増幅する init
+増幅する api を追加
 ```
 
-**Go to the AWS RDS console and click "Create database".**
+**AWS RDSコンソールに移動し、「データベースを作成」をクリックします。**
 
-**Select "Standard Create" for the database creation method**
+**データベース作成方法に「標準作成」を選択します**
 
-![Database Creation](~/images/database-creation.png)
+![データベース作成](~/images/database-creation.png)
 
-**For Engine Options keep the following options**
+**エンジンオプションは以下のオプションを維持します。**
 
-![Engine Option](~/images/database-engine-option.png)
+![エンジンオプション](~/images/database-engine-option.png)
 
-**Select "Serverless" in Database Features**
+**データベース機能で「Serverless」を選択します**
 
-![Database Features](~/images/database-features.png)
+![データベース機能](~/images/database-features.png)
 
-**In Settings fill in the following information**
+**設定で以下の情報を入力してください**
 
-![Database Settings](~/images/database-setting.png)
-
-
-**Select the Capacity Settings as shown below**
-
-![Database Capacity](~/images/database-capacity.png)
+![データベース設定](~/images/database-setting.png)
 
 
-**Expand the "Additional connectivity configuration" and enable "Data API" and "Create New" if you do not have a VPC security group configured**
+**以下のように容量設定を選択してください**
 
-![Database Connectivity](~/images/database-connectivity.png)
-
-
-**Expand "Additional Configuration" and fill in "Initial Database Name" as MarketPlace**
-
-![Database Additional Configuration](~/images/database-additional-configuration.png)
-
-**Click "Create Database" and dialog will open that will prompt you to connect select the cluster and fill in the credentials configured earlier**
-
-![Database Connect ](~/images/connect-to-database.png)
+![データベース容量](~/images/database-capacity.png)
 
 
-**After connecting, create a database and some tables.**
+**VPCセキュリティグループが設定されていない場合は、「追加の接続構成」を展開し、「データAPI」と「新規作成」を有効にします。**
+
+![データベース接続](~/images/database-connectivity.png)
 
 
-![Database details](~/images/query-editor.png)
+**"Additional Configuration" を展開し、MarketPlace として "Initial Database Name" を入力します**
+
+![データベースの追加設定](~/images/database-additional-configuration.png)
+
+**「データベースを作成」をクリックすると、クラスターを選択し、以前に設定された資格情報を入力するように求められるダイアログが開きます。**
+
+![データベース接続 ](~/images/connect-to-database.png)
+
+
+**接続後、データベースといくつかのテーブルを作成します。**
+
+
+![データベースの詳細](~/images/query-editor.png)
 
 ```sql
 USE MarketPlace;
@@ -73,20 +73,20 @@ CREATE TABLE Orders (
 ```
 
 
-**Return to your command line and run `amplify api add-graphql-datasource` from the root of your amplify project.**
+**コマンドラインに戻り、増幅プロジェクトのルートから `api add-graphql-datasource` を実行します。**
 
 
-![Add GraphQL Data Source](~/images/add-graphql-datasource.png)
+![GraphQLデータソースの追加](~/images/add-graphql-datasource.png)
 
-**Push your project to AWS with `amplify push`.**
+**`増幅プッシュ`でプロジェクトをAWSにプッシュします。**
 
 Run `amplify push` to push your project to AWS. You can then open the AppSync console with `amplify api console`, to try interacting with your RDS database via your GraphQL API.
 
-**Interact with your SQL database from GraphQL**
+**GraphQLからSQLデータベースとやりとりする**
 
-Your API is now configured to work with your serverless Amazon Aurora MySQL database. Try running a mutation to create a customer from the [AppSync Console](https://console.aws.amazon.com/appsync/home) and then query it from the [RDS Console](https://console.aws.amazon.com/rds/home) to double check.
+サーバーレスのAmazon Aurora MySQLデータベースで動作するようにAPIが設定されました。 変更を実行して、 [AppSync コンソール](https://console.aws.amazon.com/appsync/home) から顧客を作成し、 [RDS コンソール](https://console.aws.amazon.com/rds/home) から問い合わせて二重確認してみてください。
 
-Create a customer:
+顧客を作成:
 
 ```
 mutation CreateCustomer {
@@ -104,17 +104,17 @@ mutation CreateCustomer {
 }
 ```
 
-![GraphQL Results](~/images/graphql-results.png)
+![GraphQL結果](~/images/graphql-results.png)
 
-Then open the RDS console and run a simple select statement to see the new customer:
+次に、RDS コンソールを開き、シンプルな select ステートメントを実行して、新しい顧客を確認します。
 
 ```sql
-USE MarketPlace;
+MarketPlaceを使用する;
 SELECT * FROM Customers;
 ```
 
-![SQL Results](~/images/sql-results.png)
+![SQLの結果](~/images/sql-results.png)
 
-### How does this work?
+### これはどのように動作しますか?
 
 The `add-graphql-datasource` will add a custom stack to your project that provides a basic set of functionality for working with an existing data source. You can find the new stack in the `stacks/` directory, a set of new resolvers in the `resolvers/` directory, and will also find a few additions to your `schema.graphql`. You may edit details in the custom stack and/or resolver files without worry. You may run `add-graphql-datasource` again to update your project with changes in the database but be careful as these will overwrite any existing templates in the `stacks/` or `resolvers/` directories. When using multiple environment with the Amplify CLI, you will be asked to configure the data source once per environment.

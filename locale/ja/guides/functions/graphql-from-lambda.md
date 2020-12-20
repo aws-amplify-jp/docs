@@ -1,6 +1,6 @@
 ---
-title: Calling GraphQL API from a Lambda function
-description: How to interact with a GraphQL API from a Lambda function
+title: Lambda 関数から GraphQL API を呼び出す
+description: Lambda関数からGraphQL APIを操作する方法
 ---
 
 <inline-fragment src="~/lib/graphqlapi/fragments/graphql-from-node.md"></inline-fragment>

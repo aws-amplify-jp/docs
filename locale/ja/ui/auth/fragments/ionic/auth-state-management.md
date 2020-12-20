@@ -18,7 +18,7 @@ Amplify.configure(awsconfig);
 export class AppModule {}
 ```
 
-Replace the content inside of *app.component.ts* with the following:
+*app.component.ts* 内のコンテンツを以下に置き換えます:
 ```js
 import { Component, ChangeDetectorRef } from '@angular/core';
 import { onAuthUIStateChange, CognitoUserInterface, AuthState } from '@aws-amplify/ui-components';
@@ -51,7 +51,7 @@ export class AppComponent {
 }
 ```
 
-Replace the content inside of *app.component.html* with the following:
+*app.component.html* 内のコンテンツを以下に置き換えます:
 ```html
 <amplify-authenticator *ngIf="authState !== 'signedin'"></amplify-authenticator>
 

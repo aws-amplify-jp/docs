@@ -1,4 +1,4 @@
-Existing Amazon Cognito identity and user pools can be used with the Amplify Libraries by referencing them in your `amplifyconfiguration.dart` file.
+既存のAmazon CognitoのIDとユーザープールは、 `anplifyconfiguration.dart` ファイルで参照することで、Amplifyライブラリと一緒に使用できます。
 
 ```dart
 const amplifyconfig = ''' {
@@ -36,13 +36,13 @@ const amplifyconfig = ''' {
 }''';
 ```
 
-- **CredentialsProvider**:
+- **資格情報プロバイダー**:
   - **Cognito Identity**:
-    - **Default**:
-      - **PoolID**: ID of the Amazon Cognito Identity Pool (e.g. `us-east-1:123e4567-e89b-12d3-a456-426614174000`)
-      - **Region**: AWS Region where the resources are provisioned (e.g. `us-east-1`)
+    - **デフォルト**:
+      - **PoolID**: Amazon Cognito Identity Pool のID (例: `us-east-1:123e4567-e89b-12d3-a456-426614174000`)
+      - **Region**: リソースがプロビジョニングされたAWS地域 (例: `us-east-1`)
 - **CognitoUserPool**:
-  - **Default**:
-    - **PoolId**: ID of the Amazon Cognito User Pool (e.g. `us-east-1_abcdefghi`)
-    - **AppClientId**: ID for the client used to authenticate against the user pool
-    - **Region**: AWS Region where the resources are provisioned (e.g. `us-east-1`)
+  - **デフォルト**:
+    - **PoolId**: Amazon Cognito User PoolのID(例: `us-east-1_abcdefghi`)
+    - **AppClientId**: ユーザプールに対する認証に使用するクライアントのID
+    - **Region**: リソースがプロビジョニングされたAWS地域 (例: `us-east-1`)

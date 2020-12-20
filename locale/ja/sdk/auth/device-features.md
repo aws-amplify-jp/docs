@@ -1,6 +1,6 @@
 ---
-title: Device features
-description: You can use the device related features of Amazon Cognito UserPools by enabling the Devices features.
+title: 端末の機能
+description: デバイス機能を有効にすることで、Amazon Cognito UserPoolsのデバイス関連の機能を利用できます。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

@@ -1,37 +1,37 @@
 AWS Amplify *ServiceWorker* class enables registering a service worker in the browser and communicating with it via *postMessage* events, so that you can create rich offline experiences with [Push APIs](https://developer.mozilla.org/en-US/docs/Web/API/Push_API) and analytics.
 
-After registering the service worker, the ServiceWorker module will listen and attempt to dispatch messages on state changes, and it will record analytics events based on the service worker's lifecycle.
+Service Workerを登録した後、ServiceWorker モジュールはリッスンし、状態変更時にメッセージをディスパッチしようとします。 サービスワーカーのライフサイクルに基づいて分析イベントを記録します
 
 <amplify-callout>
 
-postMessage events are currently not supported in all browsers. For details and to learn more about Service Worker API, please [visit here](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/).
+postMessage イベントは現在すべてのブラウザでサポートされていません。Service Worker API の詳細や詳細については、 [をご覧ください。](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/).
 
 </amplify-callout>
 
-## Installation
+## インストール
 
-Import *ServiceWorker* and instantiate a new instance (you can have multiple workers on different scopes):
+*ServiceWorker* をインポートし、新しいインスタンスをインスタンス化します（異なるスコープで複数のワーカーを持つことができます）：
 ```javascript
 import { ServiceWorker } from 'aws-amplify';
 const serviceWorker = new ServiceWorker();
 ```
 
-## Working with the API
+## API の操作
 
 ### register()
 
-You can register a service worker for the browser with `register` method.
+`register` メソッドでブラウザのサービスワーカーを登録できます。
 
 First, you need to create a service worker script **service-worker.js**. Your service worker script includes cache settings for offline access and event handlers for related lifecycle events. [Click to see a sample service worker script](#example-service-worker) for your app.
 
-Make sure that worker script is included with your build and provide a script path relative to the source directory when registering:
+Worker スクリプトがビルドに含まれていることを確認し、登録時にソースディレクトリからの相対パスを指定してください:
 
 ```javascript
-// Register the service worker with `service-worker.js` with service worker scope `/`.
+// `service-worker.js`でサービスワーカーを登録し、サービスワーカースコープ`/`を使用します。
 registeredServiceWorker = await serviceWorker.register('/service-worker.js', '/');
 ```
 
-This method will enable web push notifications for your app. If your app is not previously subscribed to the push service to receive notifications, a new subscription will be created with the provided *public key*.
+この方法では、アプリの Web プッシュ通知を有効にします。 アプリが以前にプッシュ通知を受信するためにプッシュサービスに登録されていない場合。 新しいサブスクリプションは、提供された *公開キー* で作成されます。
 
 ```javascript
     serviceWorker.enablePush('BLx__NGvdasMNkjd6VYPdzQJVBkb2qafh')
@@ -39,15 +39,15 @@ This method will enable web push notifications for your app. If your app is not 
 
 <amplify-callout>
 
-You need a web push service provider to generate the public key, and sending the actual push notifications. To test push messages with a non-production environment, you can follow [this tutorial](https://developers.google.com/web/fundamentals/codelabs/push-notifications/).
+公開鍵を生成し、実際のプッシュ通知を送信するには、Web プッシュサービスプロバイダが必要です。 本番環境以外の環境でプッシュメッセージをテストするには、 [このチュートリアル](https://developers.google.com/web/fundamentals/codelabs/push-notifications/) に従ってください。
 
 </amplify-callout>
 
-### Handling a Push Notification
+### プッシュ通知の処理
 
-To handle incoming push notifications in your service worker, your script should register an event handler for `push` event.
+サービスワーカーでプッシュ通知を処理するには、スクリプトは `push` イベントのイベントハンドラーを登録する必要があります。
 
-In your *service-worker.js* file, add following event listener:
+*service-worker.js* ファイルで、以下のイベントリスナを追加します。
 
 ```javascript
 /**
@@ -81,13 +81,13 @@ addEventListener('push', (event) => {
 });
 ```
 
-For more information about Notifications API, please visit [here](https://developer.mozilla.org/en-US/docs/Web/API/notification).
+Notifications API の詳細については、 [こちら](https://developer.mozilla.org/en-US/docs/Web/API/notification) をご覧ください。
 
 ### send()
 
 `send` method sends a message to your service worker, from your web app. Remember that your app's code and service worker script work in different contexts, and the communication between the two is possible with *send()* method.
 
-This is useful when you want to control your service worker logic from your app, such as cleaning the service worker cache:
+これは、サービスワーカーキャッシュのクリーニングなど、アプリからサービスワーカーロジックを制御したい場合に便利です。
 
 ```javascript
 
@@ -97,14 +97,14 @@ This is useful when you want to control your service worker logic from your app,
 
 ```
 
-For more information about Message API, please visit [here](https://developer.mozilla.org/en-US/docs/Web/Events/message_(ServiceWorker)).
+Message APIの詳細については、こちら [](https://developer.mozilla.org/en-US/docs/Web/Events/message_(ServiceWorker)) をご覧ください。
 
 
-#### Receiving Messages
+#### メッセージを受信中
 
-To receive the messages in your service worker, you need to add an event handler for **message** event.
+サービスワーカーでメッセージを受信するには、 **message** イベントのイベントハンドラーを追加する必要があります。
 
-In your *service-worker.js* file, add the following event listener:
+*service-worker.js* ファイルに、次のイベントリスナを追加します。
 
 ```javascript
     /**
@@ -119,27 +119,27 @@ In your *service-worker.js* file, add the following event listener:
 
 ```
 
-### Monitoring Lifecycle Events
+### ライフサイクルイベントの監視
 
-If you enable AWS Amplify [Analytics](~/lib/analytics/getting-started.md) category, *ServiceWorker* module automatically tracks service worker state changes and message events.
+AWS Amplify [Analytics](~/lib/analytics/getting-started.md) カテゴリ、 *ServiceWorker* モジュールを有効にすると、サービスワーカーの状態の変更とメッセージイベントが自動的に追跡されます。
 
-You can see those analytics events are related metrics in Amazon Pinpoint console.
+これらの分析イベントが Amazon Pinpoint コンソールに関連するメトリックであることがわかります。
 
-## API Reference
+## APIリファレンス
 
-For the complete API documentation for ServiceWorker module, visit our [API Reference](https://aws-amplify.github.io/amplify-js/docs/api/classes/serviceworkerclass.html)
+ServiceWorker モジュールの完全な API ドキュメントについては、私たちの [API リファレンス](https://aws-amplify.github.io/amplify-js/docs/api/classes/serviceworkerclass.html) を参照してください。
 
-## Using Modular Imports
+## モジュラーインポートの使用
 
-If you only need to use ServiceWorker, you can do: `npm install @aws-amplify/core` which will only install the Core module which contains the ServiceWorker module.
+ServiceWorker を使用するだけの場合 `npm install @aws-amplify/core` は、ServiceWorker モジュールを含む Core モジュールのみをインストールします。
 
-Then in your code, you can import the Analytics module by:
+次にコードで、Analytics モジュールをインポートできます。
 ```javascript
 import { ServiceWorker } from '@aws-amplify/core';
 
 ```
 
-## Example Service Worker
+## サービスワーカーの例
 
 ```javascript
 var appCacheFiles = [

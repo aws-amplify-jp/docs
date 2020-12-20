@@ -1,6 +1,6 @@
 ---
-title: Cancel API requests
-description: Learn more about how to cancel query or mutation requests with Amplify's GraphQL API category
+title: APIリクエストをキャンセル
+description: AmplifyのGraphQL API カテゴリでクエリや変更リクエストをキャンセルする方法について詳しくはこちら
 ---
 
 <inline-fragment platform="js" src="~/lib/graphqlapi/fragments/js/cancel-request.md"></inline-fragment>

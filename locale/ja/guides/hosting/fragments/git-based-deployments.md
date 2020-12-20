@@ -1,69 +1,69 @@
-This guide will show you how to host a static site from a GitHub repository using Amplify hosting.
+このガイドでは、Amplifyホスティングを使用してGitHubリポジトリから静的サイトをホストする方法を説明します。
 
-In this example we will be deploying a __React__ app, but you can also also use any of the following types of projects or frameworks:
+この例では、 __React__ アプリケーションをデプロイします。 また、以下のようなプロジェクトやフレームワークも利用できます。
 
-1. Static HTML
+1. 静的HTML
 2. Vue
-3. Angular
+3. 角度
 4. Ionic
 5. Gatsby
 
-## 1. Create a new application
+## 1. 新しいアプリケーションを作成
 
 ```sh
 npx create-react-app amplifyapp
-cd amplifyapp
+cd anplifyapp
 npm start
 ```
 
 ## 2. Initialize GitHub repository
 
-In this step, you will create a GitHub repository and commit your code to the repository. You will need a GitHub account to complete this step – if you do not have an account, sign up [here](https://github.com/join).
+このステップでは、GitHub リポジトリを作成し、リポジトリにコードをコミットします。 この手順を完了するにはGitHubアカウントが必要です。アカウントをお持ちでない場合は、こちら [](https://github.com/join)にサインアップしてください。
 
-a. Create a new GitHub repo for your app ([link](https://github.com/new)).
+a. アプリケーション用に新しい GitHub リポジトリを作成する ([リンク](https://github.com/new) ) 。
 
-![Create a new GitHub repo for your ap](~/images/hosting/git/1.png)
+![新しい GitHub リポジトリをあなたのマップ用に作成](~/images/hosting/git/1.png)
 
-b. Initialize git and push the application to the new GitHub repo executing the following commands in your CLI:
+b. git を初期化し、アプリケーションを CLI で次のコマンドを実行する新しい GitHub リポジトリにプッシュします。
 
 ```sh
 git init
-git remote add origin git@github.com:username/reponame.git
+git remote add origin git@github.com:username/reponammegit add .
 git add .
 git commit -m ‘initial commit’
 git push origin master
 ```
 
-## 4. Deploy your app to AWS Amplify
+## 4. アプリを AWS Amplify にデプロイする
 
-In this step, you will connect the GitHub repository you just created to the AWS Amplify service. This will enable you to build, deploy, and host your app on AWS.
+このステップでは、先ほど作成したGitHubリポジトリをAWS Amplifyサービスに接続します。 これにより、アプリをAWS上でビルド、デプロイ、ホストすることができます。
 
-a. Sign in to your [AWS account](https://console.aws.amazon.com/) and then visit the [Amplify Console](https://console.aws.amazon.com/amplify/home).
+a. [AWS アカウント](https://console.aws.amazon.com/) にサインインし、 [Amplify コンソール](https://console.aws.amazon.com/amplify/home) にアクセスします。
 
-b. Select Get Started under Deploy.
+b. デプロイの下で開始を選択します。
 
-![Select Get Started](~/images/hosting/git/3.png)
+![開始する方法を選択](~/images/hosting/git/3.png)
 
-c. Select GitHub as the repository service and select Next.
+c. リポジトリ サービスとして GitHub を選択し、format@@0 を選択します。
 
 ![Select GitHub](~/images/hosting/git/4.png)
 
-d. Authenticate with GitHub and return to the Amplify Console. Choose the repository you created earlier and the master branch, then select Next.
+d. GitHubで認証し、Amplifyコンソールに戻ります。以前に作成したリポジトリとmasterブランチを選択し、次へを選択します。
 
-![Authenticate](~/images/hosting/git/5.png)
+![認証](~/images/hosting/git/5.png)
 
-e. Accept the default build settings and select Next.
+e. デフォルトのビルド設定を受け入れ、format@@0を選択します。
 
-![Build settings](~/images/hosting/git/6.png)
+![ビルド設定](~/images/hosting/git/6.png)
 
-f. Review the final details and select Save and Deploy.
+f. 最終的な詳細を確認し、format@@0を選択します。
 
-![Review details](~/images/hosting/git/7.png)
+![レビューの詳細](~/images/hosting/git/7.png)
 
-g. AWS Amplify Console will now build your source code and deploy your app at https://branchname.appid.amplifyapp.com
+g. AWS Amplify Consoleがソースコードをビルドし、https://branchname.appid.anplifyapp.com にアプリをデプロイします。
 
-![Successful deployment](~/images/hosting/git/8.png)
+![デプロイ成功](~/images/hosting/git/8.png)
 
-h. Once the build completes, select the thumbnail to see your web app up and running live.
+h. ビルドが完了したら、サムネイルを選択して、ウェブアプリが稼働中に表示されます。
 
-![View your app](~/images/hosting/git/9.png)
+![アプリを表示](~/images/hosting/git/9.png)

@@ -2,23 +2,23 @@ The Predictions category enables you to integrate machine learning into your app
 
 <inline-fragment platform="ios" src="~/lib/predictions/fragments/ios/getting-started/10_coreml.md"></inline-fragment>
 
-## Goal
+## 目標
 
-To setup and configure your application with Amplify Predictions and go through a simple example of translating text.
+Amplify Predictionsを使用してアプリケーションをセットアップおよび設定し、テキストを翻訳する簡単な例を説明します。
 
-## Prerequisites
+## 前提条件
 
 <inline-fragment platform="ios" src="~/lib/predictions/fragments/ios/getting-started/20_preReq.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/predictions/fragments/android/getting-started/20_preReq.md"></inline-fragment>
 
-## Provision Backend Services
+## バックエンドサービスの提供
 
-To use the predictions category we will need to setup the auth backend resources.  To provision auth resources in the backend, go to your project directory and **execute the command**:
+予測カテゴリを使用するには、認証バックエンドリソースをセットアップする必要があります。 バックエンドで認証リソースをプロビジョニングするには、プロジェクトディレクトリに移動し、 **コマンド** を実行します。
 
 ```bash
-amplify add predictions
+amplifyの追加予測
 ```
 
-Enter the following when prompted:
+プロンプトが表示されたら以下を入力します:
 
 ```console
 ? Please select from one of the categories below
@@ -43,38 +43,38 @@ Enter the following when prompted:
     ` Auth and Guest users`
 ```
 
-Note that the languages selected during this stage will be the default language your app will translate to/from. These source and target languages can be overridden when we write the code in our application.
+このステージで選択された言語は、アプリが翻訳元のデフォルト言語になりますのでご注意ください。 これらのソース言語とターゲット言語は、アプリケーションでコードを書くときに上書きすることができます。
 
-To push your change to the cloud, **execute the command**:
+クラウドに変更をプッシュするには、 **コマンド** を実行します。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
-Upon completion, `amplifyconfiguration.json` will be updated to reference the newly provisioned backend resources.
+完了すると、 `amplifyconfiguration.json` が新しくプロビジョニングされたバックエンドリソースを参照するように更新されます。
 
-## Install Amplify Libraries
+## Amplifyライブラリのインストール
 
 <inline-fragment platform="ios" src="~/lib/predictions/fragments/ios/getting-started/30_installLib.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/predictions/fragments/android/getting-started/30_installLib.md"></inline-fragment>
 
-## Initialize Amplify Predictions
+## Amplify予測を初期化
 
 <inline-fragment platform="ios" src="~/lib/predictions/fragments/ios/getting-started/40_init.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/predictions/fragments/android/getting-started/40_init.md"></inline-fragment>
 
-## Translating text
+## テキストの翻訳
 
-To translate text from one language to another, specify the text you want translated, a source language, and a target language. The source and target language parameters will override any choice you made while adding this resource using the Amplify CLI.
+ある言語から別の言語にテキストを翻訳するには、翻訳したいテキスト、ソース言語、およびターゲット言語を指定します。 ソースとターゲット言語パラメータは、Amplify CLI を使用してこのリソースを追加する際に行った任意の選択を上書きします。
 
 <inline-fragment platform="ios" src="~/lib/predictions/fragments/ios/getting-started/50_translate.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/predictions/fragments/android/getting-started/50_translate.md"></inline-fragment>
 
-As a result of executing this code, you will see the following printed to your console:
+このコードを実行した結果、次のようにコンソールに表示されます。
 
 ```console
 Me gusta comer espaguetis
 ```
 
-## Next steps
+## 次のステップ
 
-Congratulations! You've translated text from one language to another. Check out the following links to explore other Amplify Predictions use cases:
+おめでとうございます！ある言語から別の言語にテキストを翻訳しました。他のAmplify予測のユースケースを探索するには、次のリンクを参照してください。
 
 <inline-fragment platform="ios" src="~/lib/predictions/fragments/ios/getting-started/60_nextSteps.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/predictions/fragments/android/getting-started/60_nextSteps.md"></inline-fragment>

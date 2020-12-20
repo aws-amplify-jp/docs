@@ -1,6 +1,6 @@
 ---
-title: Create or re-use existing backend
-description: Learn more about how to create an auth resource or re-use an existing auth backend for Amplify Framework.
+title: 既存のバックエンドを作成または再利用する
+description: Amplify Frameworkの認証リソースの作成方法や、既存の認証バックエンドを再利用する方法については、こちらをご覧ください。
 ---
 
 <inline-fragment platform="js" src="~/lib/auth/fragments/js/start.md"></inline-fragment>

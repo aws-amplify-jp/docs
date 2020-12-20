@@ -1,1 +1,1 @@
-- This tutorial assumes that you're familiar with both JavaScript/ES6 and React. If you need to brush up on React, we recommend going through the [official tutorial](https://reactjs.org/tutorial/tutorial.html).
+- このチュートリアルでは、JavaScript/ES6とReactの両方に精通していることを前提としています。 React に磨きをかける必要がある場合は、 [公式チュートリアル](https://reactjs.org/tutorial/tutorial.html) を参照することをお勧めします。

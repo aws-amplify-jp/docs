@@ -1,36 +1,36 @@
 ---
-title: Connect machine learning services
-description: The @predictions directive allows you to query an orchestration of AI/ML services such as Amazon Rekognition, Amazon Translate, and/or Amazon Polly.
+title: 機械学習サービスを接続
+description: '@predictionディレクティブでは、Amazon Rekognition、Amazon Translate、Amazon PollyなどのAI/MLサービスのオーケストレーションをクエリできます。'
 ---
 
 ## @predictions
 
-The `@predictions` directive allows you to query an orchestration of AI/ML services such as Amazon Rekognition, Amazon Translate, and/or Amazon Polly.
+`@予測` ディレクティブを使用すると、Amazon Rekognition、Amazon Translate、Amazon PollyなどのAI/MLサービスのオーケストレーションをクエリすることができます。
 
 > Note: Support for adding the `@predictions` directive uses the s3 storage bucket which is configured via the CLI. At the moment this directive works only with objects located within `public/`.
 
-### Definition
+### 定義
 
-The supported actions in this directive are included in the definition.
+このディレクティブでサポートされているアクションは定義に含まれています。
 
 ```graphql
-  directive @predictions(actions: [PredictionsActions!]!) on FIELD_DEFINITION
+  @predictions(actions: [PredictionsActions!]! on FIELD_DEFINITION
   enum PredictionsActions {
     identifyText # uses Amazon Rekognition to detect text
     identifyLabels # uses Amazon Rekognition to detect labels
-    convertTextToSpeech # uses Amazon Polly in a lambda to output a presigned url to synthesized speech
+    convertTextToSpeech # uses Amazon Polly in a lambda in a lambda to output a presigned url to composized speak
     translateText # uses Amazon Translate to translate text from source to target language
-  }
+}
 ```
 
-### Usage
+### 使用法
 
 
-Given the following schema a query operation is defined which will do the following with the provided image.
+次のスキーマを指定すると、指定されたイメージに対して以下の操作を行うクエリ操作が定義されます。
 
-- Identify text from the image
-- Translate the text from that image
-- Synthesize speech from the translated text.
+- 画像からテキストを識別する
+- その画像からテキストを翻訳
+- 翻訳されたテキストからスピーチを合成します。
 
 ```graphql
 type Query {
@@ -42,7 +42,7 @@ type Query {
 }
 ```
 
-An example of that query will look like:
+そのクエリの例は以下のようになります:
 
 ```graphql
 query SpeakTranslatedImageText($input: SpeakTranslatedImageTextInput!) {
@@ -61,7 +61,7 @@ query SpeakTranslatedImageText($input: SpeakTranslatedImageTextInput!) {
 }
 ```
 
-A code example of this using the JS Library:
+JSライブラリを使用するコード例:
 ```js
 import React, { useState } from 'react';
 import API, { graphqlOperation } from '@aws-amplify/api';
@@ -130,23 +130,23 @@ function App() {
 export default App;
 ```
 
-### How it works
+### 仕組み
 From example schema above, `@predictions` will create resources to communicate with Amazon Rekognition, Translate and Polly. For each action the following is created:
 
-- IAM Policy for each service (e.g. Amazon Rekognition `detectText` Policy)
-- An AppSync VTL function
-- An AppSync DataSource
+- 各サービスのIAMポリシー (例: Amazon Rekognition `detectText` Policy)
+- AppSync VTL 関数
+- AppSync のデータソース
 
-Finally a resolver is created for `speakTranslatedImageText` which is a pipeline resolver composed of AppSync functions which are defined by the action list provided in the directive.
+最後に、 `speakTranslatedImageText` 用にリゾルバが作成されます。これは、ディレクティブに提供されているアクションリストで定義された AppSync 関数で構成されたパイプラインリゾルバです。
 
-### Actions
-Each of the actions described in the @predictions definition section can be used individually, as well as in a sequence. Sequence of actions supported today are as follows:
+### アクション
+@prediction定義セクションで説明されている各アクションは、シーケンスと同様に個別に使用できます。 現在サポートされているアクションのシーケンスは次のとおりです:
 
 - `identifyText -> translateText -> convertTextToSpeech`
 - `identifyLabels -> translateText -> convertTextToSpeech`
 - `translateText -> convertTextToSpeech`
 
 
-### Action resources
-- [`translateText` Supported Language Codes](https://docs.aws.amazon.com/translate/latest/dg/what-is.html#what-is-languages)
-- [`convertTextToSpeech` Supported Voice IDs](https://docs.aws.amazon.com/polly/latest/dg/voicelist.html)
+### アクションリソース
+- [`translateText` 対応言語コード](https://docs.aws.amazon.com/translate/latest/dg/what-is.html#what-is-languages)
+- [`convertTextToSpeech` 音声IDをサポート](https://docs.aws.amazon.com/polly/latest/dg/voicelist.html)

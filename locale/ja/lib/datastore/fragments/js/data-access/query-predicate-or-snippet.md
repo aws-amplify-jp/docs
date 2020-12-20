@@ -1,4 +1,4 @@
-If you wanted this to be an `or` statement you would wrap your combined predicates with `c => c.or(...)`
+これを `または` 文にしたい場合は、組み合わせた述語を `c => c.or(...)` でラップします。
 
 ```js
 const posts = await DataStore.query(Post, c => c.or(

@@ -1,17 +1,17 @@
 When using the Amplify CLI, the __aws-exports.js__ file gets created and updated automatically for you based upon the resources you have added and configured.
 
-If you are not using the Amplify CLI or need to override these settings, this documentation shows the available configuration properties for each category.
+Amplify CLI を使用していない場合、またはこれらの設定を上書きする必要がある場合は、このドキュメントに各カテゴリで使用可能な設定プロパティが表示されます。
 
-## General configuration
+## 一般的な構成
 
 ```js
 Amplify.configure({
-  "aws_project_region": "us-east-1" // (optional) Default region for project
+  "aws_project_region": "us-east-1" // (任意) プロジェクトのデフォルト領域
 })
 ```
-## Authentication (Amazon Cognito)
+## 認証 (Amazon Cognito)
 
-### Top level configuration
+### トップレベルの構成
 
 ```js
 Amplify.configure({
@@ -23,7 +23,7 @@ Amplify.configure({
 })
 ```
 
-### Scoped configuration
+### スコープ構成
 
 ```js
 Amplify.configure({
@@ -85,18 +85,18 @@ Amplify.configure({
 });
 ```
 
-## Storage (Amazon S3)
+## ストレージ (Amazon S3)
 
-### Top level configuration
+### トップレベルの構成
 
 ```js
 Amplify.configure({
   aws_user_files_s3_bucket_region: "us-east-1", // (required) - Amazon S3 bucket region   
-  aws_user_files_s3_bucket: "testappa321fb103f1f2ae6a4d25d8cd2161728123152-dev" // (required) - Amazon S3 bucket URI   
+  aws_user_files_s3_bucket: "testappa321fb103f1f2ae6a4d25d8cd21617281232-dev" // (require) - Amazon S3 bucket URI   
 })
 ```
 
-### Scoped configuration - `Storage`
+### スコープ構成 - `ストレージ`
 
 ```js
 Amplify.configure({
@@ -117,7 +117,7 @@ Amplify.configure({
 
 ## GraphQL API (AWS AppSync)
 
-### Top level configuration
+### トップレベルの構成
 
 ```js
 Amplify.configure({
@@ -132,7 +132,7 @@ Amplify.configure({
 // Authentication type options are API_KEY, AWS_IAM, AMAZON_COGNITO_USER_POOLS and OPENID_CONNECT
 ```
 
-### Scoped configuration - `GraphQL API`
+### スコープ設定 - `GraphQL API`
 
 ```js
 Amplify.configure({
@@ -159,9 +159,9 @@ Amplify.configure({
 })
 ```
 
-## Predictions
+## 予測
 
-### Top level configuration
+### トップレベルの構成
 
 ```js
 Amplify.configure({
@@ -233,18 +233,18 @@ Amplify.configure({
 });
 ```
 
-## Analytics (Amazon Pinpoint)
+## 分析 (Amazon Pinpoint)
 
-### Top level configuration
+### トップレベルの構成
 
 ```js
 Amplify.configure({
   aws_mobile_analytics_app_region: "us-east-1", // (required) Amazon Pinpoint Project region
-  aws_mobile_analytics_app_id: "34876218b9df404a847857a94a0e7e9f" // (required) Amazon Pinpoint Project ID
+  aws_mobile_analytics_app_id: "34876218b9df404a847857a94a0e9f" // (require) Amazon Pinpoint Project ID
 });
 ```
 
-### Scoped configuration `Analytics`
+### スコープ構成 `分析`
 
 ```js
 Amplify.configure({
@@ -321,9 +321,9 @@ Amplify.configure({
 })
 ```
 
-## Interactions
+## 相互作用
 
-### Top level configuration
+### トップレベルの構成
 
 
 ```js
@@ -346,7 +346,7 @@ Amplify.configure({
 
 ## XR
 
-### Top level configuration
+### トップレベルの構成
 
 ```js
 Amplify.configure({

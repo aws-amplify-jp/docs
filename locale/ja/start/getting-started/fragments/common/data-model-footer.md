@@ -1,1 +1,1 @@
-🙌 Great job! You have successfully deployed your API and connected it with your app!
+🙌 よくできました！APIのデプロイに成功し、アプリに接続しました！

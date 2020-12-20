@@ -1,58 +1,58 @@
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/data-access/importing-datastore-snippet.md"></inline-fragment>
 
-## Create and update
+## 作成して更新
 
-To write data to the DataStore, pass an instance of a model to `Amplify.DataStore.save()`:
+DataStore にデータを書き込むには、モデルのインスタンスを `Amplify.DataStore.save()` に渡してください。
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/data-access/save-snippet.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/ios/data-access/save-snippet.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/android/data-access/save-snippet.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/datastore/fragments/flutter/data-access/save-snippet.md"></inline-fragment>
 
-The `save` method creates a new record, or in the event that one already exists in the local store, it updates the record.
+`save` メソッドは、新しいレコードを作成するか、ローカルストアにすでに存在するイベントでレコードを更新します。
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/data-access/update-snippet.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/ios/data-access/update-snippet.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/android/data-access/update-snippet.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/datastore/fragments/flutter/data-access/update-snippet.md"></inline-fragment>
 
-## Delete
+## 削除
 
-To delete an item simply pass in an instance.
+アイテムを削除するには、インスタンスに渡すだけです。
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/data-access/delete-snippet.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/ios/data-access/delete-snippet.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/android/data-access/delete-snippet.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/datastore/fragments/flutter/data-access/delete-snippet.md"></inline-fragment>
 
-## Query Data
+## クエリデータ
 
-Queries are performed against the _local store_. When cloud synchronization is enabled, the local store is updated in the background by the DataStore Sync Engine.
+クエリは _ローカルストア_に対して実行されます。 クラウド同期が有効な場合、ローカルストアは DataStore Sync Engine によってバックグラウンドで更新されます。
 
-For more advanced filtering, such as matching arbitrary field values on an object, you can supply a query predicate.
+オブジェクトの任意のフィールド値をマッチさせるなど、より高度なフィルタリングを行うには、クエリ述語を指定できます。
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/data-access/query-basic-snippet.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/ios/data-access/query-basic-snippet.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/android/data-access/query-basic-snippet.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/datastore/fragments/flutter/data-access/query-basic-snippet.md"></inline-fragment>
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/data-access/query-single-item-snippet.md"></inline-fragment>
 
-### Predicates
+### 予測
 
-Predicates are filters that can be used to match items in the DataStore. When applied to a query(), they constrain the returned results. When applied to a save(), they act as a pre-requisite for updating the data. You can match against fields in your schema by using the following predicates:
+Predicates は、DataStore 内のアイテムを一致させるために使用できるフィルタです。query() に適用されると、返される結果を制限します。 save() に適用されると、データを更新するための前提条件として動作します。 スキーマ内のフィールドに対して、以下の述語を使用することで一致することができます:
 
-**Strings:** `eq | ne | le | lt | ge | gt | contains | notContains | beginsWith | between`
+**Strings:** `eq | ne | le | lt | ge | gt | contains | beginsWith |`
 
-**Numbers:** `eq | ne | le | lt | ge | gt | between`
+**数値:** `eq | ne | le | lt | ge | gt |`
 
-**Lists:** `contains | notContains`
+**リスト:** `contains | notContains`
 
-For example if you wanted a list of all `Post` Models that have a `rating` greater than 4:
+例えば、 `Post` のすべてのモデルのリストが必要な場合、 `rating` が 4 より大きい場合があります。
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/data-access/query-predicate-snippet.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/ios/data-access/query-predicate-snippet.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/android/data-access/query-predicate-snippet.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/datastore/fragments/flutter/data-access/query-predicate-snippet.md"></inline-fragment>
 
-Multiple conditions can also be used, like the ones defined in [GraphQL Transform condition statements](~/cli/graphql-transformer/resolvers.md). For example, fetch all posts that has a rating greater than `4` and are `PUBLISHED`:
+[GraphQL 変換条件文](~/cli/graphql-transformer/resolvers.md)で定義されているもののように、複数の条件を使用することもできます。 例えば、[ 4 ](~/cli/graphql-transformer/resolvers.md) より大きく、 `発行済み` の評価を持つすべての投稿を取得します。 `発行済み`:
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/data-access/query-predicate-multiple-snippet.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/ios/data-access/query-predicate-multiple-snippet.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/android/data-access/query-predicate-multiple-snippet.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/datastore/fragments/flutter/data-access/query-predicate-multiple-snippet.md"></inline-fragment>
 
-Alternatively, the `or` logical operator can also be used:
+あるいは、 `または` 論理演算子を使用することもできます。
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/data-access/query-predicate-or-snippet.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/ios/data-access/query-predicate-or-snippet.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/android/data-access/query-predicate-or-snippet.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/datastore/fragments/flutter/data-access/query-predicate-or-snippet.md"></inline-fragment>
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/native_common/sort.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/native_common/sort.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/native_common/sort.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/datastore/fragments/native_common/sort.md"></inline-fragment>
 
-### Pagination
+### 改ページ
 
-Query results can also be paginated by passing in a `page` number (starting at 0) and an optional `limit` (defaults to 100). This will return a list of the first 100 items:
+クエリ結果は、 `ページ` (0 から始まる) 番号とオプションの `制限` (デフォルトは 100) で渡すことでページネーションすることもできます。 最初の100項目のリストを返します:
 
 <inline-fragment platform="js" src="~/lib/datastore/fragments/js/data-access/query-pagination-snippet.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/datastore/fragments/ios/data-access/query-pagination-snippet.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/datastore/fragments/android/data-access/query-pagination-snippet.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/datastore/fragments/flutter/data-access/query-pagination-snippet.md"></inline-fragment>

@@ -1,24 +1,24 @@
 ---
-title: Customizing CSS
-description: Managing the layout and styling of Components
+title: CSS のカスタマイズ
+description: コンポーネントのレイアウトとスタイルの管理
 ---
 
-You can control top level components directly using CSS. For instance, to control the layout of the `amplify-authenticator`, we can specify the properties directly inside of its selector.
+CSSを使用して最上位のコンポーネントを直接制御できます。 例えば、 `amplify-authenticator`のレイアウトを制御するには、セレクタ内でプロパティを直接指定することができます。
 
 ```css
 amplify-authenticator {
-  background: tomato;
+  background: tomatomato;
   padding: 5px;
 }
 ```
 
-The top level control is available for the following components. _**Note:**_ The components needs to be rolled out in the client in order to enable this CSS update.
+最上位レベルのコントロールは、次のコンポーネントで使用できます。 _**注意:**_ この CSS の更新を有効にするには、コンポーネントをクライアントに展開する必要があります。
 
-- `amplify-sign-in`
-- `amplify-confirm-sign-in`
-- `amplify-sign-up`
-- `amplify-confirm-sign-up`
-- `amplify-forgot-password`
-- `amplify-require-new-password`
-- `amplify-verify-contact`
-- `amplify-totp-setup`
+- `anplify-signin`
+- `anplify-confirm sign-in`
+- `anplify-signup`
+- `anplify-confirm-sign-up`
+- `anplify-forgott-password`
+- `anplify-require-new-password`
+- `anplify-verify-contact`
+- `anplify-totp-setup`

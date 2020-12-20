@@ -1,27 +1,27 @@
 ---
-title: Manage team access
-description: Manage team access to a project
+title: チームへのアクセスを管理
+description: プロジェクトへのチームアクセスを管理する
 ---
 
 With the Admin UI, team members with different job functions can collaborate on different aspects of a project deployed in the Amplify Console. Admin UI developers can create accounts with scoped access to resources and invite team members to join via email. Team members with *Full access* can create and manage AWS resources, while team members with *Manage only* access can edit application content and users.
 
-Follow these instructions to add and manage team members and their access to a project.
+以下の手順に従って、チームメンバーとプロジェクトへのアクセスを追加および管理します。
 
-## To invite team members to access a project
+## チームメンバーをプロジェクトに招待するには
 
-1. Sign in to the AWS Management Console and open AWS Amplify.
-2. In the navigation pane, choose **Admin UI management**.
-3. On the **Admin UI management** page, in the **Access control settings** section, choose **Add team members**.
-4. For **Email**, enter the email address of the team member to invite.
-5. For **Access level**, choose the level of access to grant the team member.
-  * **Full access** allows the team member to create and manage AWS resources.
-  * **Manage only** access allows the team member to edit app content and users.
-6. To email the invitation, choose **Send invite**. The team member receives an email with temporary credentials and a link to access the project in the Admin UI.
+1. AWS管理コンソールにサインインし、AWS Amplifyを開きます。
+2. ナビゲーション ウィンドウで、 **管理者 UI 管理** を選択します。
+3. **Admin UI management** **Access control settings** セクションで、 **Add team members** を選択します。
+4. **メールアドレス**の場合、招待するチームメンバーのメールアドレスを入力します。
+5. **アクセスレベル**の場合、チームメンバーにアクセス権限を付与するレベルを選択します。
+  * **フルアクセス** により、チームメンバーはAWSリソースを作成および管理できます。
+  * **** アクセスのみを管理することで、チームメンバーはアプリのコンテンツとユーザーを編集できます。
+6. 招待状を電子メールで送信するには、 **招待を送信**を選択してください。 チームメンバーには、一時的な資格情報が記載されたメールと、Admin UI でプロジェクトにアクセスするためのリンクが送信されます。
 
-## To edit team member access or delete a user
-1. Sign in to the AWS Management Console and open AWS Amplify.
-2. In the navigation pane, choose **Admin UI management**.
-3. On the **Admin UI management** page, in the **Access control settings** section, select the team member to edit or delete.
-4. Do one of the following:
-  * Choose **Edit**. In the **Edit team member(s)** window, choose the **Access level** for the team member.
-  * Choose **Delete**. In the **Delete users** window, confirm the delete action.
+## チームメンバーのアクセスを編集したり、ユーザーを削除するには
+1. AWS管理コンソールにサインインし、AWS Amplifyを開きます。
+2. ナビゲーション ウィンドウで、 **管理者 UI 管理** を選択します。
+3. **管理** ページの **アクセス制御設定** セクションで、編集または削除するチームメンバーを選択します。
+4. 次のいずれかを実行します。
+  * **編集**を選択します。 **チームメンバーの編集** ウィンドウで、チームメンバーの **アクセスレベル** を選択します。
+  * **Delete**を選択します。 **Delete users** ウィンドウで、削除アクションを確認します。

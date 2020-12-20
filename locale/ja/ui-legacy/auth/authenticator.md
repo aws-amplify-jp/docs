@@ -1,6 +1,6 @@
 ---
-title: Authenticator
-description: Authenticator legacy UI component
+title: 認証システム
+description: 認証システムレガシーUIコンポーネント
 filterKey: framework
 ---
 

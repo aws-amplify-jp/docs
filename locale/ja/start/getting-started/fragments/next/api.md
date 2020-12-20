@@ -1,18 +1,18 @@
-Now that you’ve created and configured a Next.js app and initialized a new Amplify project, you can add a feature. The first feature you will add is an API.
+次へを作成して設定しました。 sアプリでAmplifyプロジェクトを初期化し、機能を追加できます。最初に追加する機能はAPIです。
 
-The Amplify CLI supports creating and interacting with two types of API categories: REST and GraphQL.
+Amplify CLIは、RESTとGraphQLの2種類のAPIの作成と操作をサポートしています。
 
-The API you will be creating in this step is a GraphQL API using AWS AppSync (a managed GraphQL service) and the database will be Amazon DynamoDB (a NoSQL database).
+この手順で作成するAPIは、AWS AppSync(管理されたGraphQLサービス)を使用したGraphQL APIであり、データベースはAmazon DynamoDB(NoSQLデータベース)になります。
 
-## Create a GraphQL API and database
+## GraphQL API とデータベースの作成
 
-Add a [GraphQL API](https://docs.aws.amazon.com/appsync/latest/devguide/designing-a-graphql-api.html) to your app and automatically provision a database by running the following command from the root of your application directory:
+[GraphQL API](https://docs.aws.amazon.com/appsync/latest/devguide/designing-a-graphql-api.html) をアプリケーションに追加し、アプリケーションディレクトリのルートから次のコマンドを実行して自動的にデータベースをプロビジョニングします。
 
 ```bash
-amplify add api
+増幅して api を追加
 ```
 
-Select the explicit values below to enable **IAM** (for public read access) and **Cognito User Pools** (for authenticated access).
+以下の明示的な値を選択して、 **IAM** (パブリックリードアクセス用) と **Cognito User Pools** (認証済みアクセス用) を有効にします。
 
 ```console
 ? Please select from one of the below mentioned services:
@@ -47,9 +47,9 @@ Select the explicit values below to enable **IAM** (for public read access) and 
 # Yes
 ```
 
-The CLI should open this GraphQL schema in your text editor.
+CLI がテキストエディタでこの GraphQL スキーマを開く必要があります。
 
-__amplify/backend/api/myapi/schema.graphql__
+__anplify/backend/api/myapi/schema.graphql__
 
 ```graphql
 type Post
@@ -63,18 +63,18 @@ type Post
 
 The schema generated is for a blog app. You'll notice a directive on the `Post` type of `@model`. This directive is part of the [GraphQL transform](~/cli/graphql-transformer/model.md) library of Amplify.
 
-The GraphQL Transform Library provides custom directives you can use in your schema that allow you to do things like define data models, set up authentication and authorization rules, configure serverless functions as resolvers, and more.
+GraphQL Transform ライブラリには、データモデルの定義などを行うためのスキーマで使用できるカスタムディレクティブが用意されています。 認証と認可ルールの設定、サーバレス機能をリゾルバとして設定するなど。
 
-A type decorated with the `@model` directive will scaffold out the database table for the type (Post table), the schema for CRUD (create, read, update, delete) and list operations, and the GraphQL resolvers needed to make everything work together.
+`@model` ディレクティブで装飾された型は、タイプ (ホストテーブル) のデータベーステーブルを足場に置きます。 CRUD (作成、読み取り、更新、削除)およびリスト操作のためのスキーマ、およびすべてを一緒に動作させるために必要な GraphQL リゾルバ。
 
-From the command line, press __enter__ to accept the schema and continue to the next steps.
+コマンドラインから __を押して__ を入力し、スキーマを受け入れ、次のステップに進みます。
 
-### Deploying the API
+### API のデプロイ
 
-To deploy this backend, run the `push` command:
+このバックエンドをデプロイするには、 `push` コマンドを実行します。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
 ```console
@@ -94,50 +94,50 @@ Current Environment: dev
 ? Enter maximum statement depth [increase from default if your schema is deeply nested]: 2
 ```
 
-Now the API is live and you can start interacting with it!
+APIが稼働しているので、対話を始めることができます。
 
-The API you have deployed includes operations for creating, reading, updating, deleting, and listing posts.
+デプロイした API には、投稿の作成、読み取り、更新、削除、リスティングの操作が含まれます。
 
-Next, run the following command to check Amplify's status:
+次に、Amplifyの状態を確認するために次のコマンドを実行します。
 
 ```bash
-amplify status
+増幅の状態
 ```
 
-This will give us the current status of the Amplify project, including the current environment, any categories that have been created, and what state those categories are in. It should look similar to this:
+これにより、現在の環境を含むAmplifyプロジェクトの現在のステータスが得られます。 どのカテゴリーが作成されているかを調べることができます 以下のようになります。
 
 ```console
-Current Environment: dev
+現在の環境: dev
 
-| Category | Resource name         | Operation | Provider plugin   |
-| -------- | --------------------- | --------- | ----------------- |
-| Auth     | nextamplifiedXXXXXXXX | No Change | awscloudformation |
-| Api      | nextamplified         | No Change | awscloudformation |
+| Resource name | Operation | Provider プラグイン |
+| ------------------------------ | ------------------------ |
+| 認証 | nextampedXXXXXXXX | 変更なし | awscloudforming |
+| Api | nextamplified | No Change | awscloudforming |
 ```
 
-To view the GraphQL API in the AppSync console at any time, run the following command:
+AppSync コンソールで GraphQL API をいつでも表示するには、次のコマンドを実行します。
 
 ```bash
-amplify console api
+コンソールの api を増幅する
 ```
 
-To view your entire app in the Amplify console at any time, run the following command:
+Amplifyコンソールでいつでもアプリ全体を表示するには、次のコマンドを実行します。
 
 ```bash
-amplify console
+増幅コンソール
 ```
 
-### (Optional) Test your API
+### (オプション) API のテスト
 
-To test this out locally, you can run the `mock` command.
+ローカルでテストするには、 `モック` コマンドを実行します。
 
-> If you'd like to go ahead and connect the front end, you can [jump to the next step](#connect-frontend-to-api).
+> 先に進んでフロントエンドを接続したい場合は、 [次のステップ](#connect-frontend-to-api)にジャンプできます。
 
 ```bash
-amplify mock api
+amplifyモックapiは
 ```
 
-*Note:* `amplify mock api` requires Java.
+*注意:* `はモックAPIを増幅する` にはJavaが必要です。
 
 ```console
 # If you have not already deployed you API, you will be walked through the following steps for GraphQL code generation
@@ -147,9 +147,9 @@ amplify mock api
 ? Enter maximum statement depth [increase from default if your schema is deeply nested] 2
 ```
 
-This will open the GraphiQL explorer on a local port. From the test environment you can try out different operations locally, like queries and mutations.
+これにより、GraphiQL エクスプローラがローカルポート上で開きます。テスト環境では、クエリや変更など、さまざまな操作をローカルで試すことができます。
 
-In the GraphiQL toolbar, select __Use: User Pool__ and try creating a post:
+GraphiQL ツールバーで __Use: User Pool__ を選択し、投稿を作成してみてください:
 
 ```graphql
 mutation CreatePost {
@@ -164,14 +164,14 @@ mutation CreatePost {
 }
 ```
 
-Next, update auth to __Use: API Key__ and try querying the list of posts:
+次に、認証を __に更新します。使用: API キー__ を使用して、投稿の一覧に問い合わせてみてください。
 
 ```graphql
 query ListPosts {
   listPosts {
     items {
       content
-      createdAt
+      createdA
       id
       owner
       title
@@ -180,11 +180,11 @@ query ListPosts {
 }
 ```
 
-## API with Server-Side Rendering (SSR)
+## サーバーサイドレンダリング（SSR）を使用したAPI
 
-In this section you will create a way to list and create posts from the Next.js application. To do this, you will fetch & render the latest posts from the server as well as create a new post on the client.
+このセクションでは、Next.jsアプリケーションから投稿を一覧表示および作成する方法を作成します。 これを行うには fetch & サーバーから最新の投稿をレンダリングし、クライアントに新しい投稿を作成します。
 
-Open __pages/index.js__ and replace it with the following code:
+__pages/index.js__ を開き、次のコードで置き換えます。
 
 ```jsx
 // pages/index.js
@@ -290,7 +290,7 @@ export default function Home({ posts = [] }) {
 }
 ```
 
-Let's walk through some of this file:
+いくつかのファイルを見てみましょう:
 
 - __Amplify.configure__ – For authenticated requests to work on the server, our client has to be configured with `ssr: true` to make credentials available on subsequent requests.
 
@@ -298,25 +298,25 @@ Let's walk through some of this file:
 
 - __handleCreatePost__ – This function is called when a logged-in user submits our "New Post" form. `API.graphql` is called to create the new post's `title` and `content`. Once created, we redirect to `/posts/${post.id}`. Notice that we explicitly set `authMode` to `AMAZON_COGNITO_USER_POOLS`. This is because our `schema.graphql` explicitly requires an authorized user to create/delete/update our __Post__ model. Based on our configuration when we ran `amplify add api`, this value is defaulting to `API_KEY`.
 
-- __Home__ – This is a _functional component_ that renders the `posts` provided by `getServerSideProps`.
+- __ホーム__ – _getServerSideProps_ が提供する `posts` をレンダリングする `関数型コンポーネント` です。
 
-## Testing SSR
+## SSRのテスト
 
-Next, run the app and you should see a landing page with `0 posts` with a login screen:
+次に、アプリを起動すると、 `0 0 個の投稿` があるランディングページにログイン画面が表示されます。
 
 ```bash
 npm run dev
 ```
 
-Once you create an account and login, you will be presented with the __New Post__ form.
+アカウントを作成してログインすると、 __New Post__ フォームが表示されます。
 
-Submit that form to create a new post, and we'll build that page next!
+新しい投稿を作成するためにフォームを送信してください。次にそのページを作成します！
 
-## API with Incremental Static Site Generation (SSG)
+## Incremental Static Site Generation (SSG) を使用した API
 
-Statically generating pages during the build process improves performance. But, dynamically created posts still need to not `404`.
+ビルドプロセス中に静的にページを生成することでパフォーマンスが向上します。ただし、動的に作成された投稿は `404`ではありません。
 
-To solve this, create __pages/posts/[id].js__ and paste in the following content:
+これを解決するには、 __pages/posts/[id].js__ を作成し、次の内容に貼り付けてください:
 
 ```jsx
 import { Amplify, API, withSSRContext } from "aws-amplify";
@@ -407,7 +407,7 @@ export default function Post({ post }) {
 }
 ```
 
-Let's walk through some of this file:
+いくつかのファイルを見てみましょう:
 
 - __Amplify.configure__ – For authenticated requests to work on the server, our client has to be configured with `ssr: true` to make credentials available on subsequent requests.
 
@@ -423,8 +423,8 @@ Let's walk through some of this file:
 
 - __handleCreatePost__ – This function is called when a logged-in user submits our "New Post" form. `API.graphql` is called to create the new post's `title` and `content`. Once created, we redirect to `/posts/${post.id}`.
 
-- __Home__ – This is a _functional component_ that renders the `posts` provided by `getServerSideProps`.
+- __ホーム__ – _getServerSideProps_ が提供する `posts` をレンダリングする `関数型コンポーネント` です。
 
-## Testing SSG
+## SSGのテスト
 
-With your server running (`npm run dev`), refresh the page (or go back home to http://localhost:3000/ and click into a post) and you'll see a page for this post!
+サーバーが稼働している場合 (`npm run dev`) ページを更新する（または http://localhost:3000/ に戻って投稿をクリックしてください）。この投稿のページが表示されます！

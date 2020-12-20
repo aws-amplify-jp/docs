@@ -1,13 +1,13 @@
 ---
-title: Express server
-description: How to deploy an Express server to AWS using AWS Amplify
+title: エクスプレスサーバー
+description: AWS Amplifyを使用してExpressサーバーをAWSにデプロイする方法
 ---
 
-In this guide you'll learn how to deploy an [Express](https://expressjs.com/) web server complete with routing.
+このガイドでは、 [Express](https://expressjs.com/) のWebサーバーをルーティングで完全にデプロイする方法を学びます。
 
-### Initializing the Amplify project
+### Amplifyプロジェクトの初期化
 
-Initialize a new Amplify project:
+新しいAmplifyプロジェクトを初期化:
 
 ```sh
 amplify init
@@ -16,9 +16,9 @@ amplify init
 # Accept defaults for everything else and choose your AWS Profile.
 ```
 
-### Creating the API and function
+### API と関数の作成
 
-Next, create the API and web server. To do so, you can use the Amplify `add` command:
+次に、APIとWebサーバーを作成します。そのためには、Amplify `add` コマンドを使用します。
 
 ```sh
 amplify add api
@@ -38,18 +38,18 @@ amplify add api
 ? Do you want to add another path? N
 ```
 
-The CLI has created a few things for you:
+CLIはあなたのためにいくつかのものを作成しました。
 
 - API endpoint
-- Lambda function
-- Web server using [Serverless Express](https://github.com/awslabs/aws-serverless-express) in the function
-- Some boilerplate code for different methods on the `/items` route
+- Lambda 関数
+- 関数で [Serverless Express](https://github.com/awslabs/aws-serverless-express) を使用する Web サーバー
+- `/items` route (ルート)上のさまざまなメソッドのためのいくつかのボイラープレートコード
 
-### Updating the function code
+### 関数コードの更新
 
-Let's open the code for the server.
+サーバーのコードを開きましょう。
 
-Open __amplify/backend/function/mylambda/src/index.js__.
+__amplify/backend/function/mylambda/src/index.js__ を開きます。
 
 In this file you will see the main function handler with the `event` and `context` being proxied to an express server located at `./app.js` (do not make any changes to this file):
 
@@ -59,18 +59,18 @@ const app = require('./app');
 
 const server = awsServerlessExpress.createServer(app);
 
-exports.handler = (event, context) => {
-  console.log(`EVENT: ${JSON.stringify(event)}`);
+exports. andler = (event, context) => {
+  console.log(`EVENT: ${JSON.stringify(event)}');
   awsServerlessExpress.proxy(server, event, context);
 };
 
 ```
 
-Next, open __amplify/backend/function/mylambda/src/app.js__.
+次に、 __amplify/backend/function/mylambda/src/app.js__ を開きます。
 
-Here, you will see the code for the express server and some boilerplate for the different HTTP methods for the route you declared.
+ここでは、エクスプレスサーバーのコードと、宣言したルートのさまざまなHTTPメソッドのボイラープレートが表示されます。
 
-Find the route for `app.get('/items')` and update it to the following:
+`app.get('/items')` のルートを見つけ、以下に更新します。
 
 ```js
 // amplify/backend/function/mylambda/src/app.js
@@ -80,27 +80,27 @@ app.get('/items', function(req, res) {
 });
 ```
 
-### Deploying the service
+### サービスをデプロイ中
 
-To deploy the API and function, we can run the `push` command:
+API と関数をデプロイするには、 `push` コマンドを実行します。
 
 ```sh
-amplify push
+push を増幅する
 ```
 
 <inline-fragment platform="js" src="~/guides/api-rest/fragments/js/express-api-call.md"></inline-fragment> <inline-fragment platform="ios" src="~/guides/api-rest/fragments/ios/express-api-call.md"></inline-fragment> <inline-fragment platform="android" src="~/guides/api-rest/fragments/android/express-api-call.md"></inline-fragment>
 
-From here, you may want to add additional path. To do so, run the update command:
+ここから、追加のパスを追加することができます。そのためには、updateコマンドを実行します。
 
 ```sh
-amplify update api
+増幅アップデートAPI
 ```
 
-From there, you can add, update, or remove paths. To learn more about interacting with REST APIs using Amplify, check out the complete documentation [here](~/lib//restapi/getting-started.md).
+そこから、パスを追加、更新、または削除できます。 Amplify を使用した REST API の操作の詳細については、こちら [](~/lib//restapi/getting-started.md) を参照してください。
 
-The API endpoint is located in the `aws-exports.js` folder.
+API エンドポイントは `aws-exports.js` フォルダにあります。
 
-You can also interact directly with the API using this URL and the specified path:
+この URL と指定されたパスを使用して API と直接やり取りすることもできます。
 
 ```sh
 curl https://<api-id>.execute-api.<api-region>.amazonaws.com/<your-env-name>/items

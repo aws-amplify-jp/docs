@@ -1,6 +1,6 @@
 ---
-title: Getting started
-description: The AWS Amplify PubSub category provides connectivity with cloud-based message-oriented middleware. You can use PubSub to pass messages between your app instances and your app’s backend creating real-time interactive experiences.
+title: はじめに
+description: AWS Amplify PubSub カテゴリは、クラウドベースのメッセージ指向ミドルウェアとの接続を提供します。 PubSub を使用して、アプリケーションインスタンスとアプリケーションのバックエンド間のメッセージを渡すことができ、リアルタイムの対話型エクスペリエンスを作成できます。
 ---
 
 <inline-fragment platform="js" src="~/lib/pubsub/fragments/js/getting-started.md"></inline-fragment>

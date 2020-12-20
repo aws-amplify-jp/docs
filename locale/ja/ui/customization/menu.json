@@ -1,8 +1,8 @@
 {
-    "title": "Customization",
+    "title": "カスタマイズ",
     "items": [
-        "theming",
+        "テーマ",
         "customizing-css",
-        "translations"
+        "翻訳"
     ]
 }

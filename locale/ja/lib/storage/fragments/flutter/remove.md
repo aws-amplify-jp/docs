@@ -1,4 +1,4 @@
-To delete an object uploaded to S3, use `Amplify.Storage.remove` and specify the key:
+S3 にアップロードされたオブジェクトを削除するには、 `Amplify.Storage.remove` を使用してキーを指定します。
 
 ```dart
 try {

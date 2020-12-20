@@ -1,14 +1,14 @@
 {
-  "title": "Analytics",
+  "title": "分析",
   "items": [
     "getting-started",
-    "record",
+    "レコード",
     "autotrack",
     "identifyuser",
-    "streaming",
-    "storing",
-    "personalize",
-    "escapehatch",
+    "ストリーミング",
+    "保存中",
+    "個人設定",
+    "エスケープハッチ",
     "existing-resources"
   ]
 }

@@ -1,14 +1,14 @@
 ---
-title: User groups
-description: Create logical groups in Cognito User Pools and assign permissions to access resources in Amplify categories with the Amplify CLI.
+title: ユーザーグループ
+description: Cognitoユーザープールに論理グループを作成し、Amplifyカテゴリにアクセスする権限をAmplifyに割り当てます。
 ---
 
 You can create logical groups in Cognito User Pools and assign permissions to access resources in Amplify categories with the CLI, as well as define the relative precedence of one group to another. This can be useful for defining which users should be part of "Admins" vs "Editors", and if the users in a Group should be able to just write or write & read to a resource (AppSync, API Gateway, S3 bucket, etc). [You can also use these with `@auth` Static Groups in the GraphQL Transformer](~/cli/graphql-transformer/auth.md#static-group-authorization). Precedence helps remove any ambiguity on permissions if a user is in multiple Groups.
 
-## Create user groups
+## ユーザーグループを作成
 
 ```bash
-amplify add auth
+増幅して認証を追加
 ```
 
 ```console
@@ -28,12 +28,12 @@ Do you want to add User Pool Groups? (Use arrow keys)
 
 When asked as in the example above, you can press `Shift` on your keyboard along with the **LEFT** and **RIGHT** arrows to move a Group higher or lower in precedence. Once complete you can open `./amplify/backend/auth/userPoolGroups/user-pool-group-precedence.json` to manually set the precedence.
 
-## Group access controls
+## グループアクセスコントロール
 
-For certain Amplify categories you can restrict access with CRUD (Create, Read, Update, and Delete) permissions, setting different access controls for authenticated users vs Guests (e.g. Authenticated users can read & write to S3 buckets while Guests can only read). You can further restrict this to apply different permissions conditionally depending on if a logged-in user is part of a specific User Pool Group.
+特定のAmplifyカテゴリについては、CRUD(Create, Read, Update)でアクセスを制限できます。 アクセス権限、認証済みユーザーに対する異なるアクセス制御を設定する (例: ゲスト) 認証済みのユーザーは、ゲストが読み取ることができる間、 & S3バケットに書き込むことができます)。 これをさらに制限して、ログイン中のユーザーが特定のユーザープールグループの一部である場合に応じて、条件付きで異なる権限を適用することができます。
 
 ```bash
-amplify add storage  # Select content
+増幅してストレージを追加 # コンテンツを選択
 ```
 
 ```console

@@ -1,26 +1,26 @@
-Before starting this step, please make sure that please **close Xcode.**
+このステップを開始する前に、 **Xcode を閉じてください。**
 
 **Open a terminal** and **change directories to your project**.  For example, if you created your project in the folder `~/Developer`, you can:
 ```bash
 cd ~/Developer/MyAmplifyApp
 ```
 
-In order to initialize your project with the CocoaPods package manager, **execute the command**:
+CocoaPods パッケージマネージャでプロジェクトを初期化するには、 **コマンド** を実行します。
 ```bash
 pod init
 ```
 
-After doing this, you should see a newly created file called `Podfile`.  This file is used to describe what packages your project depends on.
+これを行うと、 `Podfile`という名前の新しく作成されたファイルが表示されます。 このファイルは、プロジェクトがどのパッケージに依存するかを記述するために使用されます。
 
-**Update the file** to include the `Amplify` pod:
+**ファイル** を更新して、 `Amplify` ポッドを含めます:
 ```
-target 'MyAmplifyApp' do
+ターゲット 'MyAmplifyApp' do
   use_frameworks!
   pod 'Amplify'
 end
 ```
 
-To download and install the Amplify pod into your project, **execute the command**:
+プロジェクトに Amplify ポッドをダウンロードしてインストールするには、 **コマンド** を実行します。
 ```bash
 pod install --repo-update
 ```
@@ -29,4 +29,4 @@ After doing this, you should now see file called `MyAmplifyApp.xcworkspace`.  Yo
 ```bash
 xed .
 ```
-This should open the newly generated MyAmplifyApp.xcworkspace in Xcode.
+これにより、新しく生成された MyAmplifyApp.xcworkspace を Xcode で開きます。

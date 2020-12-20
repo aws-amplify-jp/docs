@@ -1,6 +1,6 @@
 <amplify-authenticator></amplify-authenticator>
 
-## Installation
+## インストール
 
 <docs-filter framework="react">
 
@@ -28,9 +28,9 @@ yarn add aws-amplify @aws-amplify/ui-vue
 
 </docs-filter>
 
-## Usage
+## 使用法
 
-### Basic Usage
+### 基本的な使用法
 
 <docs-filter framework="react">
 
@@ -54,9 +54,9 @@ const App = () => (
 
 </docs-filter>
 
-### Recommended Usage
+### 推奨使用法
 
-In most cases you will need to manage the rendering and layout of the Authenticator separately.
+ほとんどの場合、Authenticatorのレンダリングとレイアウトを個別に管理する必要があります。
 
 <docs-filter framework="react"> <inline-fragment src="~/ui/auth/fragments/react/auth-state-management.md"></inline-fragment> </docs-filter>
 
@@ -95,7 +95,7 @@ _app.component.html_
 ```html
 <amplify-authenticator>
   <div>
-    My App
+    自分のアプリ
     <amplify-sign-out></amplify-sign-out>
   </div>
 </amplify-authenticator>
@@ -132,7 +132,7 @@ _app.component.html_
 ```html
 <amplify-authenticator>
   <div>
-    My App
+    自分のアプリ
     <amplify-sign-out></amplify-sign-out>
   </div>
 </amplify-authenticator>
@@ -177,13 +177,13 @@ _App.vue_
 
 <ui-component-props tag="amplify-authenticator" prop-type='css' use-table-headers></ui-component-props>
 
-## Customization
+## カスタマイズ
 
-### Custom Form Fields
+### カスタムフォームフィールド
 
-If you'd like to customize the form fields in the Authenticator Sign In or Sign Up component, you can do so by using the `formFields` property.
+Authenticator サインインまたはサインアップコンポーネント内のフォームフィールドをカスタマイズしたい場合。 `formFields` プロパティを使用することで、これを行うことができます。
 
-The following example highlights the use of Authenticator with customized Sign Up form fields and [authentication with email](#authenticate-with-email-or-phone-number):
+次の例では、カスタマイズされたサインアップフォームフィールドと [電子メールでの認証](#authenticate-with-email-or-phone-number) を使用した認証システムの使用を強調します。
 
 <docs-filter framework="react">
 
@@ -203,7 +203,7 @@ The following example highlights the use of Authenticator with customized Sign U
 
 </docs-filter>
 
-Here is an example of the component in use:
+使用中のコンポーネントの例を次に示します。
 
 <docs-component-playground component-name="AuthenticatorWithSlots"></docs-component-playground>
 
@@ -213,13 +213,13 @@ If you are using the `usernameAlias` prop with custom `slots`, keep in mind that
 
 </amplify-callout>
 
-For more details on this customization see the `amplify-form-field` [prop documentation](https://github.com/aws-amplify/amplify-js/tree/main/packages/amplify-ui-components/src/components/amplify-form-field#properties) and the internal [`FormFieldType` interface](https://github.com/aws-amplify/amplify-js/blob/main/packages/amplify-ui-components/src/components/amplify-auth-fields/amplify-auth-fields-interface.ts#L3).
+このカスタマイズの詳細については、 `amplify-form-field` [prop documentation](https://github.com/aws-amplify/amplify-js/tree/main/packages/amplify-ui-components/src/components/amplify-form-field#properties) および内部 [`FormFieldType` インターフェイス](https://github.com/aws-amplify/amplify-js/blob/main/packages/amplify-ui-components/src/components/amplify-auth-fields/amplify-auth-fields-interface.ts#L3) を参照してください。
 
-### Hiding form fields
+### フォームフィールドを非表示
 
-Often you will not need a default form field, for example the phone number field. To implement this you can define the array of fields you'd like to show (along with the optional field customizations).
+多くの場合、たとえば電話番号フィールドなど、デフォルトのフォームフィールドは必要ありません。 これを実装するには、表示したい項目の配列を定義することができます (オプションの項目カスタマイズとともに)。
 
-In this example we are also managing the auth state to show and hide the Authenticator component based on the authenticated state of the user. This code will also persist the user sign in state on refresh.
+この例では、認証されたユーザーの状態に基づいてAuthenticatorコンポーネントを表示および非表示にするための認証状態を管理しています。 このコードは、更新時にユーザーのサインイン状態を保持します。
 
 <docs-filter framework="react">
 
@@ -245,9 +245,9 @@ In this example we are also managing the auth state to show and hide the Authent
 
 </docs-filter>
 
-### Managing Layout with CSS
+### CSS でレイアウトを管理する
 
-Since the UI components are implemented using web components, you can control the top level `amplify-authenticator` component directly using CSS.
+UI コンポーネントは Web コンポーネントを使用して実装されているので、CSS を使用して直接最上位の `amplify-authenticator` コンポーネントを制御することができます。
 
 ```css
 amplify-authenticator {
@@ -259,13 +259,13 @@ amplify-authenticator {
 }
 ```
 
-## Components
+## コンポーネント
 
-### Sign In
+### サインイン
 
 <amplify-sign-in header-text="My Custom Sign In Text"></amplify-sign-in>
 
-**Usage**
+**使用法**
 
 <docs-filter framework="react">
 
@@ -325,11 +325,11 @@ amplify-authenticator {
 
 <ui-component-props tag="amplify-sign-in" prop-type="slots"></ui-component-props>
 
-### Sign Up
+### 新規登録
 
 <amplify-sign-up header-text="My Custom Sign Up Text"></amplify-sign-up>
 
-**Usage**
+**使用法**
 
 <docs-filter framework="react">
 
@@ -383,17 +383,17 @@ amplify-authenticator {
 
 <ui-component-props tag="amplify-sign-up" prop-type='slots'></ui-component-props>
 
-### Sign Out
+### サインアウト
 
 <amplify-sign-out button-text="Custom Text"></amplify-sign-out>
 
-**Usage**
+**使用法**
 
 <docs-filter framework="react">
 
 ```jsx
 <div>
-  My App
+  自分のアプリ
   <AmplifySignOut buttonText="Custom Text"></AmplifySignOut>
 </div>
 ```
@@ -402,7 +402,7 @@ amplify-authenticator {
 
 ```html
 <div>
-  My App
+  自分のアプリ
   <amplify-sign-out button-text="Custom Text"></amplify-sign-out>
 </div>
 ```
@@ -411,7 +411,7 @@ amplify-authenticator {
 
 ```html
 <div>
-  My App
+  自分のアプリ
   <amplify-sign-out button-text="Custom Text"></amplify-sign-out>
 </div>
 ```
@@ -420,7 +420,7 @@ amplify-authenticator {
 
 ```html
 <div>
-  My App
+  自分のアプリ
   <amplify-sign-out button-text="Custom Text"></amplify-sign-out>
 </div>
 ```
@@ -433,11 +433,11 @@ amplify-authenticator {
 
 <ui-component-props tag="amplify-sign-out" prop-type="slots"></ui-component-props>
 
-### Confirm Sign In
+### ログイン確認
 
 <amplify-confirm-sign-in header-text="My Custom Confirm Sign In Text"></amplify-confirm-sign-in>
 
-**Usage**
+**使用法**
 
 <docs-filter framework="react">
 
@@ -487,11 +487,11 @@ amplify-authenticator {
 
 <ui-component-props tag="amplify-confirm-sign-in" prop-type="attr"></ui-component-props>
 
-### Confirm Sign Up
+### サインアップを確認
 
 <amplify-confirm-sign-up header-text="My Custom Confirm Sign Up Text"></amplify-confirm-sign-up>
 
-**Usage**
+**使用法**
 
 <docs-filter framework="react">
 
@@ -541,11 +541,11 @@ amplify-authenticator {
 
 <ui-component-props tag="amplify-confirm-sign-up" prop-type="attr"></ui-component-props>
 
-### Forgot Password
+### パスワードを忘れた場合
 
 <amplify-forgot-password header-text="My Custom Forgot Password Text"></amplify-forgot-password>
 
-**Usage**
+**使用法**
 
 <docs-filter framework="react">
 
@@ -595,11 +595,11 @@ amplify-authenticator {
 
 <ui-component-props tag="amplify-forgot-password" prop-type='attr'></ui-component-props>
 
-### Require New Password
+### 新しいパスワードを必須にする
 
 <amplify-require-new-password header-text="My Custom Require New Password Text"></amplify-require-new-password>
 
-**Usage**
+**使用法**
 
 <docs-filter framework="react">
 
@@ -651,7 +651,7 @@ amplify-authenticator {
 
 ### TOTP Setup
 
-**Usage**
+**使用法**
 
 <docs-filter framework="react">
 
@@ -701,7 +701,7 @@ amplify-authenticator {
 
 <ui-component-props tag="amplify-totp-setup" prop-type='attr'></ui-component-props>
 
-### Verify Contact
+### 連絡先を確認
 
 <docs-filter framework="react">
 
@@ -755,7 +755,7 @@ amplify-authenticator {
 
 <amplify-greetings username="username"></amplify-greetings>
 
-**Usage**
+**使用法**
 
 <docs-filter framework="react">
 
@@ -814,7 +814,7 @@ Amplify.configure(awsconfig);
 export class AppModule {}
 ```
 
-Replace the content inside of _app.component.ts_ with the following:
+_app.component.ts_ 内のコンテンツを以下に置き換えます:
 
 ```js
 import { Component, ChangeDetectorRef } from '@angular/core';
@@ -846,7 +846,7 @@ export class AppComponent {
 }
 ```
 
-Replace the content inside of _app.component.html_ with the following:
+_app.component.html_ 内のコンテンツを以下に置き換えます:
 
 ```html
 <amplify-authenticator *ngIf="authState !== 'signedin'"></amplify-authenticator>
@@ -878,7 +878,7 @@ Amplify.configure(awsconfig);
 export class AppModule {}
 ```
 
-Replace the content inside of _app.component.ts_ with the following:
+_app.component.ts_ 内のコンテンツを以下に置き換えます:
 
 ```js
 import { Component, ChangeDetectorRef } from '@angular/core';
@@ -910,7 +910,7 @@ export class AppComponent {
 }
 ```
 
-Replace the content inside of _app.component.html_ with the following:
+_app.component.html_ 内のコンテンツを以下に置き換えます:
 
 ```html
 <amplify-authenticator *ngIf="authState !== 'signedin'"></amplify-authenticator>
@@ -974,7 +974,7 @@ export default {
 
 <inline-fragment src="~/ui/auth/fragments/react/withauthenticator.md"></inline-fragment>
 
-You can also pass in any of the [AmplifyAuthenticator props](#props-amplify-authenticator):
+[AmplifyAuthenticator プロパティ](#props-amplify-authenticator) のいずれかを渡すこともできます:
 
 ```jsx
 export withAuthenticator(App, {initialAuthState: 'signup'});
@@ -982,11 +982,11 @@ export withAuthenticator(App, {initialAuthState: 'signup'});
 
 </docs-filter>
 
-## Methods & Enums
+## メソッド & 列挙数
 
 ### AuthState
 
-`AuthState` is an enum with the following values:
+`AuthState` は以下の値を持つ列挙型である。
 
 ```js
 enum AuthState {
@@ -1011,7 +1011,7 @@ enum AuthState {
 }
 ```
 
-**Usage**
+**使用法**
 
 ```js
 import {AuthState, onAuthUIStateChange} from "@aws-amplify/ui-components";
@@ -1025,9 +1025,9 @@ onAuthUIStateChange((nextAuthState, authData) => {
 
 ### onAuthUIStateChange
 
-`onAuthUIStateChange` is a function that will fire whenever the state of the Authentication UI component changes.
+`onAuthUIStateChange` は認証UIコンポーネントの状態が変更されるたびに発行される関数です。
 
-**Usage**
+**使用法**
 
 ```js
 import {AuthState, onAuthUIStateChange} from "@aws-amplify/ui-components";
@@ -1043,9 +1043,9 @@ onAuthUIStateChange((nextAuthState, authData) => {
 });
 ```
 
-## Use Cases
+## ユースケース
 
-### Manage Auth State and Conditional app rendering
+### 認証状態と条件付きアプリのレンダリングを管理
 
 <docs-filter framework="react"> <inline-fragment src="~/ui/auth/fragments/react/auth-state-management.md"></inline-fragment> </docs-filter>
 
@@ -1055,9 +1055,9 @@ onAuthUIStateChange((nextAuthState, authData) => {
 
 <docs-filter framework="vue"> <inline-fragment src="~/ui/auth/fragments/vue/auth-state-management.md"></inline-fragment> </docs-filter>
 
-### Authenticate with email or phone number
+### メールアドレスまたは電話番号で認証
 
-The `amplify-authenticator` component has the ability to sign in / sign up with `email` or `phone_number` instead of default `username`.
+`anplify-authenticator` コンポーネントには、デフォルトの `ユーザー名` ではなく `email` または `phone_number` でサインイン/サインアップする機能があります。
 
 To achieve this, you first need to setup the userpool to allow email or phone number as the username [using the cli workflow](~/cli/auth/overview.md#configuring-auth-without-social-providers) or through the [Cognito Console](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-aliases-settings-option-2). To reflect this in the `amplify-authenticator` component, you can use the `usernameAlias` property. It can take one of the three values - `email`, `phone_number` or `username`. Default is set to `username`.
 
@@ -1087,11 +1087,11 @@ To achieve this, you first need to setup the userpool to allow email or phone nu
 
 </docs-filter>
 
-## Migration
+## 移行
 
-To migrate from using the `aws-amplify-<framework>` library to the latest `@aws-amplify/ui-<framework>` library use the steps below:
+`aws-amplify-<framework>` ライブラリを最新の `@aws-amplify/ui- に使用してから移行するには、<framework>` ライブラリを以下の手順で使用します。
 
-### Installation
+### インストール
 
 <docs-filter framework="react">
 
@@ -1123,7 +1123,7 @@ To migrate from using the `aws-amplify-<framework>` library to the latest `@aws-
 
 </docs-filter>
 
-### Usage
+### 使用法
 
 <docs-filter framework="react">
 
@@ -1144,7 +1144,7 @@ const App = () => (
 );
 ```
 
-If you are using `withAuthenticator`:
+`withAuthenticator` を使用している場合:
 
 ```diff
 - import { withAuthenticator } from 'aws-amplify-react';
@@ -1157,7 +1157,7 @@ export default withAuthenticator(App);
 
 <docs-filter framework="react">
 
-### Breaking changes for withAuthenticator
+### withAuthenticatorの変更を中断しています
 
 <amplify-callout warning>
 

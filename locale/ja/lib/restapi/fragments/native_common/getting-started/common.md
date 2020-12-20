@@ -1,37 +1,37 @@
-The Amplify API category provides an interface for making requests to your backend. The Amplify CLI deploys REST APIs and handlers using [Amazon API Gateway](http://docs.aws.amazon.com/apigateway/latest/developerguide/) and [AWS Lambda](http://docs.aws.amazon.com/lambda/latest/dg/).
+Amplify APIカテゴリは、バックエンドへのリクエストを行うためのインターフェースを提供します。 Amplify CLI は、 [Amazon API Gateway](http://docs.aws.amazon.com/apigateway/latest/developerguide/) および [AWS Lambda](http://docs.aws.amazon.com/lambda/latest/dg/) を使用して REST API とハンドラをデプロイします。
 
-## Goal
-To setup and configure your application with Amplify API to make requests to your API Gateway and trigger the lambda function using authorization provided by Amplify Auth.
+## 目標
+Amplify APIを使用してアプリケーションを設定し、APIゲートウェイへのリクエストを行い、Amplify Authが提供する認証を使用してラムダ機能をトリガーします。
 
-## Prerequisites
+## 前提条件
 
 <inline-fragment platform="ios" src="~/lib/restapi/fragments/ios/getting-started/10_preReq.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/restapi/fragments/android/getting-started/10_preReq.md"></inline-fragment>
 
-## Configure API
+## API の設定
 
 <inline-fragment platform="ios" src="~/lib/restapi/fragments/ios/getting-started/11_amplifyInit.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/restapi/fragments/android/getting-started/11_amplifyInit.md"></inline-fragment>
 
-## Install Amplify Libraries
+## Amplifyライブラリのインストール
 
 <inline-fragment platform="ios" src="~/lib/restapi/fragments/ios/getting-started/20_installLib.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/restapi/fragments/android/getting-started/20_installLib.md"></inline-fragment>
 
-## Initialize Amplify API
+## Amplify APIを初期化
 
 <inline-fragment platform="ios" src="~/lib/restapi/fragments/ios/getting-started/30_initapi.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/restapi/fragments/android/getting-started/30_initapi.md"></inline-fragment>
 
-## Make a POST Request
+## POST リクエストを作成
 
-Copy and paste the following code in your application so that it runs only once when the app starts:
+次のコードをアプリケーションにコピー&ペーストして、アプリが起動したときに1回だけ実行されるようにします。
 
 <inline-fragment platform="ios" src="~/lib/restapi/fragments/ios/getting-started/40_postTodo.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/restapi/fragments/android/getting-started/40_postTodo.md"></inline-fragment>
 
-To navigate to your backend, go to the [API Gateway console](https://aws.amazon.com/apigateway) and select the API. The name of the API corresponds to the friendly name of the resource to be used as a label you specified earlier in the CLI steps.
+バックエンドに移動するには、 [API Gateway コンソール](https://aws.amazon.com/apigateway) に移動し、API を選択します。 API の名前は、CLI ステップで指定したラベルとして使用するリソースのフレンドリーな名前に対応します。
 
-## Next steps
+## 次のステップ
 
-Congratulations! You've made a call to your API Gateway and triggered your Lambda function. Check out the following links to see other Amplify API use cases:
+おめでとうございます! あなたは API Gateway に電話をかけ、Lambda 機能をトリガーしました。 Amplify APIの使用例については、以下のリンクを参照してください。
 
-* [Fetching Data](~/lib/restapi/fetch.md)
-* [Updating Data](~/lib/restapi/update.md)
-* [Deleting Data](~/lib/restapi/delete.md)
-* [Define authorization rules](~/lib/restapi/authz.md)
+* [データを取得中](~/lib/restapi/fetch.md)
+* [データの更新](~/lib/restapi/update.md)
+* [データの削除](~/lib/restapi/delete.md)
+* [認可ルールを定義](~/lib/restapi/authz.md)

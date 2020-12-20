@@ -1,36 +1,36 @@
 ---
-title: Overview
-description: Get started with the Admin UI
+title: 概要
+description: 管理者 UI で始めましょう
 ---
 
-Authorization is the process of validating what a user can access. In Admin UI you can specify authorization rules that limit individual user or group access to create, read, update, or delete operations on your data. Admin UI supports owner, public, private, and group based authorization at the model level. When an authorization directive is added to a type, all fields of the type are made available to that mode by default.
+認証とは、ユーザーがアクセスできることを検証するプロセスです。 Admin UI では、データの操作の作成、読み取り、更新、または削除に個々のユーザーまたはグループアクセスを制限する権限ルールを指定できます。 Admin UI supports owner, public private, and group based authorization at the model level. 認可ディレクティブが型に追加されると、その型のすべてのフィールドがデフォルトでそのモードで利用可能になります。
 
-## To set the authorization mode
+## 認証モードを設定する
 
-As you create a data model for your app, you can use the **Inspector Panel** on the right side of the **Data modeling** page to set authorization rules.
+アプリのデータモデルを作成する際に **データ モデリング** ページの右側にある **インスペクターパネル** を使用して、認可ルールを設定できます。
 
-1. Sign in to the AWS Management console and open AWS Amplify.
-2. In the navigation pane, choose an application.
-3. On the application information page, choose the **Open Admin UI** tab.
-4. On the **Set up** menu, choose **Data**.
-5. On the **Data modeling** page, locate the **Authorization mode** menu in the upper right corner.
-6. Choose one of **API Key**, **Cognito user pool**, or **IAM**.
+1. AWS Managementコンソールにサインインし、AWS Amplifyを開きます。
+2. ナビゲーション ウィンドウで、アプリケーションを選択します。
+3. アプリケーション情報ページで、 **管理者UIを開く** タブを選択します。
+4. **セットアップ** メニューで **データ** を選択します。
+5. **データ モデリング** ページで、右上の **Authorization mode** メニューを選択します。
+6. **API Key**, **Cognito user pool**, or **IAM**.
 
-Skip ahead to [set up authorization rules](~/console/authz/permissions.md) for the bookstore app, or learn about the different authorization modes below.
+ブックストアアプリの [認可ルールの設定](~/console/authz/permissions.md) を先にスキップするか、以下の異なる認可モードについて確認してください。
 
-## Authorization modes
+## 承認モード
 
 
-The type of authorization rules that you are able to set depends on the authorization mode that you specify. There are three available authorization modes - API_KEY, Cognito User pools, and IAM.
+設定できる認証ルールの種類は、指定した認証モードによって異なります。 API_KEY、Cognito User pools、IAMの3つの認証モードがあります。
 
-### API Key
+### API キー
 
-The API key is the default authorization mode when you first deploy a data model. API Keys are recommended for development purposes or use cases where it is safe to provide public access to an API without specific authentication requirements (i.e. guest users). It is recommended to use API keys when you are getting started with the API development, want to iterate quickly, and don’t want to worry about more complicated authorization methods. Applications expected to be long-lived and widely distributed should not use API keys unless you have use cases where all or part of the application will always support guest access. API keys are valid for 30 days before they need to be rotated.
+API キーは、データモデルを最初にデプロイするときのデフォルトの認証モードです。 API キーは、開発目的や特定の認証要件を持たないAPI への公開アクセスを提供することが安全な場合に推奨されます (i. を選択します。 API 開発を開始する場合は、API キーを使用することをお勧めします。 迅速に繰り返したいし、より複雑な認可方法を心配したくない。 長寿命で広く配布されるアプリケーションは、アプリケーションの全部または一部が常にゲストアクセスをサポートするユースケースがある場合を除き、API キーを使用してはなりません。 APIキーは回転する必要がある30日間有効です。
 
-### Cognito user pool
+### Cognitoユーザープール
 
-Amplify Authentication is powered by Amazon Cognito User Pools, a fully managed user directory. This the preferred authorization mode with Amplify as it provides finer grained access to your models - scope access to any signed-in user, groups, and owners. Cognito provides a secure way to exchange JWT tokens from User Pools with temporary AWS credentials that allow you to interact with other AWS services.
+Amplify認証は、完全に管理されたユーザーディレクトリであるAmazon Cognitoユーザープールによって提供されます。 Amplifyを使用した優先認可モードで、モデルへのより詳細なアクセスを提供します - サインインユーザーへのスコープアクセス グループと所有者 Cognitoは、ユーザープールからJWTトークンを一時的なAWSの資格情報と交換し、他のAWSサービスとやり取りできる安全な方法を提供します。
 
 ### IAM
 
-With the IAM authorization mode, requests are signed using the AWS Signature Version 4 Signing Process. The IAM public authorization mode is primarily used when your application needs to provide guest (public) access to your data. Guest access is accomplished with IAM using Amazon Cognito Identity Pools unauthenticated identities. The IAM private authorization mode is a great fit when used with backend systems (e.g.: Amazon EC2 instances or AWS Lambda) that can be securely configured with AWS credentials. 
+IAM 認証モードでは、要求は AWS 署名バージョン 4 署名プロセスを使用して署名されます。 IAM パブリック認証モードは、主にアプリケーションがお客様のデータにゲスト(公開)アクセスを提供する必要がある場合に使用されます。 ゲストアクセスは、Amazon Cognito Identity Poolsの認証されていないIDを使用して、IAMで達成されます。 IAM プライベート認証モードは、バックエンドシステムで使用する場合に最適です (例: AWS 資格情報を使用してセキュアに構成できるAmazon EC2インスタンスまたはAWS Lambda)。 

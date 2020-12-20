@@ -1,6 +1,6 @@
 ---
-title: Working with the API
-description: Learn more about how to use the Amplify Framework's auth APIs
+title: API の操作
+description: Amplify Frameworkの認証APIの使用方法について詳しくはこちら
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

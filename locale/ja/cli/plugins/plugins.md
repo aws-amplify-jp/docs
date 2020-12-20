@@ -1,94 +1,94 @@
 ---
-title: Overview
-description: Plugins enable you to add additional commands and functionality to existing Amplify CLI. Learn how to create, publish, consume a plugin package.
+title: 概要
+description: プラグインを使用すると、既存の Amplify CLI に追加のコマンドと機能を追加できます。プラグインパッケージの作成、公開、使用方法について学びます。
 ---  
 
-Plugins are explicitly managed in the Amplify CLI pluggable platform. Plugins enable you to add additional commands and functionality to existing Amplify CLI. This section goes through the steps to create, publish, consume a plugin package, explains the folder structure, and key files in the plugin package.
+プラグインはAmplify CLI プラグインで明示的に管理されます。プラグインを使用すると、既存の Amplify CLI に追加のコマンドと機能を追加できます。 このセクションでは、プラグインパッケージを作成、公開、消費するための手順と、フォルダ構造とプラグインパッケージ内のキーファイルについて説明します。
 
-## Official plugins
-- amplify-category-analytics
-- amplify-category-api
-- amplify-category-auth
-- amplify-category-function
-- amplify-category-hosting
-- amplify-category-interactions
-- amplify-category-notifications
-- amplify-category-predictions
-- amplify-category-storage
-- amplify-category-xr
-- amplify-codegen
+## 公式プラグイン
+- anplify-category-analytics
+- anplify-category-api
+- anplify-category-auth
+- anplify-category-function
+- anplify-category-hosting
+- anplify-category-interaction
+- category-notifications
+- 増幅カテゴリ予測
+- 増幅カテゴリストレージ
+- anplify-category-xr
+- anplify-codegen
 - amplify-frontend-javascript
-- amplify-frontend-android
-- amplify-frontend-ios
-- amplify-provider-awscloudformation
+- anplify-frontend-android
+- anplify-frontend-ios
+- amplify-provider-awscloudforming
 
-## Third-party plugins
+## サードパーティのプラグイン
 
-* [amplify-category-video](https://www.npmjs.com/package/amplify-category-video) - Make it easy to incorporate video streaming into your mobile and web applications powered by AWS Amplify and AWS Media Services
-* [amplify-category-docs](https://www.npmjs.com/package/amplify-category-docs) - An easy way to view the Amplify Docs from the Amplify CLI
-* [amplify-category-data-importer](https://www.npmjs.com/package/amplify-category-data-importer) - Automate the process of seeding, importing, and managing data for Amplify projects
-* [graphql-ttl-transformer](https://github.com/flogy/graphql-ttl-transformer) - Enable DynamoDB's time-to-live feature to auto-delete old entries in your AWS Amplify API
+* [anplify-category-video](https://www.npmjs.com/package/amplify-category-video) - AWS AmplifyとAWS Media Servicesを搭載したモバイルおよびWebアプリケーションにビデオストリーミングを簡単に組み込むことができます。
+* [amplify-category-docs](https://www.npmjs.com/package/amplify-category-docs) - Amplify CLI からAmplify Docsを表示する簡単な方法
+* [amplify-category-data-importer](https://www.npmjs.com/package/amplify-category-data-importer) - プロジェクトを増幅するためのデータのシーディング、インポート、および管理のプロセスを自動化する
+* [graphql-ttl-transformer](https://github.com/flogy/graphql-ttl-transformer) - AWS Amplify APIで古いエントリを自動削除するために、DynamoDBのリアルタイム機能を有効にする
 
-## Plugin installation
+## プラグインのインストール
 
-You can add a 3rd party plugin to the Amplify CLI with the following steps:
-- If the plugin author named the plugin package according to the [naming convention](~/cli/plugins/architecture.md#plugin-types).
-1. Run `npm install -g <plugin>` and install the plugin to the global node_modules directory.<br/>
-2. Run `amplify plugin scan` so the Amplify CLI plugin platform will pick up the newly added plugin.
+Amplify CLI にサードパーティのプラグインを追加するには、次の手順を実行します。
+- プラグインの作成者が [命名規則](~/cli/plugins/architecture.md#plugin-types) に従ってプラグインパッケージに名前を付けた場合。
+1. `npm install -g <plugin>` を実行し、プラグインをグローバルの node_modules ディレクトリにインストールします。<br/>
+2. `増幅プラグインスキャン` を実行して、Amplify CLI プラグインプラットフォームが新しく追加されたプラグインをピックアップします。
 
-- If the plugin author did NOT name the plugin package according to the naming convention outlined above.
-1. Run `npm install -g <plugin>` and install the plugin to the global node_modules directory.<br/>
-2. Run `amplify plugin add` and provide the path to the plugin to explicitly add the plugin package into the Amplify CLI plugin platform.
+- プラグインの作成者が上記の命名規則に従ってプラグインパッケージに名前を付けなかった場合。
+1. `npm install -g <plugin>` を実行し、プラグインをグローバルの node_modules ディレクトリにインストールします。<br/>
+2. `amplify plugin add` を実行し、Amplify CLI プラグインプラットフォームにプラグインパッケージを明示的に追加するためのプラグインへのパスを提供します。
 
-## Plugin Commands
+## プラグインコマンド
 
-The following is the suite of the commands under the `amplify plugin`:
+以下は、 `増幅プラグイン`の下のコマンドのスイートです。
 
-* amplify plugin configure
-* amplify plugin scan
-* amplify plugin add
-* amplify plugin remove
-* amplify plugin list
-* amplify plugin init
-* amplify plugin verify
-* amplify plugin help
+* 増幅プラグインの設定
+* anplifyプラグインスキャン
+* 増幅プラグインの追加
+* anmpify plugin remove
+* プラグインリストを増幅する
+* anplify plugin init
+* 増幅プラグインの検証
+* 増幅プラグインのヘルプ
 
-### configure
+### 設定
 
-`amplify plugin configure` is used to configure the following settings in the `plugins.json` file:
+`amplify plugin configure` は、 `plugins.json` ファイルの以下の設定に使用されます:
 
-* `plugin-directories` : contains the directories that plugin packages are searched for during a plugin scan.
+* `plugin-directory` : プラグインパッケージがプラグインスキャン中に検索されるディレクトリを含む。
 * `plugin-prefixes`: contains the plugin package name prefixes. A package named with such prefix is considered a plugin candidate and checked during a plugin scan. If `plugin-prefixes` is empty, all packages inside the scanned directories will be checked.
-* `max-scan-interval-in-seconds` : the Amplify CLI Core will scan again if the last scan time has passed for longer than `max-scan-interval-in-seconds`. Setting this value to 0 will result in fresh scan at the beginning of each Amplify CLI command execution. The default value is 1 day.
+* `max-scan-interval-in-seconds` : 最後のスキャン時間が `max-scan-interval-in-seconds`より長くなった場合、Amplify CLI コアは再びスキャンします。 この値を 0 に設定すると、Amplify CLI コマンドの実行開始時に新しくスキャンされます。デフォルト値は 1 日です。
 
-### scan
+### スキャン
 
 `amplify plugin scan` will start a fresh scan for plugins in the local environment. A configurable set of directories specified in `plugin-directories`, such as the global node_modules, are scanned for plugins.<br/> Execution of this command will completely update the contents of the `plugins` field in the `plugins.json`. The `last-scan-time` field in the `plugins.json` is the time stamp of the last plugin scan. Note that, other than manually started by this command, a plugin scan can also be triggered by a regular amplify command execution, for example if the Amplify CLI Core noticed something is incorrect, or the last scan time has passed for longer than `max-scan-interval-in-seconds`(set to be one day by default).
 
-### add
+### 追加
 
 `amplify plugin add` will prompt you to select a previously removed plugin (see below), or enter the full path of a local package to be added as a plugin into the Amplify CLI. The Amplify CLI Core verifies the existence and validity of the plugin package during execution of the this command. You can use this command to add a plugin that will not be found by the plugin scan process, e.g. if it is not in one of the `plugin-directories`, or its package name does not have the proper prefix as specified in the `plugin-prefixes`.
 
-### remove
+### 削除
 
 `amplify plugin remove` will prompt you with the list of all the currently active plugins, and allow you to select the ones that you do not want to be included in the Amplify CLI. The Amplify CLI Core will remove the manifest of those plugins from the `plugins` field, so they will NOT be counted as active plugins anymore and will NOT be loaded during command executions.<br/> If a removed plugin is in one of the directories specified in the `plugin-directories`, and its package name has the prefix as specified in the `plugin-prefixes`, it is then inserted in the `excluded` field of the `plugins.json` file. This will not be inserted back to the `plugins` field in the next plugin scan. The actual plugin packages themselves are not removed from your computer, and they can be added back as active plugins by `amplify plugin add`.
 
-### list
+### リスト
 
-`amplify plugin list` lists all the active plugins, along with other information of the local Amplify CLI plugin platform.
+`増幅プラグインリスト` は、ローカルAmplify CLI プラグインプラットフォームの他の情報とともに、アクティブなすべてのプラグインをリストします。
 
 ### init
 
 The Amplify CLI provides the command `amplify plugin init` (with alias `amplify plugin new`) for the development of plugins.<br/> This command first collects the requirements from you and then creates the skeleton of the plugin package for you to start the development. The newly created plugin package is added to your local Amplify CLI platform, so you can conveniently test its functionalities while it is being developed. It can be easily removed from the platform with the `amplify plugin remove` command and added back with the `amplify plugin add` command.
 
-### verify
+### 確認する
 
-The Amplify CLI provides the utility command `amplify plugin verify` to verify that:
+Amplify CLI はユーティリティコマンド `増幅プラグイン 検証` を提供し、以下を確認します。
 
-* The package implements the required interface methods for plugins.
+* パッケージはプラグインに必要なインターフェイスメソッドを実装しています。
 * The `commands` field contains all the required commands for the type of the plugin. `amplify plugin verify` command treats the folder where it is executed as the root directory of the plugin package. The command can be executed manually. Its functionality is also invoked by the `amplify plugin scan` and `amplify plugin add` commands.
 
-### help
+### ヘルプ
 
-Prints out help information for the commands under `amplify plugin`.
+`増幅プラグイン` の下でコマンドのヘルプ情報を出力します。
 

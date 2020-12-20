@@ -62,6 +62,6 @@ let sink = Amplify.DataStore.save(post)
 
 <amplify-callout>
 
-This example illustrates the complexity of working with multiple dependent persistence operations. The callback model is flexible but imposes some challenges when dealing with such scenarios. Prefer to use the Combine model if your app supports iOS 13 or higher. If not, the recommendation is that you use multiple functions to simplify the code.
+この例では、複数の依存する持続性操作の複雑さを説明します。 コールバックモデルは柔軟性がありますが、そのようなシナリオに対処する際にはいくつかの課題があります。 アプリがiOS 13以上に対応している場合は、Combineモデルを使用することをお勧めします。 そうでない場合は、コードを簡素化するために複数の関数を使用することをお勧めします。
 
 </amplify-callout>

@@ -1,4 +1,4 @@
-Sweet! You're now ready to launch sign in with web UI. For now, just add this method to the `onCreate` method of MainActivity:
+素晴らしい！Web UIでサインインを開始する準備ができました。今のところ、MainActivityの `onCreate` メソッドにこのメソッドを追加してください。
 
 <amplify-block-switcher> <amplify-block name="Java">
 
@@ -27,7 +27,7 @@ RxAmplify.Auth.signInWithWebUI(this)
     .subscribe(
         result -> Log.i("AuthQuickStart", result.toString()),
         error -> Log.e("AuthQuickStart", error.toString())
-    );
+);
 ```
 
 </amplify-block> </amplify-block-switcher>

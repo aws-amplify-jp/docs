@@ -1,10 +1,10 @@
-To record an event, create an `AnalyticsEvent` and call `Amplify.Analytics.recordEvent()`:
+イベントを記録するには、 `AnalyticsEvent` を作成し、 `Amplify.Analytics.recordEvent()` を呼び出します。
 
 ```dart
-AnalyticsEvent event = AnalyticsEvent("test");
+AnalyticsEvent イベント = AnalyticsEvent("test");
 
 event.properties.addBoolProperty("boolKey", true);
-event.properties.addDoubleProperty("doubleKey", 10.0);
+event.properties.addDoubleKey("doubleKey", 10.0);
 event.properties.addIntProperty("intKey", 10);
 event.properties.addStringProperty("stringKey", "stringValue");
 

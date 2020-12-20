@@ -1,11 +1,11 @@
 ---
-title: Overwrite & customize resolvers
-description: GraphQL resolvers connect the fields in a type’s schema to a data source. Resolvers are the mechanism by which requests are fulfilled. Learn how to overwrite or add custom resolvers with Amplify.
+title: 上書き & リゾルバのカスタマイズ
+description: GraphQLリゾルバは型のスキーマ内のフィールドをデータソースに接続します。 リゾルバは要求が満たされるメカニズムです。Amplifyでカスタムリゾルバを上書きまたは追加する方法を学びます。
 ---
 
-## Overwriting Resolvers
+## リゾルバを上書きする
 
-Let's say you have a simple *schema.graphql*...
+単純な *schema.graphql* があるとします。
 
 ```graphql
 type Todo @model {
@@ -17,9 +17,9 @@ type Todo @model {
 
 and you want to change the behavior of request mapping template for the *Query.getTodo* resolver that will be generated when the project compiles. To do this you would create a file named `Query.getTodo.req.vtl` in the *resolvers* directory of your API project. The next time you run `amplify push` or `amplify api gql-compile`, your resolver template will be used instead of the auto-generated template. You may similarly create a `Query.getTodo.res.vtl` file to change the behavior of the resolver's response mapping template.
 
-## Custom Resolvers
+## カスタムリゾルバ
 
-### Add a custom resolver that targets a DynamoDB table from @model
+### @modelからDynamoDBテーブルをターゲットとするカスタムリゾルバを追加します
 
 This is useful if you want to write a more specific query against a DynamoDB table that was created by *@model*. For example, assume you had this schema with two *@model* types and a pair of *@connection* directives.
 
@@ -39,7 +39,7 @@ type Comment @model {
 
 This schema will generate resolvers for *Query.getTodo*, *Query.listTodos*, *Query.getComment*, and *Query.listComments* at the top level as well as for *Todo.comments*, and *Comment.todo* to implement the *@connection*. Under the hood, the transform will create a global secondary index on the Comment table in DynamoDB but it will not generate a top level query field that queries the GSI because you can fetch the comments for a given todo object via the *Query.getTodo.comments* query path. If you want to fetch all comments for a todo object via a top level query field i.e. *Query.commentsForTodo* then do the following:
 
-* Add the desired field to your *schema.graphql*.
+* 希望するフィールドを *schema.graphql* に追加します。
 
 ```graphql
 // ... Todo and Comment types from above
@@ -100,7 +100,7 @@ type Query {
 }
 ```
 
-* Write the resolver templates.
+* リゾルバテンプレートを書き込みます。
 
 ```
 ## Query.commentsForTodo.req.vtl **
@@ -133,13 +133,13 @@ type Query {
 $util.toJson($ctx.result)
 ```
 
-### Add a custom resolver that targets an AWS Lambda function
+### AWS Lambda関数をターゲットとするカスタムリゾルバを追加する
 
-Velocity is useful as a fast, secure environment to run arbitrary code but when it comes to writing complex business logic you can just as easily call out to an AWS lambda function. Here is how:
+速度は高速として便利です 安全な環境で任意のコードを実行できますが、複雑なビジネスロジックを書く場合は、AWSのラムダ関数を呼び出すのと同じように簡単に呼び出すことができます。 方法は次のとおりです。
 
 * First create a function by running `amplify add function`. The rest of the example assumes you created a function named "echofunction" via the `amplify add function` command. If you already have a function then you may skip this step.
 
-* Add a field to your schema.graphql that will invoke the AWS Lambda function.
+* AWS Lambda 関数を呼び出すフィールドを schema.graphql に追加します。
 
 ```graphql
 type Query {
@@ -147,7 +147,7 @@ type Query {
 }
 ```
 
-* Add the function as an AppSync data source in the stack's *Resources* block.
+* スタックの *リソース* ブロックに、関数を AppSync データソースとして追加します。
 
 ```
 "EchoLambdaDataSource": {
@@ -176,7 +176,7 @@ type Query {
 }
 ```
 
-* Create an AWS IAM role that allows AppSync to invoke the lambda function on your behalf to the stack's *Resources* block.
+* スタックの *リソース* ブロックに代わってラムダ関数を呼び出すことを可能にするAWS IAMロールを作成します。
 
 ```
 "EchoLambdaDataSourceRole": {
@@ -228,7 +228,7 @@ type Query {
 }
 ```
 
-* Create an AppSync resolver in the stack's *Resources* block.
+* スタックの *リソース* ブロックに AppSync リゾルバを作成します。
 
 ```
 "QueryEchoResolver": {
@@ -275,7 +275,7 @@ type Query {
 }
 ```
 
-* Create the resolver templates in the project's *resolvers* directory.
+* プロジェクトの *リゾルバ* ディレクトリにリゾルバテンプレートを作成します。
 
 **resolvers/Query.echo.req.vtl**
 
@@ -299,7 +299,7 @@ type Query {
 $util.toJson($ctx.result)
 ```
 
-After running `amplify push` open the AppSync console with `amplify api console` and test your API with this simple query:
+`amplify` を実行した後、AppSyncコンソールを `amplify apiコンソール` で開き、この簡単なクエリでAPIをテストします。
 
 ```
 query {
@@ -307,9 +307,9 @@ query {
 }
 ```
 
-### Add a custom geolocation search resolver that targets an Elasticsearch domain created by @searchable
+### @searchable によって作成された Elasticsearch ドメインをターゲットとするカスタム地理位置情報検索リゾルバを追加します。
 
-To add a geolocation search capabilities to an API add the *@searchable* directive to an *@model* type.
+位置情報検索機能を API に追加するには、 *@searchable* ディレクティブを *@model* 型に追加します。
 
 ```graphql
 type Todo @model @searchable {
@@ -322,7 +322,7 @@ type Todo @model @searchable {
 
 The next time you run `amplify push`, an Amazon Elasticsearch domain will be created and configured such that data automatically streams from DynamoDB into Elasticsearch. The *@searchable* directive on the Todo type will generate a *Query.searchTodos* query field and resolver but it is not uncommon to want more specific search capabilities. You can write a custom search resolver by following these steps:
 
-* Add the relevant location and search fields to the schema.
+* 関連するロケーションと検索フィールドをスキーマに追加します。
 
 ```graphql
 type Comment  @model {
@@ -354,7 +354,7 @@ type Query {
 }
 ```
 
-* Create the resolver record in the stack's *Resources* block.
+* スタックの *リソース* ブロックにリゾルバレコードを作成します。
 
 ```
 "QueryNearbyTodos": {
@@ -396,7 +396,7 @@ type Query {
 }
 ```
 
-* Write the resolver templates.
+* リゾルバテンプレートを書き込みます。
 
 ```
 ## Query.nearbyTodos.req.vtl
@@ -445,23 +445,23 @@ $util.toJson({
 })
 ```
 
-* Run `amplify push`
+* `amplify push` を実行する
 
-Amazon Elasticsearch domains can take a while to deploy. Take this time to read up on Elasticsearch to see what capabilities you are about to unlock.
+Amazon Elasticsearchドメインのデプロイには時間がかかる場合があります。 Elasticsearchで解除しようとしている機能を確認するには、この時間をお読みください。
 
-[Getting Started with Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html)
+[Elasticsearch 入門](https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html)
 
-* After the update is complete but before creating any objects, update your Elasticsearch index mapping.
+* アップデートが完了したら、オブジェクトを作成する前に、Elasticsearch インデックス マッピングを更新します。
 
 An index mapping tells Elasticsearch how it should treat the data that you are trying to store. By default, if we create an object with field `"location": { "lat": 40, "lon": -40 }`, Elasticsearch will treat that data as an *object* type when in reality we want it to be treated as a *geo_point*. You use the mapping APIs to tell Elasticsearch how to do this.
 
 Make sure you tell Elasticsearch that your location field is a *geo_point* before creating objects in the index because otherwise you will need delete the index and try again. Go to the [Amazon Elasticsearch Console](https://console.aws.amazon.com/es/home) and find the Elasticsearch domain that contains this environment's GraphQL API ID. Click on it and open the kibana link. To get kibana to show up you need to install a browser extension such as [AWS Agent](https://addons.mozilla.org/en-US/firefox/addon/aws-agent/) and configure it with your AWS profile's public key and secret so the browser can sign your requests to kibana for security reasons. Once you have kibana open, click the "Dev Tools" tab on the left and run the commands below using the in browser console.
 
 ```
-# Create the /todo index if it does not exist
+# 存在しない場合は /todo インデックスを作成する
 PUT /todo
 
-# Tell Elasticsearch that the location field is a geo_point
+# 位置フィールドが geo_point であることを Elasticsearch に伝える
 PUT /todo/_mapping/doc
 {
     "properties": {
@@ -472,9 +472,9 @@ PUT /todo/_mapping/doc
 }
 ```
 
-* Use your API to create objects and immediately search them.
+* API を使用してオブジェクトを作成し、すぐにそれらを検索します。
 
-After updating the Elasticsearch index mapping, open the AWS AppSync console with `amplify api console` and try out these queries.
+Elasticsearch インデックス マッピングを更新した後、 `api コンソール` を増幅する AWS AppSync コンソールを開き、これらのクエリを試してみてください。
 
 ```graphql
 mutation CreateTodo {

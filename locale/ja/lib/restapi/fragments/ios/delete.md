@@ -1,4 +1,4 @@
-## DELETE data
+## データを削除
 
 <amplify-block-switcher>
 

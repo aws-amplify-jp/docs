@@ -1,7 +1,7 @@
-## Subscribe
-### Subscribe to a topic
+## 購読する
+### トピックを購読する
 
-In order to start receiving messages from your provider, you need to subscribe to a topic as follows;
+プロバイダからのメッセージの受信を開始するには、次のようにトピックを購読する必要があります。
 ```javascript
 PubSub.subscribe('myTopic').subscribe({
     next: data => console.log('Message received', data),
@@ -10,7 +10,7 @@ PubSub.subscribe('myTopic').subscribe({
 });
 ```
 
-If multiple providers are defined in your app you can include the specific provider you would like to subscribe to:
+複数のプロバイダーがアプリケーションに定義されている場合は、以下のプロバイダーを登録したい特定のプロバイダーを含めることができます:
 ```javascript
 PubSub.subscribe('myTopic', { provider: 'AWSIoTProvider' }).subscribe({
     //...
@@ -23,26 +23,26 @@ PubSub.subscribe('myTopic', { provider: 'MqttOverWSProvider' }).subscribe({
 
 <amplify-callout>
 
-**Note:** If you do not include a specific provider it will subscribe to all of the configured PubSub providers in your app.
+**注意:** 特定のプロバイダを含まない場合は、アプリで設定されたすべてのPubSub プロバイダを購読します。
 
 </amplify-callout>
 
-Following events will be triggered with `subscribe()`
+`subscribe()` で次のイベントがトリガーされます
 
-Event | Description `next` | Triggered every time a message is successfully received for the topic `error` | Triggered when subscription attempt fails `close` | Triggered when you unsubscribe from the topic
+Event | Description `next` | トピックに対してメッセージが正常に受信されるたびにトリガーされます `error` | サブスクリプションの試行が失敗したときにトリガーされます `close` | トピックから退会したときにトリガーされます
 
-### Subscribe to multiple topics
+### 複数のトピックを購読する
 
-To subscribe for multiple topics, just pass a String array including the topic names:
+複数のトピックを購読するには、トピック名を含む文字列配列を渡してください。
 ```javascript
 PubSub.subscribe(['myTopic1','myTopic1']).subscribe({
     //...
 });
 ```
 
-## Unsubscribe
+## 購読解除
 
-To stop receiving messages from a topic, you can use `unsubscribe()` method:
+トピックからのメッセージの受信を停止するには、 `unsubscribe()` メソッドを使用します。
 ```javascript
 const sub1 = PubSub.subscribe('myTopicA').subscribe({
     next: data => console.log('Message received', data),

@@ -1,14 +1,14 @@
-### Add the API plugin
+### API プラグインを追加
 
-The cloud synchronization uses the [API category](~/lib/graphqlapi/getting-started.md) behind the scenes. Therefore the first step is to configure the API plugin.
+クラウド同期は [API カテゴリ](~/lib/graphqlapi/getting-started.md) を使用します。したがって、最初のステップは API プラグインを設定します。
 
-Make sure you have the following plugin dependency in your `Podfile`.
+`Podfile` に以下のプラグインの依存関係があることを確認してください。
 
 ```ruby
 pod 'AmplifyPlugins/AWSAPIPlugin'
 ```
 
-Then add the plugin in your Amplify initialization code alongside with the previously added `AWSDataStorePlugin`.
+次に、Amplify初期化コードにプラグインを追加し、以前に追加した `AWSDataStorePlugin` と一緒に追加します。
 
 ```swift
 try Amplify.add(plugin: AWSAPIPlugin())

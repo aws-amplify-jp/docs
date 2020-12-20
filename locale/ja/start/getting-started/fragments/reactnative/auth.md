@@ -1,13 +1,13 @@
-The next feature you will be adding is authentication.
+次に追加する機能は認証です。
 
-## Authentication with Amplify
+## Amplifyで認証
 
 The Amplify Framework uses [Amazon Cognito](https://aws.amazon.com/cognito/) as the main authentication provider. Amazon Cognito is a robust user directory service that handles user registration, authentication, account recovery & other operations. In this tutorial, you'll learn how to add authentication to your application using Amazon Cognito and username/password login.
 
-## Create authentication service
+## 認証サービスを作成
 
 ```bash
-amplify add auth
+増幅して認証を追加
 ```
 
 ```console
@@ -16,68 +16,68 @@ amplify add auth
 ? Do you want to configure advanced settings?  No, I am done.
 ```
 
-To deploy the service, run the `push` command:
+サービスをデプロイするには、 `push` コマンドを実行します。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
-Now, the authentication service has been deployed and you can start using it. To view the deployed services in your project at any time, go to Amplify Console by running the following command:
+これで認証サービスがデプロイされ、使用を開始できます。 プロジェクトにデプロイされたサービスをいつでも表示するには、次のコマンドを実行してAmplify Consoleに移動します。
 
 ```bash
-amplify console
+増幅コンソール
 ```
 
-## Create login UI
+## ログインUIを作成
 
 Now that we have our authentication service deployed to AWS, it's time to add authentication to our React app. Creating the login flow can be quite difficult and time consuming to get right. Luckily Amplify Framework has an authentication UI component we can use that will provide the entire authentication flow for us, using our configuration specified in our __aws-exports.js__ file.
 
-First, install the `aws-amplify-react-native` library as well as the other necessary dependencies if you have not already in a previous step. This step differs depending on if you're using Expo or React Native CLI.
+最初に、 `aws-amplify-react-native` ライブラリと、他の必要な依存関係をインストールします。 このステップはExpoまたはReact Native CLIを使用しているかによって異なります。
 
 <inline-fragment src="~/start/getting-started/fragments/reactnative/getting-started-steps-ui.md"></inline-fragment>
 
-Open __App.js__ and make the following changes:
+__App.js__ を開き、次の変更を行います。
 
-1. Import the `withAuthenticator` component:
+1. `withAuthenticator` コンポーネントをインポートします:
 
 ```javascript
 import { withAuthenticator } from 'aws-amplify-react-native'
 ```
 
-2. Change the default export to be the `withAuthenticator` wrapping the main component:
+2. メインコンポーネントをラップする `withAuthenticator` にデフォルトのエクスポートを変更します:
 
 ```javascript
 export default withAuthenticator(App)
 ```
 
-Run the app to see the new Authentication flow protecting the app:
+アプリを実行すると、アプリを保護する新しい認証フローが表示されます。
 
 <amplify-block-switcher> <amplify-block name="Expo">
 
 ```bash
-expo start
+エキスポスタート
 ```
 
 </amplify-block> <amplify-block name="React Native CLI">
 
-To run on iOS, execute the following command:
+iOS で実行するには、次のコマンドを実行します。
 ```bash
 npx react-native run-ios
 ```
 
-To run on Android, execute the following command:
+Android で実行するには、次のコマンドを実行します。
 ```bash
 npx react-native run-android
 ```
 
 </amplify-block> </amplify-block-switcher>
 
-Now you should see the app load with an authentication flow allowing users to sign up and sign in.
+これで、ユーザーがサインアップしてサインインできるようにする認証フローでアプリのロードが表示されるはずです。
 
-In this example, you used the React Native Amplify UI library and the `withAuthenticator` component to quickly get up and running with a real-world authentication flow.
+この例では、 React Native Amplify UIライブラリと `withAuthenticator` コンポーネントを使用して実際の認証フローを素早く実行しました。
 
-You can also customize this component to add or remove fields, update styling, or other configurations.
+また、このコンポーネントをカスタマイズして、項目の追加や削除、スタイリングの更新などを行うこともできます。
 
-In addition to the `withAuthenticator` you can build custom authentication flows using the `Auth` class.
+`withAuthenticator` に加えて、 `Auth` クラスを使用してカスタム認証フローを構築できます。
 
 `Auth` has over 30 methods including `signUp`, `signIn`, `forgotPassword`, and `signOut` that allow you full control over all aspects of the user authentication flow. Check out the complete API [here](https://aws-amplify.github.io/amplify-js/api/classes/authclass.html)

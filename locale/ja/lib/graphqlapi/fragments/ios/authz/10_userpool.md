@@ -1,4 +1,4 @@
-Add the following code to your app:
+アプリに次のコードを追加します。
 
 ```swift                                
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {

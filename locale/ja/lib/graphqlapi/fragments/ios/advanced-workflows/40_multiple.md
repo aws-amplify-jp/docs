@@ -23,7 +23,7 @@ extension GraphQLRequest {
 ```
 Notice here that `JSONValue` is used as the `responseType`. `JSONValue` is utility type that can be used to represent an arbitrary JSON response.
 
-Once you have the response data in a `JSONValue`, you can access each object in the JSON structure by encoding it back to Data and decoding it to the expected Model.
+`JSONValue`で応答データを取得したら、 JSON 構造内の各オブジェクトにアクセスするには、それを Data にエンコードし、予想されるモデルにデコードします。
 
 ```swift
 Amplify.API.query(request: .get(byPostId: "[POST_ID]", todoId: "[TODO_ID]")) { result in

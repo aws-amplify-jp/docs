@@ -1,12 +1,12 @@
-MFA (Multi-factor authentication increases security for your app by adding an authentication method and not relying solely on the username (or alias) and password. AWS Amplify uses Amazon Cognito to provide MFA. Please see [Amazon Cognito Developer Guide](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-mfa.html) for more information about setting up MFA in Amazon Cognito.
+MFA (Multi-factor認証) は、認証方法を追加し、ユーザー名(またはエイリアス)とパスワードのみに依存しないことで、アプリケーションのセキュリティを強化します。 AWS AmplifyはAmazon Cognitoを使用してMFAを提供します。 Amazon CognitoでMFAを設定する方法については、 [Amazon Cognito Developer Guide](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-mfa.html) を参照してください。
 
-Once you enable MFA on Amazon Cognito, you can configure your app to work with MFA.
+Amazon CognitoでMFAを有効にすると、アプリをMFAと連携させることができます。
 
 ## Setup TOTP
 
-With TOTP (Time-based One-time Password), your app user is challenged to complete authentication using a time-based one-time (TOTP) password after their username and password have been verified.
+TOTP (時間ベースのワンタイムパスワード) ユーザー名とパスワードが確認された後、時間ベースのワンタイム(TOTP)パスワードを使用して認証を完了するようアプリのユーザーに求められます。
 
-You can setup TOTP for a user in your app:
+アプリでユーザーのTOTPを設定できます：
 
 ```javascript
 import { Auth } from 'aws-amplify';
@@ -35,9 +35,9 @@ Auth.verifyTotpToken(user, challengeAnswer).then(() => {
 });
 ```
 
-## Setup MFA type
+## MFAタイプの設定
 
-Multiple MFA types supported by Amazon Cognito. You can set the preferred method in your code:
+Amazon Cognitoでサポートされている複数のMFAタイプです。あなたのコードで優先メソッドを設定できます。
 
 ```javascript
 import { Auth } from 'aws-amplify';
@@ -56,9 +56,9 @@ Auth.setPreferredMFA(user, 'SMS');
 Auth.setPreferredMFA(user, 'NOMFA');
 ```
 
-## Retrieve current preferred MFA type
+## 現在の優先MFAタイプを取得
 
-You can get current preferred MFA type in your code:
+コード内で現在推奨されているMFAタイプを入手できます。
 ```javascript
 import { Auth } from 'aws-amplify';
 
@@ -72,9 +72,9 @@ Auth.getPreferredMFA(user,{
 })
 ```
 
-## Allow users to select MFA type
+## ユーザーがMFAタイプを選択できるようにします
 
-When working with multiple MFA Types, you can let the app user select the desired authentication method. `SelectMFAType` UI Component, which is provided with `aws-amplify-react` package, renders a list of available MFA types.
+複数のMFAタイプを使用する場合は、アプリユーザーに希望する認証方法を選択させることができます。 `SelectMFAType` UI コンポーネント。これは、 `aws-amplify-react` パッケージで提供されており、利用可能なMFAタイプのリストをレンダリングします。
 
 ```javascript
 import Amplify from 'aws-amplify';
@@ -104,22 +104,22 @@ class App extends Component {
 export default withAuthenticator(App, true);
 ```
 
-## Advanced use cases
+## 高度な使用事例
 
-### Sign-in with custom auth challenges
+### カスタム認証チャレンジでサインイン
 
-When signing in with user name and password, you will either sign in directly or be asked to pass some challenges before getting authenticated.
+ユーザー名とパスワードでサインインする場合は、直接サインインするか、認証を受ける前にいくつかのチャレンジに合格するよう求められます。
 
 The `user` object returned from `Auth.signIn` will contain `challengeName` and `challengeParam` if the user needs to pass those challenges. You can call corresponding functions based on those two parameters.
 
-ChallengeName:
+チャレンジ名:
 
-* `SMS_MFA`: The user needs to input the code received from SMS message. You can submit the code by `Auth.confirmSignIn`.
-* `SOFTWARE_TOKEN_MFA`: The user needs to input the OTP(one time password). You can submit the code by `Auth.confirmSignIn`.
+* `SMS_MFA`: ユーザーは SMS メッセージから受信したコードを入力する必要があります。 `Auth.confirmSignin` でコードを送信できます。
+* `SOFTWARE_TOKEN_MFA`: ユーザーは OTP(1 回限りのパスワード)を入力する必要があります。 `Auth.confirmSignIn` でコードを送信できます。
 * `NEW_PASSWORD_REQUIRED`: This happens when the user account is created through the Cognito console. The user needs to input the new password and required attributes. You can submit those data by `Auth.completeNewPassword`.
 * `MFA_SETUP`: This happens when the MFA method is TOTP(the one time password) which requires the user to go through some steps to generate those passwords. You can start the setup process by `Auth.setupTOTP`.
 
-The following code is only for demonstration purpose:
+以下のコードはデモ用にのみ使用されます。
 
 ```javascript
 import { Auth } from 'aws-amplify';
@@ -182,9 +182,9 @@ async function signIn() {
 }
 ```
 
-### Sign-in with custom validation data for Lambda Trigger
+### Lambda Trigger のカスタムバリデーションデータでサインイン
 
-You can also pass an object which has the username, password and validationData which is sent to a PreAuthentication Lambda trigger
+PreAuthentication Lambdaトリガーに送信されるユーザー名、パスワード、およびvalidationDataを持つオブジェクトを渡すこともできます。
 
 ```js
 try {
@@ -199,10 +199,10 @@ try {
 }
 ```
 
-### Forcing Email Uniqueness in Cognito User Pools
+### Cognitoユーザープールでメールの一意性を強制する
 
 When your Cognito User Pool sign-in options are set to "*Username*", and "*Also allow sign in with verified email address*", the *signUp()* method creates a new user account every time it's called, without validating email uniqueness. In this case you will end up having multiple user pool identities and all previously created accounts will have their *email_verified* attribute changed to *false*.
 
 To enforce Cognito User Pool signups with a unique email, you need to change your User Pool's *Attributes* setting in [Amazon Cognito console](https://console.aws.amazon.com/cognito) as the following:
 
-![cup](~/images/cognito_user_pool_settings.png)
+![カップ](~/images/cognito_user_pool_settings.png)

@@ -1,10 +1,10 @@
-DataStore has a few optional configurations, such as the ability to specify a custom handler for error messages that take place in any part of the system. You can also specify a custom conflict handler that runs if a mutation is rejected by AWS AppSync during one of the conflict resolution strategies.
+DataStore にはいくつかのオプション設定があります。 例えば、システムの任意の部分で行われるエラーメッセージのカスタムハンドラを指定する機能などです。 競合解決戦略のいずれかでAWS AppSyncによって変更が拒否された場合に実行されるカスタム競合ハンドラを指定することもできます。
 
-Finally you can configure the number of records to sync as an upper bound on items (per-Model) which will be stored locally on the device, as well as a custom interval in minutes which is an override of the default 24 hour "base query" which runs as part of the Delta Sync process.
+最後に、機器にローカルに保存されるアイテム(モデルごと)上限として同期するレコード数を設定できます。 Delta Sync プロセスの一部として実行されるデフォルトの 24 時間の「ベースクエリ」のオーバーライドであるカスタム間隔を分単位で指定します。
 
-### Example
+### 例
 
-The code below illustrates a conflict resolution handler for the `Post` model that retries a mutation with the same title, but the most recent remote data for all other fields. The conflict resolution handler discards conflicts for all other models (by passing `.applyRemote` to the `resolve` function).
+以下のコードは、同じタイトルを持つ変異を再試行する `Post` モデルの競合解決ハンドラを示しています。 他のすべての分野の最新のリモートデータです 競合解決ハンドラは他のすべてのモデルの競合を破棄します(` .applyRemote ` を `` に `resolve` 関数に渡すことによって)。
 
 ```swift
 // custom conflict resolution configuration

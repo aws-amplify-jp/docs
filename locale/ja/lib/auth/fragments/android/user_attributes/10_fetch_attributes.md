@@ -3,7 +3,7 @@
 ```java
 Amplify.Auth.fetchUserAttributes(
     attributes -> Log.i("AuthDemo", "User attributes = " + attributes.toString()),
-    error -> Log.e("AuthDemo", "Failed to fetch user attributes.", error)
+    error -> Log.e("AuthDemo", "Fetch user attributes.", error)
 );
 ```
 

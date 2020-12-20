@@ -1,21 +1,21 @@
-The Analytics category enables you to collect analytics data for your App. The Analytics category comes with built-in support for [Amazon Pinpoint](https://aws.amazon.com/pinpoint) and [Amazon Kinesis](https://aws.amazon.com/kinesis) (Kinesis support is currently only available in the Amplify JavaScript library).
+Analytics カテゴリを使用すると、アプリケーションの分析データを収集できます。 Analytics カテゴリには、 [Amazon Pinpoint](https://aws.amazon.com/pinpoint) と [Amazon Kinesis](https://aws.amazon.com/kinesis) (Kinesis support is only available in the Amplify JavaScript library).
 
-## Goal
+## 目標
 
-To setup and configure your application with Amplify Analytics and record an analytics event.
+Amplify Analyticsを使用してアプリケーションを設定および構成し、分析イベントを記録します。
 
-## Prerequisites
+## 前提条件
 
 <inline-fragment platform="ios" src="~/lib/analytics/fragments/ios/getting-started/10_preReq.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/analytics/fragments/android/getting-started/10_preReq.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/analytics/fragments/flutter/getting-started/10_preReq.md"></inline-fragment>
 
-## Set up Analytics backend
+## 分析バックエンドの設定
 
-Run the following command in your project's root folder. The CLI will prompt configuration options for the Analytics category such as Amazon Pinpoint resource name and analytics event settings.
+プロジェクトのルートフォルダで次のコマンドを実行します。 CLI は、Amazon Pinpoint リソース名や分析イベント設定など、Analytics カテゴリの設定オプションをプロンプトします。
 
-> The Analytics category utilizes the Authentication category behind the scenes to authorize your app to send analytics events.
+> Analytics カテゴリは、分析イベントを送信するためにアプリケーションを承認するために、舞台裏の認証カテゴリを使用します。
 
 ```bash
-amplify add analytics
+anmpify add analytics
 ```
 
 ```console
@@ -27,39 +27,39 @@ amplify add analytics
     `Yes`
 ```
 
-To deploy your backend, run:
+バックエンドをデプロイするには、次を実行します。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
 Upon completion, `amplifyconfiguration.json` should be updated to reference provisioned backend analytics resources. Note that these files should already be a part of your project if you followed the [Project setup walkthrough](~/lib/project-setup/create-application.md).
 
-## Install Amplify Libraries
+## Amplifyライブラリのインストール
 
 <inline-fragment platform="ios" src="~/lib/analytics/fragments/ios/getting-started/20_installLib.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/analytics/fragments/android/getting-started/20_installLib.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/analytics/fragments/flutter/getting-started/20_installLib.md"></inline-fragment>
 
-## Initialize Amplify Analytics
+## Amplify分析を初期化
 
 <inline-fragment platform="ios" src="~/lib/analytics/fragments/ios/getting-started/30_initAnalytics.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/analytics/fragments/android/getting-started/30_initAnalytics.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/analytics/fragments/flutter/getting-started/30_initAnalytics.md"></inline-fragment>
 
-## Record events
+## イベントを記録
 
 <inline-fragment platform="ios" src="~/lib/analytics/fragments/ios/getting-started/40_record.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/analytics/fragments/android/getting-started/40_record.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/analytics/fragments/flutter/getting-started/40_record.md"></inline-fragment>
 
-## View Analytics console
+## Analytics コンソールを表示
 
-From the terminal run the following command. Navigate to the Analytics tab, and then choose View in Pinpoint.
+ターミナルから次のコマンドを実行します。format@@0タブに移動し、format@@1を選択します。
 
 ```console
-amplify console analytics
+コンソール分析を増幅する
 ```
 
-Next Steps:
+次のステップ:
 
-Congratulations! Now that you have Analytics' backend provisioned and Analytics library installed.  Check out the following links to see Amplify Analytics use cases:
+おめでとうございます! これで、Analytics のバックエンドプロビジョニングとAnalytics ライブラリがインストールされました。Amplify Analytics のユースケースを参照するには、次のリンクを参照してください。
 
-* [Record Events](~/lib/analytics/record.md)
-* [Track Sessions](~/lib/analytics/autotrack.md)
-* [Identify User](~/lib/analytics/identifyuser.md)
-* [Escape Hatch](~/lib/analytics/escapehatch.md)
+* [イベントを記録](~/lib/analytics/record.md)
+* [セッションを追跡](~/lib/analytics/autotrack.md)
+* [ユーザーを識別する](~/lib/analytics/identifyuser.md)
+* [脱出ハッチ](~/lib/analytics/escapehatch.md)

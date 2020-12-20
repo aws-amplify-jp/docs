@@ -1,6 +1,6 @@
-Currently, the federation feature in the AWSMobileClient supports Cognito Identity Pools only.
+現在、AWSMobileClient のフェデレーション機能は、Cognito Identity Pools のみをサポートしています。
 
-### Federated Sign In
+### 連合サインイン
 
 ```java
 AWSMobileClient.getInstance().federatedSignIn(IdentityProvider.FACEBOOK.toString(), "FACEBOOK_TOKEN_HERE", new Callback<UserStateDetails>() {
@@ -20,11 +20,11 @@ AWSMobileClient.getInstance().federatedSignIn(IdentityProvider.FACEBOOK.toString
 
 The API calls to get AWS credentials will be asynchronously blocked until you fetch the social provider's token and give it to `AWSMobileClient`. Once you pass the tokens, the `AWSMobileClient` will fetch AWS Credentials using the new tokens and unblock all waiting calls. It will then use the new credentials.
 
-#### SAML with Cognito Identity
+#### Cognitoアイデンティティを持つSAML
 
-To federate your SAML sign-in provider as a user sign-in provider for AWS services called in your app, you will pass tokens to `AWSMobileClient.getInstance().federatedSignIn()`. You must first register your SAML application with AWS IAM by using the following [instructions](https://docs.aws.amazon.com/cognito/latest/developerguide/saml-identity-provider.html).
+アプリで呼び出されるAWSサービスのユーザーサインインプロバイダとしてSAMLサインインプロバイダを連携させるには トークンを `AWSMobileClientに渡します。 etInstance() ederatedSignIn() <code> .`. 次の [手順](https://docs.aws.amazon.com/cognito/latest/developerguide/saml-identity-provider.html) を使用して、まずAWS IAMでSAMLアプリケーションを登録する必要があります。
 
-Once you retrieve the SAML tokens from your sign-in, you can call the `federatedSignIn` API in `AWSMobileClient`:
+サインインから SAML トークンを取得したら、 `AWSMobileClient` の `federatedSignIn` API を呼び出すことができます。
 
 ```java
 // Perform SAML token federation
@@ -60,79 +60,79 @@ AWSMobileClient.getInstance().federatedSignIn("YOUR_SAML_PROVIDER_NAME", "YOUR_S
 });
 ```
 
-### Set up Facebook
+### Facebook を設定
 
 To federate Facebook as a user sign-in provider for AWS services called in your app, you will pass tokens to `AWSMobileClient.getInstance().federatedSignIn()`. You must first register your application with Facebook by using the [Facebook Developers portal](https://developers.facebook.com/) and configure this with Amazon Cognito Identity Pools.
 
-AWS Amplify helps set this up for you but first this topic explains how to set up Facebook as an identity provider for your app.
+AWS Amplifyはこの設定に役立ちますが、まずはアプリのIDプロバイダーとしてFacebookを設定する方法を説明します。
 
-If you already have a Facebook app ID, you can copy and paste it into the `Facebook App ID` field when configuring authentication using the AWS Amplify CLI.
+すでにFacebookアプリIDをお持ちの場合 AWS Amplify CLI を使用して認証を設定する際に、 `Facebook App ID` フィールドにコピー&ペーストできます。
 
-**To get a Facebook app ID**
+**FacebookアプリIDを取得するには**
 
-Set up your app in Facebook by following Facebook's [App Development](https://developers.facebook.com/docs/apps) guide. Sign in to the [Facebook Developers portal](https://developers.facebook.com/):
+Facebookの [アプリ開発ガイド](https://developers.facebook.com/docs/apps) に従ってFacebookにアプリを設定してください。 [Facebook開発者ポータル](https://developers.facebook.com/)にサインインしてください。
 
- - Choose **Add a New App** (or choose a previously created app from **My Apps**).
-    - If asked, choose the platform of your app that will use Facebook Login and choose **basic setup**.
+ - **新しいアプリを追加** を選択するか、 **My Apps** から以前に作成したアプリを選択します。
+    - 尋ねられた場合は、Facebookログインを使用するアプリのプラットフォームを選択し、 **基本設定**を選択します。
  - Type a display name for your app, select a category for your app from the **Category** drop-down list, then choose **Create App ID**; take note of the **App ID**.
  - In the Facebook Developer portal's left hand navigation list, choose **Settings**, **Basic**, then press the **+Add Platform** button.
- - Choose **Android** and add your app's **Google Play Package Name** (for example, com.example.YourProjectName) and **Class Name**.
- - Choose **Save changes**
+ - **Android** を選択し、 **Google Play Package Name** (例えば、com.example.YourProjectName) と **Class Name** を追加します。
+ - **変更を保存** を選択してください
 
-Only users with roles assigned in the Facebook portal will be able to authenticate through your app while it is in development (not yet published). To authorize users, in the Facebook Developer portal's left hand navigation list, choose **Roles**, then **Add Testers** and provide valid Facebook IDs.
+Facebookポータルに割り当てられたロールを持つユーザーのみが、開発中(まだ公開されていない)にアプリを通じて認証することができます。 ユーザーを承認するには、Facebook Developer ポータルの左側のナビゲーション リストにあります。 **ロール**を選択し、 **テスターを追加する** を選択し、有効な Facebook ID を提供します。
 
-> For more information about integrating with Facebook Login see the [Facebook Login Getting Started Guide](https://developers.facebook.com/docs/facebook-login).
+> Facebookログインとの統合の詳細については、 [Facebookログイン入門ガイド](https://developers.facebook.com/docs/facebook-login) を参照してください。
 
-**Amplify CLI Configuration - Facebook**
+**Amplify CLI 設定 - Facebook**
 
-In a terminal window, navigate to the root of your app files and add the auth category to your app. The CLI prompts you for configuration parameters. Choose **I will setup my own configuration** and **AWS IAM controls** when prompted.
+ターミナルウィンドウで、アプリファイルのルートに移動し、認証カテゴリをアプリに追加します。 CLIは設定パラメータを求めます。 **を選択してください。** とプロンプトが表示されたら **AWS IAM コントロール** をセットアップします。
 
 ```bash
 cd ./YOUR_PROJECT_FOLDER
-amplify add auth              ##"amplify update auth" if already configured
+増幅する ##"amplify update auth" がすでに設定されている場合、認証を追加
 ```
 
 ```console
-❯ Manual Configuration.
-❯ User Sign-Up, Sign-In, connected with AWS IAM controls
+<unk> Manual Configuration.
+<unk> AWS IAMコントロールに接続されたユーザサインアップ、サインイン。
 ```
 
 Choose **YES** to `? Allow unauthenticated logins?` and **YES** to `? Do you want to enable 3rd party authentication providers in your identity pool?`
 
-**Choose Facebook** and then provide your Facebook **App ID** that you saved earlier.
+**Facebook** を選択し、先ほど保存したFacebook **App ID** を提供します。
 
-When configuration for Facebook sign-in is complete, the CLI displays a message confirming that you have configured local CLI metadata for this category. Run the following to update your changes in the cloud:
+Facebook のサインインの設定が完了すると、CLI はこのカテゴリのローカル CLI メタデータを設定したことを確認するメッセージを表示します。 クラウドの変更を更新するには、以下を実行してください。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
-You can now [configure Facebook in your mobile app](#facebook-login-in-your-mobile-app).
+モバイルアプリ [で Facebook を設定できるようになりました](#facebook-login-in-your-mobile-app)。
 
-Note that the CLI allows you to select more than one identity provider for your app. You can also run `amplify auth update` to add an identity provider to an existing auth configuration.
+CLI では、アプリケーションの ID プロバイダーを複数選択できます。 既存の認証設定にアイデンティティプロバイダを追加するために、 `増幅認証アップデート` を実行することもできます。
 
-### Set up Google
+### Google を設定
 
-To federate Google as a user sign-in provider for AWS services called in your app, you will pass tokens to `AWSMobileClient.getInstance().federatedSignIn()`. You must first register your application with Google Sign-In in the Google Developers Console, and then configure this with Amazon Cognito Identity Pools.
+アプリで呼び出されたAWSサービスのユーザーサインインプロバイダーとしてGoogleを連携させるには、トークンを `AWSMobileClient.getInstance().federatedSignIn()`に渡します。 アプリケーションを Google Developers Console で登録し、次にAmazon Cognito Identity Poolsで設定する必要があります。
 
-To implement Google Sign-in into your iOS app, you need two things:
+iOSアプリにGoogleサインインを実装するには、次の2つのことが必要です。
 
-1. OAuth Web Client ID
+1. OAuthウェブクライアントID
 2. Android Client ID
 
-These Client IDs are part of your Google Developers project. The Web Client ID will be used by Cognito Identity Pools to manage the OAuth flow between Cognito and Google on the server side. The Android Client ID will be used in your Android app to authorize the OAuth flow directly with Google allowing your users to authenticate with Google using their Google login credentials.
+これらのクライアントIDは、Google Developersプロジェクトの一部です。 Web クライアント ID は、Cognito と Google の間の OAuth フローをサーバー側で管理するために Cognito ID プールで使用されます。 Android クライアント ID は、Android アプリで Google ログイン情報を使用してユーザーが Google で認証できるように OAuth フローを直接認証するために使用されます。
 
-> **NOTE:** The creation and configuration steps for creating OAuth Clients for Google Sign-In is constantly changing, always refer to the official setup instructions from Google.
+> **注意:** Google サインイン用の OAuth クライアントを作成するための作成と設定手順は、常に変更されています。 常にGoogleからの公式設定手順を参照してください。
 
-First, navigate to the ["Start Integrating" section of the Google Developer portal](https://developers.google.com/identity/sign-in/ios/start-integrating) and click **CREATE AN OAUTH CLIENT ID** to get an OAuth client ID.
+最初に Google Developer Portal [](https://developers.google.com/identity/sign-in/ios/start-integrating) の **"連携を開始" セクションに移動し、** をクリックして OAuth クライアント ID を取得します。
 
 When prompted choose **Android** as the calling platform along with your Package name and certificate. Once created the **Android Client ID** will be created; take note of this value.
 
 Next, obtain your **OAuth Web Client ID** by navigating to the [Credentials section of the Google Developer console](https://console.developers.google.com/apis/credentials). Select your project (you may need to click **All**) and under **OAuth 2.0 client IDs** copy the **Client ID** associated with the Web application type; take note of this value.
 
-**Amplify CLI Configuration - Google**
+**Amplify CLI 設定 - Google**
 
-In a terminal window, navigate to the root of your app files and add auth. The CLI prompts you for configuration parameters. Choose **I will setup my own configuration** and **AWS IAM controls** when prompted.
+ターミナルウィンドウで、アプリファイルのルートに移動し、auth を追加します。CLIは設定パラメータを求めます。 **を選択してください。** とプロンプトが表示されたら **AWS IAM コントロール** をセットアップします。
 
 ```bash
 cd ./YOUR_PROJECT_FOLDER
@@ -140,39 +140,39 @@ amplify add auth # or `amplify update auth`
 ```
 
 ```console
-❯ Manual Configuration  
-❯ User Sign-Up, Sign-In, connected with AWS IAM controls
+<unk> 手動設定  
+<unk> AWS IAM コントロールで接続されたユーザサインアップ、サインイン。
 ```
 
 Choose **YES** to `? Allow unauthenticated logins?` and **YES** to `? Do you want to enable 3rd party authentication providers in your identity pool?`
 
-Choose **Google** and then provide the **Web Client ID** and **iOS Client ID** noted above. Once complete, run the following to update your backend:
+**Google** を選択し、上記の **Web Client ID** と **iOS Client ID** を入力します。 完了したら、以下を実行してバックエンドを更新します。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
-You can now [configure Google in your mobile app](#google-login-in-your-mobile-app).
+モバイルアプリで [Googleを設定](#google-login-in-your-mobile-app)できるようになりました。
 
-> Note that the CLI allows you to select more than one identity provider for your app. You can also run `amplify update auth` to add an identity provider to an existing auth configuration.
+> CLI では、アプリケーションの ID プロバイダーを複数選択できます。 既存の認証設定にアイデンティティプロバイダを追加するために、 `増幅更新認証` を実行することもできます。
 
-### Set up Sign in with Apple
+### Appleでサインインを設定する
 
 To federate Sign in with Apple as a user sign-in provider for AWS services called in your app, you will pass tokens to `AWSMobileClient.getInstance().federatedSignIn()`. You must set up your application to use Sign in with Apple, and then configure Amazon Cognito Identity Pools to use Apple as an authentication provider. There are three main steps to setting up Sign in with Apple: implementing Sign in with Apple in your app, configuring Sign in with Apple as an authentication provider in your Amazon Cognito Identity Pool, and passing the Sign in with Apple token to AWSMobileClient via `federatedSignIn`.
 
-1. **Implementing Sign in with Apple in your app**
+1. **アプリで Apple でサインインを実装する**
 
     Since we don’t have an SDK that supports Sign in with Apple for Android, we need to use the web flow in a web view. To configure Sign in with Apple in your application, follow [Configuring Your Webpage for Sign In with Apple](https://developer.apple.com/documentation/signinwithapplejs/configuring_your_webpage_for_sign_in_with_apple) in the Apple documentation. To add a Sign in with Apple button to your Android user interface, follow [Displaying and Configuring Sign In with Apple Buttons](https://developer.apple.com/documentation/signinwithapplejs/displaying_and_configuring_sign_in_with_apple_buttons) in the Apple documentation. To securely authenticate users using Sign in with Apple, follow [Configuring Your Webpage for Sign In with Apple](https://developer.apple.com/documentation/signinwithapplerestapi/authenticating_users_with_sign_in_with_apple) in the Apple documentation.
 
-2. **Configuring Sign in with Apple as an authentication provider in your Amazon Cognito Identity Pool**
+2. **Amazon Cognito Identity Pool で認証プロバイダとして Apple でサインインを設定する**
 
     Once you have configured your application to use Sign in with Apple, paste your app's **Service Identifier** into the **Apple Services ID** field of your [Amazon Cognito Identity Pool](https://console.aws.amazon.com/cognito/home). The Service Identifier can be found in the [**Certificates, IDs & Profiles** section](https://developer.apple.com/account/resources/identifiers/list) of your Apple Developer Account.
 
-3. **Passing the Sign in with Apple token to AWSMobileClient via `federatedSignIn`**
+3. **`federatedSignIn` 経由で Apple トークンでサインインする**
 
-    Sign in with Apple uses a session object to track its state. Amazon Cognito uses the id token from this session object to authenticate the user, generate the unique identifier, and, if needed, grant the user access to other AWS resources.
+    Appleでサインインすると、セッションオブジェクトを使用して状態を追跡します。 Amazon Cognitoは、このセッションオブジェクトのIDトークンを使用してユーザーを認証します。 は、一意の識別子を生成し、必要に応じて、ユーザに他のAWSリソースへのアクセスを許可します。
 
-    Once you have configured Sign in with Apple as an authentication provider for your Amazon Cognito Identity Pool, and your app implements authentication with Sign in with Apple, you can retrieve the `id_token` value of the Sign in with Apple authentication response to use as the token for the `federatedSignIn` method:
+    設定が完了したら、Amazon Cognito Identity Poolの認証プロバイダとしてAppleでサインインします。 アプリは Apple でサインインを使用して認証を実装しています。 `federatedSignIn` メソッドのトークンとして使用するApple認証レスポンスを使用してサインインの `id_token` 値を取得できます。
 
     ```java
     // The onSuccess method of your app's Sign in with Apple flow
@@ -195,13 +195,13 @@ To federate Sign in with Apple as a user sign-in provider for AWS services calle
     }
     ```
 
-    After the `federatedSignIn` method successfully completes, `AWSMobileClient` will automatically use the federated identity to obtain credentials to make AWS service calls.
+    `federatedSignIn` メソッドが正常に完了すると、 `AWSMobileClient` は自動的に連合IDを使用して AWS サービスコールを行うための資格情報を取得します。
 
-### Facebook Login in Your Mobile App
+### モバイルアプリでのFacebookログイン
 
-> **Use Android API level 23 or higher** The `AWSMobileClient` library for Android sign-in provides the activity and view for presenting a `SignInUI` for the sign-in providers you configure. This library depends on the Android SDK API Level 23 or higher.
+> **Android API レベル 23 以上を使用する** Android のサインイン用 `AWSMobileClient` ライブラリは、設定したサインインプロバイダの `SignInUI` を表示するためのアクティビティとビューを提供します。 このライブラリは、Android SDK の API レベル 23 以上に依存します。
 
-Add the following permissions and Activity to your `AndroidManifest.xml` file:
+次の権限とアクティビティを `AndroidManifest.xml` ファイルに追加します。
 
 ```xml
 <uses-permission android:name="android.permission.INTERNET"/>
@@ -221,7 +221,7 @@ Add the following permissions and Activity to your `AndroidManifest.xml` file:
 <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id" />
 ```
 
-Add the following dependencies to your `app/build.gradle` file:
+次の依存関係を `app/build.gradle` ファイルに追加します。
 
 ```groovy
 dependencies {
@@ -238,13 +238,13 @@ dependencies {
 }
 ```
 
-> Note: When you add the dependencies, make sure that the major version of appcompat and support libraries match. In the previous example, we're using version 28.
+> 注意: 依存関係を追加する場合は、appcompatとサポートライブラリのメジャーバージョンが一致していることを確認してください。 前の例では、バージョン28を使用しています。
 
 In `strings.xml`, add string definitions for your Facebook app ID and login protocol scheme. The value for app_id is your Facebook app ID and the value for logic_protocol_scheme should be your Facebook app ID prefixed with `fb`.
 
 ```xml
-<string name="facebook_app_id">1231231231232123123</string>
-<string name="fb_login_protocol_scheme">fb1231231231232123123</string>
+<string name="facebook_app_id">123123123123123</string>
+<string name="fb_login_protocol_scheme">fb123123123123123</string>
 ```
 
 Next, create an activity that will present your sign-in screen. In Android Studio, choose `File > New > Activity > Basic Activity` and type an activity name, such as `AuthenticatorActivity`. If you want to make this your starting activity, move the intent filter block containing `.LAUNCHER` to the `AuthenticatorActivity` in your app's `AndroidManifest.xml`.
@@ -258,7 +258,7 @@ Next, create an activity that will present your sign-in screen. In Android Studi
 </activity>
 ```
 
-Finally, you can update the `onCreate` function of your `AuthenticatorActivity` to call `AWSMobileClient.getInstance().federatedSignIn()` as outlined earlier.
+最後に、以前に概説したように `AWSMobileClient.getInstance().federatedSignIn()` を呼び出すために、 `AuthenticatorActivity の` の `onCreate` 関数を更新することができます。
 
 ```java
 import android.app.Activity;
@@ -307,19 +307,19 @@ public class AuthenticatorActivity extends Activity {
 }
 ```
 
-### Google Login in Your Mobile App
+### モバイルアプリでGoogleログイン
 
-> **Use Android API level 23 or higher** The `AWSMobileClient` library for Android sign-in provides the activity and view for presenting a `SignInUI` for the sign-in providers you configure. This library depends on the Android SDK API Level 23 or higher.
+> **Android API レベル 23 以上を使用する** Android のサインイン用 `AWSMobileClient` ライブラリは、設定したサインインプロバイダの `SignInUI` を表示するためのアクティビティとビューを提供します。 このライブラリは、Android SDK の API レベル 23 以上に依存します。
 
 
-Add the following permissions to your `AndroidManifest.xml` file:
+`AndroidManifest.xml` ファイルに次の権限を追加します。
 
 ```xml
 <uses-permission android:name="android.permission.INTERNET"/>
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 ```
 
-Add the following dependencies to your `app/build.gradle` file:
+次の依存関係を `app/build.gradle` ファイルに追加します。
 
 ```groovy
 dependencies {
@@ -336,7 +336,7 @@ dependencies {
 }
 ```
 
-> Note: When you add the dependencies, make sure that the major version of appcompat and support libraries match. In the previous example, we're using version 28.
+> 注意: 依存関係を追加する場合は、appcompatとサポートライブラリのメジャーバージョンが一致していることを確認してください。 前の例では、バージョン28を使用しています。
 
 Create an activity that will present your sign-in screen. In Android Studio, choose `File > New > Activity > Basic Activity` and type an activity name, such as `AuthenticatorActivity`. If you want to make this your starting activity, move the intent filter block containing `.LAUNCHER` to the `AuthenticatorActivity` in your app's `AndroidManifest.xml`.
 
@@ -349,7 +349,7 @@ Create an activity that will present your sign-in screen. In Android Studio, cho
 </activity>
 ```
 
-Finally, you can update the `onCreate` function of your `AuthenticatorActivity` to call `AWSMobileClient.getInstance().federatedSignIn()` as outlined earlier.
+最後に、以前に概説したように `AWSMobileClient.getInstance().federatedSignIn()` を呼び出すために、 `AuthenticatorActivity の` の `onCreate` 関数を更新することができます。
 
 ```java
 import android.app.Activity;

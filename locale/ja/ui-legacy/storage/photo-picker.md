@@ -1,6 +1,6 @@
 ---
-title: Photo Picker
-description: Photo Picker UI Component
+title: 写真の選択
+description: 写真選択UIコンポーネント
 filterKey: framework
 ---
 

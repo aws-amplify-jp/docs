@@ -1,16 +1,16 @@
-> Prerequisite: [Install and configure](~/cli/start/install.md) the Amplify CLI
+> 前提条件: [](~/cli/start/install.md) Amplify CLI をインストールして構成する
 
-## Authentication with Amplify
+## Amplifyで認証
 
 The Amplify Framework uses [Amazon Cognito](https://aws.amazon.com/cognito/) as the main authentication provider. Amazon Cognito is a robust user directory service that handles user registration, authentication, account recovery & other operations. In this tutorial, you'll learn how to add authentication to your application using Amazon Cognito and username/password login.
 
-## Create authentication service
-To start from scratch, run the following command in your project's root folder:
+## 認証サービスを作成
+最初から起動するには、プロジェクトのrootフォルダで次のコマンドを実行します。
 
-> If you want to re-use an existing authentication resource from AWS (e.g. Amazon Cognito UserPool or Identity Pool) refer to [this section](~/lib/auth/start.md#re-use-existing-authentication-resource).
+> AWSから既存の認証リソースを再利用したい場合(例えば、Amazon Cognito UserPoolやIdentity Poolなど)は、 [このセクション](~/lib/auth/start.md#re-use-existing-authentication-resource) を参照してください。
 
 ```bash
-amplify add auth
+増幅して認証を追加
 ```
 
 ```console
@@ -19,55 +19,55 @@ amplify add auth
 ? Do you want to configure advanced settings?  No, I am done.
 ```
 
-To deploy the service, run the `push` command:
+サービスをデプロイするには、 `push` コマンドを実行します。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
-Now, the authentication service has been deployed and you can start using it. To view the deployed services in your project at any time, go to Amplify Console by running the following command:
+これで認証サービスがデプロイされ、使用を開始できます。 プロジェクトにデプロイされたサービスをいつでも表示するには、次のコマンドを実行してAmplify Consoleに移動します。
 
 ```bash
-amplify console
+増幅コンソール
 ```
 
-## Configure your application
+## アプリケーションの設定
 
-Add Amplify to your app:
+アプリにAmplifyを追加:
 
 <inline-fragment src="~/lib/auth/fragments/js/getting-started-steps-basic-auth.md"></inline-fragment>
 
-In your app's entry point (i.e. __App.js__, __index.js__, or __main.js__), import and load the configuration file:
+アプリのエントリポイント(例: __App.js__, __index.js__, または __main.js__)で、設定ファイルをインポートしてロードします。
 
 ```javascript
-import Amplify, { Auth } from 'aws-amplify';
+import Amplify, { Auth } from 'aws-amply';
 import awsconfig from './aws-exports';
 Amplify.configure(awsconfig);
 ```
 
-## Enable sign-up, sign-in, and sign-out
+## サインアップ、サインイン、サインアウトを有効にする
 
-There are two ways to add authentication capabilities to your application.
+認証機能をアプリケーションに追加するには2つの方法があります。
 
-1. [Use pre-built UI components](#option-1-use-pre-built-ui-components)
+1. [ビルド済みの UI コンポーネントを使用する](#option-1-use-pre-built-ui-components)
 
-2. [Call Authentication APIs manually](#option-2-call-authentication-apis-manually)
+2. [認証APIを手動で呼び出す](#option-2-call-authentication-apis-manually)
 
-## Option 1: Use pre-built UI components
+## オプション 1: ビルド済みの UI コンポーネントを使用する
 
 Creating the login flow can be quite difficult and time consuming to get right. Amplify Framework has authentication UI components you can use that will provide the entire authentication flow for you, using your configuration specified in your __aws-exports.js__ file.
 
-Amplify has pre-built UI components for React, Vue, Angular and React Native.
+AmplifyはReact、Vue、Angular、React Native向けにUIコンポーネントをあらかじめ構築しています。
 
 <amplify-block-switcher> <amplify-block name="React">
 
-First, install the `@aws-amplify/ui-react` library as well as `aws-amplify` if you have not already:
+まず、 `@aws-amplify/ui-react` ライブラリと `aws-amplify` をインストールします。
 
 ```sh
 npm install aws-amplify @aws-amplify/ui-react
 ```
 
-Next, open __src/App.js__ and add the `withAuthenticator` component.
+次に、 __src/App.js__ を開き、 `withAuthenticator` コンポーネントを追加します。
 
 **withAuthenticator**
 
@@ -75,21 +75,21 @@ Next, open __src/App.js__ and add the `withAuthenticator` component.
 
 </amplify-block> <amplify-block name="Vue">
 
-First, install the `@aws-amplify/ui-vue` library as well as `aws-amplify` if you have not already:
+まず、 `@aws-amplify/ui-vue` ライブラリと `aws-amplify` をインストールします。
 
 ```bash
 npm install aws-amplify @aws-amplify/ui-vue
 ```
 
-Now open __src/main.js__ and add the following below your last import:
+__src/main.js__ を開き、最後にインポートした以下を追加してください。
 
 ```js
 import '@aws-amplify/ui-vue';
 ```
 
-Next, open __src/App.js__ and add the `amplify-authenticator` component.
+次に、 __src/App.js__ を開き、 `amplify-authenticator` コンポーネントを追加します。
 
-**amplify-authenticator**
+**anplify-authentication**
 
 The `amplify-authenticator` component offers a simple way to add authentication flows into your app. This component encapsulates an authentication workflow in the framework of your choice and is backed by the cloud resources set up in your Auth cloud resources. You’ll also notice the `amplify-sign-out` component. This is an optional component if you’d like to render a sign out button.
 
@@ -107,7 +107,7 @@ The `amplify-authenticator` component offers a simple way to add authentication 
 
 </amplify-block> <amplify-block name="Angular">
 
-First, install the `@aws-amplify/ui-angular` library as well as `aws-amplify` if you have not already:
+まず、 `@aws-amplify/ui-angular` ライブラリと `aws-amplify` をインストールします。
 
 ```bash
 npm install aws-amplify @aws-amplify/ui-angular
@@ -137,9 +137,9 @@ Amplify.configure(awsconfig);
 export class AppModule {}
 ```
 
-Next, open __app.component.html__ and add the `amplify-authenticator` component.
+次に、 __app.component.html__ を開き、 `amplify-authenticator` コンポーネントを追加します。
 
-**amplify-authenticator**
+**anplify-authentication**
 
 The `amplify-authenticator` component offers a simple way to add authentication flows into your app. This component encapsulates an authentication workflow in the framework of your choice and is backed by the cloud resources set up in your Auth cloud resources. You’ll also notice the `amplify-sign-out` component. This is an optional component if you’d like to render a sign out button.
 
@@ -157,35 +157,35 @@ The `amplify-authenticator` component offers a simple way to add authentication 
 
 </amplify-block> <amplify-block name="React Native">
 
-First, install the `aws-amplify-react-native` library as well as the other necessary dependencies if you have not already in the previous step. This step differs depending on if you're using Expo or React Native CLI.
+まず、 `aws-amplify-react-native` ライブラリと他の必要な依存関係をインストールします。 このステップはExpoまたはReact Native CLIを使用しているかによって異なります。
 
 <inline-fragment src="~/start/getting-started/fragments/reactnative/getting-started-steps-ui.md"></inline-fragment>
 
-**Integrate with the front end**
+**フロントエンドと統合**
 
-Open __App.js__ and make the following changes:
+__App.js__ を開き、次の変更を行います。
 
-1. Import the `withAuthenticator` component:
+1. `withAuthenticator` コンポーネントをインポートします:
 
 ```javascript
 import { withAuthenticator } from 'aws-amplify-react-native'
 ```
 
-2. Change the default export to be the `withAuthenticator` wrapping the main component:
+2. メインコンポーネントをラップする `withAuthenticator` にデフォルトのエクスポートを変更します:
 
 ```javascript
 export default withAuthenticator(App)
 ```
 </amplify-block> </amplify-block-switcher>
 
-## Option 2: Call Authentication APIs manually
+## オプション2：手動で認証APIを呼び出す
 
 Follow the instructions in the [Sign in, Sign up and Sign out](~/lib/auth/emailpassword.md) to learn about how to integrate these authentication flows in your application with the Auth APIs.
 
 ## Summary
 
-To implement authentication flows using Amplify you can either use the Amplify UI libraries or call authentication methods directly on the `Auth` class.
+Amplifyを使用した認証フローを実装するには、AmplifyUIライブラリを使用するか、 `Auth` クラスで認証メソッドを直接呼び出すことができます。
 
 `Auth` has over 30 methods including [`signUp`](~/lib/auth/emailpassword.md#sign-up), [`signIn`](~/lib/auth/emailpassword.md#sign-in), [`forgotPassword`](~/lib/auth/manageusers.md#forgot-password), and [`signOut`](~/lib/auth/emailpassword.md#sign-out) that allow you full control over all aspects of the user authentication flow.
 
-Check out the complete API [here](https://aws-amplify.github.io/amplify-js/api/classes/authclass.html).
+完全な API [はこちら](https://aws-amplify.github.io/amplify-js/api/classes/authclass.html) をご覧ください。

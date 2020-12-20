@@ -1,4 +1,4 @@
-The Push Notifications category allows you to integrate push notifications in your app with Amazon Pinpoint targeting, campaign, and journey management support.
+プッシュ通知カテゴリを使用すると、プッシュ通知を Amazon Pinpoint ターゲティング、キャンペーン、およびジャーニー管理のサポートと組み合わせることができます。
 
 <amplify-callout>
 
@@ -6,7 +6,7 @@ Push Notifications are currently supported only for **React Native**. For handli
 
 </amplify-callout>
 
-This guide provides step-by-step instructions to start working with push notifications in React Native with Amazon Pinpoint. Amazon Pinpoint helps you to monitor your app's usage, create messaging campaigns and journeys targeted to specific user segments or demographics, and collect interaction metrics with push notifications.
+このガイドでは、Amazon Pinpoint を使用して React Native でプッシュ通知を扱うためのステップバイステップの手順を提供します。 Amazon Pinpointは、アプリの使用状況を監視し、特定のユーザーセグメントや人口統計を対象としたメッセージングキャンペーンやジャーニーを作成するのに役立ちます。 プッシュ通知を使って相互作用指標を収集します。
 
-> Ensure you have [installed and configured the Amplify CLI and library](~/cli/start/install.md).
+> [がインストールされ、Amplify CLIおよびライブラリ](~/cli/start/install.md)が設定されていることを確認してください。
 

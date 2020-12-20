@@ -1,6 +1,6 @@
 ---
-title: Hub
-description: Amplify has a local eventing system called Hub. It is a lightweight implementation of Publisher-Subscriber pattern, and is used to share data between modules and components in your app.
+title: ハブ
+description: AmplifyにはHubというローカルイベントシステムがあります。 Publisher-Subscriber パターンの軽量実装であり、アプリケーション内のモジュールとコンポーネント間でデータを共有するために使用されます。
 ---
 
 <inline-fragment platform="js" src="~/lib/utilities/fragments/hub.md"></inline-fragment>

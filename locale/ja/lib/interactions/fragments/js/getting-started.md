@@ -1,45 +1,45 @@
-AWS Amplify Interactions category enables AI-powered chatbots in your web or mobile apps. You can use *Interactions* to configure your backend chatbot provider and to integrate a chatbot UI into your app with just a single line of code.
+AWS Amplify Interactionsカテゴリでは、WebまたはモバイルアプリでAI搭載のチャットボットを使用できます。 *Interactions* を使用してバックエンドのチャットボットプロバイダを設定したり、たった1行のコードでチャットボットUIをアプリに統合したりできます。
 
-## Interactions with AWS
+## AWSとの相互作用
 
-AWS Amplify implements [Amazon Lex](https://aws.amazon.com/lex) as the default chatbots service. Amazon Lex supports creating conversational bots with the same deep learning technologies that power Amazon Alexa.
+AWS Amplifyはデフォルトのチャットボットサービスとして [Amazon Lex](https://aws.amazon.com/lex) を実装している。 Amazon LexはAmazon Alexaを動かすのと同じディープラーニングテクノロジーで対話型ボットの作成をサポートしています。
 
-## Create new chatbot
+## 新しいチャットボットを作成
 
-> Prerequisite: [Install and configure the Amplify CLI](~/cli/start/install.md)
+> 前提条件: [Amplify CLI をインストールして構成します](~/cli/start/install.md)
 
-Run the following command in your project's root folder:
-
-```bash
-amplify add interactions
-```
-
-The CLI will lead you through the steps to specify the chatbot to be created.
-
-You can choose to start from a sample chatbot or start from scratch.  If you choose to start from scratch, the CLI will prompt you with a series of questions to set the intents and slots for the chatbot.
-
-You are allowed to run the `amplify add interactions` command multiple times to add multiple chatbots into your project.
-
-<amplify-callout warning> The Interactions category utilizes the Authentication category behind the scenes to authorize your app to send analytics events. </amplify-callout>
-
-The `add` command automatically creates a backend configuration locally. To update your backend in the cloud, run:
+プロジェクトのrootフォルダで次のコマンドを実行します。
 
 ```bash
-amplify push
+増幅して相互作用を加えます
 ```
 
-Upon successful execution of the push command, a configuration file called `aws-exports.js` will be copied to your configured source directory, for example `./src`.
+CLIは、作成するチャットボットを指定する手順を説明します。
 
-> If your Interactions resources were created with Amplify CLI version 1.6.4 and below, you will need to manually update your project to avoid Node.js runtime issues with AWS Lambda. [Read more](~/cli/migration/lambda-node-version-update.md)
+サンプルチャットボットから開始するか、最初から開始するかを選択できます。 一から始めることを選択した場合 CLIはチャットボットの意図とスロットを設定するための一連の質問を求めます。
 
-## Manual setup
+プロジェクトに複数のチャットボットを追加するために、 `増幅を追加する` コマンドを複数回実行することができます。
 
-You can create Amazon Lex chatbox in Amazon Lex console. To create your bot, follow the steps shown in [Amazon Lex Developer Guide](https://docs.aws.amazon.com/lex/latest/dg/getting-started.html).
+<amplify-callout warning> Interactions カテゴリは、分析イベントの送信をアプリに許可するために、舞台裏の認証カテゴリを使用します。 </amplify-callout>
 
-![Interactions](~/images/interactions_lex_console_edit_bot.jpg)
+`add` コマンドは自動的にバックエンド設定をローカルに作成します。クラウドでバックエンドを更新するには、次を実行します。
+
+```bash
+push を増幅する
+```
+
+push コマンドが正常に実行されると、 `aws-exports という設定ファイルが生成されます。 s <code>` は `./src` などの設定されたソースディレクトリにコピーされます。
+
+> Amplify CLI バージョン1.6でインタラクションリソースが作成された場合。 以下では、AWS LambdaでNode.jsランタイムの問題を回避するために、プロジェクトを手動で更新する必要があります。 [詳しくはこちら](~/cli/migration/lambda-node-version-update.md)
+
+## 手動セットアップ
+
+Amazon Lexのチャットボックスは、Amazon Lexコンソールで作成できます。 ボットを作成するには、 [Amazon Lex開発者ガイド](https://docs.aws.amazon.com/lex/latest/dg/getting-started.html) の手順に従ってください。
+
+![相互作用](~/images/interactions_lex_console_edit_bot.jpg)
 
 
-With manual setup, you need to provide your auth credentials and bot details to configure your app:
+手動で設定する場合は、アプリを構成するために認証情報とボットの詳細を入力する必要があります。
 
 ```javascript
 import Amplify from 'aws-amplify';
@@ -61,12 +61,12 @@ Amplify.configure({
 });
 ```
 
-## Configure frontend
+## フロントエンドの設定
 
-Import and load the configuration file in your app. It's recommended you add the Amplify configuration step to your app's root entry point. For example `App.js` in React or `main.ts` in Angular.
+設定ファイルをアプリに読み込みます。Amplify設定ステップをアプリのルートエントリポイントに追加することをお勧めします。 例えば `App.js` 、Angularの `main.ts` など。
 
 ```javascript
-import Amplify, { Interactions } from 'aws-amplify';
+import Amplify, { Interactions } from 'aws-amply';
 import awsconfig from './aws-exports';
 
 Amplify.configure(awsconfig);
@@ -74,8 +74,8 @@ Amplify.configure(awsconfig);
 
 ## ChatBot UI component
 
-Use the `ChatBot` component to add conversational UI to your app. [Learn more](~/ui-legacy/interactions/chatbot.md).
+`ChatBot` コンポーネントを使用して、会話型 UI をアプリケーションに追加します。 [詳細はこちら](~/ui-legacy/interactions/chatbot.md)。
 
-## API reference
+## API リファレンス
 
-For the complete API documentation for Interactions module, visit our [API Reference](https://aws-amplify.github.io/amplify-js/api/classes/interactions.html).
+Interactions モジュールの完全な API ドキュメントについては、 [API リファレンス](https://aws-amplify.github.io/amplify-js/api/classes/interactions.html) を参照してください。

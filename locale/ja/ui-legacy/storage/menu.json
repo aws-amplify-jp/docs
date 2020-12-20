@@ -1,10 +1,10 @@
 {
-    "title": "Storage",
+    "title": "ストレージ",
     "items": [
         "photo-picker",
         "s3-album",
         "s3-image",
-        "tracking-events",
-        "customization"
+        "tracking-event",
+        "カスタマイズ"
     ]
 }

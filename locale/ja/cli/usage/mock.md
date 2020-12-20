@@ -1,52 +1,52 @@
 ---
-title: Mocking and testing
-description: Learn how to quickly test and debug without pushing all changes in your Amplify project to the cloud. Use local mocking and testing for certain categories including API (AWS AppSync), Storage (Amazon DynamoDB and Amazon S3), and Functions (AWS Lambda).
+title: モックとテスト
+description: Amplifyプロジェクトのすべての変更をクラウドにプッシュせずに、すばやくテストとデバッグを行う方法を学びます。 API(AWS AppSync)、ストレージ(Amazon DynamoDBおよびAmazon S3)、関数(AWS Lambda)など、特定のカテゴリにローカルモックとテストを使用します。
 ---  
 
-It is highly recommended that you complete the Getting Started section of Amplify setup before using local mocking.
+ローカルモックを使用する前に、AmplifyセットアップのGetting Started セクションを完了することを強くお勧めします。
 
-<docs-internal-link-button href="~/start/start.md"> <span slot="text">🚀 Get Started</span> </docs-internal-link-button>
+<docs-internal-link-button href="~/start/start.md"> <span slot="text">🚀 始めましょう</span> </docs-internal-link-button>
 
 In order to quickly test and debug without pushing all changes in your project to the cloud, Amplify supports *Local Mocking and Testing* for certain categories including API (AWS AppSync), Storage (Amazon DynamoDB and Amazon S3), and Functions (AWS Lambda). This includes using directives from the GraphQL Transformer, editing & debug resolvers, hot reloading, JWT mocking of authorization checks, and even performing S3 operations such as uploading and downloading content.
 
-<amplify-callout> Java is required on your development workstation to use Local Mocking in Amplify </amplify-callout>
+<amplify-callout> Amplifyでローカルモッキングを使用するには、開発ワークステーションにJavaが必要です </amplify-callout>
 
-[Blog walk-through with sample app](https://aws.amazon.com/blogs/mobile/amplify-framework-local-mocking/).
+[サンプルアプリでブログウォークスルー](https://aws.amazon.com/blogs/mobile/amplify-framework-local-mocking/).
 
-## API mocking setup
-After running `amplify init` you can immediately add a GraphQL API and begin mocking without first pushing to the cloud. REST APIs are not yet supported. For example:
+## API モック設定
+`amplify init` を実行すると、すぐに GraphQL API を追加し、クラウドに最初にプッシュせずにモックを開始できます。 REST API はまだサポートされていません。例えば:
 
 ```bash
 amplify init
-amplify add api # Select GraphQL, use API key
-amplify mock api
+amplify add api # GraphQLを選択し、API キー
+を使用してモックAPIを増幅する
 ```
 
 When you run `amplify mock api` the codegen process will run and create any required GraphQL assets such as queries, mutations, and subscriptions as well as TypeScript or Swift classes for your app. Android requires a build step for Gradle to create required classes after the codegen process completes, as well as an extra [configuration in your AndroidManifest.xml](#android-config).
 
 If you do not wish to test your app locally, you can still use the [local GraphQL console](#graphql-local-console) as well as [edit, debug, and test your VTL resolvers](#graphql-resolver-debugging) locally against the mock endpoint.
 
-When adding a schema use an API Key at first to ensure everything works, though you can authenticate against a Cognito User Pool and the local testing server will honor the JWT tokens. You can also mock the JWT tokens in the local console (outlined below), however in that case you will need to do an `amplify push` first to create the User Pool.
+スキーマを追加する場合は、最初に API キーを使用してすべてが動作するようにします。 ただし、Cognitoユーザープールで認証することはでき、ローカルテストサーバーはJWTトークンを認証します。 ローカルコンソールで JWT トークンをモックすることもできます(以下に概要を示します)。 ただし、その場合は、まずユーザープールを作成するために、 `プッシュを増幅する` を行う必要があります。
 
-When defining a schema you can use directives from the GraphQL Transformer in local testing as well as local code generation from the schema for types. The following directives are currently supported in local testing:
+スキーマを定義する際には、GraphQL Transformer からのディレクティブをローカルテストで使用し、スキーマから型に対してローカルコードを生成することができます。 以下のディレクティブは現在ローカルでのテストでサポートされています:
 
 - [@auth](~/cli/graphql-transformer/auth.md)
 - [@key](~/cli/graphql-transformer/key.md)
-- [@connection](~/cli/graphql-transformer/connection.md)
-- [@versioned](~/cli/graphql-transformer/versioned.md)
+- [@connections](~/cli/graphql-transformer/connection.md)
+- [@バージョニング](~/cli/graphql-transformer/versioned.md)
 - [@function](~/cli/graphql-transformer/function.md)
 
-> Note that `@searchable` is not supported at this time.
+> `@searchable` は現時点ではサポートされていないことに注意してください。
 
-## Storage mocking setup
+## ストレージモックのセットアップ
 For S3 storage mocking, after running `amplify init` you must first run through `amplify add auth`, either explicitly or implicitly if adding storage first, and then run an `amplify push`. This is because mocking storage in client libraries requires credentials for initial setup. Note however that S3 authorization rules, such as those placed on a bucket policy, are not checked by local mocking at this time.
 
-Once you have done an initial push you can run the mock server and hit the local endpoint:
+一度最初のプッシュを行ったら、モックサーバーを実行して、ローカルエンドポイントをヒットできます。
 
 ```bash
 amplify init
-amplify add storage # This will prompt you to add auth
-amplify push
+amplify add storage # これにより認証
+push
 amplify mock storage
 ```
 
@@ -54,53 +54,53 @@ To use an iOS application with the local S3 endpoint you will need to [modify yo
 
 For DynamoDB storage, setup is automatically done when creating a GraphQL API with no action is needed on your part. Resources for the mocked data, such as the DynamoDB Local database or objects uploaded using the local S3 endpoint, inside your project under `./amplify/mock-data`.
 
-## Function mocking setup
+## 機能モック設定
 For Lambda function mocking, after running `amplify init` you can add a function to your project with `amplify add function` and either invoke it directly, or use the [@function](~/cli/graphql-transformer/function.md) directive as part of your GraphQL schema to mock the invocation as part of your API.
 
-To invoke the function directly:
+関数を直接呼び出すには：
 
 ```bash
 amplify init
-amplify add function # Follow prompts
+increify add function # プロンプトに従ってください
 amplify mock function <function_name>
 ```
 
-This will ask you for the path to a JSON file that contains the event payload to pass to the event handler of your Lambda. It defaults to `src/event.json`. To avoid entering the path every time, you can also run
+これにより、Lambdaのイベントハンドラに渡すイベントペイロードを含むJSONファイルへのパスが要求されます。 デフォルトは `src/event.json`です。毎回パスを入力しないようにするには、
 ```bash
-amplify mock function <function_name> --event "<path to event JSON file>"
+amplify モック関数 <function_name> --event "<path to event JSON file>"
 ```
 
-### Function mocking with GraphQL
+### GraphQLをモックする関数
 
-Alternatively, you can add a Lambda function and attach it as a GraphQL resolver with the `@function` directive. To do this, first add a function to your project:
+あるいは、Lambda関数を追加し、 `@function` ディレクティブを使用してGraphQLリゾルバとして添付することもできます。 これを行うには、まずプロジェクトに関数を追加します。
 
 ```bash
 amplify init
-amplify add function # Follow prompts
-amplify add api # Select GraphQL, use API key
+increify add function # Follow prompts
+increify add api # GraphQLを選択し、API キーを使用する
 ```
-Then add the function as a resolver on a query or field in your schema. For example, if you named your function **quoteOfTheDay** your schema might have a query that looks like:
+次に、スキーマ内のクエリまたはフィールドにリゾルバとして関数を追加します。 たとえば、関数 **の quoteOfTheDay** に名前を付けた場合、スキーマは次のようなクエリを持っている可能性があります。
 
 ```
 type Query {
     getQuote: String @function(name: "quoteOfTheDay-${env}")
 }
 ```
-Full instructions on how to use the @function directive can be found [here](~/cli/graphql-transformer/function.md).
+@function ディレクティブの使い方の完全な説明は [こちら](~/cli/graphql-transformer/function.md) をご覧ください。
 
-Then when running `amplify mock api`, the local GraphQL endpoint will invoke this function when running a GraphQL query such as:
+次に、 `amplifyモックapi`を実行すると、以下のようなGraphQLのクエリを実行するときに、ローカルのGraphQLエンドポイントがこの関数を呼び出します。
 
 ```
-query {
+クエリ {
     getQuote
 }
 ```
 
-## Config files
+## 設定ファイル
 
 When performing operations against the local mock endpoint, the Amplify CLI will automatically update your `aws-exports.js` and `awsconfiguration.json` with the local endpoints, fake values where necessary (e.g. fake API key), and disable SSL with an explicit value (`DangerouslyConnectToHTTPEndpointForTesting`) to indicate the functionality is only for local mocking and testing. This happens automatically when you run `amplify mock` and the server is running. Once you stop the mock server the config files are updated with the correct cloud endpoints for your project and `DangerouslyConnectToHTTPEndpointForTesting` is removed from the config file.
 
-### aws-exports.js example
+### aws-exports.js の例
 
 ```javascript
 const awsmobile = {
@@ -121,7 +121,7 @@ const awsmobile = {
 };
 ```
 
-### awsconfiguration.json example
+### awsconfiguration.json の例
 
 ```json
     "AppSync": {
@@ -142,15 +142,15 @@ const awsmobile = {
     }
 ```
 
-## iOS config
+## iOSの設定
 
 When running against the local mock S3 server with iOS you must update your `Info.plist` to not require SSL when on a local network. To enable this set `NSAllowsLocalNetworking` to `YES` under `NSAppTransportSecurity`. This will scope the security exception to only run on localhost domains as outlined in [Apple Developer documentation for NSAllowsLocalNetworking](https://developer.apple.com/documentation/bundleresources/information_property_list/nsapptransportsecurity/nsallowslocalnetworking).
 
-## Android config
+## Android の設定
 
-When running against the local mock server with Android **it is recommended to use additional Build Variants**, such as a Debug and Release, to enable cleartext traffic only if the app is running on your local network. This will help ensure that you do not allow unsecured HTTP traffic in your Release Build Variant.
+Android **を使用してローカルのモックサーバに対して実行する場合は、追加のビルドバリアントを使用することをお勧めします**。 DebugやReleaseなど、アプリがローカルネットワーク上で実行されている場合にのみ、クリアテキストトラフィックを有効にします。 これにより、リリースビルドバリアントでセキュアでない HTTP トラフィックが許可されないようになります。
 
-For example, in your Android Studio project create `/src/debug/AndroidManifest.xml` and in this file create a network configuration file reference `android:networkSecurityConfig="@xml/network_security_config"`:
+例えば、Android Studio プロジェクトで `/src/debug/AndroidManifest.xml` を作成し、このファイルでネットワーク構成ファイルの参照を作成します。 `android:networkSecurityConfig="@xml/network_security_config"`:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -159,7 +159,7 @@ For example, in your Android Studio project create `/src/debug/AndroidManifest.x
 </manifest>
 ```
 
-Then create the network configuration file `/src/debug/res/xml/network_security_config.xml` and restrict to only run on your localhost IP range:
+次に、ネットワーク構成ファイル `/src/debug/res/xml/network_security_config.xml` を作成し、localhostのIP範囲でのみ実行するように制限します。
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -185,9 +185,9 @@ Alternatively, if you are running a non-production application and do not want t
 </application>
 ```
 
-## GraphQL Local Console
+## GraphQL ローカルコンソール
 
-To start testing, before starting your JavaScript/Android/iOS application run the following command:
+テストを開始するには、JavaScript/Android/iOSアプリケーションを起動する前に、次のコマンドを実行します。
 
 ```
 $ amplify mock
@@ -199,29 +199,29 @@ Once the server starts it will print a URL. Open this URL in your browser (it sh
 
 When your API is configured to use Cognito User Pools, the local console provides a way to change `Username`, `Groups`, and `email` of the bundled JWT token. These values are used by GraphQL transformers Auth directive. Edit them by clicking **Auth** and saving your changes, then run operations in the console to test your rules.
 
-## GraphQL Resolver Debugging
+## GraphQL リゾルバのデバッグ
 
 You can edit VTL templates locally to see if they contain errors, including the line numbers causing problems, before pushing to AppSync. With the local API running navigate to `./amplify/backend/api/APINAME/resolvers` where `APINAME` is the logical name that you used when running `$amplify add api`. You will see a list of resolver templates that the Transformer generated. Modify any of them and save, and they will be immediately loaded into the locally running API service with a message `Mapping template change detected. Reloading.`. If there is an error you will see something such as the following:
 
 ```
-Reloading failed Error: Parse error on line 1:
+エラーのリロードに失敗しました: 1行目のパースエラー:
 ...son($context.result
-----------------------^
+------------------^
 ```
 
 If you stop the server locally, for instance to push your changes to the cloud, all of the templates in the `../APINAME/resolvers` directory will be removed except for any that you modified. When you subsequently push to the cloud these local changes will be merged with your AppSync API.
 
-### Modify schema and test again
+### スキーマを変更してテストする
 
 As you are developing your app, you can always modify the GraphQL schema which lives in `./amplify/backend/api/APINAME/schema.graphql`. You can modify any types using any of the supported directives and save this file, while the local server is still running. The changes will be detected and if your schema is valid they will be hot reloaded into the local API. If there is an error in the schema an error will be printed to the terminal like so:
 
 ```
-Unknown directive "mode".
+不明なディレクティブ "mode".
 
-GraphQL request (1:11)
+GraphQL リクエスト (1:11)
 1: type Todo @mode{
              ^
-2:   id: ID!
+2: id: ID!
 
     at GraphQLTransform.transform
 ```

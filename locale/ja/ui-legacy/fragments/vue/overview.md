@@ -1,17 +1,17 @@
 [![npm version](https://badge.fury.io/js/aws-amplify-vue.svg)](https://badge.fury.io/js/aws-amplify-vue)
 
-The `aws-amplify-vue` package is a set of Vue components which integrates your Vue application with the AWS-Amplify library. The package supports Vue applications using version 2.5 or above, and was created using the Vue 3.0 CLI.
+`aws-amplify-vue` パッケージは、VueアプリケーションとAWS-Amplifyライブラリを統合したVueコンポーネントのセットです。 パッケージはバージョン2.5以上のVueアプリケーションをサポートし、Vue 3.0 CLIを使用して作成されました。
 
-## Configuration
+## 設定
 
-In your Vue app, install the following:
+Vueアプリで、以下をインストールしてください。
 
 ```bash
 npm i aws-amplify
 npm i aws-amplify-vue
 ```
 
-Then, alter main.js:
+次にmain.jsを変更します。
 
 ```javascript
 import Amplify, * as AmplifyModules from 'aws-amplify'
@@ -29,7 +29,7 @@ new Vue({
 
 ```
 
-In App.vue:
+App.vueで:
 
 ```
 <script>
@@ -48,30 +48,30 @@ export default {
 
 ## AmplifyEventBus
 
-The aws-amplify-vue package implements a Vue EventBus for emitted and listening to events within its components. The events emitted by the components are listed within the documentation for each individual component.
+aws-amplify-vueパッケージは、コンポーネント内でイベントを発行しリッスンするためのVue EventBusを実装しています。 コンポーネントによって発生するイベントは、個々のコンポーネントのドキュメントにリストされています。
 
-To listen to these events within one of your components, import the EventBus:
+コンポーネント内でこれらのイベントをリッスンするには、EventBusをインポートします。
 
 ```javascript
 import { AmplifyEventBus } from 'aws-amplify-vue';
 ```
 
-Then, register an event listener (potentially within a lifecycle hook):
+次に、イベントリスナーを登録します(ライフサイクルフック内での可能性があります):
 
 ```javascript
 AmplifyEventBus.$on('authState', info => {
-  console.log(`Here is the auth event that was just emitted by an Amplify component: ${info}`)
+  console.log(`Here is the authイベントがAmplifyコンポーネント: ${info}`)
 });
 ```
 
 ## AmplifyPlugin
 
-The aws-amplify-vue package provides a Vue plugin to access the Amplify library. You installed the plugin when you set up your application:
+Amplify-vueパッケージは、AmplifyライブラリにアクセスするVueプラグインを提供します。アプリケーションの設定時にプラグインをインストールしました。
 
 `Vue.use(AmplifyPlugin, AmplifyModules)`
 
 This makes the Amplify library available to the aws-amplify-vue components as well as your application. Please note that you can restrict the modules that are made available to the plugin by passing only specific modules in the second argument of `Vue.use` call.
 
-### Using the AmplifyPlugin
+### AmplifyPlugin の使用
 
-To call the Amplify library, simply use `this.$Amplify.` followed by whichever module you wish to use.
+Amplifyライブラリを呼び出すには、 `この$Amplifyを使用します。` の後にはどちらかのモジュールを使用します。

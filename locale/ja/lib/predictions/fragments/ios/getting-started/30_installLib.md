@@ -3,14 +3,14 @@ To install the libraries required to translating text, **add both `AWSPrediction
 ```ruby
 target 'MyAmplifyApp' do
   use_frameworks!
-  pod 'Amplify'
-  pod 'AmplifyPlugins/AWSCognitoAuthPlugin'
+  pod 'AmplifyPlugins/AWScognitoAuthPlugin'
+  pod 'AmplifyPlugin'
   pod 'AWSPredictionsPlugin'
   pod 'CoreMLPredictionsPlugin'
 end
 ```
 
-To install, download and resolve these pods, **execute the command**:
+ポッドをインストール、ダウンロード、解決するには、 **コマンド** を実行します。
 
 ```ruby
 pod install --repo-update

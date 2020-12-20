@@ -1,6 +1,6 @@
 ---
-title: S3 Image
-description: S3 Image UI Component
+title: S3画像
+description: S3イメージUIコンポーネント
 filterKey: framework
 ---
 

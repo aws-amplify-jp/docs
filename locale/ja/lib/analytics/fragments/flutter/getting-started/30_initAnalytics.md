@@ -1,14 +1,14 @@
-Add the Auth and Analytics plugin, along with any other plugins you may have added as described in the *Prerequisites* section;
+AuthとAnalyticsプラグインと他のプラグインを追加するには、 *前提条件* セクションの説明に従って追加してください。
 
 ```dart
 AmplifyAuthCognito authPlugin = AmplifyAuthCognito();
 AmplifyAnalyticsPinpoint analyticsPlugin = AmplifyAnalyticsPinpoint();
 
-amplifyInstance.addPlugin(
+anplyInstance.addPlugin(
     authPlugins: [authPlugin], analyticsPlugins: [analyticsPlugin]);
 ```
 
-Make sure that the amplifyconfiguration.dart file generated in the project setup is included and sent to Amplify.configure:
+プロジェクト設定で生成された anplifyconfiguration.dart ファイルが含まれていることを確認し、Amplify.configure に送信します。
 
 ```dart 
 import 'amplifyconfiguration.dart';
@@ -16,7 +16,7 @@ import 'amplifyconfiguration.dart';
 Amplify.configure( amplifyConfig )
 ```
 
-Your class will look like this:
+あなたのクラスは次のようになります：
 
 ```dart
 import 'amplifyconfiguration.dart';

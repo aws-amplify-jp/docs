@@ -1,6 +1,6 @@
 ---
-title: Sumerian Scene
-description: Sumerian Scene UI Component
+title: シュメール語の場
+description: シュメールシーンUIコンポーネント
 filterKey: framework
 ---
 

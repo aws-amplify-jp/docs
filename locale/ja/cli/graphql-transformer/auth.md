@@ -1,6 +1,6 @@
 ---
-title: Setup authorization rules
-description: Add authorization rules to your GraphQL schema to control access to your data.
+title: 認証ルールのセットアップ
+description: データへのアクセスを制御するために、GraphQLスキーマに許可ルールを追加します。
 ---
 
 ## @auth
@@ -11,7 +11,7 @@ Authorization is required for applications to interact with your GraphQL API. **
 
 When using the `@auth` directive on object type definitions that are also annotated with `@model`, all resolvers that return objects of that type will be protected. When using the `@auth` directive on a field definition, a resolver will be added to the field that authorize access based on attributes found in the parent type.
 
-### Definition
+### 定義
 
 ```graphql
 # When applied to a type, augments the application with
@@ -40,11 +40,11 @@ enum ModelQuery { get list }
 enum ModelMutation { create update delete }
 ```
 
-> Note: The operations argument was added to replace the 'queries' and 'mutations' arguments. The 'queries' and 'mutations' arguments will continue to work but it is encouraged to move to 'operations'. If both are provided, the 'operations' argument takes precedence over 'queries'.
+> 注意: 演算引数は、「クエリ」と「変異」の引数を置き換えるために追加されました。 「クエリ」と「変異」の引数は引き続き機能しますが、「操作」に移行することをお勧めします。 両方が与えられている場合、'operations' 引数は 'queries' よりも優先されます。
 
-### Owner authorization
+### 所有者の権限
 
-By default, enabling `owner` authorization allows any signed in user to create records.
+デフォルトで、 `所有者` の承認を有効にすると、任意のサインインしたユーザーがレコードを作成できます。
 
 ```graphql
 # The simplest case
@@ -69,20 +69,20 @@ type Post
 
 <amplify-callout>
 
-Owner authorization requires an authentication type of **Amazon Cognito User Pools** to be enabled in your app.
+オーナー認証を有効にするには、 **Amazon Cognito User Pools** の認証タイプをアプリで有効にする必要があります。
 
 </amplify-callout>
 
-Owner authorization specifies whether a user can access or operate against an object. To do so, each object will get an `ownerField` field (by default `owner` will be added to the object if not specified) that stores ownership information and is verified in various ways during resolver execution.
+オーナー権限は、ユーザーがオブジェクトに対してアクセスまたは操作できるかどうかを指定します。 これを行うには 各オブジェクトは所有者情報を格納し、リゾルバ実行中に様々な方法で検証される `ownerField` (デフォルトでは `owner` がオブジェクトに追加されます) を取得します。
 
-You can use the `operations` argument to specify which operations are enabled as follows:
+`operations` 引数を使用して、有効にする操作を次のように指定できます。
 
-- **read**: Allow the user to perform queries (`get` and `list` operations) against the API.
-- **create**: Inject the logged in user's identity as the `ownerField` automatically.
-- **update**: Add conditional update that checks the stored `ownerField` is the same as the signed in user.
-- **delete**: Add conditional update that checks the stored `ownerField` is the same as the signed in user.
+- **read**: ユーザーが API に対してクエリ (`get` and `list` operations) を実行できるようにします。
+- **create**: `ownerField` としてログインしたユーザーの身元を自動的に注入します。
+- **update**: 保存されている `ownerField` が署名されているユーザと同じであることをチェックする条件付き更新を追加。
+- **delete**: 保存されている `ownerField` が署名されているユーザーと同じであることをチェックする条件付き更新を追加します。
 
-You must ensure that the `create` operations rule is specified explicitly or inferred from defaults to ensure that the owner's identity is stored with the record so it can be verified on subsequent requests.
+`create` の操作ルールが明示的に指定されているか、またはデフォルトから推定されていることを確認して、所有者の身元がレコードで保存されていることを確認しなければなりません。
 
 ```graphql
 # owner identity inferred from defaults on every object
@@ -106,12 +106,12 @@ type Post @model @auth(rules: [{ allow: owner, operations: [read] }]) {
 
 <amplify-callout>
 
-When specifying operations as a part of the `@auth` rule, the operations not included in the list are not protected by default.
+`@auth` ルールの一部として操作を指定すると、リストに含まれていない操作はデフォルトでは保護されません。
 
 </amplify-callout>
 
 
-Let's take a look at a few examples:
+いくつかの例を見てみましょう。
 
 ```graphql
 type Todo @model
@@ -124,14 +124,14 @@ type Todo @model
 
 In this schema, only the owner of the object has the authorization to perform read (`getTodo` and `listTodos`), update (`updateTodo`), and delete (`deleteTodo`) operations on the owner created object. This prevents the object from being updated or deleted by users other than the creator of the object.
 
-Here's a table outlining which users are permitted to execute which operations. **owner** refers to the user who created the object, **other** refers to all other authenticated users.
+ユーザーがどの操作を実行することが許可されている表を示します。 **owner** はオブジェクトを作成したユーザーを指します。 **other** は他のすべての認証済みユーザーを参照します。
 
-|       | getTodo | listTodos | createTodo | updateTodo | deleteTodo |
-|:----- |:-------:|:---------:|:----------:|:----------:|:----------:|
-| owner |    ✅    |     ✅     |     ✅      |     ✅      |     ✅      |
-| other |    ❌    |     ❌     |     ✅      |     ❌      |     ❌      |
+|     | getTodo | listTodos | createTodo | updateTodo | deleteTodo |
+|:--- |:-------:|:---------:|:----------:|:----------:|:----------:|
+| 所有者 |    ✅    |     ✅     |     ✅      |     ✅      |     ✅      |
+| その他 |    ❌    |     ❌     |     ✅      |     ❌      |     ❌      |
 
-Next, let's say that you wanted to modify the schema to allow only the owner of the object to be able to update or delete, but allow any authenticated user to read the objects.
+次に、オブジェクトの所有者のみが更新または削除できるようにスキーマを変更したいとします。 認証されたユーザがオブジェクトを読むことを許可します。
 
 ```graphql
 type Todo @model
@@ -144,14 +144,14 @@ type Todo @model
 
 In this schema, only the owner of the object has the authorization to perform update (`updateTodo`) and delete (`deleteTodo`) operations on the owner created object, but anyone can read them (`getTodo`, `listTodos`). This prevents the object from being updated or deleted by users other than the creator of the object while allowing all authenticated users of the app to read them.
 
-Here's a table outlining which users are permitted to execute which operations. **owner** refers to the user who created the object, **other** refers to all other authenticated users.
+ユーザーがどの操作を実行することが許可されている表を示します。 **owner** はオブジェクトを作成したユーザーを指します。 **other** は他のすべての認証済みユーザーを参照します。
 
-|       | getTodo | listTodos | createTodo | updateTodo | deleteTodo |
-|:----- |:-------:|:---------:|:----------:|:----------:|:----------:|
-| owner |    ✅    |     ✅     |     ✅      |     ✅      |     ✅      |
-| other |    ✅    |     ✅     |     ✅      |     ❌      |     ❌      |
+|     | getTodo | listTodos | createTodo | updateTodo | deleteTodo |
+|:--- |:-------:|:---------:|:----------:|:----------:|:----------:|
+| 所有者 |    ✅    |     ✅     |     ✅      |     ✅      |     ✅      |
+| その他 |    ✅    |     ✅     |     ✅      |     ❌      |     ❌      |
 
-Next, let's say that you wanted to modify the schema to allow only the owner of the object to be able to delete, but allow anyone to create, read, and update.
+次に、オブジェクトの所有者のみが削除できるようにスキーマを変更したいとします。 誰でも作成、読み、更新ができます
 
 ```graphql
 type Todo @model
@@ -164,21 +164,21 @@ type Todo @model
 
 In this schema, only the owner of the object has the authorization to perform delete operations on the owner created object, but anyone can read or update them. This is because `read` and `update` aren't specified as owner-only actions, so all users are able to perform them. Since `delete` is specified as an owner only action, only the object's creator can delete the object.
 
-Here's a table outlining which users are permitted to execute which operations. **owner** refers to the user who created the object, **other** refers to all other authenticated users.
+ユーザーがどの操作を実行することが許可されている表を示します。 **owner** はオブジェクトを作成したユーザーを指します。 **other** は他のすべての認証済みユーザーを参照します。
 
-|       | getTodo | listTodos | createTodo | updateTodo | deleteTodo |
-|:----- |:-------:|:---------:|:----------:|:----------:|:----------:|
-| owner |    ✅    |     ✅     |     ✅      |     ✅      |     ✅      |
-| other |    ✅    |     ✅     |     ✅      |     ✅      |     ❌      |
+|     | getTodo | listTodos | createTodo | updateTodo | deleteTodo |
+|:--- |:-------:|:---------:|:----------:|:----------:|:----------:|
+| 所有者 |    ✅    |     ✅     |     ✅      |     ✅      |     ✅      |
+| その他 |    ✅    |     ✅     |     ✅      |     ✅      |     ❌      |
 
 
-### Multiple authorization rules
+### 複数の承認ルール
 
-You may also apply multiple ownership rules on a single `@model` type.
+単一の `@model` 型に複数の所有ルールを適用することもできます。
 
 For example, imagine you have a type **Draft** that stores unfinished posts for a blog. You might want to allow the **Draft's** owner to `create`, `update`, `delete`, and `read` **Draft** objects. However, you might also want the **Draft's editors** to be able to update and read **Draft** objects.
 
-To allow for this use case you could use the following type definition:
+このユースケースを許可するには、次のタイプの定義を使用できます。
 
 ```graphql
 type Draft @model
@@ -197,12 +197,12 @@ type Draft @model
 }
 ```
 
-### Ownership with create mutations
+### 突然変異を伴う所有者
 
 The ownership authorization rule will automatically fill ownership fields unless told explicitly not to do so. To show how this works, lets look at how the create mutation would work for the **Draft** type above:
 
 ```graphql
-mutation CreateDraft {
+mutterCreateDraft {
   createDraft(input: { title: "A new draft" }) {
     id
     title
@@ -212,7 +212,7 @@ mutation CreateDraft {
 }
 ```
 
-Let's assume that when I call this mutation I am logged in as `someuser@my-domain.com`. The result would be:
+この変更を呼び出すと、私は `someuser@my-domain.com`としてログインしていると仮定します。結果は次のようになります。
 
 ```json
 {
@@ -229,7 +229,7 @@ Let's assume that when I call this mutation I am logged in as `someuser@my-domai
 
 The `Mutation.createDraft` resolver is smart enough to match your auth rules to attributes and will fill them in be default. If you do not want the value to be automatically set all you need to do is include a value for it in your input.
 
-For example, to have the resolver automatically set the **owner** but not the **editors**, you would run this:
+例えば、リゾルバが **owner** を自動的に設定しますが、 **エディタ**ではない場合、次のように実行します。
 
 ```graphql
 mutation CreateDraft {
@@ -247,7 +247,7 @@ mutation CreateDraft {
 }
 ```
 
-This would return:
+これは以下のように戻ります:
 
 ```json
 {
@@ -262,7 +262,7 @@ This would return:
 }
 ```
 
-To specify a list of custom **editors**, you could run this:
+カスタム **エディター**のリストを指定するには、次を実行できます。
 
 ```graphql
 mutation CreateDraft {
@@ -280,7 +280,7 @@ mutation CreateDraft {
 }
 ```
 
-This would return:
+これは以下のように戻ります:
 
 ```json
 {
@@ -295,7 +295,7 @@ This would return:
 }
 ```
 
-You can try to perform the same modification to **owner** but this will throw an **Unauthorized** exception because you are no longer the owner of the object you are trying to create.
+**owner** に同じ変更を試みることはできますが、作成しようとしているオブジェクトの所有者ではなくなったため、 **不正な** 例外がスローされます。
 
 ```graphql
 mutation CreateDraft {
@@ -314,14 +314,14 @@ mutation CreateDraft {
 }
 ```
 
-### Static group authorization
+### 静的グループの承認
 
 Static group authorization allows you to protect `@model` types by restricting access to a known set of groups. For example, you can allow all **Admin** users to create, update, delete, get, and list Salary objects.
 
 ```graphql
 type Salary @model @auth(rules: [{ allow: groups, groups: ["Admin"] }]) {
   id: ID!
-  wage: Int
+  wage: int
   currency: String
 }
 ```
@@ -350,7 +350,7 @@ type Draft @model
 }
 ```
 
-### Dynamic group authorization
+### 動的グループ認証
 
 ```graphql
 # Dynamic group authorization with multiple groups
@@ -396,7 +396,7 @@ type Draft @model
 }
 ```
 
-With this setup, you could create an object that can be read by the "BizDev" group:
+この設定では、"BizDev" グループで読み込めるオブジェクトを作成できます。
 
 ```graphql
 mutation CreateDraft {
@@ -411,7 +411,7 @@ mutation CreateDraft {
 }
 ```
 
-And another draft that can be read by the "Marketing" group:
+そして、「マーケティング」グループによって読むことができる別のドラフト:
 
 ```graphql
 mutation CreateDraft {
@@ -426,10 +426,10 @@ mutation CreateDraft {
 }
 ```
 
-### `public` authorization
+### `パブリック` 認証
 
 ```graphql
-# The simplest case
+# 最もシンプルなケース
 type Post @model @auth(rules: [{ allow: public }]) {
   id: ID!
   title: String!
@@ -439,19 +439,19 @@ type Post @model @auth(rules: [{ allow: public }]) {
 The `public` authorization specifies that everyone will be allowed to access the API, behind the scenes the API will be protected with an API Key. To be able to use `public` the API must have API Key configured. For local execution, this key resides in the file `aws-exports.js` for the JavaScript library and `amplifyconfiguration.json` for Android and iOS under the key `aws_appsync_apiKey`.
 
 ```graphql
-# public authorization with provider override
+# プロバイダがオーバーライドするパブリック認証
 type Post @model @auth(rules: [{ allow: public, provider: iam }]) {
   id: ID!
   title: String!
 }
 ```
 
-The @auth directive allows the override of the default provider for a given authorization mode. In the sample above iam is specified as the provider which allows you to use an "UnAuthenticated Role" from Cognito Identity Pools for public access, instead of an API Key. When used in conjunction with amplify add auth the CLI generates scoped down IAM policies for the "UnAuthenticated" role automatically.
+@auth ディレクティブにより指定された認証モードのデフォルトプロバイダを上書きすることができます。 上記のサンプルでは、Cognito Identity Poolsから「認証されていないロール」を使用してパブリックアクセスできるプロバイダとして指定されています。 APIキーの代わりに。 増幅と組み合わせて使用すると、CLI がスコープダウンIAM ポリシーを自動的に生成し、「認証されていない」ロールに追加します。
 
-### `private` authorization
+### `プライベート` 認証
 
 ```graphql
-# The simplest case
+# 最もシンプルなケース
 type Post @model @auth(rules: [{ allow: private }]) {
   id: ID!
   title: String!
@@ -461,16 +461,16 @@ type Post @model @auth(rules: [{ allow: private }]) {
 The `private` authorization specifies that everyone will be allowed to access the API with a valid JWT token from the configured Cognito User Pool. To be able to use `private` the API must have Cognito User Pool configured.
 
 ```graphql
-# private authorization with provider override
+# プロバイダがオーバーライドするプライベート認証
 type Post @model @auth(rules: [{ allow: private, provider: iam }]) {
   id: ID!
   title: String!
 }
 ```
 
-The @auth directive allows the override of the default provider for a given authorization mode. In the sample above iam is specified as the provider which allows you to use an "Authenticated Role" from Cognito Identity Pools for private access. When used in conjunction with amplify add auth the CLI generates scoped down IAM policies for the "Authenticated" role automatically.
+@auth ディレクティブにより指定された認証モードのデフォルトプロバイダを上書きすることができます。 上記のサンプルでは、Cognito Identity Poolsからプライベートアクセスに「認証ロール」を使用できるプロバイダとして指定されています。 増幅と組み合わせて使用すると、認証された役割に対して、CLI がスコープダウンの IAM ポリシーを自動的に生成します。
 
-### Authorization using an `oidc` provider
+### `oidc` プロバイダを使用した承認
 
 ```graphql
 # owner authorization with provider override
@@ -483,13 +483,13 @@ type Profile @model @auth(rules: [{ allow: owner, provider: oidc, identityClaim:
 By using a configured `oidc` provider for the API, it is possible to authenticate the users against it. In the sample above, `oidc` is specified as the provider for the `owner` authorization on the type. The field `identityClaim: "sub"` specifies that the `"sub"` claim from your JWT token is used to provider ownership instead of the default `username` claim, which is used by the Amazon Cognito JWT.
 
 
-### Combining multiple authorization types
+### 複数の認証タイプを結合する
 
-Amplify GraphQL APIs have a primary **default** authentication type and, optionally, additional secondary authentication types. The objects and fields in the GraphQL schema can have rules with different authorization providers assigned based on the authentication types configured in your app.
+Amplify GraphQL API には、プライマリ **デフォルトの** 認証タイプがあり、オプションで追加の二次認証タイプがあります。 GraphQL スキーマのオブジェクトとフィールドには、アプリケーションで構成されている認証タイプに基づいて異なる認証プロバイダが割り当てられたルールがあります。
 
-One of the most common scenarios for multiple authorization rules is for combining public and private access. For example, blogs typically allow public access for viewing a post but only allow a post's creator to update or delete that post.
+複数の認証ルールの最も一般的なシナリオの1つは、パブリックアクセスとプライベートアクセスを組み合わせることです。 例えば、blogs は一般的に投稿を見るための公開アクセスを許可しますが、投稿の作成者のみがその投稿を更新または削除できます。
 
-Let's take a look at how you can combine public and private access to achieve this:
+パブリックアクセスとプライベートアクセスを組み合わせる方法を見てみましょう。
 
 ```graphql
 type Post @model
@@ -514,7 +514,7 @@ type Post @model
 
 <amplify-callout>
 
-The above schema assumes a combination of **Amazon Cognito User Pools** and **API key** authentication types
+上記のスキーマは、 **Amazon Cognito User Pools** と **API キー** の認証タイプの組み合わせを想定しています
 
 </amplify-callout>
 
@@ -536,24 +536,24 @@ type Post @model
 
 <amplify-callout>
 
-The above schema assumes a combination of **Amazon Cognito User Pools** and **IAM** authentication types
+上記のスキーマは、 **Amazon Cognito User Pools** と **IAM** の認証タイプの組み合わせを想定しています。
 
 </amplify-callout>
 
-### Allowed authorization mode vs. provider combinations
+### 許可された認証モードとプロバイダの組み合わせ
 
-The following table shows the allowed combinations of authorization modes and providers.
+次の表に許可モードとプロバイダの組み合わせを示します。
 
-|           | owner | groups | public | private |
-|:--------- |:-----:|:------:|:------:|:-------:|
-| userPools |   ✅   |   ✅    |        |    ✅    |
-| oidc      |   ✅   |   ✅    |        |         |
-| apiKey    |       |        |   ✅    |         |
-| iam       |       |        |   ✅    |    ✅    |
+|          | 所有者 | グループ | 公開 | 非公開 |
+|:-------- |:---:|:----:|:--:|:---:|
+| userPool |  ✅  |  ✅   |    |  ✅  |
+| oidc     |  ✅  |  ✅   |    |     |
+| apiKey   |     |      | ✅  |     |
+| iam      |     |      | ✅  |  ✅  |
 
-Please note that `groups` is leveraging Cognito User Pools but no provider assignment needed/possible.
+`グループ` は Cognito ユーザー・プールを活用していますが、プロバイダの割り当てが不要/可能であることに注意してください。
 
-### Custom claims
+### カスタムの請求
 
 `@auth` supports using custom claims if you do not wish to use the default `username` or `cognito:groups` claims from your JWT token which are populated by Amazon Cognito. This can be helpful if you are using tokens from a 3rd party OIDC system or if you wish to populate a claim with a list of groups from an external system, such as when using a [Pre Token Generation Lambda Trigger](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html) which reads from a database. To use custom claims specify `identityClaim` or `groupClaim` as appropriate like in the example below:
 
@@ -576,11 +576,11 @@ In this example the object owner will check against a `user_id` claim. Similarly
 
 <amplify-callout>
 
-Note `identityField` is being deprecated for `identityClaim`.
+メモ `identityField` は `identityClaim` で非推奨になっています。
 
 </amplify-callout>
 
-### Authorizing subscriptions
+### サブスクリプションを承認中
 
 <amplify-callout warning>
 
@@ -590,13 +590,13 @@ Prior to version 2.0 of the CLI, `@auth` rules did not apply to subscriptions. I
 
 When `@auth` is used subscriptions have a few subtle behavior differences than queries and mutations based on their event based nature. When protecting a model using the owner auth strategy, each subscription request will **require** that the user is passed as an argument to the subscription request. If the user field is not passed, the subscription connection will fail. In the case where it is passed, the user will only get notified of updates to records for which they are the owner.
 
-<amplify-callout warning> Subscription filtering uses data passed from mutation to do the filtering. If a mutation does not include `owner` field in the selection set of a owner based auth, Subscription message won't be fired for that mutation. </amplify-callout>
+<amplify-callout warning> サブスクリプションフィルタリングは、変異から渡されたデータを使用してフィルタリングを行います。 変更が所有者ベースの作者の選択セットに `owner` フィールドを含まない場合、 その変更に対してサブスクリプションメッセージは発行されません。 </amplify-callout>
 
-Alternatively, when the model is protected using the static group auth strategy, the subscription request will only succeed if the user is in an allowed group. Further, the user will only get notifications of updates to records if they are in an allowed group. Note: You don't need to pass the user as an argument in the subscription request, since the resolver will instead check the contents of your JWT token.
+または、静的グループ認証戦略を使用してモデルを保護する場合。 サブスクリプション要求は、ユーザーが許可されたグループにいる場合にのみ成功します。 さらに、ユーザーは許可されたグループにいる場合にのみレコードの更新通知を受け取ります。 注: サブスクリプションリクエストでユーザーを引数として渡す必要はありません。 リゾルバは代わりにJWTトークンの内容を確認しますので。
 
-<amplify-callout> Dynamic groups have no impact to subscriptions. You will not get notified of any updates to them. </amplify-callout>
+<amplify-callout> ダイナミックグループはサブスクリプションに影響を与えません。更新を通知することはありません。 </amplify-callout>
 
-For example suppose you have the following schema:
+例えば、次のスキーマがあるとします。
 
 ```
 type Post @model
@@ -609,7 +609,7 @@ type Post @model
 }
 ```
 
-This means that the subscription must look like the following or it will fail:
+これは、サブスクリプションが次のように表示されなければ失敗することを意味します:
 
 ```graphql
 subscription OnCreatePost {
@@ -622,7 +622,7 @@ subscription OnCreatePost {
 
 Note that if your type doesn’t already have an `owner` field the Transformer will automatically add this for you. Passing in the current user can be done dynamically in your code by using [Auth.currentAuthenticatedUser()](~/lib/auth/manageusers.md/q/platform/js#retrieve-current-authenticated-user) in JavaScript, [AWSMobileClient.default().username](~/sdk/auth/working-with-api.md/q/platform/ios#utility-properties) in iOS, or [AWSMobileClient.getInstance().getUsername()](~/sdk/auth/working-with-api.md/q/platform/android#utility-properties) in Android.
 
-In the case of groups if you define the following:
+以下を定義した場合、グループの場合は、次のようにします。
 
 ```graphql
 type Post @model
@@ -635,27 +635,27 @@ type Post @model
 }
 ```
 
-Then you don’t need to pass an argument, as the resolver will check the contents of your JWT token at subscription time and ensure you are in the “Admin” group.
+その後、引数を渡す必要はありません。 リゾルバはサブスクリプション時にJWTトークンの内容を確認し、「管理者」グループにいることを確認します。
 
-Finally, if you use both owner and group authorization then the username argument becomes optional. This means the following:
+最後に、owner と group authorization の両方を使用する場合、username 引数は省略可能になります。これは次のことを意味します:
 
-- If you don’t pass the user in, but are a member of an allowed group, the subscription will notify you of records added.
-- If you don’t pass the user in, but are NOT a member of an allowed group, the subscription will fail to connect.
-- If you pass the user in who IS the owner but is NOT a member of a group, the subscription will notify you of records added of which you are the owner.
-- If you pass the user in who is NOT the owner and is NOT a member of a group, the subscription will not notify you of anything as there are no records for which you own
+- ユーザーをパスしないが、許可されたグループのメンバーである場合、サブスクリプションは追加されたレコードを通知します。
+- ユーザーをパスしないが、許可されたグループのメンバーではない場合、サブスクリプションは接続に失敗します。
+- オーナーでありながらグループのメンバーではないユーザーを渡した場合。 サブスクリプションは、あなたが所有者であることを追加したレコードを通知します。
+- 所有者ではなく、グループのメンバーではないユーザーを渡した場合。 あなたが所有している記録がないため、サブスクリプションはあなたに何も通知しません
 
 
-You may disable authorization checks on subscriptions or completely turn off subscriptions as well by specifying either `public` or `off` in `@model`:
+`@model` で `公開` または `オフ` のいずれかを指定することで、サブスクリプションの承認チェックを無効にするか、サブスクリプションを完全にオフにすることができます:
 
 ```
-@model (subscriptions: { level: public })
+@model (subscription: { level: public })
 ```
 
-### Field level authorization
+### フィールドレベルの承認
 
-The `@auth` directive specifies that access to a specific field should be restricted according to its own set of rules. Here are a few situations where this is useful:
+`@auth` ディレクティブは特定のフィールドへのアクセスをルールごとに制限するよう指定します 。 これが便利ないくつかの状況を以下に示します:
 
-**Protect access to a field that has different permissions than the parent model**
+**親モデルとは異なる権限を持つフィールドへのアクセスを保護**
 
 You might want to have a user model where some fields, like *username*, are a part of the public profile and the *ssn* field is visible to owners.
 
@@ -667,9 +667,9 @@ type User @model {
 }
 ```
 
-**Protect access to a `@connection` resolver based on some attribute in the source object**
+**ソースオブジェクトの属性に基づいて `@connection` リゾルバへのアクセスを保護**
 
-This schema will protect access to Post objects connected to a user based on an attribute in the User model. You may turn off top level queries by specifying `queries: null` in the `@model` declaration which restricts access such that queries must go through the `@connection` resolvers to reach the model.
+このスキーマは、Userモデルの属性 に基づいて、ユーザーに接続されたPostオブジェクトへのアクセスを保護します。 @model `でクエリ: null` を指定することにより、トップレベルのクエリをオフにできます。 `@model` クエリがモデルに到達するために `@connection` リゾルバ を通過しなければならないようにアクセスを制限する宣言。
 
 ```graphql
 type User @model {
@@ -682,7 +682,7 @@ type User @model {
 type Post @model(queries: null) { ... }
 ```
 
-**Protect mutations such that certain fields can have different access rules than the parent model**
+**特定のフィールドが親モデルとは異なるアクセスルールを持つように変更を保護します。**
 
 When used on field definitions, `@auth` directives protect all operations by default. To protect read operations, a resolver is added to the protected field that implements authorization logic. To protect mutation operations, logic is added to existing mutations that will be run if the mutation's input contains the protected field. For example, here is a model where owners and admins can read employee salaries but only admins may create or update them.
 
@@ -705,7 +705,7 @@ type Employee @model {
 
 **Note** The `delete` operation, when used in @auth directives on field definitions, translates to protecting the update mutation such that the field cannot be set to null unless authorized.
 
-**Note**: When specifying operations as a part of the @auth rule on a field, the operations not included in the operations list are not protected by default. For example, let's say you have the following schema:
+**注**: フィールドの @auth ルールの一部として操作を指定する場合 操作リストに含まれていない操作はデフォルトでは保護されません。 たとえば、次のスキーマがあるとします。
 
 ```graphql
 type Todo
@@ -718,7 +718,7 @@ type Todo
 }
 ```
 
-In this schema, only the owner of the object has the authorization to perform update operations on the `content` field. But this does not prevent any other owner (any user other than the creator or owner of the object) to update some other field in the object owned by another user. If you want to prevent update operations on a field, the user would need to explicitly add auth rules to restrict access to that field. One of the ways would be to explicitly specify @auth rules on the fields that you would want to protect like the following:
+このスキーマでは、オブジェクトの所有者だけが `content` フィールドで更新操作を実行する権限を持っています。 しかし、これは他の所有者(オブジェクトの作成者または所有者以外のユーザー)が、他のユーザーが所有するオブジェクトの他のフィールドを更新することを妨げるものではありません。 フィールドの更新操作を防止したい場合は、そのフィールドへのアクセスを制限するために明示的に認証ルールを追加する必要があります。 次のように保護したいフィールドに @auth ルールを明示的に指定する方法があります。
 
 ```graphql
 type Todo
@@ -730,7 +730,7 @@ type Todo
   content: String! @auth(rules: [{ allow: owner, operations: [update] }])
 }
 ```
-You can also provide explicit deny rules to your field like the following:
+フィールドに次のような明示的な拒否ルールを指定することもできます:
 
 ```graphql
 type Todo
@@ -743,7 +743,7 @@ type Todo
 }
 ```
 
-You can also combine top-level @auth rules on the type with field level auth rules. For example, let's consider the following schema:
+タイプの最上位の @auth ルールを項目レベルの auth ルールと組み合わせることもできます。例えば、次のスキーマを見てみましょう。
 
 ```graphql
 type Todo
@@ -757,9 +757,9 @@ type Todo
 ```
 In the above schema users in the `Admin` group have the authorization to create, read, delete and update (except the `content` field in the object of another owner) for the type Todo. An `owner` of an object, has the authorization to create Todo types and read all the objects of type Todo. In addition an `owner` can perform an update operation on the Todo object, only when the `content` field is present as a part of the input. Any other user - who isn't an owner of an object isn't authorized to update that object.
 
-#### Per-Field with subscriptions
+#### サブスクリプションを持つ項目ごと
 
-When setting per-field `@auth` the Transformer will alter the response of mutations for those fields by setting them to `null` in order to prevent sensitive data from being sent over subscriptions. For example in the schema below:
+フィールド `@auth` ごとに設定すると、Transformer は機密データがサブスクリプション上で送信されないように、 `null` に設定することで、これらのフィールドの変更のレスポンスを変更します。 例えば、以下のスキーマを参照してください。
 
 ```graphql
 type Employee @model
@@ -774,10 +774,10 @@ type Employee @model
 }
 ```
 
-Subscribers might be a member of the "Admins" group and should get notified of the new item, however they should not get the `ssn` field. If you run the following mutation:
+購読者は「管理者」グループのメンバーであり、新しいアイテムの通知を受け取る必要があります。 しかしながら、彼らは `ssn` フィールドを得るべきではありません。 以下の変異を実行する場合:
 
 ```graphql
-mutation {
+mutter{
   createEmployee(input: {
     name: "Nadia"
     address: "123 First Ave"
@@ -792,11 +792,11 @@ mutation {
 
 The mutation will run successfully, however `ssn` will return null in the GraphQL response. This prevents anyone in the "Admins" group who is subscribed to updates from receiving the private information. Subscribers would still receive the `name` and `address`. The data is still written and this can be verified by running a query.
 
-#### Generates
+#### 生成
 
-The `@auth` directive will add authorization snippets to any relevant resolver mapping templates at compile time. Different operations use different methods of authorization.
+`@auth` ディレクティブはコンパイル時に、関連するリゾルバマッピングテンプレートに認可スニペットを追加します。異なる操作では、異なる承認メソッドが使用されます。
 
-**Owner Authorization**
+**オーナーの承認**
 
 ```graphql
 type Post @model @auth(rules: [{ allow: owner }]) {
@@ -805,7 +805,7 @@ type Post @model @auth(rules: [{ allow: owner }]) {
 }
 ```
 
-The generated resolvers would be protected like so:
+生成されたリゾルバは以下のように保護されます:
 
 - `Mutation.createX`: Verify the requesting user has a valid credential and automatically set the **owner** attribute to equal `$ctx.identity.username`.
 - `Mutation.updateX`: Update the condition expression so that the DynamoDB `UpdateItem` operation only succeeds if the record's **owner** attribute equals the caller's `$ctx.identity.username`.
@@ -814,7 +814,7 @@ The generated resolvers would be protected like so:
 - `Query.listX`: In the response mapping template filter the result's **items** such that only items with an **owner** attribute that is the same as the `$ctx.identity.username` are returned.
 - `@connection` resolvers: In the response mapping template filter the result's **items** such that only items with an **owner** attribute that is the same as the `$ctx.identity.username` are returned. This is not enabled when using the `queries` argument.
 
-### Static group authorization
+### 静的グループの承認
 
 ```graphql
 type Post @model @auth(rules: [{ allow: groups, groups: ["Admin"] }]) {
@@ -824,7 +824,7 @@ type Post @model @auth(rules: [{ allow: groups, groups: ["Admin"] }]) {
 }
 ```
 
-Static group auth is simpler than the others. The generated resolvers would be protected like so:
+静的グループ認証は他のリゾルバよりも簡単です。生成されたリゾルバは次のように保護されます。
 
 - `Mutation.createX`: Verify the requesting user has a valid credential and that `$ctx.identity.claims.get("cognito:groups")` contains the **Admin** group. If it does not, fail.
 - `Mutation.updateX`: Verify the requesting user has a valid credential and that `$ctx.identity.claims.get("cognito:groups")` contains the **Admin** group. If it does not, fail.
@@ -833,7 +833,7 @@ Static group auth is simpler than the others. The generated resolvers would be p
 - `Query.listX`: Verify the requesting user has a valid credential and that `$ctx.identity.claims.get("cognito:groups")` contains the **Admin** group. If it does not, fail.
 - `@connection` resolvers: Verify the requesting user has a valid credential and that `$ctx.identity.claims.get("cognito:groups")` contains the **Admin** group. If it does not, fail. This is not enabled when using the `queries` argument.
 
-### Dynamic group authorization
+### 動的グループ認証
 
 ```graphql
 type Post @model @auth(rules: [{ allow: groups, groupsField: "groups" }]) {
@@ -843,7 +843,7 @@ type Post @model @auth(rules: [{ allow: groups, groupsField: "groups" }]) {
 }
 ```
 
-The generated resolvers would be protected like so:
+生成されたリゾルバは以下のように保護されます:
 
 - `Mutation.createX`: Verify the requesting user has a valid credential and that it contains a claim to at least one group passed to the query in the `$ctx.args.input.groups` argument.
 - `Mutation.updateX`: Update the condition expression so that the DynamoDB `UpdateItem` operation only succeeds if the record's **groups** attribute contains at least one of the caller's claimed groups via `$ctx.identity.claims.get("cognito:groups")`.

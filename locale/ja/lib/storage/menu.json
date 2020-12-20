@@ -1,16 +1,16 @@
 {
-  "title": "Storage",
+  "title": "ストレージ",
   "items": [
     "getting-started",
-    "overview",
+    "概要",
     "configureaccess",
-    "upload",
-    "download",
-    "list",
-    "remove",
+    "アップロード",
+    "ダウンロード",
+    "リスト",
+    "削除",
     "autotrack",
-    "triggers",
-    "escapehatch",
+    "トリガー",
+    "エスケープハッチ",
     "existing-resources"
   ]
 }

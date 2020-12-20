@@ -50,8 +50,8 @@ You can also write this in a compositional function manner by replacing the oper
 let p = Post.keys
 Amplify.DataStore.query(Post.self,
                         where: p.rating.gt(4).and(p.status.eq(PostStatus.published))) {
-    // handle the callback like in the previous example
-}
+    // 前の例
+ } のようにコールバックを処理する
 ```
 
 </amplify-block>

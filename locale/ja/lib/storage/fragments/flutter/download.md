@@ -1,4 +1,4 @@
-If you uploaded the data using the key `ExampleKey`, you can retrieve the data using `Amplify.Storage.downloadFile`.
+キー `ExampleKey`を使用してデータをアップロードした場合、 `Amplify.Storage.downloadFile` を使用してデータを取得できます。
 
 ```dart
 try {
@@ -11,9 +11,9 @@ try {
 }
 ```
 
-### Generate a download URL
+### ダウンロード URL を生成する
 
-You can also retrieve a URL for the object in storage:
+また、ストレージ内のオブジェクトの URL を取得することもできます。
 
 ```dart
 

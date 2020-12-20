@@ -1,8 +1,8 @@
-## Setup the backend
+## バックエンドのセットアップ
 
-This will allow you to determine key phrases, sentiment analysis from text, etc. If you haven't already done so, run `amplify init` inside your project and then `amplify add auth` (we recommend selecting the *default configuration*).
+これにより、キーフレーズ、文章からのセンチメント分析などを決定することができます。 まだ実行していない場合 プロジェクト内で `amplify init` を実行し、 `増幅して認証を追加` します(デフォルトの設定 *を選択することをお勧めします*)。
 
-Run `amplify add predictions` and select **Interpret**. Then use the following answers:
+`増幅して予測を追加する` を実行し、 **解釈**を選択します。次に次の解答を使用します:
 
 ```console
 ? What would you like to interpret? (Use arrow keys)
@@ -22,11 +22,11 @@ Run `amplify add predictions` and select **Interpret**. Then use the following a
 
 Now run `amplify push` which will generate your `aws-exports.js` and create resources in the cloud. You can now either add this to your backend or skip and add more features to your app.
 
-Services used: Amazon Comprehend
+使用されるサービス: Amazon Compriend
 
-## Working with the API
+## API の操作
 
-Analyze text to find key phrases, sentiment (positive, negative, neutral), or the syntax (pronouns, verbs, etc.). You can also find entities in the text such as names or places, or perform language detection.
+テキストを分析して、キーフレーズ、センチメント(正、負、中立)、または構文(代名詞、動詞など)を検索します。 をクリックします。また、名前や場所などのテキスト内のエンティティを検索したり、言語を検出したりすることもできます。
 
 ```js
 Predictions.interpret({

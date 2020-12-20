@@ -1,14 +1,14 @@
-You can integrate with Amplify framework using the following steps:
+Amplifyフレームワークと統合するには、次の手順を実行します。
 
-1. Setup the API endpoint and authentication information in the client side configuration.
-2. Generate Swift Model classes from the API schema.
-3. Write app code to run queries, mutations and subscriptions.
+1. クライアント側の設定で API エンドポイントと認証情報を設定します。
+2. API スキーマからSwift Model クラスを生成します。
+3. クエリ、変更、サブスクリプションを実行するためのアプリコードを記述します。
 
-## Set up your backend
+## バックエンドの設定
 
-**Prerequisites**
-* An iOS project targeting at least iOS 11.0.
-* Install and configure the Amplify CLI
+**前提条件**
+* 少なくともiOS 11.0を対象としたiOSプロジェクト。
+* Amplify CLI をインストールおよび設定
 
 <amplify-block-switcher>
 
@@ -23,7 +23,7 @@ npm install -g @aws-amplify/cli
 <amplify-block name="cURL (Mac and Linux)">
 
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
+curl -sL https://aws-amplify.github.io/anplify-cli/install | bash && $SHELL
 ```
 
 </amplify-block>
@@ -31,7 +31,7 @@ curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
 <amplify-block name="cURL (Windows)">
 
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install-win -o install.cmd && install.cmd
+curl -sL https://aws-amplify.github.io/anplify-cli/install-win -o install.cmd && install.cmd
 ```
 
 </amplify-block>
@@ -39,17 +39,17 @@ curl -sL https://aws-amplify.github.io/amplify-cli/install-win -o install.cmd &&
 </amplify-block-switcher>
 
 ```bash
-amplify configure
+増幅の設定
 ```
 
-**Steps**
+**歩数**
 
-Go to your project directory and run the following commands to get a fully functioning AppSync backend with API category.
+プロジェクトディレクトリに移動し、APIカテゴリのAppSyncバックエンドを完全に機能させるために、以下のコマンドを実行します。
 
-Run `amplify init` command as shown:
+以下のように、 `amplify init` コマンドを実行します。
 
 ```bash
-amplify init
+initを増幅する
 ```
 
 ```console
@@ -61,7 +61,7 @@ amplify init
 ? Please choose the profile you want to use default
 ```
 
-Add API using the command `amplify add api`. Here is an example:
+コマンド `amplify add api`を使用して API を追加します。以下に例を示します。
 
 ```console
 ? Please select from one of the below mentioned services: `GraphQL`
@@ -76,7 +76,7 @@ Add API using the command `amplify add api`. Here is an example:
 ? Do you want to edit the schema now? `Yes`
 ```
 
-We'll be using this schema:
+このスキーマを使用します：
 ```graphql
 type Todo @model {
   id: ID!
@@ -84,53 +84,53 @@ type Todo @model {
   description: String
 }
 ```
-Provision the backend with `amplify push` command. Here is an example:
+`amplify push` コマンドでバックエンドを提供します。以下に例を示します。
 
 ```console
-? Are you sure you want to continue? `Yes`
-? Do you want to generate code for your newly created GraphQL API `No`
+? 続行してもよろしいですか? `はい`
+? 新しく作成したGraphQL API `いいえ` 用のコードを生成しますか?
 ```
 
 The example above creates a backend with the Todo schema. You can open the AWS Console for AppSync with `amplify console api` to interact directly with the GraphQL service.  When your backend is successfully updated, there should be two newly created files: `amplifyconfiguration.json` and `awsconfiguration.json` in your project folder.
 
-## Install Amplify libraries and tools
+## Amplifyライブラリとツールのインストール
 
-If this is a new project, run `pod init` to create the `Podfile` to use CocoaPods to manage your dependencies. Add the following to the Podfile:
+これが新しいプロジェクトの場合。 `pod init` を実行して `Podfile` を作成し、CocoaPods を使用して依存関係を管理します。 ポッドファイルに以下を追加します:
 
 ```ruby
 target :'YOUR-APP-NAME' do
     use_frameworks!
     pod 'AmplifyPlugins/AWSAPIPlugin'
-    pod 'amplify-tools'
+    pod 'anply-tools'
 end
 ```
 
-Close out of the existing Xcode project if you have it open.
+既存の Xcode プロジェクトを閉じます。
 
-Install the dependencies via CocoaPods
+CocoaPods 経由で依存関係をインストール
 ```bash
 pod install --repo-update
 ```
 
-Open the `.xcworkspace` file created by CocoaPods
+CocoaPods によって作成された `.xcworkspace` ファイルを開く
 
 ```bash
-open <YOURAPP>.xcworkspace
+<YOURAPP>.xcworkspace を開く
 ```
 
-Build your project and you should see the `amplify` folder, `amplifyxc.config`, `awsconfiguration.json`, and `amplifyconfiguration.json`.
+プロジェクトをビルドすると、 `amplify` フォルダ、 `amplifyxc.config`、 `awsconfiguration.json`、および `amplifyconfiguration.json` が表示されます。
 
-## Initialize Amplify
+## Amplifyを初期化
 
-Initialize Amplify and AWSAPIPlugin.
+AmplifyとAWSAPIPluginを初期化します。
 
-Add the following imports to the top of your `AppDelegate.swift` file
+`AppDelegate.swift` ファイルの先頭に以下のインポートを追加します
 ```swift
 import Amplify
 import AmplifyPlugins
 ```
 
-Add the follow code to your AppDelegate's `application:didFinishLaunchingWithOptions` method
+AppDelegate の `application:didFinishLaunchingWithOptions` メソッドにフォローコードを追加します
 ```swift
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
     let apiPlugin = AWSAPIPlugin(modelRegistration: AmplifyModels())
@@ -144,18 +144,18 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
     return true
 }
 ```
-## Add configuration files
+## 設定ファイルを追加
 
-3. Click on the top level project on the left panel.
-4. Click on your app under Targets in the left panel that contains Project and Targets.
-5. Click on Build Phases
-6. Expand the Copy Bundle Resources
-7. Click on the + button, and select `awsconfiguration.json` and `amplifyconfiguration.json` to add.
-8. Build and run (`Cmd+R`) the app and make sure Amplify is initialized.
+3. 左側のパネルのトップレベルプロジェクトをクリックします。
+4. プロジェクトとターゲットが含まれている左側のパネルのターゲットの下にあるアプリをクリックします。
+5. ビルドフェーズをクリックします
+6. コピーバンドルリソースを展開します
+7. + ボタンをクリックし、 `awsconfiguration.json` と `amplifyconfiguration.json` を選択して追加します。
+8. アプリをビルドして実行 (`Cmd+R`) し、Amplifyが初期化されていることを確認します。
 
-## Running code generator
+## コードジェネレータの実行
 
-1. In `amplifyxc.config`, enable model generation, and save the file.
+1. `amplifyxc.config`では、モデル生成を有効にしてファイルを保存します。
     ```ruby
     modelgen=true
     ```
@@ -165,14 +165,14 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
 
 4. Drag the entire `models` directory over to your project. If you Build the project, the model files will be regenerated under the `amplify` folder.
 
-5. Select each model file, and select the app under Target Membership, to make sure it gets added to the target when building the app.
+5. 各モデル ファイルを選択し、[Target Membership] の下でアプリを選択し、アプリをビルドする際にターゲットに追加されるようにします。
 
-6. Register the models before initializing Amplify in your AppDelegate method.
+6. AppDelegate メソッドでAmplifyを初期化する前にモデルを登録します。
     ```
     ModelRegistry.register(modelType: Todo.self)
     ```
-Make sure it builds and runs (`Cmd+R`) successfully before moving onto the next section.
+次のセクションに移動する前に、ビルドして実行していることを確認してください (`Cmd+R`) 。
 
-## API Reference
+## APIリファレンス
 
-For the complete API documentation for API, visit our [API Reference](https://aws-amplify.github.io/amplify-ios/docs/Classes/AmplifyAPICategory.html)
+API の完全な API ドキュメントについては、 [API リファレンス](https://aws-amplify.github.io/amplify-ios/docs/Classes/AmplifyAPICategory.html) を参照してください。

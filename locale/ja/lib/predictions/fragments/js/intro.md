@@ -1,26 +1,26 @@
-The Predictions category provides a solution for using AI and ML cloud services to enhance your application. Some supported use cases:
+予測カテゴリは、アプリケーションを強化するためにAIとMLクラウドサービスを使用するためのソリューションを提供します。一部のサポートされているユースケース:
 
-- Translating text from one language to another
-- Converting text to speech
-- Text recognition from image
-- Entities recognition
-- Label real world objects
-- Interpretation of text
-- Uploading images for automatic training
-- Transcribing text
+- ある言語から別の言語へのテキストの翻訳
+- テキストを音声に変換中
+- 画像からのテキスト認識
+- エンティティ認識
+- 実際のオブジェクトにラベル付け
+- テキストの解釈
+- 自動トレーニング用の画像をアップロードしています
+- テキストを書き換え中
 
 <br />
-Predictions is broadly organized into 3 key use cases - Identify, Convert, and Interpret - which are available in the client API as well as CLI workflows.   
+予測は大きく3つの重要なユースケースに分類されます - 識別、変換、。 クライアントAPIとCLIワークフローで利用可能なInterpret。   
 <br /><br />
 
-- `Identify` will find text (words, tables, pages from a book), entities (faces and/or celebrities) from images. You can also identify real world objects such as chairs, desks, etc. which are referred to as “labels” from images.
+- `識別する` はテキスト(単語、表、本からのページ)、イメージからのエンティティ (顔や有名人) を見つけます。 また、椅子、机などの実際のオブジェクトを識別することもできます。これは画像から「ラベル」と呼ばれます。
 
-- `Convert` allows you to translate text from one source language to a target language. You can also generate speech audio from text input. Lastly, you can take an audio input and transcribe it using a websocket stream.
+- `` を使用すると、翻訳元の言語から翻訳先の言語にテキストを翻訳できます。 テキスト入力から音声音声を生成することもでき、最後にWebSocketストリームを使用して音声入力を転写することもできます。
 
-- `Interpret` allows you to analyze text for language, entities (places, people), key phrases, sentiment (positive, neutral, negative), and syntax (pronouns, verbs, adjectives).
+- `解釈` では、言語、エンティティ (場所、人々) 、キーフレーズ、センチメント (正、中立、負)、および構文 (代名詞、動詞、形容詞) のテキストを解析できます。
 
-Some common use cases are listed below, as well as an advanced workflow which allows you to perform dynamic image indexing from your client application.
+一般的な使用事例は以下にリストされており、クライアントアプリケーションから動的なイメージインデックスを実行できる高度なワークフローがあります。
 
 Predictions comes with built-in support for [Amazon Translate](https://docs.aws.amazon.com/translate/latest/dg/what-is.html), [Amazon Polly](https://docs.aws.amazon.com/polly/latest/dg/what-is.html), [Amazon Transcribe](https://docs.aws.amazon.com/transcribe/latest/dg/what-is-transcribe.html), [Amazon Rekognition](https://docs.aws.amazon.com/rekognition/latest/dg/what-is.html), [Amazon Textract](https://docs.aws.amazon.com/textract/latest/dg/what-is.html), and [Amazon Comprehend](https://docs.aws.amazon.com/comprehend/latest/dg/what-is.html).
 
-Additionally Predictions supports generic invocation of SageMaker Inference API from a native (iOS/Android) application.
+さらに、予測は、ネイティブ(iOS/Android)アプリケーションからSageMaker推論APIの一般的な呼び出しをサポートしています。

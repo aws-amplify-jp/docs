@@ -1,88 +1,88 @@
 ---
-title: Commands
-description: Use these Amplify CLI commands to manage a team workflow with multiple environments.
+title: マーク
+description: Amplify CLI コマンドを使用して、複数の環境でチームワークフローを管理します。
 ---
  
-## Team workflows
+## チームワークフロー
 
-Amplify environments help you manage your local and cloud environments to mimic your team workflows. Common tasks include:
-- Manage environments to support development processes. Eg: development, staging, production
-- Test new features safely
-- Share environments between team members
-- Support team workflows
+Amplify環境では、ローカルおよびクラウド環境を管理してチームワークフローを模倣することができます。一般的なタスクは次のとおりです。
+- 開発プロセスをサポートする環境を管理します。例: 開発、ステージング、生産
+- 安全に新機能をテストする
+- チームメンバー間で環境を共有
+- サポートチームワークフロー
 
-To display all commands available for a new Amplify project, run the following command from the root directory.
+新しいAmplifyプロジェクトで使用可能なすべてのコマンドを表示するには、ルートディレクトリから次のコマンドを実行します。
 ```
-amplify env
+増幅env
 ```
 
-## Commands overview
+## コマンドの概要
 
-| Command                                                                                                                                  | Description                                  |
-| ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| [`amplify env add`](#add-a-new-environment)                                                                                              | Adds a new environment                       |
-| [`amplify env pull [--restore]`](#pull-the-environment-from-the-cloud)                                                                   | Pulls the current environment from the cloud |
-| [`amplify env checkout <env-name> [--restore]`](#checkout-an-environment)                                                          | Switches to the selected environment         |
-| [`amplify env list [--details] [--json]`](#list-environments)                                                                            | Displays a list of all the environments      |
-| [`amplify env get --name <env-name>`](#show-environment-details)                                                                   | Displays the environment details             |
-| [`amplify env import --name <env-name> --config <provider-configs> [--awsInfo <aws-configs>]`](#import-an-environment) | Imports an environment                       |
-| [`amplify env remove <env-name>`](#remove-an-environment)                                                                          | Removes an environment                       |
+| (Command)                                                                                                                                | 説明                |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| [`anmpify env add`](#add-a-new-environment)                                                                                              | 新しい環境を追加          |
+| [`enmify env pull [--restore]`](#pull-the-environment-from-the-cloud)                                                                    | クラウドから現在の環境をプルします |
+| [`anmpify env checkout <env-name> [--restore]`](#checkout-an-environment)                                                          | 選択した環境に切り替えます     |
+| [`anmpify env list [--details] [--json]`](#list-environments)                                                                            | すべての環境のリストを表示します  |
+| [`amplify env get --name <env-name>`](#show-environment-details)                                                                   | 環境の詳細を表示します       |
+| [`amplify env import --name <env-name> --config <provider-configs> [--awsInfo <aws-configs>]`](#import-an-environment) | 環境をインポート          |
+| [`enmify env remove <env-name>`](#remove-an-environment)                                                                           | 環境を削除             |
 
-## Environment CLI commands
+## 環境 CLI コマンド
 
-### Add a new environment
+### 新しい環境を追加
 ```
-amplify env add
+anmpify env add
 ```
-The `add` command goes through the following steps:
-- Asks for a name for the new environment
-- Creates IAM role for unauthenticated users
-- Creates IAM role for authenticated users
-- Creates S3 bucket for deployment
-- Creates a new backend environment in [AWS Amplify Console](https://console.aws.amazon.com/amplify) to view and manage resources.
+`add` コマンドは次のステップを実行します。
+- 新しい環境の名前を尋ねます
+- 認証されていないユーザーのIAMロールを作成
+- 認証済みユーザーのIAMロールを作成
+- デプロイ用のS3バケットを作成
+- リソースを表示および管理するために、 [AWS Amplify Console](https://console.aws.amazon.com/amplify) で新しいバックエンド環境を作成します。
 
-### Pull the environment from the cloud
+### クラウドから環境を引っ張ってください
 ```
-amplify env pull [--restore]
+enmify env pull [--restore]
 ```
 Use this command to pull the current environment from the cloud. Add the `--restore` flag to overwrite your local changes like `amplify pull` command.
 
-### Checkout an environment
+### 環境をチェックアウト
 ```
-amplify env checkout <env-name> [--restore]
+anmpify env checkout <env-name> [--restore]
 ```
-Use this command to checkout the \<env-name\> environment. Add the `--restore` flag to overwrite your local changes.
+\<env-name\> 環境をチェックアウトするには、このコマンドを使用します。ローカルの変更を上書きするには、 `--restore` フラグを追加します。
 
-### List environments
+### リスト環境
 ```
-amplify env list [--details] [--json]
+anmpify env list [--details] [--json]
 ```
-Use this command to list all the environments. Add the `--details` or `--json` flags to see more details and format the output. Details include the AWS Region, IAM roles, S3 bucket and stack information.
+このコマンドを使用して、すべての環境を一覧表示します。 `--details` または `--json` フラグを追加して詳細を表示し、出力をフォーマットします。 詳細には、AWSリージョン、IAMロール、S3バケット、スタック情報が含まれます。
 
-See the output below for an Amplify project with `dev` and `test` environments. The active environment is preceded with an asterisk.
+`dev` 環境と `テスト` 環境を持つAmplifyプロジェクトについては、以下の出力を参照してください。アクティブな環境の前にはアスタリスクが付きます。
 
 ```bash
-amplify env list
+envリストを増幅する
 ```
 
 ```console
-| Environments |
+| 環境 |
 | ------------ |
-| *dev         |
-| test         |
+| *dev |
+| test |
 ```
 
-### Show environment details
+### 環境の詳細を表示
 ```
 amplify env get --name <env-name>
 ```
-Use this command to list all details for \<env-name\> environment. Details include the AWS Region, IAM roles, S3 bucket and stack information.
+\<env-name\> 環境のすべての詳細を一覧表示するには、このコマンドを使用します。詳細にはAWSリージョン、IAMロール、S3バケット、スタック情報が含まれます。
 
-### Import an environment
+### 環境をインポート
 ```
 amplify env import --name <env-name> --config <provider-configs> [--awsInfo <aws-configs>]
 ```
-Use this command to import an existing environment. Find below an example of a bash command.
+既存の環境をインポートするには、このコマンドを使用します。bash コマンドの例を以下に示します。
 
 ```
 #!/bin/bash
@@ -118,10 +118,10 @@ amplify env import \
 
 ```
 
-You can get the `AWSCLOUDFORMATIONCONFIG` from the `team-provider-info.json` file from your existing Amplify project.
+既存のAmplifyプロジェクトから `AWSCLOUDFORMATIONCONFIG` を `team-provider-info.json` ファイルから取得できます。
 
-### Remove an environment
+### 環境を削除
 ```
-amplify env remove <env-name>
+enmify env remove <env-name>
 ```
-Use this command to remove an environment. This will remove both the local and the cloud environments including all provisioned services and resources.
+このコマンドを使用して、環境を削除します。これにより、すべてのプロビジョニングされたサービスとリソースを含むローカル環境とクラウド環境の両方が削除されます。

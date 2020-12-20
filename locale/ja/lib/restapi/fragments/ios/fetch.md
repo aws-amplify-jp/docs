@@ -1,6 +1,6 @@
-## GET requests
+## GET リクエスト
 
-To make a GET request, first create a RESTRequest object and then use the Amplify.API.get api to issue the request:
+GET リクエストを作成するには、まずRESTRequest オブジェクトを作成し、Amplify.API.get api を使用してリクエストを発行します。
 
 <amplify-block-switcher>
 
@@ -47,9 +47,9 @@ func getTodo() -> AnyCancellable {
 
 </amplify-block-switcher>
 
-## Accessing query parameters & body in Lambda proxy function
+## Lambdaプロキシ関数でクエリパラメータ & 本体にアクセス中
 
-> To learn more about Lambda Proxy Integration, please visit [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-create-api-as-simple-proxy-for-lambda.html).
+> Lambda Proxy Integrationの詳細については、 [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-create-api-as-simple-proxy-for-lambda.html) をご覧ください。
 
 If you are using a REST API which is generated with Amplify CLI, your backend is created with Lambda Proxy Integration, and you can access your query parameters & body within your Lambda function via the *event* object:
 
@@ -60,16 +60,16 @@ exports.handler = function(event, context, callback) {
 }
 ```
 
-Alternatively, you can update your backend file which is located at `amplify/backend/function/[your-lambda-function]/app.js` with the middleware:
+あるいは、 `amplify/backend/function/[your-lambda-function]/app.js` にあるバックエンドファイルをミドルウェアで更新することもできます。
 
 ```javascript
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware');
 app.use(awsServerlessExpressMiddleware.eventContext());
 ```
 
-Accessing Query Parameters with Serverless Express
+Serverless Express でクエリーパラメーターにアクセスする
 
-In your request handler use `req.apiGateway.event` or `req.query`:
+リクエストハンドラで `req.apiGateway.event` または `req.query` を使用してください:
 
 ```javascript
 app.get('/todo', function(req, res) {
@@ -83,7 +83,7 @@ app.get('/todo', function(req, res) {
 });
 ```
 
-Then you can use query parameters in your path as follows:
+次に、次のようにパス内のクエリパラメータを使用できます。
 
 <amplify-block-switcher>
 

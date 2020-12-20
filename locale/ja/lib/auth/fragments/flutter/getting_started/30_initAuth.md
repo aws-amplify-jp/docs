@@ -1,4 +1,4 @@
-Add the Auth plugin, along with any other plugins you may have added as described in the **Prerequisites** section.
+Authプラグインと他のプラグインを追加するには、 **前提条件** セクションで説明したように追加します。
 
 ```dart
 // Add this line, to include the Auth plugin.

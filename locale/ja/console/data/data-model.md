@@ -1,26 +1,26 @@
 ---
-title: Data modeling
-description: Get started with the Admin UI
+title: データモデリング
+description: 管理者 UI で始めましょう
 ---
 
-## Data modeling example
+## データモデリングの例
 
-In this example we will build a data model for a bookstore to maintain information about books, authors, and publishers with relationships and authorization rules. The schema template below is a starting point for the bookstore backend.
+この例では、リレーションシップと認可ルールを持つ書籍、著者、出版社に関する情報を維持するための書店のためのデータモデルを構築します。 以下のスキーマテンプレートは、書店のバックエンドの出発点です。
 
 <docs-card external url="https://sandbox.amplifyapp.com/schema-design/4f1a9f51-5783-4da5-9db1-60ce071e6539/clone" container-tag="amplify-external-link">
-        <img slot="graphic" src="~/images/console/adminui.svg" /><h4 slot="heading">Clone in Sandbox</h4>
-        <p slot="description">A bookstore data model template with four models called Book, ISBN, Publisher, and Author</p>
+        <img slot="graphic" src="~/images/console/adminui.svg" /><h4 slot="heading">サンドボックス内で複製</h4>
+        <p slot="description">Book、ISBN、Publisher、Author と呼ばれる4つのモデルを持つ書店データモデルテンプレート</p>
 </docs-card>
 <br/>
 
-Skip ahead to [relationships](~/console/data/relationships.md) or read below on how data modeling works in the Admin UI.
+[リレーションシップ](~/console/data/relationships.md) にスキップするか、Admin UIでデータモデリングがどのように機能するかについては以下をお読みください。
 
-## Data modeling in the Admin UI
+## 管理者 UI でのデータモデリング
 
 The Admin UI data model designer provides a visual way to define your app's data model, relationships, and authorization rules. Admin UI generates a `schema.graphql` GraphQL Transform for the data model you create. To learn more about how the GraphQl transform works, see [GraphQL Transform Overview](~/cli/graphql-transformer/overview.md).
 
 ![datamodel](~/images/console/datamodel.gif)
 
-All data models built with Admin UI work with Amplify DataStore out-of-the-box. DataStore is an on-device storage engine that automatically synchronizes data between your mobile and web apps and your database in the AWS cloud to help you build real-time and offline apps faster. [Learn more](https://docs.awsamplifyconsole.com/lib/datastore/getting-started/)
+AdminのUIで構築されたすべてのデータモデルはAmplifyのDataStoreをすぐに使用できます。 DataStoreは、AWSクラウド上のモバイルアプリとWebアプリとデータベースの間で自動的にデータを同期するオンデバイスストレージエンジンで、リアルタイムおよびオフラインアプリの構築を迅速に支援します。 [詳細](https://docs.awsamplifyconsole.com/lib/datastore/getting-started/)
 
-The experience for modeling data is the same in the sandbox and in the Admin UI. With an AWS account, you will have real-time data synchronization capabilities and you will also be able to set authorization rules on your models. For more information, see [Authorization](~/console/authz/authorization.md). All data models are provisioned in your account as AWS AppSync GraphQL APIs and Amazon DynamoDB tables. As with every feature of the Admin UI, it can be further extended with the CLI.
+データモデリングの経験は、Sandbox と Admin UI でも同じです。 AWSアカウントを使用すると、リアルタイムのデータ同期機能があり、モデルに認可ルールを設定することもできます。 詳細については、 [Authorization](~/console/authz/authorization.md)を参照してください。 AWS AppSync GraphQL API および Amazon DynamoDB テーブルとして、すべてのデータモデルがアカウントでプロビジョニングされます。 Admin UI のすべての機能と同様に、CLI でさらに拡張できます。

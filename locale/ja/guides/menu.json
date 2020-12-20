@@ -1,11 +1,11 @@
 {
-  "title": "Guides",
+  "title": "補助線",
   "items": [
     "api-graphql",
     "api-rest",
-    "authentication",
-    "functions",
-    "hosting",
+    "認証",
+    "関数",
+    "ホスティング",
     "location-service"
   ]
 }

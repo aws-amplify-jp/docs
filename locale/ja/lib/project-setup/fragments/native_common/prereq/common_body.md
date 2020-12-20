@@ -1,34 +1,34 @@
-## Sign up for an AWS account
+## AWS アカウントにサインアップ
 
-If you don't already have an AWS account, you'll need to create one in order to follow the steps outlined in this tutorial.
+AWSアカウントをまだお持ちでない場合は、このチュートリアルの手順に従って作成する必要があります。
 
-[Create AWS Account](https://portal.aws.amazon.com/billing/signup?redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start)
+[AWS アカウントを作成](https://portal.aws.amazon.com/billing/signup?redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start)
 
-> There are no upfront charges or any term commitments to create an AWS account and signing up gives you immediate access to the AWS Free Tier.
+> 先行料金やAWSアカウントを作成し、サインアップすることでAWSFree Tierに即座にアクセスすることができます。
 
-## Install and configure the Amplify CLI
+## Amplify CLI をインストールおよび設定
 
-The Amplify Command Line Interface (CLI) is a unified toolchain to create AWS cloud services for your app. Let's go ahead and install the Amplify CLI.
+Amplifyコマンドラインインターフェース(CLI)は、アプリケーション用のAWSクラウドサービスを作成するための統合ツールチェーンです。 では、AmplifyのCLIをインストールしてみましょう。
 
-### Option 1: Watch the video guide
+### オプション1:ビデオガイドを見る
 
-Watch the video below to learn how to install and configure the Amplify CLI or skip to the next section to follow the step-by-step instructions. <iframe src="https://www.youtube-nocookie.com/embed/fWbM5DLh25U" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen mark="crwd-mark"></iframe>
+Amplify CLI のインストールと設定方法、または次のセクションにスキップしてステップバイステップの指示に従う方法については、以下のビデオをご覧ください。 <iframe src="https://www.youtube-nocookie.com/embed/fWbM5DLh25U" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen mark="crwd-mark"></iframe>
 
-### Option 2: Follow the instructions
+### オプション2:指示に従ってください
 <inline-fragment platform="ios" src="~/lib/project-setup/fragments/native_common/prereq/cliInstall.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/project-setup/fragments/native_common/prereq/cliInstall.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/project-setup/fragments/flutter/prereq/cliInstall.md"></inline-fragment>
-> Because we're installing the Amplify CLI globally, you might need to run the command above with `sudo`.
+> Amplify CLI をグローバルにインストールしているので、上記のコマンドを `sudo` で実行する必要があるかもしれません。
 
 
-Now it's time to setup the Amplify CLI. Configure Amplify by running the following command:
+次のコマンドを実行してAmplifyを構成します。
 
 ```bash
-amplify configure
+増幅の設定
 ```
 
-`amplify configure` will ask you to sign into the AWS Console.
+`amplify configure` は AWS コンソールへのサインインを要求します。
 
-Once you're signed in, Amplify CLI will ask you to create an IAM user.
-> Amazon IAM (Identity and Access Management) enables you to manage users and user permissions in AWS. You can learn more about Amazon IAM [here](https://aws.amazon.com/iam/).
+サインイン後、Amplify CLIはIAMユーザーを作成するよう求めます。
+> Amazon IAM(Identity and Access Management)では、AWSのユーザとユーザの権限を管理できます。 Amazon IAM [については、こちら](https://aws.amazon.com/iam/) をご覧ください。
 
 ```console
 Specify the AWS Region
@@ -38,11 +38,11 @@ Specify the username of the new IAM user:
 Complete the user creation using the AWS console
 ```
 
-Create a user with `AdministratorAccess` to your account to provision AWS resources for you like AppSync, Cognito etc.
+`AdministratorAccess` でアカウントにユーザーを作成し、AppSync、CognitoなどのAWSリソースをプロビジョニングできます。
 
-![image](../../images/user-creation.gif)
+![画像](../../images/user-creation.gif)
 
-Once the user is created, Amplify CLI will ask you to provide the `accessKeyId` and the `secretAccessKey` to connect Amplify CLI with your newly created IAM user.
+ユーザーが作成されると、 Amplify CLI は `accessKeyId` と `secretAccessKey` を提供して、新しく作成した IAM ユーザーとAmplify CLI を接続するように要求します。
 
 ```console
 Enter the access key of the newly created user:
@@ -54,4 +54,4 @@ This would update/create the AWS Profile in your local machine
 Successfully set up the new user.
 ```
 
-Next, we'll set up the app and initialize Amplify!
+次に、アプリをセットアップし、Amplify を初期化します。

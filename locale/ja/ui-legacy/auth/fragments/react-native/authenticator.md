@@ -1,12 +1,12 @@
-## Using withAuthenticator HOC
+## withAuthenticator HOC の使用
 
-For React Native, the simplest way to add authentication flows into your app is to use the `withAuthenticator` Higher Order Component.
+React Nativeでは、アプリケーションに認証フローを追加する最も簡単な方法は、 `withAuthenticator` Higher Order Componentを使用することです。
 
-`withAuthenticator` automatically detects the authentication state and updates the UI. If the user is signed in, the underlying component (typically your app's main component) is displayed otherwise signin/signup controls are displayed.
+`withAuthenticator` は自動的に認証状態を検出し、UI を更新します。 ユーザーがサインインしている場合、基礎となるコンポーネント (通常はアプリのメインコンポーネント) が表示され、サインイン/サインアップコントロールが表示されます。
 
-> The default implementation uses the Amplify UI styling, for an example of what that looks like out of the box on web and mobile, see <a href="https://aws-amplify.github.io/media/ui_library" target="_blank">here</a>.
+> デフォルトの実装では、AmplifyのUIスタイルを使用しています。 例えば、ウェブとモバイルの箱の外見は、ここ <a href="https://aws-amplify.github.io/media/ui_library" target="_blank">を参照してください</a>。
 
-Just add these two lines to your `App.js`:
+`App.js`に以下の2行を追加してください:
 
 ```javascript
 import { withAuthenticator } from 'aws-amplify-react-native';
@@ -38,9 +38,9 @@ export default withAuthenticator(App, {
                 theme: {myCustomTheme}});
 ```
 
-## Using the Authenticator Component
+## 認証コンポーネントの使用
 
-The `withAuthenticator` HOC wraps an `Authenticator` component. Using `Authenticator` directly gives you more customization options for your UI.
+`withAuthenticator` HOC は `Authenticator` コンポーネントをラップします。 `Authenticator` を使用すると、UI のより多くのカスタマイズオプションが直接与えられます。
 
 ```jsx
 
@@ -96,9 +96,9 @@ The `withAuthenticator` HOC wraps an `Authenticator` component. Using `Authentic
 </Authenticator>
 ```
 
-## Customize your own components
+## 独自のコンポーネントをカスタマイズ
 
-You can provide custom components to the `Authenticator` as child components in React and React Native.
+React と React Native の子コンポーネントとして `Authenticator` にカスタムコンポーネントを提供することができます。
 
 ```jsx
 import { Authenticator, SignIn } from 'aws-amplify-react-native';
@@ -136,19 +136,19 @@ class MyCustomSignUp extends Component {
 }
 ```
 
-You can render the custom component (or not) based on the injected `authState` within your component as well as jump to other states within your component.
+コンポーネント内の注入された `authState` に基づいてカスタムコンポーネントをレンダリングしたり、コンポーネント内の他の状態にジャンプしたりすることができます。
 
 ```jsx
 if (props.onStateChange) props.onStateChange(state, data);
 ```
 
-> ***The withFederated and Federated components are not supported on React Native***. Use the API Auth.federatedSignIn() on React Native.
+> ***withFederatedおよびFederatedコンポーネントはReact Native ではサポートされていません***. React Native で API Auth.federatedSignIn() を使用してください。
 
-There is also `withGoogle`, `withFacebook`, `withAmazon` components, in case you need to customize a single provider.
+単一のプロバイダをカスタマイズする必要がある場合に備えて、 `withGoogle`, `withFacebook`, `withAmazon` コンポーネントもあります。
 
-#### Wrapping your Component
+#### コンポーネントをラップしています
 
-This will render your App component with *Authenticator*:
+*Authenticator* を使用してアプリケーションコンポーネントをレンダリングします:
 
 ```javascript
 import { Authenticator } from 'aws-amplify-react-native'; // or 'aws-amplify-react-native'
@@ -167,49 +167,49 @@ class AppWithAuth extends Component {
 export default AppWithAuth;
 ```
 
-## Show your App After Sign-in
+## サインイン後にアプリを表示
 
 In the previous example, you'll see the App is rendered even before the user is signed-in. To change this behavior, you can use *Authenticator* properties. When inside `Authenticator`, the App component automatically receives those properties.
 
-**authState** is the current authentication state (a string):
+**authState** は現在の認証状態（文字列）です。
 ```
  - signIn
  - signUp
  - confirmSignIn
  - confirmSignUp
- - forgotPassword
+ - forged Password
  - requireNewPassword
  - verifyContact
  - signedIn
  ```
 
-**authData** - additional data within authState; when the state is `signedIn`, it will return a [`CognitoUser`](https://github.com/aws-amplify/amplify-js/blob/main/packages/amazon-cognito-identity-js/index.d.ts#L48) object.
+**authData** - authState内の追加データ。 state が ** signedIn ** である場合、 `CognitoUser` [`オブジェクトを返します。`](https://github.com/aws-amplify/amplify-js/blob/main/packages/amazon-cognito-identity-js/index.d.ts#L48)
 
 Using the options above, to control the condition for *Authenticator* to render App component, simply set `_validAuthStates` property:
 
 ```javascript
-this._validAuthStates = ['signedIn'];
+this._validAuthState = ['signedIn'];
 ```
 
-Then, in the component's constructor,  implement `showComponent(theme) {}` in lieu of the typical `render() {}` method.
+次に、コンポーネントのコンストラクタで、 `showComponent(theme) {}` を典型的な `render() {}` メソッドの代わりに実装します。
 
-## SignUp
+## サインアップ
 
-The SignUp component provides your users with the ability to sign up. It is included as part of the `Authenticator` component.
+サインアップコンポーネントはユーザーにサインアップ機能を提供します。これは、 `Authenticator` コンポーネントの一部として含まれています。
 
-Usage: `<Authenticator signUpConfig={ signUpConfig }/>`
+使用法: `<Authenticator signUpConfig={ signUpConfig }/>`
 
-It can also be used as part of the authentication HOC: `export default withAuthenticator(App, { signUpConfig });`
+認証 HOC の一部としても使用できます: `export default withAuthenticator(App, { signUpConfig });`
 
-The SignUp Component accepts a 'signUpConfig' object which allows you to customize it.
+SignUpコンポーネントは、カスタマイズできる「signUpConfig」オブジェクトを受け取ります。
 
 <inline-fragment framework="react" src="~/ui-legacy/auth/fragments/react/sign-up-attributes.md"></inline-fragment>
 
-The signUpFields array in turn consist of an array of objects, each describing a field that will appear in sign up form that your users fill out:
+順番に signUpFields 配列はオブジェクトの配列で構成されています 各項目について説明します。登録フォームに表示されます。
 
 <inline-fragment framework="react" src="~/ui-legacy/auth/fragments/react/sign-up-fields.md"></inline-fragment>
 
-A Sample signUpFields attribute would look like the following:
+signUpFields 属性の例は次のようになります。
 
 ```js
 const signUpConfig = {
@@ -231,11 +231,11 @@ const signUpConfig = {
 export default withAuthenticator(App, { signUpConfig });
 ```
 
-## Sign up/in with email/phone number
+## メールアドレス/電話番号でサインアップ/ログイン
 
-If the user pool is set to allow email addresses/phone numbers as the username, you can then change the UI components accordingly by using `usernameAttributes` [(learn more about the setup)](~/lib/auth/getting-started.md/q/platform/js).
+ユーザープールがユーザー名としてメールアドレス/電話番号を許可するように設定されている場合 `usernameAttributes` [(設定の詳細)](~/lib/auth/getting-started.md/q/platform/js) を使用して、それに応じてUIコンポーネントを変更できます。
 
-When you are using `email` as the username:
+`email` をユーザー名として使用している場合:
 
 ```js
 import { withAuthenticator, Authenticator } from 'aws-amplify-react';
@@ -261,7 +261,7 @@ class App2 {
 export default withAuthenticator(App2, { usernameAttributes: 'email' });
 ```
 
-When you are using `phone number` as the username:
+ユーザー名に `電話番号` を使用している場合
 
 ```js
 import { Authenticator, withAuthenticator } from 'aws-amplify-react';
@@ -288,7 +288,7 @@ export default withAuthenticator(App2, { usernameAttributes: 'phone_number' });
 
 **Note:** If you are using custom signUpFields to customize the `username` field, then you need to make sure either the label of that field is the same value you set in `usernameAttributes` or the key of the field is `username`.
 
-For example:
+例:
 
 ```js
 import React, { Component } from 'react';

@@ -1,20 +1,20 @@
-The Analytics category enables you to collect analytics data for your App. The Analytics category comes with built-in support for [Amazon Pinpoint](https://aws.amazon.com/pinpoint) and [Amazon Kinesis](https://aws.amazon.com/kinesis) (Kinesis support is currently only available in the Amplify JavaScript library).
+Analytics カテゴリを使用すると、アプリケーションの分析データを収集できます。 Analytics カテゴリには、 [Amazon Pinpoint](https://aws.amazon.com/pinpoint) と [Amazon Kinesis](https://aws.amazon.com/kinesis) (Kinesis support is only available in the Amplify JavaScript library).
 
-## Goal
+## 目標
 
-To setup and configure your application with Amplify Analytics and record an analytics event.
+Amplify Analyticsを使用してアプリケーションを設定および構成し、分析イベントを記録します。
 
-## Prerequisites
-* [Install and configure Amplify CLI](https://docs.amplify.aws/cli/start/install)
+## 前提条件
+* [Amplify CLI をインストールおよび設定](https://docs.amplify.aws/cli/start/install)
 
-## Set up Analytics backend
+## 分析バックエンドの設定
 
-Run the following command in your project's root folder. The CLI will prompt configuration options for the Analytics category such as Amazon Pinpoint resource name and analytics event settings.
+プロジェクトのルートフォルダで次のコマンドを実行します。 CLI は、Amazon Pinpoint リソース名や分析イベント設定など、Analytics カテゴリの設定オプションをプロンプトします。
 
-> The Analytics category utilizes the Authentication category behind the scenes to authorize your app to send analytics events.
+> Analytics カテゴリは、分析イベントを送信するためにアプリケーションを承認するために、舞台裏の認証カテゴリを使用します。
 
 ```bash
-amplify add analytics
+anmpify add analytics
 ```
 
 ```console
@@ -25,17 +25,17 @@ Adding analytics would add the Auth category to the project if not already added
     `Yes`
 ```
 
-To deploy your backend, run:
+バックエンドをデプロイするには、次を実行します。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
 A configuration file called `aws-exports.js` will be copied to your configured source directory, for example `./src`. The CLI will also print the URL for Amazon Pinpoint console to track your app events.
 
-## Configure Your App
+## アプリの設定
 
-Import and load the configuration file in your app. It's recommended you add the Amplify configuration step to your app's root entry point. For example `App.js` in React or `main.ts` in Angular.
+設定ファイルをアプリに読み込みます。Amplify設定ステップをアプリのルートエントリポイントに追加することをお勧めします。 例えば `App.js` 、Angularの `main.ts` など。
 
 ```javascript
 import Amplify from 'aws-amplify';
@@ -43,11 +43,11 @@ import awsconfig from './aws-exports';
 Amplify.configure(awsconfig);
 ```
 
-User session data is automatically collected unless you disabled analytics. To see the results visit the [Amazon Pinpoint console](https://console.aws.amazon.com/pinpoint/home/).
+解析を無効にしない限り、ユーザーセッションデータは自動的に収集されます。結果を確認するには、 [Amazon Pinpoint コンソール](https://console.aws.amazon.com/pinpoint/home/) を参照してください。
 
-## Recording an event
+## 予定の記録
 
-To record custom events call the `record` method:
+カスタムイベントを記録するには、 `レコード` メソッドを呼び出します。
 
 ```javascript
 import Amplify, { Analytics } from 'aws-amplify';
@@ -55,11 +55,11 @@ import Amplify, { Analytics } from 'aws-amplify';
 Analytics.record({ name: 'albumVisit' });
 ```
 
-## Using Modular Imports
+## モジュラーインポートの使用
 
 You can import only specific categories into your app if you are only using specific features, analytics for example: `npm install @aws-amplify/analytics` which will only install the Analytics category. For working with AWS services you will also need to install and configure `@aws-amplify/auth`.
 
-Import only Analytics:
+分析のみインポート:
 
 ```javascript
 import Analytics from '@aws-amplify/analytics';
@@ -67,13 +67,13 @@ import Analytics from '@aws-amplify/analytics';
 Analytics.record({ name: 'albumVisit' });
 ```
 
-## API Reference
+## APIリファレンス
 
-For a complete API reference visit the [API Reference](https://aws-amplify.github.io/amplify-js/api/classes/analyticsclass.html)
+完全な API 参照については、 [API リファレンス](https://aws-amplify.github.io/amplify-js/api/classes/analyticsclass.html) を参照してください。
 
-## Set up existing analytics backend
+## 既存の分析バックエンドを設定
 
-The manual setup enables you to use your existing Amazon Pinpoint resource in your app.
+手動設定により、既存の Amazon Pinpoint リソースをアプリケーションで使用できます。
 
 ```javascript
 import Amplify from 'aws-amplify';
@@ -158,9 +158,9 @@ Amplify.configure({
 });
 ```
 
-### Update your IAM Policy:
+### IAM ポリシーを更新:
 
-Amazon Pinpoint service requires an IAM policy in order to use the `record` API:
+Amazon Pinpoint サービスは、 `レコード` API を使用するために IAM ポリシーが必要です。
 
 ```json
 {
@@ -180,9 +180,9 @@ Amazon Pinpoint service requires an IAM policy in order to use the `record` API:
 }
 ```
 
-## Update Endpoint
+## エンドポイントを更新
 
-An endpoint uniquely identifies your app within Pinpoint. In order to update your <a href="https://docs.aws.amazon.com/pinpoint/latest/apireference/rest-api-endpoints.html" target="_blank">endpoint</a> use the `updateEndpoint()` method:
+エンドポイントは Pinpoint 内のアプリケーションを一意に識別します。 <a href="https://docs.aws.amazon.com/pinpoint/latest/apireference/rest-api-endpoints.html" target="_blank">エンドポイント</a> を更新するには、 `updateEndpoint()` メソッドを使用します。
 
 ```javascript
 import Analytics from '@aws-amplify/analytics';
@@ -231,13 +231,13 @@ Analytics.updateEndpoint({
 });
 ```
 
-<a href="https://docs.aws.amazon.com/pinpoint/latest/developerguide/audience-define-user.html" target="_blank">Learn more</a> about Amazon Pinpoint and Endpoints.
+<a href="https://docs.aws.amazon.com/pinpoint/latest/developerguide/audience-define-user.html" target="_blank">Amazon Pinpoint と Endpoint についての詳細</a> を参照してください。
 
-## Using a Custom Plugin
+## カスタムプラグインの使用
 
-You can create your custom pluggable for Analytics. This may be helpful if you want to integrate your app with a custom analytics backend.
+Analytics 用のカスタムプラグインを作成できます。これは、カスタム アナリティクスのバックエンドとアプリケーションを統合する場合に役立ちます。
 
-To create a plugin implement the `AnalyticsProvider` interface:
+プラグインを作成するには、 `AnalyticsProvider` インターフェイスを実装します。
 
 ```typescript
 import { Analytics, AnalyticsProvider } from 'aws-amplify';
@@ -262,7 +262,7 @@ export default class MyAnalyticsProvider implements AnalyticsProvider {
 }
 ```
 
-You can now register your pluggable:
+プラグインを登録できるようになりました：
 
 ```javascript
 // add the plugin
@@ -283,11 +283,11 @@ Analytics.configure({
 
 ```
 
-The default provider (Amazon Pinpoint) is in use when you call `Analytics.record()` unless you specify a different provider: `Analytics.record({..},'MyAnalyticsProvider')`.
+デフォルトのプロバイダー (Amazon Pinpoint) は、 `Analyticsを呼び出すときに使用されます。 ecord() <code> 異なるプロバイダを指定しない限り:` `Analytics.record({..},'MyAnalyticsProvider')`.
 
-## View Analytics Console
+## Analytics コンソールを表示
 
-From the terminal run the following command. Navigate to the Analytics tab, and then choose View in Pinpoint.
+ターミナルから次のコマンドを実行します。format@@0タブに移動し、format@@1を選択します。
 ```console
-amplify console analytics
+コンソール分析を増幅する
 ```

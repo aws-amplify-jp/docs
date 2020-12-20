@@ -1,8 +1,8 @@
-In your project, drag and drop the file `./amplify/.config/local-env-info.json` to xcode. This file contains environment information that will be displayed on the developer menu.
+プロジェクトで、ファイル `./amplify/.config/local-env-info.json` を Xcode にドラッグ&ドロップします。 このファイルには開発者メニューに表示される環境情報が含まれています。
 
 <amplify-callout warning>
 
-If you do not see the `amplify` directory, please follow the [project setup instructions](https://docs.amplify.aws/lib/project-setup/prereq/q/platform/ios).
+`増幅` ディレクトリが表示されない場合は、 [プロジェクト設定の手順](https://docs.amplify.aws/lib/project-setup/prereq/q/platform/ios)に従ってください。
 
 </amplify-callout>
 
@@ -12,4 +12,4 @@ To be able to activate the developer menu when running a debug build of your app
 Amplify.enableDevMenu(contextProvider: obj1)
 ```
 
-where `obj1` is an object that implements `DevMenuPresentationContextProvider`.
+where `obj1` is a object that implements `DevMenuPresentationContextProvider`.

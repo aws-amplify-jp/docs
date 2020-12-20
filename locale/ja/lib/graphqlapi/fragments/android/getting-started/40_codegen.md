@@ -1,1 +1,1 @@
-The generated files will be under the `app/src/main/java/com/amplifyframework.datastore.generated.model` directory. 
+生成されたファイルは、 `app/src/main/java/com/anplifyframework.datastore.generated.model` ディレクトリの下にあります。 

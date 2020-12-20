@@ -1,11 +1,11 @@
 ---
-title: GraphQL pagination
-description: How to implement pagination with GraphQL
+title: GraphQL ページネーション
+description: GraphQL でページネーションを実装する方法
 ---
 
-In this guide you will learn how to implement pagination in your GraphQL API.
+このガイドでは、GraphQL API でページネーションを実装する方法を学びます。
 
-When working with a large record set, you may want to only fetch the first __N__ number of items. For example, let's start with a basic GraphQL schema for a Todo app:
+大きなレコードセットを扱う場合は、最初の __N__ 個のアイテム数のみを取得することができます。 たとえば、Todo アプリの基本的なGraphQL スキーマから始めましょう。
 
 ```graphql
 type Todo @model {
@@ -15,7 +15,7 @@ type Todo @model {
 }
 ```
 
-When the API is created with an `@model` directive, the following queries will automatically be created for you:
+API が `@model` ディレクティブで作成されると、次のクエリが自動的に作成されます。
 
 ```graphql
 type Query {
@@ -24,7 +24,7 @@ type Query {
 }
 ```
 
-Next, take a look at the `ModelTodoConnection` type to get an idea of the data that will be returned when the `listTodos` query is run:
+次に、 `ModelTodoConnection` 型を見て、 `listTodos` クエリが実行されたときに返されるデータのアイデアを取得します。
 
 ```graphql
 type ModelTodoConnection {
@@ -37,10 +37,10 @@ When querying the API using the `listTodos` query, the return type will be of `M
 
 The `nextToken` is what is used to handle pagination. If the `nextToken` is `null`, that means that there is no more data to return from the API. If the `nextToken` is present, you can use the value as an argument to the next `listTodos` query to return the next selection set from the API.
 
-To test this out, try creating 5 todos using a mutation like this:
+これをテストするには、次のような変更を使用して 5 つの todos を作成してみてください。
 
 ```sh
-mutation createTodo {
+<unk> createTodo {
   createTodo(input: {
     title: "Todo 1"
     description: "My first todo"
@@ -67,7 +67,7 @@ query listTodos {
 }
 ```
 
- Now, to query the next 2 items from the API, you can pass this `nextToken` as the argument:
+ APIから次の2つのアイテムをクエリするには、引数としてこの `nextToken` を渡すことができます。
 
 ```graphql
 query listTodos {
@@ -82,6 +82,6 @@ query listTodos {
 }
 ```
 
-When there are no other items left to be returned, the `nextToken` in the response will be set to null.
+返却される他の項目がない場合、レスポンス内の `nextToken` はnullに設定されます。
 
 <inline-fragment platform="js" src="~/guides/api-graphql/fragments/js/graphql-pagination.md"></inline-fragment> 

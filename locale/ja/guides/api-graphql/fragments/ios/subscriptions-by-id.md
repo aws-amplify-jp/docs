@@ -1,4 +1,4 @@
-Now you can create a custom subscription for comment creation with a specific post id:
+特定の投稿IDでコメントを作成するためのカスタムサブスクリプションを作成できるようになりました:
 
 ```swift
 extension GraphQLRequest {
@@ -21,7 +21,7 @@ extension GraphQLRequest {
 }
 ```
 
-Because the lifetime of the subscription will last longer than the lifetime of a single function, you can create an instance variable at the top of your class:
+サブスクリプションの有効期間は単一の機能の有効期間より長くなりますので。 クラスの上部にインスタンス変数を作成できます。
 
 <amplify-block-switcher>
 
@@ -44,7 +44,7 @@ var dataSink: AnyCancellable?
 
 </amplify-block-switcher>
 
-To listen to creation updates with the specific post using the post id, you can use the following code sample:
+post IDを使用して特定のポストを使用して作成の更新を聞くには、次のコードサンプルを使用できます。
 
 <amplify-block-switcher>
 

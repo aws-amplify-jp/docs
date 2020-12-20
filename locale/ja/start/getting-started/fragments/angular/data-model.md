@@ -1,12 +1,12 @@
-### Model the data with GraphQL transform
+### GraphQL変換でデータをモデル
 
-Add a [GraphQL API](https://docs.aws.amazon.com/appsync/latest/devguide/designing-a-graphql-api.html) to your app and automatically provision a database by running the following command from the root of your application directory:
+[GraphQL API](https://docs.aws.amazon.com/appsync/latest/devguide/designing-a-graphql-api.html) をアプリケーションに追加し、アプリケーションディレクトリのルートから次のコマンドを実行して自動的にデータベースをプロビジョニングします。
 
 ```bash
-amplify add api
+増幅して api を追加
 ```
 
-Accept the **default values** which are highlighted below:
+以下のハイライト表示されている **デフォルト値** を受け入れます。
 
 ```console
 ? Please select from one of the below mentioned services:
@@ -29,7 +29,7 @@ Accept the **default values** which are highlighted below:
 # Yes
 ```
 
-The generated schema is for a Todo app. Replace the GraphQL schema at `amplify/backend/api/RestaurantAPI/schema.graphql` with the following:
+生成されたスキーマは Todo アプリ用です。GraphQL スキーマを `amplify/backend/api/RestaurantAPI/schema.graphql` に置換します。
 
 ```graphql
 type Restaurant @model {
@@ -42,15 +42,15 @@ type Restaurant @model {
 
  You'll notice a directive on the `Restaurant` type of `@model`. This directive is part of Amplify's [GraphQL transformer](~/cli/graphql-transformer/model.md) functionality.
 
-The GraphQL Transform Library provides custom directives you can use in your schema that allow you to do things like define data models, set up authentication and authorization rules, configure serverless functions as resolvers, and more.
+GraphQL Transform ライブラリには、データモデルの定義などを行うためのスキーマで使用できるカスタムディレクティブが用意されています。 認証と認可ルールの設定、サーバレス機能をリゾルバとして設定するなど。
 
-A type decorated with the `@model` directive will scaffold out the database table for the type (Restaurant table), the schema for CRUD (create, read, update, delete) and list operations, and the GraphQL resolvers needed to make everything work together.
+`@model` ディレクティブで装飾された型は、型 (Restaurant テーブル) のデータベーステーブルを骨格化します。 CRUD (作成、読み取り、更新、削除)およびリスト操作のためのスキーマ、およびすべてを一緒に動作させるために必要な GraphQL リゾルバ。
 
-From the command line, press __enter__ to accept the schema and continue to the next steps.
+コマンドラインから __を押して__ を入力し、スキーマを受け入れ、次のステップに進みます。
 
-## Creating the API with database
+## データベースで API を作成する
 
-Create required backend resources for your configured api with the following command:
+以下のコマンドで構成されたAPIに必要なバックエンドリソースを作成します。
 
 ```bash
 amplify push
@@ -64,17 +64,17 @@ amplify push
 ? Enter the file name for the generated code: src/app/API.service.ts
 ```
 
-### Code generation
+### コード生成
 
 Once the deployment is complete, the CLI will create a new directory in `src/graphql` with all of the GraphQL operations you will need for your API. The CLI also created an `API.service.ts` file in the `app` directory that we will be using shortly.
 
-Next, run the following command to check Amplify's status:
+次に、Amplifyの状態を確認するために次のコマンドを実行します。
 
 ```bash
-amplify status
+増幅の状態
 ```
 
-This will give us the current status of the Amplify project, including the current environment, any categories that have been created, and what state those categories are in. It should look similar to this:
+これにより、現在の環境を含むAmplifyプロジェクトの現在のステータスが得られます。 どのカテゴリーが作成されているかを調べることができます 以下のようになります。
 
 ```console
 Current Environment: dev
@@ -84,19 +84,19 @@ Current Environment: dev
 | Api      | RestaurantAPI | No Change | awscloudformation |
 ```
 
-### Testing your API
+### API のテスト
 
-You can open the AWS console to run Queries, Mutation, or Subscription against your new API at any time directly by running the following command:
+AWSコンソールを開いて、新しいAPIに対していつでもクエリ、変更、またはサブスクリプションを実行するには、次のコマンドを実行します。
 
 ```bash
-amplify console api
+コンソールの api を増幅する
 ```
 
-When prompted, select **GraphQL**. This will open the AWS AppSync console for you to run Queries, Mutations, or Subscriptions at the server and see the changes in your client app.
+プロンプトが表示されたら、 **GraphQL**を選択します。 これにより、AWS AppSync コンソールが開き、クエリ、ミューテーションを実行できます。 またはサーバーでサブスクリプションを行い、クライアントアプリケーションの変更を確認します。
 
-## Connect frontend to API
+## フロントエンドを API に接続
 
-Open `src/main.ts` and add the following code to configure the Angular project with Amplify:
+`src/main.ts` を開き、Amplify でAngularプロジェクトを構成するために次のコードを追加します。
 
 ```javascript
 import Amplify from "aws-amplify";
@@ -104,9 +104,9 @@ import aws_exports from "./aws-exports";
 Amplify.configure(aws_exports);
 ```
 
-<amplify-callout>The code above imports the entire Amplify library. You can use separate imports like `import Auth from '@aws-amplify/auth'` to reduce the final bundle size.</amplify-callout>
+<amplify-callout>上のコードはAmplifyライブラリ全体をインポートします。 `import Auth from '@aws-amplify/auth'` のように別々のインポートを使用して、最終バンドルサイズを小さくできます。</amplify-callout>
 
-Update `tsconfig.app.json` to include the "node" compiler option in *types*:
+`tsconfig.app.json` を更新して、 *types* に "node" コンパイラー・オプションを含めます。
 
 ```json
 "compilerOptions": {
@@ -116,7 +116,7 @@ Update `tsconfig.app.json` to include the "node" compiler option in *types*:
 
 <amplify-callout>Depending on your TypeScript version you may need to rename `aws-exports.js` to `aws-exports.ts` prior to importing, or enable the `allowJs` <a href="https://www.typescriptlang.org/docs/handbook/compiler-options.html" target="_blank">compiler option</a> in your tsconfig.</amplify-callout>
 
-Next, define a `Restaurant` type. Create a new file at `src/types/restaurant.ts`:
+次に、 `Restaurant` 型を定義します。 `src/types/restaurant.ts`:
 
 ```ts
 export type Restaurant = {
@@ -167,7 +167,7 @@ export class AppComponent implements OnInit {
 }
 ```
 
-Next, enable the Angular forms modules in `src/app/app.module.ts`:
+次に、 `src/app/app.module.ts` でAngularフォームモジュールを有効にします。
 
 ```js
 import { BrowserModule } from '@angular/platform-browser';
@@ -198,7 +198,7 @@ import { AppComponent } from './app.component';
 export class AppModule { }
 ```
 
-Next, add a form that will be used for creating restaurants. Add the following to your `src/app/app.component.html`:
+次に、レストランの作成に使用するフォームを追加します。 `src/app/app.component.html` に以下を追加します。
 
 ```html
 <div class="form-body">
@@ -268,7 +268,7 @@ export class AppComponent implements OnInit {
 }
 ```
 
-Add the following to your `src/app/app.component.html` to display any of the restaurants you have added:
+追加したレストランを表示するには、 `src/app/app.component.html` に以下を追加してください。
 
 ```html
 <div *ngFor="let restaurant of restaurants">
@@ -299,10 +299,10 @@ async ngOnInit() {
 }
 ```
 
-Next, run the app:
+次に、アプリを実行します。
 
 ```sh
 npm start
 ```
 
-Now, open the app in 2 browser windows (both at http://localhost:4200/) so that you have your app running side by side. When creating a new item in one window, you should see it come through in the other window in real-time.
+アプリを2つのブラウザウィンドウで開きます(両方ともhttp://localhost:4200/)。アプリが並んで動作するようにします。 新しいアイテムを1つのウィンドウで作成する場合、別のウィンドウでリアルタイムに表示されます。

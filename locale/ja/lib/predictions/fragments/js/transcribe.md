@@ -1,26 +1,26 @@
-## Set up the backend
+## バックエンドの設定
 
-IIf you haven't already done so, run `amplify init` inside your project and then `amplify add auth` (we recommend selecting the *default configuration*).
+まだやっていない場合は プロジェクト内で `amplify init` を実行し、 `増幅して認証を追加` します(デフォルトの設定 *を選択することをお勧めします*)。
 
-Run `amplify add predictions` and select **Convert**. Then use the following answers:
+`増幅して予測を追加する` を実行し、 **変換**を選択します。その後、以下の解答を使用します:
 
 ```console
-? What would you like to convert? 
-  Convert text into a different language 
-  Convert text to speech 
-❯ Convert speech to text 
-  Learn More 
+? 何を変換したいですか？ 
+  テキストを別の言語に変換する 
+  テキストを音声に変換する 
+<unk> 音声をテキストに変換する 
+  詳細はこちら 
 
-? Who should have access? Auth and Guest users
+? 誰にアクセスする必要がありますか？認証とゲストユーザー
 ```
 
 Now run `amplify push` which will generate your `aws-exports.js` and create resources in the cloud. You can now either add this to your backend or skip and add more features to your app.
 
-Services used: Amazon Transcribe
+使用されるサービス: Amazon Transscribe
 
-## Working with the API
+## API の操作
 
-You can transcribe a PCM Audio byte buffer to Text, such as a recording from microphone.
+マイクからの録音など、PCMオーディオバイトバッファをテキストに変換することができます。
 
 ```javascript
 Predictions.convert({

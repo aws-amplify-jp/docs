@@ -1,4 +1,4 @@
-The `AWSMobileClient` client supports a simple "drop-in" UI for your application. You can add drop-in Auth UI like so:
+`AWSMobileClient` クライアントは、アプリケーションのシンプルな「ドロップイン」UIをサポートしています。以下のようなドロップイン認証UIを追加できます：
 
 ```java
 // 'this' refers the current active activity
@@ -50,11 +50,11 @@ AWSMobileClient.getInstance().showSignIn(
 
 The above code also shows an additional Auth API, `signOut()`. For more advanced scenarios, you can call the `AWSMobileClient` APIs, such as for building your own UI or using functionality in different UX of your application lifecycle.
 
-## Customization
+## カスタマイズ
 
-Currently, you can change the following properties of the drop-in UI with the `AWSMobileClient`:
-- Logo: Any Drawable resource supported by ImageView
-- Background Color: Any color Android supported
+現在、 `AWSMobileClient` を使用してドロップインUIの次のプロパティを変更できます:
+- ロゴ: ImageView でサポートされているDrawable リソース
+- 背景色: Android でサポートされているすべての色
 
 ```java
 AWSMobileClient.getInstance().showSignIn(
@@ -80,4 +80,4 @@ AWSMobileClient.getInstance().showSignIn(
 );
 ```
 
-You can allow the sign in process to be dismissed by setting the `canCancel` property. 
+`canCancel` プロパティを設定することで、サインインプロセスを解除することを許可できます。 

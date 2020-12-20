@@ -1,6 +1,6 @@
-## Query by Id
+## ID でクエリ
 
-Now that you were able to make a mutation, take the `Id` that was printed out and use it in your query to retrieve data.
+変異を作ることができたので。 出力された `Id` を取得し、クエリでデータを取得するために使用します。
 
 <amplify-block-switcher>
 
@@ -61,7 +61,7 @@ func getTodo() -> AnyCancellable {
 
 </amplify-block-switcher>
 
-## List Query
+## リストクエリ
 
 You can get the list of items that match a condition that you specify using the `where` parameter in `Amplify.API.query`
 

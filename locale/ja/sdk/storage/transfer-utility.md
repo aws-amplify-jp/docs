@@ -1,6 +1,6 @@
 ---
-title: Using TransferUtility
-description: To make it easy to upload and download objects from Amazon S3, AWS Mobile SDK provides a TransferUtility component with built-in support for background transfers, progress tracking, and MultiPart uploads.
+title: TransferUtilityの使用
+description: Amazon S3からオブジェクトを簡単にアップロードおよびダウンロードできるようにします。 AWS Mobile SDKは、バックグラウンド転送、進捗管理、マルチパートアップロードの組み込みサポートを備えたTransferUtilityコンポーネントを提供する。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

@@ -1,4 +1,4 @@
-The `AWSMobileClient` client supports a "drop-in" UI component that allows you to easily add the full capabilities for authentication to your application.
+`AWSMobileClient` クライアントは、アプリケーションに認証のための完全な機能を簡単に追加できる「ドロップイン」UIコンポーネントをサポートしています。
 
 ```swift
 AWSMobileClient.default().showSignIn(
@@ -13,10 +13,10 @@ AWSMobileClient.default().showSignIn(
 
 > **Note**: The drop-in UI requires the use of a navigation controller. Please make sure your app has an active navigation controller which is passed in via the `navigationController` parameter.
 
-## Customization
+## カスタマイズ
 
-You can change the following properties of the drop-in UI with the `AWSMobileClient`:
-- **Logo**: Any image file of png or jpg
+`AWSMobileClient` を使用して、ドロップインUIの次のプロパティを変更できます:
+- **ロゴ**: png または jpg の任意の画像ファイル
 - **Background Color**: Any iOS UIColor
 
 ```swift

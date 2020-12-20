@@ -1,8 +1,8 @@
-Shake the device to access the developer menu during a debug build of your app. An emulator can be shaken by selecting the more option (denoted by three dots) next to the emulator, navigating to the “Virtual Sensors” tab, clicking the “Move” button, and then moving the emulator shown within the “Virtual Sensors” tab back and forth a few times.
+デバイスを振ると、アプリのデバッグビルド中に開発者メニューにアクセスできます。 エミュレータは、エミュレータの横にあるより多くのオプション(3つのドットで示されています)を選択し、「仮想センサー」タブに移動することで振動させることができます。 「移動」ボタンをクリックし、「仮想センサー」タブ内に表示されるエミュレーターを数回移動します。
 
-![Shake Android Emulator](~/images/debugging/shakeAndroidEmulator.gif)
+![シェイクアンドロイドエミュレーター](~/images/debugging/shakeAndroidEmulator.gif)
 
-The developer menu will only be shown when running a debug build of your app.  However, if you still would like to disable the menu even for debug builds, you can pass a custom configuration when configuring Amplify:
+開発者メニューは、アプリケーションのデバッグビルドを実行しているときにのみ表示されます。 ただし、デバッグビルドでもメニューを無効にしたい場合は、Amplifyを構成するときにカスタム構成を渡すことができます。
 
 <amplify-block-switcher> <amplify-block name="Java">
 

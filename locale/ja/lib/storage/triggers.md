@@ -1,8 +1,8 @@
 ---
-title: Lambda triggers
-description: Learn more about how to enable triggers for the Storage Category with Amazon S3 & Amazon DynamoDB as Providers. The CLI supports associating Lambda triggers with S3 and DynamoDB events.
+title: ラムダトリガー
+description: Amazon S3 & Amazon DynamoDBをプロバイダーとして使用してストレージカテゴリのトリガーを有効にする方法について詳しくはこちらをご覧ください。 CLI は、Lambda トリガーを S3 および DynamoDB イベントに関連付けることをサポートします。
 ---
 
-If you are looking to enable triggers for the Storage Category with Amazon S3 & Amazon DynamoDB as Providers, the CLI supports associating Lambda triggers with S3 and DynamoDB events. For example, this can be useful for a use case where you want to invoke a Lambda function after a create or update operation on a DynamoDB table managed by the Amplify CLI.
+Amazon S3 & Amazon DynamoDBをプロバイダとして使用してストレージカテゴリのトリガを有効にしようとしている場合。 CLI は、Lambda トリガーを S3 および DynamoDB イベントに関連付けることをサポートします。 例えば、 これは、Amplify CLI によって管理されている DynamoDB テーブルでの作成または更新操作の後に Lambda 関数を呼び出したいユースケースに役立ちます。
 
-For more information on this topic, please read on [File Storage Lambda Triggers](~/cli/usage/lambda-triggers.md#s3-lambda-triggers) through our Amplify CLI documentation.
+このトピックの詳細については、Amplify CLI ドキュメントの [File Storage Lambda Triggers](~/cli/usage/lambda-triggers.md#s3-lambda-triggers) を参照してください。

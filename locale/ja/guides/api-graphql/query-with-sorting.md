@@ -1,13 +1,13 @@
 ---
-title: GraphQL query with sorting
-description: How to implement sorting in a GraphQL query
+title: 並べ替えによるGraphQLクエリ
+description: GraphQL クエリでソートを実装する方法
 ---
 
-In this guide you will learn how to implement sorting in a GraphQL API using the GraphQL transform library.
+このガイドでは、GraphQL 変換ライブラリを使用してGraphQL APIでソートを実装する方法を説明します。
 
-### Overview
+### 概要
 
-To get started, let's start with a basic GraphQL schema for a Todo app:
+始めるには、Todo アプリの基本的なGraphQLスキーマから始めましょう。
 
 ```graphql
 type Todo @model {
@@ -16,7 +16,7 @@ type Todo @model {
 }
 ```
 
-When the API is created with an `@model` directive, the following queries will automatically be created for you:
+API が `@model` ディレクティブで作成されると、次のクエリが自動的に作成されます。
 
 ```graphql
 type Query {
@@ -25,7 +25,7 @@ type Query {
 }
 ```
 
-Next, take a look at the `ModelTodoConnection` type to get an idea of the data that will be returned when the `listTodos` query is run:
+次に、 `ModelTodoConnection` 型を見て、 `listTodos` クエリが実行されたときに返されるデータのアイデアを取得します。
 
 ```graphql
 type ModelTodoConnection {
@@ -34,15 +34,15 @@ type ModelTodoConnection {
 }
 ```
 
-By default, the `listTodos` query will return the `items` array __unordered__. Many times you will need these items to be ordered by title, by creation date, or in some other way.
+デフォルトでは、 `listTodos` クエリは `items` array __を順序なしで__を返します。 何度も、タイトル、作成日、またはいくつかの他の方法で順序付けられるこれらの項目が必要になります。
 
 To enable this, you can use the [@key](~/cli/graphql-transformer/key.md) directive. This directive will allow you to set a custom `sortKey` on any field in your API.
 
-### Implementation
+### 実装
 
 In this example, you will enable sorting by the `createdAt` field. By default, Amplify will populate this `createdAt` field with a timestamp if none is passed in.
 
-To enable this, update your schema with the following:
+これを有効にするには、以下のスキーマを更新してください:
 
 ```graphql
 type Todo @model
@@ -56,11 +56,11 @@ type Todo @model
 
 <amplify-callout>
 
-When created a Todo, you must now populate the `type` field for this to work properly.
+Todo を作成する際には、 `タイプ` フィールドを正常に動作させる必要があります。
 
 </amplify-callout>
 
-Next, create a few todos being sure to populate the `type` field:
+次に、 `タイプ` フィールドを確実に取り込むために、いくつかの ToDo を作成します。
 
 ```graphql
 mutation createTodo {
@@ -74,7 +74,7 @@ mutation createTodo {
 }
 ```
 
-Now, you can query for todos by date in an ascending or descending order using the new `todosByDate` query:
+これで、新しい `todosByDate` クエリを使用して、日付ごとに昇順または降順でタスクをクエリできます。
 
 ```graphql
 query todosByDate {
@@ -104,4 +104,4 @@ query todosByDateDescending {
 }
 ```
 
-To learn more about the `@key` directive, check out the documentation [here](~/cli/graphql-transformer/key.md)
+`@key` ディレクティブの詳細については、こちらのドキュメント [をご覧ください](~/cli/graphql-transformer/key.md)

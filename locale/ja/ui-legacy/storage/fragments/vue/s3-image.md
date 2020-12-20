@@ -1,9 +1,9 @@
-The S3Image component displays a single image from the provided path.
+S3Image コンポーネントは指定されたパスから単一のイメージを表示します。
 
-Usage: `<amplify-s3-image imagePath="path"></amplify-s3-image>`
+使用法: `<amplify-s3-image imagePath="path"></amplify-s3-image>`
 
-Props:
+プロパティ:
 
-The S3Image component does not have a config object like most other amplify-vue components. Instead it receives the S3 image path as a string.  The path is required.
+S3Imageコンポーネントは他の他のanplify-vueコンポーネントと同様にconfigオブジェクトを持っていません。 代わりに、S3 イメージパスを文字列として受け取ります。パスは必須です。
 
-Events: None
+イベント: なし

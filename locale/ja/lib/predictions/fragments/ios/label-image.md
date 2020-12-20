@@ -1,12 +1,12 @@
-The following APIs will enable you identify real world objects (chairs, desks, etc) in images.  These objects are referred to as "labels" from images.
+以下のAPIでは、画像中の実際のオブジェクト(椅子、机など)を識別することができ、これらのオブジェクトは画像から「ラベル」と呼ばれます。
 
-For labeling images on iOS we use both AWS backend services as well as Apple's on-device Core ML [Vision Framework](https://developer.apple.com/documentation/vision) to provide you with the most accurate results.  If your device is offline, we will return results only from Core ML.  On the other hand, if you are able to connect to AWS Services, we will return a unioned result from both the service and Core ML.  Switching between backend services and Core ML is done automatically without any additional configuration required.
+iOSで画像をラベル付けするには、AWSバックエンドサービスとAppleのオンデバイスCore ML [Vision Framework](https://developer.apple.com/documentation/vision) を使用して、最も正確な結果を提供します。 デバイスがオフラインの場合は、Core MLからのみ結果を返します。 一方、AWSサービスに接続できる場合。 サービスとコアMLの両方からユニオン結果を返します。 バックエンドサービスとCore MLの切り替えは、追加の設定なしに自動的に行われます。
 
-## Set up your backend
+## バックエンドの設定
 
-If you haven't already done so, run `amplify init` inside your project and then `amplify add auth` (we recommend selecting the *default configuration*).
+まだ実行していない場合 プロジェクト内で `amplify init` を実行し、 `増幅して認証を追加` します(デフォルトの設定 *を選択することをお勧めします*)。
 
-Run `amplify add predictions`, then use the following answers:
+`を増幅して予測を追加する`を実行し、次の答えを使用します。
 
 ```console
 ? Please select from one of the categories below (Use arrow keys)
@@ -34,13 +34,13 @@ Run `amplify add predictions`, then use the following answers:
 
 ```
 
-The Advanced Configuration will allow you to select moderation for unsafe content or all of the identified labels. Default uses both.
+高度な設定では、安全でないコンテンツまたは特定されたラベルのすべてのモデレーションを選択できます。デフォルトでは両方を使用します。
 
-Run `amplify push` to create the resources in the cloud
+クラウドでリソースを作成するには、 `増幅プッシュ` を実行してください
 
-## Working with the API
+## API の操作
 
-You can identify real world objects such as chairs, desks, etc. which are referred to as “labels” by using the following sample code:
+以下のサンプルコードを使用して、「ラベル」と呼ばれる椅子、机などの実際のオブジェクトを識別することができます。
 
 <amplify-block-switcher>
 

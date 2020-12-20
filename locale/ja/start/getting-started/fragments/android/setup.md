@@ -1,15 +1,15 @@
 
-👋 Welcome! In this tutorial, you will:
+👋 ようこそ! このチュートリアルでは、以下を行います。
 
-- Set up an Android application configured with Amplify
-- Create a data model and persist data to Amplify DataStore
-- Connect your local data to synchronize to a cloud backend
+- Amplifyで設定されたAndroidアプリを設定する
+- データモデルを作成し、DataStoreをAmplify
+- クラウドバックエンドに同期するためにローカルデータを接続します
 
-## Prerequisites
+## 前提条件
 
-- Install [Android Studio](https://developer.android.com/studio/index.html#downloads) version 4.0 or higher
-- Install the [Android SDK](https://developer.android.com/studio/releases/platforms) API level 29 (Android 10)
-- Install [Amplify CLI](~/cli/cli.md) version 4.21.0 or later by running:
+- [Android Studio](https://developer.android.com/studio/index.html#downloads) バージョン 4.0 以降をインストール
+- [Android SDK](https://developer.android.com/studio/releases/platforms) API レベル 29 (Android 10) をインストールします
+- [Amplify CLI](~/cli/cli.md) バージョン 4.21.0 以降を実行してインストールします。
 
 <amplify-block-switcher>
 
@@ -24,7 +24,7 @@ npm install -g @aws-amplify/cli
 <amplify-block name="cURL (Mac and Linux)">
 
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
+curl -sL https://aws-amplify.github.io/anplify-cli/install | bash && $SHELL
 ```
 
 </amplify-block>
@@ -32,31 +32,31 @@ curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
 <amplify-block name="cURL (Windows)">
 
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install-win -o install.cmd && install.cmd
+curl -sL https://aws-amplify.github.io/anplify-cli/install-win -o install.cmd && install.cmd
 ```
 
 </amplify-block>
 
 </amplify-block-switcher>
 
-## Set up your application
+## アプリケーションの設定
 
-### Create a new Android application
+### 新しいAndroidアプリケーションを作成します
 
-1. Open **Android Studio**. Select **+ Start a new Android Studio project**.
+1. **Android Studio**を開きます。 **+ 新しい Android Studio プロジェクトを開始する** を選択します。
 
     ![](~/images/lib/getting-started/android/set-up-android-studio-welcome.png)
 
-1. In **Select a Project Template**, select **Empty Activity**. Press **Next**.
+1. **プロジェクトテンプレート**を選択し、 **空のアクティビティ**を選択します。 **次へ**を押します。
 
     ![](~/images/lib/getting-started/android/set-up-android-studio-select-project-template.png)
 
-1. Next, configure your project:
+1. 次に、プロジェクトを構成します。
 
-    - Enter *Todo* in the **Name** field
-    - Select either *Java* or *Kotlin* from the **Language** dropdown menu
-    - Select *API 21: Android 5.0 (Lollipop)* from the **Minimum SDK** dropdown menu
-    - Press **Finish**
+    - *名前* フィールドに **Todo** を入力します
+    - *言語* ドロップダウンメニューから *Java* または **Kotlin** を選択します
+    - *API 21: Android 5.0 (Lollipop)* を **Minimum SDK** ドロップダウンメニューから選択します
+    - **Finish** を押します
 
   ![](~/images/lib/getting-started/android/set-up-android-studio-configure-your-project-todo.png)
 
@@ -64,17 +64,17 @@ Android Studio will open your project with a tab opened to either *MainActivity.
 
 ![](~/images/lib/getting-started/android/set-up-android-studio-successful-setup.png)
 
-### Add Amplify to your application
+### Amplifyをアプリケーションに追加
 
-Amplify for Android is distributed as an Apache Maven package. In this section, you'll add the packages and other required directives to your build configuration.
+Amplify for Android は Apache Maven パッケージとして配布されています。このセクションでは、パッケージやその他の必要なディレクティブをビルドの設定に追加します。
 
-1. Expand **Gradle Scripts** in the project file viewer and open **build.gradle (Project: Todo)**.
+1. プロジェクトファイルビューアで **Gradle スクリプト** を展開し、 **build.gradle (プロジェクト: Todo)** を開きます。
 
-  Make the following additions to the project-level `build.gradle` file:
-  - Add the line `classpath 'com.amplifyframework:amplify-tools-gradle-plugin:1.0.2'` within the `dependencies` block.
-  - Add the line `apply plugin: 'com.amplifyframework.amplifytools'` at the end of the file.
+  プロジェクト レベル `build.gradle` ファイルに次の追加を行います。
+  - `依存関係` ブロックに `classpath 'com.amplify-tools-gradle-plugin:1.0.2'` 行を追加します。
+  - `の行を追加する plugin: 'com.amplifyframework.amplifytools'` をファイルの末尾に追加する。
 
-  Your file should look like this:
+  あなたのファイルは次のようになります:
 
   ```groovy
   buildscript {
@@ -102,25 +102,25 @@ Amplify for Android is distributed as an Apache Maven package. In this section, 
   apply plugin: 'com.amplifyframework.amplifytools'
   ```
 
-2. Under **Gradle Scripts**, open **build.gradle (Module: app)**.
+2. **Gradle Scripts**の下で **build.gradle (Module: app)** を開きます。
 
-   Update the `dependencies` block in your file with the following lines:
+   次の行を使用して、ファイル内の `依存関係` ブロックを更新します。
 
    ```groovy
    dependencies {
        implementation 'com.amplifyframework:aws-api:1.6.4'
        implementation 'com.amplifyframework:aws-datastore:1.6.4'
-   }
+}
    ```
 
 3. Run **Gradle Sync**
 
-    Android Studio requires you to sync your project with your new configuration. To do this, click **Sync Now** in the notification bar above the file editor.
+    Android Studio では、プロジェクトを新しい構成と同期させる必要があります。 これを行うには、ファイルエディタの上の通知バーにある **Sync Now** をクリックします。
 
     ![](~/images/lib/getting-started/android/set-up-android-studio-sync-gradle.png)
 
-    When complete, you will see *CONFIGURE SUCCESSFUL* in the output in the *Build* tab at the bottom of your screen.
+    完了すると、画面下部の *ビルド* タブの出力に *CONFIGURE SUCCESSFUL* が表示されます。
 
     ![](~/images/lib/getting-started/android/set-up-android-studio-configure-successful.png)
 
-You are ready to start building with Amplify! 🎉
+Amplify でビルドを開始する準備ができました! 🎉

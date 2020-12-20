@@ -1,144 +1,144 @@
-## Setting Up APNS for Push Notifications
+## プッシュ通知のAPNSを設定する
 
-Push notifications for iOS apps are sent using Apple Push Notification service (APNs). Before you can send push notifications to iOS devices, you must create an app ID on the Apple Developer portal, and you must create the required certificates.
+iOS アプリのプッシュ通知は、Apple Push Notification Service (APNs) を使用して送信されます。 iOS端末にプッシュ通知を送信する前に Apple Developer Portal でApp ID を作成する必要があり、必要な証明書を作成する必要があります。
 
-This section describes how to use the Apple Developer portal to obtain iOS and APNs credentials. These credentials enable you to create an iOS project that can receive push notifications.
+このセクションでは、Apple Developer ポータルを使用して iOS および APN の資格情報を取得する方法について説明します。 これらの資格情報を使用すると、プッシュ通知を受信できる iOS プロジェクトを作成できます。
 
-You do not need an existing iOS app to complete the steps in this section. After you complete these steps, see the main [Push Notifications](~/sdk/push-notifications/getting-started.md) API Guide for instructions on setting up an app to use AWS Pinpoint to receive push notifications.
+このセクションの手順を完了するために、既存のiOSアプリは必要ありません。 これらの手順を完了したら、 AWS Pinpointを使用してプッシュ通知を受信するアプリを設定する手順については、メインの [プッシュ通知](~/sdk/push-notifications/getting-started.md) APIガイドを参照してください。
 
-After completing the steps in this section, you will have the following items in your Apple Developer account:
+このセクションの手順を完了すると、Apple Developer アカウントに次の項目が表示されます。
 
-* An app ID.
-* An SSL certificate, which authorizes you to send push notifications to your app through APNs.
-* A registration for your test device, such as an iPhone, with your Apple Developer account.
-* An iOS distribution certificate, which enables you to install your app on your test device.
-* A provisioning profile, which allows your app to run on your test device.
+* アプリ ID
+* SSL証明書。APNs経由でプッシュ通知をアプリに送信することを許可します。
+* Apple Developer アカウントを使用して、iPhoneなどのテストデバイスの登録を行います。
+* iOSディストリビューション証明書を使用すると、テストデバイスにアプリをインストールできます。
+* プロビジョニングプロファイル。テストデバイスでアプリを実行できます。
 
-Before you begin, you must have an account with the Apple Developer Program as an individual or as part of an organization, and you must have agent or admin privileges in that account.
+始める前に、個人または組織の一部として Apple Developer Program のアカウントを持っている必要があります。 そのアカウントにはエージェントまたは管理者権限が必要です。
 
-The steps in this tutorial are based on the following versions of Mac OS software:
+このチュートリアルの手順は、以下のバージョンの Mac OS ソフトウェアに基づいています。
 
-* OS X El Capitan version 10.11.6
-* Xcode version 8.1
+* OS X El Capitan バージョン 10.11.6
+* Xcode バージョン 8.1
 
-**Topics**
+**トピック**
 
-* [Step 1: Create an App ID](#step-1-create-an-app-id)
-* [Step 2: Create an APNs SSL Certificate](#step-2-create-an-apns-ssl-certificate)
-* [Step 3: Register a Test Device](#step-3-register-a-test-device)
-* [Step 4: Create an iOS Distribution Certificate](#step-4-create-an-ios-distribution-certificate)
-* [Step 5: Create a Provisioning Profile](#step-5-create-a-provisioning-profile)
+* [ステップ 1: アプリIDを作成](#step-1-create-an-app-id)
+* [ステップ 2: APNs SSL 証明書を作成する](#step-2-create-an-apns-ssl-certificate)
+* [ステップ3：テストデバイスを登録する](#step-3-register-a-test-device)
+* [ステップ4:iOSディストリビューション証明書を作成する](#step-4-create-an-ios-distribution-certificate)
+* [ステップ 5: プロビジョニングプロファイルを作成](#step-5-create-a-provisioning-profile)
 
 
-### Step 1: Create an App ID
+### ステップ 1: アプリIDを作成
 
-Create an app ID to identify your app in the Apple Developer portal. You need this ID when you create an SSL certificate for sending push notifications, when you create an iOS distribution certificate, and when you create a provisioning profile.
+App ID を作成して、Apple Developer ポータルでアプリケーションを識別します。 プッシュ通知を送信するための SSL 証明書を作成する場合、この ID が必要です。 たとえば、iOS ディストリビューション証明書を作成するときと、プロビジョニング・プロファイルを作成するときです。
 
-If you already have an ID assigned to your app, you can skip this step. You can use an existing app ID provided it doesn't contain a wildcard character ("*").
+すでにアプリにIDが割り当てられている場合は、この手順をスキップできます。 ワイルドカード文字("*")を含まない場合、既存のアプリ ID を使用できます。
 
-**To assign an App ID to your app**
+**アプリにアプリIDを割り当てるには**
 
-- Sign in to your [Apple Developer account](https://developer.apple.com/membercenter/index.action.)
-- Choose **Certificates, Identifiers & Profiles**.
-- In the **Identifiers** section, choose **App IDs**.
-- In the **iOS App IDs** pane, choose the **Add** button (+).
-- In the **Registering an App ID** pane, for **Name**, type a custom name for your app ID that makes it easy to recognize later.
-- Choose the default selection for an App ID Prefix.
-- For **App ID Suffix**, select **Explicit App ID**, and type a bundle ID for your app. If you already have an app, use the bundle ID assigned to it. You can find this ID in the app project in Xcode on your Mac. Otherwise, take note of the bundle ID because you will assign it to your app in Xcode later.
-- Under **App Services** select **Push Notifications**.
-- Choose **Continue**. In the **Confirm your App ID** pane, check that all values were entered correctly. The identifier should match your app ID and bundle ID.
-- Choose **Register** to register the new app ID.
+- [Apple Developer アカウント](https://developer.apple.com/membercenter/index.action.) にサインインする
+- **証明書、識別子 & プロファイル** を選択します。
+- **識別子** セクションで、 **アプリ ID** を選択します。
+- **iOS アプリ ID** ペインで、 **追加** ボタン (+) を選択します。
+- **アプリIDの登録** ペイン、 **名前**で アプリIDのカスタム名を入力すると、後で簡単に認識できます。
+- App ID プレフィックスのデフォルト選択を選択します。
+- **App ID Suffix**の場合、 **明示的なApp ID**を選択し、アプリにバンドルIDを入力します。 すでにアプリをお持ちの場合は、バンドルIDを使用してください。 この ID は、Mac の Xcode のアプリプロジェクトで確認できます。 それ以外の場合は、後で Xcode のアプリに割り当てるため、バンドル ID をメモします。
+- **App Services** で **Push Notifications** を選択します。
+- **Continue**を選択します。 **App ID を確認** ペインで、すべての値が正しく入力されていることを確認します。 識別子はアプリIDとバンドルIDと一致するはずです。
+- 新しいアプリ ID を登録するには、 **登録** を選択します。
 
-### Step 2: Create an APNs SSL Certificate
+### ステップ 2: APNs SSL 証明書を作成する
 
-Create an APNs SSL certificate so that you can deliver push notifications to your app through APNs. You will create and download the certificate from your Apple Developer account. Then, you will install the certificate in Keychain Access and export it as a `.p12` file.
+APNs SSL 証明書を作成して、APNs を介してプッシュ通知をアプリに配信できます。 Apple Developer アカウントから証明書を作成し、ダウンロードします。 次に、証明書を Keychain Access にインストールし、 `.p12` ファイルとしてエクスポートします。
 
-If you already have an SSL certificate for your app, you can skip this step.
+すでにアプリ用の SSL 証明書をお持ちの場合は、この手順をスキップできます。
 
-**To create an SSL certificate for push notifications**
+**プッシュ通知用の SSL 証明書を作成する**
 
-- Choose **Certificates, Identifiers & Profiles**.
-- In the **Identifiers** section, choose **App IDs**.
-- From the list of iOS app IDs, select the app ID that you created in [Step 1: Create an App ID](#step-1-create-an-app-id).
-- Choose **Edit**.
-- Under **Push Notifications**, in the **Production SSL Certificate** section, choose **Create Certificate...**.
+- **証明書、識別子 & プロファイル** を選択します。
+- **識別子** セクションで、 **アプリ ID** を選択します。
+- iOSアプリIDの一覧から、 [ステップ1:アプリIDを作成](#step-1-create-an-app-id)で作成したアプリIDを選択します。
+- **編集** を選択します。
+- **Push Notifications**の下で、 **Production SSL Certificate** セクションで **Create Certificate...** を選択します。
 - In the **About Creating a Certificate Signing Request (CSR)** pane, follow the instructions for creating a Certificate Signing Request (CSR) file. You use the Keychain Access application on your Mac to create the request and save it on your local disk. When you are done, choose **Continue**.
 - In the **Generate your certificate** pane, choose Choose **File...**, and then select the CSR file you created and Choose Continue. -When the certificate is ready, choose **Download** to save the certificate to your computer.
-- Double-click the downloaded certificate to install it to the Keychain on your Mac.
-- On your Mac, start the Keychain Access application.
+- ダウンロードした証明書をダブルクリックして、MacのKeychainにインストールします。
+- Mac で、キーチェーンアクセスアプリケーションを起動します。
 - In **My Certificates**, find the certificate you just added. The certificate is named "Apple Push Services:`com.my.app.id`", where `com.my.app.id` is the app ID for which the certificate was created.
-- Context-select the push certificate and then select **Export...** from the context menu to export a file containing the certificate.
-- Type a name for the certificate that is easy to recognize and save it to your computer. Do not provide an export password when prompted. You need to upload this certificate when creating your app in AWS Mobile Hub.
+- コンテキストを選択し、プッシュ証明書を含むファイルをエクスポートするには、コンテキストメニューから **エクスポート...** を選択します。
+- 認識しやすい証明書の名前を入力し、コンピュータに保存します。 プロンプトが表示されたら、エクスポートパスワードを提供しないでください。AWS Mobile Hubでアプリを作成する際に、この証明書をアップロードする必要があります。
 
-[Back to top](#setting-up-ios-push-notifications)
+[トップに戻る](#setting-up-ios-push-notifications)
 
-### Step 3: Register a Test Device
+### ステップ3：テストデバイスを登録する
 
-Register a test device with your Apple Developer account so that you can test your app on that device. Later, you associate this test device with your provisioning profile, which allows your app to launch on your device.
+そのデバイスでアプリをテストできるように、Apple Developer アカウントにテストデバイスを登録します。 後で、このテストデバイスをプロビジョニングプロファイルに関連付けます。これにより、アプリがデバイスで起動できるようになります。
 
-If you already have a registered device, you can skip this step.
+すでに登録済みのデバイスをお持ちの場合は、この手順をスキップできます。
 
-**To add a device**
+**デバイスを追加するには**
 
-- Choose **Certificates, Identifiers & Profiles**.
-- In the **Devices** section, choose the type of device that you want to add, such as **iPhone**.
-- Choose the **Add** button (+).
-- In the **Register Device** section, for **Name**, type a name that is easy to recognize later.
-- For **UDID**, type the unique device ID. For an iPhone, you can find the UDID by completing the following steps:
+- **証明書、識別子 & プロファイル** を選択します。
+- **デバイス** セクションで、追加するデバイスの種類、 **iPhone** などを選択します。
+- **追加** ボタン (+) を選択します。
+- **Register Device** ( **Name**の)セクションで、後で簡単に認識できる名前を入力します。
+- **UDID**の場合は、一意のデバイス ID を入力します。iPhone の場合は、次の手順でUDID を見つけることができます。
 
-    - Connect your iPhone to your Mac with a USB cable.
-    - Open the iTunes app.
-    - In the top left corner of the iTunes window, a button with an iPhone icon is shown. Choose this button. iTunes displays the summary page for your iPhone.
+    - iPhoneをMacにUSBケーブルで接続します。
+    - iTunesアプリを開きます。
+    - iTunesウィンドウの左上隅に、iPhoneアイコンのあるボタンが表示されます。 このボタンを選択します。iTunesはiPhoneのサマリページを表示します。
     - In the top box, the summary page provides your iPhone's **Capacity**, **Phone Number**, and **Serial Number**. Click **Serial Number**, and the value changes to **UDID**.
-    - Context-select your UDID, and choose **Copy**.
-    - Paste your UDID into the **UDID** field in the Apple Developer website.
-    - Choose **Continue**.
+    - UDIDをコンテキスト選択し、 **コピー** を選択します。
+    - Apple Developer Web サイトの **UDID** フィールドに UDID を貼り付けます。
+    - **** を選択します。
 
-- On the **Review and register** pane, verify the details for your device, and choose **Register**. Your device name and identifier are added to the list of devices.
+- **レビューと** ペインで、デバイスの詳細を確認し、 **登録**を選択します。 デバイス名と識別子がデバイスのリストに追加されます。
 
-[Back to top](#setting-up-ios-push-notifications)
+[トップに戻る](#setting-up-ios-push-notifications)
 
-### Step 4: Create an iOS Distribution Certificate
+### ステップ4:iOSディストリビューション証明書を作成する
 
-An iOS distribution certificate enables you to install your app on a test device and deliver push notifications to that device. You specify your iOS distribution certificate later when you create a provisioning profile for your app.
+iOS ディストリビューション証明書を使用すると、テストデバイスにアプリをインストールし、そのデバイスにプッシュ通知を配信できます。 アプリ用のプロビジョニング・プロファイルを作成する際に、iOS 配布証明書を後で指定します。
 
-If you already have an iOS distribution certificate, you can skip this step.
+すでにiOSディストリビューション証明書をお持ちの場合は、この手順をスキップできます。
 
-**To create an iOS distribution certificate**
+**iOSディストリビューション証明書を作成する**
 
-- On the **Certificates, Identifiers & Profiles** page of your Apple Developer account, in the **Certificates** section, choose **Production**.
-- In the **iOS Certificates (Production)** pane, choose the **Add** button (+). The **Add iOS Certificate** pane opens.
-- In the **Production** section, select **App Store and Ad Hoc**, and then choose **Continue**.
-- On the **About Creating a Certificate Signing Request (CSR)** page, choose **Continue**.
+- Apple Developer アカウントの **証明書、識別子 & プロファイル** ページで、 **証明書** セクションで、 **プロダクション** を選択します。
+- **iOS Certificates (Production)** ペインで、 **Add** ボタン (+) を選択します。 **Add iOS Certificate** ペインが開きます。
+- **Production** セクションで、 **App Store と Ad Hoc**を選択し、 **Continue** を選択します。
+- **証明書署名リクエスト (CSR)** ページで、 **** を選択します。
 - In the **About Creating a Certificate Signing Request (CSR)** pane, follow the instructions for creating a Certificate Signing Request (CSR) file. You use the Keychain Access application on your Mac to create the request and save it on your local disk. When you are done, choose **Continue**.
-- In the **Generate your certificate** pane, choose **Choose File...**, and then select the CSR file you created.
-- Choose **Continue**.
-- When the certificate is ready, choose **Download** to save the certificate to your computer.
-- Double-click the downloaded certificate to install it in Keychain on your Mac.
+- **証明書を生成する** ペインで、 **ファイルを選択...**を選択し、作成した CSR ファイルを選択します。
+- **** を選択します。
+- 証明書の準備ができたら、 **ダウンロード** を選択して証明書をコンピュータに保存します。
+- ダウンロードした証明書をダブルクリックして、MacのKeychainにインストールします。
 
-[Back to top](#setting-up-ios-push-notifications)
+[トップに戻る](#setting-up-ios-push-notifications)
 
-### Step 5: Create a Provisioning Profile
+### ステップ 5: プロビジョニングプロファイルを作成
 
-A provisioning profile allows your app to run on your test device. You create and download a provisioning profile from your Apple Developer account and then install the provisioning profile in Xcode.
+プロビジョニングプロファイルを使用すると、アプリがテストデバイスで実行されます。 Apple Developer アカウントからプロビジョニング・プロファイルを作成してダウンロードし、Xcode にプロビジョニング・プロファイルをインストールします。
 
-**To create a provisioning profile**
+**プロビジョニングプロファイルを作成するには**
 
-- Choose **Certificates, Identifiers & Profiles**.
-- In the Provisioning Profiles section, choose Distribution.
+- **証明書、識別子 & プロファイル** を選択します。
+- format@@0セクションで、format@@1を選択します。
 - In the **iOS Provisioning Profiles (Distribution)** pane, choose the **Add** button (+). The **Add iOS Provisioning Profiles (Distribution)** pane is shown.
-- In the **Distribution** section, select **Ad Hoc**, and then choose **Continue**.
-- For **App ID**, select the app ID you created for your app, and then choose **Continue**.
-- Select your iOS Development certificate and then choose **Continue**.
-- For **Select devices**, select the device that you registered for testing, and choose **Continue**.
-- Type a name for this provisioning profile, such as `ApnsDistributionProfile`, and choose **Continue**.
-- Select **Download** to download the generated provisioning profile.
-- Install the provisioning profile by double-clicking the downloaded file. The Xcode app opens in response.
-- To verify that the provisioning profile is installed, check the list of installed provisioning profiles in Xcode by doing the following:
+- **Distribution** セクションで、 **Ad Hoc**を選択し、 **Continue** を選択します。
+- **App ID**の場合は、アプリ用に作成したアプリ ID を選択し、 **Continue** を選択します。
+- iOS 開発証明書を選択し、 **Continue** を選択します。
+- **デバイス**を選択するには、テスト用に登録したデバイスを選択し、 **Continue** を選択します。
+- `ApnsDistributionProfile`など、このプロビジョニングプロファイルの名前を入力し、 **Continue** を選択します。
+- 生成されたプロビジョニング・プロファイルをダウンロードするには、 **ダウンロード** を選択します。
+- ダウンロードしたファイルをダブルクリックしてプロビジョニング・プロファイルをインストールします。Xcode アプリが応答で開きます。
+- プロビジョニング・プロファイルがインストールされていることを確認するには、以下の手順で Xcode のインストール済みプロビジョニング・プロファイルのリストを確認してください。
 
-    - In the Xcode menu bar, choose **Xcode** and then choose **Preferences**.
-    - In the preferences window, choose **Accounts**.
-    - In the **Accounts** tab, select your Apple ID, and then choose **View Details**.
-    - Check that your provisioning profile is listed in the **Provisioning Profiles** section.
+    - Xcode のメニューバーで、 **Xcode** を選択し、 **環境設定** を選択します。
+    - 設定ウィンドウで、 **アカウント** を選択します。
+    - **アカウント** タブで Apple ID を選択し、 **詳細** を選択します。
+    - プロビジョニングプロファイルが **Provisioning Profiles** セクションにリストされていることを確認します。
 
-[Back to top](#setting-up-ios-push-notifications)
+[トップに戻る](#setting-up-ios-push-notifications)

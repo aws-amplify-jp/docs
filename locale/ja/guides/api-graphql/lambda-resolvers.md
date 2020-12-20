@@ -1,33 +1,33 @@
 ---
-title: How to use Lambda GraphQL Resolvers
-description: How to use Lambda GraphQL resolvers to interact with other services
+title: Lambda GraphQLリゾルバの使い方
+description: Lambda GraphQLリゾルバを使用して他のサービスとやりとりする方法
 ---
 
 The [GraphQL Transform Library](~/cli/graphql-transformer/function.md) provides a `@function` directive that enables the configuration of AWS Lambda function resolvers within your GraphQL API. In this guide you will learn how to use Lambda functions as GraphQL resolvers to interact with other services and APIs using the `@function` directive.
 
-## Creating basic query and mutation Function resolvers
+## 基本クエリと変更の作成 関数リゾルバ
 
-To get started, let's take a look at a GraphQL schema with a query and a mutation that has the data source set as a Lambda function.
+開始するには クエリとLambda関数としてデータソースが設定されている変異を含むGraphQLスキーマを見てみましょう。
 
 ```graphql
-# A query that returns the arguments
+# 引数を返すクエリ
 type Query {
   echo(msg: String): String @function(name: "functionName-${env}")
 }
 
-# A mutation that adds two numbers
+# 2つの数値を追加する突然変異
 type Mutation {
-  add(number1: Int, number2: Int): Int @function(name: "functionName-${env}")
+  add(number1: Int, number2: Int): Int@function(named@@0 "functionName-${env}")
 }
 ```
 
-Using the `@function` directive, you can specify a Lambda function to be invoked as the GraphQL resolver.
+`@function` ディレクティブを使用して、GraphQL リゾルバとして呼び出される Lambda 関数を指定できます。
 
-In this guide, you'll learn how to enable Lambda function resolvers in a GraphQL API.
+このガイドでは、GraphQL API でLambda 関数リゾルバを有効にする方法を学びます。
 
-### Creating the functions
+### 関数の作成
 
-To get started, create the first Lambda function:
+始めるには、最初の Lambda 関数を作成します。
 
 ```sh
 amplify add function
@@ -41,7 +41,7 @@ amplify add function
 ? Do you want to edit the local lambda function now? Yes
 ```
 
-Open the function code (located at __amplify/backend/function/echofunction/src/index.js__) and press enter:
+関数コード( __amplify/backend/function/echofunction/src/index.js__)を開き、Enterキーを押します。
 
 ```js
 exports.handler = async (event) => {
@@ -50,11 +50,11 @@ exports.handler = async (event) => {
 };
 ```
 
-This function will just return the value of the `msg` property passed in as an argument.
+この関数は引数として渡される `msg` プロパティの値だけを返します。
 
-#### Lambda event information
+#### Lambda イベント情報
 
-The `event` object will contain the following properties:
+`イベント` オブジェクトには以下のプロパティが含まれます。
 
 ```js
 /*
@@ -70,9 +70,9 @@ event = {
 */
 ```
 
-In the above function we've used the `arguments` property to get the values passed in as arguments to the function.
+上記の関数では、関数の引数として渡される値を取得するために、 `arguments` プロパティを使用しました。
 
-Next, create another Lambda function:
+次に、別のLambda関数を作成します。
 
 ```sh
 amplify add function
@@ -86,7 +86,7 @@ amplify add function
 ? Do you want to edit the local lambda function now? Yes
 ```
 
-Next, update the function code (located at __amplify/backend/function/addingfunction/src/index.js__) to the following and press enter:
+次に、関数コード( __amplify/backend/function/addingfunction/src/index.js__)を以下に更新し、Enterキーを押します。
 
 ```js
 exports.handler = async (event) => {
@@ -96,11 +96,11 @@ exports.handler = async (event) => {
 };
 ```
 
-This function will add two numbers together and return the result.
+この関数は2つの数字を加えて結果を返します。
 
-### Creating the GraphQL API
+### GraphQL API の作成
 
-Now that the functions have been created, you can create the GraphQL API:
+機能が作成されたので、GraphQL API を作成できます。
 
 ```sh
 amplify add api
@@ -117,7 +117,7 @@ amplify add api
 ? Do you want to edit the schema now? Y
 ```
 
-Next, update the base GraphQL schema (located at __amplify/backend/api/gqllambda/schema.graphql__) with the following code and press enter:
+次に、( __amplify/backend/api/gqlambda/schema.graphql__にある) ベースのGraphQLスキーマを次のコードで更新し、Enterキーを押します。
 
 ```graphql
 type Query {
@@ -125,19 +125,19 @@ type Query {
 }
 
 type Mutation {
-  add(number1: Int, number2: Int): Int @function(name: "addfunction-${env}")
+  add(number1: Int, number2: Int): Int@function(name: "addfunction-${env}")
 }
 ```
 
-Now deploy the functions and GraphQL API:
+次に、関数とGraphQL APIをデプロイします。
 
 ```sh
-amplify push
+push を増幅する
 ```
 
-### Querying the GraphQL API
+### GraphQL API のクエリ
 
-Now, you can run the following queries and mutations to interact with the API:
+これで、次のクエリと変更を実行してAPIとやり取りできます。
 
 ```sh
 query echo {
@@ -149,17 +149,17 @@ mutation add {
 }
 ```
 
-## Creating a resolver that interacts with another API
+## 別の API と相互作用するリゾルバの作成
 
-Next, we'll create a function that will interact with a public Cryptocurrency REST API.
+次に、パブリックCryptocurrencyのREST APIと相互作用する機能を作成します。
 
-Create another function:
+別の機能を作成:
 
 ```sh
-amplify add function
+anmpify add関数
 ```
 
-Next, update the function code (located at __amplify/backend/function/cryptofunction/src/index.js__) to the following and press enter:
+次に、関数コード( __amplify/backend/function/src/index.js__)を以下に更新し、Enterキーを押します。
 
 ```javascript
 const axios = require('axios')
@@ -175,40 +175,40 @@ exports.handler = async (event) => {
 };
 ```
 
-Next, install the axios library in the function __src__ folder and change back into the root directory:
+次に、関数 __src__ フォルダに axios ライブラリをインストールし、ルートディレクトリに戻します。
 
 ```sh
-cd amplify/backend/function/cryptofunction/src
+cd anplify/backend/function/cryptofunction/src
 npm install axios
 cd ../../../../../
 ```
 
-Now, update the GraphQL schema and add a `getCoins` resolver to the Query type:
+GraphQL スキーマを更新し、 `getCoins` リゾルバをクエリタイプに追加します。
 
 ```graphql
 type Query {
   echo(msg: String): String @function(name: "gqlfunc-${env}")
-  getCoins(limit: Int): String @function(name: "cryptofunction-${env}")
+  getCoins(limit: Int): String @function(name: "cryptocurrency-${env}")
 }
 ```
 
-Next, deploy the updates:
+次に、アップデートをデプロイします。
 
 ```sh
-amplify push
+push を増幅する
 ```
 
-Now you can query the GraphQL API using the new `getCoins` query.
+これで新しい `getCoins` クエリを使用して GraphQL API をクエリできるようになりました。
 
-#### Basic query
+#### 基本クエリ
 
 ```graphql
-query getCoins {
+getCoinsをクエリする {
   getCoins
 }
 ```
 
-#### Query with limit
+#### クエリの上限あり
 
 ```graphql
 query getCoins {
@@ -216,4 +216,4 @@ query getCoins {
 }
 ```
 
-To learn more about the `@function` directive, check out the GraphQL Transform documentation [here](~/cli/graphql-transformer/function.md).
+`@function` ディレクティブの詳細については、GraphQL 変換ドキュメント [を参照してください。](~/cli/graphql-transformer/function.md)。

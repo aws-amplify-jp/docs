@@ -1,1 +1,1 @@
-Custom conflict resolution configuration is not available just yet for Flutter. We are actively working on this. Track our progress with this [issue](https://github.com/aws-amplify/amplify-flutter/issues/230)
+カスタムの競合解決設定は、Flutter ではまだ利用できません。私たちはこれに積極的に取り組んでいます。この [課題](https://github.com/aws-amplify/amplify-flutter/issues/230) で進捗状況を追跡してください。

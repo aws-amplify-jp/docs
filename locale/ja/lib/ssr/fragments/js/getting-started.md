@@ -1,14 +1,14 @@
-To work well with server-rendered pages, Amplify JS requires slight modifications from how you would use it in a client-only environment.
+サーバーでレンダリングされたページをうまく動作させるには、Amplify JS はクライアントのみの環境でどのように使用するかをわずかに変更する必要があります。
 
-## Amplify
+## 増幅する
 
 ### Enabling SSR
 
 When using the Amplify CLI, the __aws-exports.js__ file gets created and updated automatically for you based upon the resources you have added and configured.
 
-For client-only apps, `Amplify.configure(awsExports)` is all you need.
+クライアントのみのアプリケーションの場合、 `Amplify.configure(awsExports)` がすべてです。
 
-To enable SSR support, also provide `ssr: true`:
+SSRサポートを有効にするには、 `ssr: true` も提供してください。
 
 ```js
 import { Amplify } from "aws-amplify";
@@ -17,18 +17,18 @@ import awsExports from "../src/aws-exports";
 Amplify.configure({ ...awsExports, ssr: true });
 ```
 
-By providing `ssr: true`, Amplify persists credentials on the client in cookies so that subsequent requests to the server have access to them.
+`ssr: true`を提供することで Amplifyはクッキーでクライアントの資格情報を保持します。これにより、サーバーへの後続のリクエストがそれらにアクセスできるようになります。
 
 > **Note**: Once [vercel/next.js#16977](https://github.com/vercel/next.js/issues/16977) is resolved, you can hoist `Amplify.configure` into **pages/_app.js**.  Until then, be sure that all **pages/*** run `Amplify.configure({ ...awsExports, ssr: true })`.
 
 
 ### withSSRContext
 
-Once an application has been configured with `ssr: true`, client-side credentials are passed to the server via cookies.
+アプリケーションが `ssr: true`で設定されると、クライアント側の資格情報はクッキーを介してサーバーに渡されます。
 
-The `withSSRContext` utility creates an instance of `Amplify` scoped to a single request (`req`) using those cookie credentials.
+`withSSRContext` ユーティリティは、これらのクッキーの資格情報を使用して、単一のリクエスト ( `req` ) にスコープされた`Amplify`のインスタンスを作成します。
 
-For client-side code rendered in the browser, your page should continue using top-level imports as usual:
+ブラウザでレンダリングされたクライアント側のコードの場合、ページは通常どおりトップレベルのインポートを使用し続ける必要があります。
 
 ```js
 import { Amplify, API } from "aws-amplify";
@@ -48,7 +48,7 @@ export default function HomePage({ posts = [] }) {
 }
 ```
 
-When on the server, use `withSSRContext({ req?: ServerRequest })`:
+サーバ上で `withSSRContext({ req?: ServerRequest }) を使用する`:
 
 ```js
 import { Amplify, API, withSSRContext } from "aws-amplify";
@@ -70,7 +70,7 @@ Server-side functions that _don't_ have a `req` object (e.g. Next.js' `getStatic
 
 ## DataStore
 
-### Serializing
+### シリアライズ中
 
 For Next.js, returned `props` from the server have to be valid JSON. Because `DataStore.query(Model)` returns _instances_ of `Model`, we need the `serializeModel` helper to convert it to JSON instead:
 
@@ -93,9 +93,9 @@ export async function getServerSideProps({ req }) {
 }
 ```
 
-### Deserializing
+### デシリアライズ中
 
-If your client-side code only reads from the server-side props and doesn't perform any updates to these models, then your client-side code won't need any changes.
+クライアント側のコードがサーバー側の props からのみ読み取り、これらのモデルの更新が行われない場合。 クライアント側のコードを変更する必要はありません
 
 However, if you receive models from the server and need to `DataStore.delete(model)` or `DataStore.save(...)` changes to them, you'll need the `deserializeModel` utility to convert them from server-friendly JSON back into model _instances_:
 

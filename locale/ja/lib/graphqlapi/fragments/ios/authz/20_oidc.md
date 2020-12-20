@@ -1,18 +1,18 @@
 
-Add the following code to your app:
+アプリに次のコードを追加します。
 
-* Create a subclass of `APIAuthProviderFactory`
+* `APIAuthProviderFactory` のサブクラスを作成する
 ```swift
 class MyAPIAuthProviderFactory: APIAuthProviderFactory {
     let myAuthProvider = MyOIDCAuthProvider()
 
-    override func oidcAuthProvider() -> AmplifyOIDCAuthProvider? {
+    オーバーライドfunc oidcAuthProvider() -> AmplifyOIDCAuthProvider? {
         return myAuthProvider
     }
 }
 ```
 
-* Implement your class which conforms to `AmplifyOIDCAuthProvider`:
+* `AmplifyOIDCAuthProvider` に準拠するクラスを実装 :
 ```swift
 class MyOIDCAuthProvider : AmplifyOIDCAuthProvider {
     func getLatestAuthToken() -> Result<String, Error> {
@@ -20,7 +20,7 @@ class MyOIDCAuthProvider : AmplifyOIDCAuthProvider {
     }
 }
 ```
-* Finally, register your instance of `APIAuthProviderFactory` prior to calling `Amplify.configure()`:
+* 最後に、 `Amplify.configure()` を呼び出す前に、 `APIAuthProviderFactory` のインスタンスを登録してください。
 ```swift
 try Amplify.add(plugin: AWSAPIPlugin(apiAuthProviderFactory: MyAPIAuthProviderFactory()))
 try Amplify.configure()

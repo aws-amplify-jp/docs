@@ -1,6 +1,6 @@
 ---
-title: Setting up push notification services
-description: Learn how to setup the various push notification services for your mobile app.
+title: プッシュ通知サービスの設定
+description: モバイルアプリのさまざまなプッシュ通知サービスの設定方法をご覧ください。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

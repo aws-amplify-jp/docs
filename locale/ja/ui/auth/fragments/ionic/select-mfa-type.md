@@ -1,4 +1,4 @@
-**Usage**
+**使用法**
 
 ```jsx
 // Required in order to not have the default message of "Less than two mfa types available"

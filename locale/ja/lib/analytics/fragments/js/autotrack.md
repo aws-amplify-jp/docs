@@ -1,10 +1,10 @@
-Analytics Auto Tracking helps you to automatically track user behaviors like sessions start/stop, page view change and web events like clicking, mouseover.
+Analytics 自動トラッキングを使用すると、セッションの開始/停止、ページビューの変更、クリック、マウスオーバーなどのWebイベントなど、ユーザーの行動を自動的に追跡できます。
 
-## Session Tracking
+## セッショントラッキング
 
-You can track the session both in a web app or a React Native app by using Analytics. A web session can be defined in different ways. To keep it simple we define that the web session is active when the page is not hidden and inactive when the page is hidden. A session in the React Native app is active when the app is in the foreground and inactive when the app is in the background.
+Analytics を使用することで、Web アプリまたは React Native アプリの両方でセッションを追跡できます。 Webセッションは異なる方法で定義することができます。 それをシンプルに保つために、ページが非表示ではなく、ページが非表示であるときに、Webセッションがアクティブであることを定義します。 React Native アプリケーションのセッションは、アプリがフォアグラウンドにあり、アプリケーションがバックグラウンドにある場合には無効になっています。
 
-For example:
+例:
 ```javascript
 Analytics.autoTrack('session', {
     // REQUIRED, turn on/off the auto tracking
@@ -26,7 +26,7 @@ Analytics.autoTrack('session', {
 });
 ```
 
-When the page is loaded, the Analytics module will send an event to the Amazon Pinpoint Service.
+ページがロードされると、Analytics モジュールはイベントを Amazon Pinpoint Service に送信します。
 ```javascript
 { 
     eventType: '_session_start', 
@@ -36,27 +36,27 @@ When the page is loaded, the Analytics module will send an event to the Amazon P
 }
 ```
 
-To keep backward compatibility, the auto tracking of the session is enabled by default. You can turn it off by:
+後方互換性を維持するために、セッションの自動追跡はデフォルトで有効になっています。次によってオフにできます:
 ```javascript
 Analytics.configure({
-    // OPTIONAL - Allow recording session events. Default is true.
+    // OPTIONAL - セッションイベントの記録を許可します。Default is true.
     autoSessionRecord: false,
 });
 ```
-or
+または
 ```javascript
 Analytics.autoTrack('session', {
     enable: false
 });
 
-// Note: this must be called before Amplify.configure() or Analytics.configure() to cancel the session_start event
+// 注意: session_start イベントをキャンセルするには、Amplify.configure() または Analytics.configure() の前に呼び出す必要があります。
 ```
 
-## Page View Tracking
+## ページビュートラッキング
 
-If you want to track which page/url in your webapp is the most frequently viewed one, you can use this feature. It will automatically send events containing url information when the page is visited.
+ウェブアプリで最も頻繁に閲覧されているページ/URLを追跡したい場合は、この機能を使用できます。 ページを訪問すると、URL情報を含むイベントが自動的に送信されます。
 
-To turn it on:
+オンにするには：
 ```javascript
 Analytics.autoTrack('pageView', {
     // REQUIRED, turn on/off the auto tracking
@@ -87,13 +87,13 @@ Analytics.autoTrack('pageView', {
     }
 });
 ```
-Note: This is not supported in React Native.
+注意: これはReact Nativeではサポートされていません。
 
-## Page Event Tracking
+## ページイベントの追跡
 
-If you want to track user interactions with elements on the page, you can use this feature. All you need to do is attach the specified selectors to your dom element and turn on the auto tracking.
+ページ上の要素とユーザーのやり取りを追跡したい場合は、この機能を使用できます。 あなたがする必要があるのは、指定されたセレクターをdom要素にアタッチし、自動追跡をオンにするだけです。
 
-To turn it on:
+オンにするには：
 ```javascript
 Analytics.autoTrack('event', {
     // REQUIRED, turn on/off the auto tracking
@@ -121,16 +121,14 @@ Analytics.autoTrack('event', {
 });
 ```
 
-For example:
-```html
-<!-- you want to track this button and send an event when it is clicked -->
-<button
+例:
+```html<!-- あなたはこのボタンを追跡し、それがクリックされたときにイベントを送信したい--><button
     data-amplify-analytics-on='click'
     data-amplify-analytics-name='click'
     data-amplify-analytics-attrs='attr1:attr1_value,attr2:attr2_value'
 />
 ```
-When the button above is clicked, an event will be sent automatically and this is equivalent to do:
+上のボタンがクリックされると、イベントが自動的に送信されます。これは次のようになります。
 ```html
 <script>
     var sendEvent = function() {

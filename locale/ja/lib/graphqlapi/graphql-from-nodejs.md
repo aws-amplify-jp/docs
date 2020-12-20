@@ -1,6 +1,6 @@
 ---
-title: GraphQL from NodeJS
-description: Learn more about how to call an AppSync GraphQL API from a NodeJS app or a Lambda function
+title: NodeJS からのGraphQL
+description: NodeJSアプリまたはLambda関数からAppSyncGraphQL APIを呼び出す方法について詳しくはこちら
 ---
 
 <inline-fragment platform="js" src="~/lib/graphqlapi/fragments/graphql-from-node.md"></inline-fragment>

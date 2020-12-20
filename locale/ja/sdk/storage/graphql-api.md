@@ -1,6 +1,6 @@
 ---
-title: Using GraphQL API
-description: Learn how to upload and download Amazon S3 Objects using AWS AppSync, a GraphQL based solution to build data-driven apps with real-time and offline capabilities.
+title: GraphQL API の使用
+description: リアルタイムおよびオフライン機能を備えたデータドリブンなアプリケーションを構築するためのGraphQLベースのソリューションであるAWS AppSyncを使用してAmazon S3オブジェクトをアップロードおよびダウンロードする方法を学びます。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

@@ -1,4 +1,4 @@
-To initialize the Amplify Auth and Storage categories you call `Amplify.addPlugin()` method for each category. To complete initialization call `Amplify.configure()`.
+Amplify Authとストレージのカテゴリを初期化するには、カテゴリごとに `Amplify.addPlugin()` メソッドを呼び出します。初期化を完了するには、 `Amplify.configure()` を呼び出します。
 
 ```dart
 // Add this line, to include the Auth plugin.

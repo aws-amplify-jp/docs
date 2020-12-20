@@ -1,4 +1,4 @@
-## DELETE data
+## データを削除
 
 ```javascript
 const apiName = 'MyApiName'; // replace this with your api name.
@@ -17,7 +17,7 @@ API
   });
 ```
 
-Example with async/await
+async/await の例
 
 ```javascript
 async function deleteData() { 
@@ -32,7 +32,7 @@ async function deleteData() {
 deleteData();
 ```
 
-Access body in the Lambda function
+Lambda 関数内の本体にアクセス
 
 ```javascript
 // using a basic lambda handler

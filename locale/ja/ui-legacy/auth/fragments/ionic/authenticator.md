@@ -1,24 +1,24 @@
-AWS Amplify provides UI components that you can use in your view templates.
+AWS Amplifyにはビューテンプレートで使用できるUIコンポーネントが用意されています。
 
-The Authenticator component creates a drop-in user authentication experience. Add the `amplify-authenticator` component to your `app.component.html` view:
+Authenticatorコンポーネントはドロップインユーザー認証体験を作成します。 `amplify-authenticator` コンポーネントを `app.component.html` ビューに追加します。
 
 ```html
   <amplify-authenticator framework="Ionic"></amplify-authenticator>
 ```
 
-### SignUp Configuration
-The SignUp component provides your users with the ability to sign up.  It is included as part of the `amplify-authenticator` component, but can also be used in isolation:
+### サインアップ設定
+サインアップコンポーネントはユーザーにサインアップする機能を提供します。 これは `amplify-authenticator` コンポーネントの一部として含まれていますが、分離して使用することもできます。
 
 Usage:  
 `<amplify-auth-sign-up framework="Ionic" [signUpConfig]="signUpConfig"></amplify-auth-sign-up>`  
 or  
 `<amplify-authenticator framework="Ionic" [signUpConfig]="signUpConfig"></amplify-authenticator>`
 
-The SignUp Component accepts a 'signUpConfig' object which allows you to customize it.
+SignUpコンポーネントは、カスタマイズできる「signUpConfig」オブジェクトを受け取ります。
 
 <inline-fragment framework="angular" src="~/ui-legacy/fragments/sign-up-attributes.md"></inline-fragment>
 
-The signUpFields array in turn consist of an array of objects, each describing a field that will appear in sign up form that your users fill out:
+順番に signUpFields 配列はオブジェクトの配列で構成されています 各項目について説明します。登録フォームに表示されます。
 
 <inline-fragment framework="angular" src="~/ui-legacy/fragments/sign-up-fields.md"></inline-fragment>
 
@@ -71,15 +71,15 @@ export class AppComponent {
 }
 ```
 
-In `app.component.html`:
+`app.component.html`:
 ```html
 <amplify-authenticator [signUpConfig]="signUpConfig"></amplify-authenticator>
 ```
 
-### Sign in or sign up with email or phone number
-If the user pool is set to allow email addresses or phone numbers as the username, you can then change the UI components accordingly by using `usernameAttributes`.
+### メールアドレスまたは電話番号でサインインまたはサインアップ
+ユーザープールが電子メールアドレスまたは電話番号をユーザー名として許可するように設定されている場合 `usernameAttributes`を使用して、それに応じてUIコンポーネントを変更できます。
 
-In `app.component.ts`:
+`app.component.ts`:
 ```js
 import { Component } from '@angular/core';
 
@@ -93,13 +93,13 @@ export class AppComponent {
 }
 ```
 
-In `app.component.html`: `<amplify-authenticator framework="Ionic" [usernameAttributes]="usernameAttributes"></amplify-authenticator>`
+`app.component.html`: `<amplify-authenticator framework="Ionic" [usernameAttributes]="usernameAttributes"></amplify-authenticator>`
 
-The `usernameAttributes` should be either `email` or `phone_number` based on your user pool setting.
+ユーザープール設定に基づいて、 `usernameAttributes` は `メールアドレス` または `電話番号` のいずれかである必要があります。
 
 Note: if you are using custom signUpFields to customize the `username` field, then you need to make sure either the label of that field is the same value you set in `usernameAttributes` or the key of the field is `username`.
 
-For example:
+例:
 ```js
 import { Component } from '@angular/core';
 
@@ -151,15 +151,15 @@ export class AppComponent {
 
 ---
 
-### Replacing Authentication Components With Custom Components
-The child components displayed within the Authenticator can be hidden or replaced with custom components.
+### 認証コンポーネントをカスタムコンポーネントに置き換え
+Authenticator 内に表示される子コンポーネントは非表示またはカスタムコンポーネントに置き換えることができます。
 
-Usage: `<amplify-authenticator framework="Ionic" [hide]="['Greetings']"></amplify-authenticator>`
+使用法: `<amplify-authenticator framework="Ionic" [hide]="['Greetings']"></amplify-authenticator>`
 
-#### Using Authentication Components Without the Authenticator
-The child components displayed within the Authenticator can be used as standalone components.  This could be useful in situations where, for example, you want to display your own components for specific pieces of the registration and authentication flow.
+#### 認証システムなしで認証コンポーネントを使用する
+Authenticator 内に表示される子コンポーネントはスタンドアロンコンポーネントとして使用することができます。 これは、例えば、 登録および認証フローの特定の部分に対して独自のコンポーネントを表示したい場合です。
 
-These components include:
+これらのコンポーネントは次のとおりです。
 
 ```javascript
 <amplify-auth-confirm-sign-in>
@@ -171,11 +171,11 @@ These components include:
 <amplify-auth-sign-up>
 ```
 
-Each of these components expects to receive the authState object, which consists of a 'state' string and a 'user' object.  The authState is an observable managed by the amplifyService, so make sure that your own custom components set the authState appropriately.
+これらの各コンポーネントは、'state' 文字列と 'user' オブジェクトで構成される authState オブジェクトを受け取ることを期待しています。 authStateはanplifyServiceによって管理されているため、自身のカスタムコンポーネントがauthStateを適切に設定していることを確認してください。
 
-Example:
+例
 ```javascript
-this.amplifyService.setAuthState({ state: 'confirmSignIn', user });
+this.amplyService.setAuthState({ state: 'confirmSignIn', user });
 ```
 
-Additional details about the authState can be found in the [Subscribe to Authentication State Changes](~/ui-legacy/auth/authenticator.md#subscribe-to-authentication-state-changes) section.
+authState についての詳細は、 [認証状態の変更を購読する](~/ui-legacy/auth/authenticator.md#subscribe-to-authentication-state-changes) セクションを参照してください。

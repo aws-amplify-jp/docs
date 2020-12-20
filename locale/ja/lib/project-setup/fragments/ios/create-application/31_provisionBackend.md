@@ -2,12 +2,12 @@ To add these configuration files to your project, **open finder within your proj
 
 ![GSA](~/images/project-setup/50_1_dragDrop.png)
 
-* Enable **Copy items if needed** if not already enabled
-* For “Added folders”, have **Create groups** selected.
-* For “Add to targets”, make sure the app target (**MyAmplifyApp**) is checked.
+* 必要に応じて **アイテムをコピー** を有効にする
+* 「追加されたフォルダ」の場合、 **グループの作成** が選択されています。
+* 「ターゲットに追加」の場合は、アプリのターゲット (**MyAmplifyApp**) がチェックされていることを確認してください。
 
-Click **Finish** to add these files to your project as shown in this screenshot:
+**終了** をクリックして、このスクリーンショットに表示されるようにこれらのファイルをプロジェクトに追加します:
 
 ![GSA](~/images/project-setup/50_2_addFiles.png)
 
-Now you can build (`Cmd+b`) and run (`Cmd+r`) your application.
+これでアプリケーションをビルド(`Cmd+b`) して実行(`Cmd+r`) することができます。

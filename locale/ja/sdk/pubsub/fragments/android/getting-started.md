@@ -1,81 +1,81 @@
-PubSub provides connectivity with cloud-based message-oriented middleware. You can use PubSub to pass messages between your app instances and your app's backend creating real-time interactive experiences.
+PubSub は、クラウドベースのメッセージ指向ミドルウェアとの接続を提供します。 PubSub を使用して、アプリケーションインスタンスとアプリケーションのバックエンド間のメッセージを渡すことができ、リアルタイムのインタラクティブなエクスペリエンスを作成できます。
 
-PubSub is available with **AWS IoT**.
+PubSub は **AWS IoT** で利用可能です。
 
 <amplify-callout>
 
-When using AWS IoT your PubSub HTTP requests are automatically signed when sending your messages.
+AWS IoTを使用する場合、メッセージの送信時にPubSub HTTP要求が自動的に署名されます。
 
 </amplify-callout>
 
-## Installation and Configuration
+## インストールと設定
 
 ### AWS IoT
 
-In the PubSub category, `AWSIoTMqttManager` establishes a signed connection with AWS IoT according to [Signature Version 4](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html).
+PubSub カテゴリでは、 `AWSIOTMqttManager` は [署名バージョン 4](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html) に従ってAWS IoT で署名された接続を確立します。
 
-Set up AWS Mobile SDK components by including the following libraries in your `app/build.gradle` dependencies list.
+`app/build.gradle` の依存関係リストに次のライブラリを含めることで、AWS Mobile SDKコンポーネントを設定します。
 
 ```groovy
 dependencies {
-  implementation ('com.amazonaws:aws-android-sdk-iot:2.15.+@aar') { transitive = true }
-  implementation ('com.amazonaws:aws-android-sdk-mobile-client:2.15.+@aar') { transitive = true }
+  implementation ('com.<unk> s:aws-android-sdk-iot:2.15.+@aar') { transitive = true }
+  implementation ('com.<unk> s:aws-android-sdk-mobile-client:2.15.+@aar') { transitive = true }
 }
 ```
 
-* `aws-android-sdk-iot` library enables connecting to AWS IoT.
-* `aws-android-sdk-mobile-client` library gives access to the AWS credentials provider and configurations.
+* `aws-android-sdk-iot` ライブラリはAWS IoTに接続できます。
+* `aws-android-sdk-mobile-client` ライブラリは AWS 資格情報プロバイダと設定へのアクセスを提供します。
 
-To use in your app, import the following classes:
+アプリで使用するには、次のクラスをインポートします。
 
 ```java
-import com.amazonaws.mobileconnectors.iot.AWSIotMqttManager;
-import com.amazonaws.mobileconnectors.iot.AWSIotMqttNewMessageCallback;
-import com.amazonaws.mobileconnectors.iot.AWSIotMqttQos;
+import com.amazonaws.amazonaws.commobileconnectors.iot.AWSIotMqttManager;
+import com.amazonaws.commobileconnectors.iot.AWSIotMqttNewMessageCallback;
+import com.amazonaws.com.amazonawsmobileconnectors.iot.AWSIotMqttQos;
 ```
 
-Define your unique client ID and endpoint (incl. region) in your configuration:
+設定内の固有のクライアント ID とエンドポイント (リージョンを含む) を定義します。
 
 ```java
-// Initialize the AWSIotMqttManager with the configuration
+// 設定で AWSIotMqttManager を初期化する
 AWSIotMqttManager mqttManager = new AWSIotMqttManager(
     "<YOUR_CLIENT_ID>", 
-    "xxxxxxxxxxxxx-ats.iot.<YOUR-AWS-REGION>.amazonaws.com");
+    "xxxxxxxxxxx-ats.iot.<YOUR-AWS-REGION>.amazonaws.com");
 ```
 
-<amplify-callout> You can get the endpoint information from the IoT Core -> Settings page on the AWS Console. </amplify-callout>
+<amplify-callout> AWS コンソールの IoT Core -> 設定ページからエンドポイント情報を取得できます。 </amplify-callout>
 
-**Create IAM policies for AWS IoT**
+**AWS IoT 向けの IAM ポリシーを作成**
 
-To use PubSub with AWS IoT, you will need to create the necessary IAM policies in the AWS IoT Console, and attach them to your Amazon Cognito Identity.
+AWS IoTでPubSubを使用するには、AWS IoTコンソールで必要なIAMポリシーを作成する必要があります。 Amazon Cognito Identityに接続します。
 
 Go to IoT Core and choose *Secure* from the left navigation pane. Then navigate to *Create Policy*. The following `myIOTPolicy` policy will allow full access to all the topics.
 
-![Alt text](~/images/iot_attach_policy.png)
+![Altテキスト](~/images/iot_attach_policy.png)
 
-**Attach your policy to your Amazon Cognito Identity**
+**Amazon Cognito IDにポリシーを添付**
 
-To attach the policy to your *Cognito Identity*, begin by retrieving the `Cognito Identity Id` from `AWSMobileClient`.
+ポリシーを *Cognito Identity*に添付するには、 `AWSMobileClient` から `Cognito Identity Id` を取得します。
 
 ```java
 AWSMobileClient.getInstance().getIdentityId();
 ```
 
-Then, you need to attach the `myIOTPolicy` policy to the user's *Cognito Identity Id* with the following [AWS CLI](https://aws.amazon.com/cli/) command:
+次に、 `myIOTPolicy` ポリシーを次の *AWS CLI* コマンドでユーザーの [Cognito Identity Id](https://aws.amazon.com/cli/) に添付する必要があります。
 
 ```bash
 aws iot attach-principal-policy --policy-name 'myIOTPolicy' --principal '<YOUR_COGNITO_IDENTITY_ID>'
 ```
 
-To programmatically attach the `myIOTPolicy` policy to the user's *Cognito Identity Id*, import the following classes:
+プログラム的に `myIOTPolicy` ポリシーをユーザの *Cognito Identity Id*に添付するには、次のクラスをインポートします。
 
 ```java
-import com.amazonaws.services.iot.AWSIotClient;
-import com.amazonaws.mobile.client.AWSMobileClient;
-import com.amazonaws.services.iot.model.AttachPolicyRequest;
+import com.amazonaws.com.iot.AWSIotClient;
+import com.amazonawsmobile.client.AWSMobileClient;
+import com.amazonaws.com.amazonaws.com.model.AttachPolicyRequest;
 ```
 
-Next, instantiate the `AttachPolicyRequest` class and attach it your IoT Client as follows:
+次に、 `AttachPolicyRequest` クラスをインスタンス化し、IoTクライアントを次のようにアタッチします。
 
 ```java
 AttachPolicyRequest attachPolicyReq = new AttachPolicyRequest();

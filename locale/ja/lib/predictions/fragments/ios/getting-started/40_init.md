@@ -7,7 +7,7 @@ import AmplifyPlugins
 import AWSPredictionsPlugin
 
 ```
-**Add the following code** to your AppDelegate's `application:didFinishLaunchingWithOptions` method:
+**AppDelegateの** アプリケーションに次のコード `を追加します:didFinishLaunchingWithOptions` メソッド:
 
 ```swift
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {

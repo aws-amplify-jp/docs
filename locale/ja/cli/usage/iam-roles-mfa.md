@@ -1,55 +1,55 @@
 ---
-title: IAM Roles & MFA
-description: Configure the Amplify CLI to assume an IAM role by defining a profile for the role in the shared `~/.aws/config` file.
+title: IAM ロール & MFA
+description: Amplify CLI は、共有された `~/.aws/config` ファイル内のロールのプロファイルを定義して、IAM ロールを想定するように設定します。
 --- 
 
 You can optionally configure the Amplify CLI to assume an IAM role by defining a profile for the role in the shared `~/.aws/config` file. This is similar to how the [AWS CLI](https://aws.amazon.com/cli/) functions, including short term credentials. This can be useful when you have multiple developers using one or more AWS accounts, including team workflows where you want to restrict the category updates they might be permitted to make.
 
-When prompted during the execution of `amplify init` or the `amplify configure project` command, you will select a configured profile for the role, and the Amplify CLI will handle the logic to retrieve, cache and refresh the temp credentials. If Multi-Factor Authentication (MFA) is enabled, the CLI will prompt you to enter the MFA token code when it needs to retrieve or refresh temporary credentials.
+`amplify init` または `amplify configure プロジェクト` コマンドの実行中にプロンプトされたとき。 役割に設定されたプロファイルを選択すると、Amplify CLI が一時資格情報を取得、キャッシュ、更新するロジックを処理します。 多要素認証 (MFA) が有効な場合。 一時的な資格情報を取得または更新する必要がある場合は、CLIはMFAトークンコードを入力するよう求めます。
 
 The Amplify CLI has its own mechanism of caching temporary credentials, it does NOT use the same cache of the AWS CLI. The temporary credentials are cached at `~/.amplify/awscloudformation/cache.json`. You can remove all cached credentials by removing this file. If you only want to remove the cached temp credentials associated with a particular project, execute `amplify awscloudformation reset-cache` or it's alias `amplify aws reset-cache` in the project.
 
-## Step by step guide to create and assume an IAM role
-The following is a step by step guide on how to create an IAM role and make it available for the Amplify CLI.
+## IAMロールを作成し、仮定するためのステップバイステップガイド
+以下は、IAMロールを作成し、Amplify CLIで利用できるようにする方法についてのステップバイステップガイドです。
 
-The setup has three parts, we will use an example to demonstrate this capability.
+セットアップには3つの部分があり、この機能を実証するための例を使用します。
 
-Assume Biz Corp has decided to hire Dev Corp to develop its inventory management web portal, and Dev Corp is using the Amplify CLI to speed up the development process.
+Biz Corpが在庫管理のウェブポータルを開発するためにDev Corpを採用することを決定したと仮定する そして、Dev CorpはAmplify CLIを使用して開発プロセスをスピードアップしています。
 
-## 1. Set up the role (Biz Corp)
-1. Sign in to the AWS Management Console and open the [IAM](https://console.aws.amazon.com/iam/) console.
-2. In the navigation pane of the console, choose `Roles` and then choose `Create role`.
-3. Choose the `Another AWS account` role type.
-4. For Account ID, type Dev Corp's AWS account ID (the account ID of the entity you want to grant access to your AWS resources).
+## 1. 役割を設定する（Biz部隊）
+1. AWS 管理コンソールにサインインし、 [IAM](https://console.aws.amazon.com/iam/) コンソールを開きます。
+2. コンソールのナビゲーション画面で、 `ロール` を選択し、 `ロールの作成` を選択します。
+3. `別のAWSアカウント` ロールタイプを選択します。
+4. アカウント IDには、Dev CorpのAWSアカウントID(AWSリソースへのアクセスを許可するエンティティのアカウントID)を入力します。
 5. Although optional, it is recommended to select `Require external ID` and enter the external id given to you by Dev Corp. (click [here](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html) for more details on external IDs).
-6. If you want to restrict the role to users who sign in with multi-factor authentication (MFA), select `Require MFA`(click [here](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html) for more details on MFA).
-7. Choose `Next: Permissions`.
-8. Select permissions policies that you want the developers from Dev Corp to have when the role is assumed. Note: You MUST grant the role permissions to perform CloudFormation actions and create associated resources (depending on the categories you use in your project) such as:
-- Cognito User and Identity Pools
-- S3 buckets
-- DynamoDB tables
+6. 多要素認証(MFA)でサインインするユーザーにロールを制限したい場合 `[MFA が必要] を選択します`(MFAの詳細については、 [ここ](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html) をクリックします)。
+7. `次へ: 権限` を選択します。
+8. Dev Corpの開発者にロールが仮定されたときに持たせたい権限ポリシーを選択します。 注意: 次のような、CloudFormationアクションを実行し、関連リソースを作成するためにロールパーミッションを付与しなければなりません(プロジェクトで使用するカテゴリによって異なります)。
+- Cognitoユーザーとアイデンティティプール
+- S3 バケツ数
+- DynamoDBテーブル
 - AppSync APIs
 - API Gateway APIs
-- Pinpoint endpoints
-- Cloudfront distributions
-- IAM Roles
-- Lambda functions
+- ピンポイントのエンドポイント
+- Cloudfront の配布
+- IAM ロール
+- Lambda 関数
 - Lex bots
 
-9. Choose `Next: Tagging`, attach tags if you want (optional).
-10. Choose `Next: Review`, type a name for your role, and optionally add the role description.
-11. Enter the required fields such as the "Role name".
-11. Choose `Create role`.
-12. Give the Role Arn to Dev Corp.
+9. `を選択します: タグ付け`, 必要に応じてタグを付けます(オプション)。
+10. `次へ: レビュー`を選択し、ロールの名前を入力し、必要に応じてロールの説明を追加します。
+11. "Role name" などの必須フィールドを入力します。
+11. `ロールの作成` を選択します。
+12. Arn Role を Dev Corp. に渡します。
 
-## 2. Set up the user to assume the role (Dev Corp)
+## 2. ロール(Dev Corp)を想定するユーザーを設定
 
-### 2.1 Create a policy that has permission to assume the role created above by Biz corp
+### 2.1 Biz社が上記の役割を担う権限を持つポリシーを作成する
 
-1. Get the Role Arn from Biz Corp.
-2. Sign in to the AWS Management Console and open the [IAM](https://console.aws.amazon.com/iam/) console. (Assuming Dev corp has a separate AWS account).
-3. In the navigation pane of the console, choose `Policies` and then choose `Create policy`.
-4. Select the 'JSON' tab and paste the following contents in the pane, replacing `<biz_corp_rol_arn>` with the value previously noted.
+1. Biz社からロールアーンを入手。
+2. AWS 管理コンソールにサインインし、 [IAM](https://console.aws.amazon.com/iam/) コンソールを開きます。 (Dev 社が別の AWS アカウントを持っていると仮定します)。
+3. コンソールのナビゲーションペインで、 `ポリシー` を選択し、 `ポリシーの作成` を選択します。
+4. 「JSON」タブを選択し、以下の内容をペインに貼り付け、 `<biz_corp_rol_arn>` を以前にメモした値に置き換えます。
 ```
 {
     "Version": "2012-10-17",
@@ -62,40 +62,40 @@ Assume Biz Corp has decided to hire Dev Corp to develop its inventory management
     ]
 }
 ```
-5. Choose `Review policy`.
-6. Type in the policy Name, and optionally add the policy description.
-7. Choose `Create policy`.
+5. `レビューポリシー` を選択します。
+6. ポリシー名を入力し、必要に応じてポリシーの説明を追加します。
+7. `ポリシーの作成` を選択します。
 
-### 2.2 Attach the policy to the user
+### 2.2 利用者にポリシーを添付
 
-1. Sign in to the AWS Management Console and open the [IAM](https://console.aws.amazon.com/iam/) console.
-2. In the navigation pane of the console, choose `Users` and then choose `Add user`.
-3. Type the `User name` for the new user.
-4. Select Programmatic access for `Access type`.
-5. Choose `Next: Permissions`.
-6. On the Set Permissions Page, select `Attach existing policies directly`.
-7. Select the policy created in 2.1.
-9. Choose `Next: Tagging`, attach tags if you wish (optional).
-10. Choose `Next: Review`.
-11. Choose `Create User`.
-12. Click `Download .csv` to download a copy of the credentials. You can, optionally, copy paste the Access Key ID and Secret Access Key and store it in a safe location. These credentials would be used in a later section.
+1. AWS 管理コンソールにサインインし、 [IAM](https://console.aws.amazon.com/iam/) コンソールを開きます。
+2. コンソールのナビゲーション ウィンドウで、 `ユーザー` を選択し、 `ユーザー` を選択します。
+3. 新しいユーザの `ユーザ名` を入力します。
+4. `アクセスタイプ` のプログラムアクセスを選択します。
+5. `次へ: 権限` を選択します。
+6. `ページで、` を選択します。
+7. 2.1で作成されたポリシーを選択します。
+9. `を選択します:`にタグを付け、希望する場合はタグを付けます(オプション)。
+10. `次へ: レビュー` を選択します。
+11. `Create User` を選択します。
+12. `.csv` をクリックして資格情報のコピーをダウンロードします。 必要に応じて、アクセスキーIDとシークレットアクセスキーをコピーして安全な場所に保存することもできます。 これらの資格情報は後のセクションで使用されます。
 
-### 2.3 Assign MFA device (Optional)
+### 2.3 MFAデバイスの割り当て (オプション)
 
 This must be set up if the Biz Corp selected to `Require MFA` when creating the role. This needs to be set up by Dev Corp users and in their respective AWS account.<br/> We are using a virtual MFA device, such as the Google Authenticator app, in this example.
 
-1. Sign in to the AWS Management Console and open the [IAM](https://console.aws.amazon.com/iam/) console.
-2. In the navigation pane of the console, choose `Users` and select the user created above in 2.2.
-3. Select the `Security Credentials` tab.
-4. Next to the `Assigned MFA device` label, choose the `Manage` option.
-5. In the Manage MFA Device wizard, choose `Virtual MFA device`, and then choose `Continue`.
+1. AWS 管理コンソールにサインインし、 [IAM](https://console.aws.amazon.com/iam/) コンソールを開きます。
+2. コンソールのナビゲーション画面で、 `ユーザー` を選択し、2.2 で上記のユーザーを選択します。
+3. `セキュリティ資格情報` タブを選択します。
+4. `割り当てられた MFA デバイス` ラベルの横にあり、 `Manage` オプションを選択します。
+5. MFAデバイスの管理ウィザードで、 `Virtual MFAデバイス`を選択し、 `Continue` を選択します。
 7. Choose `Show QR code` if the MFA app supports QR code, and scan the QR code from your virtual device(Google Authenticator app in our case), if not, choose `Show secret key` and type it into the MFA app.
-8. In the MFA code 1 box, type the one-time password that currently appears in the virtual MFA device. Wait for the device to generate a new one-time password. Then type the second one-time password into the MFA code 2 box. Then choose Assign MFA.
-9. Copy the MFA device arn next to `Assigned MFA device`, which will be used in part 3.
+8. MFAコード1ボックスで、仮想MFAデバイスに現在表示されているワンタイムパスワードを入力します。 デバイスが新しいワンタイムパスワードを生成するのを待ちます。 次に、MFAコード2ボックスに2番目のワンタイムパスワードを入力し、次にMFAの割り当てを選択します。
+9. パート3で使用される `割り当てられたMFAデバイス`の隣にあるMFAデバイスをコピーします。
 
-## 3. Set up the local development environment (Dev Corp)
-1. On the local development system, create the following two files if they do not exist.<br/> `~/.aws/config`<br/> `~/.aws/credentials`<br/>
-2. Insert the following contents into the `~/.aws/config` file:
+## 3. ローカル開発環境の設定 (Dev Corp)
+1. ローカル開発システム上で、存在しない場合は次の2つのファイルを作成します。<br/> `~/.aws/config`<br/> `~/.aws/credentials`<br/>
+2. `~/.aws/config` ファイルに以下の内容を挿入します。
 
 ```
 [profile bizcorprole]
@@ -109,16 +109,16 @@ region=us-east-1
 region=us-east-1
 ```
 
-`mfa_serial` and `external_id` are optional, leave them out if they are not configured.
+`mfa_serial` と `external_id` は省略可能で、設定されていない場合は省略してください。
 
-3. Insert the following contents into the `~/.aws/credentials` file:
+3. `~/.aws/credentials` ファイルに以下の内容を挿入します:
 ```
 [devcorpuser]
 aws_access_key_id=<key_id_from_part_2.2>
 aws_secret_access_key=<secret_access_key_from_part_2.2>
 ```
 
-Now, when Dev Corp is trying to initialize an Amplify Project, the user can select the `bizcorprole` profile configured above, and based on the authentication method set up the user would be prompted with corresponding questions such as MFA codes. After this, the user would be able to successfully deploy/manage AWS resources in Biz corps account (based on the access policies set by the Biz corp).
+現在、Dev CorpがAmplify プロジェクトを初期化しようとしている場合、上記で設定した `bizcorprole` プロファイルを選択することができます。 そして、ユーザーが設定された認証方法に基づいて、MFAコードなどの対応する質問が表示されます。 これ以降は ユーザーは、BizのコープアカウントにAWSリソースのデプロイ/管理を成功させることができます(Bizのコープが設定したアクセスポリシーに基づいて)。
 
 
-You can take a look at [AWS IAM](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user.html) and the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html) documentation for more details on IAM role and its usage.
+IAM ロールとその使用法については、 [AWS IAM](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user.html) および [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html) のドキュメントを参照してください。

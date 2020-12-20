@@ -1,8 +1,8 @@
-There are three ways of getting data that was previously uploaded:
+以前アップロードされたデータを取得するには、次の3つの方法があります。
 
-### Download data
+### データをダウンロード
 
-You can download to in-memory buffer [Data](https://developer.apple.com/documentation/foundation/data) object with `Amplify.Storage.downloadData`:
+[Amplify.Storage.downloadData](https://developer.apple.com/documentation/foundation/data) `を使用して、インメモリバッファ` データformat@@4 オブジェクトにダウンロードできます。
 
 <amplify-block-switcher>
 
@@ -44,9 +44,9 @@ receiveValue: { data in
 
 </amplify-block-switcher>
 
-### Download to file
+### ファイルにダウンロード
 
-You can download to a file [URL](https://developer.apple.com/documentation/foundation/url) with `Amplify.Storage.downloadFile`:
+[Amplify.Storage.downloadFile](https://developer.apple.com/documentation/foundation/url) : ファイル `URL` にダウンロードできます。
 
 <amplify-block-switcher>
 
@@ -96,9 +96,9 @@ receiveValue: {
 
 </amplify-block-switcher>
 
-### Generate a download URL
+### ダウンロード URL を生成する
 
-You can also retrieve a URL for the object in storage:
+また、ストレージ内のオブジェクトの URL を取得することもできます。
 
 <amplify-block-switcher>
 

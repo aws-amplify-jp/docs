@@ -1,10 +1,10 @@
-For React, the simplest way to add a conversational UI into your app is to use our *ChatBot* Component.
+React の場合、会話型 UI をアプリケーションに追加する最も簡単な方法は、 *ChatBot* コンポーネントを使用することです。
 
-ChatBot automatically renders a complete chat messaging interface that can be used out-of-the-box, or it can be customized using theming support.
+ChatBotは完全なチャットメッセージングインターフェースを自動的にレンダリングし、すぐに使えるようにします。また、テーマサポートを使用してカスタマイズできます。
 
-## Usage
+## 使用法
 
-When using React, you can use *ChatBot* with following properties;
+React を使用する場合、 *ChatBot* を以下のプロパティで使用できます。
 
 ```html
 <ChatBot
@@ -18,16 +18,16 @@ When using React, you can use *ChatBot* with following properties;
 />
 ```
 
-By default, the ChatBot will allow for only text interaction. You can turn off text interaction by passing prop `textEnabled={false}` or you can turn on voice interaction by passing prop `voiceEnabled={true}`. You should not disable both; this will cause no user inputs to be available.
+デフォルトでは、ChatBotはテキストのみを使用できます。 prop `の textEnabled={false}` を渡すか、prop `voiceEnabled={true}`を渡すことで音声操作をオンにできます。 両方を無効にしてはいけません。これにより、ユーザー入力は利用できなくなります。
 
-Note: In order for voice input to work with Amazon Lex, you may have to enable Output voice in the AWS Console. Under the Amazon Lex service, click on your configured Lex chatbot and go to Settings -> General and pick your desired Output voice. Then, click Build. If you have forgotten to enable Output voice, you will get an error like this:
+注意: Amazon Lexで音声入力を動作させるには、AWSコンソールで音声出力を有効にする必要があります。 Amazon Lexサービスの下で、設定したLexチャットボットをクリックし、設定 -> General に移動し、希望する出力音声を選択します。 次に、format@@0をクリックします。出力音声を有効にし忘れた場合、次のようなエラーが表示されます。
 ```
-ChatBot Error: Invalid Bot Configuration: This bot does not have a Polly voice ID associated with it. For voice interaction with the user, set a voice ID
+ChatBot エラー: 無効なボット設定: このボットにはポリーボイスIDが関連付けられていません。 ユーザーと音声操作を行うには音声IDを設定してください
 ```
 
-The `conversationModeOn` props turns continuous conversation cycle mode on/off for voice interaction. In continuous conversation mode, the user will only have to click the microphone button once to complete a chatbot conversation. This means that the component will detect when the user is done speaking to stop recording, and then send data to interactions provider, and then start recording again when a response is received from the interactions provider. The cycle will stop when the conversation is finished.
+`conversationModeOn` propsは、音声操作で連続会話モードのオン/オフを切り替えます。 連続会話モードでは、ユーザーはチャットボットの会話を完了するために一度だけマイクボタンをクリックする必要があります。 つまり、ユーザが録音を停止するために音声通話を終了し、インタラクションプロバイダにデータを送信するタイミングをコンポーネントが検出します。 やり取りプロバイダから応答を受け取ったら再度録音を開始します 会話が終了するとサイクルが停止します。
 
-If needed, you can also pass `voiceConfig` in the props to modify the silence detection parameters, like in this example:
+必要に応じて、props で `voiceConfig` を渡して、この例のように無音検出パラメータを変更することもできます。
 
 ```jsx
 const customVoiceConfig = {
@@ -44,9 +44,9 @@ const customVoiceConfig = {
 
 ```
 
-## Sample React app
+## サンプル React アプリ
 
-Following simple app shows how to use **ChatBot** component in a React app, with the automatic setup outlined above;
+以下のシンプルなアプリは、React アプリケーションで **ChatBot** コンポーネントを使用する方法を示しています。上記の自動設定を示しています。
 
 ```javascript
 import React, { Component } from 'react';

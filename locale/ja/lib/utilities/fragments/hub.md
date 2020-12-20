@@ -1,15 +1,15 @@
-Amplify has a local eventing system called Hub. It is a lightweight implementation of Publisher-Subscriber pattern, and is used to share data between modules and components in your app. Amplify uses Hub for different categories to communicate with one another when specific events occur, such as authentication events like a user sign-in or notification of a file download.
+AmplifyにはHubというローカルイベントシステムがあります。 Publisher-Subscriber パターンの軽量実装であり、アプリケーション内のモジュールとコンポーネント間でデータを共有するために使用されます。 Amplifyは、特定のイベントが発生したときに互いに通信するためにさまざまなカテゴリにハブを使用します。 例えば、ユーザーのサインインやファイルダウンロードの通知などの認証イベント。
 
-## Installation
+## インストール
 ```javascript
 import { Hub } from 'aws-amplify';
 // or
 import { Hub } from '@aws-amplify/core';
 ```
 
-## Working with the API
+## API の操作
 
-### Listening for messages
+### メッセージを聞いています
 
 `Hub.listen(channel: string | RegExp, callback)` is used to listen for messages that have been dispatched. You must provide either a named `channel` or a regular expression, along with a callback. In the case of a regular expression only dispatches which contain a `message` in their payload will be matched against your pattern. You can add multiple listeners to your application for different channels or patterns to listen for, or trap generic events and perform your own filtering.
 
@@ -37,9 +37,9 @@ In previous versions of Amplify capturing updates required you to implement an `
 
 </amplify-callout>
 
-### Sending messages
+### メッセージを送信中
 
-Sending events to different channels is done with the `dispatch` function:
+イベントを別のチャンネルに送信するには、 `ディスパッチ` 機能を使用します。
 ```javascript
 Hub.dispatch(
     'DogsChannel', 
@@ -73,27 +73,27 @@ export type HubPayload = {
 
 The `event` field is recommended to be a small string without spaces such as `signIn` or `hang_up` as it's useful for checking payload groupings. The `data` field is a freeform structure which many times is used for larger JSON objects or custom data types. Finally while `message` is optional, we encourage you to use it as it is required when using a `RegExp` filtering with `Hub.listen()`.
 
-### Stop Listening
+### リスニングを停止する
 
-Hub provides a way to stop listening for messages with `Hub.remove(channel: string | RegExp, listener: callback)`. This may be useful if you no longer need to receive messages in your application flow, as well as to avoid any memory leaks on low powered devices when you are sending large amounts of data through Hub on multiple channels.
+Hub は `Hub.remove(channel: string | RegExp, listener: callback)`でメッセージのリッスンを停止する方法を提供します。 これは、アプリケーションフローでメッセージを受信する必要がなくなった場合に便利です。 複数のチャンネルで Hub から大量のデータを送信している場合、低電力デバイスでのメモリリークを避けることができます。
 
 
-### Channels
+### チャンネル
 A channel is a logical group name that you use to organize messages and listen on. These are strings and completely up to you as the developer to define for dispatching or listening. However, while you can dispatch to any channel, ***Amplify protects certain channels*** and will flag a warning as sending unexpected payloads could have undesirable side effects (such as impacting authentication flows). The protected channels are currently:
 
 * core
-* auth
+* 認証する
 * api
-* analytics
-* interactions
+* 分析
+* 相互作用
 * pubsub
-* storage
+* ストレージ
 * xr
 * datastore
 
-### Listening for Regular Expressions
+### 正規表現を再生
 
-The listener feature of Hub is a powerful way to perform filtering when you're unsure what the data across different channels will look like. Additionally it's also a nice realtime debugging feature. For instance, if you wanted to listen to all messages then you can just pass in a wildcard:
+Hub のリスナー機能は、さまざまなチャンネル間のデータがどのように見えるかがわからない場合にフィルタリングを実行する強力な方法です。 さらに、それは素晴らしいリアルタイムデバッグ機能でもあります。 たとえば、すべてのメッセージを聴きたい場合は、ワイルドカードを渡すだけです。
 
 ```javascript
 Hub.listen(/.*/, (data) => {
@@ -101,16 +101,16 @@ Hub.listen(/.*/, (data) => {
 })
 ```
 
-When using a "Capturing Group" (e.g. parenthesis grouping regular expressions) an array will be populated called `patternInfo` and returned as part of your callback:
+「グループをキャプチャ」を使用する場合 (例: 括弧の正規表現のグループ化) 配列が `patternInfo` と呼ばれ、コールバックの一部として返されます:
 
 ```javascript
 Hub.listen(/user(.*)/, (data) => {
-  console.log('A USER event has been found matching the pattern: ', data.payload.message);
+  console.log('USER イベントが pattern: ', data.payload.message);
   console.log('patternInfo:', data.patternInfo);
 })
 ```
 
-For example, this can be useful if you want to extract the text before and/or after a specific phrase:
+例えば、特定のフレーズの前後にテキストを抽出したい場合に便利です。
 
 ```javascript
 Hub.listen(/user ([^ ]+) ([^ ]+) (.*)/, (data) => {
@@ -119,9 +119,9 @@ Hub.listen(/user ([^ ]+) ([^ ]+) (.*)/, (data) => {
 })
 ```
 
-### State Management
+### 要塞管理
 
-Hub can be used as part of a state management system such as [Redux](https://redux.js.org/) or [MobX](https://github.com/mobxjs/mobx) by updating the store when an event is seen by one or more listeners. You could also construct your own local store. For example, suppose you have the following in a React application's top level component:
+Hubは、イベントが1つ以上のリスナーによって閲覧されたときにストアを更新することによって、 [Redux](https://redux.js.org/) や [MobX](https://github.com/mobxjs/mobx) のような状態管理システムの一部として使用できます。 独自のローカルストアを構築することもできます。例えば、React アプリケーションのトップレベルコンポーネントに次のようなものがあるとします。
 
 ```javascript
 const store = (() => {
@@ -199,8 +199,8 @@ class DogStatus extends Component {
 }
 ```
 
-Now when the store is updated the `<DogStatus />` component re-renders on the screen.
+ストアが更新されると、 `<DogStatus />` コンポーネントが画面に再レンダリングされます。
 
-## API Reference
+## APIリファレンス
 
-For the complete API documentation for Hub module, visit our [API Reference](https://aws-amplify.github.io/amplify-js/api/classes/hubclass.html)
+Hub モジュールの完全な API ドキュメントについては、 [API リファレンス](https://aws-amplify.github.io/amplify-js/api/classes/hubclass.html) を参照してください。

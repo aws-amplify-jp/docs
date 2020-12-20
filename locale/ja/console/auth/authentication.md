@@ -1,40 +1,40 @@
 ---
-title: Authentication
-description: Configure and deploy authentication for an app
+title: 認証
+description: アプリの認証を設定およびデプロイします
 ---
 
-Authentication is the process of verifying the identity of a user. Writing the code for an application's login flow can be difficult and time consuming. In Admin UI, you can easily add a complete [Amazon Cognito](https://aws.amazon.com/cognito/) authentication solution to your app. You simply specify the log-in method, such as email and password, Amazon, Google, or Facebook, and you are provided with the authentication UI component for the entire authentication flow.
+認証は、ユーザーの身元を確認するプロセスです。アプリケーションのログインフローのコードを記述するのは難しく、時間がかかることがあります。 Admin UI では、完全な [Amazon Cognito](https://aws.amazon.com/cognito/) 認証ソリューションをアプリに簡単に追加できます。 電子メールやパスワード、Amazon、Google、Facebookなどのログイン方法を指定するだけです。 認証フロー全体の認証UIコンポーネントが提供されます。
 
-If you choose to add one of the social sign-in login mechanisms, you will also need to specify an app ID, app secret, and redirect URIs. To learn more about how social sign-in works, see [Social sign-in (OAuth)](~/lib/auth/social.md).
+ソーシャルログインメカニズムのいずれかを追加する場合は、 また、アプリ ID、アプリ シークレット、リダイレクトURIも指定する必要があります。 ソーシャルサインインの仕組みの詳細については、 [ソーシャルサインイン(OAuth)](~/lib/auth/social.md) を参照してください。
 
-Multi-factor authentication (MFA) increases security for your app by adding an authentication method and not relying solely on the username and password. AWS Amplify uses Amazon Cognito to provide MFA. To learn more, see [Multi-factor authentication](~/lib/auth/mfa.md).
+多要素認証 (MFA) は、ユーザー名とパスワードのみに依存しない認証方法を追加することで、アプリケーションのセキュリティを向上させます。 AWS AmplifyはAmazon Cognitoを使用してMFAを提供しています。詳細については、 [多要素認証](~/lib/auth/mfa.md) を参照してください。
 
-Note that you must configure and deploy authentication for your application before you can [create users and groups](~/console/auth/user-management.md) or apply [authorization rules](~/console/authz/authorization.md) to your data models.
+アプリケーションの認証を構成してデプロイする必要があることに注意してください。 [ユーザーとグループを作成する](~/console/auth/user-management.md) または [許可ルール](~/console/authz/authorization.md) をデータ モデルに適用する前に。
 
-## To configure how users log in to an app
-1. Sign in to the AWS Management console and open AWS Amplify.
-2. In the navigation pane, choose an application.
-3. On the application information page, choose the **Open Admin UI** tab.
-4. On the **Set up** menu, choose **Auth**.
+## アプリへのログイン方法を設定するには
+1. AWS Managementコンソールにサインインし、AWS Amplifyを開きます。
+2. ナビゲーション ウィンドウで、アプリケーションを選択します。
+3. アプリケーション情報ページで、 **管理者UIを開く** タブを選択します。
+4. **** メニューで **認証** を選択します。
 5. In the **Configure log in** section, choose a login mechanism to add from the **Add login mechanism** list. Valid options are *Username*, *Phone number*, *Facebook*, *Google*, and *Amazon*. If you choose one of the social sign-in mechanisms, *Facebook*, *Google*, or *Amazon*, you will also need to enter your *App ID*, *App Secret*, and redirect URLs.
 6. (Optional) Add multi-factor authentication (MFA).  MFA is set to **Off** by default. To turn on MFA, do the following in the **Multi-factor authentication** section:
-  * Choose **Enforced** to require MFA for all users or choose **Optional** to allow individual users to enable MFA.
-  * (Optional) Choose **SMS**, and enter your SMS message.
-  * (Optional) Choose **Authenticator Application** if you want your app to load with an authentication flow that includes sign up and sign in.
+  * すべてのユーザーにMFAを必要とするには **強制** を選択するか、個々のユーザーがMFAを有効にできるようにするには **オプション** を選択します。
+  * (オプション) **SMS**を選択し、SMSメッセージを入力します。
+  * (オプション)サインアップとサインインを含む認証フローでアプリケーションをロードする場合は、 **Authenticator Application** を選択します。
 5. In the **Configure sign up** section, expand **Password protection settings** and customize the password policy settings to enforce. u6. Choose **Save and Deploy**. This starts a CloudFormation deployment with the progress displayed in the upper right corner of the page.
 
-Login mechanism settings, and sign up settings can't be changed after you deploy authentication. To change these settings, you must first delete the deployed authentication and then create and deploy new settings. You can, however, add new login mechanisms, add multi-factor authentication, and update the password protection settings.
+ログインメカニズムの設定、およびサインアップ設定は、認証の導入後に変更できません。 これらの設定を変更するには、最初にデプロイされた認証を削除し、次に新しい設定を作成してデプロイする必要があります。 ただし、新しいログインメカニズムを追加し、多要素認証を追加し、パスワード保護設定を更新することができます。
 
-[\\]: * (Is the last sentence above true?)
+[\\]: * (上の最後の文は本当ですか?)
 
-## To reset authentication configuration settings
-1. Sign in to the AWS Management console and open AWS Amplify.
-2. In the navigation pane, choose an application.
-3. On the application information page, choose the **Open Admin UI** tab.
-4. On the **Set up** menu, choose **Auth**.
-5. At the end of the **Authentication** page, choose **Reset all authentication settings and users**.
-6. In the **Delete authentication** confirmation window, choose **Delete all authentication rules**.
-5. The deployment progress displays in the upper right corner of the page.
-6. After the delete authentication deployment completes, deploy new authentication rules by following the steps in the preceding procedure [for configuring how users log in to an app](~/console/auth/authentication.md#to-configure-how-users-log-in-to-an-app).
+## 認証設定をリセットするには
+1. AWS Managementコンソールにサインインし、AWS Amplifyを開きます。
+2. ナビゲーション ウィンドウで、アプリケーションを選択します。
+3. アプリケーション情報ページで、 **管理者UIを開く** タブを選択します。
+4. **** メニューで **認証** を選択します。
+5. **認証** ページの最後に、 **すべての認証設定とユーザーをリセットする** を選択します。
+6. **Delete authentication** confirmation ウィンドウで、 **Delete all authentication rules** を選択します。
+5. デプロイの進行状況がページの右上隅に表示されます。
+6. 削除認証のデプロイが完了したら、 ユーザーがアプリにどのようにログインするかを設定するための手順 [の手順に従って、新しい認証ルールをデプロイします](~/console/auth/authentication.md#to-configure-how-users-log-in-to-an-app)。
 
-[\\]: * (What is the consequence of doing the above? What should we warn about?)
+[\\]: * (上記の結果は何ですか?何について警告すべきですか?)

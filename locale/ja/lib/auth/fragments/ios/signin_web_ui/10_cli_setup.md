@@ -1,4 +1,4 @@
-In terminal, navigate to your project, run `amplify add auth`, and choose the following options:
+ターミナルで、プロジェクトに移動し、 `amplify add auth`を実行し、次のオプションを選択します。
 
 
 ```terminal
@@ -22,4 +22,4 @@ In terminal, navigate to your project, run `amplify add auth`, and choose the fo
     `<hit enter>`
 ```
 
-Once finished, run `amplify push` to publish your changes.
+終了したら、 `amplify push` を実行して変更を公開します。

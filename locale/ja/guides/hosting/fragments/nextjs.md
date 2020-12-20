@@ -1,24 +1,24 @@
-In this guide you'll learn how to deploy a *static* [Next](https://nextjs.org/) app using Amplify Hosting.
+このガイドでは、Amplify Hostingを使用して *static* [Next](https://nextjs.org/) アプリをデプロイする方法を学びます。
 
 > Note: Next also supports pre-rendering for *dynamic* server-rendered routes. At this time, Amplify **does not** support the hosting of dynamic server-rendered routes with Next.
 
-There are two options: One using the Amplify CLI, and the other using a Git repository. This will cover both.
+Amplify CLI を使用する方法と、Git リポジトリを使用する方法の 2 つのオプションがあります。
 
-1. [CLI workflow](#cli-workflow)
-2. [Git-based workflow](#git-based-deployments)
+1. [CLIワークフロー](#cli-workflow)
+2. [Gitベースのワークフロー](#git-based-deployments)
 
-## CLI workflow
+## CLIワークフロー
 
-To get started, create a new Next site:
+開始するには、新しい次のサイトを作成します。
 
 ```sh
 $ npm init next-app
 
-✔ What is your project named? my-app
-✔ Pick a template › Default starter app
+✔ プロジェクトの名前は何ですか? my-app
+✔ テンプレートを選ぶ › デフォルトのスターターアプリ
 ```
 
-Next, change into the new directory and update __package.json__ to add the `export` script to the existing `build` script:
+次に、新しいディレクトリに変更し、 __package.json__ を更新して、 `エクスポート` スクリプトを既存の `ビルド` スクリプトに追加します。
 
 ```json
 "scripts": {
@@ -28,11 +28,11 @@ Next, change into the new directory and update __package.json__ to add the `expo
 },
 ```
 
-> `next export` allows you to export your app to static HTML, which can be run standalone without the need of a Node.js server.
+> `next export` アプリケーションを静的HTMLにエクスポートすることができ、Node.jsサーバーを必要とせずにスタンドアロンで実行することができます。
 
-### Adding Amplify hosting
+### 増幅ホスティングの追加
 
-If you haven't already, install and configure the latest version of the Amplify CLI:
+まだインストールしていない場合は、Amplify CLIの最新バージョンをインストールして設定してください:
 
 <amplify-block-switcher>
 
@@ -47,7 +47,7 @@ npm install -g @aws-amplify/cli
 <amplify-block name="cURL (Mac and Linux)">
 
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
+curl -sL https://aws-amplify.github.io/anplify-cli/install | bash && $SHELL
 ```
 
 </amplify-block>
@@ -55,7 +55,7 @@ curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
 <amplify-block name="cURL (Windows)">
 
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install-win -o install.cmd && install.cmd
+curl -sL https://aws-amplify.github.io/anplify-cli/install-win -o install.cmd && install.cmd
 ```
 
 </amplify-block>
@@ -63,12 +63,12 @@ curl -sL https://aws-amplify.github.io/amplify-cli/install-win -o install.cmd &&
 </amplify-block-switcher>
 
 ```bash
-amplify configure
+増幅の設定
 ```
 
-> To see a video walkthrough of how to configure the CLI, click [here](https://www.youtube.com/watch?v=fWbM5DLh25U).
+> CLI の設定方法のビデオウォークスルーを表示するには、ここをクリックします [](https://www.youtube.com/watch?v=fWbM5DLh25U)。
 
-Next, initialize a new Amplify project. __Make sure you set the Distribution Directory Path to `out`__.
+次に、Amplifyプロジェクトを初期化します。 __配布ディレクトリのパスを ``__に設定してください。
 
 ```sh
 $ amplify init
@@ -86,65 +86,65 @@ $ amplify init
 ? Please choose the profile you want to use: <your profile>
 ```
 
-Now, add hosting with the Amplify `add` command:
+次に、Amplify `add` コマンドでホスティングを追加します。
 
 ```sh
 $ amplify add hosting
 
-? Select the plugin module to execute: Hosting with Amplify Console
-? Choose a type: Manual deployment
+? 実行するプラグインモジュールを選択します: Ampliify Console でホスティングする
+? 種類を選択します。手動でデプロイする
 ```
 
-Next, deploy the app:
+次に、アプリをデプロイします。
 
 ```sh
 $ amplify publish
 
-? Are you sure you want to continue? Yes
+? 続行しますか? はい。
 ```
 
-⚡️ Congratulations, your app has now been successfully deployed! The URL for the app should be displayed in your terminal.
+⚡ おめでとうございます。アプリのデプロイに成功しました！アプリの URL が端末に表示されるはずです。
 
 ![](https://dev-to-uploads.s3.amazonaws.com/i/bc06wo8unppp7am869ra.png)
 
-To see your app in the Amplify console at any time, run the following command:
+Amplifyコンソールでいつでもアプリを表示するには、次のコマンドを実行します。
 
 ```sh
 $ amplify console
 ```
 
-### Deploying updates
+### アップデートをデプロイ中
 
-Once you make changes to your app and are ready to deploy them, you can run the `publish` command again:
+アプリに変更を加えてデプロイする準備ができたら、 `publish` コマンドを再度実行できます。
 
 ```sh
 $ amplify publish
 ```
 
-### Deleting the app
+### アプリを削除中
 
-To delete the app and the deployment, run the `delete` command:
+アプリとデプロイメントを削除するには、 `delete` コマンドを実行します。
 
 ```sh
 $ amplify delete
 ```
 
-## Git-based deployments
+## Gitベースのデプロイメント
 
-Amplify also offers Git-based deployments with features like CI/CD and branch previews.
+Amplifyはまた、CI/CDやブランチプレビューなどの機能を備えたGitベースのデプロイメントを提供します。
 
-To host using a Git-based deployment, follow these steps instead.
+Gitベースのデプロイメントを使用してホストするには、代わりに次の手順に従ってください。
 
-__1.__ Create your app
+__1.__ アプリを作成
 
 ```sh
 $ npm init next-app
 
-✔ What is your project named? my-app
-✔ Pick a template › Default starter app
+✔ プロジェクトの名前は何ですか? my-app
+✔ テンプレートを選ぶ › デフォルトのスターターアプリ
 ```
 
-__2.__ Set the following custom `build` script in your package.json:
+__2.__ package.json 内で以下のカスタム `ビルド` スクリプトを設定:
 
 ```json
 "scripts": {
@@ -154,37 +154,38 @@ __2.__ Set the following custom `build` script in your package.json:
 },
 ```
 
-__3.__ Create a Git repository, then push your code to Git.
+__3.__ Git リポジトリを作成し、コードを Git にプッシュします。
 
 ```sh
 $ git init
-$ git remote add origin git@github.com:username/my-next-app.git
+$ git remote add origin git@github.com:username/my-next-app. it 
+ $ git add .
 $ git add .
 $ git commit -m 'initial commit'
 $ git push origin master
 ```
 
-__4.__ Go to the [Amplify Console](https://console.aws.amazon.com/amplify) and click "Connect App"
+__4.__ [Amplify Console](https://console.aws.amazon.com/amplify) に移動し、「アプリを接続」をクリックします
 
-__5.__ Follow the steps to choose your Git provider and your branch.
+__5.__ Gitプロバイダとブランチを選択する手順に従ってください。
 
-__6.__ Set the __baseDirectory__ to __out__:
+__6.__ __baseDirectory__ を __アウト__ に設定:
 
-![Setting the baseDirectory property](https://dev-to-uploads.s3.amazonaws.com/i/edt8ccos33addseu2c06.png)
+![baseDirectory プロパティの設定](https://dev-to-uploads.s3.amazonaws.com/i/edt8ccos33addseu2c06.png)
 
-__7.__ Click __Next__ then __Save and deploy__.
+__7.__ __次に__ そして __保存して__ をクリックします。
 
-Once your site has successfully deployed, you should see three green checkmarks.
+サイトが正常にデプロイされると、3つの緑色のチェックマークが表示されます。
 
-To view the live site, click on the automatically generated URL given to you by the Amplify Console.
+ライブサイトを表示するには、Amplifyコンソールから自動生成されたURLをクリックします。
 
-### Kicking off a new build
+### 新しいビルドを開始します。
 
-You can kick off a new build directly from the Amplify console or by pushing changes to master.
+Amplifyコンソールから直接、または変更をマスターにプッシュすることで、新しいビルドをキックオフできます。
 
-1. Make some changes to your code
+1. コードを変更する
 
-2. Push the changes to git
+2. 変更を git にプッシュします
 
 ```sh
 $ git add .
@@ -192,8 +193,8 @@ $ git commit -m 'updates'
 $ git push origin master
 ```
 
-## Dynamic server-rendered routes
+## 動的サーバレンダリングされたルート
 
-In this guide you learned how to deploy a static __Next__ site using Amplify Hosting.
+このガイドでは、Amplify Hostingを使用して静的な __Next__ サイトをデプロイする方法を学びました。
 
-Next also supports pre-rendering for dynamic server-rendered routes. At this time, Amplify does not support the hosting of dynamic server-rendered routes with Next.
+次に、動的なサーバレンダリングルートの事前レンダリングもサポートします。現時点では、AmplifyはNextによる動的なサーバレンダリングルートのホスティングをサポートしていません。

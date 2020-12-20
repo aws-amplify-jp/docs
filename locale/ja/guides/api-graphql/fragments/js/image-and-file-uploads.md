@@ -1,42 +1,42 @@
-Storing and querying for files like images and videos is a common requirement for most applications, but how do you do this using GraphQL?
+画像や動画などのファイルの保存とクエリは、ほとんどのアプリケーションで一般的な要件ですが、GraphQLを使用してどのように行うのですか?
 
-One option would be to Base64 encode the image and send as a string in the mutation. This comes with disadvantages like the encoded file being larger than the original binary, the operation being computationally expensive, and the added complexity around encoding and decoding properly.
+一つのオプションは、Base64が画像をエンコードし、変更内の文字列として送信することです。 これは、エンコードされたファイルが元のバイナリよりも大きいような欠点があります。 演算が高価でエンコードとデコードの複雑さが増しています
 
-Another option is to have a separate server (or API) for uploading files. This is the preferred approach and the technique that will be covered in this guide.
+もう一つのオプションは、ファイルをアップロードするための別のサーバー(またはAPI)を持つことです。 これが好ましいアプローチであり、このガイドで説明されるテクニックです。
 
-## How it all works
+## どのように動作する
 
-You typically would need a few things to make this work:
+この作業を行うには通常、いくつかのことが必要になります。
 
-1. A GraphQL API
-2. A storage service or database for saving your files
-3. A database to store the GraphQL data including a reference to the location of the file
+1. GraphQL API
+2. ファイルを保存するためのストレージサービスまたはデータベース
+3. ファイルの場所への参照を含むGraphQLデータを保存するデータベース
 
-Take for example the following schema for a product in an E-commerce app:
+例えば、Eコマースアプリ内の製品のスキーマを以下に示します。
 
 ```
 type Product {
   id: ID!
   name: String!
   description: String
-  price: Int
+  price: int
   image: ?
 }
 ```
 
-How could you use this `image` field and make it work with your app to store and reference an image?
+この `イメージ` フィールドをどのように使用して、画像を保存して参照するためにアプリで動作させることができますか?
 
-#### For mutations
+#### 突然変異用
 
-1. Store the image in S3
-2. Send a mutation to create the Product in the GraphQL API using the image reference along with the other product data
+1. 画像をS3に保存
+2. 画像参照と他の製品データを使用してGraphQL API で製品を作成するために変更を送信します。
 
-#### For Queries
+#### クエリ用
 
-1. Query the product data from the API (including the image reference)
-2. Get a signed URL for the image from S3 in another API call
+1. (画像参照を含む) API から製品データを問い合わせます
+2. 別の API 呼び出しで S3 から画像の署名 URL を取得します
 
-Let's take a look at how to implement this using AWS Amplify, AWS AppSync, and Amazon S3.
+AWS Amplify、AWS AppSync、Amazon S3を使用してこれを実装する方法を見てみましょう。
 
 <!-- ## Creating the client
 
@@ -49,12 +49,12 @@ npx create-react-app gqlimages
 cd gqlimages
 npm install aws-amplify @aws-amplify/ui-react uuid
 ``` -->
-## Creating the services
-To build this API, we need the following:
-1. S3 bucket to store the image
-2. GraphQL API to store the image reference and other data about the type
-3. Authentication service to authenticate users (only needed in order to upload files to S3)
-The first thing we will want to do is create the authentication service. To do so, we'll initialize an Amplify project and add authentication.
+## サービスの作成
+この API を構築するには、次のものが必要です。
+1. 画像を格納するS3バケット。
+2. タイプに関する画像参照やその他のデータを格納するGraphQL API
+3. ユーザー認証のための認証サービス（S3にファイルをアップロードするためにのみ必要）
+まず最初に認証サービスを作成します。そのためには、Amplifyプロジェクトを初期化し、認証を追加します。
 
 
 ```sh
@@ -69,7 +69,7 @@ amplify add auth
 ? Do you want to configure advanced settings?  No, I am done.
 ```
 
-Next, we'll create the storage service (Amazon S3):
+次に、ストレージサービス(Amazon S3)を作成します。
 
 ```sh
 amplify add storage
@@ -82,7 +82,7 @@ amplify add storage
 ? What kind of access do you want for Guest users? read
 ```
 
-Next you will be creating a GraphQL API with a type that has an image field. This image can only be accessed by someone using our app. If someone tries to fetch this image directly, they will not be able to view it.
+次に、画像項目を持つタイプのGraphQL APIを作成します。 この画像にアクセスできるのはアプリを使っている人だけです。 誰かがこの画像を直接取得しようとすると、それを見ることはできません。
 
 ```sh
 amplify add api
@@ -102,7 +102,7 @@ amplify add api
 ? Do you want to edit the schema now? Yes
 ```
 
-When prompted, update the schema located at __/amplify/backend/api/gqls3/schema.graphql__ with the following:
+プロンプトが表示されたら、 __/amplify/backend/api/gqls3/schema.graphql__ にあるスキーマを以下のように更新します。
 
 ```graphql
 type Product @model
@@ -121,23 +121,23 @@ type Product @model
 
 <amplify-callout>
 
-The above schema assumes a combination of Amazon Cognito User Pools and API key authentication types. It will allow authenticated users to create products, and both authenticated and unauthenticated users to read products.
+上記のスキーマは、Amazon Cognito User PoolsとAPIキー認証タイプの組み合わせを想定しています。 認証されたユーザーが製品を作成し、認証されたユーザーと認証されていないユーザーの両方が製品を読み取ることができます。
 
 </amplify-callout>
 
-Go back to the CLI and press __Enter__.
+CLIに戻り、 __Enter__ を押します。
 
-Next, deploy the services using the Amplify `push` command:
+次に、Amplify `push` コマンドを使用してサービスをデプロイします。
 
 ```sh
 amplify push --y
 ```
 
-### Interacting with the API from a client application
+### クライアントアプリケーションから API を操作する
 
-Now that the backend is created, how can we interact with it to save and read products and images from it?
+バックエンドが作成されたので、製品や画像を保存して読み取るにはどうすればよいでしょうか?
 
-Here is the code that we could use to save a product and image to the API:
+以下は、製品と画像をAPIに保存するために使用できるコードです。
 
 ```js
 import { Storage, API } from 'aws-amplify';
@@ -151,7 +151,7 @@ async function saveProduct() {
 }
 ```
 
-Here is the code that we could use to query a product and corresponding image from the API:
+以下は、API から製品と対応する画像を照会するために使用できるコードです。
 
 ```javascript
 import { Storage, API } from 'aws-amplify';
@@ -165,7 +165,7 @@ async function getProductById () {
 }
 ```
 
-Here is the code that we could use to query an array of products and images from the API:
+APIから製品や画像の配列をクエリするために使用できるコードは次のとおりです。
 
 ```javascript
 import { Storage, API } from 'aws-amplify';

@@ -1,4 +1,4 @@
-To upload to S3 from a data object, specify the `key` and the `data` object to be uploaded.
+データオブジェクトから S3 にアップロードするには、アップロードする `キー` と、 `データ` オブジェクトを指定します。
 
 <amplify-block-switcher>
 
@@ -46,7 +46,7 @@ receiveValue: { data in
 
 </amplify-block-switcher>
 
-When you have a file that you want to upload, you can specify the url to the file in the `local` parameter.
+アップロードしたいファイルがある場合は、 `ローカル` パラメータでファイルのURLを指定できます。
 
 <amplify-block-switcher>
 

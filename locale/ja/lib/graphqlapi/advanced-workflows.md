@@ -1,6 +1,6 @@
 ---
-title: Advanced Workflows
-description: Learn more about advanced workflows in the Amplify Framework's API category
+title: 高度なワークフロー
+description: Amplify FrameworkのAPIカテゴリの高度なワークフローについて詳しくはこちら
 ---
 
 <inline-fragment platform="js" src="~/lib/graphqlapi/fragments/js/complex-objects.md"></inline-fragment> <inline-fragment platform="js" src="~/lib/graphqlapi/fragments/js/delta-sync.md"></inline-fragment>

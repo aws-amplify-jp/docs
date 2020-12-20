@@ -1,8 +1,8 @@
-The `amplify-tools-gradle-plugin` Gradle plugin provides an integration layer between the Amplify CLI headless mode (i.e. no AWS credentials needed) and Android Studio. It integrates into the build process of the IDE to provide a seamless experience.
+`amplify-tools-gradle-plugin` Gradle プラグインはAmplify CLI ヘッドレスモード間の統合レイヤーを提供します (i. をクリックします。AWSの資格情報は不要です。Android Studioは、IDEのビルドプロセスに統合され、シームレスなエクスペリエンスを提供します。
 
-First, add the plugin to your project-level `build.gradle`.
+まず、プロジェクト レベル `build.gradle` にプラグインを追加します。
 
-Add the plugin as a dependency under the `buildscript`'s `dependencies` block:
+`buildscript`の `依存関係` ブロックの下に依存関係としてプラグインを追加します。
 
 ```groovy
 buildscript {
@@ -20,15 +20,15 @@ buildscript {
 }
 ```
 
-At the end of that same project-level `build.gradle`, apply the plugin:
+同じプロジェクト レベル `build.gradle`の最後にプラグインを適用します。
 ```groovy
 apply plugin: 'com.amplifyframework.amplifytools'
 ```
 
-In Android Studio, go to the File menu and select **Sync Project with Gradle Files**.
+Android Studio で、 **メニューから** を選択します。
 
-Once that completes, you see will see new run/debug configurations available in the top menu bar of Android Studio. Look to the left of the green **Run** button. In the drop-down, you will see:
+これが完了すると、Android Studio のトップメニューバーに新しい実行/デバッグ構成が表示されます。 緑色の **実行** ボタンの左を見てください。ドロップダウンには次のように表示されます。
 
-- `modelgen`
-- `amplifyPush`
+- `モデル`
+- `anplifyPush`
 

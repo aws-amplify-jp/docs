@@ -1,1 +1,1 @@
-* An app setup according to the [getting started walkthrough](~/lib/auth/getting-started.md)
+* [ウォークスルーを開始](~/lib/auth/getting-started.md) に応じたアプリのセットアップ

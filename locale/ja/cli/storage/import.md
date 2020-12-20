@@ -1,53 +1,53 @@
 ---
-title: Use an existing S3 bucket or DynamoDB table
-description: Configure the Amplify CLI to use existing S3 bucket or DynamoDB table resources as a storage resource for other Amplify categories. (API, Function, and more)
+title: 既存のS3バケットまたはDynamoDBテーブルを使用
+description: Amplify CLIを構成して、既存のS3バケットまたはDynamoDBテーブルリソースを他のAmplifyカテゴリのストレージリソースとして使用します。(API、Function、その他)
 ---
 
-Import an existing S3 bucket or DynamoDB tables into your Amplify project. Get started by running `amplify import storage` command to search for & import an S3 or DynamoDB resource from your account.
+既存のS3バケットまたはDynamoDBテーブルをAmplifyプロジェクトにインポートします。 インポートストレージを `増幅する` コマンドを実行して、 & アカウントからS3またはDynamoDBリソースをインポートします。
 
 ```sh
-amplify import storage
+インポートストレージを増幅する
 ```
 
-Make sure to run `amplify push` to complete the import process and deploy this backend change to the cloud.
+インポートプロセスを完了するために、 `anmpify push` を実行し、このバックエンドの変更をクラウドにデプロイしてください。
 
-The `amplify import storage` command will:
-* automatically populate your Amplify Library configuration files (aws-exports.js, amplifyconfiguration.json) with your chosen S3 bucket information
-* provide your designated S3 bucket or DynamoDB table as a storage mechanism for all storage-dependent categories (API, Function, Predictions, and more)
-* enable Lambda functions to access the chosen S3 or DynamoDB resource if you permit it
+`importストレージを増幅する` コマンドは次のようになります。
+* Amplifyライブラリ設定ファイル(aws-exports.js, anplifyconfiguration.json)に、選択したS3バケット情報を自動的に入力します。
+* 指定されたS3バケットまたはDynamoDBテーブルを、すべてのストレージ依存カテゴリ(API、Function、Predictionsなど)のストレージメカニズムとして提供します
+* Lambda関数が選択したS3またはDynamoDBリソースにアクセスできるようにします。
 
-This feature is particularly useful if you're trying to:
-* enable Amplify categories (such as API and Function) to access your existing storage resources;
-* incrementally adopt Amplify for your application stack;
-* independently manage S3 and DynamoDB resources while working with Amplify.
+この機能は、以下のような場合に特に便利です:
+* Amplifyカテゴリ（APIやFunctionなど）を有効にして既存のストレージリソースにアクセスします。
+* アプリケーションスタックに Amplify を徐々に採用します。
+* Amplifyで作業中にS3とDynamoDBのリソースを独立して管理します。
 
-## Import an existing S3 bucket
+## 既存の S3 バケットをインポート
 
-Select the "S3 bucket - Content (Images, audio, video, etc.)" option when you've run `amplify import storage`.
+インポートストレージを `増幅する`を実行すると、「S3バケット-コンテンツ(画像、オーディオ、ビデオなど)」オプションを選択します。
 
-Run `amplify push` to complete the import procedure.
+`amplify push` を実行してインポート手順を完了します。
 
-> Amplify projects are limited to exactly one S3 bucket.
+> AmplifyプロジェクトはS3バケット1つに制限されています。
 
-### Connect to an imported S3 bucket with Amplify Libraries
+### Amplifyライブラリを使用してインポートされたS3バケットに接続します
 
-By default, Amplify Libraries assumes that S3 buckets are configured with the following access patterns:
-- `public/` - Accessible by all users of your app
-- `protected/{user_identity_id}/` - Readable by all users, but writable only by the creating user
-- `private/{user_identity_id}/` - Only accessible for the individual user
+デフォルトでは、Amplifyライブラリは、S3バケットが次のアクセスパターンで構成されていると仮定しています。
+- `public/` - アプリのすべてのユーザーがアクセス可能
+- `protected/{user_identity_id}/` - すべてのユーザーによって読み取ることができますが、作成ユーザーによってのみ書き込み可能
+- `private/{user_identity_id}/` - 個々のユーザーのみアクセス可能
 
-You can either configure your IAM role to use the Amplify-recommended policies or in your Amplify libraries configuration [overwrite the default storage path behavior](~/lib/storage/configureaccess.md/q/platform/js#customize-object-key-path).
+Amplify推奨ポリシーを使用するようにIAMロールを設定するか、Amplifyライブラリ設定で [デフォルトのストレージパスの動作](~/lib/storage/configureaccess.md/q/platform/js#customize-object-key-path)を上書きすることができます。
 
-It is highly recommended to review your S3 bucket's CORS settings. Review the [recommendation guide here](~/lib/storage/getting-started.md/q/platform/js#amazon-s3-bucket-cors-policy-setup).
+S3バケットのCORS設定を確認することを強くお勧めします。 [レコメンドガイド](~/lib/storage/getting-started.md/q/platform/js#amazon-s3-bucket-cors-policy-setup) をご覧ください。
 
-### Configuring IAM role to use Amplify-recommended policies
+### Amplify推奨ポリシーを使用するIAMロールの設定
 
-If you're using an imported S3 bucket with an imported Cognito resource, then you'll need to update the policy of your Cognito Identity Pool's authenticated and unauthenticated role. Create new __managed policies__ (not *inline policies*) for these roles with the following statements:
+CognitoリソースをインポートしたS3バケットを使用している場合 次に、Cognito Identity Poolの認証済みおよび未認証の役割のポリシーを更新する必要があります。 新しい __管理されたポリシー__ ( *インライン ポリシー*ではありません) を次のステートメントでこれらのロールに作成します。
 
-> Make sure to replace `{YOUR_S3_BUCKET_NAME}` with your S3 bucket's name.
+> `{YOUR_S3_BUCKET_NAME}` を S3 バケットの名前に置き換えてください。
 
-#### Unauthenticated role policies:
-- IAM policy statement for `public/`:
+#### 認証されていないロールポリシー:
+- `public/` の IAM policy ステートメント :
 ```json
 {
     "Action": [
@@ -62,7 +62,7 @@ If you're using an imported S3 bucket with an imported Cognito resource, then yo
 }
 ```
 
-- IAM policy statement for read access to `public/`, `protected/`, and `private/`:
+- `public/`, `protected/`, および `private/` への読み取りアクセスのための IAM policy ステートメント :
 ```json
 {
     "Action": [
@@ -94,8 +94,8 @@ If you're using an imported S3 bucket with an imported Cognito resource, then yo
 }
 ```
 
-#### Authenticated role policies:
-- IAM policy statement for `public/`:
+#### 認証済みロールポリシー:
+- `public/` の IAM policy ステートメント :
 ```json
 {
     "Action": [
@@ -110,7 +110,7 @@ If you're using an imported S3 bucket with an imported Cognito resource, then yo
 }
 ```
 
-- IAM policy statement for `protected/`:
+- `protected/` の IAM policy ステートメント :
 ```json
 {
     "Action": [
@@ -125,7 +125,7 @@ If you're using an imported S3 bucket with an imported Cognito resource, then yo
 }
 ```
 
-- IAM policy statement for `private/`:
+- `private/` の IAM policy ステートメント :
 ```json
 {
     "Action": [
@@ -140,7 +140,7 @@ If you're using an imported S3 bucket with an imported Cognito resource, then yo
 }
 ```
 
-- IAM policy statement for read access to `public/`, `protected/`, and `private/`:
+- `public/`, `protected/`, および `private/` への読み取りアクセスのための IAM policy ステートメント :
 ```json
 {
     "Action": [
@@ -174,22 +174,22 @@ If you're using an imported S3 bucket with an imported Cognito resource, then yo
 }
 ```
 
-## Import an existing DynamoDB table
+## 既存の DynamoDB テーブルをインポート
 
-Select the "DynamoDB table - NoSQL Database" option when you've run `amplify import storage`. In order to successfully import your DynamoDB table, your DynamoDB table needs to be located within the same region as your Amplify project.
+`implify import storage`を実行すると、「DynamoDBテーブル - NoSQLデータベース」オプションを選択します。 DynamoDBテーブルを正常にインポートするには、DynamoDBテーブルをAmplifyプロジェクトと同じリージョン内に配置する必要があります。
 
-Run `amplify push` to complete the import procedure.
+`amplify push` を実行してインポート手順を完了します。
 
-> Amplify projects can contain multiple DynamoDB tables.
+> Amplifyプロジェクトは複数のDynamoDBテーブルを含めることができます。
 
-## Multi-environment support
+## マルチ環境のサポート
 
-When you create a new environment through `amplify env add`, Amplify CLI will assume by default that you're managing your app's storage resources outside of an Amplify project. You'll be asked to either import a different S3 bucket or DynamoDB tables or maintain the same imported storage resource.
+`amplify env add`を使用して新しい環境を作成するとき。 Amplify CLI はデフォルトで、Amplifyプロジェクト以外でアプリケーションのストレージリソースを管理していると仮定します。 別の S3 バケットまたは DynamoDB テーブルをインポートするか、インポートされた同じストレージリソースを維持するかを尋ねられます。
 
-If you want to have Amplify manage your storage resources in a new environment, run `amplify remove storage` to unlink the imported storage resources and `amplify add storage` to create new Amplify-managed S3 buckets and DynamoDB tables in the new environment.
+Amplifyに新しい環境でストレージリソースを管理させたい場合 `amplify remove storage` を実行して、インポートされたストレージリソースのリンクを解除し、 `増幅ストレージを追加` して、新しい環境で新しい Amplify-managed S3 バケットと DynamoDB テーブルを作成します。
 
-## Unlink an existing S3 bucket or DynamoDB table
+## 既存の S3 バケットまたは DynamoDB テーブルのリンクを解除します
 
-In order to unlink your existing Cognito resource run `amplify remove storage`. This will only unlink the S3 bucket or DynamoDB table referenced from the Amplify project. It will not delete the S3 bucket or DynamoDB table itself.
+既存のCognitoリソースのリンクを解除するには、 `ストレージを増幅します`。 これにより、Amplifyプロジェクトから参照されているS3バケットまたはDynamoDBテーブルのリンクが解除されます。 S3バケットまたはDynamoDBテーブル自体は削除されません。
 
-Run `amplify push` to complete the unlink procedure.
+`amplify push` を実行して、リンク解除の手順を完了します。

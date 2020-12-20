@@ -1,28 +1,28 @@
 ---
-title: Calling DynamoDB using AWS Cognito triggers
-description: How to add an entry in DynamoDB, with user's information after sign-up post-confirmation
+title: AWS Cognito トリガーを使用して DynamoDB を呼び出す
+description: DynamoDBにエントリを追加するには、登録後の確認後のユーザー情報を入力します。
 ---
 
-If you are using AWS Cognito to handle authentication in your application you can use triggers to handle authentication events. For example, send a welcome email after the user signs up. The complete documentation on AWS Cognito triggers can be found [here](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html).
+AWS Cognitoをアプリケーションで認証処理に使用している場合は、トリガーを使用して認証 イベントを処理できます。 たとえば、ユーザーがサインアップした後にウェルカムメールを送信します。 AWS Cognitoトリガーに関する完全なドキュメントは こちら [](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html)をご覧ください。
 
 In this guide, you will learn how to use a post confirmation trigger to save user's information to your DynamoDB table. Like mentioned in the previous guides, the easiest way to interact with DynamoDB from Lambda in a Node.js environment is to use the [DynamoDB document client](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html).
 
-Using this approach you can link a Cognito Identity to an user profile in your application, and have the possibility to list posts by author and be able to show their name, email , date of creation, etc instead of their id.
+このアプローチを使用すると、Cognito Identity をアプリケーションのユーザープロファイルにリンクできます。 著者が投稿したものをリストアップし名前を表示できる可能性があります メールアドレスの代わりに、 、作成日などを送信します。
 
-The main advantage of this method is that you don't have to manually create the user in your GraphQL API using a mutation, which is another alternative.
+このメソッドの主な利点は、変更を使用してGraphQL APIでユーザーを手動で作成する必要がないことです。 別の選択肢があります
 
-The main issue of this solution is that if you remove an user from AWS Cognito, your application won't know about it.
+このソリューションの主な問題は、AWS Cognito からユーザーを削除すると、アプリケーションがそのことを知らないということです。
 
 
-### Scenario
+### シナリオ
 
-After user sign-up, you want to create an entry in a DynamoDB table with the user's information.
+ユーザーがサインアップした後、ユーザー情報を含む DynamoDB テーブルにエントリを作成します。
 
-### Create GraphQL API
+### GraphQL API の作成
 
-In this step you will create your User table, where the entry with user's information will be saved. This will be done using Amplify GraphQL API.
+このステップでは、ユーザー情報を含むエントリが保存されるUserテーブルを作成します。 これはAmplify GraphQL API を使用して行います。
 
-You can skip this part, if you already have a GraphQL API with an User model.
+Userモデルを持つGraphQL APIを既に持っている場合は、この部分をスキップできます。
 
 ```sh
 amplify add api
@@ -39,7 +39,7 @@ amplify add api
 ? Do you want to edit the schema now? Yes
 ```
 
-The CLI should open the GraphQL schema, located at amplify/backend/api/contactapi/schema.graphql, in your text editor. Update the schema with the following and save the file:
+CLIは、テキストエディタでanplify/backend/api/contactapi/schema.graphqlにあるGraphQLスキーマを開きます。スキーマを次のように更新し、ファイルを保存します。
 
 ```graphql
 type User
@@ -52,9 +52,9 @@ type User
 ```
 
 
-### Create the lambda function
+### lambda 関数を作成
 
-This function will be called after user post confirmation.
+この関数は、ユーザーが投稿を確認した後に呼び出されます。
 
 ```sh
 amplify add function
@@ -71,7 +71,7 @@ amplify add function
 ? Do you want to edit the local lambda function now? N
 ```
 
-Next open the index.js file associated to your newly created lambda function, and paste the following code :
+次に、新しく作成した lambda 関数に関連付けられた index.js ファイルを開き、次のコードを貼り付けます。
 
 ```js
 var aws = require('aws-sdk');
@@ -114,22 +114,22 @@ exports.handler = async (event, context) => {
 };
 ```
 
-You can access your table name by calling the environment variable API_{APP_NAME}_USERTABLE_NAME.
+環境変数 API_{APP_NAME}_USERTABLE_NAME を呼び出すことでテーブル名にアクセスできます。
 
 
-Deploy the lambda function :
+lambda 関数をデプロイする :
 
 ```sh
-amplify push
+push を増幅する
 ```
 
-Your lambda function is now ready to use!
+lambda関数が使えるようになりました！
 
-### Configure the Post Confirmation trigger
+### 投稿確認トリガーの設定
 
-To configure your AWS Cognito trigger to call the lambda function you just created, you should do the following :
+AWS Cognitoトリガーを作成したlambda関数を呼び出すように設定するには、以下を行う必要があります。
 
-    - Go to your [AWS Console](https://console.aws.amazon.com/console/home)
-    - Navigate to AWS Cognito service, and choose 'Manage User Pools'
-    - Select the User Pool related to your application
-    - Go to 'Triggers' and look for Post Confirmation Trigger, then select your lambda function
+    - [AWSコンソール](https://console.aws.amazon.com/console/home)に移動する
+    - AWS Cognitoサービスに移動し、「ユーザプールを管理」を選択します
+    - アプリケーションに関連するユーザープールを選択してください
+    - 「トリガー」に移動し、ポスト確認トリガーを探し、ラムダ機能を選択してください

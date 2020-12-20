@@ -1,11 +1,11 @@
 ```js
-const original = await DataStore.query(Post, "123");
+const origin = await DataStore.query(Post, "123");
 
 await DataStore.save(
   Post.copyOf(original, updated => {
     updated.title = `title ${Date.now()}`;
   })
-);
+
 ```
 
 <amplify-callout>

@@ -1,6 +1,6 @@
-All Amazon S3 resources are private by default. If you want your users to have access to Amazon S3 buckets or objects, you can assign appropriate permissions with an [IAM policy](http://docs.aws.amazon.com/IAM/latest/UserGuide/PoliciesOverview.html).
+すべてのAmazon S3リソースはデフォルトでプライベートです。 ユーザーに Amazon S3 バケットまたはオブジェクトへのアクセスを許可する場合。 [IAM ポリシー](http://docs.aws.amazon.com/IAM/latest/UserGuide/PoliciesOverview.html) で適切な権限を割り当てることができます。
 
-## IAM Policy Based Permissions
+## IAM ポリシーに基づく権限
 
 When you upload objects to the S3 bucket the Amplify CLI creates, you must manually prepend the appropriate access-level information to the `key`. The correct prefix - `public/`, `protected/` or `private/` - will depend on the access level of the object as documented in the [Storage Access section](~/sdk/storage/getting-started.md#storage-access). For example:
 
@@ -19,11 +19,11 @@ s3Object.key = "private/\(cognitoIdentityId)/myFile.txt"
 
 **Note:** These keys must be prepended when you are uploading the object, and the same key must be specified as part of the object's key during download. The `cognitoIdentityId` is required for `protected` and `private` access and you can get it by using the [Authentication Utilities](~/sdk/auth/working-with-api.md#utility-properties) within AWSMobileClient: `AWSMobileClient.default().identityId`.
 
-## Temporary Permissions via Pre-signed URLs
+## 事前署名付きURL経由の一時的な権限
 
-However, what if you wanted to provide permissions temporarily, for example: _you want to share a link to a file temporarily and have the link expire after a set time_. You can use pre-signed URLs to give your users temporary access to S3 objects. When you create a pre-signed URL, you must provide your security credentials, specify a bucket name, an object key, an HTTP method, and an expiration date and time. The pre-signed URL is valid only for the specified duration.
+ただし、一時的に許可を与えたい場合はどうすればよいでしょう。 例: _一時的にファイルへのリンクを共有し、設定した時間_の後にリンクが切れるようにします。 事前に署名されたURLを使用して、ユーザーにS3オブジェクトへの一時的なアクセスを与えることができます。 事前に署名された URL を作成する場合、セキュリティ資格情報を入力する必要があります。 バケット名、オブジェクトキー、HTTPメソッド、および有効期限を指定します。 事前に署名された URL は指定された期間にのみ有効です。
 
-The following example shows how to build a pre-signed URL to get an S3 object.
+以下の例は、S3 オブジェクトを取得するために事前に署名された URL を構築する方法を示しています。
 
 ```swift
 let getPreSignedURLRequest = AWSS3GetPreSignedURLRequest()

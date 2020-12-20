@@ -1,6 +1,6 @@
 <amplify-block-switcher> <amplify-block name="Web">
 
-Install the necessary dependencies by running the following command:
+次のコマンドを実行して、必要な依存関係をインストールします。
 
 ```sh
 npm install aws-amplify
@@ -8,20 +8,20 @@ npm install aws-amplify
 
 </amplify-block> <amplify-block name="React Native">
 
-Install the necessary dependencies by running the following command:
+次のコマンドを実行して、必要な依存関係をインストールします。
 
 ```sh
-npm install aws-amplify amazon-cognito-identity-js @react-native-community/netinfo
+npm install aws-amzon-cognito-identity-js @react-native-community/netinfo
 ```
 
-You will also need to install the pod dependencies for iOS:
+また、iOS 用の pod 依存関係をインストールする必要があります。
 
 ```sh
 npx pod-install
 ```
 </amplify-block> <amplify-block name="Expo">
 
-Install the necessary dependencies by running the following command:
+次のコマンドを実行して、必要な依存関係をインストールします。
 
 ```sh
 npm install aws-amplify @react-native-community/netinfo

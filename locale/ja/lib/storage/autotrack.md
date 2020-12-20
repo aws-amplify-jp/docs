@@ -1,6 +1,6 @@
 ---
-title: Automatically track events
-description: You can enable automatic tracking of Storage Events such as uploads and downloads. Enabling this will automatically send Storage Events to Amazon Pinpoint and you will be able to see them within the AWS Pinpoint Console under Custom Events.
+title: 予定を自動的に追跡
+description: アップロードやダウンロードなどのストレージイベントの自動トラッキングを有効にできます。 これを有効にすると、自動的に Amazon Pinpoint にストレージイベントが送信され、カスタムイベントの下の AWS Pinpoint Console 内でストレージイベントが表示されます。
 ---
 
 <inline-fragment platform="js" src="~/lib/storage/fragments/js/autotrack.md"></inline-fragment>

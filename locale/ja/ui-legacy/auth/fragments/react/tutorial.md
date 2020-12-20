@@ -1,6 +1,6 @@
-This tutorial walks you through how to use AWS Amplify to build a React application. You can use a similar process with a React Native application (omitting hosting).
+このチュートリアルでは、AWS Amplifyを使ってReactアプリケーションを構築する方法について説明します。 似たようなプロセスを React Native アプリケーション(ホスティングを省略)で使用できます。
 
-## Installation
+## インストール
 
 <amplify-block-switcher>
 
@@ -15,7 +15,7 @@ npm install -g @aws-amplify/cli
 <amplify-block name="cURL (Mac and Linux)">
 
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
+curl -sL https://aws-amplify.github.io/anplify-cli/install | bash && $SHELL
 ```
 
 </amplify-block>
@@ -23,7 +23,7 @@ curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
 <amplify-block name="cURL (Windows)">
 
 ```bash
-curl -sL https://aws-amplify.github.io/amplify-cli/install-win -o install.cmd && install.cmd
+curl -sL https://aws-amplify.github.io/anplify-cli/install-win -o install.cmd && install.cmd
 ```
 
 </amplify-block>
@@ -31,29 +31,29 @@ curl -sL https://aws-amplify.github.io/amplify-cli/install-win -o install.cmd &&
 </amplify-block-switcher>
 
 ```bash
-amplify configure
+増幅の設定
 ```
 
-If you're using Windows, we recommend the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
+Windows をお使いの場合は、 [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10) をお勧めします。
 
-- Ensure you have [Create React App](https://github.com/facebook/create-react-app) installed.
-- Create a new project as follows:<br> `npx create-react-app myapp`<br> `cd myapp`<br>
+- [Create React App](https://github.com/facebook/create-react-app) がインストールされていることを確認してください。
+- 以下のように新しいプロジェクトを作成します:<br> `npx create-react-app myapp`<br> `cd myapp`<br>
 
-***Getting Started with the CLI***
+***CLI 入門***
 
-To get started, initialize your project in the new directory:
+開始するには、新しいディレクトリでプロジェクトを初期化します。
 
 ```
-amplify init
+initを増幅する
 ```
 
 After you answer the provided questions, you can use `amplify help` at any time to see the overall command structure, and `amplify help <category>` to see actions for a specific category.
 
-The Amplify CLI uses AWS CloudFormation, and you can add or modify configurations locally before you push them for execution in your account. To see the status of the deployment at any time, run `amplify status`.
+Amplify CLIはAWS CloudFormionを使用し、アカウントで実行するためにプッシュする前に、ローカルに設定を追加または変更できます。 デプロイの状況をいつでも確認するには、 `amplify status` を実行します。
 
-***Publishing Your Web App***
+***Webアプリを公開***
 
-Without making any changes to your React application, add web hosting as follows:
+React アプリケーションに変更を加えずに、以下のようにウェブホスティングを追加してください：
 
 ```
 amplify add hosting
@@ -61,34 +61,34 @@ amplify add hosting
 
 You would be prompted next to select the environment setup. Select **DEV (S3 only with HTTP)** for quick prototyping and testing, and once production ready you could run the `amplify update hosting` command to publish your app to Amazon CloudFront (a CDN service).
 
-**Note:** when using the **PROD** option there could be a 15-20 minute delay for the CDN setup and content replication.
+**注意:** **PROD** オプションを使用する場合、CDN 設定とコンテンツのレプリケーションには15~20分の遅延が発生する可能性があります。
 
-When you're prompted for information, such as the bucket name or application files, you can use the default values by pressing **Enter**.
+Bucket 名やアプリケーション ファイルなどの情報を求められる場合は、 **Enter** を押してデフォルト値を使用できます。
 
-**Note** You can use an order alias to add or remove category features. You can also run `amplify hosting add`.
+**メモ** 注文エイリアスを使用してカテゴリ機能を追加または削除することができます。 `hostify add` を実行することもできます。
 
 Run `amplify status` to see that status (not deployed). Next, build and deploy your site by running `amplify publish` or `amplify publish --invalidate-cache` - for cache invalidation in the distribution network (if CloudFront is added via the hosting category). After it's complete, your application is available in an S3 hosting bucket for testing. It's also fronted with an Amazon CloudFront distribution. (if it is added via the hosting category in the prior bucket)
 
-## Add Auth
+## 認証を追加
 
 Now that your app is in the cloud, you can add some features like enabling users to register for your site and log in. Run `amplify add auth` and select the **Default configuration**. This adds the auth resource configurations locally in your `amplify/backend/auth` directory.
 
 Run `amplify push` to provision your auth resources in the cloud. The `./src/aws-exports.js` file that's created has all of the appropriate cloud resources defined for your application.
 
-Next, add the Amplify library to your web application as follows:
+次に、AmplifyライブラリをWebアプリケーションに追加します。
 
 ```
 yarn add aws-amplify aws-amplify-react
 ```
 
-If integrating with a React Native app, use:
+React Native アプリと連携する場合は以下を使用してください：
 
 ```
-yarn add aws-amplify aws-amplify-react-native
-react-native link amazon-cognito-identity-js # DO NOT run this when using Expo or ExpoKit
+yarn add aws-amplify aws-anplify-react-native
+react-native link amazon-cognito-identity-js # ExpoやExpoKitを使用する場合は実行しないでください。
 ```
 
-Edit `./src/App.js` to include the Amplify library, configurations, and [React HOC](https://reactjs.org/docs/higher-order-components.html). Then, initialize the library as follows:
+`./src/App.js` を編集して、Amplifyライブラリ、設定、 [React HOC](https://reactjs.org/docs/higher-order-components.html)を含めます。その後、以下のようにライブラリを初期化します。
 
 ```javascript
 import Amplify from 'aws-amplify';
@@ -98,33 +98,33 @@ import { withAuthenticator } from 'aws-amplify-react'; // or 'aws-amplify-react-
 Amplify.configure(awsconfig);
 ```
 
-Wrap the default `App` component using `withAuthenticator` at the bottom of the file as follows:
+ファイルの下部にある `withAuthenticator` を使用してデフォルトの `App` コンポーネントを以下のようにラップします:
 
 ```javascript
 export default withAuthenticator(App, true);
 ```
 
-You can now use `amplify publish` to build and publish your app again. This time you'll be able to register a new user and sign in before opening the main application.
+`amplify publish` を使ってアプリをビルドして再び公開できるようになりました。 今回は新しいユーザーを登録し、メインアプリケーションを開く前にサインインすることができます。
 
-> API & property details for the `Authenticator` and `withAuthenticator` HOC are available in the [Authentication Guide](~/ui-legacy/auth/authentcator/q/framework/react).
+> API & プロパティの詳細 `Authenticator` と `withAuthenticator` HOC は [Authentication Guide](~/ui-legacy/auth/authentcator/q/framework/react) にあります。
 
-#### SignUp Configuration
+#### サインアップ設定
 
-The SignUp component provides your users with the ability to sign up. It is included as part of the `Authenticator` component.
+サインアップコンポーネントはユーザーにサインアップ機能を提供します。これは、 `Authenticator` コンポーネントの一部として含まれています。
 
-Usage: `<Authenticator signUpConfig={ signUpConfig }/>`
+使用法: `<Authenticator signUpConfig={ signUpConfig }/>`
 
-It can also be used as part of the authentication HOC: `export default withAuthenticator(App, { signUpConfig });`
+認証 HOC の一部としても使用できます: `export default withAuthenticator(App, { signUpConfig });`
 
-The SignUp Component accepts a 'signUpConfig' object which allows you to customize it.
+SignUpコンポーネントは、カスタマイズできる「signUpConfig」オブジェクトを受け取ります。
 
 {% include sign-up-attributes.html %}
 
-The signUpFields array in turn consist of an array of objects, each describing a field that will appear in sign up form that your users fill out:
+順番に signUpFields 配列はオブジェクトの配列で構成されています 各項目について説明します。登録フォームに表示されます。
 
 {% include sign-up-fields.html %}
 
-A Sample signUpFields attribute would look like the following:
+signUpFields 属性の例は次のようになります。
 
 ```js
 const signUpConfig = {
@@ -146,11 +146,11 @@ const signUpConfig = {
 export default withAuthenticator(App, { signUpConfig });
 ```
 
-#### Sign up/in with email/phone number
+#### メールアドレス/電話番号でサインアップ/ログイン
 
-If the user pool is set to allow email addresses/phone numbers as the username, you can then change the UI components accordingly by using `usernameAttributes` [(learn more about the setup)](~/lib/auth/getting-started.md/q/platform/js).
+ユーザープールがユーザー名としてメールアドレス/電話番号を許可するように設定されている場合 `usernameAttributes` [(設定の詳細)](~/lib/auth/getting-started.md/q/platform/js) を使用して、それに応じてUIコンポーネントを変更できます。
 
-When you are using `email` as the username:
+`email` をユーザー名として使用している場合:
 
 ```js
 import { withAuthenticator, Authenticator } from 'aws-amplify-react';
@@ -176,7 +176,7 @@ class App2 {
 export default withAuthenticator(App2, { usernameAttributes: 'email' });
 ```
 
-When you are using `phone number` as the username:
+ユーザー名に `電話番号` を使用している場合
 
 ```js
 import { Authenticator, withAuthenticator } from 'aws-amplify-react';
@@ -203,7 +203,7 @@ export default withAuthenticator(App2, { usernameAttributes: 'phone_number' });
 
 **Note:** If you are using custom signUpFields to customize the `username` field, then you need to make sure either the label of that field is the same value you set in `usernameAttributes` or the key of the field is `username`.
 
-For example:
+例:
 
 ```js
 import React, { Component } from 'react';
@@ -258,11 +258,11 @@ export default withAuthenticator(App, {
 });
 ```
 
-## Add Analytics and Storage
+## アナリティクスとストレージを追加
 
-Next, we'll add some features, like tracking user behavior analytics and uploading/downloading images in the cloud.
+次に、ユーザーの行動分析の追跡やクラウド内の画像のアップロード/ダウンロードなどの機能を追加します。
 
-Before starting, to enable analytics in amplify, we need to associate user to an identity pool. Run `amplify add auth` and configure authentication with using manual configuration.
+開始する前に、増幅分析を有効にするには、ユーザーを ID プールに関連付ける必要があります。 `amplify add auth` を実行し、手動設定を使用して認証を構成します。
 
 Start by running `amplify add analytics` in your project. You can enable analytics for authenticated users only, or for users that aren't authenticated. You would be prompted to ask whether you want to allow guests and unauthenticated users to send analytics events, so you can choose `Yes`. You can also try a new project without authentication configured to test this feature.
 
@@ -279,7 +279,7 @@ The `Analytics` category automatically tracks user session data such as sign-in 
 
 `Storage.configure({ level: 'private' });`
 
-Next, add the following methods before the component's `render` method as follows:
+次に、コンポーネントの `render` メソッドの前に次のメソッドを追加します。
 
 ```javascript
   uploadFile = (evt) => {
@@ -296,7 +296,7 @@ Next, add the following methods before the component's `render` method as follow
   }
 ```
 
-Finally, modify the `render` method so that you can upload files and also view any of the `private` photos that have been added for the logged in user as follows:
+最後に `render` メソッドを変更して、ファイルをアップロードしたり、ログインしたユーザーに追加された `プライベート` の写真を以下のように表示したりできます:
 
 ```javascript
   render() {
@@ -310,20 +310,20 @@ Finally, modify the `render` method so that you can upload files and also view a
   }
 ```
 
-Save your changes and run `amplify publish`. You've already pushed the changes earlier so just the local build is created and uploaded to the hosting bucket. Log in (if necessary) and upload photos, which are protected by the user. You can refresh the page to view the photos after you upload them.
+変更を保存し、 `publish`を実行します。 すでに変更をプッシュしているため、ローカルビルドだけが作成され、ホスティングバケットにアップロードされます。 ログインして、ユーザーによって保護されている写真をアップロードします。 アップロード後、ページを更新して写真を表示することができます。
 
-## Add GraphQL Backend
+## GraphQLバックエンドを追加
 
-Now that your application is set up, it's time to add a backend API with data that can be persisted in a database. The Amplify CLI comes with a **GraphQL Transformer** that converts annotated GraphQL schema files into the appropriate AWS CloudFormation template based on your data requirements. This includes options such as the following:
+アプリケーションがセットアップされたので、データベースに永続化できるバックエンドAPIを追加しましょう。 Amplify CLI には **GraphQL Transformer** が付属しており、データ要件に基づいて注釈付きGraphQL スキーマファイルを適切なAWS CloudFormationテンプレートに変換します。 これには以下のようなオプションが含まれます:
 
-- `@model` for storing types in Amazon DynamoDB.
-- `@auth` to define different authorization strategies.
+- `Amazon DynamoDBで型を格納するための @model`。
+- `@auth` さまざまな認証戦略を定義します。
 - `@connection` for specifying relationships between `@model` object types.
-- `@searchable` for streaming the data of an `@model` object type to Amazon Elasticsearch Service.
+- `Amazon Elasticsearch Serviceに` @model `オブジェクトタイプのデータをストリーミングする @searchable`。
 
 To get started run `amplify add api` and select `GraphQL`. When prompted, choose `Amazon Cognito User Pool` and the project will leverage your existing authentication setup. For `annotated schema`, choose **No**. For `guided schema creation`, choose **Yes**.
 
-The guided steps provide some default schemas that are pre-annotated to help you learn. The following steps take you through the `Single object with fields` option, but feel free to revisit these steps later in another project. If you choose this option you'll see the following annotated schema in your text editor:
+ガイドされた手順では、事前に注釈が付けられたデフォルトのスキーマがいくつか用意されています。 次のステップでは、フィールド `を含む` 単一オブジェクト を選択します。 でも後で別のプロジェクトでこれらのステップを再度見直すことができます このオプションを選択すると、テキストエディタに以下の注釈付きスキーマが表示されます:
 
 ```graphql
 type Todo @model {
@@ -333,15 +333,15 @@ type Todo @model {
 }
 ```
 
-This is the GraphQL schema that you'll deploy to AWS AppSync. If you're familiar with GraphQL you can rename or add fields and types, but you'll need to change the client code too. When you're ready press `Enter` in the CLI and then run `amplify push`.
+これはAWS AppSyncにデプロイするGraphQLスキーマです。 GraphQL に精通している場合、項目やタイプの名前を変更したり追加したりすることができますが、クライアントコードも変更する必要があります。 準備ができたら、CLIに `` を入力し、 `増幅プッシュ`を実行します。
 
-After the deployment is complete, open your `App.js` again and update the import to include both the `API` category and `graphqlOperation` method as follows:
+デプロイが完了したら、 `アプリを開きます。 s <code> 再び` を更新し、 `API` カテゴリと `graphqlOperation` メソッドの両方を次のように含めます:
 
 ```javascript
 import Amplify, { Analytics, Storage, API, graphqlOperation } from 'aws-amplify';
 ```
 
-Add the following query and mutations in your code, _before_ the `class App extends Component {...}` definition as follows:
+次のクエリと変更をコードに追加します。 __ 前に `クラス App はコンポーネント {...}` の定義を次のように拡張します。
 
 ```javascript
 const listTodos = `query listTodos {
@@ -366,7 +366,7 @@ const addTodo = `mutation createTodo($name:String! $description: String!) {
 }`;
 ```
 
-Now, inside the `App` component add the following two methods before the `render()` method:
+`App` コンポーネント内で、 `render()` メソッドの前に次の 2 つのメソッドを追加します。
 
 ```javascript
 todoMutation = async () => {
@@ -386,7 +386,7 @@ listQuery = async () => {
 };
 ```
 
-You can now make GraphQL calls from your application. Update the `render()` method so that it has the following buttons to invoke the mutation and query:
+これで、アプリケーションからGraphQL呼び出しを行うことができます。 `render()` メソッドを更新して、変更とクエリを呼び出すための次のボタンを持つようにします:
 
 ```javascript
   render() {
@@ -404,7 +404,7 @@ You can now make GraphQL calls from your application. Update the `render()` meth
 
 Save the file and run `amplify publish`. After the backend is deployed, you can choose **GraphQL Mutation** to enter data into the database and **GraphQL Query** to retrieve a list of all entries. You can validate this in the AWS AppSync console too.
 
-## Add REST API Calls to a Database
+## REST API コールをデータベースに追加
 
 For this example, we use a REST backend with a NoSQL database. Run `amplify add api` and follow the prompts. Select the **REST** option and provide a friendly name for your API, such as **myapi** or something else that you can remember. Use the default `/items` path and choose **Create a new lambda function**. Choose the option titled **CRUD function for Amazon DynamoDB table (Integration with Amazon API Gateway and Amazon DynamoDB)** when prompted. This creates an architecture using Amazon API Gateway with Express running in an AWS Lambda function that reads and writes to Amazon DynamoDB. You can modify the routes in the Lambda function later to meet your needs and update it in the cloud.
 
@@ -412,13 +412,13 @@ Since you do not have a database provisioned yet, the CLI workflow prompts you f
 
 Next, for the API security type questions, choose **Yes** when prompted for Restriction of API access. Similar to the storage category, when prompted for **Who should have access?**, choose **Auth and guest users** to give both authorized and guest users access. In the next prompts, based on your previous selection you would be asked to configure read/write permissions for authorized and guest user.
 
-In the React project, edit your `App.js` file again and modify your imports so that the `API` category is included so that you can make API calls from the app.
+React プロジェクトで、 `アプリを編集します。 s <code>` ファイルを再度作成し、 `API` カテゴリを含めることで、アプリから API 呼び出しを行うことができるようにインポートを変更します。
 
 ```javascript
-import Amplify, { Analytics, Storage, API } from 'aws-amplify';
+import Amplify, { Analytics, Storage, API } from 'aws-amply';
 ```
 
-In `App.js`, add the following code before the `render()` method and update `myapi` if you used an alternative name during the setup:
+`アプリで. s <code> , <code> render()`メソッドの前に以下のコードを追加し、 `myapi` を設定時に別の名前を使用した場合は、 `myapi` を更新します。
 
 ```javascript
 post = async () => {
@@ -443,7 +443,7 @@ list = async () => {
 };
 ```
 
-Update the `render()` method to include calls to the following methods:
+`render()` メソッドを更新し、次のメソッドへの呼び出しを含めます。
 
 ```javascript
   render() {
@@ -465,12 +465,12 @@ Save the file and run `amplify publish`. After the API is deployed along with th
 
 In your project directory, open `./amplify/backend/function` and you'll see the Lambda function that you created. The `app.js` file runs the Express function and all of the HTTP method routes are available for you to manipulate. For example, the `API.post()` in your React app corresponded to the `app.post(path, function(req, res){...})` code in this Lambda function. If you choose to customize the Lambda function, you can update it in the cloud using `amplify push`.
 
-## Adding XR Sumerian Scene
+## XR シュメールシーンの追加
 
-To load Amazon Sumerian scenes you will need to activate the [Amplify Auth category](~/lib/auth/getting-started.md?platform=js).
+アマゾンシュメールシーンをロードするには、 [Amplify Authカテゴリ](~/lib/auth/getting-started.md?platform=js) を有効にする必要があります。
 
 ```bash
-amplify add auth
+増幅して認証を追加
 ```
 
 The `./src/aws-exports.js` file that's created has all of the appropriate cloud resources defined for your application. Edit `./src/App.js` to include the Amplify library and configurations. Then, initialize the library as follows:
@@ -495,7 +495,7 @@ Amplify.configure({
 });
 ```
 
-Update the `render()` method to include the Sumerian Scene component:
+`render()` メソッドを更新して、Sumerian Scene コンポーネントを含めます:
 
 {% include_relative common/scene-size-note.md %}
 
@@ -510,21 +510,21 @@ Update the `render()` method to include the Sumerian Scene component:
   }
 ```
 
-See the [XR documentation](~/lib/xr/getting-started.md?platform=js) for information on creating and publishing a Sumerian scene.
+シュメールシーンの作成と公開については、 [XR ドキュメント](~/lib/xr/getting-started.md?platform=js) を参照してください。
 
-## Testing Serverless Functions
+## サーバーレス関数のテスト
 
-Amplify CLI supports local testing of Lambda functions. Run `amplify status` to get the resource name of the Lambda function created earlier, and then run the following:
+Amplify CLI は Lambda 関数のローカルテストをサポートします。 以前に作成されたLambda関数のリソース名を取得するには、 `amplifyステータス` を実行し、次のように実行します。
 
 ```
-amplify function invoke <resourcename>
+amplify関数は <resourcename>を呼び出します。
 ```
 
 In this case, the function runs, but it doesn't exit because this Lambda example starts an Express server which you need to manually close when testing it from the CLI. Use `ctrl-c` to close and open the `./amplify/backend/function/resourcename` directory to see the local structure that is packaged for Lambda invocation from API Gateway. The Lambda function is inside the `src` directory, along with `event.json`, which is used for the `amplify function invoke` command you just ran. `index.js` is also in this directory, which is the main entry point for the Serverless Express library that echoed out the test event and instantiated the server inside `app.js`. Since the Express routes defined in `app.js` don't have a path that's called via the test event, it responded with a 404 message. For more information, see https://github.com/awslabs/aws-serverless-express.
 
-## Note on JWT Storage
+## JWT ストレージに関する注意
 
-Data is stored unencrypted when using standard storage adapters (`localStorage` in the browser and `AsyncStorage` on React Native). Amplify gives you the option to use your own storage object to persist data. With this, you could write a thin wrapper around libraries like:
+標準的なストレージアダプターを使用する場合、データは暗号化されていない状態で保存されます (`localStorage` ブラウザと React Nativeの `AsyncStorage` )。 Amplifyは、データを保持するために独自のストレージオブジェクトを使用するオプションを提供します。これを使用すると、次のようなライブラリの周りに細いラッパーを書くことができます。
 
 - `react-native-keychain`
 - `react-native-secure-storage`

@@ -1,6 +1,6 @@
 ---
-title: Drop-in auth
-description: Learn how to use and customize AWSMobileClient's simple “drop-in” auth UI for your application.
+title: Drop-in-auth
+description: AWSMobileClientのシンプルな「ドロップイン」認証UIの使用方法とカスタマイズ方法をご覧ください。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

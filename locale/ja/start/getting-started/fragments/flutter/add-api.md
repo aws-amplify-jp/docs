@@ -1,20 +1,20 @@
-### Setup AWS Cloud Resources with Amplify CLI
+### Amplify CLI で AWS Cloud Resources をセットアップ
 
-We will now use the Amplify CLI to configure the AWS Cloud Resources that will power your app.
+Amplify CLI を使用して、アプリに電源を供給するAWS Cloud Resourcesを設定します。
 
-1. First install the amplify cli. Within your terminal run:
+1. まず、増幅クリップをインストールします。端末の実行内で:
 
     ```bash
     npm install -g @aws-amplify/cli
     ```
 
-2. Initialize Amplify CLI by running:
+2. Amplify CLI を実行して初期化します。
 
     ```bash
-    amplify init
+    initを増幅する
     ```
 
-    Enter the following when prompted:
+    プロンプトが表示されたら以下を入力します:
 
     ```console
     ? Enter a name for the environment
@@ -36,21 +36,21 @@ We will now use the Amplify CLI to configure the AWS Cloud Resources that will p
         `default`
     ```
 
-3. Configure Amplify to manage cloud resources on your behalf. This step will configure a new AWS user in your account for Amplify. Open up a terminal window. You can use an external terminal or the integrated terminal in Android Studio. In the terminal, run:
+3. Amplifyを設定してクラウドリソースを管理します。このステップでは、Amplifyのアカウントに新しいAWSユーザーを設定します。 端末ウィンドウを開きます。Android Studio で外部端末または統合端末を使用できます。端末では、次を実行します。
 
     ```bash
-    amplify configure
+    増幅の設定
     ```
 
-    This command will open up a web browser to the AWS Management Console and guide you through creating a new IAM user. For step-by-step directions to set this up, refer to the [CLI installation guide](~/cli/start/install.md).
+    このコマンドはAWS管理コンソールへのWebブラウザを開き、新しいIAMユーザーの作成をガイドします。 これを設定するには、 [CLI インストールガイド](~/cli/start/install.md) を参照してください。
 
-4. Add Analytics by typing in the following in terminal:
+4. ターミナルに以下を入力して Analytics を追加します。
 
     ```
-    amplify add analytics
+    anmpify add analytics
     ```
 
-    You can just accept all of the default values:
+    すべてのデフォルト値を受け入れるだけです。
 
     ```
     ? Select an Analytics provider (Use arrow keys)
@@ -61,12 +61,12 @@ We will now use the Amplify CLI to configure the AWS Cloud Resources that will p
         `Yes`
     ```
 
-5. To save all your changes and to create your AWS resources, run the following command last:
+5. すべての変更を保存し、AWS リソースを作成するには、次のコマンドを最後に実行します。
 
     ``` 
-    amplify push 
+    push を増幅する 
     ```
 
-    After these steps, you should notice a `amplifyconfiguration.dart` file within your lib directory of your project.  Guard this file carefully!  It contains sensitive information that your app will use to establish a secure communication with your backend AWS resources.  If it is lost or corrupted, you can always regenerate it by repeating the above steps again with the Amplify CLI.
+    これらの手順を実行すると、プロジェクトのlibディレクトリに `anplifyconfiguration.dart` ファイルが表示されます。 このファイルを慎重に保護しましょう! アプリケーションがバックエンドのAWSリソースとの安全な通信を確立するために使用する機密情報が含まれています。 紛失または破損している場合は、Amplify CLI で上記の手順をもう一度繰り返すことで、いつでも再生成できます。
 
-At this point you are ready to run your app.  Go back to Android Studio and at the top bar click on the green play button to deploy.
+この時点で、アプリを実行する準備が整いました。 Android Studioに戻り、上部のバーで緑色の再生ボタンをクリックしてデプロイします。

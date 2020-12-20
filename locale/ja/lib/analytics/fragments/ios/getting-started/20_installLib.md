@@ -1,15 +1,15 @@
 To install the Amplify Analytics and Authentication to your application, **add both "AmplifyPlugins/AWSPinpointAnalyticsPlugin" and "AmplifyPlugins/AWSCognitoAuthPlugin" to your `Podfile`** (Because IAM credential is required to access AWS Pinpoint Service, `"AWSCognitoAuthPlugin"` also needs to be installed). Your `Podfile` should look similar to:
 
 ```bash
-target 'MyAmplifyApp' do
+ターゲット 'MyAmplifyApp' do
   use_frameworks!
-  pod 'Amplify'
   pod 'AmplifyPlugins/AWSPinpointAnalyticsPlugin'
   pod 'AmplifyPlugins/AWSCognitoAuthPlugin'
+  pod 'AmplifyPlugin/AWScognitoAuthPlugin'
 end
 ```
 
-To install, download and resolve these pods, **execute the command**:
+ポッドをインストール、ダウンロード、解決するには、 **コマンド** を実行します。
 
 ```bash
 pod install --repo-update

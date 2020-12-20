@@ -1,4 +1,4 @@
-The Photo Picker component will render a file upload control that will allow choosing a local image and uploading it to Amazon S3. Once an image is selected, a base64 encoded image preview will be displayed automatically. To render photo picker in an Angular view, use *amplify-photo-picker* component:
+Photo Pickerコンポーネントはローカル画像を選択し、Amazon S3にアップロードすることができるファイルアップロードコントロールをレンダリングします。 イメージが選択されると、base64 エンコードされたイメージプレビューが自動的に表示されます。 写真ピッカーを角度ビューでレンダリングするには、 *amplify-photo-picker* コンポーネントを使用します。
 
 ```html
 <amplify-photo-picker 
@@ -9,9 +9,9 @@ The Photo Picker component will render a file upload control that will allow cho
 </amplify-photo-picker>
 ```
 
- - `(picked)` - Emitted when an image is selected. The event will contain the `File` object which can be used for upload.
- - `(loaded)` - Emitted when an image preview has been rendered and displayed.
- - `path` - An optional S3 image path (prefix).
- - `storageOptions` - An object passed within the ‘options’ property in the Storage.put request. This can be used to set the permissions ‘level’ property of the objects being uploaded i.e. ‘private’, ‘protected’, or ‘public’.
+ - `(picked)` - 画像が選択されたときに発生します。イベントには、アップロードに使用できる `ファイル` オブジェクトが含まれます。
+ - `(loaded)` - イメージのプレビューがレンダリングされ、表示されたときに発生します。
+ - `path` - オプションの S3 イメージパス (prefix).
+ - `storageOptions` - Storage.put リクエストの ‘options’ プロパティ内で渡されるオブジェクト。 これは、アップロードされるオブジェクトのパーミッション「レベル」プロパティを設定するために使用できます。つまり、「プライベート」、「保護」、または「パブリック」。
 
- [Learn more about S3 permissions.](~/lib/storage/configureaccess.md)
+ [S3パーミッションの詳細については、こちらをご覧ください。](~/lib/storage/configureaccess.md)

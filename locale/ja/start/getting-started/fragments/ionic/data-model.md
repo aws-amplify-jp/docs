@@ -1,12 +1,12 @@
-### Model the data with GraphQL transform
+### GraphQL変換でデータをモデル
 
-Add a [GraphQL API](https://docs.aws.amazon.com/appsync/latest/devguide/designing-a-graphql-api.html) to your app and automatically provision a database by running the following command from the root of your application directory:
+[GraphQL API](https://docs.aws.amazon.com/appsync/latest/devguide/designing-a-graphql-api.html) をアプリケーションに追加し、アプリケーションディレクトリのルートから次のコマンドを実行して自動的にデータベースをプロビジョニングします。
 
 ```bash
-amplify add api
+増幅して api を追加
 ```
 
-Accept the **default values** which are highlighted below:
+以下のハイライト表示されている **デフォルト値** を受け入れます。
 
 ```console
 ? Please select from one of the below mentioned services:
@@ -29,9 +29,9 @@ Accept the **default values** which are highlighted below:
 # Yes
 ```
 
-The CLI should open this GraphQL schema in your text editor.
+CLI がテキストエディタでこの GraphQL スキーマを開く必要があります。
 
-__amplify/backend/api/myapi/schema.graphql__
+__anplify/backend/api/myapi/schema.graphql__
 
 ```graphql
 type Todo @model {
@@ -43,53 +43,53 @@ type Todo @model {
 
 The schema generated is for a Todo app. You'll notice a directive on the `Todo` type of `@model`. This directive is part of the [GraphQL transform](~/cli/graphql-transformer/model.md) library of Amplify.
 
-The GraphQL Transform Library provides custom directives you can use in your schema that allow you to do things like define data models, set up authentication and authorization rules, configure serverless functions as resolvers, and more.
+GraphQL Transform ライブラリには、データモデルの定義などを行うためのスキーマで使用できるカスタムディレクティブが用意されています。 認証と認可ルールの設定、サーバレス機能をリゾルバとして設定するなど。
 
-A type decorated with the `@model` directive will scaffold out the database table for the type (Todo table), the schema for CRUD (create, read, update, delete) and list operations, and the GraphQL resolvers needed to make everything work together.
+`@model` ディレクティブで装飾された型は、タイプ (Todo テーブル) のデータベーステーブルを足場に置きます。 CRUD (作成、読み取り、更新、削除)およびリスト操作のためのスキーマ、およびすべてを一緒に動作させるために必要な GraphQL リゾルバ。
 
-From the command line, press __enter__ to accept the schema and continue to the next steps.
+コマンドラインから __を押して__ を入力し、スキーマを受け入れ、次のステップに進みます。
 
-## Create GraphQL API and database
+## GraphQL API とデータベースの作成
 
-Create required backend resources for your configured api with the following command:
+以下のコマンドで構成されたAPIに必要なバックエンドリソースを作成します。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
-### Code generation
+### コード生成
 
 Since you added an API the `amplify push` process will automatically prompt for codegen (select `y` when prompted for automatic query and code generation). For Ionic applications, choose **Angular** which will create an `API.service.ts` file in the app directory.
 
-Next, run the following command to check Amplify's status:
+次に、Amplifyの状態を確認するために次のコマンドを実行します。
 
 ```bash
-amplify status
+増幅の状態
 ```
 
-This will give us the current status of the Amplify project, including the current environment, any categories that have been created, and what state those categories are in. It should look similar to this:
+これにより、現在の環境を含むAmplifyプロジェクトの現在のステータスが得られます。 どのカテゴリーが作成されているかを調べることができます 以下のようになります。
 
 ```console
-Current Environment: dev
+現在の環境: dev
 
-| Category | Resource name | Operation | Provider plugin   |
-| -------- | ------------- | --------- | ----------------- |
-| Api      | myapi         | No Change | awscloudformation |
+| Resource name | Operation | Provider プラグイン|
+| --------------- | ------------- | -------------- |
+| Api | myapi | No Change | awscloudforming |
 ```
 
-### Test your API
+### API をテスト
 
-You can open the AWS console to run Queries, Mutation, or Subscription against your new API at any time directly by running the following command:
+AWSコンソールを開いて、新しいAPIに対していつでもクエリ、変更、またはサブスクリプションを実行するには、次のコマンドを実行します。
 
 ```bash
-amplify console api
+コンソールの api を増幅する
 ```
 
-When prompted, select **GraphQL**. This will open the AWS AppSync console for you to run Queries, Mutations, or Subscriptions at the server and see the changes in your client app.
+プロンプトが表示されたら、 **GraphQL**を選択します。 これにより、AWS AppSync コンソールが開き、クエリ、ミューテーションを実行できます。 またはサーバーでサブスクリプションを行い、クライアントアプリケーションの変更を確認します。
 
-## Connect frontend to API
+## フロントエンドを API に接続
 
-Update __src/main.ts__ to configure the library:
+__src/main.ts__ を更新してライブラリを設定します:
 
 ```javascript
 import Amplify from "aws-amplify";
@@ -106,7 +106,7 @@ When working with underlying `aws-js-sdk`, the "node" package should be included
 }
 ```
 
-Note: If you are using Angular 6 or above, you may need to add the following to the top of your `src/polyfills.ts` file:
+注意: Angular 6 以上を使用している場合は、 `src/polyfills.ts` ファイルの先頭に以下を追加する必要があるかもしれません。
 ```
 (window as any).global = window;
 
@@ -152,7 +152,7 @@ export class AppComponent {
 }
 ```
 
-Update the code in `src/app/app.component.html` with the following to display the list of todos:
+`src/app/app.component.html` のコードを次のように更新して、todosのリストを表示します:
 
 ```html
 <ion-app>
@@ -166,7 +166,7 @@ Update the code in `src/app/app.component.html` with the following to display th
 
 ```
 
-Finally, to subscribe to realtime data, update `initializeApp()` to setup a subscription on app start and update the `todos` array when new events are received:
+最後に、リアルタイムデータを購読する update `initializeApp()` アプリの起動時にサブスクリプションをセットアップし、新しいイベントを受信したときに `todos` 配列を更新します:
 
 ```javascript
 initializeApp() {
@@ -180,6 +180,6 @@ initializeApp() {
 }
 ```
 
-> The code above imports only the API and PubSub category. To import the entire Amplify library use `import Amplify from 'aws-amplify'`. However, importing only the required categories is recommended as it will greatly reduce the final bundle size.
+> 上記のコードは、APIとPubSub カテゴリのみをインポートします。Amplifyライブラリ全体をインポートするには、 `import Amplify from 'aws-anplify'`を使用します。 ただし、最終バンドルサイズを大幅に削減するため、必要なカテゴリのみをインポートすることをお勧めします。
 
-After restarting your app using `npm start` go back to your browser and using dev tools you will see data being stored and retrieved in your backend from the console logs.
+`npm start` を使用してアプリを再起動した後、ブラウザーに戻り、開発ツールを使用すると、コンソールログからバックエンドに保存されているデータが表示されます。

@@ -1,6 +1,6 @@
 ---
-title: Custom auth flow
-description: Learn how to customize the authentication flow with Amazon Cognito User Pools to enable custom challenge types, in addition to a password in order to verify the identity of users.
+title: カスタム認証フロー
+description: Amazon Cognitoユーザープールを使用して認証フローをカスタマイズし、カスタムチャレンジタイプを有効にする方法を学びます。 利用者の身元を確認するためのパスワードに加えて。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

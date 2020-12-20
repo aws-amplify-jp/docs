@@ -1,88 +1,394 @@
-The AWS SDK contains [high-level client interfaces](~/start/start.md) for quickly adding common features and functionality to your app. You can also manually add the generated AWS service interfaces for direct interaction if you have custom or advanced requirements.
+AWS SDKには、アプリケーションに共通の機能と機能をすばやく追加するための、 [高レベルのクライアントインターフェイス](~/start/start.md) が含まれています。 カスタムまたは高度な要件がある場合は、生成された AWS サービスインターフェイスを手動で追加して直接操作することもできます。
 
 ## Android Gradle setup
 
-The AWS Mobile SDK for Android is available through Gradle.
+AWS Mobile SDK for Android は Gradle で利用できます。
 
 If you are using Android Studio, add the dependency for the individual services that your project will use to your `app/build.gradle` file, as shown below.
 
 ```groovy
 dependencies {
-    implementation 'com.amazonaws:aws-android-sdk-ddb:2.15.+'
+    implementation 'com.<unk> s:aws-android-sdk-ddb:2.15.+'
 }
 ```
 
-A full list of dependencies are listed below. For dependencies ending in "`@aar`" use a compile statement in the following form.
+依存関係の完全なリストは以下にリストされています。「`@aar`」で終わる依存関係については、以下の形式でコンパイル文を使用してください。
 
 ```groovy
-implementation ('com.amazonaws:aws-android-sdk-mobile-client:2.15.+@aar') { transitive = true }
+implementation ('com.<unk> s:aws-android-sdk-mobile-client:2.15.+@aaar') { transitive = true }
 ```
 
-| Dependency                               | Build.gradle Value                                             |
-| ---------------------------------------- | -------------------------------------------------------------- |
-| "Amazon API Gateway"                     | "com.amazonaws:aws-android-sdk-apigateway-cor:2.15.+"          |
-| "AWS Auth Core"                          | "com.amazonaws:aws-android-sdk-auth-core:2.15.+@aar"           |
-| "AWS Facebook SignIn Provider"           | "com.amazonaws:aws-android-sdk-auth-facebook:2.15.+@aar"       |
-| "AWS Google SignIn Provider"             | "com.amazonaws:aws-android-sdk-auth-google:2.15.+@aar"         |
-| "AWS Auth UI"                            | "com.amazonaws:aws-android-sdk-auth-ui:2.15.+@aar"             |
-| "AWS Cognito User Pools SignIn Provider" | "com.amazonaws:aws-android-sdk-auth-userpools:2.15.+@aar"      |
-| "Amazon Auto Scaling"                    | "com.amazonaws:aws-android-sdk-autoscaling:2.15.+"             |
-| "Amazon CloudWatch"                      | "com.amazonaws:aws-android-sdk-cloudwatch:2.15.+"              |
-| "Amazon Cognito Auth"                    | "com.amazonaws:aws-android-sdk-cognitoauth:2.15.+@aar"         |
-| "Amazon Cognito Identity Provider"       | "com.amazonaws:aws-android-sdk-cognitoidentityprovider:2.15.+" |
-| "AWS Core"                               | "com.amazonaws:aws-android-sdk-core:2.15.+"                    |
-| "Amazon DynamoDB Document Model"         | "com.amazonaws:aws-android-sdk-ddb-document:2.15.+"            |
-| "Amazon DynamoDB Object Mapper"          | "com.amazonaws:aws-android-sdk-ddb-mapper:2.15.+"              |
-| "Amazon DynamoDB"                        | "com.amazonaws:aws-android-sdk-ddb:2.15.+"                     |
-| "Amazon Elastic Compute Cloud"           | "com.amazonaws:aws-android-sdk-ec2:2.15.+"                     |
-| "Amazon Elastic Load Balancing"          | "com.amazonaws:aws-android-sdk-elb:2.15.+"                     |
-| "AWS IoT"                                | "com.amazonaws:aws-android-sdk-iot:2.15.+@aar"                 |
-| "Amazon Kinesis"                         | "com.amazonaws:aws-android-sdk-kinesis:2.15.+"                 |
-| "Amazon Kinesis Video"                   | "com.amazonaws:aws-android-sdk-kinesisvideo:2.15.+@aar"        |
-| "Amazon Key Management Service (KMS)"    | "com.amazonaws:aws-android-sdk-kms:2.15.+"                     |
-| "AWS Lambda"                             | "com.amazonaws:aws-android-sdk-lambda:2.15.+"                  |
-| "Amazon Lex"                             | "com.amazonaws:aws-android-sdk-lex:2.15.+@aar"                 |
-| "Amazon CloudWatch Logs"                 | "com.amazonaws:aws-android-sdk-logs:2.15.+"                    |
-| "Amazon Machine Learning"                | "com.amazonaws:aws-android-sdk-machinelearning:2.15.+"         |
-| "AWS Mobile Client"                      | "com.amazonaws:aws-android-sdk-mobile-client:2.15.+@aar"       |
-| "Amazon Pinpoint"                        | "com.amazonaws:aws-android-sdk-pinpoint:2.15.+"                |
-| "Amazon Polly"                           | "com.amazonaws:aws-android-sdk-polly:2.15.+"                   |
-| "Amazon Rekognition"                     | "com.amazonaws:aws-android-sdk-rekognition:2.15.+"             |
-| "Amazon Simple Storage Service (S3)"     | "com.amazonaws:aws-android-sdk-s3:2.15.+"                      |
-| "Amazon Simple DB (SDB)"                 | "com.amazonaws:aws-android-sdk-sdb:2.15.+"                     |
-| "Amazon SES"                             | "com.amazonaws:aws-android-sdk-ses:2.15.+"                     |
-| "Amazon SNS"                             | "com.amazonaws:aws-android-sdk-sns:2.15.+"                     |
-| "Amazon SQS"                             | "com.amazonaws:aws-android-sdk-sqs:2.15.+"                     |
+<table spaces-before="0" line-breaks-before="2">
+  <tr>
+    <th>
+      依存関係
+    </th>
+    
+    <th>
+      Build.gradle の値
+    </th>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon APIゲートウェイ"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-apigateway-cor:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "AWS Auth Core"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-auth-core:2.15.+@aar"
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "AWS Facebookサインインプロバイダー"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-auth-facebook:2.15.+@aar"
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "AWS Google Signin Provider"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-auth-google:2.15.+@aar"
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "AWS Auth UI"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-auth-ui:2.15.+@aar"
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "AWS Cognito User Pools Sin Provider"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-auth-userpools:2.15.+@aar"
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon Auto Scaling"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-autoscaling:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon CloudWatch"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-cloudwatch:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon Cognito Auth"
+    </td>
+    
+    <td>
+      "com.amazonaws:aws-android-sdk-cognitoauth:2.15.+@aar"
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon Cognito Identity Provider"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-cognitoidentityprovider:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "AWS Core"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-core:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon DynamoDB Document Model"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-ddb-document:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon DynamoDB Object Mapper"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-ddb-mapper:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon DynamoDB"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdkddb:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon Elastic Compute Cloud"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-ec2:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon Elastic Load Balancing"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-elb:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "AWS IoT"
+    </td>
+    
+    <td>
+      "com.amazonaws:aws-android-sdk-iot:2.15.+@aar"
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon Kinesis"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-kinesis:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      「アマゾンキネシス・ビデオ」
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-kinesisvideo:2.15.+@aar"
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      「Amazon Key Management Service (KMS)"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdkkms:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "AWS Lambda"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-lambda:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon Lex"
+    </td>
+    
+    <td>
+      "com.amazonaws:aws-android-sdk-lex:2.15.+@aar"
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon CloudWatchログ"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-logs:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon Machine Learning"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-machinelearning:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "AWS Mobile Client"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-mobile-client:2.15.+@aar"
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon Pinpoint"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-pinpoint:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "アマゾンポリー"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-polly:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon Rekognition"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-rekognition:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon Simple Storage Service (S3)"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-s3:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon Simple DB (SDB)"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-sdb:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon SES"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-ses:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon SNS"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-sns:2.15.+)
+    </td>
+  </tr>
+  
+  <tr>
+    <td>
+      "Amazon SQS"
+    </td>
+    
+    <td>
+      "com.<unk> s:aws-android-sdk-sqs:2.15.+"
+    </td>
+  </tr>
+</table>
 
-Whenever a new version of the SDK is released you can update by running a Gradle Sync and rebuilding your project to use the new features.
+SDK の新しいバージョンがリリースされるたびに、Gradle Sync を実行してプロジェクトを再構築し、新機能を使用することで更新できます。
 
-### AWS SDK Version vs. Semantic Versioning
+### AWS SDKバージョンvs. セマンティックバージョン管理
 
-The AWS SDK for Android does not follow semantic versioning. Instead, it increments the patch-level version for both backward-compatible bug fixes *and* non-breaking changes, and increments the minor version for breaking changes. Major version changes are rare, and usually indicate a dramatically different programming model.
+AWS SDK for Android は、セマンティックバージョンに従っていません。 代わりに、後方互換性のあるバグ修正 *と* 壊れない変更の両方について、パッチレベルのバージョンが増加します。 をクリックして、変更を破るマイナーバージョンを増やします。 主なバージョン変更はまれであり、通常は劇的に異なるプログラミングモデルを示します。
 
-For comparison, Semantic versioning increments the patch level for backward-compatible bug fixes, the minor version for backward-compatible new features, and the major version for breaking changes.
+比較のために、Semantic バージョン管理は、後方互換性のあるバグ修正のパッチレベルを増加させます。 後方互換性のある新機能のマイナーバージョンと、互換性のない変更のためのメジャーバージョンです。
 
-## Set Permissions in Your Manifest
+## マニフェストの権限を設定
 
-Add the following permission to your `AndroidManifest.xml`::
+`AndroidManifest.xml` に次の権限を追加します。
 
 ```xml
 <uses-permission android:name="android.permission.INTERNET" />
 ```
 
-## Direct AWS Service access
+## 直接AWSサービスへのアクセス
 
 You can call AWS service interface objects directly via the generated SDK clients. You can use the client credentials provided by the [AWSMobileClient](~/sdk/auth/getting-started.md) by calling `AWSMobileClient.getInstance()` and passing it to the service client. This will leverage short term AWS credentials from Cognito Identity.
 
 <amplify-callout warning>
 
-To work with service interface objects, your Amazon Cognito users' [IAM role](https://docs.aws.amazon.com/cognito/latest/developerguide/iam-roles.html) must have the appropriate permissions to call the requested services.
+サービス インターフェイス オブジェクトを使用するには、Amazon Cognito ユーザの [IAM ロール](https://docs.aws.amazon.com/cognito/latest/developerguide/iam-roles.html) には、要求されたサービスを呼び出すための適切な権限が必要です。
 
 </amplify-callout>
 
 For example, if you were using [Amazon Simple Queue Service (SQS)](https://aws.amazon.com/sqs/) in your Android project you would first add `aws-android-sdk-sqs:2.11.+` to your `app/build.gradle` and install the dependencies by running a Gradle Sync.
 
-Next, import `AmazonSQS` in your Android Studio project and create the client:
+次に、Android Studio プロジェクトに `AmazonSQS` をインポートし、クライアントを作成します。
 
 ```java
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
@@ -107,4 +413,4 @@ public void addItemSQS() {
 }
 ```
 
-You could then call `this.addItemSQS()` to invoke this action from your app.
+`this.addItemSQS()` を呼び出して、アプリケーションからこのアクションを呼び出すことができます。

@@ -1,6 +1,6 @@
 <amplify-sign-out button-text="Custom Text"></amplify-sign-out>
 
-**Usage**
+**使用法**
 
 ```jsx
 <AmplifySignOut button-text="Custom Text"></AmplifySignOut>

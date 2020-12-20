@@ -1,17 +1,17 @@
-## Complex objects
-Many times you might want to create logical objects that have more complex data, such as images or videos, as part of their structure. For example, you might create a Person type with a profile picture or a Post type that has an associated image. With AWS AppSync, you can model these as GraphQL types, referred to as complex objects. If any of your mutations have a variable with bucket, key, region, mimeType and localUri fields, the SDK uploads the file to Amazon S3 for you.
+## 複雑なオブジェクト
+多くの場合、画像やビデオなど、より複雑なデータを持つ論理オブジェクトを構造の一部として作成したい場合があります。 たとえば、プロフィール画像を含むPerson型を作成したり、関連画像を含むPost型を作成したりすることができます。 AWS AppSyncでは、これらを複合オブジェクトと呼ばれるGraphQL型としてモデル化できます。 変異のいずれかにバケット、キー、リージョンがある変数がある場合。 mimeType および localUri フィールドは、SDK が Amazon S3 にファイルをアップロードします。
 
-For a complete working example of this feature, see [aws-amplify-graphql](https://github.com/aws-samples/aws-amplify-graphql) on GitHub.
+この機能の完全な動作例については、GitHub の [aws-amplify-graphql](https://github.com/aws-samples/aws-amplify-graphql) を参照してください。
 
-The GraphQL transformer will configure your resolvers to write to DynamoDB and point at S3 objects when using the `S3Object` type. For example, run the following in an Amplify project:
+GraphQL 変圧器は、 `S3Object` 型を使用するときに、DynamoDB と S3 オブジェクトのポイントに書き込むようにリゾルバを設定します。 たとえば、Amplifyプロジェクトで以下を実行します。
 
 ```bash
-amplify add auth        #Select default configuration
-amplify add storage     #Select S3 with read/write access
-amplify add api         #Select Cognito User Pool for authorization type
+増幅された認証を追加する #デフォルトの設定を選択する
+増幅されたストレージを追加する #読み取り/書き込みアクセスのあるS3を選択する
+増幅された api を追加する #認可タイプのCognito User Poolを選択する
 ```
 
-When prompted, use the following schema:
+プロンプトが表示されたら、次のスキーマを使用してください:
 ```graphql
 type Todo @model {
     id: ID!
@@ -33,7 +33,7 @@ input CreateTodoInput {
   file: S3ObjectInput # This input type will be generated for you
 }
 ```
-Save and run `amplify push` to deploy changes.
+保存し、 `を増幅して` を実行して変更をデプロイします。
 
 To use complex objects you need AWS Identity and Access Management credentials for reading and writing to Amazon S3 which `amplify add auth` configured in the default setting along with a Cognito user pool. These can be separate from the other auth credentials you use in your AWS AppSync client. Credentials for complex objects are set using the `complexObjectsCredentials` parameter, which you can use with AWS Amplify and the complex objects feature like so:
 
@@ -82,4 +82,4 @@ const client = new AWSAppSyncClient({
 })();
 ```
 
-When you run the above mutation a record will be in a DynamoDB table for your AppSync API as well as the corresponding file in an S3 bucket.
+上記の変更を実行すると、レコードはAppSync API用のDynamoDBテーブルと、S3バケット内の対応するファイルになります。

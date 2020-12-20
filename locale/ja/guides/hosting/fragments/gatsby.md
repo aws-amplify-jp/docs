@@ -1,14 +1,14 @@
-In this guide you will learn how to deploy a Gatsby site with Amplify hosting.
+このガイドでは、AmplifyホスティングでGatsbyサイトをデプロイする方法を学びます。
 
-### Getting started
+### はじめに
 
 <amplify-callout>
 
-In this step, you will create a new Gatsby site. If you have already created a site, you can jump to the [next step](#creating-the-git-repository).
+このステップでは、新しいGatsbyサイトを作成します。 すでにサイトを作成している場合は、 [次のステップ](#creating-the-git-repository) にジャンプできます。
 
 </amplify-callout>
 
-If you haven't already, install the [Gatsby CLI](https://www.gatsbyjs.org/tutorial/part-zero/#using-the-gatsby-cli):
+まだインストールしていない場合は、 [Gatsby CLI](https://www.gatsbyjs.org/tutorial/part-zero/#using-the-gatsby-cli) をインストールしてください :
 
 ```sh
 # Using YARN
@@ -18,20 +18,20 @@ yarn global add gatsby-cli
 npm install --global gatsby-cli
 ```
 
-Next, create a new site and change into the new directory:
+次に、新しいサイトを作成し、新しいディレクトリに変更します:
 
 ```sh
 gatsby new gatsby-amplify
 cd gatsby-amplify
 ```
 
-### Creating the Git repository
+### Git リポジトリの作成
 
-Next, create a new Git repository and copy the URI of the repo to your clipboard.
+次に、新しい Git リポジトリを作成し、リポジトリの URI をクリップボードにコピーします。
 
-![Gatsby Hosting with Amplify Console - Creating a new project in Git](~/images/hosting/gatsby/1.png)
+![Gatsby Hosting with Amplify Console - Git で新しいプロジェクトを作成する](~/images/hosting/gatsby/1.png)
 
-Now, initialize the new repository within the root of your project and push the code to Git.
+ここで、プロジェクトのルート内の新しいリポジトリを初期化し、コードをGitにプッシュします。
 
 ```sh
 git init
@@ -41,28 +41,28 @@ git commit -m 'initial commit'
 git push origin master
 ```
 
-### Deploying the site to Amplify Console Hosting
+### サイトをAmplifyコンソールホスティングにデプロイする
 
-Visit the [Amplify Console](https://console.aws.amazon.com/amplify/home) and click __GET STARTED__ under __Deploy__.
+[Amplifyコンソール](https://console.aws.amazon.com/amplify/home) にアクセスし、 __デプロイ__ の ____をクリックします。
 
-![Gatsby Hosting with Amplify Console - Console view](~/images/hosting/gatsby/2.png)
+![Gatsby Hosting with Amplify Console - コンソールビュー](~/images/hosting/gatsby/2.png)
 
-Next, choose the Git provider that you are using and click __Continue__:
+次に、使用している Git プロバイダを選択し、 __Continue__ をクリックします。
 
-![Gatsby Hosting with Amplify Console - Choosing Git provider](~/images/hosting/gatsby/3.png)
+![Gatsby Hosting with Amplify Console - Git プロバイダの選択](~/images/hosting/gatsby/3.png)
 
-In the next screen, choose your repository and branch and click __Next__:
+次の画面で、リポジトリとブランチを選択し、 __次へ__ をクリックします:
 
-![Gatsby Hosting with Amplify Console - Choosing repo and branch](~/images/hosting/gatsby/4.png)
+![Gatsby Hosting with Amplify Console - リポジトリとブランチの選択](~/images/hosting/gatsby/4.png)
 
-In the __App build and test settings__ view, click __Next__:
+__App build and test settings__ view, click __Next__:
 
-![Gatsby Hosting with Amplify Console - Configuring build settings](~/images/hosting/gatsby/5.png)
+![Gatsby Hosting with Amplify Console - ビルド設定の構成](~/images/hosting/gatsby/5.png)
 
-Finally, click __Save and deploy__.
+最後に、 __Save and deploy__ をクリックします。
 
-Once your site has successfully deployed, you should see three green checkmarks:
+サイトが正常にデプロイされると、次の3つの緑色のチェックマークが表示されます:
 
-![Gatsby Hosting with Amplify Console - Deployment complete](~/images/hosting/gatsby/6.png)
+![Gatsby Hosting with Amplify Console - デプロイ完了](~/images/hosting/gatsby/6.png)
 
-To view the live site, click on the automatically generated URL given to you by the Amplify Console.
+ライブサイトを表示するには、Amplifyコンソールから自動生成されたURLをクリックします。

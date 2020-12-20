@@ -1,14 +1,14 @@
-## What we'll build
+## 何を作ろうか？
 
-In this tutorial, we'll use React to build a photo sharing app that lets users upload photos to a shared photo gallery. We'll use a GraphQL API (AWS AppSync) to access data stored in a NoSQL database (Amazon DynamoDB). In addition, we'll demonstrate how to authenticate users, communicate with our API, manage photo uploads, and set up continuous deployment and hosting.
+このチュートリアルでは、React を使用して、ユーザーが共有のフォトギャラリーに写真をアップロードできる写真共有アプリを構築します。 NoSQLデータベース(Amazon DynamoDB)に保存されているデータにアクセスするためにGraphQL API (AWS AppSync)を使用します。 さらに、ユーザーの認証、API との通信、写真のアップロードの管理、継続的なデプロイメントとホスティングの設定方法についても説明します。
 
-The app includes the following views:
+アプリには次のビューが含まれています：
 
-- A login view
-- A photo gallery view
-- A photo upload view
+- ログインビュー
+- フォトギャラリービュー
+- 写真のアップロードビュー
 
-## Prerequisites
+## 前提条件
 
-- [Install Node](https://nodejs.org/en/)
-- This tutorial assumes that you're familiar with both JavaScript/ES6 and React. If you need to brush up on React, we recommend going through the [official tutorial](https://reactjs.org/tutorial/tutorial.html).
+- [ノードのインストール](https://nodejs.org/en/)
+- このチュートリアルでは、JavaScript/ES6とReactの両方に精通していることを前提としています。 React に磨きをかける必要がある場合は、 [公式チュートリアル](https://reactjs.org/tutorial/tutorial.html) を参照することをお勧めします。

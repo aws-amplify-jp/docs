@@ -1,6 +1,6 @@
 ---
-title: Next steps
-description: Getting Started with Amplify Framework - Next steps
+title: 次のステップ
+description: Amplifyフレームワークの入門 - 次のステップ
 ---
 
 <inline-fragment integration="angular" src="~/start/getting-started/fragments/common/nextsteps-header.md"></inline-fragment> <inline-fragment integration="js" src="~/start/getting-started/fragments/common/nextsteps-header.md"></inline-fragment> <inline-fragment integration="vue" src="~/start/getting-started/fragments/common/nextsteps-header.md"></inline-fragment> <inline-fragment integration="next" src="~/start/getting-started/fragments/common/nextsteps-header.md"></inline-fragment> <inline-fragment integration="react" src="~/start/getting-started/fragments/common/nextsteps-header.md"></inline-fragment> <inline-fragment integration="react-native" src="~/start/getting-started/fragments/common/nextsteps-header.md"></inline-fragment> <inline-fragment integration="ionic" src="~/start/getting-started/fragments/common/nextsteps-header.md"></inline-fragment>

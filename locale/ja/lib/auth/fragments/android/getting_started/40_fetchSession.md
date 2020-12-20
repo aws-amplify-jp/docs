@@ -1,4 +1,4 @@
-For testing purposes, you can run this from your MainActivity's `onCreate` method.
+テスト目的では、MainActivity の `onCreate` メソッドからこれを実行できます。
 
 <amplify-block-switcher> <amplify-block name="Java">
 
@@ -25,7 +25,7 @@ RxAmplify.Auth.fetchAuthSession()
     .subscribe(
         result -> Log.i("AmplifyQuickstart", result.toString()),
         error -> Log.e("AmplifyQuickstart", error.toString())
-    );
+);
 ```
 
  </amplify-block> </amplify-block-switcher>

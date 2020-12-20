@@ -1,6 +1,6 @@
 ---
-title: Getting started
-description: Learn how to integrate auth capabilities into your mobile app with AWS Mobile SDK.
+title: はじめに
+description: AWS Mobile SDK を使用してモバイルアプリに認証機能を統合する方法を学びます。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

@@ -1,6 +1,6 @@
-## Sign-up
+## サインアップ
 
-Create a new user in the Amazon Cognito UserPool by passing the new user's email address, password, and other attributes to `Auth.signUp`.
+新しいユーザーのメールアドレス、パスワード、その他の属性を `Auth.signUp` に渡して、Amazon Cognito UserPoolに新しいユーザーを作成します。
 
 ```javascript
 import { Auth } from 'aws-amplify';
@@ -23,7 +23,7 @@ async function signUp() {
 }
 ```
 
-The `Auth.signUp` promise returns a data object of type [`ISignUpResult`](https://github.com/aws-amplify/amplify-js/blob/4644b4322ee260165dd756ca9faeb235445000e3/packages/amazon-cognito-identity-js/index.d.ts#L136-L139) with a [`CognitoUser`](https://github.com/aws-amplify/amplify-js/blob/4644b4322ee260165dd756ca9faeb235445000e3/packages/amazon-cognito-identity-js/index.d.ts#L48).
+`Auth.signUp` promiseは、 [`ISignUpResult`](https://github.com/aws-amplify/amplify-js/blob/4644b4322ee260165dd756ca9faeb235445000e3/packages/amazon-cognito-identity-js/index.d.ts#L136-L139) を [`CognitoUser`](https://github.com/aws-amplify/amplify-js/blob/4644b4322ee260165dd756ca9faeb235445000e3/packages/amazon-cognito-identity-js/index.d.ts#L48) で返します。
 
 ```js
 {
@@ -33,9 +33,9 @@ The `Auth.signUp` promise returns a data object of type [`ISignUpResult`](https:
 }
 ```
 
-### Confirm sign up
+### サインアップを確認
 
-If you enabled multi-factor auth, confirm the sign-up after retrieving a confirmation code from the user.
+多要素認証を有効にした場合、ユーザーから確認コードを取得した後にサインアップを確認します。
 
 ```js
 import { Auth } from 'aws-amplify';
@@ -49,9 +49,9 @@ async function confirmSignUp() {
 }
 ```
 
-### Custom Attributes
+### カスタム属性
 
-To create a custom attribute during your sign-up process, add it to the attributes field of the signUp method prepended with `custom:`.
+サインアッププロセス中にカスタム属性を作成するには、 `custom:`を追加してsignUpメソッドのattributeフィールドに追加します。
 
 ```js
 Auth.signUp({
@@ -59,16 +59,16 @@ Auth.signUp({
     password,
     attributes: {
         email,
-        'custom:favorite_flavor': 'Cookie Dough'  // custom attribute, not standard
+        'custom:favorite_flavor': 'Cookie Dough' // カスタム属性, not standard
     }
 })
 ```
 
-> Amazon Cognito does not dynamically create custom attributes on sign up. In order to use a custom attribute, the attribute must be first created in the user pool. To open the User Pool to create custom attributes using the Amplify ClI, run `amplify console auth`. If you are not using the Amplify CLI, you can view the user pool by visiting the AWS console and opening the Amazon Cognito dashboard.
+> Amazon Cognitoはサインアップ時にカスタム属性を動的に作成しません。 カスタム属性を使用するには、最初にユーザープールに属性を作成する必要があります。 Amplify ClIを使用してカスタム属性を作成するには、 `console auth`を増幅してください。 AmplifyのCLIを使用していない場合は、AWSコンソールにアクセスし、Amazon Cognitoダッシュボードを開くことで、ユーザープールを表示できます。
 
-## Sign-in
+## サインイン
 
-When signing in with user name and password, you will pass in the username and the password to the `signIn` method of the Auth class.
+ユーザー名とパスワードでサインインするとき ユーザー名とパスワードを Authクラスの `signIn` メソッドに渡します。
 
 ```javascript
 import { Auth } from 'aws-amplify';
@@ -82,7 +82,7 @@ async function signIn() {
 }
 ```
 
-### Re-send confirmation code
+### 確認コードを再送信する
 
 ```js
 import { Auth } from 'aws-amplify';
@@ -97,7 +97,7 @@ async function resendConfirmationCode() {
 }
 ```
 
-## Sign-out
+## サインアウト
 
 ```javascript
 import { Auth } from 'aws-amplify';
@@ -113,7 +113,7 @@ async function signOut() {
 
 ### Global sign-out
 
-By doing this, you are revoking all the auth tokens (id token, access token and refresh token) which means the user is signed out from all the devices Note: although the tokens are revoked, the AWS credentials will remain valid until they expire (which by default is 1 hour)
+これを行うと、すべての認証トークンを取り消します(id token)。 アクセストークンとリフレッシュトークン) これは、ユーザーがすべてのデバイスからサインアウトされていることを意味します 注意: トークンは取り消されていますが、 AWSの資格情報は有効期限が切れるまで有効です (デフォルトでは1時間です)
 
 ```js
 import { Auth } from 'aws-amplify';

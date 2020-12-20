@@ -1,8 +1,8 @@
-## Customize UI Theme
+## UIテーマをカスタマイズ
 
-For React, you can create your own theme and use it to render Amplify components:
+React では、独自のテーマを作成してAmplifyコンポーネントをレンダリングすることができます：
 
-> Your custom theme must use the selectors from the following [template](https://github.com/aws-amplify/amplify-js/blob/main/packages/aws-amplify-react/src/Amplify-UI/Amplify-UI-Theme.tsx)
+> カスタムテーマは、次の [テンプレート](https://github.com/aws-amplify/amplify-js/blob/main/packages/aws-amplify-react/src/Amplify-UI/Amplify-UI-Theme.tsx)からセレクターを使用する必要があります。
 
 ```javascript
 import MyTheme from './MyTheme';
@@ -10,7 +10,7 @@ import MyTheme from './MyTheme';
 <Authenticator theme={MyTheme} />
 ```
 
-Alternatively, you can change a few properties and pass in a theme object from the same file:
+または、いくつかのプロパティを変更し、同じファイルからテーマオブジェクトを渡すこともできます。
 
 ```javascript
 const MyTheme = {
@@ -21,7 +21,7 @@ const MyTheme = {
 <Authenticator theme={MyTheme} />
 ```
 
-For React Native, you must override properties defined in AmplifyTheme.js [here](https://github.com/aws-amplify/amplify-js/blob/main/packages/aws-amplify-react-native/src/AmplifyTheme.js)
+React Nativeの場合、ここでAmplifyTheme.js [で定義されているプロパティを上書きする必要があります](https://github.com/aws-amplify/amplify-js/blob/main/packages/aws-amplify-react-native/src/AmplifyTheme.js)
 
 ```javascript
 import { AmplifyTheme } from 'aws-amplify-react-native';
@@ -32,9 +32,9 @@ const MyTheme = Object.assign({}, AmplifyTheme, { sectionHeader: MySectionHeader
 <Authenticator theme={MyTheme} />
 ```
 
-### Create Your Own UI
+### 独自のUIを作成する
 
-To customize the default auth experience even more, you can create your own auth UI. To do this, your component will leverage the following *Authenticator* properties:
+デフォルトの認証体験をさらにカスタマイズするには、独自の認証UIを作成できます。 これを行うには、コンポーネントが次の *Authenticator* プロパティを利用します:
 
 ```
 - authState
@@ -42,7 +42,7 @@ To customize the default auth experience even more, you can create your own auth
 - onStateChange
 ```
 
-The following example creates an 'Always On' Auth UI, which continuously shows the current auth state in your app.
+次の例では、アプリケーションで現在の認証状態を継続的に表示する 'Always On' Auth UI を作成します。
 
 ```javascript
 import { Authenticator, SignIn, SignUp, ConfirmSignUp, Greetings } from 'aws-amplify-react';

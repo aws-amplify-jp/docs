@@ -1,14 +1,14 @@
-## Registering Endpoints in Your Application
+## アプリケーションにエンドポイントを登録する
 
-When a user starts a session (for example, by launching your mobile app), your mobile or web application can automatically register (or update) an _endpoint_ with Amazon Pinpoint. The endpoint represents the device that the user starts the session with. It includes attributes that describe the device, and it can also include custom attributes that you define. Endpoints can also represent other methods of communicating with customers, such as email addresses or mobile phone numbers.
+ユーザーがセッションを開始したとき (例えば、モバイルアプリを起動するなど) モバイルまたはWebアプリケーションは、Amazon Pinpointで _エンドポイント_ を自動的に登録(または更新)することができます。 エンドポイントは、ユーザーがセッションを開始するデバイスを表します。 デバイスを記述する属性が含まれ、定義したカスタム属性も含めることができます。 エンドポイントは、電子メールアドレスや携帯電話番号など、顧客との通信方法を表すこともできます。
 
 After your application registers endpoints, you can segment your audience based on endpoint attributes. You can then engage these segments with tailored messaging campaigns. You can also use the **Analytics** page in the Amazon Pinpoint console to view charts about endpoint registration and activity, such as **New endpoints** and **Daily active endpoints**.
 
-You can assign a single user ID to multiple endpoints. A user ID represents a single user, while each endpoint that is assigned the user ID represents one of the user's devices. After you assign user IDs to your endpoints, you can view charts about user activity in the console, such as **Daily active users** and **Monthly active users**.
+1 つのユーザ ID を複数のエンドポイントに割り当てることができます。 ユーザ ID は単一のユーザを表し、ユーザ ID を割り当てられた各エンドポイントはユーザのデバイスの 1 つを表します。 エンドポイントにユーザー ID を割り当てると、コンソールでのユーザー アクティビティに関するグラフを表示できます。 例: **デイリーアクティブユーザー** や **月間アクティブユーザー** など。
 
-## Adding Custom Endpoint Attributes
+## カスタムエンドポイント属性の追加
 
-After you initialize the Amazon Pinpoint client in your application, you can add custom attributes to endpoints.
+アプリケーションで Amazon Pinpoint クライアントを初期化した後、エンドポイントにカスタム属性を追加できます。
 
 ```swift
 // Add a custom attribute to the endpoint
@@ -20,16 +20,16 @@ if let targetingClient = pinpoint?.targetingClient {
 }
 ```
 
-## Assigning User IDs to Endpoints
+## エンドポイントへのユーザー ID の割り当て
 
-Assign user IDs to endpoints by doing either of the following:
+次のいずれかを実行して、ユーザー ID をエンドポイントに割り当てます:
 
-* Manage user sign-up and sign-in with Amazon Cognito user pools.
-* Use the Amazon Pinpoint client to assign user IDs without using Amazon Cognito user pools.
+* Amazon Cognitoのユーザープールでのユーザー登録とサインインを管理します。
+* Amazon Pinpoint クライアントを使用して、Amazon Cognito のユーザプールを使用せずにユーザIDを割り当てます。
 
-Amazon Cognito user pools are user directories that make it easier to add sign-up and sign-in to your app. When the AWS Mobile SDKs for iOS and Android register an endpoint with Amazon Pinpoint, Amazon Cognito automatically assigns a user ID from the user pool. For more information, see [Using Amazon Pinpoint Analytics with Amazon Cognito User Pools](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-pinpoint-integration.html) in the _Amazon Cognito Developer Guide_.
+Amazon Cognitoのユーザープールは、アプリにサインアップとサインインを簡単に追加できるユーザーディレクトリです。 AWS Mobile SDK for iOS と Android がエンドポイントを Amazon Pinpoint に登録するとき。 Amazon Cognitoは自動的にユーザープールからユーザーIDを割り当てます。 詳細はこちら See [Amazon Pinpoint Analytics with Amazon Cognito User Pools](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-pinpoint-integration.html) in the _Amazon Cognito Developer Guide_.
 
-If you don't want to use Amazon Cognito user pools, you can use the Amazon Pinpoint client in your application to assign user IDs to endpoints.
+Amazon Cognitoユーザプールを使用したくない場合 アプリケーションで Amazon Pinpoint クライアントを使用して、エンドポイントにユーザー ID を割り当てることができます。
 
 ```swift
 if let targetingClient = pinpoint?.targetingClient {
@@ -45,7 +45,7 @@ if let targetingClient = pinpoint?.targetingClient {
 }
 ```
 
-## Endpoint Limits
+## エンドポイントの制限
 
-The limits applicable to the endpoints using the AWS Android SDK for Pinpoint and the Amazon Pinpoint Endpoint API can be found [here](https://docs.aws.amazon.com/pinpoint/latest/developerguide/limits.html#limits-endpoint).
+AWS Android SDK for Pinpoint と Amazon Pinpoint エンドポイント API を使用するエンドポイントに適用できる制限は [こちら](https://docs.aws.amazon.com/pinpoint/latest/developerguide/limits.html#limits-endpoint) です。
 

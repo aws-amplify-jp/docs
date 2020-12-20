@@ -1,43 +1,43 @@
 ---
-title: Configure Lambda resolvers
-description: Quickly & easily configure AWS Lambda resolvers within your AWS AppSync API.
+title: Lambda リゾルバを設定
+description: すばやく & AWS AppSync API内でAWS Lambdaリゾルバを簡単に設定できます。
 ---
 
 ## @function
 
 The `@function` directive allows you to quickly & easily configure AWS Lambda resolvers within your AWS AppSync API.
 
-### Definition
+### 定義
 
 ```graphql
-directive @function(name: String!, region: String) on FIELD_DEFINITION
+@function(name: String!, region: String) の FIELD_DEFINITION
 ```
 
-### Usage
+### 使用法
 
-The @function directive allows you to quickly connect lambda resolvers to an AppSync API. You may deploy the AWS Lambda functions via the Amplify CLI, AWS Lambda console, or any other tool. To connect an AWS Lambda resolver, add the `@function` directive to a field in your `schema.graphql`.
+@function ディレクティブを使用すると、lambda リゾルバを AppSync API に素早く接続できます。 Amplify CLI、AWS Lambdaコンソール、または他のツールを介してAWS Lambda関数をデプロイできます。 AWS Lambda リゾルバを接続するには、 `schema.graphql` のフィールドに `@function` ディレクティブを追加します。
 
-Let's assume you have deployed an *echo* function with the following contents:
+次の内容を含む *echo* 関数をデプロイしたと仮定します。
 
 ```javascript
-exports.handler =  async function(event, context){
+exports.handler = async function(event, context){
   return event.arguments.msg;
 };
 ```
 
-**If you deployed your function using the 'amplify function' category**
+**「関数の増幅」カテゴリを使用して関数をデプロイした場合**
 
 The Amplify CLI provides support for maintaining multiple environments out of the box. When you deploy a function via `amplify add function`, it will automatically add the environment suffix to your Lambda function name. For example if you create a function named **echofunction** using `amplify add function` in the **dev** environment, the deployed function will be named **echofunction-dev**. The `@function` directive allows you to use `${env}` to reference the current Amplify CLI environment.
 
 ```
 type Query {
-  echo(msg: String): String @function(name: "echofunction-${env}")
+  echo(msg: String): String @function(${env}")
 }
 ```
 
-**If you deployed your function without amplify**
+**関数を増幅せずに展開した場合**
 
-If you deployed your API without amplify then you must provide the full Lambda function name. If you deployed the same function with the name **echofunction** then you would have:
+増幅せずに API をデプロイした場合は、完全な Lambda 関数名を指定する必要があります。 **echofunction** という名前で同じ関数をデプロイした場合、以下のようになります。
 
 ```
 type Query {
@@ -45,11 +45,11 @@ type Query {
 }
 ```
 
-**Example: Return custom data and run custom logic**
+**例: カスタムデータを返し、カスタムロジックを実行**
 
 You can use the `@function` directive to write custom business logic in an AWS Lambda function. To get started, use `amplify add function`, the AWS Lambda console, or other tool to deploy an AWS Lambda function with the following contents.
 
-For example purposes assume the function is named `GraphQLResolverFunction`:
+例えば、関数に `GraphQLResolverFunction` という名前が付けられていると仮定します:
 
 ```javascript
 const POSTS = [
@@ -111,11 +111,11 @@ exports.handler = async (event) => {
 };
 ```
 
-**Example: Get the logged in user from Amazon Cognito User Pools**
+**例: Amazon Cognito User Pools からログインしたユーザーを取得する**
 
 When building applications, it is often useful to fetch information for the current user. You can use the `@function` directive to quickly add a resolver that uses AppSync identity information to fetch a user from Amazon Cognito User Pools. First make sure you have added Amazon Cognito User Pools enabled via `amplify add auth` and a GraphQL API via `amplify add api` to an amplify project. Once you have created the user pool, get the **UserPoolId** from **amplify-meta.json** in the **backend/** directory of your amplify project. You will provide this value as an environment variable in a moment. Next, using the Amplify function category, AWS console, or other tool, deploy a AWS Lambda function with the following contents.
 
-For example purposes assume the function is named `GraphQLResolverFunction`:
+例えば、関数に `GraphQLResolverFunction` という名前が付けられていると仮定します:
 
 ```javascript
 /* Amplify Params - DO NOT EDIT
@@ -183,7 +183,7 @@ exports.handler = async (event) => {
 };
 ```
 
-You can connect this function to your AppSync API deployed via Amplify using this schema:
+このスキーマを使用して、Amplify経由でデプロイされたAppSync APIにこの関数を接続できます。
 
 ```graphql
 type Query {
@@ -200,11 +200,11 @@ type Comment {
 }
 ```
 
-This simple lambda function shows how you can write your own custom logic using a language of your choosing. Try enhancing the example with your own data and logic.
+このシンプルなlambda関数は、選択した言語を使用して独自のカスタムロジックを書く方法を示しています。 独自のデータとロジックを使用してサンプルを強化してみてください。
 
-> When deploying the function, make sure your function has access to the auth resource. You can run the `amplify update function` command for the CLI to automatically supply an environment variable named `AUTH_<RESOURCE_NAME>_USERPOOLID` to the function and associate corresponding CRUD policies to the execution role of the function.
+> 関数をデプロイする際には、関数が認証リソースにアクセスできることを確認してください。 CLIの `amplify更新関数` コマンドを実行して、関数に `AUTH_<RESOURCE_NAME>_USERPOOLID` という名前の環境変数を自動的に与え、対応するCRUDポリシーを関数の実行ロールに関連付けます。
 
-After deploying our function, you can connect it to AppSync by defining some types and using the @function directive. Add this to your schema, to connect the `Query.echo` and `Query.me` resolvers to our new function.
+関数をデプロイしたら、@function ディレクティブを使用して、AppSync に接続できます。 これをスキーマに追加して、 `Query.echo` と `Query.me` を新しい関数に接続します。
 
 ```graphql
 type Query {
@@ -266,25 +266,25 @@ query {
 }
 ```
 
-which will return user information related to the current user directly from your user pool.
+をクリックすると、現在のユーザーに関連するユーザー情報が直接ユーザープールから返されます。
 
-### Structure of the function event
+### ファンクションイベントの構造
 
-When writing lambda functions that are connected via the `@function` directive, you can expect the following structure for the AWS Lambda event object.
+`@function` ディレクティブで接続された lambda 関数を書くときは、AWS Lambda イベントオブジェクトの次の構造を期待できます。
 
-| Key       | Description                                                                                                                                                            |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| typeName  | The name of the parent object type of the field being resolver.                                                                                                        |
-| fieldName | The name of the field being resolved.                                                                                                                                  |
-| arguments | A map containing the arguments passed to the field being resolved.                                                                                                     |
-| identity  | A map containing identity information for the request. Contains a nested key 'claims' that will contains the JWT claims if they exist.                                 |
-| source    | When resolving a nested field in a query, the source contains parent value at runtime. For example when resolving `Post.comments`, the source will be the Post object. |
-| request   | The AppSync request object. Contains header information.                                                                                                               |
-| prev      | When using pipeline resolvers, this contains the object returned by the previous function. You can return the previous value for auditing use cases.                   |
+| キー        | 説明                                                                                           |
+| --------- | -------------------------------------------------------------------------------------------- |
+| typeName  | リゾルバであるフィールドの親オブジェクトタイプの名前。                                                                  |
+| fieldName | 解決されるフィールドの名前。                                                                               |
+| 引数        | 解決されるフィールドに渡された引数を含むマップ。                                                                     |
+| identity  | リクエストの ID 情報を含むマップ。存在する場合は JWT クレームを含むネストされたキー「クレーム」が含まれます。                                  |
+| ソース       | クエリ内でネストされたフィールドを解決する場合、実行時にソースに親値が含まれます。 例えば、 `Post.comments`を解決する場合、ソースは Post オブジェクトになります。 |
+| リクエスト     | AppSync リクエストオブジェクトにはヘッダー情報が含まれています。                                                         |
+| 前         | パイプラインリゾルバを使用する場合, これは、前の関数によって返されたオブジェクトを含みます. ユースケースを監査するために、以前の値を返すことができます.               |
 
-### Calling functions in different regions
+### 異なる領域で関数を呼び出し中
 
-By default, you expect the function to be in the same region as the amplify project. If you need to call a function in a different (or static) region, you can provide the **region** argument.
+デフォルトでは、この機能は増幅プロジェクトと同じ領域にあることを期待します。 異なる(または静的な)領域で関数を呼び出す必要がある場合は、 **region** 引数を指定できます。
 
 ```graphql
 type Query {
@@ -292,11 +292,11 @@ type Query {
 }
 ```
 
-Calling functions in different AWS accounts is not supported via the @function directive but is supported by AWS AppSync.
+異なるAWSアカウントでの関数の呼び出しは、@function ディレクティブではサポートされていませんが、AWS AppSync でサポートされています。
 
-### Chaining functions
+### 連鎖関数
 
-The @function directive supports AWS AppSync pipeline resolvers. That means, you can chain together multiple functions such that they are invoked in series when your field's resolver is invoked. To create a pipeline resolver that calls out to multiple AWS Lambda functions in series, use multiple `@function` directives on the field.
+@function ディレクティブは AWS AppSync パイプラインリゾルバをサポートしています。 つまり、フィールドのリゾルバが呼び出されたときに直列に呼び出されるように、複数の関数を連鎖させることができます。 複数の AWS Lambda 関数を直列に呼び出すパイプラインリゾルバを作成する。 フィールドに複数の `@function` ディレクティブを使用します。
 
 ```graphql
 type Mutation {
@@ -306,11 +306,11 @@ type Mutation {
 
 In the example above when you run a mutation that calls the `Mutation.doSomeWork` field, the **worker-function** will be invoked first then the **audit-function** will be invoked with an event that contains the results of the **worker-function** under the **event.prev.result** key. The **audit-function** would need to return **event.prev.result** if you want the result of **worker-function** to be returned for the field. Under the hood, Amplify creates an `AppSync::FunctionConfiguration` for each unique instance of `@function` in a document and a pipeline resolver containing a pointer to a function for each `@function` on a given field.
 
-#### Generates
+#### 生成
 
-The `@function` directive generates these resources as necessary:
+`@function` ディレクティブはこれらのリソースを必要に応じて生成します:
 
-1. An AWS IAM role that has permission to invoke the function as well as a trust policy with AWS AppSync.
-2. An AWS AppSync data source that registers the new role and existing function with your AppSync API.
-3. An AWS AppSync pipeline function that prepares the lambda event and invokes the new data source.
-4. An AWS AppSync resolver that attaches to the GraphQL field and invokes the new pipeline functions.
+1. AWS AppSync で関数を呼び出す権限と信頼ポリシーを持つ、AWS IAM ロール。
+2. 新しいロールと既存の関数をAppSync APIに登録するAWS AppSyncデータソース。
+3. lambdaイベントを準備し、新しいデータソースを呼び出すAWS AppSyncパイプライン関数。
+4. GraphQL 項目にアタッチし、新しいパイプライン機能を呼び出すAWS AppSync リゾルバ。

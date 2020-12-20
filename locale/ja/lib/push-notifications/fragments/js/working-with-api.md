@@ -1,4 +1,4 @@
-You can use `onNotification`, `onRegister` and `onNotificationOpened` event handlers to work with push notifications in your app:
+`onNotification`, `onRegister` と `onNotificationOpen` イベントハンドラーを使用して、アプリ内のプッシュ通知を操作できます:
 
 ```javascript
 // get the notification data when notification is received
@@ -24,11 +24,11 @@ PushNotification.onNotificationOpened((notification) => {
 
 <amplify-callout>
 
-The `onRegister` handler will only be triggered once when the token is generated or updated by the push provider i.e. Apple/Google (and when the app opened the first time).
+`onRegister` ハンドラは、トークンがプッシュプロバイダー i によって生成または更新されたときにのみトリガーされます。 をクリックします。
 
 </amplify-callout>
 
-If you have configured your application not to automatically request iOS push notification permissions, you can use the `requestIOSPermissions` method to request them explicitly:
+iOSのプッシュ通知の権限を自動的に要求しないようにアプリケーションを設定している場合は、 明示的に要求するには `requestIOSPermissions` メソッドを使用できます。
 
 ```javascript
 // request iOS push notification permissions

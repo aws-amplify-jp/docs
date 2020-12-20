@@ -1,29 +1,29 @@
-AWS AppSync helps you build data-driven apps with real-time and offline capabilities. The [AppSync iOS SDK](https://github.com/awslabs/aws-mobile-appsync-sdk-ios/) enables you to integrate your app with the AWS AppSync service and is based off of the Apollo project found [here](https://github.com/apollographql/apollo-ios). The SDK supports multiple authorization models, handles subscription handshake protocols for real-time updates to data, and has built-in capabilities for offline support that makes it easy to integrate into your app.
+AWS AppSync を使用すると、リアルタイムおよびオフラインの機能を備えたデータドリブンなアプリケーションを構築できます。 [AppSync iOS SDK](https://github.com/awslabs/aws-mobile-appsync-sdk-ios/) を使用すると、AWS AppSync サービスとアプリを統合でき、 [ここ](https://github.com/apollographql/apollo-ios)のApolloプロジェクトに基づいています。 SDKは複数の認可モデルをサポートし、データをリアルタイムに更新するためのサブスクリプションハンドシェイクプロトコルを処理します。 また、オフラインサポート機能を内蔵しているため、アプリに簡単に統合できます。
 
-You can integrate with AWS AppSync using the following steps:
+AWS AppSync との連携は、次の手順で行うことができます。
 
-1. Setup the API endpoint and authentication information in the client side configuration.
-2. Generate Swift code from the API schema.
-3. Write app code to run queries, mutations and subscriptions.
+1. クライアント側の設定で API エンドポイントと認証情報を設定します。
+2. APIスキーマからSwiftコードを生成します。
+3. クエリ、変更、サブスクリプションを実行するためのアプリコードを記述します。
 
-The Amplify CLI provides support for AppSync that make this process easy. Using the CLI, you can configure an AWS AppSync API, download required client side configuration files, and generate client side code within minutes by running a few simple commands on the command line.
+Amplify CLI は、このプロセスを容易にする AppSync のサポートを提供します。 CLI を使用して、AWS AppSync API を設定し、必要なクライアント側の設定ファイルをダウンロードできます。 コマンドラインで簡単なコマンドを実行することで、数分でクライアントサイドコードを生成できます。
 
-### Configuration
+### 設定
 
-The AWS SDKs support configuration through a centralized file called `awsconfiguration.json` that defines your AWS regions and service endpoints. You obtain this file in one of two ways, depending on whether you are creating your AppSync API in the AppSync console or using the Amplify CLI.
+AWS SDKは、AWSリージョンとサービスエンドポイントを定義する `awsconfiguration.json` と呼ばれる集中化されたファイルを介して構成をサポートします。 あなたはこのファイルを二つの方法のいずれかで取得します。 AppSync コンソールで AppSync API を作成するか、Amplify CLI を使用するかによって異なります。
 
 * If you are creating your API in the console, navigate to the `Getting Started` page, and follow the steps in the `Integrate with your app` section. The `awsconfiguration.json` file you download is already populated for your specific API. Place the file in the root directory of your iOS project, and add it to your Xcode project.
 
 * If you are creating your API with the Amplify CLI (using `amplify add api`), the `awsconfiguration.json` file is automatically downloaded and updated each time you run `amplify push` to update your cloud resources. The file is placed in the root directory of your iOS project, and you need to add it to your Xcode project.
 
 
-### Code Generation
+### コード生成
 
-To execute GraphQL operations in iOS you need to run a code generation process, which requires both the GraphQL schema and the statements (for example, queries, mutations, or subscriptions) that your client defines. The Amplify CLI toolchain helps you do this by automatically pulling down your schema and generating default GraphQL queries, mutations, and subscriptions before kicking off the code generation process. If your client requirements change, you can alter these GraphQL statements and regenerate your types.
+iOSでGraphQL操作を実行するには、コード生成プロセスを実行する必要があります。 これは、クライアントが定義するGraphQLスキーマとステートメント(クエリ、変更、サブスクリプションなど)の両方を必要とします。 Amplify CLI ツールチェーンは、スキーマを自動的に引き出し、デフォルトの GraphQL クエリを生成することで、これを行うのに役立ちます。 コード生成プロセスをキックオフする前に突然変異やサブスクリプションが必要です クライアントの要件が変更された場合、これらのGraphQL文を変更して型を再生成することができます。
 
-#### AppSync APIs Created in the Console
+#### AppSync API コンソールで作成された
 
-After installing the Amplify CLI open a terminal, go to your Xcode project root, and then run the following:
+Amplify CLI をインストールした後、ターミナルを開き、Xcode プロジェクトのルートに移動し、以下を実行します。
 
 ```bash
 amplify init
@@ -32,25 +32,25 @@ amplify add codegen --apiId XXXXXX
 
 The `XXXXXX` is the unique AppSync API identifier that you can find in the console in the root of your API's integration page. When you run this command you can accept the defaults, which create an `API.swift` file, and a `graphql` folder with your statements, in your root directory.
 
-#### AppSync APIs Created Using the CLI
+#### AppSync API CLIを使用して作成されたAPI
 
-Navigate in your terminal to an Xcode project directory and run the following:
+端末で Xcode のプロジェクト・ディレクトリに移動し、以下を実行します。
 
 ```bash
-amplify init     ## Select iOS as your platform
-amplify add api  ## Select GraphQL, API key, "Single object with fields Todo application"
+amplify init ## プラットフォームとしてiOSを選択します
+amplify add api ## GraphQL, APIキー, "Todoアプリケーションフィールドを持つ単一オブジェクト"
 ```
-Select *GraphQL* when prompted for service type:
+サービス タイプのプロンプトが表示されたら、 *GraphQL* を選択します:
 
 ```console
-? Please select from one of the below mentioned services (Use arrow keys)
-❯ GraphQL
+?以下のサービスから選択してください（矢印キーを使用）
+<unk> GraphQL
   REST
 ```
 
 The `add api` flow above will ask you some questions, such as if you already have an annotated GraphQL schema. If this is your first time using the CLI select **No** and let it guide you through the default project **"Single object with fields (e.g., “Todo” with ID, name, description)"** as it will be used in the code examples below. Later on, you can always change it.
 
-Name your GraphQL endpoint and select authorization type:
+GraphQL エンドポイントに名前を付け、認証タイプを選択します。
 
 ```console
 ? Please select from one of the below mentioned services GraphQL
@@ -60,27 +60,27 @@ Name your GraphQL endpoint and select authorization type:
   Amazon Cognito User Pool
 ```
 
-<amplify-callout> AWS AppSync API keys expire seven days after creation, and using API KEY authentication is only suggested for development. To change AWS AppSync authorization type after the initial configuration, use the `$ amplify update api` command and select `GraphQL`. </amplify-callout>
+<amplify-callout> AWS AppSync API キーは作成から 7 日後に期限切れになり、API KEY 認証を使用することは開発にのみ推奨されます。 初期設定後にAWS AppSync の認証タイプを変更する。 `$ amplify update api` コマンドを使用し、 `GraphQL` を選択します。 </amplify-callout>
 
 When you update your backend with *push* command, you can go to [AWS AppSync Console](http://console.aws.amazon.com/appsync/home) and see that a new API is added under *APIs* menu item:
 
 ```bash
-amplify push
+push を増幅する
 ```
 
 The `amplify push` process will prompt you to enter the codegen process and walk through configuration options. Accept the defaults and it will create a file named `API.swift` in your root directory (unless you choose to name it differently) as well as a directory called `graphql` with your documents. You also will have an `awsconfiguration.json` file that the AppSync client will use for initialization. At any time you can open the AWS console for your new API directly by running the following command:
 
 ```bash
-amplify console api
+コンソールの api を増幅する
 ```
 
-When prompted, select **GraphQL**. This will open the AWS AppSync console for you to run Queries, Mutations, or Subscriptions at the server and see the changes in your client app.
+プロンプトが表示されたら、 **GraphQL**を選択します。 これにより、AWS AppSync コンソールが開き、クエリ、ミューテーションを実行できます。 またはサーバーでサブスクリプションを行い、クライアントアプリケーションの変更を確認します。
 
-### Import SDK and Config
-To use AppSync in your Xcode project, modify your Podfile with a dependency of the AWS AppSync SDK as follows:
+### SDKのインポートと設定
+Xcode プロジェクトで AppSync を使用するには、次のように、AWS AppSync SDK の依存性を持つ Podfile を変更します。
 
 ```ruby
-target 'PostsApp' do
+ターゲット 'PostsApp' do
     use_frameworks!
     pod 'AWSAppSync'
 end
@@ -88,9 +88,9 @@ end
 
 Run `pod install` from your terminal and open up the `.xcworkspace` Xcode project. Add the `API.swift` and `awsconfiguration.json` files to your project **(File->Add Files to ..->Add)** and then build your project, ensuring there are no issues.
 
-### Client Initialization
+### クライアントの初期化
 
-Initialize the AppSync client your application delegate by creating `AWSAppSyncClientConfiguration` and `AWSAppSyncClient` like the following:
+次のように `AWSAppSyncClientConfiguration` と `AWSAppSyncClient` を作成して、アプリケーションが委任するAppSyncクライアントを初期化します。
 
 ```swift
 import AWSAppSync
@@ -120,9 +120,9 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
 }
 ```
 
-`AWSAppSyncServiceConfig` represents the configuration information present in your `awsconfiguration.json` file.
+`AWSAppSyncServiceConfig` は、 `awsconfiguration.json` ファイルにある設定情報を表します。
 
-Next, in your application code, you reference this in an appropriate lifecycle method such as `viewDidLoad()` if you are using `UIKit`:
+次に、アプリケーションコードを入力します。 `UIKit` を使用している場合は、 `viewDidLoad()` のような適切なライフサイクルメソッドを参照します。
 
 ```swift
 import AWSAppSync
@@ -140,7 +140,7 @@ class Todos: UIViewController{
 }
 ```
 
-If you are using SwiftUI, you can add a reference to the shared AppSync client as `@State` to your View, and assign it in your view's initializer:
+SwiftUI を使用している場合は、共有の AppSync クライアントへの参照を `@State` としてビューに追加できます。 ビューのイニシャライザに割り当ててください:
 
 ```swift
 // Remember to import AWSAppSync
@@ -158,7 +158,7 @@ struct ContentView: View {
 }
 ```
 
-### Run a Query
+### クエリの実行
 
 Now that the client is set up, you can run a GraphQL query. The syntax is `appSyncClient?.fetch(query: <NAME>Query() {(result, error)})` where `<NAME>` comes from the GraphQL statements that `amplify codegen` created. For example, if you have a `ListTodos` query your code will look like the following:
 
@@ -173,14 +173,14 @@ Now that the client is set up, you can run a GraphQL query. The syntax is `appSy
 }
 ```
 
-Optionally, you can set a cache policy on the query as follows:
+必要に応じて、クエリのキャッシュポリシーを次のように設定できます。
 
 ```swift
-appSyncClient?.fetch(query: ListTodosQuery(), cachePolicy: .returnCacheDataAndFetch)  { (result, error) in
+appSyncClient?.fetch(query: ListTodosQuery(), cachePolicy: .returnCacheDataAndFetch) { (result, error)
 ```
-`returnCacheDataAndFetch` pulls results from the local cache first before retrieving data over the network. This gives a snappy UX and offline support.
+`returnCacheDataAndFetch` はネットワーク経由でデータを取得する前に最初にローカルキャッシュから結果を引き出します。これにより、簡単な UX とオフラインのサポートが可能になります。
 
-#### Considerations for SwiftUI
+#### SwiftUIに関する考慮事項
 
 When using `List` and `ForEach` for SwiftUI the structure needs to conform to `Identifiable`. The code generated for Swift does not make the structure `Identifiable` but as long as you have a unique id associated with the object then you can retroactively mark a field as unique. Here is some example code for `ListTodosQuery()`
 
@@ -191,7 +191,7 @@ ForEach(listTodosStore.listTodos.identified(by:\.id)){ todo in
 
 ```
 
-### Run a Mutation
+### 突然変異を実行
 
 To add data you need to run a GraphQL mutation. The syntax is `appSyncClient?.perform(mutation: <NAME>Mutation() {(result, error)})` where `<NAME>` comes from the GraphQL statements that `amplify codegen` created. However, most GraphQL schemas organize mutations with an `input` type for maintainability, which is what the AppSync console and Amplify CLI do as well. Therefore, you need to pass this as a parameter called `input`, as in the following example:
 
@@ -209,11 +209,11 @@ appSyncClient?.perform(mutation: CreateTodoMutation(input: mutationInput)) { (re
 }
 ```
 
-#### Working with Complex Objects
+#### 複合オブジェクトの操作
 
-Sometimes you might want to create logical objects that have more complex data, such as images or videos, as part of their structure. For example, you might create a Person type with a profile picture or a Post type that has an associated image. You can use AWS AppSync to model these as GraphQL types and [automatically store them to S3](~/sdk/storage/graphql-api.md).
+時々、より複雑なデータ(画像やビデオなど)を持つ論理オブジェクトを構造の一部として作成したい場合があります。 たとえば、プロフィール画像を含むPerson型を作成したり、関連画像を含むPost型を作成したりすることができます。 AWS AppSyncを使用してGraphQL型としてモデル化し、 [自動的にS3](~/sdk/storage/graphql-api.md)に保存することができます。
 
-### Subscribe to Data
+### データの購読
 
 Finally, it's time to set up a subscription to real-time data. The syntax `appSyncClient?.subscribe(subscription: <NAME>Subscription() {(result, transaction, error)})` where `<NAME>` comes from the GraphQL statements that `amplify codegen` created. Note that the AppSync console and Amplify GraphQL transformer have a common nomenclature that puts the word `On` in front of a subscription as in the following example:
 
@@ -238,35 +238,35 @@ do {
 }
 ```
 
-Like mutations, subscriptions can also take input types, in which case they will be subscribing to particular events based on the input. To learn more about subscription arguments, see [AWS AppSync Subscription Arguments](https://docs.aws.amazon.com/appsync/latest/devguide/real-time-data.html#using-subscription-arguments).
+変更と同様に、サブスクリプションは入力タイプを取ることもできます。その場合、入力に基づいて特定のイベントを購読します。 サブスクリプション引数の詳細については、 [AWS AppSync サブスクリプション引数](https://docs.aws.amazon.com/appsync/latest/devguide/real-time-data.html#using-subscription-arguments) を参照してください。
 
 
-### Mocking and Local Testing
+### モックとローカルテスト
 
-Amplify supports running a local mock server for testing your application with AWS AppSync, including debugging of resolvers, before pushing to the cloud. Please see the [CLI Toolchain documentation](~/cli/usage/mock.md) for more details.
+Amplifyは、クラウドにプッシュする前に、AWS AppSyncでアプリケーションをテストするためのローカルモックサーバの実行をサポートしています。 詳細は [CLI ツールチェーン ドキュメント](~/cli/usage/mock.md) を参照してください。
 
-### Client Architecture
+### クライアントアーキテクチャ
 
-The AppSync client supports offline scenarios with a programing model that provides a "write through cache". This allows you to both render data in the UI when offline as well as add/update through an "optimistic response". The below diagram shows how the AppSync client interfaces with the network GraphQL calls, its offline mutation queue, the Apollo cache, and your application code.
+AppSync クライアントはオフラインシナリオをサポートし、「キャッシュを通じて書き込み」を提供するプログラムモデルを提供します。 これにより、オフライン時にデータをレンダリングしたり、「楽観的な応答」を介して追加/更新したりすることができます。 次の図は、ネットワークGraphQLコール、そのオフラインの変更キュー、Apolloキャッシュ、およびアプリケーションコードとのAppSyncクライアントインターフェイスを示しています。
 
-![Image](~/images/appsync-architecture.png)
+![画像](~/images/appsync-architecture.png)
 
-Your application code will interact with the AppSync client to perform GraphQL queries, mutations, or subscriptions. The AppSync client automatically performs the correct authorization methods when interfacing with the HTTP layer adding API Keys, tokens, or signing requests depending on how you have configured your setup. When you do a mutation, such as adding a new item (like a blog post) in your app the AppSync client adds this to a local queue (persisted to disk with SQLite) when the app is offline. When network connectivity is restored the mutations are sent to AppSync in serial allowing you to process the responses one by one.
+アプリケーション・コードは、GraphQL クエリ、変更、またはサブスクリプションを実行するために、AppSync クライアントと相互作用します。 APIキーを追加するHTTPレイヤーとインターフェースする場合、AppSyncクライアントは自動的に正しい認可メソッドを実行します。 トークン、または、セットアップの構成に応じてリクエストに署名します。 突然変異を行うとき 例えば、アプリに新しいアイテム(ブログ記事など)を追加するなど、AppSyncクライアントは、アプリがオフラインのときにローカルキュー(SQLiteのディスクに永続化)にこれを追加します。 ネットワーク接続が復元されると、変更はシリアルの AppSync に送信され、応答を一つずつ処理することができます。
 
-Any data returned by a query is automatically written to the Apollo Cache (e.g. “Store”) that is persisted to disk via SQLite. The cache is structured as a key value store using a reference structure. There is a base “Root Query” where each subsequent query resides and then references their individual item results. You specify the reference key (normally “id”) in your application code. An example of the cache that has stored results from a “listPosts” query and “getPost(id:1)” query is below.
+クエリによって返されるデータは、自動的に Apollo Cache に書き込まれます。 SQLite経由でディスクに永続化される「Store」です。キャッシュは参照構造体を使用してキー値ストアとして構造化されます。 後続のクエリが存在し、個々のアイテムの結果を参照するベースの「ルートクエリ」があります。 アプリケーションコードに参照キー(通常は「id」)を指定します。 "listPosts"クエリと"getPost(id:1)"クエリの結果を格納したキャッシュの例を以下に示します。
 
 | Key | Value | | ROOT_QUERY | [ROOT_QUERY.listPosts, ROOT_QUERY.getPost(id:1)] | ROOT_QUERY.listPosts | {0, 1, …,N} | | Post:0 |{author:"Nadia", content:"ABC"} | | Post:1 | {author:"Shaggy", content:"DEF"} | | ... | ... | | Post:N | {author:"Pancho", content:"XYZ"} | | ROOT_QUERY.getPost(id:1) |ref: $Post:1 |
 
-Notice that the cache keys are normalized where the `getPost(id:1)` query references the same element that is part of the `listPosts` query. This only happens when you define a common cache key to uniquely identify the objects. This is done when you configure the AppSync client in your AppDelegate with:
+キャッシュキーは `getPost(id:1)` クエリが `listPosts` クエリの一部である同じ要素を参照する場合に正規化されることに注意してください。 これは、オブジェクトを一意に識別するための共通キャッシュキーを定義した場合にのみ発生します。 AppDelegate で AppSync クライアントを以下のように設定します。
 
 ```swift
-//Use something other than "id" if your GraphQL type is different
+//GraphQL タイプが異なる場合、"id" 以外のものを使用する
 appSyncClient?.apolloClient?.cacheKeyForObject = { $0["id"] }
 ```
 
-If you are performing a mutation, you can write an “optimistic response” anytime to this cache even if you are offline. You use the AppSync client to connect by passing in the query to update, reading the items off the cache. This normally returns a single item or list of items, depending on the GraphQL response type of the query to update. At this point you would add to the list, remove, or update it as appropriate and write back the response to the store persisting it to disk. When you reconnect to the network any responses from the service will overwrite the changes as the authoritative response.
+変更を実行している場合は、たとえオフラインであっても、いつでもこのキャッシュに「楽観的な応答」を書くことができます。 AppSync クライアントを使用して、アップデートにクエリを渡し、キャッシュ外のアイテムを読み込んで接続します。 これは通常、更新するクエリのGraphQL応答タイプに応じて、単一のアイテムまたはアイテムのリストを返します。 この時点でリストに追加し、削除します。 それを適切に更新してディスクに残す店舗への応答を書き戻すこともできます ネットワークに再接続すると、サービスからの応答は、権威ある応答として変更を上書きします。
 
-#### Offline Mutations
+#### オフラインミューテーション
 
 As outlined in the architecture section, all query results are automatically persisted to disc with the AppSync client. For updating data through mutations when offline you will need to use an "optimistic response" with a transaction. This is done by passing an `optimisticUpdate` in the `appSyncClient?.perform()` mutation method using a `transaction`, where you pass in a query that will be updated in the cache. Inside of this transaction, you can write to the store via `appSyncClient?.store?.withinReadWriteTransaction`.
 
@@ -312,11 +312,11 @@ func optimisticCreateTodo(input: CreateTodoInput, query:ListTodosQuery){
 
 You might add similar code in your app for updating or deleting items using an optimistic response, it would look largely similar except that you might overwrite or remove an element from the `data.listTodos?.items` array.
 
-### Authorization Modes
+### 承認モード
 
-For client authorization AppSync supports API Keys, Amazon IAM credentials (we recommend using Amazon Cognito Identity Pools for this option), Amazon Cognito User Pools, and 3rd party OIDC providers. This is inferred from the `awsconfiguration.json` file when you call `AWSAppSyncClientConfiguration(appSyncServiceConfig: AWSAppSyncServiceConfig()`.
+クライアント認証の場合、AppSync は API キー、Amazon IAM クレデンシャルをサポートしています (このオプションでは、Amazon Cognito Identity Poolsの使用をお勧めします) Amazon Cognitoユーザープール、サードパーティ製OIDCプロバイダー。 これは `AWSAppSyncClientConfiguration(appSyncServiceConfig: AWSAppSyncServiceConfig()` を呼び出すときに `awsconfiguration.json` ファイルから推定されます。
 
-#### API Key
+#### API キー
 
 API Key is the easiest way to setup and prototype your application with AppSync. It's also a good option if your application is completely public. If your application needs to interact with other AWS services besides AppSync, such as S3, you will need to use IAM credentials provided by Cognito Identity Pools, which also supports "Guest" access. See [the authentication section for more details](~/sdk/auth/how-it-works.md). For manual configuration, add the following snippet to your `awsconfiguration.json` file:
 
@@ -333,7 +333,7 @@ API Key is the easiest way to setup and prototype your application with AppSync.
 }
 ```
 
-Add the following code to your app:
+アプリに次のコードを追加します。
 
 ```swift
 do {
@@ -348,7 +348,7 @@ do {
 }
 ```
 
-#### Cognito User Pools
+#### Cognitoユーザープール
 
 Amazon Cognito User Pools is the most common service to use with AppSync when adding user Sign-Up and Sign-In to your application. If your application needs to interact with other AWS services besides AppSync, such as S3, you will need to use IAM credentials with Cognito Identity Pools. The Amplify CLI can automatically configure this for you when running `amplify add auth` and can also automatically federate User Pools with Identity Pools. This allows you to have both User Pool credentials for AppSync and AWS credentials for S3. You can then use the `AWSMobileClient` for automatic credentials refresh [as outlined in the authentication section](~/sdk/auth/how-it-works.md). For manual configuration, add the following snippet to your `awsconfiguration.json` file:
 
@@ -371,7 +371,7 @@ Amazon Cognito User Pools is the most common service to use with AppSync when ad
 }
 ```
 
-Add the following code to your app:
+アプリに次のコードを追加します。
 
 ```swift                                
     func initializeAppSync() {
@@ -428,7 +428,7 @@ When using AWS IAM in a mobile application you should leverage Amazon Cognito Id
 }
 ```
 
-Add the following code to your app:
+アプリに次のコードを追加します。
 
 ```swift         
 do {
@@ -446,7 +446,7 @@ do {
 
 #### OIDC
 
-If you are using a 3rd party OIDC provider you will need to configure it and manage the details of token refreshes yourself. Update the `awsconfiguration.json` file and code snippet as follows:
+サードパーティ製のOIDCプロバイダーを使用している場合は、トークンの更新の詳細を管理する必要があります。 `awsconfiguration.json` ファイルとコードスニペットを以下のように更新します。
 
 ```json
 {
@@ -460,7 +460,7 @@ If you are using a 3rd party OIDC provider you will need to configure it and man
 }
 ```
 
-Add the following code to your app:
+アプリに次のコードを追加します。
 
 ```swift
 class MyOidcProvider: AWSOIDCAuthProvider {
@@ -483,17 +483,17 @@ do {
 }
 ```
 
-#### Multi-Auth
+#### マルチ認証
 
 This section talks about the capability of AWS AppSync to configure multiple authorization modes for a single AWS AppSync endpoint and region. Follow the [AWS AppSync Multi-Auth](https://docs.aws.amazon.com/appsync/latest/devguide/security.html#using-additional-authorization-modes) to configure multiple authorization modes for your AWS AppSync endpoint.
 
-You can now configure a single GraphQL API to deliver private and public data. Private data requires authenticated access using authorization mechanisms such as IAM, Cognito User Pools, and OIDC. Public data does not require authenticated access and is delivered through authorization mechanisms such as API Keys. You can also configure a single GraphQL API to deliver private data using more than one authorization type. For example, you can configure your GraphQL API  to authorize some schema fields using OIDC, while other schema fields through Cognito User Pools and/or IAM.
+プライベートおよびパブリックのデータを配信するために、GraphQL API を 1 つ設定できるようになりました。 プライベートデータには、IAM、Cognitoユーザプール、OIDCなどの認証メカニズムを使用して認証されたアクセスが必要です。 パブリックデータは認証されたアクセスを必要とせず、API キーなどの認可メカニズムを介して提供されます。 1 つの GraphQL API を設定して、複数の認証タイプを使用してプライベートデータを配信することもできます。 たとえば、GraphQL API を構成して、OIDC を使用していくつかのスキーマフィールドを承認することができます。 一方、Cognito User Pools や IAM を介して他のスキーマフィールドが表示されます。
 
 As discussed in the above linked documentation, certain fields may be protected by different authorization types. This can lead the same query, mutation, or subscription to have different responses based on the authorization sent with the request; Therefore, it is recommended to use different `AWSAppSyncClient` objects for each authorization type. Instantiation of multiple `AWSAppSyncClient` objects is enabled by passing `true` to the `useClientDatabasePrefix` flag. The `awsconfiguration.json` generated by the AWS AppSync console and Amplify CLI will add an entry called `ClientDatabasePrefix` in the "AppSync" section. This will be used to differentiate the databases used for operations such as queries, mutations, and subscriptions.
 
 **Important Note:** If you are an existing customer of AWS AppSync SDK for Android, the `useClientDatabasePrefix` has a default value of `false`. If you choose to use multiple `AWSAppSyncClient` objects, turning on `useClientDatabasePrefix` will change the location of the databases used by the client. The databases will not be automatically moved. You are responsible for migrating any data within the databases that you wish to keep and deleting the old databases on the device.
 
-The following snippets highlight the new values in the `awsconfiguration.json` and the client code configurations.
+以下のスニペットは、 `awsconfiguration.json` 内の新しい値とクライアント・コードの構成を強調します。
 
 The `friendly_name` illustrated here is created from Amplify CLI prompt. There are 4 clients in this configuration that connect to the same API except that they use different `AuthMode` and `ClientDatabasePrefix`.
 
@@ -542,7 +542,7 @@ let clientConfig = AWSAppSyncClientConfiguration(appSyncServiceConfig: serviceCo
 let client = AWSAppSyncClient(appSyncConfig: clientConfig)
 ```
 
-The following code creates a client factory to retrieve the client based on the authorization mode: public (`API_KEY`) or private (`AWS_IAM`).
+次のコードは、認証モードに基づいてクライアントを取得するためのクライアントファクトリを作成します: public (`API_KEY`) またはプライベート (`AWS_IAM` ) 。
 
 ```swift
 public enum AppSyncClientMode {
@@ -575,7 +575,7 @@ public class ClientFactory {
 }
 ```
 
-This is what the usage would look like.
+これがそのようになります。
 
 ```swift
 ClientFactory.getAppSyncClient(AppSyncClientMode.private)?.fetch(query: ListPostsQuery())  { (result, error) in
@@ -587,7 +587,7 @@ ClientFactory.getAppSyncClient(AppSyncClientMode.private)?.fetch(query: ListPost
         };
 ```
 
-The following example uses `API_KEY` as the default authorization mode and `AWS_IAM` as an additional authorization mode.
+以下の例では、 `API_KEY` をデフォルトの認可モードとして使用し、 `AWS_IAM` を追加の認可モードとして使用します。
 
 ```
 type Post @aws_api_key
@@ -603,9 +603,9 @@ type Post @aws_api_key
 }
 ```
 
-1. Add a post (Mutation) through `ClientFactory.getAppSyncClient(AppSyncClientMode.private)` using `AWS_IAM` authorization mode.
+1. `AWS_IAM` 認可モードを使用して、 `ClientFactory.getAppSyncClient(AppSyncClientMode.private)` から投稿を追加します。
 
-2. Query the post through `ClientFactory.getAppSyncClient(AppSyncClientMode.private)` using `AWS_IAM` authorization mode.
+2. `AWS_IAM` 認可モードを使用して、 `ClientFactory.getAppSyncClient(AppSyncClientMode.private)` で投稿をクエリします。
 
 3. Query the post through `ClientFactory.getAppSyncClient(AppSyncClientMode.public)` using `API_KEY` authorization mode.
 
@@ -629,42 +629,42 @@ appSyncClient?.fetch(query: GetPostQuery())  { (result, error) in
 }
 ```
 
-### Clear cache
+### キャッシュをクリア
 
-Clears the data cached by the `AWSAppSyncClient` object on the local device.
+ローカルデバイス上の `AWSAppSyncClient` オブジェクトでキャッシュされたデータを消去します。
 
 ```swift
-appSyncClient.clearCaches(); // clear the queries, mutations and delta sync cache.
+appSyncClient.clearCaches(); // クエリ、変更、およびデルタ同期キャッシュをクリアします。
 ```
 
-Selectively clear caches `ClearCacheOptions`.
+キャッシュを選択的にクリア `ClearCacheOptions`.
 
 ```swift
-// Selectively clear caches, omit parameters to keep those caches
+// 選択的にキャッシュをクリアし、それらのキャッシュを維持するためのパラメータを省略します
 let clearCacheOptions = ClearCacheOptions(clearQueries: true,
                                         clearMutations: true,
-                                    clearSubscriptions: true)
+                                    clearSubscription: true)
 appSyncClient.clearCaches(options: clearCacheOptions)
 ```
 
-### Delta Sync
+### デルタ同期
 
-DeltaSync allows you to perform automatic synchronization with an AWS AppSync GraphQL server. The client will perform reconnection, exponential backoff, and retries when network errors take place for simplified data replication to devices. It does this by taking the results of a GraphQL query and caching it in the local Apollo cache.
+DeltaSyncでは、AWS AppSync GraphQLサーバーとの自動同期を実行できます。 クライアントは再接続、指数的なバックオフを実行し、デバイスへのデータ複製を簡素化するためにネットワークエラーが発生したときに再試行します。 これを行うには、GraphQL クエリの結果を取得し、ローカルの Apollo キャッシュでキャッシュします。
 
-In the most basic form, you can use a single query with the API to replicate the state from the backend to the client. This is referred to as a "Base Query" and could be a list operation for a GraphQL type which might correspond to a DynamoDB table. For large tables where the content changes frequently and devices switch between offline and online frequently as well, pulling all changes for every network reconnect can result in poor performance on the client. In these cases you can provide the client API a second query called the "Delta Query" which will be merged into the cache. When you do this the Base Query is run an initial time to hydrate the cache with data, and on each network reconnect the Delta Query is run to just get the changed data. The Base Query is also run on a regular basis as a "catch-up" mechanism. By default this is every 24 hours however you can make it more or less frequent.
+最も基本的なフォームでは、API で単一のクエリを使用してバックエンドから state をクライアントにレプリケートできます。 これは「Base Query」と呼ばれ、DynamoDBテーブルに対応するGraphQL型のリスト操作になります。 コンテンツが頻繁に変更され、デバイスがオフラインとオンラインの間で頻繁に切り替わる大きなテーブルの場合。 ネットワークの再接続ごとにすべての変更を引くと、クライアントのパフォーマンスが低下する可能性があります。 この場合、クライアント API に、キャッシュにマージされる「Delta Query」という2番目のクエリを指定できます。 これを行うと、Base Queryが最初に実行され、データを使用してキャッシュをハイドレートします。 そして、各ネットワークでデルタクエリを再接続し、変更されたデータを取得するために実行されます。 ベースクエリは、「キャッチアップ」メカニズムとして定期的に実行されます。 デフォルトでは、これは24時間ごとですが、多かれ少なかれ頻繁にすることができます。
 
-By allowing clients to separate the base hydration of the cache using one query and incremental updates in another query, you can move the computation from your client application to the backend. This is substantially more efficient on the clients when regularly switching between online and offline states. This could be implemented in your AWS AppSync backend in different ways such as using a DynamoDB Query on an index along with a conditional expression. You can also leverage Pipeline Resolvers to partition your records to have the delta responses come from a second table acting as a journal. [A full sample with CloudFormation is available in the AppSync documentation](https://docs.aws.amazon.com/appsync/latest/devguide/tutorial-delta-sync.html). The rest of this documentation will focus on the client usage.
+クライアントが1つのクエリと別のクエリのインクリメンタルアップデートを使用してキャッシュの基本ハイドレーションを分離できるようにすることにより、 クライアントアプリケーションからバックエンドに計算を移動できます。 これは、オンラインとオフラインの状態を定期的に切り替える際に、クライアントにとって大幅に効率的です。 これをAWS AppSync バックエンドで実装することができます。例えば、インデックスでDynamoDB Queryを条件式と一緒に使用するなど、さまざまな方法です。 また、Pipeline Resolversを活用して、レコードを分割してデルタ応答をジャーナルとして動作させることもできます。 [CloudFormationの完全なサンプルは、AppSyncドキュメント](https://docs.aws.amazon.com/appsync/latest/devguide/tutorial-delta-sync.html)で入手できます。 このドキュメントの残りの部分は、クライアントの使用状況に焦点を当てます。
 
-You can also use Delta Sync functionality with GraphQL subscriptions, taking advantage of both only sending changes to the clients when they switch network connectivity but also when they are online. In this case you can pass a third query called the "Subscription Query" which is a standard GraphQL subscription statement. When the device is connected, these are processed as normal and the client API simply helps make setting up realtime data easy. However, when the device transitions from offline to online, to account for high velocity writes the client will execute the resubscription along with synchronization and message processing in the following order:
+GraphQL サブスクリプションでデルタ同期機能を使用することもできます。 ネットワーク接続を切り替えたときだけでなくネット上でも変更を送信する この場合、標準のGraphQLサブスクリプションステートメントである「Subscription Query」と呼ばれる3つ目のクエリを渡すことができます。 デバイスが接続されると、これらは通常どおりに処理され、クライアント API は、リアルタイムのデータを簡単に設定するのに役立ちます。 ただし、デバイスがオフラインからオンラインに切り替わったとき。 高速を考慮して、クライアントは次の順序で同期とメッセージ処理と共に再購読を実行します:
 
-1. Subscribe to any queries defined and store results in an incoming queue
-2. Run the appropriate query (If `baseRefreshIntervalInSeconds` has elapsed, run the Base Query otherwise only run the Delta Query)
-3. Update the cache with results from the appropriate query
-4. Drain the subscription queue and continue processing as normal
+1. 定義されたクエリを購読し、結果を受信キューに保存します
+2. 適切なクエリを実行します( `baseRefreshIntervalInSeconds` が経過した場合、それ以外の場合はDelta Queryのみを実行します)
+3. 適切なクエリの結果を使用してキャッシュを更新します
+4. サブスクリプションキューを削除し、通常通り処理を続ける
 
 Finally, you might have other queries which you wish to represent in your application other than the base cache hydration. For instance a `getItem(id:ID)` or other specific query. If your alternative query corresponds to items which are already in the normalized cache, you can point them at these cache entries with the `cacheUpdates` function which returns an array of queries and their variables. The DeltaSync client will then iterate through the items and populate a query entry for each item on your behalf. If you wish to use additional queries which don't correspond to items in your base query cache, you can always create another instance of the `appSyncClient?.sync()` process.
 
-**Usage**
+**使用法**
 
 ```swift
   // instance variable in your view controller
@@ -688,33 +688,33 @@ Finally, you might have other queries which you wish to represent in your applic
   deltaWatcher.cancel();
 ```
 
-**The method parameters**
-* *baseQuery* the base query to get the baseline state. (REQUIRED)
-* *baseQueryResultHandler* callback to handle the baseQuery results. (REQUIRED)
-* *subscription* subscription to get changes on the fly.
-* *subscriptionResultHandler* callback to handle the subscription messages.
-* *deltaQuery* the catch-up query
-* *deltaQueryResultHandler* callback to handle the deltaQuery results.
-* *syncConfiguration* time duration (specified in seconds) when the base query will be re-run to get an updated baseline state. Defaults to 24 hours.
-* *returnValue* returns a `Cancellable` object that can be used later to cancel the sync operation by calling the `cancel()` method.
+**メソッドパラメータ**
+* *baseQuery* のベースライン状態を取得するためのベースラインクエリ。 (REQUIRED)
+* *baseQueryResultHandler* baseQuery の結果を処理するコールバック。 (REQUIRED)
+* *サブスクリプション* その場で変更を取得するためのサブスクリプション。
+* *subscriptionResultHandler* サブスクリプションメッセージを処理するコールバック。
+* *deltaQuery* キャッチアップクエリ
+* *deltaQueryResultHandler* のコールバックは、deltaQuery の結果を処理します。
+* *syncConfiguration* ベースクエリが更新されるために再実行される時間（秒単位で指定）。デフォルトは24時間です。
+* *returnValue* は、 `キャンセル可能な` オブジェクトを返します。このオブジェクトは、 `cancel()` メソッドを呼び出して同期操作をキャンセルするために後で使用できます。
 
-Note that above only the `baseQuery` and `baseQueryResultHandler` are required parameters. You can call the API in different ways such as:
+上記の `baseQuery` と `baseQueryResultHandler` のみが必要なパラメータであることに注意してください。以下のように異なる方法で API を呼び出すことができます。
 
 ```swift
-//Performs sync only with base query
+//基本クエリ
 appSyncClient?.sync(baseQuery: baseQuery, baseQueryResultHandler: baseQueryResultHandler) 
 
-//Performs sync with delta but no subscriptions
-appSyncClient?.sync(baseQuery: baseQuery, baseQueryResultHandler: baseQueryResultHandler, deltaQuery: deltaQuery, deltaQueryResultHandler: deltaQueryResultHandler)
+//Delta との同期を実行しますが、
+appSyncClient?はありません。 ync(baseQuery: baseQuery, baseQueryResultHandler: baseQueryResultHandler, deltaQuery: deltaQuery, deltaResultHandler: deltaQueryResultHandler)
 ```
 
-**Example**
+**例**
 
-The following section walks through the details of creating an app using Delta Sync. We will use a simple Posts App that has a view that displays a list of posts and keeps it synchronized using the Delta Sync functionality. We will use an array called `postList` to collect and manage the posts and a UIViewController to power the UI.
+以下のセクションでは、Delta Syncを使用したアプリの作成の詳細について説明します。 私たちは、投稿のリストを表示し、デルタ同期機能を使用して同期を保つビューを持つシンプルな投稿アプリを使用します。 `postList` と呼ばれる配列を使用して、UIを動かすために投稿とUIViewControllerを収集して管理します。
 
-**Create Sync Handler Function**
+**同期ハンドラ関数を作成**
 
-Create a new method named `loadPostsWithSyncFeature` which will be called from the `viewDidLoad()` method of your view controller.
+ビューコントローラの `viewDidLoad()` メソッドから呼び出される `loadPostsWithSyncFeature` という新しいメソッドを作成します。
 
 ```swift
 class YourAppViewController: UIViewController {
@@ -750,9 +750,9 @@ class YourAppViewController: UIViewController {
 }
 ```
 
-**Create Helpers to Add/ Update/ Delete Posts in Cache**
+**キャッシュに投稿を追加/更新/削除するためのヘルパーを作成**
 
-*Helper function to load posts from cache:*
+*キャッシュから投稿を読み込むヘルパー関数:*
 
 ```swift
       func loadAllPostsFromCache() {
@@ -766,7 +766,7 @@ class YourAppViewController: UIViewController {
     }
 ```
 
-*Helper function to `Add` or `Update` a post:*
+*ヘルパー関数 to `Add` or `Update` a post:*
 
 ```swift
       func addOrUpdatePostInQuery(id: GraphQLID, title: String, author: String, content: String) {
@@ -808,7 +808,7 @@ class YourAppViewController: UIViewController {
     }
 ```
 
-*Helper function to `Delete` a post:*
+*ヘルパー関数で `投稿を` 削除:*
 
 ```swift
       func deletePostFromCache(uniqueId: GraphQLID) {
@@ -843,9 +843,9 @@ class YourAppViewController: UIViewController {
     }
 ```
 
-**Implement the new sync function**
+**新しい同期機能を実装**
 
-Now, update the `loadPostsWithSyncFeature` function with the calls to our helper methods to make sure all changes are updated in the UI.
+次に、すべての変更が UI で更新されていることを確認するために、ヘルパーメソッドの呼び出しで `loadPostsWithSyncFeature` 関数を更新します。
 
 ```swift
     func loadPostsWithSyncFeature() {
@@ -903,12 +903,12 @@ Now, update the `loadPostsWithSyncFeature` function with the calls to our helper
     }
 ```
 
-Once we have all of these pieces in place, we will tie it all together by invoking the Delta Sync functionality as follows.
+これらすべてのピースが揃ったら、以下のようにDelta Sync機能を呼び出して、すべてのピースを結びつけます。
 
-**Delta Sync Lifecycle**
+**デルタ同期のライフサイクル**
 
-The delta sync process runs at various times, in response to different conditions.
-- Runs immediately, when you make the call to `sync` as shown above. This will be the initial run and it will first execute the base query from the cache, setup the subscription and execute the base or delta Query based on when it was last run. It will always run the base query if running for the first time.
-- Runs when the device that is running the app transitions from offline to online. Depending on the duration for which the device was offline, either the deltaQuery or the baseQuery will be run.
-- Runs when the app transitions from background to foreground. Once again, depending on how long the app was in the background, either the deltaQuery or the baseQuery will be run.
-- Runs once every time based on the time specified in sync configuration as part of a periodic catch-up. 
+差分同期プロセスは、さまざまな条件に対応して、さまざまな時間に実行されます。
+- 上記のように `sync` を呼び出すと、直ちに実行されます。 これは最初の実行になり、キャッシュから最初に基本クエリを実行します。 サブスクリプションをセットアップし、ベースまたはデルタクエリを実行します。 初めて実行する場合は、常に基本クエリを実行します。
+- 実行中のデバイスがオフラインからオンラインに移行したときに実行されます。 デバイスがオフラインであった期間に応じて、deltaQuery または baseQuery が実行されます。
+- アプリがバックグラウンドからフォアグラウンドに遷移したときに実行されます。 アプリがバックグラウンドにある期間に応じて、deltaQuery か baseQuery のどちらかが実行されます。
+- 同期設定で指定された時間に基づいて、周期キャッチアップの一部として毎回実行されます。 

@@ -1,8 +1,8 @@
-## Set up the backend
+## バックエンドの設定
 
-If you haven't already done so, run `amplify init` inside your project and then `amplify add auth` (we recommend selecting the *default configuration*).
+まだ実行していない場合 プロジェクト内で `amplify init` を実行し、 `増幅して認証を追加` します(デフォルトの設定 *を選択することをお勧めします*)。
 
-Run `amplify add predictions` and select **Identify**. Then use the following answers:
+`増幅して予測を追加する` を実行し、 **識別**を選択します。その後、次の答えを使用します:
 
 ```console
 ? What would you like to identify? (Use arrow keys)
@@ -17,11 +17,11 @@ Run `amplify add predictions` and select **Identify**. Then use the following an
 
 Now run `amplify push` which will generate your `aws-exports.js` and create resources in the cloud. You can now either add this to your backend or skip and add more features to your app.
 
-Services used: Amazon Rekognition (default for plain text) and Amazon Textract (default for documents)
+使用するサービス: Amazon Rekognition（プレーンテキストの場合はデフォルト）とAmazon Textract（ドキュメントの場合はデフォルト）
 
-## Working with the API
+## API の操作
 
-Detect text in an input image. Input can be sent directly from the browser or an Amazon S3 key from project bucket.
+入力画像内のテキストを検出します。入力はブラウザから直接、またはプロジェクトバケットからAmazon S3キーを送信できます。
 
 ```javascript
 Predictions.identify({
@@ -35,7 +35,7 @@ Predictions.identify({
 .catch(err => console.log({ err }));
 ```
 
-## Identify image stored in Amazon S3
+## Amazon S3 に保存されている画像を識別します
 
 ```javascript
 Predictions.identify({
@@ -52,9 +52,9 @@ Predictions.identify({
 
 > The following options are independent of which `source` is specified. For demonstration purposes we will reference a `file` but it can be an S3 Key as well. `Predictions.identify({text : {...}})` can detect unstructured text `PLAIN`, structured text from tables `TABLE` or text from forms `FORM`.
 
-## Identify plain text
+## プレーンテキストを識別する
 
-For detecting plain text, you can see the whole detected text, the lines detected, the position of each line of text, and each word.
+プレーンテキストを検出するために、検出されたテキスト全体、検出された行、テキストの各行の位置、および各単語を見ることができます。
 
 ```javascript
 Predictions.identify({
@@ -91,9 +91,9 @@ Predictions.identify({
 .catch(err => console.log({ err }));
 ```
 
-## Identify structured forms
+## 構造化されたフォームを特定
 
-For detecting structured forms (documents, tables, etc.) from an image, `keyValues` will return a string of the entity found in the image as well as metadata such as selected checkboxes or the relative location in the image using a `boundingBox`.
+構造化されたフォーム（文書、表など）を検出するために。 イメージから得られるものです `keyValues` は、画像内で見つかった文字列と、選択されたチェックボックスや画像内の相対位置などのメタデータを、 `boundingBox` を使用して返します。
 
 ```javascript
 Predictions.identify({
@@ -117,11 +117,11 @@ Predictions.identify({
 
 For example the below image would return `keyValues` with "Test" or "Checked" as a key, and `true` since they are selected. The location of these elements would be returned in the `boundingBox` value.
 
-![Image](~/images/IdentifyTable.png)
+![画像](~/images/IdentifyTable.png)
 
-## Identify structured tables
+## 構造化テーブルを識別する
 
-For detecting structured tables from an image
+画像から構造化されたテーブルを検出するためのツールです。
 ```javascript
 Predictions.identify({
     text: {
@@ -148,7 +148,7 @@ Predictions.identify({
 .catch(err => console.log({ err }));
 ```
 
-For detecting tables and forms on the image just select format "ALL"
+画像上のテーブルとフォームを検出するには、フォーマット"ALL"を選択してください。
 ```javascript
 Predictions.identify({
     text: {
@@ -168,11 +168,11 @@ Predictions.identify({
 .catch(err => console.log({ err }));
 ```
 
-#### Identify Entities from a photo
+#### 写真からエンティティを識別する
 
 Setup your backend with the following: If you haven't already done so, run `amplify init` inside your project and then `amplify add auth` (we recommend selecting the *default configuration*).
 
-Run `amplify add predictions` and select **Identify**. Then use the following answers:
+`増幅して予測を追加する` を実行し、 **識別**を選択します。その後、次の答えを使用します:
 
 ```console
 ? What would you like to identify? 
@@ -188,17 +188,17 @@ Run `amplify add predictions` and select **Identify**. Then use the following an
 
 Now run `amplify push` which will generate your `aws-exports.js` and create resources in the cloud. You can now either add this to your backend or skip and add more features to your app.
 
-Services used: Amazon Rekognition
+使用されるサービス: Amazon Rekognition
 
-**Advanced configuration**
+**高度な構成**
 
-You can enhance your application's ability to identify entities by performing [indexing against a pre-defined collection of images and providing them to Amazon Rekognition](https://docs.aws.amazon.com/rekognition/latest/dg/API_IndexFaces.html). This can be done in one of two ways:
-1. Administrators provide images to be indexed from an S3 bucket
-2. Application users upload files to an S3 bucket which are indexed
+あらかじめ定義された画像のコレクションに対して [インデックスを作成し、Amazon Rekognition](https://docs.aws.amazon.com/rekognition/latest/dg/API_IndexFaces.html)に提供することで、アプリケーションのエンティティを識別する能力を高めることができます。 これは以下のいずれかの方法で行うことができます。
+1. 管理者はS3バケットからインデックスされる画像を提供します
+2. アプリのユーザーはインデックス化されたS3バケットにファイルをアップロードします
 
-Amplify configures Lambda Triggers to automatically perform this indexing when the files are uploaded. As Rekognition does not store any faces, but rather the facial features into a vector which are stored in the backend, these images can be deleted after indexing if you choose to do so. However note that by default the Lambda Triggers will remove the index if you delete an image so you will need to modify their behavior if you desire this functionality.
+Amplifyは、ファイルがアップロードされたときにこのインデックスを自動的に実行するようにLambda Triggersを設定します。 Rekognitionは顔を格納しないので、むしろ顔の特徴はバックエンドに格納されるベクトルに格納されます。 これらの画像は、インデックス作成後に削除できます。 ただし、デフォルトでは、画像を削除すると、Lambda Triggersはインデックスを削除しますので、この機能を使用する場合は動作を変更する必要があります。
 
-To add this functionality into your application choose **advanced** when prompted in the **Identify** flow (if you already enabled `Identify Entities` you will need to run `amplify update predictions`):
+この機能をアプリケーションに追加するには、 **** で **** フローを識別する (既に有効になっている場合 `エンティティを識別する` を実行する必要があります `増幅更新予測`):
 
 ```console
 ? What would you like to identify? Identify Entities
@@ -213,7 +213,7 @@ To add this functionality into your application choose **advanced** when prompte
 
 Note that if you already have an S3 bucket in your project from running `amplify add storage` it would be reused. To upload images from the CLI for administrator indexing, you can run `amplify predictions console` and select `Identify` which will open the S3 bucket location in the AWS console for you to upload your images.
 
-For application users, when they upload images with `Storage.put()` they will specify a prefix which the Lambda functions perform indexing like so:
+アプリケーションユーザーの場合、 `Storage.put()` で画像をアップロードすると、Lambda 関数がインデックス作成を行うプレフィックスを指定します。
 
 ```javascript
 Storage.put('test.jpg', file, 

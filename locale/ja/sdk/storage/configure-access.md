@@ -1,6 +1,6 @@
 ---
-title: Configure Access
-description: description
+title: アクセス権の設定
+description: 説明
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

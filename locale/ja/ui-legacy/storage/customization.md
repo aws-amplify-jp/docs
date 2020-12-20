@@ -1,6 +1,6 @@
 ---
-title: Customization
-description: Customizing Storage UI Components
+title: カスタマイズ
+description: ストレージ UI コンポーネントのカスタマイズ
 filterKey: framework
 ---
 

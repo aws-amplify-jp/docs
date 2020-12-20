@@ -1,3 +1,3 @@
-## What we'll build
+## 何を作ろうか？
 
-In this tutorial you'll create a basic Flutter app and integrate the Amplify Flutter Library to track an event in [Amazon Pinpoint](https://aws.amazon.com/pinpoint/).   
+このチュートリアルでは、基本的なFlutterアプリを作成し、Amplify Flutter Libraryを統合して、 [Amazon Pinpoint](https://aws.amazon.com/pinpoint/)でイベントを追跡します。   

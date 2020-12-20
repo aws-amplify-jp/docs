@@ -1,4 +1,4 @@
-In this guide you will learn how to use the `Hub` utility to listen for different authentication events.
+このガイドでは、 `Hub` ユーティリティを使用してさまざまな認証イベントをリッスンする方法を学びます。
 
 Amplify’s Auth category publishes in the auth channel when `signIn`, `signUp`, and `signOut` events happen. You can listen and act upon those event notifications.
 
@@ -25,4 +25,4 @@ Hub.listen('auth', (data) => {
 });
 ```
 
-To learn more about how `Hub` works, check out the API docs [here](~/lib/utilities/hub.md)
+`Hub` の仕組みの詳細については、APIドキュメント [をご覧ください。](~/lib/utilities/hub.md)

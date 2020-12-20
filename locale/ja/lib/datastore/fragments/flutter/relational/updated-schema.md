@@ -1,4 +1,4 @@
-For the examples below with DataStore, let's add a new model to the [sample schema](~/lib/datastore/getting-started.md#sample-schema):
+以下の例では、 [サンプルスキーマ](~/lib/datastore/getting-started.md#sample-schema)に新しいモデルを追加してみましょう。
 
 ```graphql
 enum PostStatus {

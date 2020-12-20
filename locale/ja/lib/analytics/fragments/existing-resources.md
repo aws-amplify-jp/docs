@@ -19,9 +19,9 @@ Existing Amazon Pinpoint resources can be used with the Amplify Libraries by ref
 ```
 
 - **pinpointAnalytics**
-  - **appId**: Amazon Pinpoint application ID
-  - **region**: AWS Region where the resources are provisioned (e.g. `us-east-1`)
-- **pinpointTargeting**
-  - **region**: AWS Region where the resources are provisioned (e.g. `us-east-1`)
+  - **appId**: Amazon Pinpoint アプリケーションID
+  - **region**: リソースがプロビジョニングされるAWS地域 (例: `us-east-1`)
+- **ターゲットをピンポイントする**
+  - **region**: リソースがプロビジョニングされるAWS地域 (例: `us-east-1`)
 
-Note that before you can add an AWS resource to your application, the application must have the Amplify libraries installed. If you need to perform this step, see [Install Amplify Libraries](~/lib/project-setup/create-application.md#n2-install-amplify-libraries). 
+アプリケーションにAWSリソースを追加する前に、アプリケーションにAmplifyライブラリがインストールされている必要があります。 この手順を実行する必要がある場合は、 [Amplifyライブラリのインストール](~/lib/project-setup/create-application.md#n2-install-amplify-libraries) を参照してください。 

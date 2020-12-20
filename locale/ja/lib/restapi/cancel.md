@@ -1,6 +1,6 @@
 ---
-title: Cancel API requests
-description: Using the Cancel API in Amplify Framework
+title: APIリクエストをキャンセル
+description: AmplifyフレームワークでのCancelAPIの使用
 ---
 
 <inline-fragment platform="js" src="~/lib/restapi/fragments/js/cancel.md"></inline-fragment>

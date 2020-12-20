@@ -1,35 +1,35 @@
-## Create a tracker resource
+## トラッカーリソースを作成
 
-In order to start tracking, you create an Amazon Location Tracking resource to capture and store positions of your users.
+トラッキングを開始するには、Amazon Location Tracking リソースを作成して、ユーザーの位置を取得して保存します。
 
-1. Open the [Amazon Location Service console](https://console.aws.amazon.com/location/tracking/home#/create) to create a tracker.
-1. Enter **MyTracker** in **Name**.
-1. Press **Create tracker**.
+1. トラッカーを作成するには、 [Amazon Location Service コンソール](https://console.aws.amazon.com/location/tracking/home#/create) を開きます。
+1. **名前** に **MyTracker** を入力します。
+1. **Create tracker** を押します。
 
-      ![Amazon Location Service - Create tracker](~/images/als/create-tracker.png)
+      ![Amazon Location Service - トラッカーの作成](~/images/als/create-tracker.png)
 
-1. Note the Amazon Resource Name (ARN) of your tracker. This will start with **arn:aws:geo** as in the below screenshot.
+1. トラッカーの Amazon Resource Name (ARN) に注意してください。以下のスクリーンショットのように、 **arn:aws:geo** から始まります。
 
-      ![Amazon Location Service - Tracker](~/images/als/my-tracker.png)
+      ![Amazon Location Service - トラッカー](~/images/als/my-tracker.png)
 
-## Allow Guest users access to the tracker
+## ゲストユーザーにトラッカーへのアクセスを許可する
 
-Now that you have created a tracker resource, you must create an inline policy to give users of your application access to the resource:
+トラッカーリソースを作成したら、アプリケーションのユーザーにリソースへのアクセスを許可するインラインポリシーを作成する必要があります。
 
-1. Navigate to the root of your project and run the following command:
+1. プロジェクトのルートに移動し、次のコマンドを実行します。
 
     ```bash
-    amplify console auth
+    コンソールの認証を増幅する
     ```
 
-1. Select **Identity Pool** from **Which console?** when prompted.
-1. You will be navigated to the Amazon Cognito console. Click on **Edit identity pool** in the top right corner of the page.
+1. **どのコンソール** から **アイデンティティプール** を選択します。
+1. Amazon Cognitoコンソールに移動します。ページの右上隅にある **Edit Identity pool** をクリックします。
 1. Open the drop down for **Unauthenticated identities**, choose **Enable access to unauthenticated identities**, and then press **Save Changes**.
 1. Click on **Edit identity pool** once more. Make a note of the name of the Unauthenticated role. For example, `amplify-<project_name>-<env_name>-<id>-unauthRole`.
-1. Open the [AWS Identity and Access Management (IAM) console](https://console.aws.amazon.com/iam/home#/roles) to manage roles.
-1. In the **Search** field, enter the name of your unauthRole noted above and click on it.
-1. Click **+Add inline policy**, then click on the **JSON** tab.
-1. Fill in the **[ARN]** placeholder with the ARN of your tracker which you noted above and replace the contents of the policy with the below.
+1. ロールを管理するには、 [AWS Identity and Access Management (IAM) コンソール](https://console.aws.amazon.com/iam/home#/roles) を開きます。
+1. **Search** フィールドに、上記に記載されている unauthRole の名前を入力してクリックします。
+1. **+ Add インラインポリシー**をクリックし、 **JSON** タブをクリックします。
+1. **[ARN]** プレースホルダに上記のトラッカーのARNを記入し、ポリシーの内容を以下に置き換えます。
 
     ```json
 {
@@ -44,18 +44,19 @@ Now that you have created a tracker resource, you must create an inline policy t
 }
     ```
 
-1. Click on the **Review policy** button.
-2. In the **Name** field, enter **LocationTracker**.
-3. Click on the **Create policy** button.
+1. **Review Policy** ボタンをクリックします。
+2. **名前** フィールドに、 **LocationTracker** と入力します。
+3. **ポリシーの作成** ボタンをクリックします。
 
-You have now successfully added authentication to your iOS app.
+これで、iOSアプリに認証が正常に追加されました。
 
-## Set up Core Location services
+## コア位置情報サービスの設定
 
-In order for your app to get the location of the device, you will first set up your app to use [Core Location](https://developer.apple.com/documentation/corelocation) services. Follow the following steps to request for permission and retrieve location updates.
+アプリがデバイスの場所を取得するために。 最初に [コアロケーション](https://developer.apple.com/documentation/corelocation) サービスを使用するようにアプリを設定します。 次の手順に従って、権限のリクエストと位置情報の更新を取得します。
 
-1. In your **Info.plist** file, set the `Privacy - Location When In Use Description` as well as a description message. This message will be displayed to your user when the app requests authorization to access their location.
-2. Create a new file called `LocationManagement.swift` with the following contents:
+1. **情報に記載されています。 list ** file,** set the `Privacy - Location When In Use Description` and a description message. このメッセージは、アプリが位置情報へのアクセス許可を要求すると、ユーザーに表示されます。</li>
+2
+次の内容で `LocationManagement.swift` という新しいファイルを作成します。
 
     <amplify-block-switcher> <amplify-block name="Deployment target iOS 14">
 
@@ -163,7 +164,9 @@ In order for your app to get the location of the device, you will first set up y
 
     </amplify-block> </amplify-block-switcher>
 
-1. Create an instance of `LocationManagement` in the view you would like to prompt the user for permission to retrieve their device location. For example:
+1
+
+ユーザーにデバイスの場所を取得する権限を求めるビューで `LocationManagement` のインスタンスを作成します。 例:
 
     <amplify-block-switcher>
 
@@ -172,7 +175,7 @@ In order for your app to get the location of the device, you will first set up y
     ```swift
     class ViewController: UIViewController {
       let locationManagement = LocationManagement()
-    }
+}
     ```
 
     </amplify-block> <amplify-block name="SwiftUI">
@@ -180,29 +183,33 @@ In order for your app to get the location of the device, you will first set up y
     ```swift
     struct ContentView: View {
       let locationManagement = LocationManagement()
-    }
+}
     ```
 
     </amplify-block> </amplify-block-switcher>
 
-1. Build (⌘B) and run the app (⌘R). The UI will prompt you with a modal to request location permissions.
+1
 
-1. Choose **Allow While Using App**. Ensure the debug logs show `Received authorization of user location`.
+アプリをビルド(⌘B)して実行します。UIは位置情報の許可を要求するモーダルを表示します。
 
-You’ve successfully set up your app to retrieve location data. When you click on the simulate location button, the location update will be sent from Core Location service to your app in the `locationManager(_:didUpdateLocations)` delegate method.
+1
 
-## Sending device location data to Amazon Location Service
+**Allow while Using App**. デバッグログに `Received authorization of user location` が表示されることを確認してください。</ol>
 
-The below steps describe how you can pass device location to the tracker resource you have created with Amazon Location Service:
+位置情報を取得するためのアプリのセットアップに成功しました。 シミュレーションの場所ボタンをクリックすると、 位置情報の更新は、 `locationManager(_:didUpdateLocations)` delegate メソッドで、コア位置情報サービスからアプリに送信されます。
 
-1. Add the following imports to the `LocationManagement.swift` file:
+## デバイスの位置情報データを Amazon Location Service に送信します
+
+以下の手順では、Amazon Location Serviceで作成したトラッカーリソースにデバイスの場所を渡す方法を説明します。
+
+1. `LocationManagement.swift` ファイルに以下のインポートを追加します。
 
     ```swift
     import AWSLocation
     import AWSMobileClient
     ```
 
-1. Create an instance of `AWSLocationTracker`, and add conformance to `AWSLocationTrackerDelegate`, as in the following example:
+1. `AWSLocationTracker`のインスタンスを作成し、次の例のように `AWSLocationTrackerDelegate`に準拠を追加します。
 
     ```swift
     class LocationManagement: NSObject, 
@@ -222,7 +229,7 @@ The below steps describe how you can pass device location to the tracker resourc
     }
     ```
 
-1. Start tracking the device’s location with `AWSLocationTracker`. Inside `locationManagerDidChangeAuthorization(_)` add the following code in the authorized status scenario:
+1. `AWSLocationTracker`を使用してデバイスの位置を追跡し始めます。 `locationManagerDidChangeAuthorization(_)` 許可された状況シナリオで次のコードを追加します。
 
     ```swift
     case .authorizedWhenInUse:
@@ -252,21 +259,21 @@ The below steps describe how you can pass device location to the tracker resourc
 
     **Note:** `startTracking` should be called after the user has authorized the app to retrieve device location data. Make sure to remove the call to `startUpdatingLocation()` as that will continuously retrieve a stream of location updates, rather than tracking the location at an interval.
 
-1. Update the body of `requestLocation` method by calling `locationManager.requestLocation()`, as in the following example:
+1. `requestLocation` メソッドの本文を `locationManager.requestLocation()`を呼び出して更新します。次の例のようにします。
 
     ```swift
-    class LocationManagement: NSObject, ObservableObject, CLLocationManagerDelegate, AWSLocationTrackerDelegate  { 
+    class LocationManagement: NSObject, ObservableObject, CLLocationManagerDelegate, AWSLocationTrackerDelegate { 
       // ...
-      func requestLocation() {
+      func requestLocationLocation() {
         locationManager.requestLocation()
       }
       // ...
-    }
+}
     ```
 
-    **Note:** `requestLocation` will be called on the `retrieveLocationFrequency` interval.
+    **注意:** `requestLocation` は `retrievLocationFrequency` の間隔で呼び出されます。
 
-1. When your app retrieves location updates, pass the data for location tracking to update your tracker and continue performing your app logic, as in the following example:
+1. アプリが位置情報の更新を取得する時 位置追跡のデータを渡してトラッカーを更新し、次の例のようにアプリのロジックを引き続き実行します。
 
       ```swift
       class LocationManagement: NSObject, ObservableObject, CLLocationManagerDelegate, AWSLocationTrackerDelegate  { 
@@ -279,7 +286,7 @@ The below steps describe how you can pass device location to the tracker resourc
       }
       ```
 
-1. (Optional) Listen for tracking events to be notified when the tracker sends data to Amazon Location Service and when the tracker has stopped. The following example shows how this can be implemented:
+1. (オプション)トラッカーがデータをAmazon Location Serviceに送信し、トラッカーが停止したときに通知されるイベントをトラッキング待ちます。 次の例は、これを実装する方法を示しています。
 
     ```swift
     func onTrackingEvent(event: TrackingListener) {
@@ -298,24 +305,24 @@ The below steps describe how you can pass device location to the tracker resourc
         }
     }
     ```
-    Pass `onTrackingEvent` to `startTracking()`
+    `onTrackingEvent` を `startTracking()` に渡します。
     ```swift
     let result = locationTracker.startTracking(
                     delegate: self,
                     options: TrackerOptions(
                         customDeviceId: "12345",
-                        retrieveLocationFrequency: TimeInterval(30),
+                        retrieLocationFrequency: TimeInterval(30),
                         emitLocationFrequency: TimeInterval(120)),
-                    listener: onTrackingEvent)
+                    listener: onTracker: onTrackingEvent)
       ```
 
       **Note**: `onDataPublished` will be triggered for each successful call to Amazon Location Service. The `trackingPublishedEvent` payload contains the request containing locations sent and the successful response from the service.
 
-      **Note**: `onDataPublicationError` will be triggered for each attempt made to send location data to Amazon Location Service and had failed with an error.
+      **メモ**: `onDataPublicationError` は、位置データを Amazon Location Service に送信しようとするたびにトリガーされ、エラーで失敗します。
 
-      **Note**: `onStop` will be triggered when the tracker has been started and `stopTracking` was called.
+      **メモ**: `onStop` はトラッカーが開始され、 `追跡が開始された` が呼び出されたときにトリガーされます。
 
-1. (Optional) To debug your app, you can enable verbose logging during development, when the app starts up:
+1. (オプション)アプリケーションをデバッグするには、アプリの起動時に、開発中に詳細なログを有効にできます。
 
     ```swift
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -328,11 +335,11 @@ The below steps describe how you can pass device location to the tracker resourc
     }
     ```
 
-You have now successfully set up `AWSLocationTracker` in your app.
+アプリで `AWSLocationTracker` の設定に成功しました。
 
-### Stop tracking
+### 追跡を停止
 
-When you want to prevent the tracker from continuing to store and emit location data, call the following method:
+トラッカーが位置情報の保存と送信を続行しないようにしたい場合は、次の方法を呼び出します。
 
 ```swift
 func stopTracking() {
@@ -340,9 +347,9 @@ func stopTracking() {
 }
 ```
 
-### Tracking status
+### トラッキングステータス
 
-You can also check if the tracker is currently tracking by calling the following method:
+トラッカーが現在トラッキングされているかどうかは、以下の方法で確認することもできます。
 
 ```swift
 func isTracking() -> Bool {
@@ -350,9 +357,9 @@ func isTracking() -> Bool {
 }
 ```
 
-## Complete code sample
+## コードサンプルを完了
 
-As a reference, here is the full code sample we created throughout these sections and procedures.
+参照として、これらのセクションと手順全体で作成した完全なコードサンプルを次に示します。
 
 
 <amplify-block-switcher>

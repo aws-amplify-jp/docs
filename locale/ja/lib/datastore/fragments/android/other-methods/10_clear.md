@@ -24,7 +24,7 @@ Amplify.DataStore.clear(
 RxAmplify.DataStore.clear()
     .subscribe(
         () -> Log.i("MyAmplifyApp", "DataStore cleared"),
-        error -> Log.e("MyAmplifyApp", "Error clearing DataStore", error)
+        error -> Log.e("MyAmplifyApp", "Clearing DataStore", error)
     );
 }
 ```

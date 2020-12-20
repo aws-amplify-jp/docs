@@ -1,4 +1,4 @@
-To initialize the Amplify DataStore call `Amplify.add(plugin:)` method and add the `AWSDataStorePlugin`, then call `Amplify.configure()`.
+Amplify DataStore コールを初期化するには `Amplify.add(plugin:)` メソッドを追加し、 `AWSDataStorePlugin`を追加し、 `Amplify.configure()` を呼び出します。
 
 **Add the following imports** to the top of your `AppDelegate.swift` file:
 
@@ -7,7 +7,7 @@ import Amplify
 import AmplifyPlugins
 ```
 
-**Add the following code** to your AppDelegate's `application:didFinishLaunchingWithOptions` method:
+**AppDelegateの** アプリケーションに次のコード `を追加します:didFinishLaunchingWithOptions` メソッド:
 
 ```swift
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -25,7 +25,7 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
     return true
 }
 ```
-Upon building and running this application you should see the following in your console window:
+このアプリケーションをビルドして実行すると、コンソールウィンドウに次のようなものが表示されます:
 
 ```console
 Amplify configured with DataStore plugin

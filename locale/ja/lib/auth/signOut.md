@@ -1,6 +1,6 @@
 ---
-title: Sign out
-description: SignOut a user
+title: サインアウト
+description: ユーザーにサインアウトする
 ---
 
 

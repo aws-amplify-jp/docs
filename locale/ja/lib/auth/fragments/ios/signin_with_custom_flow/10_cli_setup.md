@@ -1,4 +1,4 @@
-In terminal, navigate to your project, run `amplify add auth`, and choose the following options:
+ターミナルで、プロジェクトに移動し、 `amplify add auth`を実行し、次のオプションを選択します。
 
 
 ```terminal
@@ -57,7 +57,7 @@ In terminal, navigate to your project, run `amplify add auth`, and choose the fo
     `Yes`
 ? Please edit the file in your editor: <local file path>/src/boilerplate-create-challenge.js
 ```
-The boilerplate for Create Auth Challenge opens in your favorite code editor. Enter the following code to this file:
+Create Auth Challengeのボイラープレートがお気に入りのコード エディターで開きます。次のコードをこのファイルに入力します:
 
 ```js
 function createAuthChallenge(event) {
@@ -83,7 +83,7 @@ Amazon Cognito invokes the Create Auth Challenge trigger after Define Auth Chall
     `Yes`
 ? Please edit the file in your editor: <local file path>/src/boilerplate-define-challenge.js
 ```
-The boilerplate for Define Auth Challenge opens in your favorite code editor. Enter the following code to this file:
+認証定義チャレンジのボイラープレートがお気に入りのコード・エディターで開きます。次のコードをこのファイルに入力してください:
 
 ```js
 exports.handler = function(event, context) {
@@ -102,11 +102,11 @@ if (event.request.session.length == 1 && event.request.session[0].challengeName 
     context.done(null, event);
 }
 ```
-Amazon Cognito invokes the Define Auth Challenge trigger to initiate the custom authentication flow.
+Amazon Cognitoは、カスタム認証フローを開始するために認証チャレンジトリガーを呼び出します。
 
 The Amplify Auth library always starts with an SRP_A flow, so in the code above, we bypass SRP_A and return `CUSTOM_CHALLENGE` in the first step. In the second step, if `CUSTOM_CHALLENGE` return with `challengeResult == true` we recognize the custom auth challenge is successful, and tell Cognito to issue tokens. In the last `else` block we tell Cognito to fail the authentication flow.
 
-Save and close the file, then switch back to the terminal and follow the instructions:
+保存してファイルを閉じ、ターミナルに戻って指示に従ってください:
 
 ```
 ? Press enter to continue
@@ -116,7 +116,7 @@ Save and close the file, then switch back to the terminal and follow the instruc
     `Yes`
 ? Please edit the file in your editor: <local file path>/src/boilerplate-verify.js
 ```
-The boilerplate for Verify Auth Challenge opens in your favorite code editor. Enter the following code to this file:
+Verify Auth Challenge のボイラープレートがお気に入りのコード エディターで開きます。次のコードをこのファイルに入力します:
 
 ```js
 function verifyAuthChallengeResponse(event) {
@@ -135,8 +135,8 @@ exports.handler = (event, context, callback) => {
 Amazon Cognito invokes the Verify Auth Challenge trigger to verify if the response from the end user for a custom challenge is valid or not. The response from the user will be available in `event.request.challengeAnswer`. The code above compares that with `privateChallengeParameters` value set in the Create Auth Challenge trigger. Save and close the file, then switch back to the terminal and follow the instructions:
 
 ```
-? Press enter to continue
-    `Hit Enter`
+? Enterキーを押して
+    `Enterキーを押してください
 ```
 
-Once finished, run `amplify push` to publish your changes.
+終了したら、 `amplify push` を実行して変更を公開します。

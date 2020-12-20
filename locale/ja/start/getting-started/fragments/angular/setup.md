@@ -1,6 +1,6 @@
-## Create a new Angular app
+## 新しいAngularアプリを作成
 
-Use the [Angular CLI](https://github.com/angular/angular-cli) to bootstrap a new Angular app:
+新しいAngularアプリを起動するには、 [Angular CLI](https://github.com/angular/angular-cli) を使用してください。
 
 ```bash
 npx -p @angular/cli ng new amplify-app
@@ -13,7 +13,7 @@ cd amplify-app
 
 ### Angular 6+ Support
 
-Currently, the newest versions of Angular (6+) do not include shims for 'global' or 'process' as provided in previous versions. Add the following to your `src/polyfills.ts` file to recreate them:
+現在、Angular(6+)の最新バージョンには、以前のバージョンで提供されている「global」または「プロセス」のシムは含まれていません。 `src/polyfills.ts` ファイルに以下を追加して再作成します。
 
 ```javascript
 (window as any).global = window;
@@ -22,15 +22,15 @@ Currently, the newest versions of Angular (6+) do not include shims for 'global'
 };
 ```
 
-## Create a new Amplify backend
+## 新しいAmplifyバックエンドを作成
 
-Now that we have a running Angular app, it's time to set up Amplify for this app so that we can create the necessary backend services needed to support the app. From the root of the project, run:
+Angularアプリを起動しました。 今度は、アプリをサポートするために必要なバックエンドサービスを作成できるように、このアプリ用にAmplifyを設定しましょう。 プロジェクトのルートから、以下を実行します。
 
 ```bash
-amplify init
+initを増幅する
 ```
 
-When you initialize Amplify you'll be prompted for some information about the app.  For newer versions of Angular, you will have to change the Distribution Directory Path from `dist` to `dist/amplify-app` to match how Angular will build your project.
+Amplifyを初期化すると、アプリに関する情報が表示されます。 Angularの新しいバージョンの場合 Angularがプロジェクトをどのように構築するかを一致させるために、Distribution Directory Path を `dist` から `dist/amplify-app` に変更する必要があります。
 
 ```console
 Enter a name for the project (amplifyapp)
@@ -60,16 +60,16 @@ Start command (ng serve or npm start)
 Do you want to use an AWS profile
 ```
 
-When you initialize a new Amplify project, a few things happen:
+新しいAmplifyプロジェクトを初期化すると、いくつかのことが起こります。
 
 - It creates a top level directory called `amplify` that stores your backend definition. During the tutorial you'll add capabilities such as authentication, GraphQL API, storage, and set up authorization rules for the API. As you add features, the `amplify` folder will grow with infrastructure-as-code templates that define your backend stack. Infrastructure-as-code is a best practice way to create a replicable backend stack.
 - It creates a file called `aws-exports.js` in the `src` directory that holds all the configuration for the services you create with Amplify. This is how the Amplify client is able to get the necessary information about your backend services.
-- It modifies the `.gitignore` file, adding some generated files to the ignore list.
-- A cloud project is created for you in the AWS Amplify Console that can be accessed by running `amplify console`. The Console provides a list of backend environments, deep links to provisioned resources per Amplify category, status of recent deployments, and instructions on how to promote, clone, pull, and delete backend resources.
+- `.gitignore` ファイルを変更し、生成されたファイルを無視リストに追加します。
+- AWS Amplifyコンソールで、 `amplifyコンソール`を実行することでアクセスできるクラウドプロジェクトが作成されます。 Consoleは、Amplifyカテゴリごとにプロビジョニングされたリソースへの深いリンクをバックエンド環境のリストを提供します。 最近のデプロイのステータスとバックエンドリソースのプロモーション、クローン、プル、削除方法に関する説明。
 
-## Install Amplify libraries
+## Amplifyライブラリのインストール
 
-Inside the `amplify-app` directory, install the Amplify Angular library and run your app:
+`amplify-app` ディレクトリ内で、Amplify Angularライブラリをインストールしてアプリを実行します。
 
 ```bash
 npm install --save aws-amplify @aws-amplify/ui-angular
@@ -85,9 +85,9 @@ Angular CLI output warnings: if you see CommonJS or AMD dependencies optimizatio
 
 </amplify-callout>
 
-### Importing the Amplify Angular UI Module
+### Amplify Angular UI モジュールのインポート
 
-Add the **Amplify Angular UI Module** to `src/app/app.module.ts`:
+**Amplify Angular UI Module** を `src/app/app.module.ts` に追加します:
 
 ```ts
 import { BrowserModule } from '@angular/platform-browser';

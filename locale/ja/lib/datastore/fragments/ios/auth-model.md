@@ -1,6 +1,6 @@
-## Example schema
+## スキーマの例
 
-The following schema is an example of a model named `Todo` that uses the `@auth` directive.
+次のスキーマは、 `@auth` ディレクティブを使用する `Todo` という名前のモデルの例です。
 
 ```graphql
 type Todo
@@ -18,22 +18,22 @@ By setting `allow:owner` with `operations` set to `create`, `update` and `delete
 
 For example, if there are two users, UserA and UserB, where UserA creates a `Todo` instance named `todo123`, UserA can create, update, or delete `todo123`. UserB can read `todo123` but can not update or delete `todo123`.
 
-The `@auth` directive when used with Amplify DataStore supports the following fields:
+Amplify DataStore で使用する場合、 `@auth` ディレクティブは以下のフィールドをサポートしています。
 
-  - `allow` with "owner" and "groups"
+  - `"owner" と "groups" で` を許可する
   - `ownerField`
-  - `groups`
-  - `operations`
+  - `グループ`
+  - `操作`
 
-## Configure API with Amazon Cognito user pool
+## Amazon CognitoユーザープールでAPIを設定する
 
-While using the `@auth` directive in your schema to limit read/write access, we require authentication to be integrated into your app in order to differentiate who the owner is. To set this up issue the command:
+スキーマ内で `@auth` ディレクティブを使用して、読み取り/書き込みアクセスを制限します。 所有者を区別するためには認証をアプリに統合する必要があります これを設定するには、次のコマンドを実行します。
 
 ```console
-amplify update api
+増幅アップデートAPI
 ```
 
-then follow the prompts:
+次にプロンプトに従ってください:
 
 ```console
 ? Please select from one of the below mentioned services: 
@@ -44,9 +44,9 @@ then follow the prompts:
   `Amazon Cognito User Pool`
 ```
 
-Once finished, run `amplify push` to provision your services in the backend.
+終了したら、 `amplify push` を実行して、バックエンドでサービスをプロビジョニングします。
 
-## Configuration
+## 設定
 
 Upon successfully running `amplify push` per the last step, `amplifyconfiguration.json` will have a section under "awsAPIPlugins" and "awsCognitoAuthPlugin" with the corresponding API and Auth configurations. Your `amplifyconfiguration.json` may look like this:
 
@@ -68,15 +68,15 @@ Upon successfully running `amplify push` per the last step, `amplifyconfiguratio
     }
 ```
 
-Add "AWSCognitoAuthPlugin" and "AWSAPIPlugin" to Amplify before configuring
+設定する前にAmplifyに「AWScognitoAuthPlugin」と「AWSAPIPlugin」を追加します
 
 ```swift
-Amplify.add(plugin: AWSCognitoAuthPlugin())
+Amplify.add(plugin: AWScognitoAuthPlugin())
 Amplify.add(plugin: AWSAPIPlugin())
 Amplify.configure()
 ```
 
-## Authentication requirements
+## 認証要件
 
 In order to issue an operation (`Datastore.save`, `Datastore.delete`) on a model that has fine grain controls defined, the user must be signed in using `Amplify.Auth.signIn`. A user's sign-in state may vary during the lifecycle of an app, so it is a common practice to check if the user has already been signed in by using `Amplify.Auth.fetchAuthSession` prior to attempting to update/delete a model that uses the @auth directive. The following are examples of how we recommend you handle auth state in your application:
 
@@ -110,17 +110,17 @@ _ = Amplify.Auth.fetchAuthSession {
 }
 ```
 
-3. During the lifecycle of the app, listen to Auth events to show different views based on the user's state. See [Auth Events](~/lib/auth/auth-events.md) for more details.
+3. アプリケーションのライフサイクル中に、Authイベントをリッスンして、ユーザーの状態に基づいて異なるビューを表示します。 詳細については、 [Auth Events](~/lib/auth/auth-events.md) を参照してください。
 
-For more information on related topics:
+関連トピックの詳細については:
 
 - [Auth.SignIn](~/lib/auth/signin.md)
 - [Auth.fetchAuthSession](~/lib/auth/getting-started.md#check-the-current-auth-session)
-- [Auth Events](~/lib/auth/auth-events.md)
+- [認証イベント](~/lib/auth/auth-events.md)
 
-## Model owner
+## モデル所有者
 
-To check who the owner of the model is, call `DataStore.query` and check the user's username against the owner field.
+モデルの所有者を確認するには、 `DataStore.query` を呼び出し、ユーザーのユーザー名を owner フィールドに照らしてください。
 ```swift
 if let currentUser = Amplify.Auth.getCurrentUser() {
     if currentUser.username == todo.owner {

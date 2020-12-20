@@ -1,19 +1,19 @@
-## Using Amplify GraphQL client
+## AmplifyGraphQLクライアントの使用
 
-Each AppSync API is set with a __default__ authorization mode.
+各 AppSync API は、 __デフォルトの__ 認証モードで設定されます。
 
-AWS AppSync also supports [multiple authorization modes on a single API](https://docs.aws.amazon.com/appsync/latest/devguide/security.html#using-additional-authorization-modes) enabling you to add additional authorization modes.
+AWS AppSync は [複数の認証モードを 1 つの API でサポートしています](https://docs.aws.amazon.com/appsync/latest/devguide/security.html#using-additional-authorization-modes) 。これにより、追加の認証モードを追加できます。
 
 In order to use this feature with the Amplify GraphQL Client the `API.graphql({...})` function accepts an optional parameter called `authMode`, its value will be one of the supported auth modes:
 
-- `API_KEY`
+- `API キー`
 - `AWS_IAM`
-- `OPENID_CONNECT`
+- `接続を開きます。`
 - `AMAZON_COGNITO_USER_POOLS`
 
 <br />
 
-This is an example of using `AWS_IAM` as an authorization mode:
+これは認証モードとして `AWS_IAM` を使用した例です。
 
 ```javascript
 // Creating a post is restricted to IAM 
@@ -32,13 +32,13 @@ When using __AWS_IAM__ for public API access, unauthenticated logins must be ena
 
 </amplify-callout>
 
-## Using AWS AppSync SDK
+## AWS AppSync SDK の使用
 
 For client authorization, AppSync supports API Keys, Amazon IAM credentials (we recommend using Amazon Cognito Identity Pools for this option), Amazon Cognito User Pools, and 3rd party OIDC providers. This is inferred from the `aws-exports.js` when you call `.awsConfiguration()` on the `AWSAppSyncClient` builder.
 
-### API Key
+### API キー
 
-API Key is the easiest way to set up and prototype your application with AppSync. It’s also a good option if your application is completely public. If your application needs to interact with other AWS services besides AppSync, such as S3, you will need to use IAM credentials provided by Cognito Identity Pools, which also supports “Guest” access. See the authentication section for more details. Following code snippet shows how to configure `AWSAppSyncClient` using API Key:
+APIキーは、AppSyncでアプリケーションを設定してプロトタイプを作成する最も簡単な方法です。 アプリケーションが完全に公開されている場合にも良いオプションです。 アプリケーションがAppSync以外のAWSサービス(S3など)とやり取りする必要がある場合 Cognito Identity Poolsが提供するIAM認証情報を使用する必要があります。これは「ゲスト」アクセスもサポートしています。 詳細については、認証セクションを参照してください。API キーを使用して `AWSAppSyncClient` を設定する方法を次のコードスニペットに示します。
 
 ```js
 import AWSAppSyncClient, { AUTH_TYPE } from 'aws-appsync';
@@ -55,7 +55,7 @@ const client = new AWSAppSyncClient({
 ```
 
 
-### Cognito User Pools
+### Cognitoユーザープール
 
 Amazon Cognito User Pools is the most common service to use with AppSync when adding user Sign-Up and Sign-In to your application. If your application needs to interact with other AWS services besides AppSync, such as S3, you will need to use IAM credentials with Cognito Identity Pools. The Amplify CLI can automatically configure this for you when running `amplify add auth` and can also automatically federate User Pools with Identity Pools. This allows you to have both User Pool credentials for AppSync and AWS credentials for S3. You can then use the Auth category for automatic credentials refresh as [outlined in the authentication section](~/lib/auth/getting-started.md). Following code snippet shows how to configure `AWSAppSyncClient` using Cognito User Pools:
 
@@ -76,7 +76,7 @@ const client = new AWSAppSyncClient({
 });
 ```
 
-> **Note** In React, you can use amplify’s withAuthenticator:
+> **メモ** React では、amplifyのwithAuthenticatorを使用できます。
 
 ```js
 import { withAuthenticator } from 'aws-amplify-react';
@@ -105,7 +105,7 @@ const client = new AWSAppSyncClient({
 });
 ```
 
-> **Note** In React, you can use amplify’s withAuthenticator:
+> **メモ** React では、amplifyのwithAuthenticatorを使用できます。
 
 ```js
 import { withAuthenticator } from 'aws-amplify-react';
@@ -115,7 +115,7 @@ export default withAuthenticator(App);
 
 ### OIDC
 
-If you are using a 3rd party OIDC provider you will need to configure it and manage the details of token refreshes yourself. Following code snippet shows how to configure `AWSAppSyncClient` using OIDC:
+サードパーティ製のOIDCプロバイダーを使用している場合は、トークンの更新の詳細を管理する必要があります。 以下のコードスニペットは、OIDCを使用して `AWSAppSyncClient` を設定する方法を示しています:
 
 
 ```js

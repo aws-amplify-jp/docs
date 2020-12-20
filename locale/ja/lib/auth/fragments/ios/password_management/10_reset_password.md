@@ -48,4 +48,4 @@ func resetPassword(username: String) -> AnyCancellable {
 
 </amplify-block-switcher>
 
-Usually resetting the password require you to verify that it is the actual user that tried to reset the password. So the next step above will be `.confirmResetPasswordWithCode`.
+通常、パスワードをリセットするには、パスワードをリセットしようとした実際のユーザーであることを確認する必要があります。 上記の次のステップは `.confirmResetPasswordWithCode` になります。

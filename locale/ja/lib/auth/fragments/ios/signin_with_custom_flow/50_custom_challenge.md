@@ -38,11 +38,11 @@ func customChallenge(response: String) -> AnyCancellable {
 
 </amplify-block-switcher>
 
-### Lambda Trigger Setup
+### Lambda Trigger セットアップ
 
-The Amplify CLI can be used to generate triggers required by a custom authentication flow. See the [CLI Documentation](~/cli/usage/lambda-triggers.md) for details. The CLI will create a custom auth flow skeleton that you can manually edit.
+Amplify CLI は、カスタム認証フローによって必要なトリガーを生成するために使用できます。 詳細は [CLI ドキュメント](~/cli/usage/lambda-triggers.md) を参照してください。CLI は手動で編集できるカスタム認証フロースケルトンを作成します。
 
-> More information on available triggers can be found in the [Cognito documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-challenge.html).
+> 利用可能なトリガーの詳細については、 [Cognito documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-challenge.html) を参照してください。
 
 `AWSCognitoAuthPlugin` assumes the custom auth flow starts with username and password (SRP_A). If you want a passwordless authentication flow, modify your **Define Auth Challenge** Lambda trigger to bypass the initial username/password verification and proceed to the custom challenge:
 
@@ -67,4 +67,4 @@ exports.handler = (event, context) => {
   context.done(null, event);
 };
 ```
-You also need to pass a dummy password during the signup process as shown above.
+また、サインアッププロセス中にダミーパスワードを渡す必要があります。

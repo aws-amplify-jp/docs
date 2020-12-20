@@ -1,6 +1,6 @@
 ---
-title: Guest access
-description: Learn how to enable “Guest” or “Unauthenticated” UX in your application. This is provided out of the box with AWSMobileClient through the initialization routine you have added.
+title: ゲストアクセス
+description: アプリケーションで「ゲスト」または「認証されていない」UXを有効にする方法を学びましょう。 これは追加された初期化ルーチンを通じてAWSMobileClientとともにボックスから提供されます。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

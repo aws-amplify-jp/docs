@@ -1,4 +1,4 @@
-## Example application
+## アプリケーションの例
 
 <amplify-block-switcher> <amplify-block name="React">
 
@@ -323,6 +323,6 @@ export default App;
 ```
 </amplify-block> </amplify-block-switcher>
 
-## API Reference
+## APIリファレンス
 
-For the complete API documentation for DataStore, visit our [API Reference](https://aws-amplify.github.io/amplify-js/api/classes/datastore.html)
+DataStore の完全な API ドキュメントについては、 [API リファレンス](https://aws-amplify.github.io/amplify-js/api/classes/datastore.html) を参照してください。

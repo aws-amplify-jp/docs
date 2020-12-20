@@ -1,18 +1,18 @@
-> ### Prerequisites
+> ### 前提条件
 > 
-> * An [Android project](https://developer.android.com/training/basics/firstapp/creating-project) targeting Android API level 16 (Android 4.1) or above
-> * [Install and configure](~/cli/start/install.md) the Amplify CLI
+> * Android API レベル 16 (Android 4.1) 以上を対象とした [Android プロジェクト](https://developer.android.com/training/basics/firstapp/creating-project)
+> * [Amplify CLI を](~/cli/start/install.md) インストールして設定
 
-## GraphQL API with Amplify
+## Amplify付きGraphQL API
 
-The Amplify API category provides a solution for making HTTP requests to REST and GraphQL endpoints.  For GraphQL, it supports [AWS AppSync](https://aws.amazon.com/appsync/).
+Amplify APIカテゴリは、RESTおよびGraphQLエンドポイントにHTTPリクエストを行うためのソリューションを提供します。GraphQLについては、 [AWS AppSync](https://aws.amazon.com/appsync/)をサポートしています。
 
-## Create GraphQL API service
+## GraphQL API サービスの作成
 
-Run the following command in your project's root folder:
+プロジェクトのrootフォルダで次のコマンドを実行します。
 
 ```bash
-amplify add api
+増幅して api を追加
 ```
 
 ```console
@@ -28,7 +28,7 @@ amplify add api
 ? Do you want to edit the schema now? `No`
 ```
 
-This will create the following schema for us to get started with:
+これにより、以下のスキーマが作成されます。
 ```graphql
 type Blog @model {
   id: ID!
@@ -50,26 +50,26 @@ type Comment @model {
 }
 ```
 
-To deploy the API, you can use the Amplify `push` command:
+API をデプロイするには、Amplify `push` コマンドを使用します。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
 ```console
-? Are you sure you want to continue? `Yes`
-? Do you want to generate code for your newly created GraphQL API `No`
+? 続行してもよろしいですか? `はい`
+? 新しく作成したGraphQL API `いいえ` 用のコードを生成しますか?
 ```
 
-When your backend is successfully provisioned, there should be two new generated files : `amplifyconfiguration.json` and `awsconfiguration.json` in your `app/src/main/res/raw` directory.
+バックエンドが正常にプロビジョニングされると、2つの新しい生成されたファイルがあります: `amplifyconfiguration. son <code> and` awsconfiguration.json `` in your `app/src/main/res/raw` directory
 
-To view the deployed services in your project at any time, go to Amplify Console by running the following command:
+プロジェクトにデプロイされたサービスをいつでも表示するには、次のコマンドを実行してAmplify Consoleに移動します。
 
 ```bash
-amplify console
+増幅コンソール
 ```
 
-Generate the Java models to easily perform operations on your schema with the following command:
+次のコマンドでスキーマに対する操作を簡単に実行できるように、Javaモデルを生成します。
 
 ```console
 $ amplify codegen models
@@ -86,11 +86,11 @@ GraphQL schema compiled successfully.
 
 This will generate the Model files to be used with `Amplify.API` to query, mutate, and subscribe to your AppSync endpoint. After build completes, the model files will be generated under `app/src/main/java/com/amplifyframework.datastore.generated.model`.
 
-Note: You will see import errors in these files until performing the next steps below.
+注意: 次の手順を実行するまで、これらのファイルにインポートエラーが表示されます。
 
-## Configure your application
+## アプリケーションの設定
 
-Open your **project** `build.gradle` and add `mavenCentral()` as a repository:
+**プロジェクト** `build.gradle` を開き、 `mavenCentral()` をリポジトリとして追加します:
 
 ```groovy
 buildscript {
@@ -100,22 +100,22 @@ buildscript {
 }
 ```
 
-Next, add the following dependencies to your **app** `build.gradle`:
+次に、 **アプリ** `build.gradle` に次の依存関係を追加します。
 
 ```groovy
 dependencies {
   implementation 'com.amplifyframework:aws-api:1.6.4'
 
-  // Support for Java 8 features
+  // Java 8 機能のサポート
   coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.10'
 }
 ```
-Also in your **app** `build.gradle`, add this piece of code to support the Java 8 features Amplify uses:
+**アプリ** `build.gradle`でも、このコードを追加して Java 8 の機能をAmplify でサポートします。
 
 ```groovy
 android {
   compileOptions {
-    // Support for Java 8 features
+    // Java 8 機能のサポート
     coreLibraryDesugaringEnabled true
     sourceCompatibility JavaVersion.VERSION_1_8
     targetCompatibility JavaVersion.VERSION_1_8
@@ -123,16 +123,16 @@ android {
 }
 ```
 
-Sync the project with Maven and ensure it builds successfully.
+プロジェクトを Maven と同期し、正常にビルドされていることを確認します。
 
-### (Optional) Add Gradle Plugin to auto generate models
+### (オプション) モデルを自動生成するためにGradle Pluginを追加する
 
-If you would like your models to easily update both locally and on the server when you make changes to your schema, follow these steps to install our Gradle Plugin which automates the whole process on build:
+スキーマを変更したときに、ローカルとサーバーの両方でモデルを簡単に更新したい場合。 以下の手順に従って、プロセス全体をビルド時に自動化する Gradle プラグインをインストールしてください。
 
-1 - Add the following dependencies to your **project** `build.gradle`:
+1 - **プロジェクト** `build.gradle` に次の依存関係を追加:
 
-* `classpath 'com.amplifyframework:amplify-tools-gradle-plugin:1.0.1'` as a dependency
-* A plugin of `'com.amplifyframework.amplifytools'` as in the example below:
+* `classpath 'com.amplifyframework:amplify-tools-gradle-plugin:1.0.1'` 依存関係として
+* 以下の例のように、 `'com.amplifyframework.amplifytools'` のプラグインです。
 
 ```groovy
 buildscript {
@@ -145,13 +145,13 @@ buildscript {
 apply plugin: 'com.amplifyframework.amplifytools'
 ```
 
-2 - Run 'Make Project'
+2 - 「プロジェクトを作る」を実行
 
 When the build is successful, it adds two gradle tasks to you project - `modelgen` and `amplifyPush`. These can be found in the configuration dropdown menu which currently would display app if it's a new project, up where you would run your project. Whenever you update your schema (found at `amplify/backend/api/amplifyDatasource/schema.graphql`) run the `modelgen` task followed by `amplifyPush` to update your online resources and local Java models.
 
-## Initialize Amplify
+## Amplifyを初期化
 
-Add the following imports at the top of your MainActivity and code at the bottom of the `onCreate` method (ideally this would go in your Application class but this works for getting started quickly):
+MainActivity の上部に次のインポートを追加し、 `onCreate` メソッドの下部にコードを追加します(理想的には、これはアプリケーションクラスに入りますが、すぐに開始できます)。
 
 ```java
 import com.amplifyframework.AmplifyException;
@@ -179,6 +179,6 @@ public class MainActivity extends AppCompatActivity {
 
 ### Summary
 
-Now you should be able to build and run your Android application and see "All set and ready to go!" in logcat.
+今、あなたはあなたのAndroidアプリケーションを構築し、実行し、logcatで「すべてのセットと行く準備ができて参照してくださいすることができるようにする必要があります。
 
-In this example, you setup a GraphQL API using the Amplify CLI, autogenerated Java Model classes from the API schema, and integrated it into your Android application.
+この例では、Amplify CLI を使用して GraphQL API を設定します。 APIスキーマから自動生成されたJavaモデルクラスとAndroidアプリケーションに統合されました。

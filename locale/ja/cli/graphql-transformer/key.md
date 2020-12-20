@@ -1,31 +1,31 @@
 ---
-title: Index your data with keys
-description: The @key directive makes it simple to configure custom index structures for @model types.
+title: データをキーでインデックスする
+description: '@key ディレクティブを使用すると、@model タイプのカスタムインデックス構造を簡単に設定できます。'
 ---
 
 ## @key
 
-The `@key` directive makes it simple to configure custom index structures for `@model` types.
+`@key` ディレクティブは `@model` 型のカスタムインデックス構造を簡単に設定できます。
 
-Amazon DynamoDB is a key-value and document database that delivers single-digit millisecond performance at any scale but making it work for your access patterns requires a bit of forethought. DynamoDB query operations may use at most two attributes to efficiently query data. The first query argument passed to a query (the hash key) must use strict equality and the second attribute (the sort key) may use gt, ge, lt, le, eq, beginsWith, and between. DynamoDB can effectively implement a wide variety of access patterns that are powerful enough for the majority of applications.
+Amazon DynamoDBは、キー値およびドキュメントデータベースであり、あらゆる規模で1桁のミリ秒のパフォーマンスを提供しますが、アクセスパターンで動作するようにするには、少しの前置きが必要です。 DynamoDBのクエリ操作は、データを効率的にクエリするために最大2つの属性を使用することができます。 クエリに渡された最初のクエリ引数(ハッシュキー)は厳密な等価性を使用しなければならず、2番目の属性 (ソートキー) は gt を使用できます。 GE、Lt、le、eq、beginsWith、そしてbetween。 DynamoDBは、多くのアプリケーションに十分強力な多種多様なアクセスパターンを効果的に実装できます。
 
-When modeling your data during schema design there are common patterns that you may need to leverage. [We provide a fully working schema with 17 patterns related to relational designs](~/cli/graphql-transformer/dataaccess.md).
+スキーマ設計中にデータをモデリングする場合、活用する必要がある一般的なパターンがあります。 [リレーショナルデザインに関連する17パターンの完全な動作スキーマ](~/cli/graphql-transformer/dataaccess.md) を提供します。
 
-### Definition
+### 定義
 
 ```graphql
-directive @key(fields: [String!]!, name: String, queryField: String) on OBJECT
+OBJECTの@key(fields: [String!]!, name: String, queryField: String)
 ```
 
-**Argument**
+**引数**
 
-| Argument   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 引数         | 説明                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| fields     | A list of fields that should comprise the @key, used in conjunction with an `@model` type. The first field in the list will always be the **HASH** key. If two fields are provided the second field will be the **SORT** key. If more than two fields are provided, a single composite **SORT** key will be created from a combination of `fields[1...n]`. All generated GraphQL queries & mutations will be updated to work with custom `@key` directives. |
-| name       | When provided, specifies the name of the secondary index. When omitted, specifies that the `@key` is defining the primary index. You may have at most one primary key per table and therefore you may have at most one `@key` that does not specify a **name** per `@model` type.                                                                                                                                                                           |
-| queryField | When defining a secondary index (by specifying the *name* argument), this specifies that a new top level query field that queries the secondary index should be generated with the given name.                                                                                                                                                                                                                                                              |
+| フィールド      | A list of fields that should comprise the @key, used in conjunction with an `@model` type. The first field in the list will always be the **HASH** key. If two fields are provided the second field will be the **SORT** key. If more than two fields are provided, a single composite **SORT** key will be created from a combination of `fields[1...n]`. All generated GraphQL queries & mutations will be updated to work with custom `@key` directives. |
+| 名前         | When provided, specifies the name of the secondary index. When omitted, specifies that the `@key` is defining the primary index. You may have at most one primary key per table and therefore you may have at most one `@key` that does not specify a **name** per `@model` type.                                                                                                                                                                           |
+| queryField | ( *名* 引数を指定することによって) セカンダリインデックスを定義する場合 これは、指定された名前でセカンダリインデックスをクエリする新しいトップレベルクエリフィールドを指定します。                                                                                                                                                                                                                                                                                                                                                               |
 
-### How to use @key
+### @key の使い方
 
 For an introduction to the `@key` directive, let's start by looking a basic `Todo` app schema with only an `@model` directive.
 
@@ -37,10 +37,10 @@ type Todo @model {
 }
 ```
 
-By default, the `@model` directive will enable the following 2 data access patterns:
+デフォルトでは、 `@model` ディレクティブは以下の 2 つのデータアクセスパターンを有効にします。
 
-1. `getTodo` - Get a Todo by `id`
-2. `listTodos` - Query all Todos
+1. `getTodo` - `idでTodoを取得`
+2. `listTodos` - すべての Todos をクエリ
 
 You will often need additional data access patterns. For example in a Todo app you may want to fetch Todos by `status`. The `@key` directive would allow you to add this additional data access pattern with a single new line of code:
 
@@ -53,7 +53,7 @@ type Todo @model
 }
 ```
 
-Using the new `todosByStatus` query you can fetch todos by `status`:
+新しい `todosByStatus` クエリを使用すると、 `ステータス` でタスクをフェッチできます:
 
 ```graphql
 query todosByStatus {
@@ -67,20 +67,20 @@ query todosByStatus {
 }
 ```
 
-Next, let's take a closer look at how this works by examining a few more common data access patterns and how to model them.
+次に、より一般的なデータアクセスパターンをいくつか検討し、それらをモデル化する方法を詳しく見てみましょう。
 
-### Designing Data Models using @key
+### @key を使用してデータモデルを設計する
 
 When designing data models using the `@key` directive, the first step should be to write down your application's expected access patterns. For example, let's say you were building an e-commerce application and needed to implement access patterns like:
 
-1. Get customers by email.
-2. Get orders by customer by createdAt.
-3. Get items by order by status by createdAt.
-4. Get items by status by createdAt.
+1. 顧客をEメールで取得
+2. createdAtによって顧客から注文を取得します。
+3. createdAtによってステータス順にアイテムを取得します。
+4. createdAtによってステータス別にアイテムを取得します。
 
-Let's take a look at how you would define custom keys to implement these access patterns in your `schema.graphql`.
+ここでは、 `schema.graphql` にこれらのアクセスパターンを実装するためのカスタムキーをどのように定義するかを見てみましょう。
 
-#### Get customers by email.
+#### 顧客をEメールで取得
 
 ```graphql
 type Customer @model @key(fields: ["email"]) {
@@ -94,7 +94,7 @@ A `@key` without a *name* specifies the key for the DynamoDB table's primary ind
 The example above shows the simplest case where you are specifying that the table's primary index should have a simple key where the hash key is *email*. This allows you to get unique customers by their *email*.
 
 ```graphql
-query GetCustomerById {
+クエリ GetCustomerById {
   getCustomer(email:"me@email.com") {
     email
     username
@@ -102,9 +102,9 @@ query GetCustomerById {
 }
 ```
 
-This is great for simple lookup operations, but what if you need to perform slightly more complex queries?
+これは簡単なルックアップ操作に最適ですが、少し複雑なクエリを実行する必要がある場合はどうでしょうか?
 
-#### Get orders by customer email by createdAt.
+#### createdAtによって顧客の電子メールで注文を取得します。
 
 ```graphql
 type Order @model @key(fields: ["customerEmail", "createdAt"]) {
@@ -128,7 +128,7 @@ query ListOrdersForCustomerIn2019 {
 }
 ```
 
-The query above shows how you can use compound key structures to implement more powerful query patterns on top of DynamoDB but you are not quite done yet.
+上記のクエリでは、より強力なクエリパターンをDynamoDB上に実装するために複合キー構造を使用する方法を示していますが、まだ完了していません。
 
 Given that DynamoDB limits you to query by at most two attributes at a time, the `@key` directive helps by streamlining the process of creating composite sort keys such that you can support querying by more than two attributes at a time. For example, you can implement “Get items by `orderId`, `status`, and `createdAt”` as well as “Get items by `status` and `createdAt”` for a single `@model` with this schema.
 
@@ -151,7 +151,7 @@ enum Status {
 
 The primary `@key` with 3 fields performs a bit more magic than the 1 and 2 field variants. The first field orderId will be the **HASH** key as expected, but the **SORT** key will be a new composite key named *status#createdAt* that is made of the *status* and *createdAt* fields on the @model. The `@key` directive creates the table structures and also generates resolvers that inject composite key values for you during queries and mutations.
 
-Using this schema, you can query the primary index to get IN_TRANSIT items created in 2019 for a given order.
+このスキーマを使用して、プライマリインデックスをクエリして、2019年に作成されたIN_TRANSITアイテムを所定の注文に対して取得できます。
 
 ```graphql
 # Get items for order by status by createdAt.
@@ -183,15 +183,15 @@ query ItemsByStatus {
 }
 ```
 
-### Evolving APIs with @key
+### @key で API を進化させる
 
-There are a few important things to think about when making changes to APIs using `@key`. When you need to enable a new access pattern or change an existing access pattern you should follow these steps.
+`@key`を使用して API を変更する際に考慮すべきことがいくつかあります。 新しいアクセスパターンを有効にする必要がある場合、または既存のアクセスパターンを変更する必要がある場合は、次の手順に従ってください。
 
-1. Create a new index that enables the new or updated access pattern.
+1. 新規または更新されたアクセスパターンを有効にする新しいインデックスを作成します。
 2. If adding an `@key` with 3 or more fields, you will need to back-fill the new composite sort key for existing data. With a `@key(fields: ["email", "status", "date"])`, you would need to backfill the `status#date` field with composite key values made up of each object's *status* and *date* fields joined by a `#`. You do not need to backfill data for `@key` directives with 1 or 2 fields.
-3. Deploy your additive changes and update any downstream applications to use the new access pattern.
-4. Once you are certain that you do not need the old index, remove its `@key` and deploy the API again.
+3. 追加の変更をデプロイし、新しいアクセス パターンを使用するようにダウンストリーム アプリケーションを更新します。
+4. 古いインデックスは必要ないと確信したら、その `@key` を削除し、API を再度デプロイします。
 
-### Combining @key with @connection
+### @key と @connection を組み合わせます
 
 Secondary indexes created with the `@key` directive can be used to resolve connections when creating relationships between types. To learn how this works, check out [the documentation for @connection](#connection).

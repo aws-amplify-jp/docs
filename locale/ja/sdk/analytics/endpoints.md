@@ -1,6 +1,6 @@
 ---
-title: Endpoints
-description: When a user starts a session (for example, by launching your mobile app), your mobile or web application can automatically register (or update) an endpoint with Amazon Pinpoint. The endpoint represents the device that the user starts the session with.
+title: エンドポイント
+description: ユーザーがセッションを開始したとき (例えば、モバイルアプリを起動するなど) モバイルまたはWebアプリケーションは、Amazon Pinpointでエンドポイントを自動的に登録(または更新)できます。 エンドポイントは、ユーザーがセッションを開始するデバイスを表します。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

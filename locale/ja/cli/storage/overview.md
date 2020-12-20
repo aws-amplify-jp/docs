@@ -1,23 +1,23 @@
 ---
-title: Overview
-description: Use Amplify CLI to create and manage cloud-connected file & data storage for your app.
+title: 概要
+description: Amplify CLI を使用して、アプリケーションのクラウド接続ファイル & データストレージを作成および管理します。
 ---
 
 Amplify CLI's `storage` category enables you to create and manage cloud-connected file & data storage. Use the `storage` category when you need to store:
-1. app content (images, audio, video etc.) in an public, protected or private storage bucket or
-2. app data in a NoSQL database and access it with a REST API + Lambda
+1. アプリのコンテンツ（画像、オーディオ、ビデオなど）を公開、保護またはプライベートストレージのバケツに保存するか
+2. NoSQLデータベースのアプリデータとREST API + Lambdaでアクセスします
 
-## Setup a new storage resource
+## 新しいストレージリソースをセットアップする
 
-You can setup a new storage resource by running the following command:
+次のコマンドを実行することで、新しいストレージ リソースを設定できます。
 
 ```sh
-amplify add storage
+増幅してストレージを追加
 ```
 
-Amplify allows you to either setup a app content storage (images, audio, video etc.) backed by Amazon S3 or a NoSQL database backed by Amazon DynamoDB.
+Amplifyを使用すると、アプリのコンテンツストレージ(画像、オーディオ、ビデオなど)をセットアップできます。 Amazon S3またはAmazon DynamoDBにバックアップされたNoSQLデータベースによってバックアップされています。
 
-### Adding S3 storage
+### S3 ストレージを追加中
 
 ```console
 ? Please select from one of the below mentioned services:
@@ -31,15 +31,15 @@ Amplify allows you to either setup a app content storage (images, audio, video e
 
 Follow the prompts to provide your content storage's resource name. Next, configure the access permissions for your Amazon S3 bucket. If you haven't set up the `auth` category already, the Amplify CLI will guide you through a workflow to enable the auth category.
 
-If you want to restrict this storage bucket to only authenticated users, then select "Auth users only". If you want unauthenticated users to access this storage bucket as well, then select "Auth and guest users".
+このストレージ バケットを認証済みユーザーのみに制限したい場合は、"Auth users only" を選択します。 認証されていないユーザーにもこのストレージ バケットにアクセスさせたい場合は、"Auth and guest users" を選択します。
 
 ```console
-? Who should have access:
-Auth users only
-Auth and guest users
+?アクセス権を持つ必要があります:
+認証ユーザーのみ
+認証とゲストユーザー
 ```
 
-Next, you'll be prompted to set the access scopes for your authenticated and (if selected prior) unauthenticated users.
+次に、認証済みおよび(選択済みの場合)認証されていないユーザに対するアクセススコープの設定を求められます。
 
 ```console
 ? What kind of access do you want for Authenticated users? (Press <space> to select, <a> to toggle all, <i> to invert selection)
@@ -54,14 +54,14 @@ Next, you'll be prompted to set the access scopes for your authenticated and (if
 
 
 ```console
-? Do you want to add a Lambda Trigger for your S3 Bucket? (y/N)
+?S3バケツにラムダトリガーを追加しますか？(y/N)
 ```
 
-If you want to configure a Lambda trigger for your S3 bucket, you'll have the option. Learn more about this workflow [here](~/cli/usage/lambda-triggers.md#s3-lambda-triggers).
+S3バケット用にLambdaトリガーを設定したい場合は、オプションがあります。このワークフローの詳細についてはこちら [](~/cli/usage/lambda-triggers.md#s3-lambda-triggers)をご覧ください。
 
-That's it! Your content storage is set up! Head to the [library's storage docs](~/lib/storage/getting-started.md) to integrate this newly created S3 bucket into your app.
+以上です！コンテンツストレージが設定されています！ [ライブラリのストレージ ドキュメント](~/lib/storage/getting-started.md) にアクセスして、新しく作成した S3 バケットをアプリに統合します。
 
-### Adding a NoSQL database
+### NoSQLデータベースの追加
 
 ```console
 ? Please select from one of the below mentioned services:
@@ -73,7 +73,7 @@ That's it! Your content storage is set up! Head to the [library's storage docs](
 > dynamo2e1dc4eb
 ```
 
-Follow the prompts to provide your NoSQL Database's resource name. Next, you'll go through a table-creation wizard. First, you'll create the columns of your table:
+プロンプトに従ってNoSQLデータベースのリソース名を指定します。次に、テーブル作成ウィザードを実行します。まず、テーブルのカラムを作成します。
 
 ```console
 You can now add columns to the table.
@@ -83,17 +83,17 @@ You can now add columns to the table.
 ? Would you like to add another column? Yes
 ```
 
-Then, you'll need to specify your indexes. The concept behind "indexes", "partition key", "sort key" and "global secondary indexes" are explained in-depth [here](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html#HowItWorks.CoreComponents.PrimaryKey).
+次に、インデックスを指定する必要があります。 「インデックス」、「パーティションキー」、「ソートキー」、および「グローバルセカンダリインデックス」の背後にある概念については、こちら [を参照してください](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html#HowItWorks.CoreComponents.PrimaryKey)。
 
 ```console
-? Please choose partition key for the table: id
-? Do you want to add a sort key to your table? (y/N)
+?テーブルのパーティションキーを選択してください: id
+? テーブルにソートキーを追加しますか? (y/N)
 ```
 
 ```console
-? Do you want to add a Lambda Trigger for your Table? (y/N)
+?テーブルにラムダトリガーを追加しますか？ (y/N)
 ```
 
-If you want to configure a Lambda trigger for your Table, you'll have the option. Learn more about this workflow [here](~/cli/usage/lambda-triggers.md#dynamodb-lambda-triggers).
+テーブルのLambdaトリガーを設定したい場合は、オプションを選択できます。このワークフローの詳細についてはこちら [](~/cli/usage/lambda-triggers.md#dynamodb-lambda-triggers) をご覧ください。
 
-That's it! Your NoSQL Database is set up!
+以上です！NoSQLデータベースがセットアップされました！

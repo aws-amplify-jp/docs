@@ -1,11 +1,11 @@
-Invoke the `signOut` api to sign out a user from the Auth category. You can only have one user signed in at a given time.
+`signOut` api を呼び出し、Authカテゴリからユーザーをサインアウトします。 指定された時間にサインインできるユーザーは1人だけです。
 
 <inline-fragment platform="android" src="~/lib/auth/fragments/android/signout/10_local_signout.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/auth/fragments/ios/signout/10_local_signout.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/auth/fragments/flutter/signout/10_local_signout.md"></inline-fragment>
 
-Calling signOut without any options will just delete the local cache and keychain of the user. If you would like to sign out of all devices, invoke the signOut api with advanced options.
+signOut をオプションなしで呼び出すと、ユーザーのローカルキャッシュとキーチェーンが削除されます。 すべてのデバイスからサインアウトしたい場合は、高度なオプションで signOut api を呼び出します。
 
 <inline-fragment platform="android" src="~/lib/auth/fragments/android/signout/20_global_signout.md"></inline-fragment> <inline-fragment platform="ios" src="~/lib/auth/fragments/ios/signout/20_global_signout.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/auth/fragments/flutter/signout/20_global_signout.md"></inline-fragment>
 
-Calling signout with `globalSignOut = true` will invalidate all the Cognito User Pool tokens of the signed in user. If the user is signed into a device, they won't be authorized to perform a task that requires a valid token when a global signout is called from some other device. They need to sign in again to get valid tokens.
+`globalSignOut = true` を使用したサインアウトを呼び出すと、ログインしているユーザーのすべての Cognito User Pool トークンが無効になります。 ユーザーがデバイスにサインインしている場合 グローバルサインアウトが他のデバイスから呼び出されたときに有効なトークンを必要とするタスクを実行する権限はありません。 有効なトークンを取得するには、再度サインインする必要があります。
 
-<amplify-callout warning> Global signout functionality does not work if you use one of the web UI sign in methods. </amplify-callout>
+<amplify-callout warning> グローバルサインアウト機能は、Web UI サインインメソッドのいずれかを使用している場合は機能しません。 </amplify-callout>

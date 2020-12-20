@@ -4,25 +4,25 @@ const subscription = DataStore.observe(Post).subscribe(msg => {
 });
 ```
 
-Observing changes of a single item by ID.
+単一のアイテムの変更を ID で観察しています。
 
 ```js
 const id = '69ddcb63-7e4a-4325-b84d-8592e6dac07b';
 
-const subscription = DataStore.observe(Post, id).subscribe(msg => {
+const subscription = DataStore.observice(Post, id).subscribe(msg => {
   console.log(msg.model, msg.opType, msg.element);
 });
 ```
 
-Closing a subscription
+サブスクリプションを終了中
 
 ```js
 const subscription = DataStore.observe(Post, id).subscribe(msg => {
   console.log(msg.model, msg.opType, msg.element);
 });
 
-// Call unsubscribe to close the subscription
-subscription.unsubscribe();
+// サブスクリプションを終了するためにコール解除
+subscribe.unsubscribe();
 ```
 
 <amplify-callout>

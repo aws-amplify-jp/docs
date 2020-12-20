@@ -1,9 +1,9 @@
 ---
-title: Examples
-description: Refer to these examples to learn about various sample application's GraphQL schemas.
+title: 例
+description: サンプルアプリケーションのGraphQLスキーマについては、これらの例を参照してください。
 ---
 
-## Simple Todo
+## シンプルなタスク
 
 ```graphql
 type Todo @model {
@@ -13,7 +13,7 @@ type Todo @model {
 }
 ```
 
-## Blog
+## ブログ
 
 ```graphql
 type Blog @model {
@@ -34,7 +34,7 @@ type Comment @model {
 }
 ```
 
-### Blog Queries
+### ブログクエリ
 
 ```graphql
 # Create a blog. Remember the returned id.
@@ -124,8 +124,8 @@ query ListBlogs {
 }
 ```
 
-## Task App
-**Note: To use the @auth directive, the API must be configured to use Amazon Cognito user pools.**
+## タスクアプリ
+**注: @auth ディレクティブを使用するには、Amazon Cognito ユーザプールを使用するように API を設定する必要があります。**
 
 ```graphql
 type Task
@@ -149,7 +149,7 @@ type PrivateNote
 }
 ```
 
-### Task Queries
+### タスククエリ
 
 ```graphql
 # Create a task. Only allowed if a manager.
@@ -201,7 +201,7 @@ query ListPrivateNote {
 }
 ```
 
-## Conflict Detection
+## 競合検出
 
 ```graphql
 type Note @model @versioned {
@@ -211,7 +211,7 @@ type Note @model @versioned {
 }
 ```
 
-### Conflict Detection Queries
+### 競合検出クエリ
 
 ```graphql
 mutation Create {
@@ -247,15 +247,15 @@ mutation Delete($noteId: ID!) {
   }
 }
 ```
-## Common Patterns for the API Category
+## APIカテゴリの一般的なパターン
 
 The Amplify CLI exposes the GraphQL Transform libraries to help create APIs with common patterns and best practices baked in but it also provides number of escape hatches for those situations where you might need a bit more control. Here are a few common use cases you might find useful.
 
-### Filter Subscriptions by model fields and/or relations
+### モデルフィールドおよび/またはリレーションによるサブスクリプションのフィルタリング
 
-In multi-tenant scenarios, subscribed clients may not always want to receive every change for a model type. These are useful features for limiting the objects that are returned by a client subscription. It is crucial to remember that subscriptions can only filter by what fields are returned from the mutation query. Keep in mind, these two methods can be used together to create truly robust filtering options.
+マルチテナントのシナリオでは、サブスクライブしているクライアントがモデルタイプのすべての変更を受け取りたいとは限りません。 これらは、クライアントサブスクリプションによって返されるオブジェクトを制限するための便利な機能です。 サブスクリプションは、変異クエリから返されるフィールドでのみフィルタリングできることを覚えておくことが重要です。 これらの2つの方法を一緒に使用して、本当に堅牢なフィルタリングオプションを作成することができます。
 
-Consider this simple schema for our examples:
+例として、この単純なスキーマを考えてみましょう。
 
 ```graphql
 type Todo @model {
@@ -271,23 +271,23 @@ type Comment @model {
 }
 ```
 
-**Filtering by type fields**
+**型フィールドによるフィルタリング**
 
-This is the simpler method of filtering subscriptions, as it requires one less change to the model than filtering on relations.
+これは、リレーションをフィルタリングするよりもモデルへの1つの変更を必要とするため、サブスクリプションをフィルタリングする簡単な方法です。
 
-1. Add the subscriptions argument on the *@model* directive, telling Amplify to *not* generate subscriptions for your Comment type.
+1. subscriptions 引数を *@model* ディレクティブに追加し、Ampliify に *not* generate for your comment type.
 
 ```graphql
-type Comment @model(subscriptions: null) {
+type Comment @model(subscription: null) {
   id: ID!
   content: String
   todo: Todo @connection(name: "TodoComments")
 }
 ```
 
-2. Run `amplify push` at this point, as running it after adding the Subscription type will throw an error, claiming you cannot have two Subscription definitions in your schema.
+2. サブスクリプションタイプを追加した後に実行するとエラーが発生するため、この時点で `を増幅して` を実行します。 スキーマに2つのサブスクリプション定義を持つことはできないと主張しています。
 
-3. After the push, you will need to add the Subscription type to your schema, including whichever scalar Comment fields you wish to use for filtering (content in this case):
+3. プッシュ後、サブスクリプションタイプをスキーマに追加する必要があります。 フィルタリングに使用したいスカラーコメントフィールドを含む(この場合のコンテンツ):
 
 ```graphql
 type Subscription {
@@ -297,9 +297,9 @@ type Subscription {
 }
 ```
 
-**Filtering by related (*@connection* designated) type**
+**関連タイプ (*@connection* 設計済み) によるフィルタリング**
 
-This is useful when you need to filter by what Todo objects the Comments are connected to. You will need to augment your schema slightly to enable this.
+コメントが接続されている Todo オブジェクトでフィルタリングする必要がある場合に便利です。 これを有効にするには、スキーマを若干拡張する必要があります。
 
 1. Add the subscriptions argument on the *@model* directive, telling Amplify to *not* generate subscriptions for your Comment type. Also, just as importantly, we will be utilizing an auto-generated column from DynamoDB by adding `commentTodoId` to our Comment model:
 
@@ -311,9 +311,9 @@ type Comment @model(subscriptions: null) {
   commentTodoId: String # This references the commentTodoId field in DynamoDB
 }
 ```
-2. You should run `amplify push` at this point, as running it after adding the Subscription type will throw an error, claiming you cannot have two Subscription definitions in your schema.
+2. サブスクリプションタイプを追加するとエラーが発生しますので、この時点で `増幅プッシュ` を実行する必要があります。 スキーマに2つのサブスクリプション定義を持つことはできないと主張しています。
 
-3. After the push, you will need to add the Subscription type to your schema, including the `commentTodoId` as an optional argument:
+3. プッシュ後、 `commentTodoId` をオプション引数として含めて、サブスクリプション型をスキーマに追加する必要があります。
 
 ```graphql
 type Subscription {

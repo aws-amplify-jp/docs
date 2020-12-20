@@ -1,9 +1,9 @@
 ---
-title: Sandbox environments
-description: Learn how to enable sandbox environments for your Amplify project.
+title: サンドボックス環境
+description: Amplifyプロジェクトでサンドボックス環境を有効にする方法については、こちらをご覧ください。
 ---
 
-Now you have two independent environments (master & dev) in the cloud and have corresponding git branches with your amplify backend infrastructure code on Git. Suppose a team member wants to work on the same Amplify project, add some features to it and then push changes to the dev environment to test some changes. They would perform the following steps:
+これで、クラウドに2つの独立した環境 (マスター & dev) があり、Gitのバックエンドインフラストラクチャコードを増幅して対応するgit ブランチがあります。 チームメンバーが同じAmplifyプロジェクトで作業したいとします。 それにいくつかの機能を追加し、変更を開発環境にプッシュして変更をテストします。 それらは次の手順を行います:
 
 ```
 $ git clone <git-repo>
@@ -18,7 +18,7 @@ $ amplify push
 $ git push -u origin mysandbox
 ```
 
-Next, suppose the team-member wants to move these changes to dev and master environments/branches:
+次に、チームメンバーがこれらの変更を dev と master environments/branch に移行したいとします。
 
 ```
 $ git checkout dev
@@ -28,7 +28,7 @@ $ amplify push
 $ git push -u origin dev
 ```
 
-After testing that everything works fine in the dev stage, you could now merge dev to the master git branch:
+開発段階ですべてがうまく動作することをテストした後、masterのgit ブランチに開発者をマージできるようになりました。
 
 ```
 $ git checkout master
@@ -38,4 +38,4 @@ $ amplify push
 $ git push -u origin master
 ```
 
-In this approach, you can consider the git branches (dev & master) as the source of truth and all the team members should work off the branches and keep their workspaces in sync.
+このアプローチで git ブランチ(dev & master)を真実のソースとして考えることができ、すべてのチームメンバーはブランチから離れ、ワークスペースを同期させる必要があります。

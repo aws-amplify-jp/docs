@@ -1,9 +1,9 @@
 {
-  "title": "Utilities",
+  "title": "ユーティリティ",
   "items": [
     "serviceworker",
-    "cache",
-    "hub",
+    "キャッシュ",
+    "ハブ",
     "i18n",
     "logger"
   ]

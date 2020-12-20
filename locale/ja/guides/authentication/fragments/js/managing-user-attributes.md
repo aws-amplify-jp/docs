@@ -1,38 +1,38 @@
-In Cognito, you have the ability to manage both __standard__ and __custom__ user attributes for your users.
+Cognito では、 __標準__ と __カスタム__ の両方のユーザー属性を管理することができます。
 
-## Standard attributes
+## 標準属性
 
-### Configuring standard attributes
+### 標準属性の設定
 
-There are many user attributes available to use by default in Cognito. Here is a list of them:
+Cognitoにはデフォルトで使用可能なユーザー属性がたくさんあります。これらのリストは次のとおりです:
 
-- address
-- birthdate
-- email
-- family name
-- gender
-- given name
-- locale
-- middle name
-- name
-- nickname
-- phone number
-- picture
-- preferred username
-- profile
+- アドレス
+- 誕生日
+- メールアドレス
+- ファミリー名
+- 性別
+- 与えられた名前
+- ロケール
+- ミドルネーム
+- 名前
+- ニックネーム：
+- 電話番号
+- 画像
+- 優先ユーザー名
+- プロファイル
 - zoneinfo
-- updated at
-- website
+- 更新日時
+- ウェブサイト
 
 To configure and enable __standard__ user attributes in your app, you can run the Amplify `update auth` command and choose __Walkthrough all the auth configurations__. When prompted for __Specify read attributes__ and __Specify write attributes__, choose the attributes you'd like to enable in your app.
 
-### Writing and updating standard attributes
+### 標準属性の書き込みと更新
 
-You can create the user attributes on sign up or after sign up.
+サインアップまたはサインアップ後にユーザー属性を作成できます。
 
-#### Creating user attributes on sign up
+#### サインアップ時にユーザー属性を作成する
 
-To set user attributes during sign up, you can populate the `attributes` field:
+サインアップ時にユーザー属性を設定するには、 `属性` フィールドを入力します。
 
 ```js
 await Auth.signUp({
@@ -43,9 +43,9 @@ await Auth.signUp({
 });
 ```
 
-#### Managing user attributes after sign up
+#### サインアップ後にユーザー属性を管理する
 
-To manage user attributes after sign up, you can use the `updateUserAttributes` method of the __Auth__ class:
+サインアップ後にユーザー属性を管理するには、 `Auth` クラスの __updateUserAttributes__ メソッドを使用します。
 
 ```js
 async function updateUser() {
@@ -56,9 +56,9 @@ async function updateUser() {
 }
 ```
 
-### Reading user attributes
+### ユーザー属性を読み込み中
 
-To read user attributes, you can use the `currentAuthenticatedUser` method of the Auth class:
+ユーザ属性を読み取るには、認証クラスの `currentAuthenticatedUser` メソッドを使用できます:
 
 ```js
 async function getUserInfo() {
@@ -67,25 +67,25 @@ async function getUserInfo() {
 }
 ```
 
-## Custom attributes
+## カスタム属性
 
-To set a custom attribute, you must first open the Amazon Cognito dashboard:
+カスタム属性を設定するには、まず Amazon Cognito ダッシュボードを開く必要があります。
 
 ```sh
-amplify console auth
+増幅コンソール auth
 
-? Which console: User Pool
+? どのコンソール: ユーザープール
 ```
 
-Next, click on __Attributes__ in the left hand navigation and click __Add custom attribute__.
+次に、左側のナビゲーションの __属性__ をクリックし、 __カスタム属性を追加__ をクリックします。
 
-### Writing and updating custom attributes
+### カスタム属性の書き込みと更新
 
-You can create the custom user attributes on sign up or after sign up. When managing custom attributes, the attribute needs to be prepended with `custom:`.
+サインアップまたはサインアップ後にカスタムユーザー属性を作成できます。 カスタム属性を管理する場合、属性の前に `custom:` を追加する必要があります。
 
-#### Creating custom user attributes on sign up
+#### サインアップ時にカスタムユーザー属性を作成する
 
-To create a user attribute during sign up, you can populate the `attributes` field:
+サインアップ時にユーザー属性を作成するには、 `属性` フィールドを入力します。
 
 ```js
 await Auth.signUp({
@@ -96,9 +96,9 @@ await Auth.signUp({
 })
 ```
 
-#### Managing custom user attributes after sign up
+#### サインアップ後にカスタムユーザー属性を管理する
 
-To manage custom user attributes after sign up, you can use the `updateUserAttributes` method of the __Auth__ class:
+サインアップ後にカスタムユーザー属性を管理するには、 `Auth` クラスの __updateUserAttributes__ メソッドを使用します。
 
 ```js
 async function updateUser() {

@@ -1,13 +1,13 @@
-For advanced use cases where Amplify does not provide the functionality, you can retrieve the escape hatch to access the underlying Amazon Pinpoint client.
+Amplifyが機能を提供していない高度なユースケースでは、エスケープハッチを取得して、基礎となるAmazon Pinpointクライアントにアクセスできます。
 
-Add the following imports:
+次のインポートを追加:
 
 ```swift
 import AmplifyPlugins
 import AWSPinpoint
 ```
 
-Then retrieve the escape hatch with this code:
+次に、このコードでエスケープハッチを取得します。
 
 ```swift
 func getEscapeHatch() {

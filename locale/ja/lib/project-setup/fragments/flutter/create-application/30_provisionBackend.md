@@ -1,4 +1,4 @@
-To start provisioning resources in the backend, change directories to your project directory and run `amplify init`:
+バックエンドでリソースのプロビジョニングを開始するには、ディレクトリをプロジェクトディレクトリに変更し、 `amplify init` を実行します。
 
 ```bash
 # in future, make sure you have Amplify CLI v4.28 and above for Flutter support
@@ -6,7 +6,7 @@ To start provisioning resources in the backend, change directories to your proje
 amplify init
 ```
 
-Enter the following when prompted:
+プロンプトが表示されたら以下を入力します:
 
 ```console
 ? Enter a name for the environment
@@ -28,6 +28,6 @@ Only the following categories are supported:
     `default`
 ```
 
-Upon successfully running `amplify init`, you will see a configuration file created in `./lib/` called `amplifyconfiguration.dart`.
+`amplify init`を正常に実行すると、 `./lib/` `amplifyconfiguration.dart` と呼ばれる設定ファイルが作成されます。
 
-This file will be bundled into your application so that the Amplify libraries know how to reach your provisioned backend resources at runtime.
+このファイルはアプリケーションにバンドルされ、Amplifyライブラリが実行時にプロビジョニングされたバックエンドリソースにアクセスする方法を知ることができます。

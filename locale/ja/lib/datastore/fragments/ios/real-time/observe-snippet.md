@@ -24,8 +24,8 @@ func unsubscribeFromPosts() {
 
 <amplify-callout>
 
-This API is built on top of the [Combine framework](https://developer.apple.com/documentation/combine); therefore, it is only available on iOS 13 or higher.
+このAPIは [融合フレームワーク](https://developer.apple.com/documentation/combine)の上に構築されているため、iOS 13以降でしか利用できません。
 
-The `publisher(for:)` API returns a standard [AnyPublisher](https://developer.apple.com/documentation/combine/anypublisher).
+`publisher(for:)` API は標準 [AnyPublisher](https://developer.apple.com/documentation/combine/anypublisher) を返します。
 
 </amplify-callout>

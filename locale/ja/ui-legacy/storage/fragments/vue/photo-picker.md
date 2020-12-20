@@ -1,31 +1,31 @@
-The PhotoPicker component provides your users to select and preview a file for upload to S3.
+PhotoPickerコンポーネントは、S3にアップロードするファイルを選択してプレビューすることができます。
 
-Usage: `<amplify-photo-picker></amplify-photo-picker>`
+使用法: `<amplify-photo-picker></amplify-photo-picker>`
 
-Config:
+設定:
 ```
 <amplify-photo-picker v-bind:photoPickerConfig="photoPickerConfig"></amplify-photo-picker>
 ```
 
 <inline-fragment framework="vue" src="~/ui-legacy/fragments/photo-picker-attributes.md"></inline-fragment>
 
-The storageOptions prop object is passed as the 'options' parameter to the .put request.  This can be used to set the 'level' of the objects being uploaded (i.e. 'protected', 'private', or 'public').
+storageOptions prop オブジェクトは .put リクエストに 'options' パラメータとして渡されます。 これは、アップロードされているオブジェクトの「レベル」を設定するために使用することができます(つまり、「保護」、「プライベート」、または「公開」)。
 
-Events:
+イベント:
 
-* `AmplifyEventBus.$emit('fileUpload', img)`: Emitted when a file is uploaded (includes the image path)
-
-
-### S3Album
-
-The S3Album component displays the image files from the provided S3 path.
-
-Usage: `<amplify-s3-album path="uploads"></amplify-s3-album>`
-
-Props:
-
-The S3Album component accepts a 'path' prop (mandatory). It can also accept a s3AlbumConfig prop object which is passed as the 'options' parameter to the .get request.  This can be used to set the 'level' of the objects being requested (i.e. 'protected', 'private', or 'public').
+* `AmplifyEventBus.$emit('fileUpload', img)`: ファイルがアップロードされたときに発生します (画像パスを含む)
 
 
+### S3アルバム
 
-Events: None
+S3Albumコンポーネントは、指定されたS3パスからイメージファイルを表示します。
+
+使用法: `<amplify-s3-album path="uploads"></amplify-s3-album>`
+
+プロパティ:
+
+S3Albumコンポーネントは'path'プロパティを受け取ります(必須)。 また、「options」パラメータとして渡される s3AlbumConfig プロパティオブジェクトを受け入れることもできます。 et request. This can be used to set the 'level' of the objects being request(e.g. protected', 'private', or 'public').
+
+
+
+イベント: なし

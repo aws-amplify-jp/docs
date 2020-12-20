@@ -1,45 +1,45 @@
 
-The Auth category can be used to register a user, confirm attributes like email/phone, and sign in with optional multi-factor authentication. It is set up to use Amazon Cognito User Pools which manages the users and their properties.
+Authカテゴリは、ユーザーを登録し、email/phoneなどの属性を確認し、オプションの多要素認証でサインインするために使用できます。 ユーザーとそのプロパティを管理するAmazon Cognitoユーザープールを使用するように設定されています。
 
-## Prerequisites
+## 前提条件
 
 <inline-fragment platform="ios" src="~/lib/auth/fragments/ios/getting_started/10_preReq.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/auth/fragments/android/common_prereq.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/auth/fragments/flutter/common_prereq.md"></inline-fragment>
 
-## Register a user
+## ユーザーを登録する
 
-The default CLI flow as mentioned in the [getting started guide](~/lib/auth/getting-started.md) requires a username, password and a valid email id as parameters to register a user. Invoke the following api to initiate a sign up flow.
+[入門ガイド](~/lib/auth/getting-started.md) に記載されているデフォルトの CLI フローには、ユーザー名が必要です パスワードと有効な電子メールIDをパラメータとしてユーザーを登録します。 以下のAPIを呼び出してサインアップフローを開始します。
 
 <inline-fragment platform="ios" src="~/lib/auth/fragments/ios/signin/10_signUp.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/auth/fragments/android/signin/10_signUp.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/auth/fragments/flutter/signin/10_signUp.md"></inline-fragment>
 
-The next step in the sign up flow is to confirm the user. A confirmation code will be sent to the email id provided during sign up. Enter the confirmation code received via email in the `confirmSignUp` call.
+サインアップフローの次のステップは、ユーザーを確認することです。 登録時に入力されたメールアドレスに確認コードが送信されます。 `confirmSignUp` 呼び出しにメールで受信した確認コードを入力します。
 
 <inline-fragment platform="ios" src="~/lib/auth/fragments/ios/signin/20_confirmSignUp.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/auth/fragments/android/signin/20_confirmSignUp.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/auth/fragments/flutter/signin/20_confirmSignUp.md"></inline-fragment>
 
-You will know the sign up flow is complete if you see the following in your console window:
+以下がコンソールウィンドウに表示されている場合は、サインアップフローが完了していることがわかります:
 
 ```console
-Confirm signUp succeeded
+登録を確認しました
 ```
 
-## Sign in a user
+## ユーザーにサインイン
 
-Implement a UI to get the username and password from the user. After the user enters the username and password you can start the sign in flow by calling the following method:
+ユーザーからユーザー名とパスワードを取得するためのUIを実装します。 ユーザー名とパスワードを入力した後、次のメソッドを呼び出してサインインを開始できます。
 
 <inline-fragment platform="ios" src="~/lib/auth/fragments/ios/signin/30_signIn.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/auth/fragments/android/signin/30_signIn.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/auth/fragments/flutter/signin/30_signIn.md"></inline-fragment>
 
-You will know the sign in flow is complete if you see the following in your console window:
+以下がコンソールウィンドウに表示されている場合は、フローのサインインが完了していることがわかります:
 
 ```console
-Sign in succeeded
+サインイン成功
 ```
 
-You have now successfully registered a user and authenticated with that user's username and password with Amplify. The Authentication category supports other mechanisms for authentication such as web UI based sign in, sign in using other providers etc that you can explore in the other sections.
+これでユーザー登録に成功し、Amplifyでそのユーザーのユーザー名とパスワードで認証されました。 認証カテゴリは、Web UI ベースのサインインなどの認証のための他のメカニズムをサポートしています。 他のセクションで探索できる他のプロバイダなどを使用してサインインしてください。
 
-## Multi-factor authentication
+## 多要素認証
 
-Some steps in setting up multi-factor authentication can only be chosen during the initial setup of Auth. If you have already added Auth via the CLI, navigate to your project directory in Terminal, run `amplify auth remove` and when that completes, `amplify push` to remove it.
+多要素認証の設定のいくつかの手順は、Authの初期設定時にのみ選択できます。 CLI 経由ですでに認証を追加している場合は、ターミナルのプロジェクト ディレクトリに移動します。 `を増幅する auth remove` を実行し、完了したら、 `push` を増幅して削除します。
 
-Now, run `amplify add auth` and setup Auth with the following options:
+次のオプションを使用して、 `amplify add auth` を実行し、認証をセットアップします。
 
 ```console
 ? Do you want to use the default authentication and security configuration? 
@@ -92,12 +92,12 @@ Warning: you will not be able to edit these selections.
     `No`
 ```
 
-When you sign up, be sure to include both email and phone attributes with the phone number formatted as follows:
+サインアップする際には、次のようにフォーマットされた電話番号と電子メールと電話番号の両方の属性を含めるようにしてください:
 
 <inline-fragment platform="ios" src="~/lib/auth/fragments/ios/signin/40_multi_factor_signup.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/auth/fragments/android/signin/40_multi_factor_signup.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/auth/fragments/flutter/signin/40_multi_factor_signup.md"></inline-fragment>
 
 You'll then confirm signup, sign in, and get back a nextStep in the sign in result of type `CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE`. A confirmation code will also be texted to the phone number provided above. Pass the code you received to the confirmSignIn api:
 
-<amplify-callout> Note that you must call confirmSignIn in the same app session as you call signIn. If you close the app, you'll need to call signIn again. As a result, for testing purposes, you'll at least need an input field where you can enter the code sent via SMS and feed it to confirmSignIn. </amplify-callout>
+<amplify-callout> signInを呼び出すのと同じアプリセッションでconfirmSignInを呼び出す必要があります。 アプリを閉じた場合は、サインインをもう一度呼び出す必要があります。 結果として、テスト目的のために。 少なくとも、SMS経由で送信されたコードを入力し、confirmSignInにフィードできる入力フィールドが必要です。 </amplify-callout>
 
 <inline-fragment platform="ios" src="~/lib/auth/fragments/ios/signin/50_multi_factor_confirm_signin.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/auth/fragments/android/signin/50_multi_factor_confirm_signin.md"></inline-fragment> <inline-fragment platform="flutter" src="~/lib/auth/fragments/flutter/signin/50_multi_factor_confirm_signin.md"></inline-fragment>

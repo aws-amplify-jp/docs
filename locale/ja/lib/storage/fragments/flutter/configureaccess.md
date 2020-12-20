@@ -1,20 +1,20 @@
- When adding the Storage category, you configure the level of access authenticated and guest users have to your S3 bucket. Additionally, when uploading files using the Storage category, you can specify the access level for that file to be either guest(public), protected, or private.
+ ストレージカテゴリを追加する際、認証済みのアクセスレベルを設定し、ゲストユーザーがS3バケットに必要なレベルを設定します。 また、Storageカテゴリを使用してファイルをアップロードする場合は、そのファイルのアクセスレベルをゲスト(公開)、保護、またはプライベートのいずれかに指定できます。
 
-- **Guest** Accessible by all users
-- **Protected** Readable by all users, but only writable by the creating user
-- **Private** Readable and writable only by the creating user
+- **ゲスト** すべてのユーザーがアクセス可能
+- **Protected** すべてのユーザーが読み込むことができますが、作成ユーザーによってのみ書き込み可能です
+- **Private** 読みやすく、書き込み可能なのは作成ユーザーのみです
 
-For protected and private access, the `user_id` in the prefix corresponds to the unique ID for the creating user.
+保護されたプライベートアクセスの場合、プレフィックスの `user_id` は、作成ユーザーの一意の ID に対応します。
 
 <amplify-callout>
 
-The default access level for the Storage category is **guest**. Unless you specify otherwise, all uploaded files will be publicly available for all users.
+ストレージカテゴリのデフォルトのアクセスレベルは **ゲスト**です。 指定しない限り、アップロードされたすべてのファイルはすべてのユーザーが公開されます。
 
 </amplify-callout>
 
-## Protected access
+## 保護されたアクセス
 
-Create an options object specifying the protected access level to allow other users to read the object:
+他のユーザーがオブジェクトを読み取ることができるように、保護されたアクセスレベルを指定した options オブジェクトを作成します。
 
 ```dart
 try {
@@ -35,7 +35,7 @@ try {
 }
 ```
 
-For other users to read the file, you must specify the user ID of the creating user in the passed options:
+他のユーザーがファイルを読み込むには、渡されたオプションで作成ユーザーのユーザー ID を指定する必要があります。
 
 ```dart
 try {
@@ -53,9 +53,9 @@ try {
 }
 ```
 
-## Private Access
+## プライベートアクセス
 
-Create an options object specifying the private access level to only allow an object to be accessed by the creating user
+作成ユーザーがアクセスできるオブジェクトのみを許可するプライベートアクセスレベルを指定したoptionsオブジェクトを作成します
 
 ```dart
 try {
@@ -74,6 +74,6 @@ try {
 }
 ```
 
-For the user to read the file, you must specify the user ID of the creating user in the passed options:
+ユーザーがファイルを読み込むには、渡されたオプションで作成ユーザーのユーザー ID を指定する必要があります。
 
 ```dart try { S3DownloadFileOptions options = S3DownloadFileOptions( targetIdentityId: "userId", accessLevel: StorageAccessLevel.private ); DownloadFileResult result = await Amplify.Storage.downloadFile( key: key, local: new File('$path/download.png') options: options ); } catch (e) { print(e.toString()); }

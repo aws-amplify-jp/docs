@@ -1,15 +1,15 @@
-## Amplify JavaScript
-The Amplify JavaScript libraries are supported for different web and mobile frameworks including React, React Native, Angular, Ionic, and Vue. It is recommended that you first complete the [Getting Started](~/start/start.md) guide for Amplify JavaScript.
+## JavaScript を増幅する
+Amplify JavaScriptライブラリは、React、React Native、Angular、Ionic、Vueなど、さまざまなWebおよびモバイルフレームワークに対応しています。 最初にAmplify JavaScriptの [Getting Started](~/start/start.md) ガイドを完了することをお勧めします。
 
-What's next? Here are some things you can add to your app:
+次は何をしますか？アプリに追加できるいくつかの機能は次のとおりです。
 
-- [Authentication](~/lib/auth/getting-started.md)
+- [認証](~/lib/auth/getting-started.md)
 - [DataStore](~/lib/datastore/getting-started.md)
-- [User File Storage](~/lib/storage/getting-started.md)
-- [Serverless APIs](~/lib/graphqlapi/getting-started.md)
-- [Analytics](~/lib/analytics/getting-started.md)
+- [ユーザーファイルストレージ](~/lib/storage/getting-started.md)
+- [サーバーレス API](~/lib/graphqlapi/getting-started.md)
+- [分析](~/lib/analytics/getting-started.md)
 - [AI/ML](~/lib/predictions/getting-started.md)
-- [Push Notification](~/lib/push-notifications/getting-started.md)
+- [プッシュ通知](~/lib/push-notifications/getting-started.md)
 - [PubSub](~/lib/pubsub/getting-started.md)
 - [AR/VR](~/lib/xr/getting-started.md)
 

@@ -1,21 +1,21 @@
-## Overview
+## 概要
 
-The Amplify CLI deploys REST APIs and handlers using [Amazon API Gateway](http://docs.aws.amazon.com/apigateway/latest/developerguide/) and [AWS Lambda](http://docs.aws.amazon.com/lambda/latest/dg/).
+Amplify CLI は、 [Amazon API Gateway](http://docs.aws.amazon.com/apigateway/latest/developerguide/) および [AWS Lambda](http://docs.aws.amazon.com/lambda/latest/dg/) を使用して REST API とハンドラをデプロイします。
 
-The API category will perform SDK code generation which, when used with the `AWSMobileClient` can be used for creating signed requests for Amazon API Gateway when the service Authorization is set to `AWS_IAM` or when using a [Cognito User Pools Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-integrate-with-cognito.html).
+API カテゴリは、SDK コードの生成を実行します。 `AWSMobileClient` と一緒に使用した場合、サービス認証が `AWS_IAM` に設定されている場合、または [Cognito User Pools Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-integrate-with-cognito.html) に設定されている場合、Amazon API Gateway の署名済みリクエストを作成するために使用できます。
 
 See [the authentication section for more details](~/sdk/auth/getting-started.md) for using the `AWSMobileClient` in your application.
 
-## Set Up Your Backend
+## バックエンドを設定
 
 In a terminal window, navigate to your project folder (the folder that typically contains your project level `build.gradle`), and add the SDK to your app.
 
 ```bash
 cd ./YOUR_PROJECT_FOLDER
-amplify add api
+増幅して api を追加
 ```
 
-When prompted select the following options:
+プロンプトが表示されたら、次のオプションを選択します。
 
 ```console
 > REST
@@ -25,25 +25,25 @@ When prompted select the following options:
 > Who should have access? Authenticated and Guest users
 ```
 
-When configuration of your API is complete, the CLI displays a message confirming that you have configured local CLI metadata for this category. You can confirm this by running `amplify status`. Finally deploy your changes to the cloud:
+API の設定が完了すると、CLI はこのカテゴリのローカル CLI メタデータを設定したことを確認するメッセージを表示します。 これを確認するには、 `増幅ステータス`を実行します。最後に、変更をクラウドにデプロイします：
 
 ```bash
-amplify push
+push を増幅する
 ```
 
 Once the deployment completes a folder with the name of your API's resource name will be created in `./src/main/java`. This is the client SDK with the models you will import and use in the `ApiClientFactory()` builder from your code in the following sections.
 
-## Connect to Your Backend
+## バックエンドに接続
 
-Add the following to your `app/build.gradle`:
+`app/build.gradle`に以下を追加します:
 
 
 ```groovy
     dependencies {
-        implementation 'com.amazonaws:aws-android-sdk-apigateway-core:2.15.+'
-        implementation ('com.amazonaws:aws-android-sdk-mobile-client:2.15.+@aar') { transitive = true }
-        implementation ('com.amazonaws:aws-android-sdk-auth-userpools:2.15.+@aar') { transitive = true }
-    }
+        implementation 'com.<unk> s:aws-android-sdk-apigateway-core:2.15.+)
+        implementation ('com.<unk> s:aws-android-sdk-mobile-client:2.15.+@aar') { transitive = true }
+        implementation ('com.<unk> s:aws-android-sdk-auth-userpools:2.15.+@aar') { transitive = true }
+}
 ```
 
 Build your project. Next, you will need to import the client that was generated in `./src/main/java` when you ran `amplify push`. For example, an app named `useamplify` with an API resource named `xyz123`, the path of the code file will be `./src/main/java/xyz123/useamplifyabcdClient.java`. The API client name will be `useamplifyabcdClient`. You would have the following entries in your code:
@@ -59,9 +59,9 @@ apiClient = new ApiClientFactory()
     .build(YOUR_API_CLIENT_NAME.class);
 ```
 
-Find the resource name of your API by running `amplify status`. Copy your API client name to use when invoking the API in the following sections.
+`amplify status`を実行して、API のリソース名を探します。 次のセクションで API を呼び出すときに使用する API クライアント名をコピーします。
 
-### IAM authorization
+### IAM 認証
 
 To invoke an API Gateway endpoint from your application, import the generated client as outlined in the last section and use the generated client class, model, and resource paths as in the below example with `YOUR_API_RESOURCE_NAME.YOUR_APP_NAME_XXXXClient`, `YOUR_APP_NAME_XXXXClient`, and `YOUR_API_CLIENT_NAME` replaced appropriately. For AWS IAM authorization use the `AWSMobileClient` as outlined in [the authentication section](~/sdk/auth/getting-started.md).
 
@@ -178,7 +178,7 @@ To invoke an API Gateway endpoint from your application, import the generated cl
       }
 ```
 
-### Cognito User Pools authorization
+### Cognitoユーザープールの承認
 
 When invoking an API Gateway endpoint with Cognito User Pools authorizer, you can leverage the `AWSMobileClient` to dynamically refresh and pass tokens to your endpoint. Using the example from the previous section, update the `doInvokeAPI()` so that it takes a "token" string argument like `doInvokeAPI(String token)`. Next, add a header for the token to be passed with `.addHeader("Authorization", token)` and set the service configuration to have `credentialsProvider(null)`. Finally, overload the `doInvokeAPI()` with a new definition that gets the Cognito User Pools token from the `AWSMobileClient` as below:
 
@@ -218,4 +218,4 @@ ApiRequest localRequest =
 }
 ```
 
-You can then invoke this method with `doInvokeAPI()` from your application code and it will pass the IdToken from Cognito User Pools as an `Authorization` header.
+その後、アプリケーションコードから `doInvokeAPI()` でこのメソッドを呼び出すことができ、 `Authorization` ヘッダーとして Cognito User Pools から IdToken を渡します。

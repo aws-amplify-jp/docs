@@ -1,8 +1,8 @@
-For client authorization AppSync supports API Keys, Amazon IAM credentials, Amazon Cognito User Pools, and 3rd party OIDC providers. This is inferred from the `amplifyconfiguration.json` file when you call `Amplify.configure()`.
+APIキー、Amazon IAM資格情報、Amazon Cognitoユーザープール、サードパーティOIDCプロバイダーをサポートしています。 `Amplify.configure()` を呼び出した場合、これは `amplifyconfiguration.json` ファイルから推定されます。
 
-#### API key
+#### API キー
 
-API Key is the easiest way to setup and prototype your application with AWS AppSync. This means it is also prone to abuse since anyone can easily discover the API Key and make requests to your public service. To have authorization checks, use the other auth modes such as Cognito user pool or AWS IAM. API Key will expiry according to the expiry time set when provisioning AWS AppSync and will require extending it or creating a new one if needed.
+API キーは、AWS AppSync を使用してアプリケーションをセットアップしてプロトタイプを作成する最も簡単な方法です。 これは、誰でもAPIキーを簡単に見つけて、あなたのパブリックサービスへのリクエストを行うことができるので、悪用されやすいことを意味します。 認証チェックを行うには、CognitoユーザプールやAWS IAMなどの他の認証モードを使用します。 API キーは、AWS AppSync をプロビジョニングする際に設定された有効期限に応じて期限切れになり、必要に応じて拡張または新しいキーを作成する必要があります。
 
 #### Amazon Cognito User Pools
 
@@ -22,7 +22,7 @@ Amazon Cognito's user pool is most commonly used with AWS AppSync when adding au
     }
 }
 ```
-and under the `awsAPIPlugin`
+そして `awsAPIPlugin` の下で
 ```json
 {
     ...
@@ -59,7 +59,7 @@ Amazon Cognito identity pools allows you to use credentials from AWS IAM in a mo
     }
 }
 ```
-and under the `awsAPIPlugin`
+そして `awsAPIPlugin` の下で
 ```json
 {
     ...
@@ -77,7 +77,7 @@ and under the `awsAPIPlugin`
 
 #### OIDC
 
-If you are using a 3rd party OIDC provider you will need to configure it and manage the details of token refreshes yourself. Update the `amplifyconfiguration.json` file and code snippet as follows:
+サードパーティ製のOIDCプロバイダーを使用している場合は、トークンの更新の詳細を管理する必要があります。 `anplifyconfiguration.json` ファイルとコードスニペットを以下のように更新します。
 
 ```json
 {
@@ -99,15 +99,15 @@ If you are using Cognito's user pool as the authorization type, this will by def
 
 <inline-fragment platform="ios" src="~/lib/graphqlapi/fragments/ios/authz/21_oidc.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/graphqlapi/fragments/android/authz/21_oidc.md"></inline-fragment>
 
-#### Multi-Auth
+#### マルチ認証
 
 This section talks about the capability of AWS AppSync to configure multiple authorization modes for a single AWS AppSync endpoint and region. Follow the [AWS AppSync Multi-Auth](https://docs.aws.amazon.com/appsync/latest/devguide/security.html#using-additional-authorization-modes) to configure multiple authorization modes for your AWS AppSync endpoint.
 
-You can now configure a single GraphQL API to deliver private and public data. Private data requires authenticated access using authorization mechanisms such as IAM, Cognito User Pools, and OIDC. Public data does not require authenticated access and is delivered through authorization mechanisms such as API Keys. You can also configure a single GraphQL API to deliver private data using more than one authorization type. For example, you can configure your GraphQL API  to authorize some schema fields using OIDC, while other schema fields through Cognito User Pools and/or IAM.
+プライベートおよびパブリックのデータを配信するために、GraphQL API を 1 つ設定できるようになりました。 プライベートデータには、IAM、Cognitoユーザプール、OIDCなどの認証メカニズムを使用して認証されたアクセスが必要です。 パブリックデータは認証されたアクセスを必要とせず、API キーなどの認可メカニズムを介して提供されます。 1 つの GraphQL API を設定して、複数の認証タイプを使用してプライベートデータを配信することもできます。 たとえば、GraphQL API を構成して、OIDC を使用していくつかのスキーマフィールドを承認することができます。 一方、Cognito User Pools や IAM を介して他のスキーマフィールドが表示されます。
 
 As discussed in the above linked documentation, certain fields may be protected by different authorization types. This can lead the same query, mutation, or subscription to have different responses based on the authorization sent with the request; Therefore, it is recommended to use the different `friendly_name_<AuthMode>` as the `apiName` parameter in the `Amplify.API` call to reference each authorization type.
 
-The following snippets highlight the new values in the `amplifyconfiguration.json` and the client code configurations.
+以下のスニペットでは、 `anplifyconfiguration.json` とクライアントコード構成の新しい値を強調します。
 
 The `friendly_name` illustrated here is created from Amplify CLI prompt. There are 4 clients in this configuration that connect to the same API except that they use different `AuthMode`.
 
@@ -149,6 +149,6 @@ The `friendly_name` illustrated here is created from Amplify CLI prompt. There a
 }
 ```
 
-The `GRAPHQL-ENDPOINT` from AWS AppSync will look similar to `https://xyz.appsync-api.us-west-2.amazonaws.com/graphql`.
+AWS AppSync の `GRAPHQL-ENDPOINT` は `https://xyz.appsync-api.us-west-2.amazonaws.com/graphql` に似ています。
 
 <inline-fragment platform="ios" src="~/lib/graphqlapi/fragments/ios/authz/30_multi.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/graphqlapi/fragments/android/authz/30_multi.md"></inline-fragment>

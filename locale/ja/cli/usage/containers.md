@@ -1,18 +1,18 @@
 ---
-title: Serverless containers
-description: Deploy containers to AWS. Serverless containers leverage AWS Fargate when building REST or GraphQL APIs in your account. containers can be deployed via a single Dockerfile definition or by using a Docker Compose file, with a build and deployment pipeline created inside your AWS account.
+title: サーバーレスコンテナ
+description: AWSにコンテナをデプロイする サーバレスコンテナは、アカウントにRESTまたはGraphQL APIを構築するときにAWS Fargateを利用します。 コンテナは、単一の Dockerfile 定義または、Docker Compose ファイルを使用してデプロイできます。 ビルドとデプロイパイプラインをAWSアカウント内に作成します。
 ---
 
-Serverless containers provide the ability for you to deploy APIs and host websites using AWS Fargate. Customers with existing applications or those who require a lower level of control can bring Docker containers and deploy them into an Amplify project fully integrating with other resources.
+サーバーレスコンテナは、AWS Fargateを使用してAPIとホストWebサイトをデプロイする機能を提供します。 既存のアプリケーションまたは低レベルの制御を必要とするお客様は、Dockerコンテナを導入し、他のリソースと完全に統合されたAmplifyプロジェクトにデプロイできます。
 
-Amplify [libraries](~/lib/lib.md) can be used with the [Auth category](~/lib/auth/start.md) giving mobile and web applications secure connectivity and access controls to your Serverless containers. Additionally, existing GraphQL and REST services such as AWS AppSync and Amazon API Gateway can be used in the same project along with Fargate-backed APIs giving flexibility to mix and match for cost optimization and operational needs.
+Amplify [ライブラリ](~/lib/lib.md) を [Authカテゴリ](~/lib/auth/start.md) で使用することで、モバイルおよびWebアプリケーションの安全な接続とサーバーレスコンテナへのアクセス制御を行うことができます。 さらに、 AWS AppSyncやAmazon API Gatewayなどの既存のGraphQLおよびRESTサービスを同じプロジェクトで使用することができ、FargateにバックアップされたAPIとともに、コストの最適化と運用上のニーズに合わせた柔軟性を提供します。
 
-Note that serverless containers do incur additional costs and operational overhead, as such we recommend using AWS AppSync with the [GraphQL Transform](~/cli/graphql-transformer/overview.md) as a starting point when building mobile and web apps with Amplify.
+サーバーレスコンテナには追加のコストと運用オーバーヘッドがかかります。 そのため、AmplifyでモバイルアプリやWebアプリを構築する際には、 [GraphQL Transform](~/cli/graphql-transformer/overview.md) を使用してAWS AppSyncを使用することをお勧めします。
 
 
 > **Billing warning**: When you deploy serverless containers with Amplify, it incurs additional costs when resources are not in use for services such as VPC, Fargate, ECR, Cloud Map, CodePipeline, and CodeBuild. For more information refer to [VPC pricing](https://aws.amazon.com/vpc/pricing/), [Fargate pricing](https://aws.amazon.com/fargate/pricing/), [ECR Pricing](https://aws.amazon.com/ecr/pricing/), [CodePipeline pricing](https://aws.amazon.com/codepipeline/pricing/), [CodeBuild pricing](https://aws.amazon.com/codebuild/pricing/), and [Cloud Map pricing](https://aws.amazon.com/cloud-map/pricing/).
 
-## Getting Started
+## はじめに
 
 Serverless containers are not enabled in your Amplify CLI project by default. To get started you will need to run `amplify configure project` in order to see the options for deploying to Fargate. To get started initialize your project and enable **container-based deployments**:
 
@@ -20,12 +20,12 @@ Serverless containers are not enabled in your Amplify CLI project by default. To
 $ amplify init
 
 $ amplify configure project
- > Do you want to enable container-based deployments? Yes
+ > コンテナベースのデプロイを有効にしますか? はい。
 ```
 
 Next add a NoSQL Database table named **posts** with column called **id** of type **number** (N). Make this the **partition key**.
 ```bash
-amplify add storage
+増幅してストレージを追加
 ```
 ```console
   > NoSQL Database # Name table “posts”
@@ -41,10 +41,10 @@ amplify add storage
   > id 
 ```
 
-You can select **no** for all other questions. After this add an API using the REST (or GraphQL) default ExpressJS template and grant it access to this DynamoDB table.
+他の質問には **いいえ** を選択できます。 この後、REST (または GraphQL) のデフォルト ExpressJS テンプレートを使用して API を追加し、この DynamoDB テーブルへのアクセス権限を付与します。
 
 ```bash
-amplify add api
+増幅して api を追加
 ```
 ```console
   > REST
@@ -61,16 +61,16 @@ amplify add api
 
 Note the environment variables printed to the screen. If you choose a different database table name so that your variables are different from `STORAGE_POSTS_NAME` then update the `TableName` variable at the top of `./amplify/backend/api/<apiname>/src/DynamoDBActions.js` appropriately.
 
-Finally run `amplify push` to deploy the backend:
+最後に、 `amplify push` を実行してバックエンドをデプロイします。
 ```bash
 $ amplify push
 ```
 
-Once this completes your container will be built via an automated pipeline and deployed to Fargate Tasks on an ECS Cluster fronted by an Amazon API Gateway HTTP API using a direct Cloud Map integration to your VPC. If you selected *Yes* to protect your API with Authentication, an Amazon Cognito User Pool will be created with an Authorizer integration for that API.
+これが完了すると、コンテナは自動化されたパイプラインを介して構築され、Amazon API Gateway HTTP APIによってフロントエンドされたECS クラスター上のFargate Tasksにデプロイされます。VPCへの直接クラウドマップ統合を使用します。 認証でAPIを保護するために *はい* を選択した場合 Amazon Cognitoユーザープールは、そのAPIのAuthorizer統合で作成されます。
 
-## Deploy a single container
+## 単一のコンテナをデプロイ
 
-The single Dockerfile scenario allows you to take an application running in a single Container which has been built with a Dockerfile and deploy it to AWS Fargate with the Amplify CLI.
+単一のDockerfileシナリオでは、Dockerfileでビルドされた単一のコンテナでアプリケーションを実行し、Amplify CLIを使用してAWS Fargateにデプロイすることができます。
 
 If you are unfamiliar with using a Dockerfile review the [Dockerizing a Node.js web app](https://nodejs.org/en/docs/guides/nodejs-docker-webapp/) guide or or add an API with an Amplify-provided template.
 
@@ -93,7 +93,7 @@ CMD [ "node", "index.js" ]
 
 You will need an [`EXPOSE` statement in your Dockerfile](https://docs.docker.com/engine/reference/builder/#expose) to specify a port to communicate with the container. If you do not provide one Amplify will suggest to use port 80.
 
-### Local development and testing
+### ローカル開発とテスト
 
 It is recommended to test your application locally first before deploying with `amplify push`, otherwise your Fargate Task may fail to start if there are application issues such as missing dependencies. With a Single Dockerfile you can do this by navigating to `./amplify/backend/api/<name>/src` and running `docker build -t` to build and tag your image followed by `docker run` to launch your container similar to the below example:
 
@@ -106,11 +106,11 @@ $ curl -i localhost:8080  ## Alternatively open in a web browser
 
 You can also run your application using standard tooling such as running `node index.js` or `python server.py` in Node or Python. Once you are satisfied with the Dockerfile and your application code, run `amplify push` and the `./amplify/backend/api/<name>/src` will be bundled for the build pipeline to run and deploy your image to Fargate. At the end of the deployment the endpoint URL will be printed and client configuration files will be updated.
 
-## Deploy multiple containers
+## 複数のコンテナをデプロイします
 
 If you wish to deploy multiple containers into Fargate to define your API, Amplify will parse a Docker Compose file (`docker-compose.yml`) in your `./amplify/backend/api/<name>/src` directory to define the backend service. If you are unfamiliar with using a Docker Compose review the [Docker Compose getting started guide](https://docs.docker.com/compose/gettingstarted/) or or add an API with an Amplify-provided template.
 
-A Compose file includes the logical container names, build & images settings, launch commands, ports, and more. An example Docker Compose file is below:
+Composeファイルには、論理コンテナ名、ビルド & イメージ設定、起動コマンド、ポートなどが含まれています。Dockerコンポジションファイルの例は以下のとおりです。
 
 ```yaml
 version: "3.8"
@@ -153,24 +153,24 @@ This `docker-compose.yml` file would be placed in your `./amplify/backend/api/<n
    server.py
 ```
 
-### Local development and testing
+### ローカル開発とテスト
 
 As with the single container workflow, it is recommended to test your application locally first before deploying with `amplify push`, otherwise your Fargate Task may fail to start if there are application issues such as missing dependencies. Navigate to `./amplify/backend/api/<name>/src` and run `docker-compose up` which will build your images and start them locally.
 
 ```console
 $ cd ./amplify/backend/api/<name>/src
 $ docker-compose up
-$ curl -i localhost:8080  ## Alternatively open in a web browser
+$ curl -i localhost:8080 ## あるいはウェブブラウザで開く
 ```
 
-If your application source changes for any of the images, you can rebuild them by running `docker-compose build` before running `docker-compose up` during your test and development cycle.
+アプリケーションソースが画像のいずれかに変更された場合。 テストと開発サイクル中に `docker-compose ビルド` を実行する前に `docker-compose ビルド` を実行することで、それらを再構築できます。
 
-### Container networking
+### コンテナネットワーク
 
-Multiple containers are deployed as a single unit in Fargate (e.g. same Task Definition). This opinionated deployment allows ease of networking between containers on the local loopback interface and avoids extra configuration, costs, operations, and debugging.
+複数のコンテナは、Fargate 内で 1 つのユニットとして展開されます (例: 同じタスク定義)。 この独自のデプロイメントにより、ローカルループバックインターフェイス上のコンテナ間のネットワーク接続が容易になり、追加の構成、コスト、操作、およびデバッグを回避できます。
 
-#### When container is deployed to Fargate
-The loopback interface has an IP of 127.0.0.1 and a hostname of `localhost` which you can use in one container's application code to communicate with another.
+#### コンテナがFargateにデプロイされたとき
+ループバックインターフェースは 127.0.0 のIPです。 そして、あるコンテナのアプリケーションコードで別のコンテナと通信するために使用できる `localhost` のホスト名。
 
 Using the `docker-compose.yml` example from earlier, you might have the following code in your NodeJS application. It references the *port* of the Redis container and a *host* using the loopback adapter with `localhost`:
 ```javascript
@@ -183,8 +183,8 @@ const options = {
 
 http.get(options, data => {...})
 ```
-#### When testing locally using `docker-compose up`
-When performing local development and testing with `docker-compose up` you will use the logical container name defined in your `docker-compose.yaml` file.
+#### `docker-compose up` を使用してローカルでテストする場合
+`docker-compose up` を使用してローカル開発とテストを行う場合は、 `docker-compose.yaml` ファイルで定義されている論理コンテナ名を使用します。
 
 ```javascript
 const options = {
@@ -197,30 +197,30 @@ const options = {
 http.get(options, data => {...})
 ```
 
-### Supported Configurations
+### サポートされる設定
 
 Amplify will configure your Fargate infrastructure (ECS Service and Task Definition) automatically while allowing you to override specific settings with a Docker Compose file. Older versions of Compose files are supported however not all configuration values will be honored, therefore [it is recommended you update to 3.8](https://docs.docker.com/compose/compose-file/). Additionally if a value has been deprecated in one version of Compose, Amplify will prefer the newest version (3.8).
 
-- build
-- name
-- ports
-- command
+- ビルド
+- 名前
+- ポート
+- (Command)
 - entrypoint
 - env_file
-- image
-- healthcheck
+- 画像
+- ヘルスチェック
 - working_dir
-- user
-- secrets
-- replicas
+- ユーザー
+- 秘密
+- レプリカ:
 
-By default Amplify will use a single Availability Zone however if you choose the *High Availability* option it will spread Fargate Tasks across 3 Availability Zones. The [`replicas`](https://docs.docker.com/compose/compose-file/#replicas) value should be used to increase [the number of Fargate tasks running in your Cluster](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service_definition_parameters.html#sd-desiredcount) depending on your traffic requirements, however note that more running tasks will accrue more costs.
+デフォルトでは、Amplifyはアベイラビリティゾーンを1つ使用しますが、 *High Availability* オプションを選択すると、Fargateタスクが3つのアベイラビリティゾーンに広がります。 トラフィックの要件に応じて、* * [`レプリカ`](https://docs.docker.com/compose/compose-file/#replicas) の値を使用して、 [クラスターで実行されている Fargate タスクの数を増やす必要があります。](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service_definition_parameters.html#sd-desiredcount) しかし、より多くの実行中のタスクは、より多くのコストが発生することに注意してください。
 
 When you have multiple container entries specifying a `port` Amplify will prompt you upon running `amplify push` to select an **Entrypoint Container**. Since all containers are deployed as a "unit" and fronted by an API Gateway HTTP endpoint for client applications to access, Amplify needs to know which container in the Cluster's Service to route requests. The answer to the Entrypoint question will use the first specified `ports` entry to perform this routing.
 
-It is recommended that you define container settings early in the development process if possible. While these settings can be updated later, it will cause an in-place replacement of the Fargate service configuration and could lead to your endpoint being unavailable for a few moments while the process completes. For best results minimize configuration changes in your Docker Compose settings and make more frequents updates to your application code in order to take advantage of rolling updates in the build and deploy pipeline.
+可能な場合は、開発プロセスの早期段階でコンテナ設定を定義することをお勧めします。 これらの設定は後で更新できますが、 これにより、Fargateサービス構成が置き換えられ、プロセスが完了する間、エンドポイントが利用できなくなる可能性があります。 最良の結果が得られるように、Docker Compose設定の構成変更を最小限に抑え、ビルドでの更新を利用してパイプラインをデプロイするためにより頻繁にアプリケーションコードを更新します。
 
-### Environment variables and secrets
+### 環境変数と秘密
 
 You can use environment variables in your application code that are specified in your Docker Compose file, but do not specify the hostname when deploying in `amplify push`. For example the `DATABASE_HOST` variable below might be specified locally when using `docker-compose up` with the  `environment` setting:
 
@@ -229,10 +229,10 @@ environment:
   - DATABASE_DB=amplify
   - DATABASE_USER=root
   - DATABASE_PASSWORD=/run/secrets/db-password
-  - DATABASE_HOST=db  #comment out before pushing
+  - DATABASE_HOST=db #comment out before pushing out
 ```
 
-Then your application code can switch between local and cloud deployment automatically and communicate with the `db` container:
+次に、アプリケーションコードはローカルとクラウドのデプロイメントを自動的に切り替え、 `db` コンテナと通信できます。
 
 ```javascript
 module.exports = {
@@ -252,7 +252,7 @@ module.exports = {
 When you perform an `amplify push` you will be prompted to store the secrets in the cloud or bypass (which may be the case in team workflows when one person controls secrets). The name of the secret will be available in your application code similar to if you specified other variables via the `environment` configuration:
 
 ```yaml
-version: "3.8"
+バージョン:"3. "
 services:
   backend:
     build:
@@ -263,9 +263,9 @@ services:
       - DATABASE_NAME=mydb
 secrets:
   DB_PASSWORD:
-    file: ../secrets/.secret-pass
+    file: . /secret/.secret-pass
 ```
-**NodeJS example**
+**NodeJSの例**
 
 ```javascript
 const database = process.env.DATABASE_NAME;
@@ -280,44 +280,44 @@ database = os.environ['DATABASE_NAME']
 password = os.environ['DB_PASSWORD']
 ```
 
-## Client Configuration
+## クライアント設定
 
 Serverless containers are fronted by a secure endpoint by which you can interact with them from a mobile or web application. Amplify CLI will attempt to update the project `aws-exports.js` or `amplifyconfiguration.json` file with the endpoint, however for GraphQL API types this is not possible and you will need to manually specify it in an `Amplify.configure()` call within your application code. The endpoint will be printed out to the screen after running an `amplify push` for you to make these changes, take note of it and follow one of the guides below appropriately.
 
-- [JavaScript GraphQL configuration](~/lib/graphqlapi/create-or-re-use-existing-backend.md)
-- [JavaScript REST configuration](~/lib/restapi/getting-started.md#manual-setup-import-existing-rest-api)
-- [Android GraphQL configuration](https://docs.amplify.aws/lib/graphqlapi/existing-resources/q/platform/android)
-- [Android REST configuration](https://docs.amplify.aws/lib/restapi/getting-started/q/platform/android)
-- [iOS GraphQL configuration](https://docs.amplify.aws/lib/graphqlapi/existing-resources/q/platform/ios)
-- [iOS REST configuration](https://docs.amplify.aws/lib/restapi/getting-started/q/platform/ios)
+- [JavaScript GraphQL 設定](~/lib/graphqlapi/create-or-re-use-existing-backend.md)
+- [JavaScript REST 設定](~/lib/restapi/getting-started.md#manual-setup-import-existing-rest-api)
+- [Android GraphQL 設定](https://docs.amplify.aws/lib/graphqlapi/existing-resources/q/platform/android)
+- [Android REST の設定](https://docs.amplify.aws/lib/restapi/getting-started/q/platform/android)
+- [iOS GraphQL 設定](https://docs.amplify.aws/lib/graphqlapi/existing-resources/q/platform/ios)
+- [iOS REST 設定](https://docs.amplify.aws/lib/restapi/getting-started/q/platform/ios)
 
 Note that if you have enabled Authorization checks on your endpoints during `amplify add api` your clients will need to Authenticate against the Cognito User Pool configured and pass tokens. Please see the [appropriate platform guide](~/lib/auth/getting-started.md) for adding Sign-Up and Sign-In calls to your application.
 
-## Hosting
+## ホスティング
 
-When using containers in the `amplify add hosting` workflow the setup will be largely the same, including the ability to define your backend with a single Dockerfile or Docker Compose file yaml. However the ECS cluster will be fronted by an Application Load Balancer (ALB) and CloudFront distribution, and you will be required to provide a domain name which you own. This can either be a domain which you have purchased on a 3rd party registrar or with Route53. The domain will be used with Amazon Certificate Manager to configure SSL between ALB and Cognito User Pools to perform authorization to your website hosted on Fargate containers.
+`増幅でホスティング` ワークフローを追加すると、セットアップはほぼ同じになります。 単一の Dockerfile または Docker Compose ファイル yaml を使用してバックエンドを定義する機能を含みます。 しかし、ECSクラスタは、Application Load Balancer(ALB)とCloudFront配布の前面にあります。 あなたが所有するドメイン・ネームを提供する必要があります これは、サードパーティのレジストラで購入したドメイン、またはRoute53で購入したドメインのいずれかです。 ドメインは Amazon Certificate Manager と共に使用され、ALB と Cognito のユーザープール間でSSLを設定して、Fargate コンテナ上でホストされているウェブサイトへの認証を行います。
 
-> Hosting with Fargate in Amplify is only available in US-East-1 at this time
+> AmplifyでFargateを使用したホスティングは現時点でUS-East-1でのみ利用可能です
 
-If you are using a non-Route53 registrar, you will need two additional steps:
+非 Route53 レジストラを使用している場合は、2 つの追加手順が必要になります。
 
-1. Approve the certificate request. This will come via email to your registered address. If you do not see it you may need to [resend the email](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-resend.html).
-2. Add a CNAME (A Record) on your to your DNS for the CloudFront distribution and Application Load Balancer. These will be printed out to the screen after `amplify push` succeeds.
+1. 証明書リクエストを承認してください。これはあなたの登録済みアドレスにメールで送信されます。 表示されない場合は、 [メールを再送信](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-resend.html)する必要があります。
+2. CloudFrontディストリビューションとアプリケーションロードバランサーのDNSにCNAME(レコード)を追加します。 これらは、 `push` が成功すると画面に出力されます。
 
-For Route53 registered domains these steps are not needed and Amplify will register everything automatically. You can learn more about [registering a domain name in the Route53 documentation](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/registrar.html).
+Route53登録ドメインの場合、これらの手順は不要で、Amplifyは自動的にすべてを登録します。 [Route53 ドキュメント](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/registrar.html) にドメイン名を登録する方法を学ぶことができます。
 
 You can additionally restrict access to your hosted site using Amazon Cognito User Pools. The ALB will authorize requests by using the OAuth endpoint of the Cognito Hosted UI with an SSL-enabled HTTP listener. To do this run `amplify add auth` first and select *Default configuration with Social Provider (Federation)* to enable the Hosted UI (you don't need to select any of the 3rd party social providers if it's not needed in your application). After this select *Yes* when prompted *Do you want to automatically protect your web app using Amazon Cognito Hosted UI* in the `amplify add hosting` flow. Alternatively, you can first add hosting and later add auth to your project by running `amplify configure hosting` after this is completed.
 
-## Build Pipeline
+## パイプラインを構築する
 
 Amplify creates APIs as an [ECS Service](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html) to ensure that your application is monitored and tasks are in a healthy and active state, automatically recovering if an instance fails. When you make changes to your source code, the build and deployment pipeline will take your source code and Dockerfile/Docker Compose configuration as inputs. One or more containers will be built in AWS CodeBuild using your source code and pushed to ECR with a build hash as a tag, allowing you to roll back deployments if something unexpected happens in your application code. After the build is complete, the pipeline will perform a rolling deployment to launch Fargate Tasks automatically. Only when all new versions of the image are in a healthy & running state will the old tasks be stopped. Finally the build artifacts in S3 (in the fully managed scenario) and ECR images are set with a lifecycle policy retention of 7 days for cost optimization.
 
 
-#### Fully Managed
+#### 完全管理
 
 The fully managed workflow does not require you to have a source control repository or even Docker installed on your local workstation in order to build and deploy a container to Fargate. Amplify will package the contents of `./amplify/backend/api/<name>/src` and place it onto an S3 deployment bucket. This will trigger a Code Pipeline process which builds your container(s), stores the results in ECR, and deploys them to Fargate.
 
-![Fully Managed Pipeline](~/images/containers/build-workflow.png)
+![完全に管理されたパイプライン](~/images/containers/build-workflow.png)
 
 Fore single containers only one ECR entry and deployment will take place. When using a Dockerfile, a build and push to ECR will take place for each container that has a corresponding `build` entry. For containers that only have an `image` entry no ECR push will take place and this image will be launched directly into the Fargate Task. As you make changes to your source code in `./amplify/backend/api/<name>/src`, Amplify will detect any changes when you run `amplify push`, package the new files together and place them on S3. This will start another run of the build and deploy pipeline automatically updating your Fargate Service.
 
@@ -325,41 +325,41 @@ Fore single containers only one ECR entry and deployment will take place. When u
 
 If you are using GitHub as your source repository for an Amplify project, you can use this to invoke the pipeline instead of having Amplify package and upload source to S3. In this use case you will need to provide a [GitHub personal access token](https://docs.github.com/en/enterprise/2.17/user/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) which will be stored in Secrets Manager as well as the full URL to your repository folder (or the branch). For instance if you push an Amplify project to GitHub called **MyFargateProject** you would use **https://github.com/username/MyFargateProject/tree/main/amplify/backend/api/APINAME/src**. `repo` and `admin:repo_hook` scopes will be needed. Please see the [Code Pipeline documentation for more details](https://docs.aws.amazon.com/codepipeline/latest/userguide/appendix-github-oauth.html).
 
-Code Pipeline will use this for accessing the GitHub repo of your choosing and invoke the build and deploy to your Fargate Service, just as with the Fully Managed flow. Your repository must have the same structure as you would have had locally in `./amplify/backend/api/APINAME/src`, that is to say:
+Code Pipelineは、選択したGitHubリポジトリにアクセスし、ビルドを呼び出し、Fargate Serviceにデプロイするためにこれを使用します。 完全に管理されたフローと同じように。 リポジトリは、 `./anplify/backend/api/APINAME/src`でローカルに持っているのと同じ構造でなければなりません。つまり、次のように言うことです。
 
-- Single container needs to have a Dockerfile and all other required files (package.json, etc)
-- Multiple containers needs to have a `docker-compose.yml` and related file structure
+- 単一のコンテナにはDockerfileとその他すべての必要なファイル(package.jsonなど)が必要です
+- 複数のコンテナが `docker-compose.yml` と関連するファイル構造を持つ必要があります
 
-Code Pipeline will create a [webhook on the GitHub repository](https://docs.github.com/en/free-pro-team@latest/developers/webhooks-and-events/about-webhooks) which will trigger an invocation of the build and deployment pipeline to Fargate.
+Code PipelineはGitHubリポジトリ [に](https://docs.github.com/en/free-pro-team@latest/developers/webhooks-and-events/about-webhooks) webhookを作成し、Fargateへのビルドとデプロイパイプラインの呼び出しをトリガーします。
 
-#### Self-managed builds
+#### 自己管理ビルド
 
-You can always interact directly with the resources in your account to build containers locally and deploy them to ECR. This is an advanced option that we do not recommend for customers getting started. As you will need to run manual docker commands for building, tagging, and pushing your images to ECR. You will also need to restart the tasks manually on your ECS Service. Please see the [ECR documentation](https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html) for more information.
+アカウント内のリソースと直接やり取りして、ローカルにコンテナをビルドし、それらをECRにデプロイすることができます。 これは、開始するお客様にはお勧めできない高度なオプションです。 構築、タグ付け、画像をECRにプッシュするためには、マニュアルのdockerコマンドを実行する必要があります。 ECS サービスで手動でタスクを再起動する必要があります。詳細については、 [ECRドキュメント](https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html) を参照してください。
 
-### Troubleshooting
+### トラブルシューティング
 
-Note that a container deployment could fail or be problematic in a few different ways ranging from a build issue to bugs in your application code not seen until production. There are different checkpoints along the way to help prevent application issues as well as methods to revert changes which are outlined below. To access the AWS Console with details of your container status, logging, or build pipeline at any time run `amplify console api` and select your deployed API.
+コンテナのデプロイメントは、ビルドの問題からアプリケーションコードのバグまで、本番まで見ていないいくつかの異なる方法で失敗したり、問題になる可能性があることに注意してください。 アプリケーションの問題を防ぐためのさまざまなチェックポイントと、以下に概説する変更を元に戻す方法があります。 AWSコンソールにコンテナの状態の詳細情報を記録するには、ログを記録してください。 またはいつでも `コンソールAPIを増幅` してデプロイしたAPIを選択してください。
 
-### Build failure
+### ビルド失敗
 
-When your code is submitted to the pipeline either via `amplify push` or check-in to GitHub, it will be packaged and submitted to a CodeBuild job. If this build phase fails your the rest of the pipeline stops and your code will not even attempt to launch on Fargate until the build errors have been resolved. The job will perform the following:
-- Login to ECR
-- Create a commit hash
-- Build each container (e.g. `docker build`)
-- Tag each container (e.g. `docker tag`)
-- Push each container to ECR (`docker push` with commit hash)
-- Write the build artifact (`imagedefinitions.json`) to S3
+コードが `amplify push` を介してパイプラインに送信されるか、GitHub にチェックインされると。 パッケージ化され、CodeBuild ジョブに提出されます。 このビルドフェーズが失敗した場合、残りのパイプラインは停止し、ビルドエラーが解決されるまでコードは Fargate で起動しようとしません。 ジョブは以下を実行します:
+- ECRにログイン
+- コミットハッシュを作成
+- 各コンテナをビルドします (例: `docker build`)
+- 各コンテナにタグを付ける（例： `docker tag`）
+- 各コンテナをECRにプッシュする (`docker push` with commit hash)
+- ビルドアーティファクト (`imagedfinitions.json`) を S3 に書き込みます
 
-If you see a failure in the Code Pipeline console at this step, you can view the details of the build (even clicking "Tail Logs" while the pipeline is running) to see what error occurred. It's possible you have a misconfiguration in your Dockerfile or even a network failure pulling an image from a 3rd party repository. To help avoid this issue you can always run `docker build` or `docker-compose up` locally before submitting a build and validating the application runs.
+このステップでコードパイプラインコンソールに失敗した場合。 ビルドの詳細(パイプラインの実行中に「テイルログ」をクリックしても)を表示して、エラーが発生したことを確認できます。 Dockerfileに誤った設定をしたり、サードパーティのリポジトリからイメージを取得したりするネットワーク障害を持っている可能性もあります。 この問題を回避するために、ビルドを送信してアプリケーションの実行を検証する前に、 `docker build` または `docker-compose up` をローカルで実行することができます。
 
-Note that on your first deployment a queueing process will take a bit longer to setup your project networking stack and run initial builds in Code Pipeline. During this time if your build fails for any reason (even external image throttling or Dockerfile config) the process will roll back. If you wish to debug this during initial rollout the Amplify CLI will print out the URL of the pipeline when `amplify push` starts to process the stack for you to view the build phase actively.
+最初のデプロイでは、キューイングプロセスはプロジェクトのネットワークスタックをセットアップし、Code Pipelineで初期ビルドを実行するのに少し時間がかかることに注意してください。 何らかの理由でビルドが失敗した場合(外部イメージのスロットリングや Dockerfile の構成であっても)、プロセスはロールバックされます。 最初の展開時にデバッグしたい場合は、Amplify CLIは、 `増幅プッシュ` がスタックを処理して積極的にビルドフェーズを表示し始めたときにパイプラインのURLを出力します。
 
-### Container launch failure
+### コンテナ起動失敗
 
-If your build pipeline completes and rolling deployment to your ECS cluster begins, but you notice that the process is not completing, it may be due to an application issue or container configuration problem in the Dockerfile. For example if you had a NodeJS or Python application that crashed upon startup (such as a file/module not found) the task may shut down. Since ECS is trying to keep the service alive it will retry starting the task several times to see if the problem will self correct. If you know what the problem is and want to stop this retry process early so that you can try another push, simply open the Cluster and click on the Service in the ECS console. Update the service and set the desired count for running tasks to 0 (zero) and update the cluster. Then fix the problem and perform another `amplify push` to try a deployment again.
+ビルドパイプラインがECSクラスタへのデプロイおよびローリングを完了した場合、プロセスが完了していないことがわかります。 Dockerfileのアプリケーションの問題やコンテナ構成の問題が原因かもしれません。 たとえば、起動時にクラッシュした NodeJS または Python アプリケーションがあった場合(ファイルやモジュールが見つからないなど)、タスクがシャットダウンする可能性があります。 ECS はサービスを維持しようとしているので、問題が正しいかどうかを確認するために、タスクを数回再試行します。 問題が何であるかを知っていて、別のプッシュを試すことができるように、この再試行を早期に停止したい場合。 クラスタを開き、ECS コンソールでサービスをクリックします。 サービスを更新し、タスクを実行するための必要な数を0(ゼロ)に設定し、クラスタを更新します。 次に、問題を解決し、別の `増幅プッシュ` を実行して、再度デプロイを試みます。
 
 Common issues ar the application level crashes mentioned above, as well as incorrect Dockerfile/Docker-Compose commands such as those specified in `entrypoint`, `command`, or `RUN`. It's also possible that a specified `healthcheck` is continually failing. To troubleshoot this further you can click on the Cluster then Service in the ECS console followed by Tasks to see the **Stopped** containers. If you expand them there may be a top level error message giving information such as permissions or resource issues. Amplify also sets up logging by default and on this screen you will also find "Log Configuration" to view the logs in CloudWatch when you expand each container entry.
 
-### Application code bug
+### アプリケーションコードのバグ
 
 Finally you may have an issue in your application code. This would be seen either in the CloudWatch logs outlined above or through functional testing. You can log to CloudWatch via standard language logging (e.g. `console.log()` in NodeJS). The simple and most straight forward way to make a fix is roll forward deployments, such as fixing the code and performing another `amplify push`. Sometimes this is not possible and you need to revert a change to an older image. Amplify automatically creates a commit hash for each successful build before storing the record in ECR, with the most recent build having an additional **latest** tag applied. Older revisions are kept in ECR for 7 days before being cleaned up in order to avoid extra storage costs. If you need to revert to an older version you can note the commit hash and re-tag it along with the **latest** tag, then stop the tasks in your Cluster Service. ECS will automatically pull your newly tagged revision from ECR and deploy that version.

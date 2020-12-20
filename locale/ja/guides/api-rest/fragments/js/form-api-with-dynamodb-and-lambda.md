@@ -1,21 +1,21 @@
-In this guide, you will learn how to deploy a form API backed by Lambda and DynamoDB.
+このガイドでは、LambdaとDynamoDBをサポートするフォームAPIのデプロイ方法を学びます。
 
-The form that we will be creating is a contact form that will capture the user's name and phone number. By the end of this guide, you should be able to create and fetch form entries.
+作成するフォームは、ユーザーの名前と電話番号を取得するコンタクトフォームです。 このガイドの最後までに、フォームエントリを作成してフェッチすることができます。
 
-### Initializing the Amplify project
+### Amplifyプロジェクトの初期化
 
-To get started, create a new Amplify project:
+始めるには、新しいAmplifyプロジェクトを作成します。
 
 ```sh
 amplify init
 
-# Choose your environment name and default text editor
-# You can answer the defaults for the rest of the questions and then choose the AWS profile you'd like to use for this project.
+# 環境名とデフォルトのテキストエディタを選択します。
+# 残りの質問に対してデフォルトの回答を行い、このプロジェクトで使用するAWSプロファイルを選択します。
 ```
 
-### Creating the database
+### データベースの作成
 
-Next, add the DynamoDB table:
+次に、DynamoDBテーブルを追加します。
 
 ```sh
 amplify add storage
@@ -38,9 +38,9 @@ amplify add storage
 ? Do you want to add a Lambda Trigger for your Table? N
 ```
 
-### Creating the API
+### API の作成
 
-Now that the table has been created, create the API and function that will connect with the table:
+テーブルが作成されたので、テーブルに接続するAPIと関数を作成します。
 
 ```sh
 amplify add api
@@ -63,11 +63,11 @@ Storage category has a resource called formtable
 ? Do you want to add another path? N
 ```
 
-The API endpoint has been configured and some boilerplate function code has been created.
+API エンドポイントが設定され、いくつかの定型関数コードが作成されました。
 
-### Updating the function code
+### 関数コードの更新
 
-Next, open the function code located at __amplify/backend/function/formfunction/src/app.js__ in your text editor and replace its contents:
+次に、テキストエディタの __anplify/backend/function/formfunction/src/app.js__ にある関数コードを開き、その内容を置き換えます。
 
 ```js
 // from REST API + DynamoDB template
@@ -124,13 +124,13 @@ app.listen(3000, function() {
 module.exports = app
 ```
 
-Now the API has been created and you can begin interacting with it to send `get`  and `post` requests for creating and reading contacts!
+これでAPIが作成され、やり取りを開始して、 `get`  と `posts` リクエストを送信して連絡先を作成して読むことができます！
 
-### Creating a new contact in a client-side web application
+### クライアント側の Web アプリケーションで新しい連絡先を作成する
 
-Now that the API has been deployed, you can interact with it from a client-side application.
+API がデプロイされたので、クライアント側のアプリケーションから対話できます。
 
-#### Creating a new contact
+#### 新しい連絡先の作成
 
 ```js
 /* Import the Amplify API category */
@@ -149,7 +149,7 @@ async function createContact() {
 }
 ```
 
-#### Creating a form for dynamic user input
+#### 動的ユーザー入力用のフォームを作成します
 
 ```js
 /* Import the Amplify API category */
@@ -181,7 +181,7 @@ function updateFormState(key, value) {
 <button onClick={createContact}>Create New Contact</button>
 ```
 
-### Querying for all contacts
+### すべての連絡先のクエリ
 
 ```js
 /* First, import the Amplify API category */

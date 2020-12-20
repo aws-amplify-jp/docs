@@ -1,10 +1,10 @@
-To start provisioning api resources in the backend, go to your project directory and **execute the command**:
+バックエンドで api リソースのプロビジョニングを開始するには、プロジェクト ディレクトリに移動し、 **コマンド** を実行します。
 
 ```bash
-amplify add api
+増幅して api を追加
 ```
 
-Enter the following when prompted:
+プロンプトが表示されたら以下を入力します:
 ```console
 ? Please select from one of the below mentioned services: 
     `REST`
@@ -41,10 +41,10 @@ Successfully added auth resource locally.
     `No`
 ```
 
-To push your changes to the cloud, **execute the command**:
+クラウドに変更をプッシュするには、 **コマンド** を実行します。
 
 ```bash
-amplify push
+push を増幅する
 ```
 
 Upon completion, `amplifyconfiguration.json` should be updated to reference provisioned backend storage resources.  Note that these files should already be a part of your project if you followed the [Project setup walkthrough](~/lib/project-setup/create-application.md).

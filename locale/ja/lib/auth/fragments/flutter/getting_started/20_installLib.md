@@ -1,9 +1,9 @@
-Add the following dependency to your **app**'s `pubspec.yaml` along with others you added above in **Prerequisites**:
+**アプリ**の `pubspec.yaml` に以下の依存関係を追加する **前提条件**:
 
 ```yaml
-dependencies:
+依存関係:
   flutter:
     sdk: flutter
-  amplify_auth_cognito: '<1.0.0'
+  anplify_auth_cognito: '<1.0.0'
 }
 ```

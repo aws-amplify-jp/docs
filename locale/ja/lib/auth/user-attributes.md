@@ -1,6 +1,6 @@
 ---
-title: User attributes
-description: Access and update user attributes
+title: ユーザー属性
+description: ユーザー属性へのアクセスと更新
 ---
 
 

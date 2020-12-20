@@ -1,24 +1,24 @@
 ---
-title: Building a Form API with GraphQL
-description: How to implement pagination with GraphQL
+title: GraphQL を使用したフォーム API のビルド
+description: GraphQL でページネーションを実装する方法
 ---
 
-In this guide you will learn how to build and interact with a Form API using Amplify.
+このガイドでは、Amplifyを使用してフォームAPIを構築し、対話する方法を学びます。
 
-The API that we will create is for a basic contact form. The form will allow the user to input their name and phone number, and for us to query for the list of contacts.
+私たちが作成するAPIは、基本的なコンタクトフォーム用です。 フォームは、ユーザーが自分の名前と電話番号を入力し、連絡先のリストをクエリすることができます。
 
-### Getting started
+### はじめに
 
-To get started, create a new Amplify project:
+始めるには、新しいAmplifyプロジェクトを作成します。
 
 ```sh
 amplify init
 
-# Choose your environment name and default text editor
-# You can answer the defaults for the rest of the questions and then choose the AWS profile you'd like to use for this project.
+# 環境名とデフォルトのテキストエディタを選択します。
+# 残りの質問に対してデフォルトの回答を行い、このプロジェクトで使用するAWSプロファイルを選択します。
 ```
 
-Next, create a GraphQL API:
+次に、GraphQL API を作成します。
 
 ```sh
 amplify add api
@@ -53,21 +53,21 @@ In the above schema, we've overriding the default mutations and are specifying t
 
 </amplify-callout>
 
-Next, deploy the API:
+次に、APIをデプロイします。
 
 ```sh
 amplify push --y
 ```
 
-### Interacting the API
+### APIの操作
 
-To create a new contact, you can use the `createContact` mutation:
+新しい連絡先を作成するには、 `createContact` の変更を使用できます。
 
 ```graphql
-mutation createContact {
+<unk> createContact {
   createContact(input: {
     name: "Chris"
-    phone: "+1-555-555-5555"
+    phone: "+1-555-555555"
   }) {
     id
     name
@@ -76,7 +76,7 @@ mutation createContact {
 }
 ```
 
-To query for a list of contacts, you can use the `listContacts` query:
+連絡先のリストをクエリするには、 `listContacts` クエリを使用できます。
 
 ```graphql
 query listContacts {

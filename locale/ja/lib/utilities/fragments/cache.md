@@ -1,23 +1,23 @@
-The Amplify Cache module provides a generic [LRU](https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_Recently_Used_.28LRU.29) cache for JavaScript developers to store data with priority and expiration settings.
+Amplify Cacheモジュールは、JavaScript開発者が優先度と期限切れの設定でデータを保存するための汎用の [LRU](https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_Recently_Used_.28LRU.29) キャッシュを提供します。
 
-It is a key/value structure where expiration values can be configured **globally** or on a **per-key basis**. For instance, you may wish to cache all JSON responses from the API module for the next 10 minutes, but like to store user input values or preferences for a month.
+これは、有効期限の値を **グローバル** または **キーごと**に設定できるキー/値構造です。 たとえば、次の10分間、APIモジュールからのすべてのJSONレスポンスをキャッシュすることができます。 ユーザー入力値や好みを1ヶ月保存したいのです
 
-## Installation
+## インストール
 
-Install `aws-amplify`.
+`aws-amplify` をインストールします。
 
 ```bash
 npm install aws-amplify
 ```
 
-## Working with the API
+## API の操作
 
-First, import the library:
+まず、ライブラリをインポートします。
 ```javascript
-import { Cache } from 'aws-amplify';
+import { Cache } from 'aws-amply';
 ```
 
-After the import, you can invoke the appropriate methods within your application.
+インポート後、アプリケーション内で適切なメソッドを呼び出すことができます。
 
 ### setItem()
 
@@ -31,12 +31,12 @@ You can set *number*, *string*, *boolean*, *array* or *object* values to the cac
 // Standard case
 Cache.setItem('key', 'value');
 
-// Set item with priority. Priority should be between 1 and 5.
-Cache.setItem('key', 'value', { priority: 3 });
+// Set item with priority should be between 1 and 5.
+Cache. etItem('key', 'value', { priority: 3 });
 
-// Set item with an expiration time
+// 有効期限付きアイテムを設定
 const expiration = new Date(2018, 1, 1);
-Cache.setItem('key', 'value', { expires: expiration.getTime() });
+Cache. etItem('key', 'value', { expires: expiration.getTime() });
 ```
 
 When using `priority` setting, the cached item with the higher number will be expired first. The Cache module decides expiration based on the memory available to the cache. In the following example,`breakfastFoodOrder` will be expired before `mothersBirthday`.
@@ -52,7 +52,7 @@ Cache.setItem('breakfastFoodOrder', 'Pancakes', { priority: 3 });
 ```javascript
 Cache.getItem(key[, options]);
 ```
-  Retrieves an item from the cache. It will return null if the item doesn’t exist or it has expired.
+  キャッシュからアイテムを取得します。アイテムが存在しないか期限切れの場合は null を返します。
 
 ```javascript
 // Standard case
@@ -66,7 +66,7 @@ Cache.getItem('key', { callback: callback });
 
 ### removeItem()
 
-  Removes item from cache.
+  キャッシュからアイテムを削除します。
 
 ```javascript
 Cache.removeItem(key);
@@ -74,7 +74,7 @@ Cache.removeItem(key);
 
 ### clear()
 
-Removes all of the items in the cache.
+キャッシュ内のすべての項目を削除します。
 
 ```javascript
 Cache.clear();
@@ -82,7 +82,7 @@ Cache.clear();
 
 ### getAllKeys()
 
-Returns all of the keys available in the cache.
+キャッシュで利用可能なすべてのキーを返します。
 
 ```javascript
 Cache.getAllKeys();
@@ -90,15 +90,15 @@ Cache.getAllKeys();
 
 ### getCacheCurSize()
 
-Returns the current size of the cache in bytes.
+キャッシュの現在のサイズをバイト単位で返します。
 
 ```javascript
-const size = Cache.getCacheCurSize();
+const size = Cache.getCacheCurrSize();
 ```
 
 ### configure()
 
-Configures default settings for `setItem` functionality. You can see all available options in [Configuration](#configuration) section.
+`setItem` 機能のデフォルト設定を設定します。 [Configuration](#configuration) セクションで使用可能なすべてのオプションを表示できます。
 
 ```javascript
 const config = {
@@ -114,7 +114,7 @@ const myCacheConfig = Cache.configure(config);
 
 ### createInstance()
 
-Creates a new instance of Cache with custom configuration.
+カスタム構成で Cache の新しいインスタンスを作成します。
 
 ```javascript
 const config = {
@@ -126,41 +126,41 @@ const newCache = Cache.createInstance(config);
 // Please provide a new keyPrefix which is the identifier of Cache.
 ```
 
-## API Reference
+## APIリファレンス
 
-For the complete API documentation for Cache module, visit our [API Reference](https://aws-amplify.github.io/amplify-js/api/classes/cacheobject.html)
+Cacheモジュールの完全なAPIドキュメントについては、 [API リファレンス](https://aws-amplify.github.io/amplify-js/api/classes/cacheobject.html) を参照してください。
 
-## Configuration
+## 設定
 
-### Configuration Parameters
+### 設定パラメータ
 
-Here is the list of configuration parameters for the Cache module:
+Cacheモジュールの設定パラメータのリストは次のとおりです。
 
-| **Parameter**    | **Type**      | **Description**                                                                                                                                                                |
-| ---------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| keyPrefix        | *string*      | The ID of Cache which can only be configured when creating new instance.                                                                                                       |
-| capacityInBytes  | *number*      | Max size of Cache in bytes. By default is 1MB and has a maximum of 5MB.                                                                                                        |
-| itemMaxSize      | *number*      | Max size of individual item which can be set into Cache in bytes. The default value is 200KB.                                                                                  |
-| defaultTTL       | *number*      | TTL for the cache items in milliseconds. The default value is 72 hours.                                                                                                        |
-| defaultPriority  | *number*      | Default priority of the cache items. The default value is 5, the highest priority is 1.                                                                                        |
-| warningThreshold | *number*      | This is for keeping Cache's current capacity in a reasonable level. The default is 0.8, which sets warnings for 80% of space usage.                                            |
-| storage          | *StorageType* | The storage medium that will be used for the Cache. Supported values are *LocalStorage*(default) and *SessionStorage* for Web development and *AsyncStorage* for React Native. |
+| **パラメータ**        | **タイプ**    | **説明**                                                                                                            |
+| ---------------- | ---------- | ----------------------------------------------------------------------------------------------------------------- |
+| keyPrefix        | *文字列*      | 新しいインスタンスを作成するときにのみ設定できるキャッシュのID。                                                                                 |
+| capacityInBytes  | *数値*       | キャッシュの最大サイズ（バイト数）。デフォルトでは1MBで、最大5MBです。                                                                            |
+| itemMaxSize      | *数値*       | Cacheにバイト単位で設定できる個々のアイテムの最大サイズ。デフォルト値は200KBです。                                                                    |
+| defaultTTL       | *数値*       | キャッシュアイテムのTTL。デフォルト値は72時間です。                                                                                      |
+| defaultPriority  | *数値*       | デフォルトのキャッシュアイテムの優先度。デフォルト値は5で、最も高い優先度は1です。                                                                        |
+| warningThreshold | *数値*       | これは、Cacheの現在の容量を合理的なレベルに保つためのものです。デフォルトは0.8で、空間使用量の80%に対する警告を設定します。                                               |
+| ストレージ            | *ストレージタイプ* | キャッシュに使用される記憶媒体。 サポートされている値は *LocalStorage*(デフォルト) と Web 開発用 *SessionStorage* 、React Native では *AsyncStorage* です。 |
 
-### Configuration Parameters for Items
+### アイテムの設定パラメータ
 
-Here is the list of configuration parameters for the items in the cache :
+キャッシュ内の項目の設定パラメータのリストは次のとおりです。
 
-| **Parameter** | **Type**   | **Description**                                                                                                                                                                                                                                                           |
-| ------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| priority      | *number*   | Priority of the item to be kept in cache. Higher priority means longer expiration time.                                                                                                                                                                                   |
-| expires       | *number*   | The expiration time of the cache item in milliseconds.                                                                                                                                                                                                                    |
-| callback      | *function* | You can provide a callback function with getItem() to implement cache miss scenarios. The provided function will only be called if there is not a match for the cache key, and the return value from the function will be assigned as the new value for the key in cache. |
+| **パラメータ** | **タイプ** | **説明**                                                                                                                          |
+| --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 優先度       | *数値*    | キャッシュに保存するアイテムの優先度。優先度が高いほど、有効期限が長くなります。                                                                                        |
+| 有効期限      | *数値*    | キャッシュアイテムの有効期限（ミリ秒単位）                                                                                                           |
+| callback  | *関数*    | キャッシュミスシナリオを実装するために、getItem() を使用したコールバック関数を提供できます。 指定された関数は、キャッシュキーに一致しない場合にのみ呼び出されます。 そして、関数からの戻り値は、キャッシュのキーの新しい値として割り当てられます。 |
 
-## Using Modular Imports
+## モジュラーインポートの使用
 
-If you only need to use Cache, you can do: `npm install @aws-amplify/cache` which will only install the Cache module for you.
+キャッシュのみを使用する必要がある場合は、以下を行うことができます: `npm install @aws-amplify/cache` これはキャッシュモジュールのみをインストールします。
 
-Then in your code, you can import the Cache module by:
+次にコードで、Cacheモジュールをインポートすることができます:
 ```javascript
 import Cache from '@aws-amplify/cache';
 

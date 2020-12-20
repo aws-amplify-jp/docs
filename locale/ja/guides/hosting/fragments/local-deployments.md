@@ -1,21 +1,21 @@
-This guide will show you how to host a static site from a local Amplify project using Amplify hosting.
+このガイドでは、Amplifyホスティングを使用してローカルAmplifyプロジェクトから静的サイトをホストする方法を説明します。
 
-In this example you will be deploying a React app, but you can also also use any of the following types of projects or frameworks:
+この例では、React アプリケーションをデプロイしますが、以下のタイプのプロジェクトやフレームワークを使用することもできます。
 
-1. Static HTML
+1. 静的HTML
 2. Vue
-3. Angular
+3. 角度
 4. Ionic
 5. Gatsby
 
-## 1. Create a new web app and change into the directory
+## 1. 新しいウェブアプリを作成し、ディレクトリに変更
 
 ```sh
 npx create-react-app amplifyapp
-cd amplifyapp
+cd anplifyapp
 ```
 
-## 2. Initialize a new Amplify project
+## 2. Amplifyプロジェクトを初期化
 
 ```sh
 amplify init
@@ -24,26 +24,26 @@ amplify init
 # Accept defaults for everything else and choose your AWS Profile.
 ```
 
-## 3. Add hosting
+## 3. ホスティングを追加
 
 ```sh
 amplify add hosting
 
-? Select the plugin module to execute: Hosting with Amplify Console
-? Choose a type: Manual Deployment
+? 実行するプラグインモジュールを選択します: Ampliify Console でホスティングする
+? タイプを選択します。
 ```
 
-## 4. Deploy the app
+## 4. アプリをデプロイする
 
-Now, the app is ready to deploy. To do so, you can run the `publish` command.
+これでアプリがデプロイできるようになりました。これを行うには、 `publish` コマンドを実行します。
 ```sh
 amplify publish
 ```
 
-## 5. View in the Amplify Console
+## 5. Amplifyコンソールで表示
 
-To view the project in the Amplify Console at any time, you can run the `console` command:
+Amplifyコンソールでいつでもプロジェクトを表示するには、 `コンソール` コマンドを実行します。
 
 ```sh
-amplify console
+増幅コンソール
 ```

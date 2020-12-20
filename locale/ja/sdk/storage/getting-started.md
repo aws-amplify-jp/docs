@@ -1,6 +1,6 @@
 ---
-title: Getting started
-description: Learn how to configure the data access level on your stored objects using AWS Mobile SDK.
+title: はじめに
+description: AWS Mobile SDK を使用して、ストアドオブジェクトのデータ アクセスレベルを設定する方法を学びます。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

@@ -1,11 +1,11 @@
 {
-    "title": "UI Components",
+    "title": "UI コンポーネント",
     "items": [
-        "auth",
+        "認証する",
         "api",
-        "storage",
-        "interactions",
+        "ストレージ",
+        "相互作用",
         "xr",
-        "customization"
+        "カスタマイズ"
     ]
 }

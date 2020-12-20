@@ -1,22 +1,22 @@
 ---
-title: Apply tags to generated resources
-description: Learn how to stay organized with your Amplify-generated AWS resources by tagging them through the CLI
+title: 生成されたリソースにタグを適用する
+description: Amplify生成されたAWSリソースをCLIでタグ付けして整理する方法を学びます。
 ---
 
-Tags are labels consisting of key-value pairs that make it easier to manage, search for, and filter resources. Some popular use cases include:
-* Resource organization
-* Cost allocation
-* Operations support
-* Access control
-* Security risk management
+タグは、リソースの管理、検索、フィルタリングを容易にするキーと値のペアで構成されるラベルです。一般的なユースケースには以下のものがあります:
+* リソース組織
+* コスト割り当て
+* オペレーションサポート
+* アクセスコントロール
+* セキュリティリスク管理
 
-You can learn more about how tags work [here](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html), as well as read about best practices for tagging [here](https://d1.awsstatic.com/whitepapers/aws-tagging-best-practices.pdf).
+タグの動作についてはこちら [](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html)をご覧ください。また、タグ付けのベストプラクティスについてはこちら [](https://d1.awsstatic.com/whitepapers/aws-tagging-best-practices.pdf) をご覧ください。
 
-## Setting up tags in a new project
+## 新しいプロジェクトでタグを設定する
 
-When running `amplify init`, a `tags.json` file is automatically generated in the `amplify/backend/` directory, containing predefined tags.
+`amplify init`を実行すると、 `tags.json` ファイルが `anplify/backend/` ディレクトリ内に自動的に生成され、定義済みのタグが含まれます。
 
-The structure of the file is the following:
+ファイルの構造は次のとおりです。
 ```json
 [
   {
@@ -31,17 +31,17 @@ The structure of the file is the following:
 ```
 **Note:** For projects created before CLI version 4.28.0. Creating a `tags.json` file under `amplify/backend/` directory with the desired tags will ensure tags being applied to existing resources after invoking `amplify push`.
 
-## Using predefined variables
+## 定義済み変数の使用
 
-There are predefined tags that let you be more specific with information about the current project, while giving you the opportunity of structuring the tags according to what feels right to you.
+定義済みのタグにより、現在のプロジェクトに関する情報をより具体的に扱うことができます。 あなたに正しいと感じるものに応じてタグを組み立てる機会を与えているのです
 
-The 2 predefined tags are the following:
+定義済みの2つのタグは以下のとおりです。
 
-* {project-env} - Refers to the project environment (e.g. prod, env, etc)
-* {project-name} - Refers to the current project name (e.g mytestproject)
+* {project-env} - プロジェクト環境（例：prod、env、etc）
+* {project-name} - 現在のプロジェクト名を参照 (例: mytestプロジェクト)
 
 
-There are many different cases in which these tag variables can be used. This is an example of how they can be used together and what the output would be:
+これらのタグ変数を使用することができる多くの異なるケースがあります。 これは、それらをどのように組み合わせて使用することができ、出力がどのようになるかの例です。
 
 ```json
 [{
@@ -50,7 +50,7 @@ There are many different cases in which these tag variables can be used. This is
 }]
 ```
 
-When getting pushed, the resources would transform into:
+プッシュされると、リソースは次のように変換されます:
 ```json
 [{
     "Key": "myawesomekey",
@@ -58,7 +58,7 @@ When getting pushed, the resources would transform into:
 }]
 ```
 
-Tag values are not required, thus they can be empty.
+タグの値は必須ではないため、空にすることができます。
 ```json
 [{
     "Key": "MY_TAG_KEY",
@@ -66,9 +66,9 @@ Tag values are not required, thus they can be empty.
 }]
 ```
 
-## Adding and updating tags
+## タグの追加と更新
 
-You can update or add any additional tags in the `tags.json` file inside the `amplify/` folder by editing the file itself. The file must in a JSON format and should follow this structure:
+`タグに追加タグを追加または更新できます。 son <code> ファイル自体を編集して、` フォルダ内の `amplify/` ファイル。 ファイルはJSON形式でなければならず、この構造に従う必要があります。
 
 ```json
 [{
@@ -77,16 +77,16 @@ You can update or add any additional tags in the `tags.json` file inside the `am
 }]
 ```
 
-To update the AWS resources from your Amplify project just run `amplify push`.
+AmplifyプロジェクトからAWSリソースを更新するには、 `amplify push`を実行します。
 
-## Restrictions
+## 制限
 
-* You can only add up to 50 tags to the `amplify/backend/tags.json` file.
-* Tag keys and values are case sensitive.
-* Duplicate tag keys are not allowed.
+* `anplify/backend/tags.json` ファイルには、最大 50 個のタグしか追加できません。
+* タグキーと値は大文字と小文字を区別します。
+* 重複タグキーは許可されていません。
 
 <amplify-callout>
 
-For more information on limits and restrictions with tagging conventions, please visit [this link](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html).
+タグ付け規則に関する制限および制限の詳細については、 [このリンク](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html) をご覧ください。
 
 </amplify-callout>

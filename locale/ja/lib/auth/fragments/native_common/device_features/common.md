@@ -1,49 +1,49 @@
-Remembering a device is useful in conjunction with Multi-Factor Authentication (MFA).  If MFA is enabled for an Amazon Cognito user pool, end users have to type in a security code received via e-mail or SMS each time they want to sign in.  This increases security but comes at the expense of the user's experience.
+デバイスを覚えることは、多要素認証(MFA)と組み合わせると便利です。 Amazon CognitoユーザープールでMFAが有効になっている場合 エンドユーザーは、サインインするたびに電子メールまたはSMSで受信したセキュリティコードを入力する必要があります。 これはセキュリティを高めますが、ユーザーの経験を犠牲にしています。
 
-Remembering a device allows the second factor requirement to be automatically met when the user signs in on that device, thereby reducing friction in the user experience.
+デバイスを覚えておくと、ユーザーがそのデバイスにサインインしたときに第2の要件を自動的に満たすことができます。 ユーザー体験の摩擦を減らすことができます
 
-## Configure Auth Category
-<amplify-callout> Device remembering functionality does not work if you use one of the web UI sign in methods. </amplify-callout>
+## 認証カテゴリの設定
+<amplify-callout> Web UI サインインメソッドのいずれかを使用している場合、デバイスの記憶機能は機能しません。 </amplify-callout>
 
-To enable remembered device functionality, open the Cognito User Pool console.  To do this, **go to your project directory** and **issue the command**:
+記憶されたデバイス機能を有効にするには、Cognito User Pool コンソールを開きます。 これを行うには、 **プロジェクトディレクトリ** に移動し、 **コマンド** を発行します。
 ```bash
-amplify auth console
+増幅認証コンソール
 ```
 
-**Select the following option** to open the Cognito User Pool console:
+**次のオプションを選択して** Cognito User Pool コンソールを開きます:
 ```bash
-? Which Console
-    User Pool
+?どのコンソール
+    ユーザープール
 ```
 
 When the console opens, **click on Devices** from the left navigation menu, which will render the following page allowing you to configure your preference for remembering a user's device.
 
-![auth](~/images/auth/webconsole_remember1.png)
+![認証する](~/images/auth/webconsole_remember1.png)
 
-**Choose either Always or User Opt in** depending on whether you want to remember a user's device by default or give the user the ability to choose.
+**デフォルトでユーザーのデバイスを覚えておくか、ユーザーに選択権を与えるかに応じて、** のいずれかを選択します。
 
-If MFA is enabled for the Cognito user pool, you will have the option to suppress the second factor during multi-factor authentication.  **Choose Yes** if you want a remembered device to be used as a second factor mechanism or No otherwise.
+CognitoユーザープールでMFAが有効になっている場合、マルチファクタ認証時に2番目のファクタを抑制するオプションがあります。  **記憶されたデバイスを第2因子メカニズムとして使用する場合は、** を選択します。
 
-![auth](~/images/auth/webconsole_remember2.png)
+![認証する](~/images/auth/webconsole_remember2.png)
 
-When you have made your selection(s), click "Save changes".  You are now ready to start updating your code to manage your remembered devices.
+選択したら、「変更を保存」をクリックします。記憶されたデバイスを管理するためにコードを更新する準備が整いました。
 
-## APIs
-### Remember Device
-You can mark your device as remembered: <inline-fragment platform="ios" src="~/lib/auth/fragments/ios/device_features/10_rememberDevice.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/auth/fragments/android/device_features/10_rememberDevice.md"></inline-fragment>
+## API
+### デバイスを記憶する
+デバイスを記憶としてマークすることができます: <inline-fragment platform="ios" src="~/lib/auth/fragments/ios/device_features/10_rememberDevice.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/auth/fragments/android/device_features/10_rememberDevice.md"></inline-fragment>
 
-### Forget Device
-You can forget your device by using the following API.  Note that forgotten devices are still tracked.  See below for the difference between remembered, forgotten and tracked. <inline-fragment platform="ios" src="~/lib/auth/fragments/ios/device_features/20_forgetDevice.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/auth/fragments/android/device_features/20_forgetDevice.md"></inline-fragment>
+### デバイスを忘れた
+以下のAPIを使用してデバイスを忘れることができます。忘れたデバイスはまだ追跡されていることに注意してください。 思い出された、忘れられた、そして追跡された間の違いについては、以下を参照してください。 <inline-fragment platform="ios" src="~/lib/auth/fragments/ios/device_features/20_forgetDevice.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/auth/fragments/android/device_features/20_forgetDevice.md"></inline-fragment>
 
-### Fetch Devices
-You can fetch a list of remembered devices by using the following: <inline-fragment platform="ios" src="~/lib/auth/fragments/ios/device_features/30_fetchDevice.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/auth/fragments/android/device_features/30_fetchDevice.md"></inline-fragment>
+### デバイスを取得
+次の方法で、記憶されたデバイスのリストを取得できます: <inline-fragment platform="ios" src="~/lib/auth/fragments/ios/device_features/30_fetchDevice.md"></inline-fragment> <inline-fragment platform="android" src="~/lib/auth/fragments/android/device_features/30_fetchDevice.md"></inline-fragment>
 
-## Terminology
-* **Tracked**
-  * Every time the user signs in with a new device, the client is given the device key at the end of a successful authentication event.  We use this device key to generate a salt and password verifier which is used to call the ConfirmDevice API.  At this point, the device is considered to be **tracked**.  Once the device is in a tracked state, you can use the Amazon Cognito console to see the time it started to be tracked, last authentication time, and other information about that device.
-* **Remembered**
-  * Remembered devices are also tracked. During user authentication, the device key and secret pair assigned to a remembered device is used to authenticate the device to verify that it is the same device that the user previously used to sign in.
-* **Not Remembered**
-  * A not-remembered device is a tracked device where Cognito has been configured to require users to "Opt-in" to remember a device, but the user has not opt-ed in to having the device remembered.  This use case is used for users signing into their application from a device that they don't own.
-* **Forgotten**
+## 用語
+* **追跡**
+  * ユーザーが新しいデバイスでサインインするたびに、クライアントには認証イベントが成功した後にデバイスキーが与えられます。 このデバイスキーを使用して、確認デバイスAPIを呼び出すために使用されるソルトとパスワード検証器を生成します。 この時点で、デバイスは **tracked**と見なされます。 デバイスが追跡された状態になったら、Amazon Cognitoコンソールを使用してトラッキングが開始された時間を確認できます。 最後の認証時間とそのデバイスに関する他の情報です
+* **記憶されている**
+  * 記憶されたデバイスも追跡されます。 ユーザー認証中 記憶されたデバイスに割り当てられたデバイスキーと秘密のペアは、ユーザーが以前サインインに使用したデバイスと同じデバイスであることを確認するために使用されます。
+* **記憶されていません**
+  * 記憶されていないデバイスは、Cognitoがデバイスを覚えるためにユーザーに「オプトイン」を要求するように設定されている追跡デバイスです。 しかし、ユーザーはデバイスを記憶させることを選択していません。 このユースケースは、所有していないデバイスからアプリケーションにサインインするユーザーに使用されます。
+* **忘れた**
   * In the event that you no longer want to remember or track a device, you can use the `Amplify.Auth.forgetDevice()` API to remove this device from being both remembered and tracked.

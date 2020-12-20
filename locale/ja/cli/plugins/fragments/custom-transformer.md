@@ -1,8 +1,8 @@
-## Authoring custom GraphQL transformers & directives
+## カスタムGraphQL変換 & ディレクティブのオーサリング
 
-This section outlines the process of writing custom GraphQL transformers. The `graphql-transform` package serves as a lightweight framework that takes as input a GraphQL SDL document and a list of **GraphQL Transformers** and returns a cloudformation document that fully implements the data model defined by the input schema. A GraphQL Transformer is a class the defines a directive and a set of functions that manipulate a context and are called whenever that directive is found in an input schema.
+このセクションでは、カスタム GraphQL 変圧器を記述するプロセスを概説します。 `graphql-transform` パッケージは、GraphQL SDLドキュメントの入力として取り込む軽量フレームワークとして機能し、 **GraphQL Transformer** のリストを提供し、入力スキーマによって定義されたデータモデルを完全に実装するクラウドフォーメーションドキュメントを返します。 GraphQL 変換器は、コンテキストを操作するディレクティブと関数のセットを定義し、入力スキーマでそのディレクティブが見つかるたびに呼び出されるクラスです。
 
-For example, the AWS Amplify CLI calls the GraphQL Transform like this:
+たとえば、AWS Amplify CLI は GraphQL Transform を次のように呼び出します。
 
 ```js
 import GraphQLTransform from 'graphql-transformer-core'
@@ -39,13 +39,13 @@ const out = await createStack(cfdoc, name, region)
 console.log('Application creation successfully started. It may take a few minutes to finish.')
 ```
 
-As shown above the `GraphQLTransform` class takes a list of transformers and later is able to transform GraphQL SDL documents into CloudFormation documents.
+`GraphQLTransform` クラスの上に示すように、トランスのリストを取得し、後で GraphQL SDLドキュメントをCloudFormationドキュメントに変換することができます。
 
-### The Transform Lifecycle
+### トランスフォームのライフサイクル
 
 At a high level the `GraphQLTransform` takes the input SDL, parses it, and validates the schema is complete and satisfies the directive definitions. It then iterates through the list of transformers passed to the transform when it was created and calls `.before()` if it exists. It then walks the parsed AST and calls the relevant transformer methods (e.g. `object()`, `field()`, `interface()` etc) as directive matches are found. In reverse order it then calls each transformer's `.after()` method if it exists, and finally returns the context's finished template.
 
-Here is pseudo code for how `const cfdoc = transformer.transform(schema);` works.
+ここでは、 `const cfdoc = transformer.transform(schema);` がどのように動作するかの擬似コードを示します。
 
 ```js
 function transform(schema: string): Template {
@@ -101,25 +101,25 @@ function transform(schema: string): Template {
 }
 ```
 
-### The Transformer Context
+### トランスフォーマーのコンテキスト
 
-The transformer context serves like an accumulator that is manipulated by transformers. See the code to see what methods are available to you.
+トランスコンテキストは、トランスによって操作されるアキュムレータのように機能します。コードを参照して、どのようなメソッドが利用可能か を確認してください。
 
 [https://github.com/aws-amplify/amplify-cli/blob/7f0cb11915fa945ad9d518e8f9a8f74378fef5de/packages/graphql-transformer-core/src/TransformerContext.ts](https://github.com/aws-amplify/amplify-cli/blob/7f0cb11915fa945ad9d518e8f9a8f74378fef5de/packages/graphql-transformer-core/src/TransformerContext.ts)
 
-> For now, the transform only support cloudformation and uses a library called `cloudform` to create cloudformation resources in code. In the future we would like to support alternative deployment mechanisms like terraform.
+> 今のところ、この変換はクラウドフォーメーションのみをサポートし、 `cloudform` というライブラリを使用して、コード内のクラウドフォーメーションリソースを作成します。 今後はterraformのような代替展開メカニズムを支援していきたいと考えています。
 
-### Example
+### 例
 
-As an example let's walk through how we implemented the @versioned transformer. The first thing to do is to define a directive for our transformer.
+例として、@versioned 変換器の実装方法を説明しましょう。まず最初に、変換器のディレクティブを定義します。
 
 ```js
-const VERSIONED_DIRECTIVE = `
-    directive @versioned(versionField: String = "version", versionInput: String = "expectedVersion") on OBJECT
+const VERSINED_DIRECTIVE = `
+    ディレクティブ @versioned(versionField: String = "version", versionInput: String = "expectedVersionVersion") on OBJECT
 `
 ```
 
-Our `@versioned` directive can be applied to `OBJECT` type definitions and automatically adds object versioning and conflict detection to an APIs mutations. For example, we might write
+`@versioned` ディレクティブは `OBJECT` 型の定義に適用でき、API の変更にオブジェクトのバージョン管理と競合の検出を自動的に追加します。 例えば、
 
 ```graphql
 # Any mutations that deal with the Post type will ask for an `expectedVersion`
@@ -218,6 +218,6 @@ export class VersionedModelTransformer extends Transformer {
     // ... Implement the functions that do the real work by calling the context methods.
 }
 ```
-## VS Code Extension
+## VS コード拡張
 
-Add the [VSCode extension](https://marketplace.visualstudio.com/items?itemName=aws-amplify.aws-amplify-vscode) to get code snippets and automatic code completion for Amplify APIs. 
+コードスニペットを取得し、Amplify APIのコード補完を自動的に行うには、 [VSCODE拡張](https://marketplace.visualstudio.com/items?itemName=aws-amplify.aws-amplify-vscode) を追加します。 

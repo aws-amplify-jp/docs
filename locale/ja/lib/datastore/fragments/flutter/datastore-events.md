@@ -10,14 +10,14 @@ AmplifyDataStore.events.listenToDataStore((event) {
 
 <amplify-callout>
 
-All Flutter DataStore Hub events are currently structured as serialized maps. The event name is specified in an 'eventName' attribute within the map.
+Flutter DataStore Hub イベントは現在、シリアライズされたマップとして構成されています。イベント名はマップ内の 'eventName' 属性で指定されます。
 
-Coming soon: Support for custom event types and automated model instantiation within the event payload.
+近日公開:イベントペイロード内でカスタムイベントタイプと自動モデルインスタンス化をサポートします。
 
 </amplify-callout>
 
 <amplify-callout>
 
-Setup your Hub Listener or Subscriber before calling Amplify.configure() to avoid missing some DataStore events.
+Amplify.configure() を呼び出す前に、Hub Listener または Subscriber を設定して、一部の DataStore イベントを逃さないようにします。
 
 </amplify-callout>

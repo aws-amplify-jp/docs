@@ -1,17 +1,17 @@
 ---
-title: Relationships
-description: Get started with the Admin UI
+title: 関連
+description: 管理者 UI で始めましょう
 ---
 
 <amplify-callout warning>
 
-Clone the [example data model](~/console/data/data-model.md#data-modeling-example) to follow along
+データモデル [の例](~/console/data/data-model.md#data-modeling-example) をクローンしてフォローする
 
 </amplify-callout>
 
-## Model data for a one to one relationship
+## 1対1の関係のモデルデータ
 
- In this scenario, the bookstore maintains a list of ISBN numbers to track the books it sells. Each book has only one ISBN number and each ISBN number is assigned to only one book. This is an example of a one to one (1:1) data relationship between ISBN numbers and books. Use the following instructions to model the *Book* and *ISBN* data types and their relationship in Admin UI.
+ このシナリオでは、書店はそれが販売する本を追跡するためにISBN番号のリストを維持しています。 各本にはISBN番号が1つしかなく、ISBN番号が1つの書籍に割り当てられています。 これは、ISBN番号と書籍の1対1(1:1)のデータ関係の例です。 以下の手順を使用して、 *Book* と *ISBN* のデータ型と、Admin UI での関連性をモデル化します。
 
 1. In the cloned schema, define the one to one data relationship between `ISBN` and `Book`, as each book has a single ISBN number and each ISBN number is associated with a single book. On the ISBN type, choose **Add a relationship**.
 1. In the **Add relationship** window, in the **Select related model** menu, choose `Book`. For the relationship type, choose **One ISBN to one Book**. For **Relationship name**, enter `Book`. Choose **Save**. The relationship should look like the following.
@@ -20,35 +20,35 @@ Clone the [example data model](~/console/data/data-model.md#data-modeling-exampl
 
 When you return to the **Data modeling** page, the `ISBN` model will be updated with the relationship information. Now repeat the same steps for the `Book` model - define a 1:1 relationship from Book to ISBN.
 
-## Model data for a one to many relationship
+## 1対多の関係のモデルデータ
 
-Now let's create a data model for publishers. Each book in the bookstore has only one publisher. However, each publisher can publish many books. This represents a one to many relationship (1:n) between publishers and books that we can model in our example.
+今、出版社のためのデータモデルを作成しましょう. 本屋の各本は、1つの出版社を持っています. しかしながら, 各出版社は、多くの本を公開することができます. これは、私たちの例でモデル化できる出版者と本の間の1対多の関係(1:n)を表しています。
 
-1. In the cloned schema, select the `Publisher` model.
-1. For the `Publisher` model, choose **Add a relationship**.
+1. 複製されたスキーマで、 `Publisher` モデルを選択します。
+1. `Publisher` モデルの場合、 **Add a relation** を選択します。
 1. In the **Add relationship** window, in the **Select related model** menu, choose `Book`. For the relationship type, choose **One Publisher to many Book**. For **Relationship name**, enter `books`. Choose **Save**. The relationship should look like the following.
 
 ![GSA](~/images/console/5_onetomanyCardinality.png)
 
-## Model data for a many to many relationship
+## 多対多の関係のモデルデータ
 
-Let's add a final data model for authors to our example. A book can have a single author or multiple authors. Therefore, a book in the bookstore can be written by many authors and each author can write many books. This is a many to many (m:n)data relationship between books and authors that we can model in our example.
+著者のための最終的なデータモデルを私たちの例に追加しましょう。本は一人の著者または複数の著者を持つことができます。 したがって、本屋の本は多くの著者によって書かれることができ、各著者は多くの本を書くことができます。 これは、本と著者の間の多くから多くのデータ関係(m:n)であり、この例ではモデル化できます。
 
-1. In the cloned schema, select the `Author` model.
-4. For the `Author` model, choose **Add a relationship**.
+1. 複製されたスキーマで、 `Author` モデルを選択します。
+4. `著者` モデルの場合は、 **関係の追加** を選択します。
 5. In the **Add relationship** window, choose `Book` from the **Select related model** menu. For the relationship type, choose **Many Author to many Book**. For **Relationship name**, enter a meaningful name, such as `Book`. Choose **Save**. The relationship should look like the following.
 
 ![GSA](~/images/console/6_manytomanyCardinality.png)
 
 
-## Test data model works as expected
+## テストデータモデルは期待通りに動作します
 
-When you are finished modeling your data and defining the data relationships, you can save and deploy the models to an Amplify backend environment.
+データのモデリングとデータリレーションシップの定義が終わったら、Amplifyバックエンド環境にモデルを保存してデプロイできます。
 
-1. Choose **Deploy** in the upper right corner of the **Data modeling** page.
+1. **データモデリング** ページの右上隅にある **デプロイ** を選択します。
 
 2. If you are working in the sandbox, on the **Deploy to AWS** page, either choose **Create an AWS account** or **Login to deploy AWS Account** and proceed with the deployment process.
 
-3. If you are working in the Admin UI from your AWS account, the deployment status displays in the upper right corner of the page.
+3. AWS アカウントのAdmin UIで作業している場合は、ページの右上隅にデプロイメント状況が表示されます。
 
 4. Navigate to the **Content** tab and create data in the tables. You should be able to create and link records from different models. For more information, see [Manage content](~/console/data/content-management.md).

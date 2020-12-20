@@ -1,32 +1,32 @@
 ---
-title: Upgrading the CLI
-description: Keep Amplify CLI up-to-date by running npm install -g @aws-amplify/cli
+title: CLI のアップグレード
+description: npm install -g @aws-amplify/cli を実行して、Amplify CLI を最新の状態に保ちます。
 ---  
 
-The Amplify CLI team continuously pushes new features, enhancements and security improvements and it is recommended to update the Amplify CLI version which you or your team is using to the latest version. You can keep track of the latest releases of the Amplify CLI on npm - https://www.npmjs.com/package/@aws-amplify/cli
+Amplify CLI チームは継続的に新機能をプッシュします。 機能強化とセキュリティの改善、そしてあなたまたはあなたのチームが使用しているAmplify CLIバージョンを最新バージョンに更新することをお勧めします。 npm で Amplify CLI の最新リリースを追跡できます - https://www.npmjs.com/package/@aws-amplify/cli
 
-Follow the steps below to update to the latest version of the CLI:
+以下の手順に従って、CLI の最新バージョンに更新してください。
 
-1. Enter the following command in your terminal:
+1. 端末に次のコマンドを入力します:
     ```bash
     npm install -g @aws-amplify/cli
     ```
-2. Verify the successful installation of the latest CLI version by entering the following command in the CLI
+2. CLI に次のコマンドを入力して、最新の CLI バージョンのインストールに成功したことを確認します。
     ```bash
     amplify -v
     ```
-    and confirm the installed version of the Amplify CLI. You can find the latest version of the CLI here - https://www.npmjs.com/package/@aws-amplify/cli
-3. Navigate to your Amplify project folder using the following command `cd <Project-Filepath>`. To verify if it is a valid Amplify project folder, enter the following command in the CLI:
+    そして、Amplify CLIのインストール済みバージョンを確認します。CLIの最新バージョンはこちらから - https://www.npmjs.com/package/@aws-amplify/cli
+3. 次のコマンド `cd <Project-Filepath>`を使用して、Amplifyプロジェクトフォルダに移動します。 有効なAmplifyプロジェクトフォルダであるかどうかを確認するには、CLIに次のコマンドを入力します。
     ```bash
-    amplify status
+    増幅の状態
     ```
-    If it is a valid Amplify project folder, Amplify will display a list of the resources in the project folder that you have deployed to the AWS cloud.
-4. Update your backend resources with updated security configurations or improvements by entering the following command in the CLI:
+    有効なAmplifyプロジェクトフォルダである場合 AmplifyはAWSクラウドにデプロイしたプロジェクトフォルダ内のリソースの一覧を表示します。
+4. 更新されたセキュリティ設定でバックエンドリソースを更新するか、CLIに次のコマンドを入力して改善します:
     ```bash
-    amplify push --force
+    push --force を増幅する
     ```
-    Hit Enter or type Y when prompted for confirmations. Look for the following result to validate the configuration updates have been applied.
+    確認のプロンプトが表示されたら、Enterキーを押すか、Yキーを入力します。設定の更新が適用されたことを検証するには、次の結果を探します。
     ```console
-    ✔ All resources are updated in the cloud 
+    ✔すべてのリソースがクラウドで更新されます 
     ```
-5. If you have multiple AWS Amplify project folders, repeat steps **#3** and **#4** for each project folder.
+5. 複数のAWS Amplifyプロジェクトフォルダがある場合は、各プロジェクトフォルダについてステップ **#3** と **#4** を繰り返してください。

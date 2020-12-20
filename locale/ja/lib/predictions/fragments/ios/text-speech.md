@@ -1,8 +1,8 @@
-## Set up the backend
+## バックエンドの設定
 
-If you haven't already done so, run `amplify init` inside your project and then `amplify add auth` (we recommend selecting the *default configuration*).
+まだ実行していない場合 プロジェクト内で `amplify init` を実行し、 `増幅して認証を追加` します(デフォルトの設定 *を選択することをお勧めします*)。
 
-Run `amplify add predictions`, then use the following answers:
+`を増幅して予測を追加する`を実行し、次の答えを使用します。
 
 ```console
 ? Please select from one of the categories below
@@ -31,11 +31,11 @@ Run `amplify add predictions`, then use the following answers:
 ❯ Auth and Guest users
 ```
 
-Run `amplify push` to create the resources in the cloud
+クラウドでリソースを作成するには、 `増幅プッシュ` を実行してください
 
-## Working with the API
+## API の操作
 
-Here is an example of converting text to speech. In order to override any choices you made while adding this resource using the Amplify CLI, you can pass in a voice in the options object as shown below.
+テキストを音声に変換する例を次に示します。 Amplify CLI を使用してこのリソースを追加中に行った選択を上書きするには、次の手順を実行します。 以下のようにoptionsオブジェクトの音声を渡すことができます。
 
 <amplify-block-switcher>
 
@@ -116,4 +116,4 @@ func textToSpeech(text: String) {
 
 </amplify-block-switcher>
 
-As a result of running this code, you will hear audio of the text being emitted from your device.
+このコードを実行すると、デバイスから発せられたテキストの音声が聞こえます。

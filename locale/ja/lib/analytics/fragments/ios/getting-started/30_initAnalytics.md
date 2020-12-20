@@ -7,7 +7,7 @@ import Amplify
 import AmplifyPlugins
 ```
 
-**Add the following code** to your AppDelegate's `application:didFinishLaunchingWithOptions` method:
+**AppDelegateの** アプリケーションに次のコード `を追加します:didFinishLaunchingWithOptions` メソッド:
 ```swift
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
@@ -23,8 +23,8 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
     return true
 }
 ```
-Upon building and running this application you should see the following in your console window:
+このアプリケーションをビルドして実行すると、コンソールウィンドウに次のようなものが表示されます:
 
 ```console
-Amplify configured with Auth and Analytics plugin
+AmplifyをAuthとAnalyticsプラグインで構成する
 ```

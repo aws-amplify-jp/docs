@@ -1,6 +1,6 @@
 ---
 title: REST API
-description: The API category will perform SDK code generation which, when used with the AWSMobileClient can be used for creating signed requests for Amazon API Gateway when the service Authorization is set to AWS_IAM or when using a Cognito User Pools Authorizer.
+description: API カテゴリは、SDK コードの生成を実行します。 AWSMobileClient と一緒に使用した場合、サービスの Authorization が AWS_IAM に設定されている場合、または Cognito User Pools Authorizer を使用している場合、Amazon API Gateway の署名済みリクエストを作成するために使用できます。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

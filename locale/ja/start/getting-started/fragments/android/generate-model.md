@@ -1,12 +1,12 @@
 With the basic setup complete, next you will model the data your application will store. Amplify DataStore will use this model to persist data to your local device and synchronize it to a backend API without writing any additional code. These models are specified as [GraphQL](http://graphql.org/) schemas. If you'd like, first [learn more](~/cli/graphql-transformer/overview.md) about GraphQL schemas and data modeling.
 
-1. Switch to **Project** view in Android Studio.
+1. Android Studio で **プロジェクト** ビューに切り替えます。
 
   ![](~/images/lib/getting-started/android/set-up-android-studio-project-view.png)
 
 1. Expand the **Todo** folder and open the schema file located at **amplify** > **backend** > **api** > **amplifyDatasource** > **schema.graphql**.
 
-    Replace the contents of the file with the following schema:
+    ファイルの内容を以下のスキーマに置き換えます:
 
     ```graphql
    enum Priority {
@@ -23,15 +23,15 @@ With the basic setup complete, next you will model the data your application wil
    }
     ```
 
-    This schema creates a model called `Todo` with four properties:
+    このスキーマは、4つのプロパティを持つ `Todo` という名前のモデルを作成します。
 
-    - **id** an auto-generated identifier field for a Todo item
-    - **name** a non-optional string field that is the title of the Todo item
+    - **ID** Todo アイテムの自動生成識別子フィールド
+    - **名前** Todoアイテムのタイトルである任意でない文字列フィールド
     - **priority** an optional enumeration type field that indicates the importance of a Todo item; the value of priority can be only *LOW*, *NORMAL*, or *HIGH*
-    - **description** an optional string field that holds more information about a Todo item
+    - **説明** Todo アイテムの詳細情報を保持する任意の文字列フィールド。
 
-1. Next, generate the classes for these models. In Android Studio, click the Gradle Task dropdown in the toolbar and select **modelgen**.
+1. 次に、これらのモデルのクラスを生成します。Android Studio で、ツールバーの Gradle Task ドロップダウンをクリックして **modelgen** を選択します。
 
   ![](~/images/lib/getting-started/android/set-up-android-studio-run-task-dropdown.png)
 
-1. Run the task. You can do this by pressing the **play button** or pressing **Control-R**.
+1. タスクを実行します。これを行うには、 **再生ボタン** を押すか、 **Control-R** を押します。

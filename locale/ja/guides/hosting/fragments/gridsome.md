@@ -1,14 +1,14 @@
-In this guide you will learn how to deploy a Gridsome site with Amplify Hosting.
+このガイドでは、Amplify HostingでGridsomeサイトを展開する方法を学びます。
 
-### Getting started
+### はじめに
 
 <amplify-callout>
 
-In this step, you will create a new Gridsome site. If you have already created a site, you can jump to the [next step](#creating-the-git-repository).
+このステップでは、新しいGridsomeサイトを作成します。 すでにサイトを作成している場合は、 [次のステップ](#creating-the-git-repository) にジャンプできます。
 
 </amplify-callout>
 
-If you haven't already, install the [Gridsome CLI](https://gridsome.org/docs/):
+まだインストールしていない場合は、 [Gridsome CLI](https://gridsome.org/docs/) をインストールしてください :
 
 ```sh
 # Using YARN
@@ -18,20 +18,20 @@ yarn global add @gridsome/cli
 npm install --global @gridsome/cli
 ```
 
-Next, create a new site and change into the new directory:
+次に、新しいサイトを作成し、新しいディレクトリに変更します:
 
 ```sh
 gridsome create gridsome-amplify
 cd gridsome-amplify
 ```
 
-### Creating the Git repository
+### Git リポジトリの作成
 
-Next, create a new Git repository and copy the URI of the repo to your clipboard.
+次に、新しい Git リポジトリを作成し、リポジトリの URI をクリップボードにコピーします。
 
-![Gridsome Hosting with Amplify Console - Creating the repo](~/images/hosting/gridsome/0.png)
+![Amplifyコンソールを使用したGridsome ホスティング - リポジトリの作成](~/images/hosting/gridsome/0.png)
 
-Now, initialize the new repository within the root of your project and push the code to Git.
+ここで、プロジェクトのルート内の新しいリポジトリを初期化し、コードをGitにプッシュします。
 
 ```sh
 git init
@@ -41,28 +41,28 @@ git commit -m 'initial commit'
 git push origin master
 ```
 
-### Deploying the site to Amplify Console Hosting
+### サイトをAmplifyコンソールホスティングにデプロイする
 
-To use Amplify Hosting, visit the [Amplify Console](https://console.aws.amazon.com/amplify/home) and click __GET STARTED__ under __Deploy__.
+Amplify Hostingを使用するには、 [Amplifyコンソール](https://console.aws.amazon.com/amplify/home) にアクセスし、 __デプロイ__ の ____をクリックします。
 
-![Gridsome Hosting with Amplify Console - Console view](~/images/hosting/gridsome/1.png)
+![Amplifyコンソールを備えたGridsome Hosting - コンソールビュー](~/images/hosting/gridsome/1.png)
 
-Next, choose the Git provider that you are using and click __Continue__:
+次に、使用している Git プロバイダを選択し、 __Continue__ をクリックします。
 
-![Gridsome Hosting with Amplify Console - Choosing your Git provider](~/images/hosting/gridsome/2.png)
+![Amplifyコンソールを使ったGridsomeホスティング - Gitプロバイダーの選択](~/images/hosting/gridsome/2.png)
 
-In the next screen, choose your repository and branch and click __Next__:
+次の画面で、リポジトリとブランチを選択し、 __次へ__ をクリックします:
 
-![Gridsome Hosting with Amplify Console - Choosing your Git repo and branch](~/images/hosting/gridsome/3.png)
+![Amplifyコンソールを使ったGridsomeホスティング - Gitリポジトリとブランチの選択](~/images/hosting/gridsome/3.png)
 
 In the __App build and test settings__ view, click __Edit__, set the `baseDirectory` location to be `dist`, then click __Save__ and __Next__:
 
-![Gridsome Hosting with Amplify Console - Configuring the build settings](~/images/hosting/gridsome/4.png)
+![Amplifyコンソールを使用したGridsome ホスティング - ビルド設定の設定](~/images/hosting/gridsome/4.png)
 
-Finally, click __Save and deploy__.
+最後に、 __Save and deploy__ をクリックします。
 
-Once your site has successfully deployed, you should see three green checkmarks:
+サイトが正常にデプロイされると、次の3つの緑色のチェックマークが表示されます:
 
-![Gridsome Hosting with Amplify Console - Deployment complete](~/images/hosting/gridsome/5.png)
+![Amplifyコンソールを備えたGridsome ホスティング - デプロイ完了](~/images/hosting/gridsome/5.png)
 
-To view the live site, click on the automatically generated URL given to you by the Amplify Console.
+ライブサイトを表示するには、Amplifyコンソールから自動生成されたURLをクリックします。

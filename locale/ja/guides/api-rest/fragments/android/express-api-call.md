@@ -1,4 +1,4 @@
-To make a GET request, first create a RestOptions object and then use the Amplify.API.get api to issue the request:
+GET リクエストを作成するには、まず RestOptions オブジェクトを作成し、Amplify.API.get api を使用してリクエストを発行します。
 
 ```kotlin
 fun getItems() {

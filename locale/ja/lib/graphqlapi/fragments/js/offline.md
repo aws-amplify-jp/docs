@@ -1,30 +1,30 @@
-For offline scenarios, Amplify provides two SDKS.
+オフラインシナリオでは、Amplifyは2つのSDKSを提供します。
 
-[Amplify DataStore](~/lib/datastore/getting-started.md) uses AWS AppSync to make it easy to build apps that need to support offline and low-latency scenarios. DataStore also makes working with distributed, cross-user data just as simple as working with local-only data by providing a programming model for leveraging shared and distributed data without writing additional code.
+[Amplify DataStore](~/lib/datastore/getting-started.md) は AWS AppSync を使用しており、オフラインおよび低レイテンシのシナリオをサポートする必要のあるアプリを簡単に構築できます。 DataStore は、分散した作業も行います。 クロスユーザーデータは、追加のコードを書かずに共有および分散データを活用するためのプログラミングモデルを提供することによって、ローカルのみのデータを扱うのと同じくらい簡単です。
 
-The [AWS AppSync SDK](https://github.com/awslabs/aws-mobile-appsync-sdk-js/) provides offline support and enables you to integrate your app with the AWS AppSync service and integrates with the Apollo client found [here](https://github.com/apollographql/apollo-client/).
+[AWS AppSync SDK](https://github.com/awslabs/aws-mobile-appsync-sdk-js/) はオフラインサポートを提供し、アプリを AWS AppSync サービスと統合し、 [ここ](https://github.com/apollographql/apollo-client/) のApollo クライアントと統合することができます。
 
-To learn more about building offline-first apps with DataStore, check out the documentation [here](~/lib/datastore/getting-started.md).
+DataStore でオフラインファーストアプリを構築する方法については、こちらのドキュメント [](~/lib/datastore/getting-started.md) をご覧ください。
 
 ## AWS AppSync Client SDK
 
-The AppSync client SDK supports offline scenarios with a programing model that provides a "write through cache". This allows you to both render data in the UI when offline as well as add/update through an "optimistic response". The below diagram shows how the AppSync client interfaces with the network GraphQL calls, it's offline mutation queue, the Apollo cache, and your application code.
+AppSync クライアント SDK は、オフラインのシナリオを「キャッシュを通じて書き込み」を提供するプログラムモデルでサポートします。 これにより、オフライン時にデータをレンダリングしたり、「楽観的な応答」を介して追加/更新したりすることができます。 次の図は、ネットワークGraphQL呼び出しとのAppSyncクライアントインターフェイス、オフラインの変更キュー、Apolloキャッシュ、およびアプリケーションコードを示しています。
 
-![Image](~/images/appsync-architecture.png)
+![画像](~/images/appsync-architecture.png)
 
 
-Your application code will interact with the AppSync client to perform GraphQL queries, mutations, or subscriptions. The AppSync client automatically performs the correct authorization methods when interfacing with the HTTP layer adding API Keys, tokens, or signing requests depending on how you have configured your setup. When you do a mutation, such as adding a new item (like a blog post) in your app the AppSync client adds this to a local queue (persisted to disk with Local Storage, AsyncStorage, or other mediums depending on your JavaScript platform configuration) when the app is offline. When network connectivity is restored the mutations are sent to AppSync in serial allowing you to process the responses one by one.
+アプリケーション・コードは、GraphQL クエリ、変更、またはサブスクリプションを実行するために、AppSync クライアントと相互作用します。 APIキーを追加するHTTPレイヤーとインターフェースする場合、AppSyncクライアントは自動的に正しい認可メソッドを実行します。 トークン、または、セットアップの構成に応じてリクエストに署名します。 突然変異を行うとき 例えば、AppSyncクライアントがアプリに新しいアイテム(ブログポストなど)を追加するなど、ローカルキューにこれを追加します (ローカルストレージとディスクに永続化されます)。 アプリがオフラインの場合、AsyncStorage、またはその他のメディアはJavaScriptプラットフォームの構成によって異なります。 ネットワーク接続が復元されると、変更はシリアルの AppSync に送信され、応答を一つずつ処理することができます。
 
-Any data returned by a query is automatically written to the Apollo Cache (e.g. “Store”) that is persisted to the configured medium. The cache is structured as a key value store using a reference structure. There is a base “Root Query” where each subsequent query resides and then references their individual item results. You specify the reference key (normally “id”) in your application code. An example of the cache that has stored results from a “listPosts” query and “getPost(id:1)” query is below.
+クエリによって返されるデータは、自動的に Apollo Cache に書き込まれます。 設定されたメディアに永続化されます。キャッシュは参照構造を使用してキー値ストアとして構成されます。 後続のクエリが存在し、個々のアイテムの結果を参照するベースの「ルートクエリ」があります。 アプリケーションコードに参照キー(通常は「id」)を指定します。 "listPosts"クエリと"getPost(id:1)"クエリの結果を格納したキャッシュの例を以下に示します。
 
-| Key                      | Value                                              |
+| キー                       | 値                                                  |
 | ------------------------ | -------------------------------------------------- |
-| ROOT_QUERY               | [ROOT_QUERY.listPosts, ROOT_QUERY.getPost(id:1)] |
+| root_query               | [ROOT_QUERY.listPosts, ROOT_QUERY.getPost(id:1)] |
 | ROOT_QUERY.listPosts     | {0, 1, …,N}                                        |
-| Post:0                   | {author:"Nadia", content:"ABC"}                    |
-| Post:1                   | {author:"Shaggy", content:"DEF"}                   |
+| 投稿:0                     | {author:"Nadia", content:"ABC"}                    |
+| 投稿:1                     | {author:"Shaggy", content:"DEF"}                   |
 | ...                      | ...                                                |
-| Post:N                   | {author:"Pancho", content:"XYZ"}                   |
+| 投稿:N                     | {author:"Pancho", content:"XYZ"}                   |
 | ROOT_QUERY.getPost(id:1) | ref: $Post:1                                       |
 
 Notice that the cache keys are normalized where the `getPost(id:1)` query references the same element that is part of the `listPosts` query. This happens automatically in JavaScript applications by using `id` as a common cache key to uniquely identify the objects. You can choose to change the cache key with the `cacheOptions :{ dataIdFromObject }` method when creating the `AWSAppSyncClient`:
@@ -43,11 +43,11 @@ const client = new AWSAppSyncClient({
 });
 ```
 
-If you are performing a mutation, you can write an “optimistic response” anytime to this cache even if you are offline. You use the AppSync client to connect by passing in the query to update, reading the items off the cache. This normally returns a single item or list of items, depending on the GraphQL response type of the query to update. At this point you would add to the list, remove, or update it as appropriate and write back the response to the store persisting it to disk. When you reconnect to the network any responses from the service will overwrite the changes as the authoritative response. We'll give some examples of that in [Offline mutations](#offline-mutations).
+変更を実行している場合は、たとえオフラインであっても、いつでもこのキャッシュに「楽観的な応答」を書くことができます。 AppSync クライアントを使用して、アップデートにクエリを渡し、キャッシュ外のアイテムを読み込んで接続します。 これは通常、更新するクエリのGraphQL応答タイプに応じて、単一のアイテムまたはアイテムのリストを返します。 この時点でリストに追加し、削除します。 それを適切に更新してディスクに残す店舗への応答を書き戻すこともできます ネットワークに再接続すると、サービスからの応答は、権威ある応答として変更を上書きします。 [オフライン突然変異](#offline-mutations)のいくつかの例を紹介します。
 
-## Configuration Options
+## 設定オプション
 
-`disableOffline`: If you don't need/want offline capabilities, this option skips the creation of a local store to persist the cache and mutations made while offline.
+`disableOffline`: オフライン機能を必要としない/必要としない場合。 このオプションは、オフライン中に行われたキャッシュと変更を保持するためにローカルストアの作成をスキップします。
 
 ```javascript
 const client = new AWSAppSyncClient({
@@ -63,13 +63,13 @@ const client = new AWSAppSyncClient({
 
 `conflictResolver`: When clients make a mutation, either online or offline, they can send a version number with the payload (named `expectedVersion`) for AWS AppSync to check before writing to Amazon DynamoDB. A DynamoDB resolver mapping template can be configured to perform conflict resolution in the cloud, which you can learn about in the [AppSync Resolver Mapping Template Reference for DynamoDB](https://docs.aws.amazon.com/appsync/latest/devguide/resolver-mapping-template-reference-dynamodb.html#aws-appsync-resolver-mapping-template-reference-dynamodb-condition-expressions). If the service determines it needs to reject the mutation, data is sent to the client and you can optionally run a "custom conflict resolvers" to perform client-side conflict resolution.
 
-- **mutation**: GraphQL statement of a mutation
-- **mutationName**: Optional if a name of a mutation is set on a GraphQL statement
-- **variables**: Input parameters of the mutation
-- **data**: Response from AWS AppSync of actual data in DynamoDB
-- **retries**: Number of times a mutation has been retried
+- **mutions**: GraphQL ステートメント
+- **mutationName**: GraphQL ステートメントに変更の名前が設定されている場合、任意。
+- **変数**: 変異の入力パラメータ
+- **data**: DynamoDBの実データのAWS AppSyncからの応答
+- **retry**: 突然変異が再試行された回数
 
-An example below of passing a `conflictResolver` to the `AWSAppSyncClient` object:
+`conflictResolver` を `AWSAppSyncClient` オブジェクトに渡した例を以下に示します。
 
 ```javascript
 const conflictResolver = ({ mutation, mutationName, variables, data, retries }) => {
@@ -95,21 +95,21 @@ const client = new AWSAppSyncClient({
 });
 ```
 
-In the previous example, you could do a logical check on the mutationName. If you return an object with variables for the mutation, this will automatically rerun the mutation with the correct version that AWS AppSync returned.
+前の例では、mutationName を論理的にチェックすることができます。 変更の変数を持つオブジェクトを返すと、AWS AppSync が返す正しいバージョンの変更が自動的に再実行されます。
 
 **Note**: We recommend doing this only in rare cases. Usually, we recommend that you let the AWS AppSync service define conflict resolution to prevent race conditions from occurring. If you don't want to retry, simply return `"DISCARD"`.
 
-### Offline configuration
+### オフライン設定
 
-When using the AWS AppSync SDK offline capabilities (e.g. `disableOffline: false`), you can provide configurations in the `offlineConfig` key:
+AWS AppSync SDK オフライン機能を使用する場合 (例えば `disableOffline: false`)、 `offlineConfig` キーで設定を提供できます。
 
 - Error handling: (`callback`)
-- Custom storage engine (`storage`)
-- A key prefix for the underlying store (`keyPrefix`)
+- カスタムストレージエンジン (`storage`)
+- 元のストアのキープレフィックス（`keyPrefix`）
 
-### Error handling
+### エラー処理
 
-If a mutation is done while the app was offline, it gets persisted to the platform storage engine. When coming back online, it is sent to the GraphQL endpoint. When a response is returned by the API, the SDK will notify you of the success or error using the callback provided in the `offlineConfig` parameter as follows:
+アプリケーションがオフラインのときに変更が行われた場合、プラットフォームストレージエンジンに変更が継続されます。 オンラインに戻ると、GraphQLエンドポイントに送信されます。 APIによってレスポンスが返された場合 SDK は、 `offlineConfig` パラメータに指定されているコールバックを使用して、成功またはエラーを通知します。
 
 ```javascript
 const client = new AWSAppSyncClient({
@@ -158,13 +158,13 @@ const client = new AWSAppSyncClient({
 })();
 ```
 
-**NOTE** The SDK will automatically retry for standard network errors, however access errors or other unrelated errors you will need to handle them yourself.
+**注意** SDKは自動的に標準ネットワークエラーを再試行します。 しかし、アクセスエラーまたは他の関連のないエラーは、あなたがそれらを処理する必要があります。
 
-### Custom storage engine
+### カスタムストレージエンジン
 
-You can use any custom storage engine from the [redux-persist supported engines](https://github.com/rt2zz/redux-persist#storage-engines) list.
+[redux-persist サポートされているエンジン](https://github.com/rt2zz/redux-persist#storage-engines) リストから任意のカスタムストレージエンジンを使用できます。
 
-Configuration is done as follows: (localForage shown in the example)
+構成は次のように行われます: (例に示すlocalForage)
 
 ```javascript
 import * as localForage from "localforage";
@@ -183,26 +183,26 @@ const client = new AWSAppSyncClient({
 ```
 
 
-### Key prefix
+### キープレフィクス
 
 The `AWSAppSyncClient` persists its cache data to support offline scenarios. Keys in the persisted cache will be prefixed by the provided `keyPrefix`.
 
-This prefix is required when offline support is enabled and you want to use more than one client in your app (e.g. by [accessing a multi-auth enabled AppSync API](#aws-appsync-multi-auth))
+このプレフィックスは、オフラインサポートが有効になっており、アプリ内で複数のクライアントを使用する場合に必要です (e. . [複数認証有効 AppSync API](#aws-appsync-multi-auth) へのアクセス
 
 
-## Offline Mutations
+## オフラインミューテーション
 
 As outlined in the architecture section, all query results are automatically persisted to disk with the AppSync client. For updating data through mutations when offline you will need to use an "optimistic response" by writing directly to the store. This is done by querying the store directly with `cache.readQuery({query: someQuery})` to pull the records for a specific query that you wish to update. You can do this manually with `update` functions or use the `buildMutation` and `buildSubscription` built-in helpers that are part of the AppSync SDK (we strongly recommended using these helpers).
 
-You can find the [Offline Helpers documentation here](https://github.com/awslabs/aws-mobile-appsync-sdk-js/blob/master/OFFLINE_HELPERS.md).
+[オフラインヘルパーのドキュメントはこちら](https://github.com/awslabs/aws-mobile-appsync-sdk-js/blob/master/OFFLINE_HELPERS.md)からご覧いただけます。
 
 The `update` functions can be called two or more times when using an `optimisticResponse` depending on the number of mutation you have in your offline queue **and** if you are currently offline. This is because the Apollo client will call the function once for the local optimistic write and a second time for the server response. You can read more about this in the [Apollo documentation for cache updates](https://www.apollographql.com/docs/react/data/mutations/#updating-the-cache-after-a-mutation). The AppSync client when offline will automatically resolve the promise for the server response and place your mutation in a queue for later processing. When you come back online, each item in the queue will be executed in serial and its corresponding `update` function will run as well as triggering the optimistic update of the pending items in the queue. This is to ensure that the cache is consistent when rendering the UI. Note that this means that your `update` functions should be *idempotent*.
 
 For example, the below code shows how you would update the `CreateTodoMutation` mutation from earlier by creating a `optimisticWrite(CreateTodoInput createTodoInput)` helper method that has the same input. This adds an item to the cache by first adding query results to a local array with `items.addAll(response.data().listTodos().items())` followed by the individual update using `items.add()`. You commit the record with `client.getStore().write()`. This example uses a locally generated unique identifier which might be enough for your app, however if the AppSync response returns a different value for `ID` (which many times is the case as best practice is generation of IDs at the service layer) then you will need to replace the value locally when a response is received. This can be done in the `onResponse()` method of the top level mutation callback by again querying the store, removing the item and calling `client.getStore().write()`.
 
-### With helper
+### ヘルパーあり
 
-An example of using the `buildMutation` helper to add an item to the cache:
+キャッシュにアイテムを追加するために、 `buildMutation` ヘルパーを使用した例:
 
 ```javascript
 import { buildMutation } from 'aws-appsync';
@@ -228,9 +228,9 @@ import { createTodo, CreateTodoInput } from './graphql/mutations';
 })();
 ```
 
-### Without helper
+### ヘルパーなし
 
-An example of writing an `update` function manually to add an item to the cache:
+アイテムをキャッシュに追加するために、 `update` 関数を手動で記述する例:
 
 ```javascript
 import { v4 as uuid } from 'uuid';

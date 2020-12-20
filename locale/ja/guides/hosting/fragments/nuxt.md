@@ -1,38 +1,38 @@
-In this guide you will learn how to deploy a Nuxt site with Amplify Hosting.
+このガイドでは、Amplify HostingでNuxtサイトをデプロイする方法を学びます。
 
-### Getting started
+### はじめに
 
 <amplify-callout>
 
-In this step, you will create a new Nuxt site. If you have already created a site, you can jump to the [next step](#creating-the-git-repository).
+この手順では、新しいNuxtサイトを作成します。 すでにサイトを作成している場合は、 [次のステップ](#creating-the-git-repository) にジャンプできます。
 
 </amplify-callout>
 
-Create a new Nuxt site:
+新しいNuxtサイトを作成:
 
 ```sh
 # Using YARN
-yarn create nuxt-app amplify-nuxt
+yarn create nux-app amplify-nuxt
 
 # Using NPM
-npx create-nuxt-app amplify-nuxt
+npx create-nux-app amplify-nuxt
 ```
 
-For the __Deployment target__, choose __Static (Static/JAMStack hosting)__.
+__Deployment target__の場合、 __Static/JAMStack hosting(静的/JAMStack hosting)__ を選択します。
 
-Next, change into the new directory:
+次に、新しいディレクトリに変更します。
 
 ```sh
-cd nuxt-amplify
+cd nux-amplify
 ```
 
-### Creating the Git repository
+### Git リポジトリの作成
 
-Next, create a new Git repository and copy the URI of the repo to your clipboard.
+次に、新しい Git リポジトリを作成し、リポジトリの URI をクリップボードにコピーします。
 
-![Nuxt Hosting with Amplify Console - Creating the repo](~/images/hosting/nuxt/1.png)
+![Amplifyコンソールを使用したNuxtホスティング - リポジトリの作成](~/images/hosting/nuxt/1.png)
 
-Now, initialize the new repository within the root of your project and push the code to Git.
+ここで、プロジェクトのルート内の新しいリポジトリを初期化し、コードをGitにプッシュします。
 
 ```sh
 git init
@@ -42,33 +42,33 @@ git commit -m 'initial commit'
 git push origin master
 ```
 
-### Deploying the site to Amplify Console Hosting
+### サイトをAmplifyコンソールホスティングにデプロイする
 
-To use Amplify Hosting, visit the [Amplify Console](https://console.aws.amazon.com/amplify/home) and click __GET STARTED__ under __Deploy__.
+Amplify Hostingを使用するには、 [Amplifyコンソール](https://console.aws.amazon.com/amplify/home) にアクセスし、 __デプロイ__ の ____をクリックします。
 
-![Nuxt Hosting with Amplify Console - Console view](~/images/hosting/nuxt/2.png)
+![Amplifyコンソールを使用したNuxtホスティング - コンソールビュー](~/images/hosting/nuxt/2.png)
 
-Next, choose the Git provider that you are using and click __Continue__:
+次に、使用している Git プロバイダを選択し、 __Continue__ をクリックします。
 
-![Nuxt Hosting with Amplify Console - Choosing your Git provider](~/images/hosting/nuxt/3.png)
+![Amplifyコンソールを使用したNuxtホスティング - Gitプロバイダの選択](~/images/hosting/nuxt/3.png)
 
-In the next screen, choose your repository and branch and click __Next__:
+次の画面で、リポジトリとブランチを選択し、 __次へ__ をクリックします:
 
-![Nuxt Hosting with Amplify Console - Choosing your Git repo and branch](~/images/hosting/nuxt/4.png)
+![Amplifyコンソールを使用したNuxtホスティング - Gitリポジトリとブランチの選択](~/images/hosting/nuxt/4.png)
 
-In the __App build and test settings__ view, click __Edit__ and do the following:
+__App build and test settings__ viewで、 __Edit__ をクリックし、次の操作を行います:
 
-1. Set the __build__ command to: `yarn run generate`
-2. Set the `baseDirectory` location to be `dist`
-3. Click __Save__
-4. Click __Next__
+1. __build__ コマンドを次のように設定します: `yarn run generate`
+2. `baseDirectory` の場所を `dist` に設定します
+3. __保存__ をクリックします
+4. __次へ__ をクリックしてください
 
-![Nuxt Hosting with Amplify Console - Configuring the build settings](~/images/hosting/nuxt/5.png)
+![Amplifyコンソールを使用したNuxtホスティング - ビルド設定の構成](~/images/hosting/nuxt/5.png)
 
-Finally, click __Save and deploy__.
+最後に、 __Save and deploy__ をクリックします。
 
-Once your site has successfully deployed, you should see three green checkmarks:
+サイトが正常にデプロイされると、次の3つの緑色のチェックマークが表示されます:
 
-![Nuxt Hosting with Amplify Console - Deployment complete](~/images/hosting/nuxt/6.png)
+![Amplifyコンソールを備えたNuxtホスティング - デプロイ完了](~/images/hosting/nuxt/6.png)
 
-To view the live site, click on the automatically generated URL given to you by the Amplify Console.
+ライブサイトを表示するには、Amplifyコンソールから自動生成されたURLをクリックします。

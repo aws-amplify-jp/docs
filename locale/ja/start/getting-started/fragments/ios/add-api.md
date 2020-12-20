@@ -1,34 +1,34 @@
-## Provision backend
+## バックエンドを提供する
 
-Now that you have DataStore persisting data locally, in the next step you'll connect it to the cloud. With a couple of commands, you'll create an AWS AppSync API and configure DataStore to synchronize its data to it.
+DataStoreがローカルでデータを永続化するようになったので、次のステップでクラウドに接続します。 いくつかのコマンドを使用すると、AWS AppSync APIを作成し、DataStoreにデータを同期させるように設定します。
 
-1. Configure Amplify to manage cloud resources on your behalf. Open a terminal window and run `amplify configure`. This step will configure a new AWS user in your account for Amplify.
+1. あなたの代わりにクラウドリソースを管理するためにAmplifyを設定します。ターミナルウィンドウを開き、 `configure configure`を実行します。 この手順では、Amplifyのアカウントに新しいAWSユーザーを設定します。
 
     ```bash
-    amplify configure
+    増幅の設定
     ```
 
-   This command will open up a web browser to the AWS Management Console and guide you through creating a new IAM user. For step-by-step directions to set this up, refer to the [CLI installation guide](~/cli/start/install.md).
+   このコマンドはAWS管理コンソールへのWebブラウザを開き、新しいIAMユーザーの作成をガイドします。 これを設定するには、 [CLI インストールガイド](~/cli/start/install.md) を参照してください。
 
-1. Initialize the Amplify backend. To do this, **run the command**:
+1. Amplifyバックエンドを初期化します。これを行うには、 **コマンド** を実行します。
 
     ```bash
-    amplify init
+    initを増幅する
     ```
 
-1. Next, push your new backend to the cloud. To do this, **run the command**:
+1. 次に、新しいバックエンドをクラウドにプッシュします。これを行うには、 **コマンド** を実行します。
 
     ```bash
-    amplify push
+    push を増幅する
     ```
 
     <amplify-callout>
 
-    **Note:** sit back and relax since this command will generate all the required cloud resources on your AWS account and it might take a while to complete.
+    **注意:** このコマンドはAWSアカウントに必要なすべてのクラウドリソースを生成し、完了するまでに時間がかかる場合がありますので、ゆっくり座ってリラックスしてください。
 
     </amplify-callout>
 
-## Enable cloud syncing
+## クラウド同期を有効にする
 
 In order to enable cloud syncing you need to **configure your application to use the Amplify API category**. Open the `AppDelegate.swift` file and **update the amplify initialization code** to add the API plugin. The `application(_,didFinishLaunchingWithOptions:)` function should now call `Amplify.add(plugin:)` with a reference to an `AWSAPIPlugin` instance:
 
@@ -46,23 +46,23 @@ do {
 }
 ```
 
-Now when you run you application the data will be synced to your cloud backend automatically! 🎉
+これでアプリケーションを実行すると、データがクラウドバックエンドに自動的に同期されます! 🎉
 
-## Add a subscription
+## サブスクリプションを追加
 
-We will now demonstrate how to add a subscription to the application, so that we can receive any updates to the `Todo` model.
+ここでは、 `Todo` モデルの更新を受け取るために、サブスクリプションをアプリケーションに追加する方法を説明します。
 
-1. Open `ContentView.swift` and **add the following** import statement at the top of the file:
+1. `ContentView.swift` を開き、 **ファイルの先頭に次の** import 文を追加します:
   ```swift
   import Combine
   ```
 
-1. In the same file (`ContentView.swift)`, **add a member variable** in the body of the struct:
+1. 同じファイル (`ContentView.swift)`, **構造体にメンバー変数** を追加:
   ```swift
   @State var todoSubscription: AnyCancellable?
   ```
 
-1. In the same file (`ContentView.swift`), **add the following** code to the body of the struct:
+1. 同じファイル (`ContentView.swift`), **構造体に次の** コードを追加:
   ```swift
   func subscribeTodos() {
       self.todoSubscription
@@ -97,29 +97,29 @@ We will now demonstrate how to add a subscription to the application, so that we
   ```swift
   func performOnAppear() {
       subscribeTodos()
-  }
+}
   ```
 
-1. **Build and run** the application. In the console output, you will see that we are making a websocket connection to receive updates any time there is a mutation to the Todo model.
+1. **** アプリケーションをビルドして実行します。 コンソールの出力で Todoモデルへの変異がある場合はいつでも更新を受け取るためにWebSocket接続を行っていることがわかります。
 
-Since this is the first time you are connecting to API, DataStore will sync any mutations that were previously made offline. If you have been following the guide, there should be one mutation that is synchronized to the backend that has an id of "Build iOS Application".
+APIに接続するのは初めてなので、DataStoreは以前にオフラインで行われた変更を同期します。 ガイドに従っている場合 "Build iOS Application"のIDを持つバックエンドと同期される1つの変異があるはずです。
 
-## Query for mutations using the console
+## コンソールを使用して変更をクエリする
 
-In this section we will make a mutation using the app sync console and have our app receive that mutation over the websocket subscription.
+このセクションでは、appsyncコンソールを使用して変更を行い、websocketサブスクリプション上で変更を受け取るようにします。
 
-1. Open a terminal window in your project's directory. **Run the command:**
+1. プロジェクトのディレクトリでターミナルウィンドウを開きます。 **コマンドを実行します:**
   ```bash
-  amplify console api
+  コンソールの api を増幅する
   ```
 
-  When prompted, select **GraphQL**. This will open the AWS AppSync console.
+  プロンプトが表示されたら、 **GraphQL**を選択します。 これによりAWS AppSync コンソールが開きます。
    ```Console
-   ? Please select from one of the below mentioned services: (Use arrow keys)
+   ?以下のサービスのいずれかから選択してください: (矢印キーを使用)
       GraphQL 
    ```
 
-1. Copy and paste the following query into the left pane:
+1. 次のクエリを左ペインにコピー&ペーストします。
 
     ```graphql
     query GetTodos {
@@ -131,16 +131,16 @@ In this section we will make a mutation using the app sync console and have our 
                 _deleted
             }
         }
-    }
+}
     ```
 
-1. Press the **play button** to run the query. This will return all of the synchronized Todos in the right pane:
+1. **再生ボタン** を押してクエリを実行します。これにより、右側のペインに同期されたすべてのTodosが返されます。
 
     ![](~/images/lib/getting-started/ios/set-up-ios-appsync-query.png)
 
-## Create a mutation
+## 突然変異を作成
 
-1. Synchronization will occur bi-directionally. Create an item in AWS AppSync by copying and pasting the following mutation:
+1. 同期は双方向に発生します。以下の変更をコピーして貼り付けることで、AWS AppSync に項目を作成します。
 
     ```graphql
     mutation CreateTodo {
@@ -163,8 +163,8 @@ In this section we will make a mutation using the app sync console and have our 
 
     ![](~/images/lib/getting-started/ios/set-up-ios-appsync-create.png)
 
-1. In the console output of your app, you should see:
+1. アプリのコンソール出力には、以下が表示されます。
 
   ```console
-  Subscription got this value: MutationEvent(id: "58220B03-6A42-4EB8-9C07-36019783B1BD", modelId: "0a0acfab-1014-4f25-959e-646a97b7013c", modelName: "Todo", json: "{\"id\":\"0a0acfab-1014-4f25-959e-646a97b7013c\",\"name\":\"Tidy up the office\",\"priority\":\"NORMAL\",\"description\":\"Organize books, vacuum, take out the trash\"}", mutationType: "create", createdAt: 2020-05-14 23:31:04 +0000, version: Optional(1), inProcess: false, graphQLFilterJSON: nil)
+  Subscription got this value: MutationEvent(id: "58220B03-6A42-4EB8-9C07-36019783B1BD", modelId: "0a0acfab-1014-4f25-959e-646a97b7013c", modelName: "Todo", json: "{\"id\":\"id\"0a0acfab-1014-4f25-959e-646a97b7013c\","name\":\"Tidy up the office\", "priority\":\"NORMAL\",\"description\":\"Organize book, vacuum, take out the trash\"}", mutationType: "create", createdAt: 2020-05-14 23:31:04 +0000, version: Optional(1), inProcess: false, graphQLFilterJSON: nil)
   ```

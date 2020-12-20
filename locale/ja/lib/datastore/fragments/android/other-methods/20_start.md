@@ -12,7 +12,7 @@ Amplify.DataStore.start(
 ```kotlin
 Amplify.DataStore.start(
     { Log.i("MyAmplifyApp", "DataStore started") },
-    { Log.e("MyAmplifyApp", "Error starting DataStore", it) }
+    { Log.e("MyAmplifyApp", "Error start DataStore", it) }
 )
 ```
 

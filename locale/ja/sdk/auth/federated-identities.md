@@ -1,6 +1,6 @@
 ---
-title: Federated identities
-description: Federated Sign In can be used to obtain federated “Identity ID” using external providers. Learn how to setup external sign-in providers like SAML provider, Facebook, Google, Sign in with Apple.
+title: フェデレーションID
+description: Federated Sign In can used to obtain federated “Identity ID” using the external providers. SAML プロバイダー、Facebook、Google、Apple でサインインなどの外部サインインプロバイダーを設定する方法をご覧ください。
 ---
 
 <inline-fragment src="~/sdk/fragments/library-callout.md"></inline-fragment>

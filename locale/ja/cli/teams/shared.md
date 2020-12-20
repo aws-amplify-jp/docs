@@ -1,38 +1,38 @@
 ---
-title: Share single environment
-description: Learn the recommended workflow for multiple team members sharing a single Amplify environment.
+title: 単一の環境を共有
+description: 単一のAmplify環境を共有する複数のチームメンバーが推奨するワークフローを学びます。
 ---
 
-You have two independent environments (master & dev) in the cloud and have corresponding git branches with your amplify backend infrastructure code on Git. Suppose all team members want to work on the same Amplify project and push backend related changes to the same dev environment to test their changes. Each team member would run the following:
+クラウドには2つの独立した環境 (マスター & dev) があり、Gitのバックエンドインフラストラクチャコードを増幅する対応するgit ブランチがあります。 すべてのチームメンバーが同じAmplifyプロジェクトで作業し、同じ開発環境でバックエンドに関連する変更をプッシュして変更をテストするとします。 各チームメンバーは以下を実行します:
 
 ```bash
 cd <project-dir>
-amplify init
+は init を増幅する
 ```
 <amplify-callout warning>
 
-Ensure the root of your project has the `amplify` folder set up in order to be able to re-use existing environments.
+既存の環境を再利用できるようにするために、プロジェクトのルートが `増幅する` フォルダが設定されていることを確認してください。
 
 </amplify-callout>
 
 ```console
-Do you want to use an existing environment? Yes
-Choose the environment you would like to use:
-❯ dev
+既存の環境を使用しますか？ はい
+使用したい環境を選択してください:
+<unk> dev
 master
-# The rest of init steps
-# amplify add/update 
-amplify push
+# 残りの init ステップ
+# 増幅を追加/更新 
+push を増幅する
 ```
 
-Since the team is sharing the same dev backend, periodically team members would need to pull in changes which their team members pushed for the dev environment to be in sync. Let's pull in the changes from the dev branch & environment.
+チームが同じ開発者バックエンドを共有しているため、 定期的にチームメンバーは開発環境を同期させるために チームメンバーが推進した変更を取り込む必要がある 開発ブランチ & 環境から変更を取り込みましょう。
 
 ```bash
-amplify pull
+増幅する
 ```
 
-## Sharing projects within the team
-Inside the amplify/ dir file-structure you will observe a **team-provider-info.json** file which contains a structure similar to the following:
+## チーム内でプロジェクトを共有
+増幅/dir file-structure 内では、以下のような構造を含む **team-provider-info.json** ファイルを観察します。
 
 ```json
 {
@@ -63,8 +63,8 @@ Inside the amplify/ dir file-structure you will observe a **team-provider-info.j
 }
 ```
 
-This file is to be shared between team members, so that they have the ability to push/provision resources to the same CloudFormation stack and that way teams can work in a push/pull way and can always be in sync with the latest state of the project in the cloud.
+このファイルはチームメンバー間で共有されます 同じCloudFormationスタックにリソースをプッシュ/プロビジョニングできるようになり、チームがプッシュ/プル方法で作業できるようになり、クラウドのプロジェクトの最新の状態と常に同期できるようになります。
 
-Note: Team members would only be able to push to a stack only if they have the correct credentials (access key/secret keys) to do so.
+注意: チームメンバーは、正しい資格情報(アクセスキー/シークレットキー)がある場合にのみ、スタックにプッシュすることができます。
 
-If you want to share a project publicly and open source your serverless infrastructure, you should remove or put the amplify/team-provider-info.json file in gitignore file.
+プロジェクトを公開してサーバーレスインフラストラクチャをオープンソースにしたい場合は、anplify/team-provider-info.json ファイルを削除するか、gitignore ファイルに入れてください。

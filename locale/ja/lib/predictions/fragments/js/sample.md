@@ -1,14 +1,14 @@
-## Sample React app
+## サンプル React アプリ
 
 A sample React application with all of the Predictions features is provided below. It shows how to use all scenarios above by calling the appropriate `convert`, `identify`, and `interpret` API calls in the Amplify library.
 
-To use `Predictions.convert()` with Amazon Transcribe you will need to install the following dependency in your app first:
+Amazon Transscribe で `Predicts.convert()` を使用するには、アプリに次の依存関係をインストールする必要があります。
 
 ```bash
 yarn add microphone-stream
 ```
 
-The components in the app code below are rendered according to the scenarios above like so:
+以下のように、アプリコード内のコンポーネントは上記のシナリオに従ってレンダリングされます。
 
 ```javascript
   return (
@@ -32,7 +32,7 @@ The components in the app code below are rendered according to the scenarios abo
   );
 ```
 
-React app code
+React アプリコード
 
 ```javascript
 import React, { useState } from 'react';
@@ -460,15 +460,15 @@ function App() {
 export default App;
 ```
 
-Now run `yarn start` and press the buttons to demo the app.
+次に、 `yarn start` を実行し、ボタンを押してアプリをデモします。
 
-## Sample Ionic app
+## Ionic アプリのサンプル
 
-First, be sure you have the latest Ionic CLI installed, then generate a new app (for this example you can use any template, but it's simplest to start with the Blank template to start):
+まず、最新の Ionic CLI がインストールされていることを確認し、新しいアプリケーションを生成します (この例では、任意のテンプレートを使用できます。 最初に空白のテンプレートから始めるのが最も簡単です:
 
 ```bash
 npm i -g ionic
-ionic start predictions blank # the first argument is your project name, the second the template
+ionic 開始予測 空白#最初の引数はプロジェクト名、2番目のテンプレートです
 ```
 
 Update the `src/polyfills.ts` and add to the top of the file `(window as any).global = window;`. Then, update the `src/tsconfig.app.json` file and add the "node" types:

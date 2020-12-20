@@ -1,48 +1,48 @@
-Collecting analytics data for your app can be accomplished with [Amazon Pinpoint](#using-amazon-pinpoint) or [Amazon Kinesis](#using-amazon-kinesis).
+アプリの分析データを収集するには、 [Amazon Pinpoint](#using-amazon-pinpoint) または [Amazon Kinesis](#using-amazon-kinesis) を使用します。
 
-Amazon Pinpoint is a fully managed AWS service that you can use to engage with your customers across multiple messaging channels using analytics captured from the device. You can send push notifications, emails, or text messages (SMS), depending on the purpose of your campaign. Features include:
+Amazon Pinpointは完全に管理されたAWSサービスで、デバイスからキャプチャした分析を使用して、複数のメッセージングチャネルの顧客とのやり取りに使用できます。 キャンペーンの目的に応じて、プッシュ通知、メール、またはテキストメッセージ(SMS)を送信できます。
 
-**Audience Segments** - You can define dynamic segments based on data that's reported by your application, such as operating system or mobile device type. You can also import static segments that you define outside of Amazon Pinpoint.
+**オーディエンスセグメント** - アプリケーションによって報告されたデータに基づいて動的セグメントを定義することができます。 例えばオペレーティングシステムやモバイル機器などです Amazon Pinpoint 以外で定義した静的セグメントをインポートすることもできます。
 
-**Messaging Campaigns** - A campaign sends tailored messages on a schedule that you define. You can create campaigns that send mobile push, email, or SMS messages. To experiment with alternative campaign strategies, set up your campaign as an A/B test, and analyze the results with Amazon Pinpoint analytics.
+**メッセージキャンペーン** - 設定したスケジュールに合わせてキャンペーンが送信されます。 モバイルプッシュ、メール、SMSメッセージを送信するキャンペーンを作成できます。 別のキャンペーン戦略を試してみるには、キャンペーンを A/B テストとして設定し、Amazon Pinpoint 分析で結果を分析します。
 
-**Transactional Messages** - Keep your customers informed by sending transactional mobile push and SMS messages—such as new account activation messages, order confirmations, and password reset notifications—to specific users.
+**トランザクションメッセージ** - 新しいアカウントのアクティベーションメッセージなど、トランザクション型のモバイルプッシュやSMSメッセージを送信することで、顧客に知らせ続けましょう 注文確認、および特定のユーザーへのパスワードリセット通知
 
-**Analyze User Behavior** - You can view trends about your users' level of engagement, purchase activity, and demographics. You can monitor your message traffic with metrics for messages sent and opened. Through the Amazon Pinpoint API, your application can report custom data, which Amazon Pinpoint makes available for analysis.
+**ユーザーの行動を分析する** - ユーザーのエンゲージメントレベル、購入アクティビティ、人口統計に関するトレンドを表示できます。 メッセージトラフィックは、送信および開いたメッセージのメトリックで監視できます。 Amazon Pinpoint APIを使用すると、アプリケーションがカスタムデータをレポートでき、Amazon Pinpointで分析が可能になります。
 
-The Amplify CLI helps setup and configure Pinpoint within your application and connect with the AWS Mobile SDK.
+Amplify CLI は、アプリケーション内で Pinpoint を設定し、AWS Mobile SDK に接続するのに役立ちます。
 
-<b>Prerequisite:</b> [Install and configure the Amplify CLI](~/cli/start/install.md)<br>
-<b>Recommendation:</b> [Complete the Getting Started guide](~/start/start.md)
+<b>前提条件:</b> [Amplify CLI](~/cli/start/install.md)<br>
+<b>推奨:</b> [Getting Startedガイドを完了](~/start/start.md)
 
-## Set Up Your Backend
+## バックエンドを設定
 
-1. Use the CLI to add analytics to your cloud-enabled backend and app.
+1. CLI を使用して、クラウド対応のバックエンドとアプリに分析を追加します。
 
     In a terminal window, navigate to your project folder (the folder that typically contains your project level `build.gradle`), and add the SDK to your app.
 
     ```bash
     cd ./YOUR_PROJECT_FOLDER
-    amplify add analytics
+    増幅分析を追加
     ```
 
-2. When configuration for analytics is complete, a message appears confirming that you have configured local CLI metadata for this category. You can confirm this by viewing status.
+2. アナリティクスの設定が完了すると、このカテゴリのローカル CLI メタデータを設定していることを確認するメッセージが表示されます。 ステータスを表示することで確認できます。
 
     ```console
     $ amplify status
-    | Category  | Resource name   | Operation | Provider plugin   |
-    | --------- | --------------- | --------- | ----------------- |
-    | Auth      | cognitoabcd0123 | Create    | awscloudformation |
-    | Analytics | yourprojectname | Create    | awscloudformation |
+    | Resource name | Operation | Provider プラグイン|
+    | --------------- | ------------- | ------------ |
+    | 認証 | cognitoabcd0123 | Create | awscloudforming |
+    | Analytics | yourprojectname | awscloudforming |
     ```
 
-3. To create your backend AWS resources run the following:
+3. バックエンドAWSのリソースを作成するには、以下を実行します。
 
     ```bash
-    amplify push
+    push を増幅する
     ```
 
-### Update your IAM Policy:
+### IAM ポリシーを更新:
 
 The Amazon Pinpoint service requires permissions defined in an IAM policy to use the `submitEvents` API. If you are using long-term AWS credentials attached to an `Amazon IAM` user, attach the following policies to the role of that `IAM` user. If you are using temporary AWS credentials vended by `Amazon Cognito Identity Pools`, then attach the following policies to the Unauthenticated and/or Authenticated `IAM` roles of your `Cognito Identity Pool`. The role you attach the policies to depends on the scope of your application. For example, if you only want events submitted when users login, attach to the authenticated role. Similarly, if you want events submitted regardless of authentication state, attach the policy to the unauthenticated role. For more information on Cognito Identities authenticated/unauthenticated roles see <a href="https://docs.aws.amazon.com/cognito/latest/developerguide/identity-pools.html" target="_blank">here</a>.
 
@@ -64,26 +64,26 @@ The Amazon Pinpoint service requires permissions defined in an IAM policy to use
 }
 ```
 
-## Connect to Your Backend
+## バックエンドに接続
 
-Use the following steps to add analytics to your mobile app and monitor the results through Amazon Pinpoint.
+次の手順を使用して、分析をモバイルアプリに追加し、Amazon Pinpointを通じて結果を監視します。
 
-## Add Analytics
-1. Set up AWS Mobile SDK components by including the following libraries in your `app/build.gradle` dependencies list.
+## 分析を追加
+1. `app/build.gradle` の依存関係リストに次のライブラリを含めることで、AWS Mobile SDKコンポーネントを設定します。
 
 ```groovy
 dependencies {
-  implementation 'com.amazonaws:aws-android-sdk-pinpoint:2.15.+'
-  implementation ('com.amazonaws:aws-android-sdk-mobile-client:2.15.+@aar') { transitive = true }
+  implementation 'com.<unk> s:aws-android-sdk-pinpoint:2.15.+'
+  implementation ('com.<unk> s:aws-android-sdk-mobile-client:2.15.+@aar') { transitive = true }
 }
 ```
 
-* `aws-android-sdk-pinpoint` library enables sending analytics to Amazon Pinpoint.
-* `aws-android-sdk-mobile-client` library gives access to the AWS credentials provider and configurations.
+* `aws-android-sdk-pinpoint` ライブラリにより、分析結果を Amazon Pinpoint に送信できます。
+* `aws-android-sdk-mobile-client` ライブラリは AWS 資格情報プロバイダと設定へのアクセスを提供します。
 
-2. Add required permissions to your app manifest.
+2. アプリマニフェストに必要な権限を追加する
 
-    The AWS Mobile SDK requires the `INTERNET` and `ACCESS_NETWORK_STATE` permissions. These are defined in the `AndroidManifest.xml` file.
+    AWS Mobile SDK は `INTERNET` と `ACCESS_NETWORK_STATE` パーミッションが必要です。これらは `AndroidManifest.xml` ファイルで定義されています。
 
     ```xml
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -92,15 +92,15 @@ dependencies {
 
 3. Add calls to capture session starts and stops. A session is one use of an app by the user. A session begins when an app is launched (or brought to the foreground), and ends when the app is terminated (or goes to the background). To accommodate for brief interruptions, like a text message, an inactivity period of up to 5 seconds is not counted as a new session. `Total daily sessions` shows the number of sessions your app has each day. `Average sessions per daily active user` shows the mean number of sessions per user per day.
 
-   The following are typical places where you can instrument your app session start and stop:
+   以下は、アプリセッションの開始と停止を計測するための典型的な場所です。
 
-   * Start a session in the `Application.onCreate()` method.
+   * `Application.onCreate()` メソッドでセッションを開始します。
 
-   * Start a session in the `onCreate()` method of the app's first activity.
+   * アプリの最初のアクティビティの `onCreate()` メソッドでセッションを開始します。
 
-   * Start or stop a session in the [ActivityLifecycleCallbacks](https://developer.android.com/reference/android/app/Application.ActivityLifecycleCallbacks) class.
+   * [ActivityLifecycleCallbacks](https://developer.android.com/reference/android/app/Application.ActivityLifecycleCallbacks) クラスでセッションを開始または停止します。
 
-   The following example shows how to start a session in the `OnCreate` event of `MainActivity`.
+   次の例は、 `MainActivity` の `OnCreate` イベントでセッションを開始する方法を示しています。
 
     ```java
     import android.support.v7.app.AppCompatActivity;
@@ -165,21 +165,21 @@ dependencies {
 
         pinpointManager.getSessionClient().stopSession();
         pinpointManager.getAnalyticsClient().submitEvents();
-    }
+}
     ```
 
-## Monitor Analytics
+## 分析の監視
 
-Build and run your app to see usage metrics in Amazon Pinpoint. When you run the previous code samples, the console shows a logged Session.
+Amazon Pinpointで使用状況のメトリックを確認するには、アプリをビルドして実行します。以前のコードサンプルを実行すると、コンソールに記録されたセッションが表示されます。
 
-1. To see visualizations of the analytics coming from your app, open your project in the Amazon Pinpoint console by running the following:
+1. 分析のビジュアライゼーションをアプリから見るには、Amazon Pinpoint コンソールで以下を実行してプロジェクトを開きます。
 
     ```bash
-    amplify console analytics
+    コンソール分析を増幅する
     ```
 
-2. Choose `Analytics` from the icons on the left of the console, and view the graphs of your app's usage. It may take up to 15 minutes for metrics to become visible.
+2. コンソールの左側のアイコンから `Analytics` を選択し、アプリの使用状況のグラフを表示します。 メトリックが表示されるまでに最大15分かかる場合があります。
 
     ![getting-started-analytics](~/images/getting-started-analytics.png)
 
-Analytics events can be grouped into segments, and you can engage your users more deeply by tying their app usage behavior to Push Notification, email, or SMS messaging campaigns. Read more about this in the [messaging section](~/sdk/push-notifications/messaging-campaign.md) or [click here to learn more about Amazon Pinpoint](http://docs.aws.amazon.com/pinpoint/latest/developerguide/welcome.html).
+分析イベントをセグメントにグループ化できます。 さらに、アプリの使用状況をプッシュ通知、メール、またはSMSメッセージキャンペーンと結びつけることで、ユーザーをより深くエンゲージメントさせることができます。 詳細については、 [メッセージングセクション](~/sdk/push-notifications/messaging-campaign.md) または [をクリックして Amazon Pinpoint](http://docs.aws.amazon.com/pinpoint/latest/developerguide/welcome.html) の詳細をご覧ください。

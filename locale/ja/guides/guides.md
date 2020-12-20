@@ -1,20 +1,20 @@
 ---
-title: Guides
-description: The Amplify Command Line Interface (CLI) is a unified toolchain to create, integrate, and manage the AWS cloud services for your app. The CLI is category-based with best practices built in.
+title: 補助線
+description: Amplifyコマンドラインインターフェース(CLI)は、アプリケーションのAWSクラウドサービスを作成、統合、管理するための統合ツールチェーンです。 CLIはカテゴリベースで、ベストプラクティスが組み込まれています。
 disableTOC: true
-filterKey: platform
+filterKey: プラットフォーム
 ---
 
-Amplify guides are meant to give you a more in-depth understanding of how to use the Amplify CLI, libraries, and hosting to build out common functionality, end-to-end solutions, and frequently asked for workflows.
+Amplifyガイドは、Amplifyライブラリの使用方法をより詳細に理解できるようにするためのものです。 共通の機能やエンドツーエンドのソリューションを構築するホスティングや頻繁にワークフローを求められています
 
-### Overview
+### 概要
 
 Like the library and CLI documentation, guides are organized by category (__Authentication__, __Hosting__, etc..), but some guides may overlap multiple categories (i.e. __Functions__ & __API__) to demonstrate how to integrate multiple services together.
 
-Unlike the library and CLI documentation, guides will often combine the CLI and libraries together in a single tutorial. This is done to teach an end-to-end solution using both the service creation and configuration as well as connecting to and interacting with the service from a client-side application.
+ライブラリとCLIドキュメントとは異なり、ガイドは多くの場合、CLIとライブラリを単一のチュートリアルで結合します。 これは、サービスの作成と設定の両方を使用してエンドツーエンドのソリューションを教えるだけでなく、クライアント側のアプリケーションからサービスに接続してサービスとやり取りするために行われます。
 
-### Contributing
+### コントリビューション
 
-If there is a guide or idea that you would like to see implemented that is not listed, open a [GitHub Issue](https://github.com/aws-amplify/docs/issues) with the details of the use case and it will be reviewed by our team and considered.
+実装されていないガイドやアイデアが表示される場合は、 使用事例の詳細を記載した [GitHub Issue](https://github.com/aws-amplify/docs/issues) を開き、私たちのチームがレビューし検討します。
 
 If you have an idea for a guide that you'd like to write yourself you can submit a [pull request](https://github.com/aws-amplify/docs/pulls). Before writing the guide and submitting the pull request, submit an [issue](https://github.com/aws-amplify/docs/issues) with the details of your idea and you will receive guidance and feedback.

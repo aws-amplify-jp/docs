@@ -2,59 +2,59 @@ Storage module can manage files with three different access levels; `public`, `p
 
 If you had previously enabled user sign-in by running `amplify add auth` in your project, the policies will be connected to an `Authenticated Role` of the Identity Pool which has scoped permission to the objects in the bucket for each user identity. If you haven't configured user sign-in, then an `Unauthenticated Role` will be assigned for each unique user/device combination, which still has scoped permissions to just their objects.
 
-* Public: Accessible by all users of your app. Files are stored under the `public/` path in your S3 bucket.
-* Protected: Readable by all users, but writable only by the creating user. Files are stored under `protected/{user_identity_id}/` where the `user_identity_id` corresponds to the unique Amazon Cognito Identity ID for that user.
-* Private: Only accessible for the individual user. Files are stored under `private/{user_identity_id}/` where the `user_identity_id` corresponds to the unique Amazon Cognito Identity ID for that user.
+* 公開: アプリのすべてのユーザーがアクセスできます。ファイルは、S3バケットの `公開/` パスの下に保存されます。
+* 保護: すべてのユーザーが読み取ることができますが、作成ユーザーによってのみ書き込み可能です。 ファイルは `protected/{user_identity_id}/` の下に保存されます。ここで、 `user_identity_id` は、そのユーザーの固有の Amazon Cognito ID に対応します。
+* プライベート: 個々のユーザーのみアクセスできます。 ファイルは `private/{user_identity_id}/` の下に保存されます。ここで、 `user_identity_id` は、そのユーザーの固有の Amazon Cognito ID に対応します。
 
 When using Auth and Storage modules together, you do not need to construct the `/{user_identity_id}/` manually as the library will use the configured Cognito Identity ID for your user/device along with the configured access level for an action. This includes UnAuthenticated access where you will first call `Auth.currentCredentials()` before a Storage action. See [Authentication](~/lib/auth/overview.md) for more information.
 
-The access level can be configured on the Storage object globally. Alternatively, the access levels can be set in individual function calls.
+ストレージ オブジェクトでアクセスレベルをグローバルに設定することもできます。また、個々の関数呼び出しでアクセスレベルを設定することもできます。
 
-> Default access level for Storage module is `public`. Unless you configure Storage otherwise, all uploaded files will be publicly available for all users.
+> Storage モジュールのデフォルトのアクセスレベルは `public`です。 ストレージを設定しない限り、アップロードされたすべてのファイルはすべてのユーザーが公開されます。
 
 
-Access level configuration on the Storage object:
+ストレージオブジェクトのアクセスレベル設定:
 
 ```javascript
 Storage.configure({ level: 'private' });
-Storage.get('welcome.png'); // Gets the welcome.png belonging to current user
+Storage.get('welcome.png'); // 現在のユーザーに属する welcome.png を取得します。
 ```
 
-Configuration when calling the API:
+APIを呼び出すときの設定:
 
 ```javascript
-Storage.get('welcome.png', { level: 'public' }); // Gets welcome.png in public space
+Storage.get('welcome.png', { level: 'public' }); // welcome.png
 ```
 
-The default access level is `public`:
+デフォルトのアクセスレベルは `public`:
 ```javascript
-Storage.get('welcome.png'); // Get welcome.png in public space
+Storage.get('welcome.png'); // welcome.png
 ```
 
-There is also a shortcut `vault`, which is merely a Storage instance with `private` level set:
+ショートカット `保管庫`もあります。これは `プライベート` レベルが設定されたストレージインスタンスです。
 
 ```javascript
-Storage.vault.get('welcome.png'); // Get the welcome.png belonging to current user
+Storage.vault.get('welcome.png'); // 現在のユーザーに属するwelcome.pngを取得
 ```
 
-## Customization
+## カスタマイズ
 
-### Customize Object Key Path
+### オブジェクトキーパスのカスタマイズ
 
-You can customize your key path by defining prefixes:
+プレフィックスを定義することで、キーパスをカスタマイズできます。
 
 ```javascript
 Storage.configure({
     customPrefix: {
         public: 'myPublicPrefix/',
-        protected: 'myProtectedPrefix/',
+        protectedPrefix/',
         private: 'myPrivatePrefix/'
     },
     // ...
 })
 ```
 
-For example, if you want to enable read, write and delete operation for all the objects under path *myPublicPrefix/*,  declare it in your IAM policy:
+たとえば、読み込みを有効にしたい場合。 パス *myPublicPrefix/*のすべてのオブジェクトに対する操作の書き込みと削除、IAMポリシーでそれを宣言します。
 
 ```xml
 "Statement": [
@@ -88,4 +88,4 @@ If you want to have custom *private* path prefix like *myPrivatePrefix/*, you ne
     }
 ]
 ```
-This ensures only the authenticated users has the access to the objects under the path.
+これにより、認証されたユーザのみがパスの下にあるオブジェクトへのアクセスを保証します。

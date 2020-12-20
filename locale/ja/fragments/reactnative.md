@@ -1,12 +1,12 @@
-## What we'll build
+## 何を作ろうか？
 
-This tutorial guides you through setting up a backend and integrating that backend with your React Native app. You will create a “Todo app” with a GraphQL API and to store and retrieve items in a cloud database. In addition, we'll demonstrate how to authenticate users.
+このチュートリアルでは、バックエンドの設定と、そのバックエンドを React Native アプリケーションと統合する方法について説明します。 GraphQL API を使用して "Todo アプリ" を作成し、クラウドデータベースに項目を保存して取得します。 さらに、ユーザーを認証する方法を紹介します。
 
-## Pre-requisites
+## 前提条件
 
-The first thing you should do is initialize a new <a href="https://facebook.github.io/react-native/docs/getting-started" target="_blank">React Native application</a>. There are two ways to do this:
+最初にすべきことは、新しい <a href="https://facebook.github.io/react-native/docs/getting-started" target="_blank">React Native アプリケーション</a>を初期化することです。以下の2つの方法があります:
 
-1. Expo CLI - Easier for new React Native developers
-2. React Native CLI - If you are already familiar with mobile development, enables you to build native code into your project.
+1. エキスポCLI - 新しいReact Native 開発者にとってより簡単
+2. React Native CLI - すでにモバイル開発に慣れている場合は、プロジェクトにネイティブコードを構築することができます。
 
-This tutorial will cover both, so use what's best for you.
+このチュートリアルでは両方について説明しますので、あなたに最適なものを使用してください。

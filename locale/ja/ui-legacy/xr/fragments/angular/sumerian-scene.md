@@ -1,8 +1,8 @@
-The `amplify-sumerian-scene` component provides you with a prebuilt UI for loading and displaying Amazon Sumerian scenes inside of your website:
+`amplify-sumerian-scene` コンポーネントは、ウェブサイト内の Amazon Sumerian シーンを読み込んだり表示するための事前構築された UI を提供します。
 
 <amplify-callout>
 
-Note: The UI component will inherit the height and width of the direct parent DOM element. Make sure to set the width and height styling on the parent DOM element to your desired size.
+メモ: UI コンポーネントは親DOM要素の高さと幅を継承します。 親DOM要素の幅と高さのスタイルを所望のサイズに設定してください。
 
 </amplify-callout> </br>
 
@@ -13,4 +13,4 @@ Note: The UI component will inherit the height and width of the direct parent DO
 ```
 
 
-See the [XR documentation](~/lib/xr/getting-started.md) for information on creating and publishing a Sumerian scene.
+シュメールシーンの作成と公開については、 [XR ドキュメント](~/lib/xr/getting-started.md) を参照してください。

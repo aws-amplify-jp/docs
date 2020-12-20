@@ -1,8 +1,8 @@
-## Establish Connection
+## 接続を確立する
 
-### Certificate based mutual authentication
+### 証明書ベースの相互認証
 
-To connect with the AWS IoT Core service on the standard MQTT port 8883, you can use the `connect` API as shown below.
+標準の MQTT ポート 8883 上で AWS IoT Core サービスに接続するには、以下のように `接続` API を使用します。
 
 ```java
 mqttManager.connect(<YOUR_KEYSTORE>, new AWSIotMqttClientStatusCallback() {
@@ -26,11 +26,11 @@ mqttManager.connectUsingALPN(<YOUR_KEYSTORE>, new AWSIotMqttClientStatusCallback
 });
 ```
 
-You can take a look at the [API Reference](https://aws-amplify.github.io/aws-sdk-android/docs/reference/com/amazonaws/mobileconnectors/iot/AWSIotMqttManager.html#connectUsingALPN-java.security.KeyStore-com.amazonaws.mobileconnectors.iot.AWSIotMqttClientStatusCallback-) to get more information.
+詳細については、 [API リファレンス](https://aws-amplify.github.io/aws-sdk-android/docs/reference/com/amazonaws/mobileconnectors/iot/AWSIotMqttManager.html#connectUsingALPN-java.security.KeyStore-com.amazonaws.mobileconnectors.iot.AWSIotMqttClientStatusCallback-) を参照してください。
 
-### AWS Credentials based Authentication
+### AWS 資格情報ベース認証
 
-This method uses AWS Signature Version 4 Credentials to sign the request to connect to the AWS IoT endpoint.
+この方法では、AWS 署名バージョン 4 資格情報を使用して、AWS IoT エンドポイントに接続するリクエストに署名します。
 
 ```java
 try {
@@ -45,13 +45,13 @@ try {
 }
 ```
 
-### Custom Authentication
+### カスタム認証
 
-AWS IoT allows you to define custom authorizers that allow you to manage your own authentication and authorization strategy using a custom authentication service and a Lambda function. Custom authorizers allow AWS IoT to authenticate your devices and authorize operations using bearer token authentication and authorization strategies. See [AWS IoT Custom Authentication](https://docs.aws.amazon.com/iot/latest/developerguide/custom-authentication.html) for more details.
+AWS IoTを使用すると、カスタム認証サービスとLambda機能を使用して、独自の認証および認証戦略を管理できるカスタムオーサライザを定義できます。 カスタムオーソリザでは、AWS IoTがデバイスを認証し、ベアラートトークン認証と認可戦略を使用して操作を承認することができます。 詳細については、 [AWS IoT Custom Authentication](https://docs.aws.amazon.com/iot/latest/developerguide/custom-authentication.html) を参照してください。
 
-Please follow the steps outlined in [Setting up Custom Authentication](https://aws.amazon.com/blogs/security/how-to-use-your-own-identity-and-access-management-systems-to-control-access-to-aws-iot-resources/) to create the custom authorizer and configure the workflow with AWS IoT.
+カスタムオーサライザを作成し、AWS IoTを使用してワークフローを設定するには、 [カスタム認証の設定](https://aws.amazon.com/blogs/security/how-to-use-your-own-identity-and-access-management-systems-to-control-access-to-aws-iot-resources/) の手順に従ってください。
 
-Once the custom authorizer workflow is configured, you can establish a connection as follows:
+カスタムオーサライザのワークフローが設定されると、次のように接続を確立できます。
 
 ```java
 try {
@@ -84,11 +84,11 @@ try {
 }
 ```
 
-This feature is available in the AWS SDK for Android starting from version `2.16.8`.
+この機能は、バージョン `2.16.8` から Android 向け AWS SDK で利用できます。
 
-## Subscribe to a topic
+## トピックを購読する
 
-In order to start receiving messages from your provider, you need to subscribe to a topic as follows;
+プロバイダからのメッセージの受信を開始するには、次のようにトピックを購読する必要があります。
 
 ```java
 try {
@@ -109,13 +109,13 @@ try {
 }
 ```
 
-## Subscribe to multiple topics
+## 複数のトピックを購読する
 
-To subscribe for multiple topics, just call `subscribeToTopic()` for each topic you wish to subscribe.
+複数のトピックを購読するには、購読したいトピックごとに `subscribeToTopic()` を呼び出してください。
 
-## Publish to a topic
+## トピックに公開
 
-To send a message to a topic, use `publishString()` method with your topic name and the message:
+トピックにメッセージを送信するには、トピック名とメッセージを使用して `publishString()` メソッドを使用します:
 
 ```java
 try {
@@ -125,9 +125,9 @@ try {
 }
 ```
 
-## Unsubscribe from a topic
+## トピックの購読を解除
 
-To stop receiving messages from a topic, you can use `unsubscribeTopic()` method:
+トピックからのメッセージの受信を停止するには、 `unsubscribeTopic()` メソッドを使用します。
 
 ```java
 try {
@@ -139,9 +139,9 @@ try {
 // You will no longer get messages for "myTopic"
 ```
 
-## Close Connection
+## 接続を閉じる
 
-In order to disconnect, you need to close the connection as follows:
+接続を切断するには、次のように接続を閉じる必要があります。
 
 ```java
 try {
@@ -151,6 +151,6 @@ try {
 }
 ```
 
-## API Reference
+## APIリファレンス
 
-For the complete API documentation for AWS IoT, visit our [API reference](https://aws-amplify.github.io/aws-sdk-android/docs/reference/com/amazonaws/mobileconnectors/iot/package-summary.html).
+AWS IoT の完全な API ドキュメントについては、 [API リファレンス](https://aws-amplify.github.io/aws-sdk-android/docs/reference/com/amazonaws/mobileconnectors/iot/package-summary.html) を参照してください。

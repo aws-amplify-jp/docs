@@ -1,6 +1,6 @@
 ---
-title: Sign up, Sign in & Sign out
-description: Learn how to use Amplify's sign up, sign in and sign out APIs.
+title: サインアップ、サインイン & サインアウト
+description: Amplifyのサインアップ、サインイン、APIのサインアウトの使い方を学びます。
 ---
 
 <inline-fragment platform="js" src="~/lib/auth/fragments/js/emailpassword.md"></inline-fragment>
