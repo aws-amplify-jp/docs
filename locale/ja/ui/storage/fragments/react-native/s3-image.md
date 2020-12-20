@@ -1,4 +1,4 @@
-`S3Image` component renders an *Amazon S3 object key* as an image:
+`S3Image` コンポーネントは、 *Amazon S3 オブジェクトキー* を画像としてレンダリングします。
 
 ![S3Image](~/images/s3image.png)
 
@@ -22,7 +22,7 @@ const App = () => {
 export default withAuthenticator(App);
 ```
 
-For private images, supply the `level` property:
+プライベートイメージの場合、 `レベル` プロパティを指定してください。
 
 ```jsx
 return (
@@ -30,7 +30,7 @@ return (
 );
 ```
 
-To initiate an upload, set the `body` property:
+アップロードを開始するには、 `body` プロパティを設定します。
 
 ```jsx
 return (
@@ -38,6 +38,6 @@ return (
 );
 ```
 
-Set the `resizeMode` property to determine how to resize the image if the frame doesn't match the image dimensions:
+フレームが画像の寸法と一致しない場合、画像のサイズを変更する方法を決定するには、 `resizeMode` プロパティを設定します。
 
-![S3Image resizeMode Example](~/images/s3image-resize-mode.png)
+![S3Image resizeMode の例](~/images/s3image-resize-mode.png)
