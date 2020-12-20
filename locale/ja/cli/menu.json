@@ -1,16 +1,16 @@
 {
   "items": [
-    "start",
-    "graphql-transformer",
+    "開始",
+    "graphqlトランス",
     "restapi",
-    "auth",
-    "storage",
-    "function",
-    "hosting",
-    "plugins",
-    "teams",
-    "usage",
-    "migration",
-    "reference"
+    "認証する",
+    "ストレージ",
+    "関数",
+    "ホスティング",
+    "プラグイン",
+    "チーム",
+    "使用法",
+    "移行",
+    "参照"
   ]
 }
