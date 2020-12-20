@@ -1,6 +1,6 @@
 ---
 title: S3 Image Picker
-description: Amplify S3 Image Picker Component is a photo picker component that uses local file input to upload image files into S3 bucket
+description: Amplify S3 Image Picker Component は、ローカルファイル入力を使用して画像ファイルを S3 Bucket にアップロードするフォトピッカーコンポーネントです。
 filterKey: framework
 ---
 
