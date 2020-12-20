@@ -1,6 +1,6 @@
-`S3Album` renders a list of `S3Image` objects:
+`S3Album` は `S3Image` オブジェクトのリストをレンダリングします:
 
-![S3Album](~/images/s3album.png)
+![S3アルバム](~/images/s3album.png)
 
 ```jsx
 import React from 'react';
@@ -21,7 +21,7 @@ const App = () => {
 export default withAuthenticator(App);
 ```
 
-To display objects in a specific folder, supply the `path` property:
+特定のフォルダにオブジェクトを表示するには、 `パス` プロパティを指定します。
 
 ```jsx
 return (
@@ -29,7 +29,7 @@ return (
 );
 ```
 
-To display private objects, supply the `level` property:
+プライベートオブジェクトを表示するには、 `レベル` プロパティを指定します。
 
 ```jsx
 return (
@@ -37,7 +37,7 @@ return (
 );
 ```
 
-You can use the `filter` property to customize the path of your album:
+`フィルター` プロパティを使用して、アルバムのパスをカスタマイズできます:
 
 ```jsx
 return (
