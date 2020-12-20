@@ -1,13 +1,13 @@
 {
-    "title": "Tutorial",
+    "title": "チュートリアル",
     "items": [
-        "installation",
-        "setup",
-        "data-model",
-        "auth",
-        "hosting",
+        "インストール",
+        "セットアップ",
+        "データモデル",
+        "認証する",
+        "ホスティング",
         "generate-model",
-        "integrate",
+        "統合",
         "add-api",
         "nextsteps"
     ]

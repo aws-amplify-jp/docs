@@ -1,6 +1,6 @@
 <inline-fragment src="~/ui/storage/fragments/web/installation.md"></inline-fragment>
 
-## Usage
+## 使用法
 
 <docs-filter framework="react">
 
@@ -118,11 +118,11 @@ amplify-s3-text {
 }
 ```
 
-## Use Cases
+## ユースケース
 
-### Getting files from protected access level
+### 保護されたアクセスレベルからファイルを取得する
 
-Protected files from S3 bucket can be accessed by anyone other than the owner by using the `identityId` of the owner.
+S3 バケットから保護されたファイルは、所有者の `identityId` を使用して所有者以外の誰でもアクセスできます。
 
 <docs-filter framework="react">
 
@@ -182,13 +182,13 @@ _App.vue_
 
 </docs-filter>
 
-## Migration
+## 移行
 
-To migrate from using the `aws-amplify-<framework>` library to the latest `@aws-amplify/ui-<framework>` library use the steps below:
+`aws-amplify-<framework>` ライブラリを最新の `@aws-amplify/ui- に使用してから移行するには、<framework>` ライブラリを以下の手順で使用します。
 
 <inline-fragment src="~/ui/storage/fragments/web/installation-diff.md"></inline-fragment>
 
-### Usage
+### 使用法
 
 <docs-filter framework="react">
 
@@ -307,4 +307,4 @@ _App.vue_
 
 </docs-filter>
 
-If you were using `S3Text` with `picker` property enabled, please see the documentation for [`S3TextPicker`](~/ui/storage/s3-text-picker.md).
+`ピッカー` プロパティを有効にして `S3Text` を使用している場合は、 [`S3TextPicker`](~/ui/storage/s3-text-picker.md) のドキュメントを参照してください。

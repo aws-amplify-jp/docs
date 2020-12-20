@@ -1,4 +1,4 @@
-## Usage
+## 使用法
 
 <docs-filter framework="react">
 
@@ -127,15 +127,15 @@ _App.vue_
 
 <ui-component-props tag="amplify-chatbot" prop-type="attr" use-table-headers></ui-component-props>
 
-## Use Cases
+## ユースケース
 
-### Setting Up Voice Chat
+### ボイスチャットの設定
 
 In order for voice input to work with Amazon Lex, you may have to enable output voice in [AWS Management Console](https://console.aws.amazon.com/console/home). Under the Amazon Lex service, click on your configured Lex chatbot and go to settings -> General and pick your desired output voice.
 
-### Listening to Chat Fulfillment
+### Fulfillment チャットを聞いています
 
-Once a conversation session is finished, `amplify-chatbot` emits a custom event `chatCompleted` that your app can listen to:
+会話セッションが終了すると、 `amplify-chatbot` は、アプリが次のようなカスタムイベント `chatCompleted` を発行します。
 
 <docs-filter framework="react">
 

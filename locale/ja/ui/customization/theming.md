@@ -1,6 +1,6 @@
 ---
-title: Theming
-description: Theming UI Components
+title: テーマ
+description: テーマUIコンポーネント
 filterKey: framework
 ---
 

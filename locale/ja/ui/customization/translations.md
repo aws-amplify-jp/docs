@@ -1,9 +1,9 @@
 ---
-title: Translations
-description: Internationalization and Custom Text
+title: 翻訳
+description: 国際化とカスタムテキスト
 ---
 
-Customizing text and adding language translations can be done via the `I18n` module:
+テキストのカスタマイズと言語翻訳の追加は、 `I18n` モジュールで行うことができます。
 
 ```js
 import { I18n } from "aws-amplify";
@@ -15,4 +15,4 @@ I18n.putVocabulariesForLanguage("en-US", {
 });
 ```
 
-A complete list of all translatable strings can be found in [`Translations.ts`](https://github.com/aws-amplify/amplify-js/blob/main/packages/amplify-ui-components/src/common/Translations.ts).
+すべての翻訳可能な文字列の完全なリストは [`Translations.ts`](https://github.com/aws-amplify/amplify-js/blob/main/packages/amplify-ui-components/src/common/Translations.ts) にあります。

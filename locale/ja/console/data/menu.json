@@ -1,8 +1,8 @@
 {
-    "title": "Data",
+    "title": "データ",
     "items": [
-        "data-model",
-        "relationships",
+        "データモデル",
+        "関係",
         "content-management"
     ]
 }

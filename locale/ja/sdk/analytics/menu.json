@@ -1,9 +1,9 @@
 {
-	"title": "Analytics",
+	"title": "分析",
 	"items": [
 		"getting-started",
-		"events",
-		"endpoints",
-		"kinesis"
+		"イベント",
+		"エンドポイント",
+		"キネシスは"
 	]
 }

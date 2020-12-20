@@ -1,4 +1,4 @@
-## Installation
+## インストール
 
 <docs-filter framework="react">
 

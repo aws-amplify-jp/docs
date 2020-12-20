@@ -1,7 +1,7 @@
-## FAQs
+## よくある質問
 
-### How do I migrate to the new UI Component library?
+### 新しい UI コンポーネントライブラリに移行するにはどうすればよいですか?
 
-The migration guide can be found under the relevant components documentation:
+移行ガイドは、関連するコンポーネントのドキュメントの下にあります。
 
-* [Authenticator](~/ui/auth/authenticator.md#migration)
+* [認証システム](~/ui/auth/authenticator.md#migration)

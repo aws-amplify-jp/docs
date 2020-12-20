@@ -1,6 +1,6 @@
 ---
-title: S3 Text
-description: Amplify S3 Text Component is used to upload and render an text from S3 bucket using an text key
+title: S3 テキスト
+description: Amplify S3 Text Componentは、テキストキーを使用してS3バケットからテキストをアップロードしてレンダリングするために使用されます。
 filterKey: framework
 ---
 

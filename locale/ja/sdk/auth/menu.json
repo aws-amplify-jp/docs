@@ -1,14 +1,14 @@
 {
-	"title": "Authentication",
+	"title": "認証",
 	"items": [
 		"getting-started",
 		"how-it-works",
 		"guest-access",
-		"drop-in-auth",
+		"認証のドロップ",
 		"working-with-api",
-		"federated-identities",
+		"フェデレーテッド・ID",
 		"hosted-ui",
 		"custom-auth-flow",
-		"device-features"
+		"デバイス機能"
 	]
 }

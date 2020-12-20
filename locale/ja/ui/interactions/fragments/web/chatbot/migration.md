@@ -1,8 +1,8 @@
-## Migration
+## 移行
 
-To migrate from the legacy chatbot component to the latest chatbot component, use the steps below:
+レガシーチャットボットコンポーネントから最新のチャットボットコンポーネントに移行するには、以下の手順を使用します。
 
-### Usage
+### 使用法
 
 <docs-filter framework="react">
 

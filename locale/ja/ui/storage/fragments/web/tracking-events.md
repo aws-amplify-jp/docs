@@ -3,7 +3,7 @@ You can automatically track `Storage` operations on the following components: `A
 <docs-filter framework="react">
 
 ```jsx
-return <AmplifyS3Image track />
+<AmplifyS3Image track /> を返す
 ```
 </docs-filter>
 
