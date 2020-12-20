@@ -1,8 +1,8 @@
 {
-	"title": "Storage",
+	"title": "ストレージ",
 	"items": [
 		"getting-started",
-		"transfer-utility",
+		"転送ユーティリティ",
 		"graphql-api",
 		"configure-access"
 	]
