@@ -1,10 +1,10 @@
-For React, the simplest way to add a conversational UI into your app is to use our *ChatBot* Component.
+React の場合、会話型 UI をアプリケーションに追加する最も簡単な方法は、 *ChatBot* コンポーネントを使用することです。
 
-ChatBot automatically renders a complete chat messaging interface that can be used out-of-the-box, or it can be customized using theming support.
+ChatBotは完全なチャットメッセージングインターフェースを自動的にレンダリングし、すぐに使えるようにします。また、テーマサポートを使用してカスタマイズできます。
 
-## Usage
+## 使用法
 
-When using React Native, you can use *ChatBot* with following properties;
+React Nativeを使用する場合、以下のプロパティで *ChatBot* を使用できます。
 
 ```jsx
 <ChatBot
@@ -20,25 +20,25 @@ When using React Native, you can use *ChatBot* with following properties;
 />
 ```
 
-By default, the ChatBot will allow for only text interaction. You can turn off text interaction by passing prop `textEnabled={false}`.
-### Turning on voice interaction
-To support voice interaction, the React Native ChatBot component requires installation of peer dependencies and linking of Native Modules. The peer dependencies are: [react-native-voice](https://github.com/wenkesj/react-native-voice), [react-native-sound](https://github.com/zmxv/react-native-sound), and [react-native-fs](https://github.com/itinance/react-native-fs).
+デフォルトでは、ChatBotはテキストの相互作用のみを許可します。prop `textEnabled={false}` を渡すことで、テキストの相互作用をオフにできます。
+### 音声操作をオンにする
+音声操作をサポートするには、React Native ChatBotコンポーネントでは相互依存関係のインストールとネイティブモジュールのリンクが必要です。 ピアの依存関係は以下のとおりです: [react-native-voice](https://github.com/wenkesj/react-native-voice), [react-native-sound](https://github.com/zmxv/react-native-sound), and [react-native-fs](https://github.com/itinance/react-native-fs).
 
-After installation, link the native modules by running:
+インストール後、以下を実行してネイティブモジュールをリンクします。
 ```
 react-native link react-native-voice 
-react-native link react-native-fs
-react-native link react-native-sound
+react-native-fs
+react-native-sound
 ```
 
-Include this import at the top of your App.js
+App.js の上部にこのインポートを含める
 ```jsx
 import voiceLibs from 'aws-amplify-react-native/dist/Interactions/ReactNativeModules'
 ```
 
-Some configurations of Android will require requesting permissions while others will not - please to refer to the [Android docs](https://developer.android.com/training/permissions/requesting.html)
+Android の設定によっては、許可を要求する必要がありますが、他の設定は必要ありません - [Android ドキュメント](https://developer.android.com/training/permissions/requesting.html) を参照してください。
 
-iOS will require permissions for `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`- you can add this snippet to your Info.plist file for iOS:
+iOS は `NSMicrophoneUsageDescription` と `NSSpeechRecognitionUsageDescription`の権限が必要です - iOS用のInfo.plistファイルにこのスニペットを追加できます:
 ```xml  
 <dict>
   ...
@@ -49,18 +49,18 @@ iOS will require permissions for `NSMicrophoneUsageDescription` and `NSSpeechRec
   ...
 </dict>
 ```
-Then, turn on voice interaction by passing `voiceEnabled={true}` with `voiceLibs={voiceLibs}` to Chatbot props. Remember not to disable both voice and text input (don't set both voiceEnabled={false} and textEnabled={false})
+次に、 `voiceEnabled={true}` と `voiceLibs={voiceLibs}` をChatbot propsに渡して音声操作を有効にします。 音声とテキストの両方の入力を無効にしないでください (voiceEnabled={false} と textEnabled={false} の両方を設定しないでください)
 
-In order for voice interaction to work with Amazon Lex, you may have to enable Output voice in the AWS Console. Under the Amazon Lex service, click on your configured Lex chatbot and go to Settings -> General and pick your desired Output voice. Then, click Build. If you have forgotten to enable Output voice, you will get an error like this:
+Amazon Lexで音声操作を行うには、AWSコンソールで音声出力を有効にする必要があります。 Amazon Lexサービスの下で、設定したLexチャットボットをクリックし、設定 -> General に移動し、希望する出力音声を選択します。 次に、format@@0をクリックします。出力音声を有効にし忘れた場合、次のようなエラーが表示されます。
 ```
-ChatBot Error: Invalid Bot Configuration: This bot does not have a Polly voice ID associated with it. For voice interaction with the user, set a voice ID
+ChatBot エラー: 無効なボット設定: このボットにはポリーボイスIDが関連付けられていません。 ユーザーと音声操作を行うには音声IDを設定してください
 ```
 
-You can also configure `silenceDelay={customTime}` where `customTime` is the silence detection time in milliseconds. The default value is 1000.
+`silenceDelay={customTime}` `customTime` がミリ秒単位で無音検出時間を設定することもできます。既定値は 1000 です。
 
-The `conversationModeOn` props turns continuous conversation cycle mode on/off for voice interaction.
+`conversationModeOn` propsは、音声操作で連続会話モードのオン/オフを切り替えます。
 
-Here is an example of a configured ChatBot component with voice enabled and conversation mode turned on
+音声が有効になっていて会話モードがオンになっている構成済みのChatBotコンポーネントの例を次に示します。
 ```jsx
 <ChatBot
     botName={botName}
@@ -78,7 +78,7 @@ Here is an example of a configured ChatBot component with voice enabled and conv
 />
 ```
 
-Following simple app shows how to use **ChatBot** component in a React Native app;
+以下のシンプルなアプリは、React Native アプリケーションで **ChatBot** コンポーネントを使用する方法を示しています。
 
  ```javascript
 import React, { Component } from 'react';
