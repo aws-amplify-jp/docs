@@ -1,8 +1,8 @@
 {
-  "title": "Push notifications",
+  "title": "プッシュ通知",
   "items": [
     "getting-started",
-    "messaging-campaign",
+    "メッセージングキャンペーン",
     "setup-push-service"
   ]
 }
