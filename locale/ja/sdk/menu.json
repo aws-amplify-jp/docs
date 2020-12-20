@@ -1,11 +1,11 @@
 {
     "items": [
         "api",
-        "analytics",
-        "auth",
-        "push-notifications",
+        "分析",
+        "認証する",
+        "push-notification",
         "pubsub",
-        "storage",
-        "configuration"
+        "ストレージ",
+        "構成"
     ]
 }
