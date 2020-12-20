@@ -1,6 +1,6 @@
 <inline-fragment src="~/ui/storage/fragments/web/installation.md"></inline-fragment>
 
-## Usage
+## 使用法
 
 <docs-filter framework="react">
 
@@ -109,13 +109,13 @@ _App.vue_
 
 <ui-component-props tag="amplify-s3-image-picker" prop-type="attr" use-table-headers></ui-component-props>
 
-## Migration
+## 移行
 
-To migrate from using the `aws-amplify-<framework>` library to the latest `@aws-amplify/ui-<framework>` library use the steps below:
+`aws-amplify-<framework>` ライブラリを最新の `@aws-amplify/ui- に使用してから移行するには、<framework>` ライブラリを以下の手順で使用します。
 
 <inline-fragment src="~/ui/storage/fragments/web/installation-diff.md"></inline-fragment>
 
-### Usage
+### 使用法
 
 <docs-filter framework="react">
 
@@ -234,4 +234,4 @@ _App.vue_
 
 </docs-filter>
 
-If you want to use `S3Image` without `picker` property enabled, please see the documentation for [`S3Image`](~/ui/storage/s3-image.md).
+`picker` プロパティを有効にせずに `S3Image` を使用したい場合は、 [`S3Image`](~/ui/storage/s3-image.md) のドキュメントを参照してください。
