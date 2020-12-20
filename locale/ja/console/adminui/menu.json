@@ -2,9 +2,9 @@
     "title": "Admin UI basics",
     "items": [
         "intro",
-        "start",
+        "開始",
         "extend-cli",
-        "access-management",
+        "アクセス管理",
         "custom-domain"
     ]
 }
