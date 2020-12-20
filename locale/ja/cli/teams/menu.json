@@ -1,11 +1,11 @@
 {
-  "title": "Team environments",
+  "title": "チーム環境",
   "items": [
-    "overview",
-    "shared",
-    "sandbox",
-    "multi-frontend",
+    "概要",
+    "共有",
+    "Sandbox",
+    "マルチフロント",
     "cicd",
-    "commands"
+    "コマンド"
   ]
 }
