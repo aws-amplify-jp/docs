@@ -1,15 +1,15 @@
 {
-  "title": "Advanced workflows",
+  "title": "高度なワークフロー",
   "items": [
-    "tags",
+    "タグ",
     "monorepo",
     "lambda-triggers",
-    "containers",
-    "mock",
+    "コンテナ",
+    "モック|<unk>",
     "customcf",
     "iam",
     "iam-roles-mfa",
-    "headless",
-    "upgrade"
+    "ヘッドレス",
+    "アップグレード"
   ]
 }
