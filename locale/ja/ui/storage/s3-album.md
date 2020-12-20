@@ -1,6 +1,6 @@
 ---
-title: S3 Album
-description: Amplify S3 Album Component is used to list images from S3 bucket into a responsive image grid. Also allows file input from local machine
+title: S3 アルバム
+description: Amplify S3 Album Component は、S3 バケットから応答イメージグリッドに画像をリストするために使用されます。また、ローカルマシンからのファイル入力を許可します
 filterKey: framework
 ---
 
