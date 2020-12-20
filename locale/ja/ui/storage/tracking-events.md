@@ -1,6 +1,6 @@
 ---
-title: Tracking Events
-description: Tracking Events for UI Components
+title: トラッキングイベント
+description: UI コンポーネントのイベントを追跡する
 filterKey: framework
 ---
 
