@@ -7,6 +7,7 @@ export interface Config {
     onTargetsWritten?: () => void;
     onWatching?: () => void;
   };
+  localeDir: string;
   outDir: string;
   publicDir: string;
   transformer?: string;

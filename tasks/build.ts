@@ -45,8 +45,9 @@ c.API({
   contentDir: "docs",
   filters: filterOptionsByName,
   hooks,
+  localeDir: "locale",
   outDir: "client/src/api",
   publicDir: "client/src/assets",
   watch,
-  srcDir: "client/src",
+  srcDir: "client/src"
 });
