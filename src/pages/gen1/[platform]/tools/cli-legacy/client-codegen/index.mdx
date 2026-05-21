@@ -1,0 +1,751 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'クライアントコード生成',
+  description: 'Amplifyのコード生成機能は、iOSおよびAndroid用のネイティブコードと、FlowおよびTypeScript用の型を生成します。GraphQLステートメント(クエリ、ミューテーション、サブスクリプション)を生成することもできます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert
+  isLegacy
+  url={'/gen1/[platform]/build-a-backend/graphqlapi/client-code-generation/'}
+/>
+
+Codegenは、iOSおよびAndroid用のネイティブコードを生成し、FlowおよびTypeScript用の型生成をサポートしています。また、GraphQLステートメント(クエリ、ミューテーション、サブスクリプション)を生成できるため、手動でコーディングする必要がありません。
+
+Codegen `add`ワークフローは、AppSync APIがクラウドにプッシュされるときに自動的にトリガーされます。AppSync APIが作成されるときにコード生成を設定するかどうかが尋ねられ、コード生成をオプトインした場合、その後のプッシュでは、変更がクラウドにプッシュされた後に生成されたコードを更新するかどうかが尋ねられます。
+
+プロジェクトがコード生成を使用するように構成されている場合、すべての設定は`.graphqlconfig.yml`ファイルにプロジェクトのルートフォルダに保存されます。型を生成するとき、codegenはGraphQLステートメントを入力として使用します。GraphQLステートメントで使用されている型のみが生成されます。
+
+## ステートメントの深さ
+
+以下のスキーマでは、`Comment` -> `Post` -> `Blog` -> `Post` -> `Comments`間の接続があります。ステートメントを生成するとき、codegenは深さトラバーサルのデフォルト制限が2です。ただし、2レベルより深く進む必要がある場合は、codegenをセットアップするときに`maxDepth`パラメータを変更するか、`codegen`に`--maxDepth`パラメータを渡すことができます。
+
+```graphql
+type Blog @model {
+  id: ID!
+  name: String!
+  posts: [Post] @connection(name: "BlogPosts")
+}
+type Post @model {
+  id: ID!
+  title: String!
+  blog: Blog @connection(name: "BlogPosts")
+  comments: [Comment] @connection(name: "PostComments")
+}
+type Comment @model {
+  id: ID!
+  content: String
+  post: Post @connection(name: "PostComments")
+}
+```
+
+```graphql
+query GetComment($id: ID!) {
+  getComment(id: $id) {
+    # depth level 1
+    id
+    content
+    post {
+      # depth level 2
+      id
+      title
+      blog {
+        # depth level 3
+        id
+        name
+        posts {
+          # depth level 4
+          items {
+            # depth level 5
+            id
+            title
+          }
+          nextToken
+        }
+      }
+      comments {
+        # depth level 3
+        items {
+          # depth level 4
+          id
+          content
+          post {
+            # depth level 5
+            id
+            title
+          }
+        }
+        nextToken
+      }
+    }
+  }
+}
+```
+
+### 一般的な使用方法
+
+### amplify add codegen
+
+```bash
+amplify add codegen
+```
+
+`amplify add codegen`により、AWSコンソールを使用して作成されたAppSync APIを追加できます。APIが現在のリージョンとは異なるリージョンにある場合、コマンドはリージョンを選択するよう求めます。初期化されたamplifyプロジェクトの外でcodegenを追加する場合は、codegenの追加呼び出しと同じディレクトリに`schema.json`という名前のイントロスペクションスキーマを提供してください。**注意**: --apiIdフラグを使用して、AWSコンソールで作成されたような外部で作成されたAppSync APIを追加する場合、スキーマ更新を実行するときにamplify api updateなどのコマンドを使用してAmplify CLIからこのAPIを管理することはできません。初期化されたプロジェクトの外で外部AppSync APIを追加することはできません。
+
+### amplify configure codegen
+
+```bash
+amplify configure codegen
+```
+
+`amplify configure codegen`コマンドにより、プロジェクトに追加された後、コード生成設定を更新できます。初期化されたプロジェクトの外では、このコマンドを使用して、プロジェクト設定およびコード生成設定を更新できます。
+
+#### amplify codegen statements
+
+```bash
+amplify codegen statements [--nodownload] [--maxDepth <int>]
+```
+
+`amplify codegen statements`コマンドは、GraphQLスキーマに基づいてGraphQLステートメント(クエリ、ミューテーション、サブスクリプション)を生成します。このコマンドは実行するたびにイントロスペクションスキーマをダウンロードしますが、`--nodownload`フラグを渡すことで、以前にダウンロードされたイントロスペクションスキーマを使用するように強制できます。
+
+#### amplify codegen types
+
+```bash
+amplify codegen types
+```
+
+`amplify codegen types [--nodownload]`コマンドは、Flowおよびtypescript用のGraphQL`types`とiOSプロジェクトのSwiftクラスを生成します。このコマンドは実行するたびにイントロスペクションスキーマをダウンロードしますが、`--nodownload`フラグを渡すことで、以前にダウンロードされたイントロスペクションスキーマを使用するように強制できます。
+
+#### amplify codegen
+
+```bash
+amplify codegen [--maxDepth <int>]
+```
+
+`amplify codegen [--nodownload]`は、GraphQL`statements`と`types`を生成します。このコマンドは実行するたびにイントロスペクションスキーマをダウンロードしますが、`--nodownload`フラグを渡すことで、以前にダウンロードされたイントロスペクションスキーマを使用するように強制できます。初期化されたamplifyプロジェクトの外でcodegenを実行している場合、`schema.json`という名前のイントロスペクションスキーマは、amplify codegenを実行するのと同じディレクトリにある必要があります。このコマンドは、amplifyプロジェクトの外にいるときはイントロスペクションスキーマをダウンロードしません。提供されたイントロスペクションスキーマのみを使用します。
+
+## ワークフロー
+
+codegenの機能の設計は、APIを作成または更新するときなど、アプリ開発ライフサイクルのさまざまなポイントで実行するメカニズムを提供します。また、APIはそのままにして、アプリのデータ取得要件を更新する場合にも独立して実行できます。さらに、スキーマが別の人によって更新または管理されるチームで作業することも可能です。最後に、codegenをビルドプロセスに含めて、自動的に実行することもできます(Xcodeなど)。
+
+**フロー1: APIを作成してからコードを自動的に生成**
+
+```bash
+amplify init
+amplify add api (select GraphQL)
+amplify push
+```
+
+以前と同じ質問が表示されますが、GraphQLステートメントを生成してcodegenを実行するかどうかが自動的に尋ねられるようになります。また、Androidプロジェクトの`./app/src/main`ディレクトリも尊重します。AppSync展開の完了後、Swiftファイルは自動的に生成され(Androidの場合は[Gradle Build手順](#androiduse)をキックオフする必要があります)、アプリですぐに使用を開始できます。
+
+**フロー2: GraphQLスキーマを変更し、プッシュしてからコードを自動的に生成**
+
+開発中に、イテレーティブな開発/テストサイクルの一部として、GraphQLスキーマと生成されたコードを更新することもできます。`amplify/backend/api/<apiname>/schema.graphql`でスキーマを変更して保存してから、次を実行します:
+
+```bash
+amplify push
+```
+
+毎回、APIのコードを更新するかどうかが尋ねられ、また新しいスキーマからのGraphQLステートメントの再生成を含めて、codegenを再度実行するかどうかが尋ねられます。
+
+**フロー3: APIの変更なし、GraphQLステートメントとコードを更新するのみ**
+
+GraphQLの利点の1つは、クライアントがAPIとは独立してデータ取得要件を定義できることです。Amplify codegenは、GraphQLステートメントの選択セット(例えば、波括弧の内側のフィールドを追加/削除)を変更して、型生成を再度実行することでこれをサポートしています。これにより、アプリケーションが行うネットワークリクエストを細かく制御できます。GraphQLステートメント(変更していない場合はデフォルトで`./graphql`フォルダ内)を変更して、ファイルを保存してから、次を実行します:
+
+```bash
+amplify codegen types
+```
+
+新しい更新されたSwiftファイルが作成されます(または、Androidで同じことをするためにGradle Buildを実行します)。その後、アプリケーションコードで更新を使用できます。
+
+**フロー4: 共有スキーマ、他の場所で変更(例:コンソールまたはチームワークフロー)**
+
+チームで作業していて、スキーマがAWS AppSyncコンソールから、または別のシステムで更新されているとします。GraphQLステートメントが古いスキーマから生成されたため、型は現在古くなっています。これを解決する最も簡単な方法は、GraphQLステートメントを再生成し、必要に応じて更新してから、型を再度生成することです。コンソールまたは別のシステムでスキーマを変更してから、次を実行します:
+
+```bash
+amplify codegen statements
+amplify codegen types
+```
+
+新しく生成されたGraphQLステートメントと、スキーマの更新に一致するSwiftコードが必要です。2番目のコマンドを実行した場合、型も更新されます。または、`amplify codegen`を単独で実行すれば、これらの両方のアクションを実行します。
+
+**フロー5: 初期化されたプロジェクトの外のイントロスペクションスキーマ**
+
+amplifyプロジェクトを初期化せずにステートメントと型を生成する場合は、プロジェクトディレクトリに`schema.json`という名前のイントロスペクションスキーマを提供し、同じディレクトリからcodegenを追加することで実行できます。AppSync apiからイントロスペクションスキーマをダウンロードするには、AppSyncコンソールのスキーマエディタに移動し、「Export schema」の下で`schema.json`を選択します。
+
+```bash
+amplify add codegen
+```
+
+codegenが追加された後、イントロスペクションスキーマを更新してから、プロジェクト情報を再度入力せずにステートメントと型を再度生成できます。
+
+```bash
+amplify codegen
+```
+
+必要に応じてプロジェクトとコード生成設定を更新できます。
+
+```bash
+amplify configure codegen
+amplify codegen
+```
+
+## iOSの使用方法
+
+このセクションでは、Swiftで書かれたiOSプロジェクトを使用し、Amplifyとともに、AWS AppSyncを使用したGraphQL APIを追加するために必要な手順について説明します。初めてユーザーの場合は、新しいXcodeプロジェクトと単一のViewController から始めることをお勧めします。
+
+### セットアップ
+
+[Amplify Getting Started](/gen1/[platform]/start/getting-started/introduction/)を完了した後、ターミナルでXcodeプロジェクトディレクトリに移動し、以下を実行します:
+
+```bash
+amplify init       ## Select iOS as your platform
+amplify add api    ## Select GraphQL, API key, "Single object with fields Todo application"
+amplify push       ## Sets up backend and prompts you for codegen, accept the defaults
+```
+
+上記の`add api`フロー中に、注釈付きGraphQLスキーマがすでに存在するかどうかなどの質問が表示されます。CLIを初めて使用する場合は、**いいえ**を選択し、以下で使用されるデフォルトプロジェクト**「Single object with fields (e.g., "Todo" with ID, name, description)」**を通じてガイドされます。後で常に変更できます。
+
+APIを追加したので、`amplify push`プロセスはcodegenプロセスに自動的にプロンプトを表示し、設定オプションをガイドします。デフォルトを受け入れると、ルートディレクトリに`API.swift`という名前のファイル(別の名前を選択しない限り)と、ドキュメント付きの`graphql`ディレクトリが作成されます。AppSyncクライアントが初期化に使用する`awsconfiguration.json`ファイルも含まれます。
+
+次に、**Podfile**をAWS AppSync SDKの依存関係で変更します:
+
+```ruby
+target 'PostsApp' do
+  use_frameworks!
+  pod 'AWSAppSync'
+end
+```
+
+ターミナルから`pod install`を実行し、`*.xcworkspace`Xcodeプロジェクトを開きます。`API.swift`と`awsconfiguration.json`ファイルをプロジェクトに追加し(_File->Add Files to ..->Add_)、プロジェクトをビルドして問題がないことを確認します。
+
+### AppSyncクライアントの初期化
+
+アプリケーションデリゲート内は、AppSyncクライアントを初期化するのに最適な場所です。`AWSAppSyncServiceConfig`は`awsconfiguration.json`ファイルに存在する設定情報を表しています。デフォルトでは、`Default`セクションの情報が使用されます。以下のような`AWSAppSyncClientConfiguration`と`AWSAppSyncClient`を作成する必要があります:
+
+```swift
+import AWSAppSync
+
+@UIApplicationMain
+class AppDelegate: UIResponder, UIApplicationDelegate {
+
+    var appSyncClient: AWSAppSyncClient?
+
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+
+        do {
+            // You can choose your database location if you wish, or use the default
+            let cacheConfiguration = try AWSAppSyncCacheConfiguration()
+
+            // AppSync configuration & client initialization
+            let appSyncConfig = try AWSAppSyncClientConfiguration(
+                appSyncServiceConfig: AWSAppSyncServiceConfig(),
+                cacheConfiguration: cacheConfiguration
+            )
+            appSyncClient = try AWSAppSyncClient(appSyncConfig: appSyncConfig)
+        } catch {
+            print("Error initializing appsync client. \(error)")
+        }
+        // other methods
+        return true
+  }
+```
+
+次に、AppSyncクライアントを使用したいアプリケーションコード(例えば、ViewControllerにバインドされた`Todos`クラス)で、`viewDidLoad()`ライフサイクルメソッドでこれを参照する必要があります:
+
+```swift
+import AWSAppSync
+
+class Todos: UIViewController{
+  //Reference AppSync client
+  var appSyncClient: AWSAppSyncClient?
+
+  override func viewDidLoad() {
+      super.viewDidLoad()
+      //Reference AppSync client from App Delegate
+      let appDelegate = UIApplication.shared.delegate as! AppDelegate
+      appSyncClient = appDelegate.appSyncClient
+  }
+}
+```
+
+### クエリ
+
+バックエンドが設定されたので、GraphQLクエリを実行できます。構文は`appSyncClient?.fetch(query: <NAME>Query() {(result, error)})`です。ここで、`<NAME>`は`amplify codegen types`が作成したGraphQLステートメントから取得されます。たとえば、`ListTodos`クエリがある場合、コードは以下のようになります:
+
+```swift
+//Run a query
+appSyncClient?.fetch(query: ListTodosQuery())  { (result, error) in
+  if error != nil {
+    print(error?.localizedDescription ?? "")
+      return
+  }
+    result?.data?.listTodos?.items!.forEach { print(($0?.name)! + " " + ($0?.description)!) }
+}
+```
+
+オプションで、クエリにキャッシュポリシーを設定できます:
+
+```swift
+appSyncClient?.fetch(query: ListTodosQuery(), cachePolicy: .returnCacheDataAndFetch)  { (result, error) in
+```
+
+`returnCacheDataAndFetch`は、ネットワーク経由でデータを取得する前に、ローカルキャッシュから結果を最初にプルします。これにより、UXが快適になり、オフラインサポートが提供されます。
+
+### ミューテーション
+
+データを追加する場合は、GraphQLミューテーションを実行する必要があります。構文は`appSyncClient?.perform(mutation: <NAME>Mutation() {(result, error)})`です。ここで、`<NAME>`は`amplify codegen types`が作成したGraphQLステートメントから取得されます。ただし、ほとんどのGraphQLスキーマは保守性のためにミューテーションを`input`型で整理しており、これはAmplify CLIでも行われます。したがって、以下の例のように`input`と呼ばれるパラメータとしてこれを渡します:
+
+```swift
+let mutationInput = CreateTodoInput(name: "Use AppSync", description:"Realtime and Offline")
+
+appSyncClient?.perform(
+    mutation: CreateTodoMutation(input: mutationInput)
+) { (result, error) in
+    if let error = error as? AWSAppSyncClientError {
+        print("Error occurred: \(error.localizedDescription )")
+    }
+    if let resultError = result?.errors {
+        print("Error saving the item on server: \(resultError)")
+        return
+    }
+}
+```
+
+### サブスクリプション
+
+最後に、リアルタイムデータへのサブスクリプションをセットアップします。構文は`appSyncClient?.subscribe(subscription: <NAME>Subscription() {(result, transaction, error)})`です。ここで、`<NAME>`は`amplify codegen types`が作成したGraphQLステートメントから取得されます。
+
+```swift
+// Subscription notifications will only be delivered as long as this is retained
+var subscriptionWatcher: Cancellable?
+
+//In your app code
+do {
+    subscriptionWatcher = try appSyncClient?.subscribe(
+        subscription: OnCreateTodoSubscription(),
+        resultHandler: { (result, transaction, error) in
+            if let result = result {
+                print(result.data!.onCreateTodo!.name + " " + result.data!.onCreateTodo!.description!)
+            } else if let error = error {
+                print(error.localizedDescription)
+            }
+        }
+    )
+} catch {
+    print("Error starting subscription.")
+}
+```
+
+サブスクリプションはミューテーションと同じように`input`型を取ることもできます。その場合、入力に基づいて特定のイベントにサブスクライブします。AppSyncのサブスクリプション引数の詳細については、[こちら](https://docs.aws.amazon.com/appsync/latest/devguide/real-time-data.html)を参照してください。
+
+### 完全なサンプル
+
+**AppDelegate.swift**
+
+```swift
+import UIKit
+import AWSAppSync
+
+@UIApplicationMain
+class AppDelegate: UIResponder, UIApplicationDelegate {
+
+    var window: UIWindow?
+    var appSyncClient: AWSAppSyncClient?
+
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+        do {
+            // You can choose your database location if you wish, or use the default
+            let cacheConfiguration = try AWSAppSyncCacheConfiguration()
+
+            // AppSync configuration & client initialization
+            let appSyncConfig = try AWSAppSyncClientConfiguration(appSyncServiceConfig: AWSAppSyncServiceConfig(), cacheConfiguration: cacheConfiguration)
+            appSyncClient = try AWSAppSyncClient(appSyncConfig: appSyncConfig)
+        } catch {
+            print("Error initializing appsync client. \(error)")
+        }
+        return true
+    }
+}
+```
+
+**ViewController.swift**
+
+```swift
+import UIKit
+import AWSAppSync
+
+class ViewController: UIViewController {
+
+    var appSyncClient: AWSAppSyncClient?
+
+    // Subscription notifications will only be delivered as long as this is retained
+    var subscriptionWatcher: Cancellable?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        appSyncClient = appDelegate.appSyncClient
+
+        // Note: each of these are asynchronous calls. Attempting to query the results of `runMutation` immediately
+        // after calling it probably won't work--instead, invoke the query in the mutation's result handler
+        runMutation()
+        runQuery()
+        subscribe()
+    }
+
+    func subscribe() {
+        do {
+            subscriptionWatcher = try appSyncClient?.subscribe(subscription: OnCreateTodoSubscription()) {
+                // The subscription watcher's result block retains a strong reference to the result handler block.
+                // Make sure to capture `self` weakly if you use it
+                // [weak self]
+                (result, transaction, error) in
+                if let result = result {
+                    print(result.data!.onCreateTodo!.name + " " + result.data!.onCreateTodo!.description!)
+                    // Update the UI, as in:
+                    //    self?.doSomethingInTheUIWithSubscriptionResults(result)
+                    // By default, `subscribe` will invoke its subscription callbacks on the main queue, so there
+                    // is no need to dispatch to the main queue.
+                } else if let error = error {
+                    print(error.localizedDescription)
+                }
+            }
+        } catch {
+            print("Error starting subscription.")
+        }
+    }
+
+    func runMutation(){
+        let mutationInput = CreateTodoInput(name: "Use AppSync", description:"Realtime and Offline")
+        appSyncClient?.perform(mutation: CreateTodoMutation(input: mutationInput)) { (result, error) in
+            if let error = error as? AWSAppSyncClientError {
+                print("Error occurred: \(error.localizedDescription )")
+            }
+            if let resultError = result?.errors {
+                print("Error saving the item on server: \(resultError)")
+                return
+            }
+            // The server and the local cache are now updated with the results of the mutation
+        }
+    }
+
+    func runQuery(){
+        appSyncClient?.fetch(query: ListTodosQuery()) {(result, error) in
+            if error != nil {
+                print(error?.localizedDescription ?? "")
+                return
+            }
+            result?.data?.listTodos?.items!.forEach { print(($0?.name)! + " " + ($0?.description)!) }
+        }
+    }
+}
+```
+
+## Androidの使用方法
+
+このセクションでは、Javaで書かれたAndroid Studioプロジェクトを使用し、Amplifyとともに、AWS AppSyncを使用したGraphQL APIを追加するために必要な手順について説明します。初めてユーザーの場合は、新しいAndroid Studioプロジェクトと単一のActivityクラスから始めることをお勧めします。
+
+### セットアップ
+
+[Amplify Getting Started](/gen1/[platform]/start/getting-started/introduction/)を完了した後、ターミナルでAndroid Studioプロジェクトディレクトリに移動し、以下を実行します:
+
+```bash
+amplify init       ## Select iOS as your platform
+amplify add api    ## Select GraphQL, API key, "Single object with fields Todo application"
+amplify push       ## Sets up backend and prompts you for codegen, accept the defaults
+```
+
+上記の`add api`フロー中に、注釈付きGraphQLスキーマがすでに存在するかどうかなどの質問が表示されます。CLIを初めて使用する場合は、**いいえ**を選択し、以下で使用されるデフォルトプロジェクト**「Single object with fields (e.g., "Todo" with ID, name, description)」**を通じてガイドされます。後で常に変更できます。
+
+APIを追加したので、`amplify push`プロセスはコード生成プロセスに自動的に入り、設定の確認を求めます。デフォルトを受け入れると、`./app/src/main/res/raw`ディレクトリに`awsconfiguration.json`ファイルが作成されます。これはAppSyncクライアントが初期化に使用します。ビルドプロセスを完了するには、Gradleとパーミッション更新が必要です。
+
+まず、プロジェクトの`build.gradle`で、ビルドスクリプトに次の依存関係を追加します:
+
+```gradle
+classpath 'com.amazonaws:aws-android-sdk-appsync-gradle-plugin:2.6.+'
+```
+
+次に、アプリの`build.gradle`で、`apply plugin: 'com.amazonaws.appsync'`のプラグインと`implementation 'com.amazonaws:aws-android-sdk-appsync:2.6.+'`の依存関係を追加します。以下の例を参照してください:
+
+```gradle
+apply plugin: 'com.android.application'
+apply plugin: 'com.amazonaws.appsync'
+android {
+    // Typical items
+}
+dependencies {
+    // Typical dependencies
+    implementation 'com.amazonaws:aws-android-sdk-appsync:2.6.+'
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0'
+    implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
+}
+```
+
+最後に、`AndroidManifest.xml`をネットワークコールとオフライン状態の`<uses-permissions>`更新で更新します。また、サブスクリプション用に`<application>`の下に`MqttService`の`<service>`エントリを追加します:
+
+```xml
+<uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+<uses-permission android:name="android.permission.WAKE_LOCK" />
+<uses-permission android:name="android.permission.READ_PHONE_STATE" />
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+
+        <!--other code-->
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <service android:name="org.eclipse.paho.android.service.MqttService" />
+
+        <!--other code-->
+    </application>
+```
+
+プロジェクトをビルドして問題がないことを確認します。
+
+### AppSyncクライアントの初期化
+
+アプリケーションコード内(例えば、activityクラスの`onCreate()`ライフサイクルメソッド)で、`AWSConfiguration()`インスタンスを`AWSAppSyncClient`ビルダーで使用してAppSyncクライアントを初期化できます。これは`awsconfiguration.json`ファイルに存在する設定情報を読み取ります。デフォルトでは、Defaultセクションの情報が使用されます。
+
+```java
+    private AWSAppSyncClient mAWSAppSyncClient;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        mAWSAppSyncClient = AWSAppSyncClient.builder()
+                .context(getApplicationContext())
+                .awsConfiguration(new AWSConfiguration(getApplicationContext()))
+                .build();
+    }
+```
+
+### クエリ
+
+バックエンドが設定されたので、GraphQLクエリを実行できます。コールバックの構文は`GraphQLCall.Callback<{NAME>Query.Data>`です。ここで、`{NAME}`は`amplify codegen types`が作成したGraphQLステートメントから取得されます。AppSyncクライアントのインスタンスから`.query(<NAME>Query.builder().build())`と同様の構文で呼び出します。たとえば、`ListTodos`クエリがある場合、コードは以下のようになります:
+
+```java
+    public void query(){
+        mAWSAppSyncClient.query(ListTodosQuery.builder().build())
+                .responseFetcher(AppSyncResponseFetchers.CACHE_AND_NETWORK)
+                .enqueue(todosCallback);
+    }
+
+    private GraphQLCall.Callback<ListTodosQuery.Data> todosCallback = new GraphQLCall.Callback<ListTodosQuery.Data>() {
+        @Override
+        public void onResponse(@Nonnull Response<ListTodosQuery.Data> response) {
+            Log.i("Results", response.data().listTodos().items().toString());
+        }
+
+        @Override
+        public void onFailure(@Nonnull ApolloException e) {
+            Log.e("ERROR", e.toString());
+        }
+    };
+```
+
+`AppSyncResponseFetchers`のキャッシュポリシーをオプションで変更できますが、`CACHE_AND_NETWORK`のままにすることをお勧めします。これはネットワーク経由でデータを取得する前に、ローカルキャッシュから結果を最初にプルします。これにより、UXが快適になり、オフラインサポートが提供されます。
+
+### ミューテーション
+
+データを追加する場合は、GraphQLミューテーションを実行する必要があります。コールバックの構文は`GraphQLCall.Callback<{NAME}Mutation.Data>`です。ここで、`{NAME}`は`amplify codegen types`が作成したGraphQLステートメントから取得されます。ただし、ほとんどのGraphQLスキーマは保守性のためにミューテーションを`input`型で整理しており、これはAmplify CLIでも行われます。したがって、2番目のビルダーで作成された`input`と呼ばれるパラメータとしてこれを渡します。AppSyncクライアントのインスタンスから`.mutate({NAME}Mutation.builder().input({Name}Input).build())`と同様の構文で呼び出します:
+
+```java
+public void mutation(){
+    CreateTodoInput createTodoInput = CreateTodoInput.builder().
+        name("Use AppSync").
+        description("Realtime and Offline").
+        build();
+
+    mAWSAppSyncClient.mutate(CreateTodoMutation.builder().input(createTodoInput).build())
+        .enqueue(mutationCallback);
+}
+
+private GraphQLCall.Callback<CreateTodoMutation.Data> mutationCallback = new GraphQLCall.Callback<CreateTodoMutation.Data>() {
+    @Override
+    public void onResponse(@Nonnull Response<CreateTodoMutation.Data> response) {
+        Log.i("Results", "Added Todo");
+    }
+
+    @Override
+    public void onFailure(@Nonnull ApolloException e) {
+        Log.e("Error", e.toString());
+    }
+};
+```
+
+### サブスクリプション
+
+最後に、リアルタイムデータへのサブスクリプションをセットアップします。コールバックは`AppSyncSubscriptionCall.Callback`で、クライアントの`.subscribe()`呼び出しで呼び出し、`{NAME}Subscription.builder()`の構文のビルダーを渡します。ここで、`{NAME}`は`amplify codegen types`が作成したGraphQLステートメントから取得されます。Amplify GraphQLトランスフォーマーには、以下の例のようにサブスクリプションの前に「On」という単語を付ける共通の命名法があります:
+
+```java
+private AppSyncSubscriptionCall subscriptionWatcher;
+
+    private void subscribe(){
+        OnCreateTodoSubscription subscription = OnCreateTodoSubscription.builder().build();
+        subscriptionWatcher = mAWSAppSyncClient.subscribe(subscription);
+        subscriptionWatcher.execute(subCallback);
+    }
+
+    private AppSyncSubscriptionCall.Callback subCallback = new AppSyncSubscriptionCall.Callback() {
+        @Override
+        public void onResponse(@Nonnull Response response) {
+            Log.i("Response", response.data().toString());
+        }
+
+        @Override
+        public void onFailure(@Nonnull ApolloException e) {
+            Log.e("Error", e.toString());
+        }
+
+        @Override
+        public void onCompleted() {
+            Log.i("Completed", "Subscription completed");
+        }
+    };
+
+```
+
+サブスクリプションはミューテーションと同じように`input`型を取ることもできます。その場合、入力に基づいて特定のイベントにサブスクライブします。AppSyncのサブスクリプション引数の詳細については、[こちら](https://docs.aws.amazon.com/appsync/latest/devguide/real-time-data.html)を参照してください。
+
+### サンプル
+
+**MainActivity.java**
+
+```java
+import android.util.Log;
+import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
+import com.amazonaws.mobileconnectors.appsync.AppSyncSubscriptionCall;
+import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
+import com.apollographql.apollo.GraphQLCall;
+import com.apollographql.apollo.api.Response;
+import com.apollographql.apollo.exception.ApolloException;
+import javax.annotation.Nonnull;
+import amazonaws.demo.todo.CreateTodoMutation;
+import amazonaws.demo.todo.ListTodosQuery;
+import amazonaws.demo.todo.OnCreateTodoSubscription;
+import amazonaws.demo.todo.type.CreateTodoInput;
+
+public class MainActivity extends AppCompatActivity {
+
+    private AWSAppSyncClient mAWSAppSyncClient;
+    private AppSyncSubscriptionCall subscriptionWatcher;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        mAWSAppSyncClient = AWSAppSyncClient.builder()
+                .context(getApplicationContext())
+                .awsConfiguration(new AWSConfiguration(getApplicationContext()))
+                .build();
+        query();
+        mutation();
+        subscribe();
+    }
+
+    private void subscribe(){
+        OnCreateTodoSubscription subscription = OnCreateTodoSubscription.builder().build();
+        subscriptionWatcher = mAWSAppSyncClient.subscribe(subscription);
+        subscriptionWatcher.execute(subCallback);
+    }
+
+    private AppSyncSubscriptionCall.Callback subCallback = new AppSyncSubscriptionCall.Callback() {
+        @Override
+        public void onResponse(@Nonnull Response response) {
+            Log.i("Response", response.data().toString());
+        }
+
+        @Override
+        public void onFailure(@Nonnull ApolloException e) {
+            Log.e("Error", e.toString());
+        }
+
+        @Override
+        public void onCompleted() {
+            Log.i("Completed", "Subscription completed");
+        }
+    };
+
+    public void query(){
+        mAWSAppSyncClient.query(ListTodosQuery.builder().build())
+                .responseFetcher(AppSyncResponseFetchers.CACHE_AND_NETWORK)
+                .enqueue(todosCallback);
+    }
+
+    private GraphQLCall.Callback<ListTodosQuery.Data> todosCallback = new GraphQLCall.Callback<ListTodosQuery.Data>() {
+        @Override
+        public void onResponse(@Nonnull Response<ListTodosQuery.Data> response) {
+            Log.i("Results", response.data().listTodos().items().toString());
+        }
+
+        @Override
+        public void onFailure(@Nonnull ApolloException e) {
+            Log.e("ERROR", e.toString());
+        }
+    };
+
+    public void mutation(){
+
+        CreateTodoInput createTodoInput = CreateTodoInput.builder().
+                name("Use AppSync").
+                description("Realtime and Offline").
+                build();
+
+        mAWSAppSyncClient.mutate(CreateTodoMutation.builder().input(createTodoInput).build())
+                .enqueue(mutationCallback);
+
+    }
+
+    private GraphQLCall.Callback<CreateTodoMutation.Data> mutationCallback = new GraphQLCall.Callback<CreateTodoMutation.Data>() {
+        @Override
+        public void onResponse(@Nonnull Response<CreateTodoMutation.Data> response) {
+            Log.i("Results", "Added Todo");
+        }
+
+        @Override
+        public void onFailure(@Nonnull ApolloException e) {
+            Log.e("Error", e.toString());
+        }
+    };
+}
+```

@@ -1,0 +1,58 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'アクションボタン (送信、キャンセル、クリア、リセット) をカスタマイズ',
+  description: 'Amplify Studio で生成されたフォームには、**送信**、**キャンセル**、**クリア** または **リセット** の 3 つのアクションボタンが付属しています。どのボタンが表示されるかは、フォームがレコードを作成するか更新するかによって異なります。',
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify Studio で生成されたフォームには、**送信**、**キャンセル**、**クリア** または **リセット** の 3 つのアクションボタンが付属しています。どのボタンが表示されるかは、フォームがレコードを作成するか更新するかによって異なります。
+
+## ボタンの位置を変更
+
+フォームの下部 (デフォルト)、上部、または上部と下部にアクションボタンを表示するかを選択できます。
+
+1. [Amplify Studio](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app) から、アクションボタンを選択します
+2. **Display** > **Position** に移動します
+3. **Bottom**、**Top**、または **Top & bottom** を選択します
+
+<Video src="/images/console/formbuilder/call-to-action-position.mp4" description="Video - Button Positions" />
+
+## 送信、キャンセル、クリア、リセットボタンのラベルをカスタマイズ
+
+フォームのユースケースをより適切に説明するために、アクションボタンのラベルをカスタマイズできます。例えば、`Submit` を `Create note` に変更することができます。
+
+1. [Amplify Studio](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app) から、アクションボタンを選択します
+2. **Display** > **Submit button label** に移動します
+3. カスタムボタンラベルを入力します
+
+<Video src="/images/console/formbuilder/call-to-action-label.mp4" description="Video - Customize Labels" />
+
+## 送信、キャンセル、クリア、リセットボタンの表示状態を切り替え
+
+フォームのユースケースに合わせて、アクションボタンの表示状態をカスタマイズできます。例えば、フォームを閉じるボタンとして `X` が付いたモーダルにフォームを表示する場合、冗長な `Cancel` アクションボタンを非表示にすることができます。
+
+1. [Amplify Studio](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app) から、アクションボタンを選択します
+2. **Display** > **Submit button is visible** に移動します
+3. カスタムボタンラベルを入力します
+
+<Video src="/images/console/formbuilder/call-to-action-visibility.mp4" description="Video - Customize Visibility" />
+
+すべてのフォームアクションボタンを非表示にした場合でも、[`onChange` イベントハンドラー](/gen1/[platform]/build-ui/formbuilder/lifecycle/#get-form-data-as-your-user-inputs-data---onchange) を活用してフォームのライフサイクルを自己管理することができます。これは、明示的なユーザー確認なしにリアルタイムでデータを更新するフォームに便利です。

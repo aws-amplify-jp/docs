@@ -1,0 +1,149 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Expressサーバーをデプロイする',
+  description: 'AWS Amplifyを使用してExpressサーバーをAWSにデプロイする方法',
+  platforms: [
+    'javascript',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      showBreadcrumbs: false,
+      meta
+    }
+  };
+}
+
+このガイドでは、ルーティング機能を備えた[Express](https://expressjs.com/)Webサーバーをデプロイする方法を学びます。
+
+### Amplifyプロジェクトの初期化
+
+新しいAmplifyプロジェクトを初期化します:
+
+```sh
+amplify init
+
+# Follow the steps to give the project a name, environment name, and set the default text editor.
+# Accept defaults for everything else and choose your AWS Profile.
+```
+
+### APIと関数の作成
+
+次に、APIとWebサーバーを作成します。Amplify `add` コマンドを使用できます:
+
+```sh
+amplify add api
+
+? Please select from one of the below mentioned services: REST
+? Provide a friendly name for your resource to be used as a label for this category in the project: myapi
+? Provide a path (e.g., /items): /items (or whatever path you would like)
+? Choose a Lambda source: Create a new Lambda function
+? Provide a friendly name for your resource to be used as a label for this category in the project: mylambda
+? Provide the AWS Lambda function name: mylambda
+? Choose the function runtime that you want to use: NodeJS
+? Choose the function template that you want to use: Serverless express function
+? Do you want to access other resources created in this project from your Lambda function? N
+? Do you want to invoke this function on a recurring schedule? N
+? Do you want to edit the local lambda function now? N
+? Restrict API access: N
+? Do you want to add another path? N
+```
+
+CLIは以下を作成しました:
+
+- APIエンドポイント
+- Lambda関数
+- 関数内の[Serverless Express](https://github.com/awslabs/aws-serverless-express)を使用したWebサーバー
+- `/items`ルートの異なるメソッド用のボイラープレートコード
+
+### 関数コードの更新
+
+サーバーのコードを開きましょう。
+
+**amplify/backend/function/mylambda/src/index.js**を開きます。
+
+このファイルには、`event`と`context`が`./app.js`に配置されているExpressサーバーにプロキシされるメインの関数ハンドラーが表示されます（このファイルは変更しないでください）:
+
+```js
+const awsServerlessExpress = require('aws-serverless-express');
+const app = require('./app');
+
+const server = awsServerlessExpress.createServer(app);
+
+exports.handler = (event, context) => {
+  console.log(`EVENT: ${JSON.stringify(event)}`);
+  awsServerlessExpress.proxy(server, event, context);
+};
+```
+
+次に、**amplify/backend/function/mylambda/src/app.js**を開きます。
+
+ここでは、Expressサーバーのコードと、宣言したルートの異なるHTTPメソッド用のボイラープレートが表示されます。
+
+`app.get('/items')`のルートを見つけて、以下のように更新します:
+
+```js
+// amplify/backend/function/mylambda/src/app.js
+app.get('/items', function (req, res) {
+  const items = ['hello', 'world'];
+  res.json({ success: 'get call succeed!', items });
+});
+```
+
+### サービスのデプロイ
+
+APIと関数をデプロイするには、`push`コマンドを実行します:
+
+```sh
+amplify push
+```
+
+import js0 from '/src/fragments/guides/api-rest/js/express-api-call.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>
+
+import ios1 from '/src/fragments/guides/api-rest/ios/express-api-call.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import android2 from '/src/fragments/guides/api-rest/android/express-api-call.mdx';
+
+<Fragments fragments={{ android: android2 }} />
+
+ここから、追加のパスを追加することができます。そうするには、更新コマンドを実行します:
+
+```sh
+amplify update api
+```
+
+そこから、パスを追加、更新、または削除できます。Amplifyを使用したREST APIとのやり取りについて詳しく知るには、完全なドキュメントをご覧ください[こちら](/gen1/[platform]/build-a-backend/restapi/set-up-rest-api/)。
+
+APIエンドポイントは`aws-exports.js`フォルダに配置されています。
+
+このURLと指定されたパスを使用してAPIと直接やり取りすることもできます:
+
+```sh
+curl https://<api-id>.execute-api.<api-region>.amazonaws.com/<your-env-name>/items
+```

@@ -1,0 +1,183 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amazon Translateに接続して言語翻訳APIを使用する',
+  description:
+    'Amazon Translateに接続します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps() {
+  return {
+    props: {
+      meta
+    }
+  };
+}
+
+Amazon Translateは、Amazon Web Services（AWS）が提供するニューラル機械翻訳サービスです。高度なディープラーニング技術を使用して、迅速で高品質な言語翻訳を提供します。Amazon Translateを使用することで、アプリケーションやサービスに多言語対応を簡単に追加でき、ユーザーが希望する言語でコミュニケーションを取り、相互作用することが可能になります。
+
+Amazon Translateの主な機能には以下が含まれます：
+
+- **正確で自然な翻訳**：Amazon Translateは、正確で自然な響きの翻訳を提供し、ユーザーにシームレスな体験をもたらします。
+
+- **複数の言語に対応**：このサービスは幅広い言語をサポートしており、世界中の多様なユーザーにアプリケーションの範囲を拡張できます。
+
+- **リアルタイムおよびバッチ翻訳**：Amazon Translateは、動的コンテンツのリアルタイム翻訳と、大量のテキストのバッチ翻訳に対応でき、様々なユースケースに適しています。
+
+- **費用効率的でスケーラブル**：従量課金制の価格モデルと自動スケーリングにより、Amazon Translateはアプリケーションに翻訳機能を追加するための経済的で柔軟なソリューションです。
+
+このセクションでは、AWS Amplifyを使用してAmazon Translateをアプリケーションに統合し、その強力な翻訳機能を簡単に活用する方法を学びます。
+
+## ステップ1 - プロジェクトの設定
+
+[クイックスタートガイド](/[platform]/start/quickstart/)の指示に従ってプロジェクトを設定してください。
+
+## ステップ2 - Amazon Translateライブラリをインストール
+Amazon Translate SDKをインストールするには、プロジェクトのルートフォルダで次のコマンドを実行してください：
+
+```bash title="Terminal" showLineNumbers={false}
+npm add @aws-sdk/client-translate
+```
+
+## ステップ3 - Amazon Translateをデータソースとして追加
+
+Amazon Translateサービスにアクセスするには、Amazon TranslateをHTTPデータソースとして追加し、AWS Lambdaが目的の機能を効果的に利用するための適切なIAMポリシーを構成する必要があります。以下のように`amplify/backend.ts`ファイルを更新してください。
+
+ ```ts title="amplify/backend.ts"
+import { defineBackend } from '@aws-amplify/backend';
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { auth } from './auth/resource';
+import { data } from './data/resource';
+
+const backend = defineBackend({
+  auth,
+  data
+});
+
+const translateDataSource = backend.data.addHttpDataSource(
+  "TranslateDataSource",
+  `https://translate.${backend.data.stack.region}.amazonaws.com`,
+  {
+    authorizationConfig: {
+      signingRegion: backend.data.stack.region,
+      signingServiceName: "translate",
+    },
+  }
+);
+
+translateDataSource.grantPrincipal.addToPrincipalPolicy(
+  new PolicyStatement({
+    actions: ["translate:TranslateText"],
+    resources: ["*"],
+  })
+);
+```
+## ステップ4 - カスタムビジネスロジックハンドラーを構成
+
+次に、`amplify/data`フォルダに以下の`translate.js`ファイルを作成し、下記のコードを使用してカスタムリゾルバーを定義してください。
+
+```ts title="amplify/data/translate.js"
+
+export function request(ctx) {
+  return {
+    method: 'POST',
+    resourcePath: '/',
+    params: {
+      body: {
+        SourceLanguageCode: ctx.arguments.sourceLanguage,
+        TargetLanguageCode: ctx.arguments.targetLanguage,
+        Text: ctx.arguments.text
+      },
+      headers: {
+        'Content-Type': 'application/x-amz-json-1.1',
+        'X-Amz-Target': 'AWSShineFrontendService_20170701.TranslateText'
+      }
+    },
+  }
+}
+
+export function response(ctx) {
+  return JSON.parse(ctx.result.body).TranslatedText
+}
+
+```
+
+## ステップ5 - カスタムクエリを定義
+
+Amazon Translateをデータソースとして追加した後、`a.handler.custom()`修飾子を使用してカスタムクエリで参照できます。これはデータソースの名前とリゾルバーのエントリーポイントを取ります。`amplify/data/resource.ts`ファイルで、以下のように`TranslateDataSource`をデータソースとして、`translate.js`をエントリーポイントとして指定してください。
+
+```ts title="amplify/data/resource.ts"
+import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
+
+
+const schema = a.schema({
+  translate: a.query()
+    .arguments({
+      sourceLanguage: a.string().required(),
+      targetLanguage: a.string().required(),
+      text: a.string().required()
+    })
+    .returns(a.string())
+    .authorization(allow => [allow.publicApiKey()])
+    .handler(a.handler.custom({
+      dataSource: "TranslateDataSource",
+      entry: './translate.js'
+    }))
+});
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: 'apiKey',
+    apiKeyAuthorizationMode: {
+      expiresInDays: 30,
+    },
+  },
+});
+
+```
+
+## ステップ6 - フロントエンドを構成
+
+設定ファイルをインポートしてアプリに読み込んでください。Amplify設定ステップをアプリのルートエントリーポイントに追加することをお勧めします。
+
+``` ts title="main.tsx"
+import { Amplify } from "aws-amplify";
+import outputs from "../amplify_outputs.json";
+
+Amplify.configure(outputs);
+```
+### APIを呼び出す
+
+あるテキストを別の言語に翻訳するサンプルフロントエンドコード。
+
+```ts
+import { generateClient } from 'aws-amplify/data';
+import { type Schema } from '../amplify/data/resource';
+
+const client = generateClient<Schema>();
+
+
+const { data } = await client.queries.translate({
+  sourceLanguage: "en",
+  targetLanguage: "es",
+  text: "Hello World!",
+});
+```

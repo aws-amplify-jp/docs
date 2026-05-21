@@ -1,0 +1,136 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'レスポンシブコンポーネント',
+  description: 'Figma to Codeコンポーネントを設定して、ブレークポイントに応じてスケーリングする方法を学びます',
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify Studioを使用すると、アプリのブレークポイントに基づいて異なるコンポーネントバリアント間で動的に切り替えることができます。例えば、ウィンドウが小さくなるにつれて、ナビゲーションバーを小さいサイズに縮小することができます。
+
+![レスポンシブヘッダーデザインを示すGIF](/images/studio/responsive/responsive-header.gif)
+
+## 1. Figmaで優先するブレークポイントを設定する
+
+Amplify Studioで生成されたコンポーネントにブレークポイントを適用するには、[AWS Amplify Theme Editor](https://www.figma.com/community/plugin/1040722185526429545/AWS-Amplify-Theme-Editor)プラグインがインストールされたFigmaアカウントが必要です。
+
+デフォルトでは、すべてのAmplify UIは以下の[Amplify UIテーマの一部として次のブレークポイント](https://ui.docs.amplify.aws/react/theming/responsive#breakpoints)を提供します：
+
+
+```
+{
+  base: '0',
+  small: '480px',
+  medium: '768px',
+  large: '992px',
+  xl: '1280px',
+  xxl: '1536px',
+}
+```
+
+ブレークポイントは[Amplify UIテーマ](https://ui.docs.amplify.aws/react/theming/responsive)レベルで設定されており、Figmaファイル内のすべてのコンポーネントに適用されます。Amplify Theme Editorプラグインを使用して、これらのブレークポイントをカスタマイズできます：
+
+1. Figmaプロジェクトで右クリックして、<strong>Plugins</strong> > <strong>AWS Amplify Theme Editor</strong>を選択します
+![プラグインの表示方法とAWS Amplify Theme Editorの選択を示すコンテキストメニュー](/images/studio/responsive/theme-editor.png)
+
+2. <strong>Breakpoints</strong>タブを選択して、任意のブレークポイントをクリックしてピクセル値をカスタマイズします
+![Breakpointsタブが選択されたAWS Amplify Theme Editor](/images/studio/responsive/breakpoints.png)
+
+表示されたボックス内のグレーバーは、1920px幅のディスプレイと比較したピクセル値を示します。
+
+## 2. Figmaバリアントを設定する
+
+コンポーネントをレスポンシブにするには、ブレークポイントに基づいてコンポーネントのさまざまなバリアントを作成します。[Figmaのドキュメントでバリアントの作成についてさらに詳しく学びます](https://help.figma.com/hc/en-us/articles/360061175334-Create-interactive-components-with-variants)。
+
+<Callout warning>
+
+**重要：** バリアントは同じ<strong>コンポーネント構造</strong>を持つ必要があります。コンポーネント構造内の要素は、同じ<strong>レイアウト方法</strong>（「Auto Layout」または手動）も使用する必要があります。
+<br />
+バリアントの構造が同じでない場合、Amplify Studioはコンポーネントをインポートできません。
+<br />
+バリアント内の子要素をカスタマイズするには、目のアイコンを使用して、異なるバリアントで要素を非表示にしたり表示したりできます。
+
+![コンポーネント構造が同じである必要があることを示す画像](/images/studio/responsive/component-structure2.png)
+
+</Callout>
+
+Figmaでバリアント付きコンポーネントを生成する場合、プロパティが作成され、各バリアントに割り当てられます。コンポーネントに以下の設定を行います：
+1. コンポーネントプロパティ名を`breakpoint`に変更します
+2. 各バリアントについて、`breakpoint`の値をサポートされている値の1つ（例：`small`、`xl`など）に設定します
+
+![プロップ名をブレークポイントに変更し、値をsmallに設定する方法を示すフロー](/images/studio/responsive/set-props.png)
+
+
+## 3. コンポーネントをレンダリングしてテストする
+
+Figmaでのデザインが完成したら、Amplify Studio UI Builderを使用してコンポーネントをインポートしてレンダリングします：
+1. [FigmaファイルをUI Builderと同期します](/gen1/[platform]/build-ui/uibuilder/responsive/)
+2. ローカルプロジェクトで、`amplify pull`を実行します
+3. 新しいReactコンポーネントをコードにインポートしてレンダリングします
+4. ウィンドウをリサイズします。前に設定したブレークポイントに基づいて、コンポーネントが自動的に変更されます
+
+>注：レスポンシブコンポーネントのレンダリングには、Amplify CLIバージョン3.1.1以上が必要です。CLIバージョンを確認するには`amplify -v`を実行し、アップグレードするには`amplify upgrade`を実行します
+
+## 高度な設定：既存バリアント付きレスポンシブコンポーネントを設定する
+
+Figmaでは、複数のプロパティに基づいてバリアントを作成できます。例えば、コンポーネントは`breakpoint`バリアント（小、中、大）と`displayMode`バリアント（ライトモード、ダークモード）を必要とする場合があります。
+
+コンポーネントに`breakpoint`に加えて追加のバリアントプロパティがある場合、レスポンシブネスのために追加の手順が必要です。すべての追加プロパティに<i>インライン値</i>を指定するか、コンポーネントがレスポンシブにならないようにする必要があります。
+
+以下の例では、`ResponsiveToolbar`コンポーネントに`breakpoint`と`displayMode`の両方のバリアントがあります。以下の例では、コンポーネントは自動的にレスポンシブに<strong>なりません</strong>。
+
+```jsx
+function App() {
+  return (
+    <div>
+      <ResponsiveToolbar />
+    </div>
+  );
+}
+export default App;
+```
+
+このコンポーネントをレスポンシブにするには、`displaymode`に値を指定する必要があります。以下の例では、コンポーネントは現在自動的にレスポンシブです。
+
+```jsx
+function App() {
+  return (
+    <div>
+      <ResponsiveToolbar displaymode='light' />
+    </div>
+  );
+}
+export default App;
+```
+
+または、多次元バリアントを別々のコンポーネントに分割することができます。各コンポーネントは`breakpoint`バリアントプロパティのみを持ちます。例えば、上記のコンポーネントを`ResponsiveToolbarLight`と`ResponsiveToolbarDark`に分割し、条件付きでレンダリングできます。以下の例では、コンポーネントは現在自動的にレスポンシブです。
+
+```jsx
+function App() {
+  let darkMode = false
+  return (
+    <div>
+      {!darkMode ? <ResponsiveToolbarLight/> : <ResponsiveToolbarDark/>}
+    </div>
+  );
+}
+export default App;
+```

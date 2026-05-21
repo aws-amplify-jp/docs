@@ -1,0 +1,33 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'GraphQL API の使用',
+  description:
+    'AWS AppSync を使用して Amazon S3 オブジェクトをアップロード、ダウンロードする方法について学習します。AppSync は、リアルタイムおよびオフライン機能を備えたデータドリブンアプリを構築するための GraphQL ベースのソリューションです。',
+  platforms: ['swift', 'android']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import all0 from '/src/fragments/sdk/library-callout.mdx';
+
+<Fragments fragments={{ all: all0 }} />
+
+import ios1 from '/src/fragments/sdk/storage/ios/graphql-api.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import android2 from '/src/fragments/sdk/storage/android/graphql-api.mdx';
+
+<Fragments fragments={{ android: android2 }} />

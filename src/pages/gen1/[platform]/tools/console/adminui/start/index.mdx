@@ -1,0 +1,136 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { ProtectedAccountMessage } from '@/protected/ProtectedAccountMessage';
+
+export const meta = {
+  title: '入門',
+  description: 'Amplify Studioの概要',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+AWS Amplify Studioは、フルスタックのウェブアプリケーションとモバイルアプリケーションを構築するための視覚的な開発環境です。詳細については、[Amplify Studio の紹介](/gen1/[platform]/tools/console)を参照してください。
+
+Amplify Studioは、以下のリージョンで利用可能です：[Amplify Studio サービスエンドポイント](https://docs.aws.amazon.com/general/latest/gr/amplify.html#amplifyadmin_region)。
+
+{/* This component contains approved messaging and cannot be removed or modified without prior approval */}
+
+<ProtectedAccountMessage />
+
+## クイックスタートガイド
+
+<BlockSwitcher>
+
+<Block name="AWSアカウントを作成する">
+
+Amplify Studioのすべての機能を使用するには、AWSアカウントが必要です。[AWS Free Tier](https://aws.amazon.com/free)を利用すれば、費用をかけずに始めることができます。
+
+<ExternalLinkButton href="https://portal.aws.amazon.com/gp/aws/developer/registration/index.html?refid=78b916d7-7c94-4cab-98d9-0ce5e648dd5f">
+  <span slot="text">AWSアカウントを作成</span>
+</ExternalLinkButton>
+
+</Block>
+
+<Block name="フルスタックアプリを構築する">
+
+既にAWSアカウントをお持ちの場合は、Amplify Studioのすべての機能を使用し始めることができます。[AWSコンソールにログイン](https://console.aws.amazon.com/console/home)し、下のボタンをクリックして、Amplify Studioで新しいプロジェクトを作成します。
+
+<ExternalLinkButton href="https://console.aws.amazon.com/amplify/home?#/deploy-backend">
+  <span slot="text">新しいプロジェクトを作成</span>
+</ExternalLinkButton>
+
+次に、以下の手順に従ってAmplify Studioをデプロイして起動します：
+
+1. アプリの名前を入力し、**デプロイメントを確認**を選択します。
+1. アプリのデプロイメントが完了したら、**バックエンド環境**タブを選択します。
+1. **Studioを起動**を選択します。これにより、Amplify Studioが新しいタブで自動的に起動されます。
+
+</Block>
+
+</BlockSwitcher>
+
+## ログインしてアプリを作成する
+
+### Amplify Consoleにログインする
+
+Amplify Consoleは、Amplifyアプリケーションを構築、管理、ホストする場所です。ログインするには、以下の手順を実行します：
+
+1. [AWSコンソールにログイン](https://console.aws.amazon.com/console/home)
+1. コンソールで**AWS Amplify**を検索します
+1. **AWS Amplify**を選択してAmplify Consoleを開きます
+
+または、[ここをクリックしてAmplify Consoleに直接移動](https://console.aws.amazon.com/amplify/home)
+
+### 新しいStudioアプリを作成する
+
+新しいStudioアプリを作成するには、まず[Amplify Console](https://console.aws.amazon.com/amplify/home)にログインします。ログインしたら、以下の手順を使用して新しいアプリを作成できます：
+
+_このリージョンにアプリがない場合..._
+
+1. ページの下部までスクロールします
+1. Amplify Studioセクションで、[「入門」](https://console.aws.amazon.com/amplify/home?#/deploy-backend)を選択します
+1. アプリに名前を付け、**デプロイメントを確認**を選択します
+
+_このリージョンに既にアプリがある場合..._
+
+1. 右上隅の**新しいアプリ**を選択します
+1. ドロップダウンメニューから**アプリを構築**を選択します
+1. アプリに名前を付け、**デプロイメントを確認**を選択します
+
+### Studioを起動する
+
+アプリのAmplify Studioを起動するには、以下の手順を実行します：
+
+1. [AWS Amplify Console](https://console.aws.amazon.com/amplify/home)にログインします
+1. アプリのリストからアプリを選択します
+1. **バックエンド環境**タブを選択します
+1. **Studioを起動**を選択します
+
+<Callout info>
+
+**アプリがリストに見つかりませんか？** 右上隅で正しいリージョンが選択されていることを確認してください。
+
+</Callout>
+
+### 既存のプロジェクトにStudioを追加する
+
+[CLIを使用して新しいAmplifyプロジェクトを作成](/gen1/[platform]/tools/cli/start/key-workflows/#initialize-new-project)した場合は、Studioを起動する前にアクティベーションが必要です。以下の手順を実行します：
+
+1. [AWS Amplify Console](https://console.aws.amazon.com/amplify/home)に移動します
+1. アプリのリストからアプリを選択します
+1. **バックエンド環境**タブを選択します
+1. **Amplify Studioをセットアップ**を選択します
+1. **Amplify Studioを有効にする**をオフからオンに切り替えます
+1. Studioが正常にプロビジョニングされたら、アプリの情報ページに戻ります
+1. **Studioを起動**を選択して、新しいブラウザタブでStudioを開きます
+
+## 次のステップ
+
+Amplify Studioでアプリケーションのバックエンドを作成および管理する準備ができました。推奨される次のステップ：
+
+- [データモデルを構築する](/gen1/[platform]/tools/console/data/data-model/)
+<InlineFilter filters={['javascript', 'react', 'nextjs']}>
+- [FigmaでUIコンポーネントを作成する](/gen1/[platform]/build-ui/uibuilder/)
+</InlineFilter>
+- [チームメンバーを招待して協力する](/gen1/[platform]/tools/console/adminui/access-management/)

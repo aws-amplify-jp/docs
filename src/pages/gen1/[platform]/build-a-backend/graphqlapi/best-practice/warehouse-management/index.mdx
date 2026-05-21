@@ -1,0 +1,552 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ウェアハウス管理システム',
+  description: 'ウェアハウス管理システムの例に従うアプリの一般的なアクセスパターンを構成します。',
+  platforms: [
+    'javascript',
+    'angular',
+    'nextjs',
+    'react',
+    'vue',
+    'swift',
+    'android',
+    'flutter',
+    'react-native'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+この「ウェアハウス管理システム」の例では、アプリの一般的なアクセスパターンを構成する方法を学びます。この例には以下のタイプがあります。
+
+- Warehouse
+- Product
+- Inventory
+- Employee
+- AccountRepresentative
+- Customer
+
+これらのタイプには、次の一般的なアクセスパターンがあります。
+
+1. [従業員IDで従業員の詳細を検索](#1-従業員idで従業員の詳細を検索)
+2. [従業員名で従業員の詳細をクエリ](#2-従業員名で従業員の詳細をクエリ)
+3. [従業員の電話番号を検索](#3-従業員の電話番号を検索)
+4. [顧客の電話番号を検索](#4-顧客の電話番号を検索)
+5. [指定された日付範囲内で特定の顧客の注文を取得](#5-指定された日付範囲内で特定の顧客の注文を取得)
+6. [指定された日付範囲内のすべてのオープン注文をすべての顧客全体で表示](#6-指定された日付範囲内のすべてのオープン注文をすべての顧客全体で表示)
+7. [最近採用されたすべての従業員を表示](#7-最近採用されたすべての従業員を表示)
+8. [特定のウェアハウスで働いているすべての従業員を検索](#8-特定のウェアハウスで働いているすべての従業員を検索)
+9. [特定の製品に関して注文されているすべてのアイテムを取得](#9-特定の製品に関して注文されているすべてのアイテムを取得)
+10. [すべてのウェアハウスで特定の製品の現在の在庫を取得](#10-すべてのウェアハウスで特定の製品の現在の在庫を取得)
+11. [営業担当者別の顧客を取得](#11-営業担当者別の顧客を取得)
+12. [営業担当者と日付別の注文を取得](#12-営業担当者と日付別の注文を取得)
+13. [特定の製品に関して注文されているすべてのアイテムを取得](#13-特定の製品に関して注文されているすべてのアイテムを取得)
+14. [指定されたジョブタイトルを持つすべての従業員を取得](#14-指定されたジョブタイトルを持つすべての従業員を取得)
+15. [製品とウェアハウス別に在庫を取得](#15-製品とウェアハウス別に在庫を取得)
+16. [総製品在庫を取得](#16-総製品在庫を取得)
+17. [注文総額と営業期間でランク付けされた営業担当者を取得](#17-注文総額と営業期間でランク付けされた営業担当者を取得)
+
+以下のスキーマは、これらのアクセスパターンをサポートするために必要なインデックスと関係を紹介しています。
+
+```graphql
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/auth
+input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
+
+type Order @model {
+  id: ID!
+  customerID: ID! @index(name: "byCustomerByStatusByDate", sortKeyFields: ["status", "date"]) @index(name: "byCustomerByDate", sortKeyFields: ["date"])
+  accountRepresentativeID: ID! @index(name: "byRepresentativebyDate", sortKeyFields: ["date"])
+  productID: ID! @index(name: "byProduct", sortKeyFields: ["id"])
+  status: String!
+  amount: Int!
+  date: String!
+}
+
+type Customer @model {
+  id: ID!
+  name: String!
+  phoneNumber: String
+  accountRepresentativeID: ID! @index(name: "byRepresentative", sortKeyFields: ["id"])
+  ordersByDate: [Order] @hasMany(indexName: "byCustomerByDate", fields: ["id"])
+  ordersByStatusDate: [Order] @hasMany(indexName: "byCustomerByStatusByDate", fields: ["id"])
+}
+
+type Employee @model {
+  id: ID!
+  name: String! @index(name: "byName", queryField: "employeeByName", sortKeyFields: ["id"])
+  startDate: String!
+  phoneNumber: String!
+  warehouseID: ID! @index(name: "byWarehouse", sortKeyFields: ["id"])
+  jobTitle: String! @index(name: "byTitle", queryField: "employeesByJobTitle", sortKeyFields: ["id"])
+  newHire: String! @index(name: "newHire", queryField: "employeesNewHire", sortKeyFields: ["id"]) @index(name: "newHireByStartDate", queryField: "employeesNewHireByStartDate", sortKeyFields: ["startDate"])
+}
+
+type Warehouse @model {
+  id: ID!
+  employees: [Employee] @hasMany(indexName: "byWarehouse", fields: ["id"])
+}
+
+type AccountRepresentative @model {
+  id: ID!
+  customers: [Customer] @hasMany(indexName: "byRepresentative", fields: ["id"])
+  orders: [Order] @hasMany(indexName: "byRepresentativebyDate", fields: ["id"])
+  orderTotal: Int
+  salesPeriod: String @index(name: "bySalesPeriodByOrderTotal", queryField: "repsByPeriodAndTotal", sortKeyFields: ["orderTotal"])
+}
+
+type Inventory @model {
+  productID: ID! @primaryKey(sortKeyFields: ["warehouseID"])
+  warehouseID: ID! @index(name: "byWarehouseID", queryField: "itemsByWarehouseID")
+  inventoryAmount: Int!
+}
+
+type Product @model {
+  id: ID!
+  name: String!
+  orders: [Order] @hasMany(indexName: "byProduct", fields: ["id"])
+  inventories: [Inventory] @hasMany(fields: ["id"])
+}
+```
+
+スキーマを作成したので、操作するデータベース内のアイテムを作成しましょう。
+
+```graphql
+# first
+mutation createWarehouse {
+  createWarehouse(input: {id: "1"}) {
+    id
+  }
+}
+
+# second
+mutation createEmployee {
+  createEmployee(input: {
+    id: "amanda"
+    name: "Amanda",
+    startDate: "2018-05-22",
+    phoneNumber: "6015555555",
+    warehouseID: "1",
+    jobTitle: "Manager",
+    newHire: "true"}
+  ) {
+    id
+    jobTitle
+    name
+    newHire
+    phoneNumber
+    startDate
+    warehouseID
+  }
+}
+
+# third
+mutation createAccountRepresentative {
+  createAccountRepresentative(input: {
+    id: "dabit"
+    orderTotal: 400000
+    salesPeriod: "January 2019"
+  }) {
+    id
+    orderTotal
+    salesPeriod
+  }
+}
+
+# fourth
+mutation createCustomer {
+  createCustomer(input: {
+    id: "jennifer_thomas"
+    accountRepresentativeID: "dabit"
+    name: "Jennifer Thomas"
+    phoneNumber: "+16015555555"
+  }) {
+    id
+    name
+    accountRepresentativeID
+    phoneNumber
+  }
+}
+
+# fifth
+mutation createProduct {
+  createProduct(input: {
+    id: "yeezyboost"
+    name: "Yeezy Boost"
+  }) {
+    id
+    name
+  }
+}
+
+# sixth
+mutation createInventory {
+  createInventory(input: {
+    productID: "yeezyboost"
+    warehouseID: "1"
+    inventoryAmount: 300
+  }) {
+    productID
+    inventoryAmount
+    warehouseID
+  }
+}
+
+# seventh
+mutation createOrder {
+  createOrder(input: {
+    amount: 300
+    date: "2018-07-12"
+    status: "pending"
+    accountRepresentativeID: "dabit"
+    customerID: "jennifer_thomas"
+    productID: "yeezyboost"
+  }) {
+    id
+    customerID
+    accountRepresentativeID
+    amount
+    date
+    customerID
+    productID
+  }
+}
+```
+
+## 1. 従業員IDで従業員の詳細を検索
+
+これは従業員IDを使用して従業員モデルをクエリすることで簡単に実行できます。`@primaryKey`または`@index`を明示的に指定する必要はありません。
+
+```graphql
+query getEmployee($id: ID!) {
+  getEmployee(id: $id) {
+    id
+    name
+    phoneNumber
+    startDate
+    jobTitle
+  }
+}
+```
+
+## 2. 従業員名で従業員の詳細をクエリ
+
+`Employee`タイプの`byName` `@index`は、このアクセスパターンを実現します。これにより、内部でインデックスが作成され、nameフィールドと照合するためのクエリが使用されます。次のクエリを使用できます。
+
+```graphql
+query employeeByName($name: String!) {
+  employeeByName(name: $name) {
+    items {
+      id
+      name
+      phoneNumber
+      startDate
+      jobTitle
+    }
+  }
+}
+```
+
+## 3. 従業員の電話番号を検索
+
+前述のクエリのいずれかを使用して、従業員の電話番号を検索できます。ただし、ID名またはこうした情報が必要です。
+
+## 4. 顧客の電話番号を検索
+
+Customerモデルで上記と同様のクエリを実行すると、顧客の電話番号が取得できます。
+
+```graphql
+query getCustomer($customerID: ID!) {
+  getCustomer(id: $customerID) {
+    phoneNumber
+  }
+}
+```
+
+## 5. 指定された日付範囲内で特定の顧客の注文を取得
+
+顧客のすべての注文をクエリできる1対多の関係があります。
+
+この関係は、Orderモデルの`byCustomerByDate`インデックス名を持つ`@index`により作成され、Customerモデルのordersフィールドの`@hasMany`関係によりクエリされます。
+
+日付付きのソートキーが使用されます。つまり、GraphQLリゾルバーは`Between`などの述語を使用して、データベース内のすべてのレコードをスキャンしてフィルタリングするのではなく、日付範囲を効率的に検索できます。
+
+日付範囲内で顧客に対する注文を取得するために必要なクエリは次のとおりです。
+
+```graphql
+query getCustomerWithOrdersByDate($customerID: ID!) {
+  getCustomer(id: $customerID) {
+    ordersByDate(date: {
+      between: [ "2018-01-22", "2020-10-11" ]
+    }) {
+      items {
+        id
+        amount
+        productID
+      }
+    }
+  }
+}
+```
+
+## 6. 指定された日付範囲内のすべてのオープン注文をすべての顧客全体で表示
+
+`byCustomerByStatusByDate` `@index`を使用すると、このアクセスパターン用のクエリを実行できます。
+
+この例では、`status`と`date`の複合ソートキー（2つ以上のキーの組み合わせ）が使用されます。つまり、これら2つのフィールド（statusとdate）を連結してデータベース内のレコードの一意の識別子が作成され、GraphQLリゾルバーは`between`または`contains`などの述語を使用して、データベース内のすべてのレコードをスキャンしてフィルタリングするのではなく、一意の識別子内の一致を効率的に検索できます。
+
+```graphql
+query listCustomersWithOrdersByStatusDate {
+  listCustomers {
+    items {
+      ordersByStatusDate(statusDate: {
+        between: [
+          { status: "pending", date: "2018-01-22" },
+          { status: "pending", date: "2020-10-11" }
+        ]}) {
+        items {
+          id
+          amount
+          date
+        }
+      }
+    }
+  }
+}
+```
+
+## 7. 最近採用されたすべての従業員を表示
+
+`Employee`モデルに`@index(name: "newHire", fields: ["newHire", "id"])`があると、従業員が最近採用されたかどうかでクエリできます。
+
+```graphql
+query employeesNewHire {
+  employeesNewHire(newHire: "true") {
+    items {
+      id
+      name
+      phoneNumber
+      startDate
+      jobTitle
+    }
+  }
+}
+```
+
+`employeesNewHireByStartDate`クエリを使用することで、開始日を返して結果を取得することもできます。
+
+```graphql
+query employeesNewHireByDate {
+  employeesNewHireByStartDate(newHire: "true") {
+    items {
+      id
+      name
+      phoneNumber
+      startDate
+      jobTitle
+    }
+  }
+}
+```
+
+## 8. 特定のウェアハウスで働いているすべての従業員を検索
+
+これは、ウェアハウスから従業員への1対多の関係が必要です。`Warehouse`モデルの`@hasMany`関係から見ることができるように、この関係は`Employee`モデルの`byWarehouse`インデックスを使用しています。関連するクエリは次のようになります。
+
+```graphql
+query getWarehouse($warehouseID: ID!) {
+  getWarehouse(id: $warehouseID) {
+    id
+    employees{
+      items {
+        id
+        name
+        startDate
+        phoneNumber
+        jobTitle
+      }
+    }
+  }
+}
+```
+
+## 9. 特定の製品に関して注文されているすべてのアイテムを取得
+
+このアクセスパターンでは、製品から注文への1対多の関係を使用します。このクエリを使用して、特定の製品のすべての注文を取得できます。
+
+```graphql
+query getProductOrders($productID: ID!) {
+  getProduct(id: $productID) {
+    id
+    orders {
+      items {
+        id
+        status
+        amount
+        date
+      }
+    }
+  }
+}
+```
+
+## 10. すべてのウェアハウスで特定の製品の現在の在庫を取得
+
+すべてのウェアハウスで製品の在庫を取得するために必要なクエリは次のとおりです。
+
+```graphql
+query getProductInventoryInfo($productID: ID!) {
+  getProduct(id: $productID) {
+    id
+    inventories {
+      items {
+        warehouseID
+        inventoryAmount
+      }
+    }
+  }
+}
+```
+
+## 11. 営業担当者別の顧客を取得
+
+これは営業担当者と顧客の間にある多対多の関係を使用します。
+
+必要なクエリは次のようになります。
+
+```graphql
+query getCustomersForAccountRepresentative($representativeId: ID!) {
+  getAccountRepresentative(id: $representativeId) {
+    customers {
+      items {
+        id
+        name
+        phoneNumber
+      }
+    }
+  }
+}
+```
+
+## 12. 営業担当者と日付別の注文を取得
+
+AccountRepresentativeモデルで見ることができるように、この関係は`Order`モデルの`byRepresentativebyDate`フィールドを使用して必要な接続を作成しています。必要なクエリは次のようになります。
+
+```graphql
+query getOrdersForAccountRepresentative($representativeId: ID!) {
+  getAccountRepresentative(id: $representativeId) {
+    id
+    orders(date: {
+      between: [
+         "2010-01-22", "2020-10-11"
+      ]
+    }) {
+        items {
+          id
+          status
+          amount
+          date
+        }
+    }
+  }
+}
+```
+
+## 13. 特定の製品に関して注文されているすべてのアイテムを取得
+
+これは#9と同じです。
+
+## 14. 指定されたジョブタイトルを持つすべての従業員を取得
+
+`byTitle` `@index`を使用すると、このアクセスパターンは簡単になります。
+
+```graphql
+query employeesByJobTitle {
+  employeesByJobTitle(jobTitle: "Manager") {
+    items {
+      id
+      name
+      phoneNumber
+      jobTitle
+    }
+  }
+}
+```
+
+## 15. 製品とウェアハウス別に在庫を取得
+
+ここで、在庫を別のモデルに保持することは特に有用です。このモデルは独自のパーティションキーとソートキーを持つことができるため、在庫自体がこのアクセスパターン用に必要とされるようにクエリできます。
+
+このモデルのクエリは次のようになります。
+
+```graphql
+query inventoryByProductAndWarehouse($productID: ID!, $warehouseID: ID!) {
+  getInventory(productID: $productID, warehouseID: $warehouseID) {
+    productID
+    warehouseID
+    inventoryAmount
+  }
+}
+
+```
+
+`byWarehouseID`キーで作成された`itemsByWarehouseID`クエリを使用して、個々のウェアハウスのすべての在庫を取得することもできます。
+
+```graphql
+query byWarehouseId($warehouseID: ID!) {
+  itemsByWarehouseID(warehouseID: $warehouseID) {
+    items {
+      inventoryAmount
+      productID
+    }
+  }
+}
+```
+
+## 16. 総製品在庫を取得
+
+これをどのように行うかはユースケースによって異なります。すべてのウェアハウスのすべての在庫リストが必要な場合は、Inventoryモデルでリスト在庫を実行することができます。
+
+```graphql
+query listInventorys {
+  listInventorys {
+    items {
+      productID
+      warehouseID
+      inventoryAmount
+    }
+  }
+}
+```
+
+## 17. 注文総額と営業期間でランク付けされた営業担当者を取得
+
+営業期間は日付範囲、またはおそらく月または週でもあります。したがって、営業期間を文字列として設定し、`salesPeriod`と`orderTotal`の組み合わせを使用してクエリできます。また、`sortDirection`を設定して、最大から最小までの戻り値を取得することもできます。
+
+```graphql
+query repsByPeriodAndTotal {
+  repsByPeriodAndTotal(
+    sortDirection: DESC,
+    salesPeriod: "January 2019",
+    orderTotal: {
+      ge: 1000
+    }) {
+    items {
+      id
+      orderTotal
+    }
+  }
+}
+```

@@ -1,0 +1,59 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'カスタムドメイン',
+  description: 'カスタムドメインで Amplify Studio にアクセスします',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+アプリが Amplify のウェブホスティング機能を使用するように設定されている場合、アプリのフロントエンド用のカスタムドメインで Amplify Studio にアクセスできます。たとえば、アプリを `https://example.com` でホストしている場合、`https://example.com/amplify/studio` などのドメインアドレスで Studio へのわかりやすいリダイレクトを設定できます。
+
+カスタムドメインを接続する場合、サードパーティ DNS プロバイダーで DNS 設定を更新するプロセスは異なります。カスタムドメインの接続の詳細については、*AWS Amplify コンソールユーザーガイド*の「[カスタムドメインのセットアップ](https://docs.aws.amazon.com/amplify/latest/userguide/custom-domains.html)」を参照してください。このトピックには、GoDaddy、Google Domains、Amazon Route 53 で DNS 設定を更新するための手順が含まれています。
+
+## Studio のカスタムドメインアクセスをセットアップするには
+1. AWS Management Console にサインインして AWS Amplify を開きます。
+2. Studio アクセスのためにカスタムドメインに接続するアプリを選択します。
+3. ナビゲーションペインで **App settings**、**Domain management** を選択します。
+4. **Domain management** ページで **Add domain** を選択します。
+5. **Add domain** の **Domain** に、ルートドメインを入力し、**Configure domain** を選択します。
+6. **Add domain** ページの下部で、**Set up redirects for custom domain to point to Studio** チェックボックスを選択します。
+7. DNS プロバイダーでドメインの DNS 管理設定を更新します。サードパーティドメインのドメイン所有権の確認と DNS 伝播には最大 48 時間かかる場合があることに注意してください。
+
+アプリがカスタムドメインに正常に接続されると、ドメインアドレスに `/amplify/staging` を追加して Studio にアクセスできます。たとえば、アプリのドメインが `https://example.com` の場合、デフォルトでは `https://example.com/amplify/staging` で Studio にアクセスできます。カスタムリダイレクトルールでドメインアドレスをカスタマイズすることもできます。
+
+## Studio アクセスのためのリダイレクトルールを追加するには
+1. AWS Management Console にサインインして AWS Amplify を開きます。
+2. Studio アクセスのためのリダイレクトルールを追加するアプリを選択します。
+3. ナビゲーションペインで **App settings**、**Amplify Studio settings** を選択します。
+4. **Domain management** セクションに Studio のリダイレクトルールが表示されます。
+5. **Manage** を選択します。
+6. **Add redirect rule** を選択し、以下の操作を実行します:
+  * **Source** にカスタムリダイレクトルール (例: `/amplify/studio`) を入力します。
+  * **Target** で、Studio を開くバックエンド環境 (例: `staging`) を選択します。
+7. **Save** を選択します。
+
+この例では、アプリが `https://example.com` でホストされている場合、`staging` バックエンドの Studio は `https://example.com/amplify/studio` で利用可能です。

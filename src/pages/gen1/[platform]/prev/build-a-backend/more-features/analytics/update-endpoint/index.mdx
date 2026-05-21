@@ -1,0 +1,29 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'エンドポイントの更新',
+  description: 'Analytics カテゴリを使用すると、アプリのアナリティクスデータを収集できます。Analytics カテゴリには、Amazon Pinpoint と Amazon Kinesis の組み込みサポートが付属しています (Kinesis サポートは現在、Amplify JavaScript ライブラリでのみ利用可能です)。Analytics カテゴリは Amazon Cognito Identity プールを使用して、アプリ内のユーザーを識別します。Cognito を使用すると、アプリ内の認証済みおよび未認証のユーザーからデータを受信できます。',
+  platforms: ['javascript', 'react-native']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+
+import js0 from '/src/fragments/lib-v1/analytics/js/update-endpoint.mdx';
+
+<Fragments fragments={{ javascript: js0 }} />
+
+import reactnative0 from '/src/fragments/lib-v1/analytics/js/update-endpoint.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative0 }} />

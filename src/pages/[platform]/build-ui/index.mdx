@@ -1,0 +1,42 @@
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'UIを構築する',
+  description: 'UIを構築およびカスタマイズする方法を学習します。',
+  route: '/[platform]/build-ui',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'flutter',
+    'vue',
+    'swift',
+    'android'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+Amplifyは、バックエンドに接続されたWebアプリユーザーインターフェースを簡単に構築できる[UIライブラリ](https://ui.docs.amplify.aws)を提供しています。Amplify UIは以下を提供します。
+
+* **接続されたコンポーネント** - AWS Amplifyバックエンドサービスとシームレスに連携するように設計されており、認証やストレージなどの一般的なUXパターンをゼロから構築することなく素早く追加できます。
+<InlineFilter filters={["javascript", "nextjs", "react"]}>
+* **ツール** - データ上にReactフォームを生成し、Figmaデザインからリアクトコンポーネントを生成します。
+</InlineFilter>
+
+<Overview childPageNodes={props.childPageNodes} />

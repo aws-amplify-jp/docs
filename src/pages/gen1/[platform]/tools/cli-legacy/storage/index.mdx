@@ -1,0 +1,101 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'GraphQL変換とStorage',
+  description: 'GraphQL Transform、Amplify CLI、およびAmplifyライブラリにより、アプリケーションにAmazon S3を使用した複雑なオブジェクトサポートを簡単に追加できます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+GraphQL Transform、Amplify CLI、およびAmplifyライブラリにより、アプリケーションにAmazon S3を使用した複雑なオブジェクトサポートを簡単に追加できます。
+
+<InlineFilter filters={["react", "javascript", "nextjs", "angular", "swift", "vue"]}>
+
+<Callout>
+
+このドキュメントはAWS AppSync SDK for JavaScript（V2）を参照しており、現在メンテナンスモードになっています。[アップグレードガイド](/gen1/[platform]/build-a-backend/graphqlapi/upgrade-guide/)と[ファイルの操作](/gen1/[platform]/build-a-backend/graphqlapi/working-with-files/)ガイドで最新のガイダンスを参照してください。
+
+</Callout>
+
+</InlineFilter>
+
+
+<Callout warning>
+
+注：DataStore対応のGraphQL APIでは複雑なオブジェクトはサポートされていません。
+
+</Callout>
+
+## 基本
+
+S3オブジェクトサポートを追加するための最小限のステップは次のとおりです：
+
+**`amplify add storage`を使用してファイルを保持するAmazon S3バケットを作成します。**
+
+**`amplify add auth`を使用してAmazon Cognito User Poolsにユーザープールを作成します。**
+
+**`amplify add api`を使用してGraphQL APIを作成し、次の型定義を追加します：**
+
+```graphql
+type S3Object {
+  bucket: String!
+  region: String!
+  key: String!
+}
+```
+
+**S3Objectタイプを何らかの`@model`タイプから参照します：**
+
+```graphql
+type Picture @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  name: String
+  owner: String
+
+  # S3Objectタイプをフィールドから参照します。
+  file: S3Object
+}
+```
+
+GraphQL Transformは関連する入力タイプの作成を処理し、Amazon DynamoDBのS3オブジェクトへのポインタを保存します。AppSync SDKおよびAmplifyライブラリは、ファイルのS3への透過的なアップロードを処理します。
+
+**クライアントアプリからS3オブジェクトを使用してミューテーションを実行します：**
+
+```graphql
+mutation ($input: CreatePictureInput!) {
+  createPicture(input: $input) {
+    id
+    name
+    visibility
+    owner
+    createdAt
+    file {
+      region
+      bucket
+      key
+    }
+  }
+}
+```

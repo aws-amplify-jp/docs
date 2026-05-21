@@ -1,0 +1,39 @@
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'フロントエンドライブラリ',
+  description:
+    'Amplify クライアントライブラリを使用して、アプリをバックエンドサービスに接続します。認証フロー、データクエリ、ファイル管理などを構築します。',
+  route: '/[platform]/frontend',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      platform: context.params.platform,
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+Amplify クライアントライブラリを使用して、フロントエンドアプリをバックエンドサービスに接続します。これらのライブラリはアプリ内で実行され、認証、データ操作、ファイル管理などの API を提供します。
+
+<Overview childPageNodes={props.childPageNodes} />

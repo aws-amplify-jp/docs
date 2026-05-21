@@ -1,0 +1,192 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+
+export const meta = {
+  title: 'サーバーサイドレンダリング',
+  description: 'SSR対応フレームワークからAmplifyカテゴリーAPIを使用します。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue'
+  ],
+  route: '/gen1/[platform]/build-a-backend/server-side-rendering'
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      platform: context.params.platform,
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+## サーバーサイドレンダリングでAmplifyカテゴリーAPIを使用する
+
+Amplify JS v6は、SSR対応フレームワークで構築されたフルスタックWebアプリのサーバー側から呼び出すことができるAPIセットを提供します。これらのAPIは、クロスリクエストの状態汚染を回避するために、分離されたサーバーコンテキスト内で呼び出す必要があります。分離されたサーバーコンテキストは、受信リクエストから抽出された情報を含み、APIコールによって使用されます。例えば、リクエストクッキーヘッダーから抽出されたAmplify Authトークンなどです。AmplifyのAPIがAuthトークンを取得し、さらにサービスコールのための認証情報を取得できるようにするには、`tokenProvider`と`credentialsProvider`を提供する必要があります（詳細は以下のセクションを参照してください）。
+
+`runWithAmplifyServerContext`関数（`aws-amplify/adapter-core`からエクスポート）を使用してサーバーコンテキストを作成する必要があります。この関数は、サーバーに送信されたクッキーに基づいてサーバーコンテキストを作成します。したがって、使用しているSSRフレームワークがリクエスト受信時とレスポンス送信時にクッキーと対話できるAPIを提供している場合、`runWithAmplifyServerContext`関数を使用してサーバー上でAmplifyカテゴリーAPIを呼び出すことができます。
+
+<Callout warning>
+
+**注記:** アプリのクライアント側で`Amplify.configure()`を呼び出す際に、`ssr`を`true`に設定する必要があります。例えば、`Amplify.configure(config, { ssr: true })`のようにして、サーバーに送信されるリクエストがクッキーヘッダーにAmplify認証トークンを含むようにしてください。
+
+アプリケーションのライフサイクルの早い段階で`Amplify.configure`を呼び出すようにしてください。`Amplify.configure`が他のAmplify JavaScript APIの前に呼び出されていない場合、設定がないか`NoCredentials`エラーがスローされます。この問題の考えられる原因については、[ライブラリが設定されていないトラブルシューティングガイド](/gen1/[platform]/build-a-backend/troubleshooting/library-not-configured/)を確認してください。
+
+</Callout>
+
+### `runWithAmplifyServerContext`関数の使用
+
+`runWithAmplifyServerContext`関数は、機能するために以下のパラメータが必要です：
+
+1. Amplify設定オブジェクト
+2. `tokenProvider`と`credentialsProvider`プロパティを持つ`LibraryOptions`オブジェクト
+3. AmplifyカテゴリーAPIの呼び出しを含むビジネスロジックが含まれるコールバック関数
+
+#### Amplify設定オブジェクト
+
+`amplifyconfiguration.json`ファイルからインポートされた設定オブジェクトをユーティリティ関数`parseAmplifyConfig`（`aws-amplify/utils`からエクスポート）に渡すことで設定オブジェクトを取得するか、`ResourceConfig`型（`aws-amplify`からエクスポート）に準拠するオブジェクトリテラルを作成することができます。
+
+#### `tokenProvider`と`credentialsProvider`プロパティを持つ`LibraryOptions`オブジェクト
+
+上述したように、AmplifyカテゴリーAPIはAuthトークンと認証情報を取得するために`tokenProvider`と`credentialsProvider`に依存します。したがって、以下のステップに従い、クッキーを使用してプロバイダーを作成および設定する必要があります。
+
+**1. フレームワークによって提供されるクッキーAPI上で動作するキー値ストレージを作成する。**
+
+`aws-amplify/adapter-core`からエクスポートされたユーティリティ関数`createKeyValueStorageFromCookieStorageAdapter`を使用してストレージオブジェクトを作成できます。
+
+**2. キー値ストレージを使用して`tokenProvider`を作成する**
+
+`aws-amplify/adapter-core`からエクスポートされたユーティリティ関数`createUserPoolsTokenProvider`を使用してtokenProviderを作成できます。
+
+**3. キー値ストレージを使用して`credentialsProvider`を作成する**
+
+`aws-amplify/adapter-core`からエクスポートされたユーティリティ関数`createAWSCredentialsAndIdentityIdProvider`を使用して`credentialsProvider`を作成できます。
+
+#### コールバック関数
+
+ビジネスロジックを含むコールバック関数は、`runWithAmplifyServerContext`関数によってコンテキスト内で呼び出されます。コールバック関数には`contextSpec`パラメータが渡され、これを使用して`aws-amplify/<category>/server`サブパスからエクスポートされたAmplifyカテゴリーAPIを呼び出すことができます。コールバック関数が完了すると、対応するサーバーコンテキストは破棄され、コールバック関数によって返された結果が`runWithAmplifyServerContext`関数によって返されます。
+
+<Callout warning>
+
+コールバック関数内で作成された変数、オブジェクト参照（例えば`contextSpec`パラメータ）、またはビジネスロジックを外側のスコープにホイストしては**いけません**。これはクロスリクエスト状態の汚染につながる可能性があります。
+
+</Callout>
+
+`runWithAmplifyServerContext`とAmplifyAPIはサーバー側でステートレスです。`runWithAmplifyServerContext`の各呼び出しは、Cognitoサービスから認証情報をリクエストする可能性があります。したがって、`runWithAmplifyServerContext`をループで呼び出したり、単一のリクエスト内で複数回呼び出したりすることは避けるべきです。
+
+<Callout>
+
+**注記:** `runWithAmplifyServerContext`の呼び出しを必要とするサーバーへの大量の同時リクエストが予想される場合、Cognitoサービスによってスローされるレート制限例外が発生する可能性があるため、制限の調整をリクエストできます。詳細は[Amazon Cognitoのクォータドキュメント](https://docs.aws.amazon.com/cognito/latest/developerguide/limits.html)を参照してください。
+
+</Callout>
+
+3つの必須パラメータを準備すれば、サーバー側でAmplifyカテゴリーAPIの呼び出しを実行できます。例えば：
+
+```ts
+import {
+  createKeyValueStorageFromCookieStorageAdapter,
+  createUserPoolsTokenProvider,
+  createAWSCredentialsAndIdentityIdProvider,
+  runWithAmplifyServerContext
+} from 'aws-amplify/adapter-core';
+import { parseAmplifyConfig } from 'aws-amplify/utils';
+import { getCurrentUser } from 'aws-amplify/auth/server';
+
+import config from './amplifyconfiguration.json';
+
+// Get the Amplify configuration object
+const amplifyConfig = parseAmplifyConfig(config);
+
+// Step 1 create the key-value storage
+const keyValueStorage = createKeyValueStorageFromCookieStorageAdapter({
+  get(name) {
+    const value = ...; // use framework cookie API to get the value by name
+    // NOTE: When you call `Amplify.configure()` with `{ ssr: true }`,
+    // the token cookie value strings are encoded. You need to decode
+    // the value here if the framework cookie API does not decode the value
+    // strings. For example, you can use `decodeURIComponent(value)` 
+    // to decode the value.
+    return { name, value };
+  },
+  getAll() {
+    return [...]; // use framework cookie API to get an array of { name, value }
+  },
+  set(name, value) {
+    // use framework cookie API to set a cookie
+    //
+    // you should implement this function if you need to update the
+    // token cookies on the client side from the server side
+  },
+  delete(name) {
+    // use framework cookies API to delete a cookie
+  }
+})
+
+// Step 2 create the `tokenProvider`
+const tokenProvider = createUserPoolsTokenProvider(
+  amplifyConfig.Auth,
+  keyValueStorage
+);
+
+// Step 3 create the `credentialsProvider`
+const credentialsProvider = createAWSCredentialsAndIdentityIdProvider(
+  amplifyConfig.Auth,
+  keyValueStorage
+);
+
+// Call Amplify APIs in the callback function
+//
+// For example, calling the `getCurrentUser` API on the server side
+const welcomeMessage = await runWithAmplifyServerContext(
+  amplifyConfig,
+  {
+    Auth: { tokenProvider, credentialsProvider }
+  },
+  // The callback function that contains your business logic
+  async (contextSpec) => {
+    const { username } = await getCurrentUser(contextSpec);
+
+    return `Welcome ${username}!`;
+  },
+);
+```
+
+### サーバーサイド使用でサポートされているAPI
+
+サーバー上での使用をサポートするすべてのAPIは、`aws-amplify/<category>/server`サブパスからエクスポートされます。サーバー側の使用例には、これらのサーバーAPI変種を使用する必要があり、サーバー側の使用例ではクライアントAPI変種を使用**しては**いけません。サーバーコンテキストでクライアント側APIを使用すると、ランタイムエラーが生成されます。
+
+| カテゴリー      | API                   |
+| ------------- | --------------------- |
+| Auth          | `fetchAuthSession`    |
+| Auth          | `fetchUserAttributes` |
+| Auth          | `getCurrentUser`      |
+| API (GraphQL) | `generateClient`      |
+| API (REST)    | `GET`                 |
+| API (REST)    | `POST`                |
+| API (REST)    | `PUT`                 |
+| API (REST)    | `DEL`                 |
+| API (REST)    | `HEAD`                |
+| API (REST)    | `PATCH`               |
+| Storage       | `getUrl`              |
+| Storage       | `getProperties`       |
+| Storage       | `list`                |
+| Storage       | `remove`              |
+| Storage       | `copy`                |
+
+### その他の例
+
+Amplify JS v6は、上述のアプローチに基づいてNext.js用に事前構築されたアダプタを提供します。`runWithAmplifyServerContext`関数の使用方法の詳細については、`@aws-amplify/adapter-nextjs`パッケージの[ソースコード](https://github.com/aws-amplify/amplify-js/blob/main/packages/adapter-nextjs)を確認できます。
+
+また、Nuxt 3プロジェクトのサーバー側でAmplifyカテゴリーAPIと対話するために`runWithAmplifyServerContext`関数を使用する方法について、はじめかたガイドも提供しています。詳細は[Nuxt 3からAmplifyカテゴリーAPIを使用する](/gen1/[platform]/build-a-backend/server-side-rendering/nuxt)を参照してください。
+
+<Overview childPageNodes={props.childPageNodes} />

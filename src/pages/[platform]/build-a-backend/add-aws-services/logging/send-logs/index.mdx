@@ -1,0 +1,126 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ログの送信',
+  description: 'Amplify Loggerを使用してログを書き込み、送信する',
+  platforms: [
+    'swift',
+    'android'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify Loggerを使用すると、Amplifyライブラリによってキャッチされたエラーまたはカスタムログメッセージを追加することで、ログをAmazon CloudWatchに送信できます。CloudWatchに送信するログメッセージのレベルをカスタマイズすることもできます。
+
+## ログメッセージ
+
+<Callout>
+
+ログメッセージをログする際は、セキュリティのベストプラクティスに従う必要があります。これには、ログメッセージの検証と、ログメッセージに個人識別情報および/または機密データが含まれていないことを確認することが含まれます。
+
+</Callout>
+
+Amplifyロガーを使用して特定のネームスペースにメッセージをログできます。これにより、CloudWatchに送信されるときに類似したログをグループ化するのに役立ちます。これを実現するには、`Logger`のインスタンスを取得し、`category name`および/または`namespace`を指定します。`Logger`インスタンスを使用して、目的のログレベルでメッセージをログします。`category name`と`namespace`の値は、CloudWatchに表示されるログメッセージにタグを付けるために使用されます。また、新しい`Logger`インスタンスを作成せずにロガーを識別して再度フェッチするためにも使用されます。
+
+JSON形式のログメッセージもログできます。これにより、[AWS CloudWatch](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AnalyzingLogData.html)のクエリとフィルター機能を活用できます。
+
+<InlineFilter filters={['android']}>
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+Logger logger = Amplify.Logging.logger(AmplifyCategory.Auth, "<namespace>")
+try {
+  String result = doSomething();
+  logger.debug("result: " + result);
+} catch(Exception: exception) {
+  logger.error("operation failed", exception);
+}
+
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+val logger = Amplify.Logging.logger(AmplifyCategory.Auth, "<namespace>")
+try {
+  val result = doSomething()
+  logger.debug("result: $result")
+} catch (exception: Exception) {
+  logger.error("operation failed", exception)
+}
+```
+
+</Block>
+<Block name="RxJava">
+
+```java
+Logger logger = Amplify.Logging.logger(AmplifyCategory.Auth, "<namespace>")
+try {
+  String result = doSomething();
+  logger.debug("result: " + result);
+} catch(Exception: exception) {
+  logger.error("operation failed", exception);
+}
+```
+</Block>
+</BlockSwitcher>
+
+以下は、ライブラリからのエラーを自動的にログする際にAmplifyがデフォルトで使用する既存のAmplifyカテゴリ名です。
+* `ANALYTICS`
+* `API`
+* `AUTH`
+* `DATASTORE`
+* `HUB`
+* `LOGGING`
+* `NOTIFICATIONS`
+* `PREDICTIONS`
+* `STORAGE`
+* `GEO`
+
+
+</InlineFilter>
+
+
+<InlineFilter filters={['swift']}>
+
+```swift
+let logger = Amplify.Logging.logger(forCategory: "Authentication", forNamespace: "<your-code-namespace>")
+do {
+    let jsonEncoder = JSONEncoder()
+    let person = Person(firstName: "John", lastName: "Doe", age: 25)
+    let jsonData = try jsonEncoder.encode(person)
+    let jsonString = String(data: jsonData, encoding: String.Encoding.utf8)!
+    logger.debug(jsonString)
+} catch {
+    logger.error("Error encoding person instance")
+}
+```
+
+以下は、ライブラリからのエラーを自動的にログする際にAmplifyがデフォルトで使用する既存のAmplifyカテゴリ名です。
+* `Analytics`
+* `API`
+* `Authentication`
+* `DataStore`
+* `Geo`
+* `Hub`
+* `Logging`
+* `Predictions`
+* `PushNotifications`
+* `Storage`
+
+</InlineFilter>

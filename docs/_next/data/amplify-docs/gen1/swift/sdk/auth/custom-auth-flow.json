@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"swift","meta":{"title":"カスタム認証フロー","description":"Amazon Cognito User Poolsで認証フローをカスタマイズして、パスワードに加えてカスタムチャレンジタイプを有効にし、ユーザーの身元を検証する方法について説明します。","platforms":["swift","android"]}},"__N_SSG":true}

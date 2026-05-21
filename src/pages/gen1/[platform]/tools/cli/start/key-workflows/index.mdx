@@ -1,0 +1,234 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'Amplify CLI の主要なワークフローを探索する',
+  description: '新しい Amplify プロジェクトを初期化する方法と、その他の一般的な Amplify CLI ワークフローおよびコマンド。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+## 新しいプロジェクトを初期化する
+
+新しい Amplify プロジェクトを初期化するには、フロントエンドアプリのルートディレクトリから以下のコマンドを実行します。
+
+```bash
+amplify init
+```
+
+`init` コマンドは以下のステップを実行します。
+
+- プロジェクトを分析し、フロントエンド設定を確認します
+- 選択されたフロントエンドの初期化ロジックを実行します
+- 複数のプロバイダープラグインがある場合、クラウドリソースへのアクセスを提供するプラグインの選択を促します
+- 選択されたプラグインの初期化ロジックを順番に実行します
+- amplify フォルダ構造をプロジェクトのルートディレクトリに挿入し、初期プロジェクト設定を行います
+- 上記で選択されたプラグインの出力を含む、プロジェクトメタデータファイルを生成します
+- [AWS Amplify コンソール](https://console.aws.amazon.com/amplify)にクラウドプロジェクトを作成して、すべてのバックエンド環境のリソースを表示・管理できるようにします。
+
+## サンプル Amplify プロジェクトをクローンする
+
+サンプル Amplify フルスタックプロジェクトをクローンするには、空のディレクトリ内で以下のコマンドを実行します。
+
+`amplify init --app <github-url>`
+
+ここで `<github-url>` は有効なサンプル Amplify プロジェクトリポジトリです。詳細は[こちら](/gen1/[platform]/tools/cli/usage/headless/#--app)をクリックしてください。
+
+## 一般的な CLI コマンド
+
+### amplify init
+
+`init` コマンドは、ディレクトリの内容に基づいてプロジェクトのデフォルトを決定できます。提供されたデフォルトを受け入れるには、以下の質問に「はい」と答えます。
+
+`Initialize the project with the above configuration?`
+
+init プロセス中に、ルートスタックが 3 つのリソースで作成されます。
+
+- 認証されていないユーザーの IAM ロール
+- 認証されたユーザーの IAM ロール
+- S3 バケット、デプロイメントバケット（このプロバイダーのワークフローをサポート）
+
+プロバイダーは、ルートスタックとリソースの情報をプロジェクトメタデータファイル (amplify/backend/amplify-meta.json) に記録します。
+
+### amplify &lt;category&gt; add
+
+init が完了したら、`amplify <category> add` コマンドを実行して、カテゴリのリソースをクラウドに追加します。これにより、このカテゴリのリソースの CloudFormation テンプレートがカテゴリのサブディレクトリ `amplify/backend/<category>` に配置され、その参照が上述のルートスタックにネストされた子スタックとして挿入されます。チームで作業する場合、バックエンドカテゴリを変更する前に `amplify pull` を実行することをお勧めします。
+
+### amplify push
+
+カテゴリの更新を行った後、`amplify push` コマンドを実行してクラウドリソースを更新します。CLI はまずカテゴリのネストされたスタックテンプレートの最新バージョンを S3 デプロイメントバケットにアップロードし、次に AWS CloudFormation API を呼び出してクラウドのリソースを作成/更新します。追加/更新されたリソースに基づいて、`aws-exports.js` ファイル（JS プロジェクト用）と `awsconfiguration.json` ファイル（ネイティブプロジェクト用）が作成/更新されます。ルートスタックのテンプレートは `amplify/backend/awscloudformation` に格納されています。
+
+### amplify pull
+
+`amplify pull` コマンドは _git pull_ に似た動作をし、クラウドからアップストリームバックエンド環境定義の変更をフェッチし、ローカル環境をその定義に一致するように更新します。このコマンドは、チームシナリオで複数のチームメンバーが同じバックエンドを編集している場合、新しいプロジェクトにバックエンドをプルする場合、または同じ Amplify バックエンド環境を共有する[複数のフロントエンドプロジェクト](/gen1/[platform]/tools/cli/teams/multi-frontend/)に接続する場合に特に役立ちます。
+> \* CLI は、最後に成功した `amplify push` から CloudFormation テンプレートを含むプロジェクト情報を取得するために S3 デプロイメントバケットを使用します。
+
+<Callout>
+
+Amplify Hosting コンソールにリストされている既存プロジェクト用のクライアント設定ファイル (aws-exports.js、amplifyconfiguration.json、または amplifyconfiguration.dart) を生成するか、ローカルにプルされていないバックエンド環境をチェックアウトするには、以下を実行してください。
+
+1. AWS コンソールにログインします
+2. `AWS Amplify` を選択します
+3. アプリをクリックします
+4. `Backend environments` に移動します
+5. プルしたいバックエンド環境を見つけます
+6. `Edit backend` をクリックします
+7. リストされているコマンドを実行します (`amplify pull --appId YOUR_APP_ID --envName YOUR_ENV_NAME`)
+
+</Callout>
+
+### amplify console
+
+`amplify console` コマンドはブラウザを起動し、AWS Amplify コンソール内のクラウドプロジェクトに誘導します。Amplify コンソールは、開発チームがバックエンド環境を表示・管理したり、バックエンド デプロイメントのステータスを確認したり、Amplify カテゴリ別のバックエンドリソースへのディープリンクを取得したり、環境をプル、クローン、更新、または削除する方法に関する指示を確認したりするための中央の場所を提供します。
+
+### amplify configure project
+
+`amplify configure project` コマンドは高度なコマンドで、初期段階の入門プロジェクトではよく使われません。このコマンドは、`.config/` ディレクトリにあるプロジェクト設定を変更し、`amplify init` ステップ中に設定された AWS 認証情報（ローカルマシンのプロファイルに基づく）を再設定するために使用する必要があります。`.config/` ディレクトリは `amplify/` ディレクトリに生成され（まだ存在しない場合）、`local-aws-info.json`、`local-env-info.json`、`project-info.json` ファイルが `amplify configure project` コマンドの一部として選択された内容を反映するように設定されます。
+
+`amplify configure project` はまた、Amazon Elastic Container Service で **Serverless Container** オプションをプロジェクトで有効にするために使用されます。有効にすると、[Dockerfile](https://docs.docker.com/engine/reference/builder/) または [Docker Compose ファイル](https://docs.docker.com/compose/compose-file/)を使用して、AWS Lambda と AWS Fargate の両方で API を構築できるようになります。詳細は[サーバーレスコンテナ](/gen1/[platform]/tools/cli/usage/containers/)を参照してください。
+
+### amplify logout --appId &lt;Amplify Project Id&gt;
+
+Amplify CLI が Amplify Studio で認証されている場合、JSON Web トークン (JWT) が開発者のマシンに保存されます。このコマンドは、特定の Amplify プロジェクトに関連付けられた JWT を削除します。CLI はまた、すべてのセッションからログアウトするかどうかも確認します。「はい」を選択すると JWT が削除され、グローバルに無効化されることが保証されます。「いいえ」を選択すると、ローカルに保存された JWT は削除されますが、トークンは有効期限が切れるまで有効なままです。
+
+## Amplify CLI をアップグレードする
+
+Amplify CLI チームは継続的に新機能、機能強化、セキュリティ改善をプッシュしており、あなたまたはチームが使用している Amplify CLI バージョンを最新バージョンに更新することをお勧めします。Amplify CLI の最新リリースは npm で追跡できます - [https://www.npmjs.com/package/@aws-amplify/cli](https://www.npmjs.com/package/@aws-amplify/cli)
+
+<BlockSwitcher>
+<Block name="npm">
+
+```bash
+npm install -g @aws-amplify/cli
+```
+
+</Block>
+<Block name="cURL (Mac and Linux)">
+
+```bash
+amplify upgrade
+```
+</Block>
+<Block name="cURL (Windows)">
+
+```bash
+amplify upgrade
+```
+</Block>
+</BlockSwitcher>
+
+### Amplify CLI アップグレードを確認する
+
+CLI で以下のコマンドを入力して、最新 CLI バージョンの正常なインストールを確認します。
+
+```bash
+amplify -v
+```
+
+Amplify CLI のインストール済みバージョンを確認します。CLI の最新バージョンは[こちら](https://www.npmjs.com/package/@aws-amplify/cli)で確認できます。
+
+### (オプション) 最新の Amplify CLI を使用してプロジェクトを更新する
+以下のコマンド `cd <Project-Filepath>` を使用して Amplify プロジェクトフォルダに移動します。それが有効な Amplify プロジェクトフォルダであるかを確認するには、CLI で以下のコマンドを入力します。
+
+```bash
+amplify status
+```
+
+それが有効な Amplify プロジェクトフォルダである場合、Amplify は AWS クラウドにデプロイしたプロジェクトフォルダ内のリソースのリストを表示します。
+
+更新されたセキュリティ設定または改善により、バックエンドリソースを更新するには、CLI で以下のコマンドを入力します。
+
+```bash
+amplify push --force
+```
+
+確認プロンプトが表示されたら、Enter キーを押すか Y を入力します。設定更新が適用されたことを検証するために、以下の結果を探します。
+
+```console
+✔ All resources are updated in the cloud
+```
+
+複数の AWS Amplify プロジェクトフォルダがある場合、各プロジェクトフォルダに対して上記のステップを繰り返します。
+
+<Callout warning>
+
+push でまだ GraphQL Transformer v2 を使用するように GraphQL リソースを移行していない場合に、不明な GraphQL ディレクティブに関するエラーが表示される場合は、リソースを移行するための詳細なガイドについて[移行ドキュメントページ](/gen1/[platform]/tools/cli/migration/transformer-migration/)を確認してください。
+
+</Callout>
+
+## Amplify CLI をアンインストールする
+
+以下のコマンドを使用して、Amplify CLI をシステムから完全に削除します。Amplify CLI を削除しても、Amplify プロジェクトは削除されません。
+プロジェクトを削除するには、プロジェクトディレクトリ内で `amplify delete` を実行します。
+
+<BlockSwitcher>
+<Block name="npm">
+
+```bash
+npm uninstall -g @aws-amplify/cli
+```
+
+</Block>
+<Block name="cURL (Mac and Linux)">
+
+```bash
+amplify uninstall
+```
+</Block>
+<Block name="cURL (Windows)">
+
+```bash
+amplify uninstall
+```
+</Block>
+</BlockSwitcher>
+
+
+## コマンド一覧
+
+- `amplify <category> <subcommand>`
+- `amplify push`
+- `amplify pull`
+- `amplify env <subcommand>`
+- `amplify configure`
+- `amplify console`
+- `amplify delete`
+- `amplify help`
+- `amplify init`
+- `amplify publish`
+- `amplify run`
+- `amplify status`
+- `amplify logout`
+
+### カテゴリコマンド
+
+- `amplify <category> add`
+- `amplify <category> update`
+- `amplify <category> remove`
+- `amplify <category> push`
+
+## シークレットスキャン
+
+Amplify プロジェクトでシークレットを使用する場合、シークレットがバージョン管理にコミットされないようにシークレットを保護することが重要です。git を使用している場合、[AWS Labs](https://github.com/awslabs) の [git-secrets](https://github.com/awslabs/git-secrets) を使用することをお勧めします。インストール後、ローカルリポジトリをスキャンしてシークレットを検出し、コミットを防止します。

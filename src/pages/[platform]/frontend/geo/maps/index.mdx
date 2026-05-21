@@ -1,0 +1,1115 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'マップを操作する',
+  description: 'マップ表示、API、その他の操作について。',
+  platforms: [
+    'android',
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'swift',
+    'vue'
+  ],
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={['javascript', 'angular', 'react', 'vue', 'react-native', 'nextjs']}>
+
+## マップを表示する
+
+まず、Amazon Location Service マップリソースをプロビジョニングし、[マップを設定](/[platform]/build-a-backend/add-aws-services/geo/set-up-geo/)または[既存のリソースを使用](/[platform]/build-a-backend/add-aws-services/geo/existing-resources/)ガイドの手順に従ってアプリを構成していることを確認します。
+
+<Callout>
+
+**注：** React では、[Amplify React MapView コンポーネント](https://ui.docs.amplify.aws/react/components/geo)を使用できます
+
+</Callout>
+
+マップをレンダリングするには、[MapLibre GL](https://github.com/maplibre/maplibre-gl-js)と`maplibre-gl-js-amplify`ライブラリが必要です。MapLibre GL はオープンソースのマップレンダリングライブラリで、`maplibre-gl-js-amplify`ライブラリは MapLibre を Amplify Geo と統合し、認証を処理するのを簡単にします。
+
+依存関係をアプリに追加します：
+
+```bash title="Terminal" showLineNumbers={false} 
+npm add maplibre-gl maplibre-gl-js-amplify
+```
+
+<Callout>
+
+以下を確認してください：
+
+- `maplibre-gl-js-amplify`バージョン`4.0.0`以上がインストールされている
+- webpack、rollup などのパッケージバンドラーが CSS ファイルを処理するように設定されている。webpack ドキュメント[こちら](https://webpack.js.org/loaders/css-loader/)を確認してください。
+
+</Callout>
+
+ライブラリをアプリケーションにインポートします：
+
+```javascript
+import { createMap } from 'maplibre-gl-js-amplify';
+import 'maplibre-gl/dist/maplibre-gl.css';
+```
+
+次に、[createMap](https://github.com/aws-amplify/maplibre-gl-js-amplify/blob/main/API.md#createmap)の助けを借りて[Map](https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/)を作成してレンダリングします。
+
+**注：** このように`createMap`を呼び出す前に、DOM に`id="map"`の`div`が必要です。
+
+```javascript
+async function initializeMap() {
+  const map = await createMap({
+    container: 'map', // マップをレンダリングする HTML 要素または HTML 要素 ID https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/
+    center: [-123.1187, 49.2819], // [経度、緯度]
+    zoom: 11
+  });
+}
+
+initializeMap();
+```
+
+className またはスタイルシート ID 以外のものを使用してマップをレンダリングするには、HTML 要素自体への参照を渡すことができます。
+
+```javascript
+const element = document.getElementsByClassName("class")[0];
+
+const map = await createMap({
+    container: element,
+    ...
+})
+```
+
+<Callout>
+
+MapLibre キャンバスには、正しく表示するために定義された高さが必要です。そうしないと、マップが表示されるべき場所で空白の画面が表示される場合があります。
+
+[amplify-map.css](https://github.com/aws-amplify/maplibre-gl-js-amplify/blob/main/src/public/amplify-map.css)ファイルには、マップコンポーネントの高さを設定するためによく使用されるいくつかのメソッドが含まれています。リストされた例のいくつかを独自のスタイルに追加することも、以下のように`amplify-map.css`を直接インポートすることもできます：
+
+```
+import "maplibre-gl-js-amplify/dist/public/amplify-map.css";
+```
+
+パーセンテージベースの高さを使用してマップをレンダリングするには、マップコンテナへのすべての祖先要素が高さを持つことを確認する必要があります：
+
+```css
+html,
+body,
+#root {
+  /* マップ要素の祖先 */
+  height: 100%;
+}
+
+#map {
+  height: 50%;
+}
+```
+
+</Callout>
+
+![バンクーバーを中心としたマップ](/images/display-map.png)
+
+## マップにマーカーを表示する
+
+マップにマーカーを表示するには、`drawPoints`関数を使用します。`drawPoints`は以下を期待しています：
+
+- `sourceName` - マーカーがレンダリングされるレイヤーを指定します。同じ`sourceName`を渡すことで既存のマーカーを編集できます
+- 座標データ - (経度、緯度) 表示するマーカーの座標データ
+- maplibre-gl-js Map - マーカーをレンダリングするマップオブジェクト
+
+まず、アプリで`drawPoints`メソッドをインポートします。インポートセクションは以下のようになります
+
+```javascript
+import { drawPoints } from 'maplibre-gl-js-amplify';
+```
+
+<Callout>
+
+`drawPoints`メソッドは、マップ上にマーカーを表示するために使用されるソースとレイヤーのID を返します。これらのID は、maplibre-gl-js[ソース](https://maplibre.org/maplibre-gl-js/docs/API/#sources)、[ペイント](https://maplibre.org/maplibre-style-spec/layers/#paint-property)、および[レイヤー](https://maplibre.org/maplibre-style-spec/layers/)オプションによるさらなるカスタマイズに使用できます。
+
+`drawPoints`で使用できるパラメータとオプションの詳細については、[ドキュメント](https://github.com/aws-amplify/maplibre-gl-js-amplify/blob/main/API.md#drawpoints)を確認してください。
+
+</Callout>
+
+次に、マップにマーカーを表示したい場合は、以下のコードスニペットを使用します。マップの読み込み時にマーカーを表示したい場合は、これを`initializeMap()`関数に追加します。
+
+```javascript
+map.on('load', function () {
+  drawPoints(
+    'mySourceName', // 任意のソース名
+    [
+      {
+        coordinates: [-122.483696, 37.833818], // [経度、緯度]
+        title: 'Golden Gate Bridge',
+        address: 'A suspension bridge spanning the Golden Gate'
+      },
+      {
+        coordinates: [-122.477, 37.8105] // [経度、緯度]
+      }
+    ], // 座標データの配列、フィーチャーデータの配列、または[NamedLocations](https://github.com/aws-amplify/maplibre-gl-js-amplify/blob/main/src/types.ts#L8)の配列
+    map,
+    {
+      showCluster: true,
+      unclusteredOptions: {
+        showMarkerPopup: true
+      },
+      clusterOptions: {
+        showCount: true
+      }
+    }
+  );
+});
+```
+
+![ゴールデンゲートブリッジ上のポイントを備えたマップ](/images/display-map-with-points.png)
+
+## 異なるマップスタイルを表示する
+
+`getAvailableMaps` API は、表示可能なすべてのマップの情報を取得します。
+
+これは、ユーザーにさまざまなマップスタイルの選択肢を提供したい場合に便利です。
+
+```javascript
+import { Geo } from '@aws-amplify/geo';
+
+Geo.getAvailableMaps();
+```
+
+利用可能なマップは以下の内容を含む配列として返されます：
+
+```javascript
+//returns
+[
+  {
+    mapName: 'myAmplifyGeoEsriStreetMap',
+    style: 'VectorEsriStreets'
+  },
+  {
+    mapName: 'myAmplifyGeoEsriTopographicMap',
+    style: 'VectorEsriTopographic'
+  }
+];
+```
+
+`resize`と`setStyle`関数を使用してマップをリサイズおよびカスタマイズできます：
+
+```javascript
+map.setStyle('myAmplifyGeoEsriTopographicMap'); // getAvailableMaps()から受け取ったマップ名
+map.resize(); // マップを再レンダリングします
+```
+
+## DOM からマップを削除する
+
+マップを DOM から削除する時が来たら、生成されたマップの`.remove`メソッドを使用できます。これは、マップに関連付けられたすべてのリソース（DOM 要素、イベントバインディング、Web ワーカー、WebGL リソース）をクリーンアップして解放します。
+
+```javascript
+map.remove();
+```
+
+<Callout warning>
+
+`.remove()`を呼び出した後、マップで他のメソッドを呼び出してはいけません。
+
+</Callout>
+
+<Callout warning>
+
+**React ユーザーの場合：**
+
+コンポーネントのアンマウント時にマップを削除しないと、アプリケーションでメモリリークが発生する可能性があります。React `useEffect`フックの戻り値またはクラスコンポーネントの`componentWillUnmount`ライフサイクルフックで`.remove()`を呼び出すことをお勧めします。
+
+</Callout>
+
+## HTML ウェブサイトにマップを追加する
+
+HTML ウェブサイトにマップを表示するには、以下のスクリプトを HTML ウェブページに追加します。
+
+```html
+<link href="https://cdn.amplify.aws/packages/maplibre-gl/1.15.2/maplibre-gl.css" rel="stylesheet" integrity="sha384-DrPVD9GufrxGb7kWwRv0CywpXTmfvbKOZ5i5pN7urmIThew0zXKTME+gutUgtpeD" crossorigin="anonymous" referrerpolicy="no-referrer"></link>
+<script src="https://cdn.amplify.aws/packages/maplibre-gl/1.15.2/maplibre-gl.js" integrity="sha384-rwYfkmAOpciZS2bDuwZ/Xa/Gog6jXem8D/whm3wnsZSVFemDDlprcUXHnDDUcrNU" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.amplify.aws/packages/core/4.3.0/aws-amplify-core.min.js" integrity="sha384-7Oh+5w0l7XGyYvSqbKi2Q7SA5K640V5nyW2/LEbevDQEV1HMJqJLA1A00z2hu8fJ" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.amplify.aws/packages/auth/4.3.8/aws-amplify-auth.min.js" integrity="sha384-jfkXCEfYyVmDXYKlgWNwv54xRaZgk14m7sjeb2jLVBtUXCD2p+WU8YZ2mPZ9Xbdw" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.amplify.aws/packages/geo/1.1.0/aws-amplify-geo.min.js" integrity="sha384-TFMTyWuCbiptXTzvOgzJbV8TPUupG1rA1AVrznAhCSpXTIdGw82bGd8RTk5rr3nP" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.amplify.aws/packages/maplibre-gl-js-amplify/1.1.0/maplibre-gl-js-amplify.umd.min.js" integrity="sha384-7/RxWonKW1nM9zCKiwU9x6bkQTjldosg0D1vZYm0Zj+K/vUSnA3sOMhlRRWAtHPi" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+```
+
+次に、マップをレンダリングしたいウェブページの任意の場所に`id="map"`の div 要素を追加します。以下のコードスニペットを含めて、Amplify を構成し（`amplify_outputs.json`ファイルパスを適宜更新）、マップをインスタンス化します。
+
+```html
+<script type="module">
+  import outputs from './amplify_outputs.json' assert { type: 'json' };
+  const { Amplify } = aws_amplify_core;
+  const { createMap } = AmplifyMapLibre;
+  Amplify.configure(outputs);
+  createMap({
+    container: 'map',
+    center: [-123.1187, 49.2819], // [経度、緯度]
+    zoom: 13
+  });
+</script>
+```
+
+{/* リソースを手動でプロビジョニングした場合は、このガイド()を使用して Amplify を構成できます。*/}
+
+### サンプルアプリケーション
+
+```html
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>ウェブページにマップを表示する</title>
+        <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+        <link href="https://cdn.amplify.aws/packages/maplibre-gl/1.15.2/maplibre-gl.css" rel="stylesheet" integrity="sha384-DrPVD9GufrxGb7kWwRv0CywpXTmfvbKOZ5i5pN7urmIThew0zXKTME+gutUgtpeD" crossorigin="anonymous" referrerpolicy="no-referrer"></link>
+        <script src="https://cdn.amplify.aws/packages/maplibre-gl/1.15.2/maplibre-gl.js" integrity="sha384-rwYfkmAOpciZS2bDuwZ/Xa/Gog6jXem8D/whm3wnsZSVFemDDlprcUXHnDDUcrNU" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://cdn.amplify.aws/packages/core/5.0.5/aws-amplify-core.min.js" integrity="sha384-eM2urkpomL9SRm/kuPHZG3XPEItAiUAAyotT/AqlhSus8iAqs/EfHaYy1Jn5ih7K" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://cdn.amplify.aws/packages/auth/5.0.5/aws-amplify-auth.min.js" integrity="sha384-H25CFLYd7YHa1Oib73fs3kJN36VhaHHkLjo4AhGrhJ4HuKam05pg2/0t2MR6epun" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://cdn.amplify.aws/packages/geo/2.0.5/aws-amplify-geo.min.js" integrity="sha384-Esc9xx0X7ckb/yeYHuYsZGqBB4FwYr98NFHS3BRXLeRE/eB0uVrad2w+G6cGxYb5" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="https://cdn.amplify.aws/packages/maplibre-gl-js-amplify/1.5.0/maplibre-gl-js-amplify.umd.min.js" integrity="sha384-9kJyZavd3Jk6QzHeaLpugVonfZmZZZdixek6uglOwzKtZvDS9K3W4dshw1uswmlV" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <style>
+            body { margin: 0; padding: 0; }
+            #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script type="module">
+            import outputs from "./amplify_outputs.json" assert { type: "json" };
+            const { Amplify } = aws_amplify_core;
+            const { createMap } = AmplifyMapLibre;
+            Amplify.configure(outputs);
+            createMap({
+                container: "map",
+                center: [-123.1187, 49.2819], // [経度、緯度]
+                zoom: 13,
+            });
+        </script>
+    </body>
+</html>
+```
+
+## マップ API
+
+現在構成されているマップについての詳細情報が必要な場合、またはプログラムでマップを切り替える方法が必要な場合、`@aws-amplify/geo`パッケージは現在プロビジョニングされているマップについてより多くの情報を返す API を提供します。
+
+まず、`@aws-amplify/geo`パッケージから Geo をインポートする必要があります。
+
+```javascript
+import { Geo } from '@aws-amplify/geo';
+```
+
+### getAvailableMaps
+
+`getAvailableMaps`は、Amplify プロジェクトで現在プロビジョニングされているマップリソースを返します。これらの異なるマップのいずれかに切り替えて、それらの異なるマップスタイルを表示できます。
+
+#### API
+
+```javascript
+Geo.getAvailableMaps() => Promise<AmazonLocationServiceMapStyle[]>;
+```
+
+#### パラメータ
+
+- N/A
+
+#### 戻り値
+
+`getAvailableMaps`からの戻り値は、`mapName`、`style`、および`region`の配列である`AmazonLocationServiceMapStyle[]`に解決する Promise です。
+
+各オブジェクトには以下のプロパティがあります：
+
+- `mapName` - 作成したマップの名前。
+- `style` - マップの作成に使用された Amazon Location Service スタイル。
+- `region` - マップがホストされている AWS リージョン。
+
+<Callout>
+
+**注：** Amplify と MapLibre でマップを変更する場合、[setStyle](https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#setstyle)関数はスタイルではなく Location Service マップの名前で呼び出す必要があります。これは、`transformRequest`関数が Location Service マップ名を使用してマップタイルデータに対する新しいリクエストを行うためです。
+
+</Callout>
+
+#### 例
+
+```js
+const availableMaps = await Geo.getAvailableMaps();
+
+map.setStyle(availableMaps[0].mapName);
+```
+
+### getDefaultMap
+
+`getDefaultMap`は、デフォルトマップオブジェクトを取得するために使用されます。
+
+#### API
+
+```javascript
+Geo.getDefaultMap() => Promise<AmazonLocationServiceMapStyle>;
+```
+
+#### パラメータ
+
+- N/A
+
+#### 戻り値
+
+`getDefaultMap`からの戻り値は、AmazonLocationServiceMapStyle オブジェクトに解決する Promise です。
+
+オブジェクトには以下のプロパティがあります：
+
+- `mapName` - 作成したマップの名前。
+- `style` - マップの作成に使用された Amazon Location Service スタイル。
+- `region` - マップがホストされている AWS リージョン。
+
+#### 例
+
+```javascript
+const defaultMap = await Geo.getDefaultMap();
+```
+
+</InlineFilter>
+
+
+<InlineFilter filters={['android', 'swift']}>
+
+## Amplify-MapLibre アダプターをインストールする
+
+<InlineFilter filters={['android']}>
+以下の依存関係を **build.gradle (Module :app)** ファイルに追加し、プロンプトが表示されたら「Sync Now」をクリックします：
+
+```groovy
+dependencies {
+    implementation 'com.amplifyframework:aws-auth-cognito:ANDROID_VERSION'
+    implementation 'com.amplifyframework:aws-geo-location:ANDROID_VERSION'
+
+    // MapLibre をアプリに統合するにはこの依存関係を追加します
+    implementation 'com.amplifyframework:maplibre-adapter:ANDROID_VERSION'
+}
+```
+
+<Callout>
+
+**注：** UI コンポーネントに必要な最小 API レベルは 21 です。
+
+</Callout>
+</InlineFilter>
+
+<InlineFilter filters={['swift']}>
+
+<Callout>
+
+MapLibre は[macOS では公式にサポートされていない](https://github.com/maplibre/maplibre-gl-native/blob/9d37d3d4aab293675f3df3a7f9bee7b2f476daf5/platform/ios/platform/macos/README.md?plain=1#L22)ため、`amplify-ios-maplibre`は iOS でのみ使用できます。macOS アプリケーションのマップを表示するには、Apple の[MapKit](https://developer.apple.com/documentation/mapkit/)フレームワークを使用する必要があります。
+
+</Callout>
+
+まず、Amazon Location Service マップリソースをプロビジョニングし、[マップを構成](/[platform]/build-a-backend/add-aws-services/geo/set-up-geo/)または[既存のリソースを使用](/[platform]/build-a-backend/add-aws-services/geo/existing-resources/)ガイドの手順に従ってアプリを構成していることを確認します。
+
+Amplify-MapLibre はオープンソースアダプターで、一般的な MapLibre SDK が Amplify Geo とシームレスに連動できるようにします。
+
+1. Amplify-MapLibre アダプターをアプリケーションにインストールするには、Xcode でプロジェクトを開き、**File > Add Packages...** を選択します
+
+1. Amplify-MapLibre GitHub リポジトリ URL（`https://github.com/aws-amplify/amplify-ios-maplibre`）を検索バーに入力して **Enter** キーを押します。結果が読み込まれるのを待ちます。Swift Package Manager にインストールする amplify-ios-maplibre のバージョンのリポジトリルールが表示されます。
+
+1. 依存関係ルール **Up to Next Major Version** を選択します。これにより、互換性のある最新バージョンの依存関係が使用され、**Add Package** をクリックします。
+
+1. 最後に、プロジェクトに追加するライブラリを選択します。アダプターが提供する SwiftUI ユーザーインターフェースコンポーネントを使用する場合は、**AmplifyMapLibreAdapter** と **AmplifyMapLibreUI** の両方を選択します。Amplify Geo が MapLibre と直接連動できるようにしたいが、提供される SwiftUI ビューを使用したくない場合は、**AmplifyMapLibreAdapter** のみを選択できます。ライブラリを選択したら、**Add Package** をクリックします。
+
+<Callout>
+
+Swift Packages タブからプロジェクトに含まれる SPM パッケージを変更できます（`Project file > Project > Package Dependencies`）
+
+</Callout>
+</InlineFilter>
+
+## マップを表示する
+
+まず、Amazon Location Service マップリソースをプロビジョニングし、[マップを構成](/[platform]/build-a-backend/add-aws-services/geo/set-up-geo/)または[既存のリソースを使用](/[platform]/build-a-backend/add-aws-services/geo/existing-resources/)ガイドの手順に従ってアプリを構成していることを確認します。
+
+<InlineFilter filters={['android']}>
+### ユーザーインターフェースを選択する
+
+Android アプリでマップをレンダリングするために利用可能な 2 つの UI コンポーネントがあります。`MapLibreView`と`AmplifyMapView`です。`MapLibreView`は標準の[Android MapLibre MapView](https://docs.maptiler.com/maplibre-gl-native-android/)の拡張で、`Amplify.Geo` API と統合されていますが、`AmplifyMapView`は組み込みの場所検索、マップコントロール、マーカー、いくつかの標準 UX インタラクションを備えたラッパーです。
+
+#### `MapLibreView`対`AmplifyMapView`
+
+目標が UI をカスタマイズすることである場合、`MapLibreView`は独自のコントロールとフローを構築および統合できるプレーンなマップを提供します。目標が標準 UI を使用してマップで場所を検索および選択することである場合、`AmplifyMapView`は良い選択です。
+
+`AmplifyMapView`の拡張性は制限されていますが、`mapView`プロパティ（Java の場合`getMapView()`）を通じてラップされた`MapLibreView`にアクセスできます。したがって、`MapLibreView`で利用可能なすべての API も`AmplifyMapView`で利用可能です。
+
+## MapLibreView
+
+`MapLibreView`は MapLibre ライブラリによって提供される標準`MapView`の拡張です。実装は`Amplify.Geo`統合をバックグラウンドに追加して、開発者がライブラリ統合ではなく UI に集中できるようにします。つまり、すべての MapLibre API が利用可能で、期待通りに動作します。API リファレンスとガイドについては、[公式 MapLibre SDK for Android ドキュメント](https://docs.maptiler.com/maplibre-gl-native-android/)を確認してください。
+
+### アプリにマップを追加する
+
+1. Android Studio でアプリの`src/main/res/layout`ディレクトリに移動します
+
+2. `activity_main.xml`という新しいレイアウトを作成するか、選択した既存のレイアウトを使用し、以下を追加します：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:mapbox="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <com.amplifyframework.geo.maplibre.view.MapLibreView
+        android:id="@+id/mapView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+    />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
+### MapLibreView を初期化する
+
+1. アプリのアクティビティ（例：`MainActivity`）に移動します
+
+2. アプリのアクティビティの先頭に MapLibreView のインポートステートメントを追加します：
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+import com.amplifyframework.geo.maplibre.view.MapLibreView;
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+import com.amplifyframework.geo.maplibre.view.MapLibreView
+```
+
+</Block>
+</BlockSwitcher>
+
+3. アクティビティの最上位でビューインスタンス変数を宣言します：
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+private MapLibreView mapView;
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+private val mapView by lazy {
+    findViewById<MapLibreView>(R.id.mapView)
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+4. アクティビティの`onCreate`でマップと対話します：
+
+<BlockSwitcher>
+
+<Block name="Java">
+
+```java
+@Override
+protected void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    // 注：setContentView を呼び出す前に Amplify を構成してください
+    // 入門手順を参照してください
+
+    setContentView(R.layout.activity_main);
+    mapView = findViewById(R.id.mapView);
+
+    // これでマップビューと相互作用できます。以下の例を参照してください
+}
+```
+
+</Block>
+
+<Block name="Kotlin">
+
+```kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+
+    // 注：setContentView を呼び出す前に Amplify を構成してください
+    // 入門手順を参照してください
+
+    setContentView(R.layout.activity_main)
+
+    // これでマップビューと相互作用できます。以下の例を参照してください
+}
+```
+
+</Block>
+
+</BlockSwitcher>
+
+### マップと相互作用する
+
+マップと相互作用するには、マップを読み込む必要があります。マップの準備が整ったときに呼び出される`getMapAsync`または、マップとそのスタイルの両方が準備が整ったときに呼び出される`getStyle`のいずれかを使用できます。`SymbolManager`などの一部の API では、マップ上にマーカーやその他のシンボルを描画できるようにスタイルも読み込まれる必要があります。それが`getStyle`が便利な場合です。
+
+### マップの中心を更新する
+
+<BlockSwitcher>
+
+<Block name="Java">
+
+```java
+import com.mapbox.mapboxsdk.camera.CameraPosition;
+import com.mapbox.mapboxsdk.geometry.LatLng;
+```
+
+```java
+mapView.getMapAsync(map -> {
+    LatLng seattle = new LatLng(47.6160281982247, -122.32642111977668);
+    map.setCameraPosition(
+        new CameraPosition.Builder()
+            .target(seattle)
+            .zoom(13.0)
+            .build()
+    );
+});
+```
+
+</Block>
+
+<Block name="Kotlin">
+
+```kotlin
+import com.mapbox.mapboxsdk.camera.CameraPosition
+import com.mapbox.mapboxsdk.geometry.LatLng
+```
+
+```kotlin
+mapView.getMapAsync { map ->
+    val seattle = LatLng(47.6160281982247, -122.32642111977668)
+    map.cameraPosition = CameraPosition.Builder()
+        .target(seattle)
+        .zoom(13.0)
+        .build()
+}
+```
+
+</Block>
+
+</BlockSwitcher>
+
+`cameraPosition`を更新すると、カメラを渡された座標に移動します。アニメーションなしで。アニメーションが必要な場合は、代わりに`map.animateCamera()`を使用してください。詳細については、[公式リファレンス](https://docs.mapbox.com/android/maps/guides/camera-and-animation/camera/)を参照してください。
+
+### マップにマーカーを追加する
+
+MapLibre SDK for Android は、マップ上にマーカーを表示するために[MapLibre Annotation Plugin](https://docs.mapbox.com/android/maps/guides/annotations/)に依存しています。
+
+<BlockSwitcher>
+
+<Block name="Java">
+
+```java
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions;
+```
+
+```java
+mapView.getStyle((map, style) -> {
+    LatLng spaceNeedle = new LatLng(47.6205063, -122.3514661);
+    mapView.symbolManager.create(
+        new SymbolOptions()
+                .withIconImage("place")
+                .withLatLng(spaceNeedle)
+    );
+    map.animateCamera(CameraUpdateFactory.newLatLngZoom(spaceNeedle, 16.0));
+});
+```
+
+</Block>
+
+<Block name="Kotlin">
+
+```kotlin
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
+```
+
+```kotlin
+mapView.getStyle { map, style ->
+    val spaceNeedle = LatLng(47.6205063, -122.3514661)
+    mapView.symbolManager.create(
+        SymbolOptions()
+            .withIconImage("place")
+            .withLatLng(spaceNeedle)
+    )
+    map.animateCamera(CameraUpdateFactory.newLatLngZoom(spaceNeedle, 16.0))
+}
+```
+
+</Block>
+
+</BlockSwitcher>
+
+**注：**
+
+- `mapView.symbolManager`は[MapLibre Annotation Plugin](https://docs.mapbox.com/android/maps/guides/annotations/)から`SymbolManager`の組み込み参照で、いくつかの標準構成があります。
+- カスタマイズされたアイコンまたは他のタイプのシェイプとレイヤーのレンダリングが必要な場合、`SymbolManager`のインスタンスを作成して、異なるタイプのカスタムユースケースを管理するために使用できます。
+
+### MapLibreView 構成パラメータ
+
+`MapLibreView`には、公式ガイドではまだ提示されていないいくつかの構成パラメータがあります。完全なリストについては、[ソース xml ファイル](https://github.com/maplibre/maplibre-gl-native/blob/main/platform/android/MapLibreAndroid/src/main/res/values/attrs.xml)を参照してください。
+
+また、利用可能なパブリック API ドキュメントについては、[公式 MapView API リファレンス](https://docs.maptiler.com/maplibre-gl-native-android/com.mapbox.mapboxsdk.maps/#mapview)を確認してください。
+
+
+## AmplifyMapView
+
+`AmplifyMapView`は、デフォルトの検索フィールド、マーカー、ビジュアライゼーションモード（マップまたはリスト）、およびマップコントロールを提供します。場所ピッカーを簡単に任意のアプリに埋め込むために使用できます。`AmplifyMapView`の検索機能を使用するには、[ロケーション検索を構成](/[platform]/build-a-backend/add-aws-services/geo/configure-location-search/)または[既存の Amazon Location Service リソースを使用](/[platform]/build-a-backend/add-aws-services/geo/configure-location-search/)ガイドの手順を使用して、検索インデックスリソースをプロビジョニングします。
+
+### アプリにマップを追加する
+
+1. Android Studio でアプリの`src/main/res/layout`ディレクトリに移動します
+
+2. `activity_main.xml`という新しいレイアウトを作成するか、選択した既存のレイアウトを使用し、以下を追加します：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <com.amplifyframework.geo.maplibre.view.AmplifyMapView
+        android:id="@+id/mapView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+    />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
+### AmplifyMapView を初期化する
+
+1. アプリのアクティビティ（例：`MainActivity`）に移動します
+
+2. アプリのアクティビティの先頭に AmplifyMapView のインポートステートメントを追加します：
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+import com.amplifyframework.geo.maplibre.view.AmplifyMapView;
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+import com.amplifyframework.geo.maplibre.view.AmplifyMapView
+```
+
+</Block>
+</BlockSwitcher>
+
+3. アクティビティの最上位でビューインスタンス変数を宣言します：
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+private AmplifyMapView amplifyMapView;
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+private val amplifyMapView by lazy {
+    findViewById<AmplifyMapView>(R.id.mapView)
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+4. アクティビティの`onCreate`でマップと相互作用します：
+
+<BlockSwitcher>
+
+<Block name="Java">
+
+```java
+@Override
+protected void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+
+    // 注：setContentView を呼び出す前に Amplify を構成してください
+    // 入門手順を参照してください
+
+    setContentView(R.layout.activity_main);
+    amplifyMapView = findViewById(R.id.mapView);
+
+    // これでマップビューと相互作用できます。以下の例を参照してください
+}
+```
+
+</Block>
+
+<Block name="Kotlin">
+
+```kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+
+    // 注：setContentView を呼び出す前に Amplify を構成してください
+    // 入門手順を参照してください
+
+    setContentView(R.layout.activity_main)
+
+    // これでマップビューと相互作用できます。以下の例を参照してください
+}
+```
+
+</Block>
+
+</BlockSwitcher>
+
+### 場所を選択する
+
+`AmplifyMapView`が提供するメイン API は、マップ上で場所が選択されたときに呼び出されるイベントリスナーです。マークをクリックするか、リスト上のアイテムをクリックします。
+
+<BlockSwitcher>
+
+<Block name="Java">
+
+```java
+import android.util.Log;
+```
+
+```java
+amplifyMapView.setOnPlaceSelectListener((place, symbol) -> {
+    // place は AmazonLocationPlace のインスタンスです
+    // symbol は MapLibre から Symbol のインスタンスです
+    Log.i("MyAmplifyApp", "The selected place is " + place.getLabel());
+    Log.i("MyAmplifyApp", "It is located at " + place.getCoordinates());
+});
+```
+
+</Block>
+
+<Block name="Kotlin">
+
+```kotlin
+import android.util.Log
+```
+
+```kotlin
+amplifyMapView.onPlaceSelect { place, symbol ->
+    // place は AmazonLocationPlace のインスタンスです
+    // symbol は MapLibre から Symbol のインスタンスです
+    Log.i("MyAmplifyApp", "The selected place is ${place.label}")
+    Log.i("MyAmplifyApp", "It is located at ${place.coordinates}")
+}
+```
+
+</Block>
+
+</BlockSwitcher>
+
+### AmplifyMapView 構成パラメータ
+
+ビューは以下の構成パラメータで初期化できます：
+
+| プロパティ                     | 型      | 説明                                  | デフォルト |
+|--------------------------------|---------|--------------------------------------|---------|
+| `map:map_centerLatitude`       | Float   | 初期中心緯度                          | `0.0`   |
+| `map:map_centerLongitude`      | Float   | 初期中心経度                         | `0.0`   |
+| `map:map_minZoomLevel`         | Integer | 最小ズームレベル（最小は 0）          | `3`     |
+| `map:map_maxZoomLevel`         | Integer | 最大ズームレベル（最大は 22）         | `18`    |
+| `map:map_showCompassIndicator` | Boolean | コンパスを表示するかどうか           | `true`  |
+| `map:map_showZoomControls`     | Boolean | ズームコントロールを表示するか       | `false` |
+| `map:map_zoomLevel`            | Integer | 初期ズームレベル（0 から 22）        | `14`    |
+
+
+例：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <com.amplifyframework.geo.maplibre.view.AmplifyMapView
+        android:id="@+id/mapView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        map:map_zoomLevel="12"
+        map:map_centerLatitude="47.6160281982247"
+        map:map_centerLongitude="-122.32642111977668"
+        map:map_showCompassIndicator="true"
+        map:map_showZoomControls="true"
+    />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+</InlineFilter>
+
+<InlineFilter filters={['swift']}>
+### ユーザーインターフェースを選択する
+
+マップを表示する 2 つの方法があります。最も簡単に始める方法は、`AmplifyMaplibreUI`ライブラリを使用して`AMLMapView`のインスタンスを作成することです。これは新しいプロジェクトまたは SwiftUI を使用したい誰もが推奨するアプローチです。
+
+または、UIKit を使用しているか、MapLibre/MapBox SDK を使用している既存のコードがある場合は、`AmplifyMapLibre.createMap(completionHandler:)`を呼び出して、Amazon Location Service と Amplify で使用するために事前に配線された`MGLMapView`のインスタンスを作成できます。`MGLMapView`を直接使用する方法の詳細については、[MapLibre ドキュメント](https://docs.maptiler.com/maplibre-gl-native-ios/)を参照してください
+
+<BlockSwitcher>
+<Block name="SwiftUI">
+
+```swift
+import SwiftUI
+import AmplifyMapLibreUI
+
+struct ContentView: View {    
+    var body: some View {
+        AMLMapView()
+            .edgesIgnoringSafeArea(.all)
+    }
+}
+```
+
+</Block>
+
+<Block name="UIKit">
+
+```swift
+import AmplifyMapLibreAdapter
+import Mapbox
+import Amplify
+
+var mapView: MGLMapView?
+do {
+    mapView = try await AmplifyMapLibre.createMap()
+} catch {
+    print(error)
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+## マップをカスタマイズして状態にアクセスする
+
+`AMLMapView`は、複数のビュー修飾子を通じてカスタマイズできます。マップ状態情報は`AMLMapViewState`のインスタンスを通じて設定および監視でき、オプションで`AMLMapView`に渡して初期値を設定できます。次の例では、マップの初期ズームレベルと中心位置を設定し、ユーザーの位置を表示するようにマップを構成しています。
+
+```swift
+@StateObject private var mapState = AMLMapViewState(
+    zoomLevel: 8,
+    center: CLLocationCoordinate2D(latitude: 39.7392, longitude: -104.9903)
+)
+
+var body: some View {
+    AMLMapView(mapState: mapState)
+        .showUserLocation(true)
+        .edgesIgnoringSafeArea(.all)
+}
+```
+
+## カスタム動作を挿入する
+
+`AMLMapView`では、ユーザーインタラクションによってトリガーされるカスタム動作を挿入することもできます。次の例では、カスタム機能イメージを設定し、その機能がタップされたときのマップの動作を定義します。現在のレベルから 2 レベル上にズームします。
+
+```swift
+var body: some View {
+    AMLMapView()
+        .featureImage { MyCustomImage() }
+        .featureTapped { mapView, pointFeature in
+            mapView.setCenter(
+                pointFeature.coordinate,
+                zoomLevel: mapView.zoomLevel + 2,
+                direction: mapView.camera.heading,
+                animated: true
+            )
+        }
+        .edgesIgnoringSafeArea(.all)
+}
+```
+
+## AMLMapCompositeView
+
+`AMLMapCompositeView`は、`AMLMapView`、`AMLSearchBar`、`AMLMapControlView`、および`AMLPlaceCellView`を組み合わせて、完全なユーザーエクスペリエンスを作成します。これには、アクセス可能なマップコントロールボタン、ユーザー入力に基づいて関心のあるポイントを自動的に検索する検索バー、およびポイントのリスト表現が含まれます。
+最も単純な形式では、上記の機能すべてを引き続き活用しながら、`AMLMapCompositeView`は引数なしでインスタンス化できます。`AMLMapView`のすべてのビュー修飾子と状態追跡機能も`AMLMapCompositeView`で利用可能です。
+
+```swift
+var body: some View {
+    AMLMapCompositeView()
+}
+```
+<Callout>
+
+`AMLMapView`の使用方法とカスタマイズについての詳細は、[AmplifyMapLibre ドキュメント](https://aws-amplify.github.io/amplify-ios-maplibre/docs/)を参照してください。
+
+</Callout>
+</InlineFilter>
+
+## 異なるマップスタイルを表示する
+
+<InlineFilter filters={['android']}>
+`getAvailableMaps` API は、表示可能なすべてのマップの情報を取得します。
+
+これは、ユーザーにさまざまなマップスタイルの選択肢を提供したい場合に便利です。
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+Amplify.Geo.getAvailableMaps(
+    result -> {
+        for (final MapStyle style : result) {
+            Log.i("MyAmplifyApp", style.toString());
+        }
+    },
+    error -> Log.e("MyAmplifyApp", "Failed to get available maps.", error)
+);
+```
+
+</Block>
+<Block name="Kotlin - Callbacks">
+
+```kotlin
+Amplify.Geo.getAvailableMaps(
+    {
+        for (mapStyle in it) {
+            Log.i("MyAmplifyApp", mapStyle.toString())
+        }
+    },
+    { Log.e("MyAmplifyApp", "Failed to get available maps.", it) }
+)
+```
+
+</Block>
+<Block name="Kotlin - Coroutines">
+
+```kotlin
+try {
+    val result = Amplify.Geo.getAvailableMaps()
+    for (mapStyle in result) {
+        Log.i("MyAmplifyApp", mapStyle.toString())
+    }
+} catch (error: GeoException) {
+    Log.e("MyAmplifyApp", "Failed to get available maps.", error)
+}
+```
+
+</Block>
+<Block name="RxJava">
+
+```java
+RxAmplify.Geo.getAvailableMaps().subscribe(
+    result -> {
+        for (final MapStyle style : result) {
+            Log.i("MyAmplifyApp", style.toString());
+        }
+    },
+    error -> Log.e("MyAmplifyApp", "Failed to get available maps.", error)
+);
+```
+
+</Block>
+</BlockSwitcher>
+
+アダプターから`setStyle`メソッドを使用してマップに別のスタイルを設定できます：
+
+<BlockSwitcher>
+<Block name="Java">
+
+`MapLibreView`で：
+
+```java
+// mapStyle は Amplify.Geo.getAvailableMaps()から選択されたスタイルへの参照です
+mapView.setStyle(mapStyle, style -> {
+    Log.i("MyAmplifyApp", "Finished loading " + mapStyle.getStyle());
+});
+```
+
+`AmplifyMapView`で：
+```java
+// mapStyle は Amplify.Geo.getAvailableMaps()から選択されたスタイルへの参照です
+amplifyMapView.getMapView().setStyle(mapStyle, style -> {
+    Log.i("MyAmplifyApp", "Finished loading " + mapStyle.getStyle());
+});
+```
+
+
+</Block>
+<Block name="Kotlin">
+
+`MapLibreView`で：
+
+```kotlin
+// mapStyle は Amplify.Geo.getAvailableMaps()から選択されたスタイルへの参照です
+mapView.setStyle(mapStyle) { style ->
+    Log.i("MyAmplifyApp", "Finished loading ${mapStyle.style}.")
+}
+```
+
+`AmplifyMapView`で：
+
+```kotlin
+// mapStyle は Amplify.Geo.getAvailableMaps()から選択されたスタイルへの参照です
+amplifyMapView.mapView.setStyle(mapStyle) { style ->
+    Log.i("MyAmplifyApp", "Finished loading ${mapStyle.style}.")
+}
+```
+
+</Block>
+</BlockSwitcher>
+</InlineFilter>
+
+
+<InlineFilter filters={['swift']}>
+`availableMaps` API は、表示可能なすべてのマップの情報を取得します。
+
+これは、ユーザーにさまざまなマップスタイルの選択肢を提供したい場合に便利です。
+
+```swift
+var maps = [Geo.MapStyle]()
+do {
+    maps = try await Amplify.Geo.availableMaps()
+} catch let error as Geo.Error {
+    print("Failed to get available maps: \(error)")
+} catch {
+    print("Unexpected error: \(error)")
+}
+```
+
+createMap 関数に渡すことで、別のスタイルマップを読み込むことができます。
+
+```swift
+guard let mapStyle = maps.first else {
+    print("No maps available")
+    return
+}
+
+let mapView = AmplifyMapLibre.createMap(mapStyle)
+```
+</InlineFilter>
+
+</InlineFilter>

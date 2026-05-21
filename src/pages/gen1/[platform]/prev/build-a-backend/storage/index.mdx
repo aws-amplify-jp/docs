@@ -1,0 +1,58 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+
+export const meta = {
+  title: 'ストレージ',
+  description: 'Amplify Storageを使用して、パブリック、保護、またはプライベートストレージバケットでアプリのユーザーコンテンツを管理する方法について詳しく学びます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ],
+  route: '/gen1/[platform]/prev/build-a-backend/storage'
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      platform: context.params.platform,
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+
+AWS Amplifyストレージモジュールは、パブリック、保護、またはプライベートストレージバケット内のアプリのユーザーコンテンツを管理するためのシンプルなメカニズムを提供します。ストレージカテゴリには、[Amazon S3（Simple Storage Service）](https://docs.aws.amazon.com/AmazonS3/latest/dev/Welcome.html)の組み込みサポートが含まれています。
+
+![Image](/images/s3_overview.jpg)
+
+## S3の主要概念
+
+Amazon S3は、データをコンテナバケット内のオブジェクトとして保存します。オブジェクトは、ファイルと、オプションでそのファイルを説明するメタデータで構成されます。Amazon S3にオブジェクトを保存するには、保存したいファイルをバケットにアップロードします。ファイルをアップロードするときに、オブジェクトのアクセス権限とメタデータを設定できます。
+
+バケットはオブジェクトのコンテナです。1つ以上のバケットを持つことができます。各バケットについて、そのバケットへのアクセスを制御し（誰がバケット内のオブジェクトを作成、削除、リストできるか）、そのバケットとそのオブジェクトのアクセスログを表示し、Amazon S3がバケットとその内容を保存する地理的領域を選択できます。
+
+## AWSサービスへのアクセス
+
+ストレージの場合、ストレージアセットへのユーザーレベルのアクセスを理解することが重要です。Amplifyは、S3バケットのプロビジョニングを通じた抽象化に役立ちますが、顧客にとって適切なレベルの制御を理解することが重要です。
+
+`amplify add storage`を実行すると、CLIはCognito Identity Pool Roleを使用してバケットに適切なIAMポリシーを構成します。また、CRUD（作成、更新、読み取り、削除）ベースのアクセス権限を追加するオプションがあり、認証済みユーザーとゲストユーザーにはこれらのレベル内で制限されたアクセス権限が付与されます。
+
+## 詳細を学ぶ
+
+<Overview childPageNodes={props.childPageNodes} />

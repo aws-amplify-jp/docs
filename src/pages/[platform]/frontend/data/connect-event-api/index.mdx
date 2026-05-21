@@ -1,0 +1,1332 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'AWS AppSync Eventsに接続する',
+  description:
+    'AWS AppSync Eventsに接続する',
+  platforms: [
+    'android',
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={['javascript', 'angular', 'react', 'vue', 'react-native', 'nextjs','swift']}>
+このガイドでは、Amplifyライブラリを使用してAWS AppSync Eventsに接続する方法について説明します。
+</InlineFilter>
+
+<InlineFilter filters={['android']}>
+このガイドでは、Amplifyの有無を問わずAWS AppSync Eventsに接続する方法について説明します。
+</InlineFilter>
+
+AWS AppSync Eventsを使用すると、接続やリソーススケーリングを管理することなく、数百万のサブスクライバーにリアルタイムイベントデータをブロードキャストできるセキュアで高性能なサーバーレスWebSocket APIを作成できます。この機能を使用すると、共同ドキュメントエディタ、チャットアプリ、ライブポーリングシステムなどの複数ユーザー機能を構築できます。
+
+AWS AppSync Eventsの詳細については、[デベロッパーガイド](https://docs.aws.amazon.com/appsync/latest/eventapi/event-api-welcome.html)をご覧ください。
+
+<InlineFilter filters={["android"]}>
+## AWS AppSync Eventsライブラリのインストール
+
+<BlockSwitcher>
+
+<Block name="Without Amplify">
+
+`aws-sdk-appsync-events`依存関係をapp/build.gradle.ktsファイルに追加します。
+
+```kotlin title="app/build.gradle.kts"
+dependencies {
+    // highlight-start
+    // Amplify依存関係を追加せずにAWS AppSync Eventsライブラリを追加します
+    implementation("com.amazonaws:aws-sdk-appsync-events:ANDROID_APPSYNC_SDK_VERSION")    
+    // highlight-end
+}
+```
+
+</Block>
+
+<Block name="With Amplify">
+
+`aws-sdk-appsync-events`と`aws-sdk-appsync-amplify`依存関係をapp/build.gradle.ktsファイルに追加します。
+
+```kotlin title="app/build.gradle.kts"
+dependencies {
+    // highlight-start
+    // AWS AppSync Eventsライブラリを追加します
+    implementation("com.amazonaws:aws-sdk-appsync-events:ANDROID_APPSYNC_SDK_VERSION")    
+    // Amplify Authに接続するAppSync認可者を含みます
+    implementation("com.amazonaws:aws-sdk-appsync-amplify:ANDROID_APPSYNC_SDK_VERSION")
+    // highlight-end
+}
+```
+
+</Block>
+
+</BlockSwitcher>
+
+### AppSync認可者の提供
+
+<BlockSwitcher>
+
+<Block name="Without Amplify">
+
+AWS AppSync Eventsライブラリは、Events APIで使用される可能性のあるさまざまな認可戦略に対応する複数の認可者クラスをインポートします。使用する認可戦略に適切な認可者タイプを選択する必要があります。
+
+*  `apiKey`認可の場合、**APIKeyAuthorizer**
+*  `identityPool`認可の場合、**IAMAuthorizer**
+*  `userPool`認可の場合、**AuthTokenAuthorizer**
+
+複数の認可タイプが必要な場合は、必要に応じて複数のEventsクライアントを作成できます。
+
+#### API KEY
+
+`ApiKeyAuthorizer`はハードコードされたAPIキーか、いくつかのソースからキーを取得することで使用できます。:
+
+```kotlin
+// highlight-start
+// ハードコードされたAPIキーを使用します
+val authorizer = ApiKeyAuthorizer("[API_KEY]")
+//highlight-end
+// または
+// highlight-start
+// 何らかのソースからAPIキーを取得します。この関数は何度も呼び出される可能性があるため、
+// 適切なキャッシュを内部的に実装する必要があります。
+val authorizer = ApiKeyAuthorizer { fetchApiKey() }
+//highlight-end
+```
+
+#### AMAZON COGNITO USER POOLS
+
+AppSyncで直接作業する場合は、トークンフェッチを自分で実装する必要があります。
+
+```kotlin
+// highlight-start
+// 独自のトークンフェッチを使用します。この関数は何度も呼び出される可能性があるため、
+// 適切なキャッシュを内部的に実装する必要があります。
+val authorizer = AuthTokenAuthorizer {
+  fetchLatestAuthToken()
+}
+//highlight-end
+```
+
+#### AWS IAM
+
+AppSyncで直接作業する場合は、リクエスト署名を自分で実装する必要があります。
+
+```kotlin
+// highlight-start
+// 署名関数の実装を提供します。この関数はAWS Sig-v4署名ロジックを実装し、
+// トークンと署名を含む認可ヘッダーを返す必要があります。
+val authorizer = IamAuthorizer { appSyncRequest -> signRequestAndReturnHeaders(appSyncRequest) }
+// highlight-end
+```
+</Block>
+
+<Block name="With Amplify">
+
+AWS AppSync Eventsライブラリは、Events APIで使用される可能性のあるさまざまな認可戦略に対応する複数の認可者クラスをインポートします。使用する認可戦略に適切な認可者タイプを選択する必要があります。
+
+*  `apiKey`認可の場合、**APIKeyAuthorizer**
+*  `identityPool`認可の場合、**AmplifyIAMAuthorizer**
+*  `userPool`認可の場合、**AmplifyUserPoolAuthorizer**
+
+複数の認可タイプが必要な場合は、必要に応じて複数のEventsクライアントを作成できます。
+
+#### API KEY
+
+`ApiKeyAuthorizer`はハードコードされたAPIキーを提供するか、何らかのソースからAPIキーを取得できます。:
+
+```kotlin
+// highlight-start
+// ハードコードされたAPIキーを使用します
+val authorizer = ApiKeyAuthorizer("[API_KEY]")
+//highlight-end
+// または
+// highlight-start
+// 何らかのソースからAPIキーを取得します。この関数は何度も呼び出される可能性があるため、
+// 適切なキャッシュを内部的に実装する必要があります。
+val authorizer = ApiKeyAuthorizer { fetchApiKey() }
+//highlight-end
+```
+
+#### AMAZON COGNITO USER POOLS
+
+`AmplifyUserPoolAuthorizer`は設定されたAmplifyインスタンスを使用してAWS Cognito UserPoolトークンをフェッチしてリクエストにアタッチします。
+
+```kotlin
+// highlight-start
+// 提供されたAmplify UserPool認可者を使用します
+val authorizer = AmplifyUserPoolAuthorizer()
+//highlight-end
+```
+
+#### AWS IAM
+
+`AmplifyIAMAuthorizer`は設定されたAmplifyインスタンスを使用してIAM SigV4プロトコルでリクエストに署名します。
+
+```kotlin
+// highlight-start
+// 提供されたAmplify IAM認可者を使用します
+val authorizer = AmplifyIamAuthorizer("{REGION}")
+//highlight-end
+```
+</Block>
+
+</BlockSwitcher>
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+## AWS AppSync Eventsライブラリのインストール
+
+<BlockSwitcher>
+
+<Block name="Without Amplify">
+
+- Swift Package Managerを使用して、`AWS AppSync Events Library for Swift`をプロジェクトに追加します。
+
+- その GitHub URL (https://github.com/aws-amplify/aws-appsync-events-swift)を入力し、`Up to Next Major Version`を選択して、`Add Package`をクリックします。
+
+- 次のプロダクトを選択してターゲットに追加します:
+  - `AWSAppSyncEvents`
+
+</Block>
+
+<Block name="With Amplify">
+
+- Swift Package Managerを使用して、`AWS AppSync Events Library for Swift`をプロジェクトに追加します。
+  - その GitHub URL (https://github.com/aws-amplify/aws-appsync-events-swift)を入力し、`Up to Next Major Version`を選択して、`Add Package`をクリックします。
+  - 次のプロダクトを選択してターゲットに追加します:
+    - `AWSAppSyncEvents`
+
+- Swift Package Managerを使用して、`Amplify Library for Swift`をプロジェクトに追加します。
+  - その GitHub URL (https://github.com/aws-amplify/amplify-swift)を入力し、`Up to Next Major Version`を選択して、`Add Package`をクリックします。
+  - 次のプロダクトを選択してターゲットに追加します:
+    - `Amplify`
+    - `AWSCognitoAuthPlugin`
+
+</Block>
+
+</BlockSwitcher>
+
+### AppSync認可者の提供
+
+<BlockSwitcher>
+
+<Block name="Without Amplify">
+
+AWS AppSync Eventsライブラリは、Events APIで使用される可能性のあるさまざまな認可戦略に対応する複数の認可者クラスをインポートします。使用する認可戦略に適切な認可者タイプを選択する必要があります。
+
+*  API KEY認可の場合、**APIKeyAuthorizer**
+*  AWS IAM認可の場合、**IAMAuthorizer**
+*  AMAZON COGNITO USER POOLS認可の場合、**AuthTokenAuthorizer**
+
+複数の認可タイプが必要な場合は、必要に応じて複数の`Events`クライアントを作成できます。
+
+#### API KEY
+
+`APIKeyAuthorizer`はハードコードされたAPIキーか、何らかのソースからキーを取得することで使用できます。
+
+```swift
+// highlight-start
+// ハードコードされたAPIキーを使用します
+let apiKeyAuthorizer = APIKeyAuthorizer(apiKey: "apiKey")
+//highlight-end
+// または
+// highlight-start
+// 何らかのソースからAPIキーを取得します。この関数は何度も呼び出される可能性があるため、
+// 適切なキャッシュを内部的に実装する必要があります。
+let authorizer = APIKeyAuthorizer(fetchAPIKey: { 
+    // APIキーをフェッチします
+ })
+//highlight-end
+```
+
+#### AMAZON COGNITO USER POOLS
+
+AppSyncで直接作業する場合は、トークンフェッチを自分で実装する必要があります。
+
+```swift
+// highlight-start
+// 独自のトークンフェッチを使用します。この関数は何度も呼び出される可能性があるため、
+// 適切なキャッシュを内部的に実装する必要があります。
+let authorizer = AuthTokenAuthorizer(fetchLatestAuthToken: {
+  // 認可トークンをフェッチします
+})
+//highlight-end
+```
+
+#### AWS IAM
+
+AppSyncで直接作業する場合は、リクエスト署名を自分で実装する必要があります。
+
+```swift
+// highlight-start
+// 署名関数の実装を提供します。この関数はAWS Sig-v4署名ロジックを実装し、
+// トークンと署名を含む認可ヘッダーを返す必要があります。
+let  authorizer = IAMAuthorizer(signRequest: {
+  // `URLRequest`署名ロジックを実装します
+})
+// highlight-end
+```
+
+</Block>
+
+<Block name="With Amplify">
+
+AWS AppSync Eventsライブラリは、Events APIで使用される可能性のあるさまざまな認可戦略に対応する複数の認可者クラスをインポートします。使用する認可戦略に適切な認可者タイプを選択する必要があります。
+
+*  API KEY認可の場合、**APIKeyAuthorizer**
+*  AWS IAM認可の場合、**IAMAuthorizer**
+*  AMAZON COGNITO USER POOLS認可の場合、**AuthTokenAuthorizer**
+
+複数の認可タイプが必要な場合は、必要に応じて複数の`Events`クライアントを作成できます。
+
+#### API KEY
+
+`APIKeyAuthorizer`はハードコードされたAPIキーか、何らかのソースからキーを取得することで使用できます。
+
+```swift
+// highlight-start
+// ハードコードされたAPIキーを使用します
+let apiKeyAuthorizer = APIKeyAuthorizer(apiKey: "apiKey")
+//highlight-end
+// または
+// highlight-start
+// 何らかのソースからAPIキーを取得します。この関数は何度も呼び出される可能性があるため、
+// 適切なキャッシュを内部的に実装する必要があります。
+let authorizer = APIKeyAuthorizer(fetchAPIKey: { 
+    // APIキーをフェッチします
+ })
+//highlight-end
+```
+
+#### AMAZON COGNITO USER POOLS
+
+Amplify Authを使用している場合は、Cognito アクセストークンを取得するメソッドを作成できます。
+
+```swift
+import Amplify
+
+func getUserPoolAccessToken() async throws -> String {
+    let authSession = try await Amplify.Auth.fetchAuthSession()
+    if let result = (authSession as? AuthCognitoTokensProvider)?.getCognitoTokens() {
+        switch result {
+        case .success(let tokens):
+            return tokens.accessToken
+        case .failure(let error):
+            throw error
+        }
+    }
+    throw AuthError.unknown("Did not receive a valid response from fetchAuthSession for get token.")
+}
+```
+
+その後、このメソッドで`AuthTokenAuthorizer`を作成します。
+
+```swift
+let authorizer = AuthTokenAuthorizer(fetchLatestAuthToken: getUserPoolAccessToken)
+```
+
+#### AWS IAM
+
+Amplify Authを使用している場合は、以下のように`AWSCognitoAuthPlugin`のヘルパーメソッドで`IAMAuthorizer`を初期化できます:
+
+```swift
+let authorizer = IAMAuthorizer(
+  signRequest: AWSCognitoAuthPlugin.createAppSyncSigner(region: "region")
+)
+```
+
+</Block>
+
+</BlockSwitcher>
+
+</InlineFilter>
+
+## 既存のAmplifyバックエンドなしでEvent APIに接続する
+
+開始する前に、以下が必要です:
+
+- AWSコンソールで作成されたEvent API
+- メモを取ってください: HTTPエンドポイント、リージョン、APIキー
+
+<InlineFilter filters={['android', 'swift']}>
+完了です! [クライアントライブラリ使用ガイド](#client-library-usage-guide)に進んでください。
+
+</InlineFilter>
+
+<InlineFilter filters={['javascript', 'angular', 'react', 'vue', 'react-native', 'nextjs']}>
+```tsx title="src/App.tsx"
+import type { EventsChannel } from 'aws-amplify/data';
+import { useState, useEffect, useRef } from 'react';
+import { Amplify } from 'aws-amplify';
+import { events } from 'aws-amplify/data';
+
+Amplify.configure({
+  API: {
+    Events: {
+      endpoint:
+        'https://abcdefghijklmnopqrstuvwxyz.appsync-api.us-east-1.amazonaws.com/event',
+      region: 'us-east-1',
+      defaultAuthMode: 'apiKey',
+      apiKey: 'da2-abcdefghijklmnopqrstuvwxyz',
+    },
+  },
+});
+
+export default function App() {
+ const [myEvents, setMyEvents] = useState<unknown[]>([]);
+
+  const sub = useRef<ReturnType<EventsChannel['subscribe']>>(null);
+
+  useEffect(() => {
+    let channel: EventsChannel;
+
+    const connectAndSubscribe = async () => {
+      channel = await events.connect('default/channel');
+
+      if (!sub.current) {
+        sub.current = channel.subscribe({
+          next: (data) => {
+            console.log('received', data);
+            setMyEvents((prev) => [data, ...prev]);
+          },
+          error: (err) => console.error('error', err),
+        });
+      }
+    };
+
+    connectAndSubscribe();
+
+    return () => {
+      sub.current?.unsubscribe();
+      sub.current = null;
+      return channel?.close();
+    };
+  }, []);
+
+  async function publishEvent() {
+    // HTTP POSTでパブリッシュします
+    await events.post('default/channel', { some: 'data' });
+
+    // または、WebSocketチャネル経由でイベントをパブリッシュします
+    const channel = await events.connect('default/channel');
+    await channel.publish({ some: 'data' });
+  }
+
+  return (
+    <>
+      <button onClick={publishEvent}>Publish Event</button>
+      <ul>
+        {myEvents.map((data, idx) => (
+          <li key={idx}>{JSON.stringify(data.event, null, 2)}</li>
+        ))}
+      </ul>
+    </>
+  );
+}
+```
+</InlineFilter>
+
+## 既存のAmplifyバックエンドにEvent APIを追加する
+
+このガイドでは、既存のAmplifyバックエンドにEvent APIを追加する方法について説明します。フロントエンドアプリケーションからEvent APIで認証するためにCognito User Poolsを使用します。サインインしているユーザーはEvent APIをサブスクライブしてイベントをパブリッシュできます。
+
+開始する前に、以下が必要です:
+
+- 既存のAmplifyバックエンド（[クイックスタート](/[platform]/start/quickstart/)を参照）
+- `@aws-amplify/backend`と`@aws-amplify/backend-cli`の最新バージョン（`npm add @aws-amplify/backend@latest @aws-amplify/backend-cli@latest`）
+
+### バックエンド定義の更新
+
+まず、バックエンド定義に新しいEvent APIを追加します。
+
+<InlineFilter filters={['javascript', 'angular', 'react', 'vue', 'react-native', 'nextjs']}>
+```ts title="amplify/backend.ts"
+import { defineBackend } from '@aws-amplify/backend';
+import { auth } from './auth/resource';
+// highlight-start
+// CDKリソースをインポートします:
+import {
+  CfnApi,
+  CfnChannelNamespace,
+  AuthorizationType,
+} from 'aws-cdk-lib/aws-appsync';
+import { Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+// highlight-end
+
+const backend = defineBackend({
+	auth,
+});
+
+// highlight-start
+// Event APIリソースの新しいスタックを作成します:
+const customResources = backend.createStack('custom-resources');
+
+// スタックに新しいEvent APIを追加します:
+const cfnEventAPI = new CfnApi(customResources, 'CfnEventAPI', {
+  name: 'my-event-api',
+  eventConfig: {
+    authProviders: [
+      {
+        authType: AuthorizationType.USER_POOL,
+        cognitoConfig: {
+          awsRegion: customResources.region,
+          // Event APIをAmplifyによってプロビジョンされたCognito User Poolを使用するように設定します:
+          userPoolId: backend.auth.resources.userPool.userPoolId,
+        },
+      },
+    ],
+    // Connect、Publish、および Subscribe操作の認可プロバイダーとしてUser Poolを設定します:
+    connectionAuthModes: [{ authType: AuthorizationType.USER_POOL }],
+    defaultPublishAuthModes: [{ authType: AuthorizationType.USER_POOL }],
+    defaultSubscribeAuthModes: [{ authType: AuthorizationType.USER_POOL }],
+  },
+});
+
+// Event APIのデフォルトネームスペースを作成します:
+const namespace = new CfnChannelNamespace(
+  customResources,
+  'CfnEventAPINamespace',
+  {
+    apiId: cfnEventAPI.attrApiId,
+    name: 'default',
+  }
+);
+
+// User Pool内の認証されたユーザーロールにポリシーをアタッチしてEvent APIへのアクセスを許可します:
+backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(
+  new Policy(customResources, 'AppSyncEventPolicy', {
+    statements: [
+      new PolicyStatement({
+        actions: [
+          'appsync:EventConnect',
+          'appsync:EventSubscribe',
+          'appsync:EventPublish',
+        ],
+        resources: [`${cfnEventAPI.attrApiArn}/*`, `${cfnEventAPI.attrApiArn}`],
+      }),
+    ],
+  })
+);
+
+// 最後に、Event API設定をamplify_outputsに追加します:
+backend.addOutput({
+  custom: {
+    events: {
+      url: `https://${cfnEventAPI.getAtt('Dns.Http').toString()}/event`,
+      aws_region: customResources.region,
+      default_authorization_type: AuthorizationType.USER_POOL,
+    },
+  },
+});
+// highlight-end
+```
+</InlineFilter>
+
+<InlineFilter filters={['android', 'swift']}>
+```ts title="amplify/backend.ts"
+import { defineBackend } from '@aws-amplify/backend';
+import { auth } from './auth/resource';
+// highlight-start
+// CDKリソースをインポートします:
+import {
+  CfnApi,
+  CfnChannelNamespace,
+  AuthorizationType,
+} from 'aws-cdk-lib/aws-appsync';
+import { Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+// highlight-end
+
+const backend = defineBackend({
+	auth,
+});
+
+// highlight-start
+// Event APIリソースの新しいスタックを作成します:
+const customResources = backend.createStack('custom-resources');
+
+// スタックに新しいEvent APIを追加します:
+const cfnEventAPI = new CfnApi(customResources, 'CfnEventAPI', {
+  name: 'my-event-api',
+  eventConfig: {
+    authProviders: [
+      {
+        authType: AuthorizationType.USER_POOL,
+        cognitoConfig: {
+          awsRegion: customResources.region,
+          // Event APIをAmplifyによってプロビジョンされたCognito User Poolを使用するように設定します:
+          userPoolId: backend.auth.resources.userPool.userPoolId,
+        },
+      },
+    ],
+    // Connect、Publish、および Subscribe操作の認可プロバイダーとしてUser Poolを設定します:
+    connectionAuthModes: [{ authType: AuthorizationType.USER_POOL }],
+    defaultPublishAuthModes: [{ authType: AuthorizationType.USER_POOL }],
+    defaultSubscribeAuthModes: [{ authType: AuthorizationType.USER_POOL }],
+  },
+});
+
+// Event APIのデフォルトネームスペースを作成します:
+const namespace = new CfnChannelNamespace(
+  customResources,
+  'CfnEventAPINamespace',
+  {
+    apiId: cfnEventAPI.attrApiId,
+    name: 'default',
+  }
+);
+
+// User Pool内の認証されたユーザーロールにポリシーをアタッチしてEvent APIへのアクセスを許可します:
+backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(
+  new Policy(customResources, 'AppSyncEventPolicy', {
+    statements: [
+      new PolicyStatement({
+        actions: [
+          'appsync:EventConnect',
+          'appsync:EventSubscribe',
+          'appsync:EventPublish',
+        ],
+        resources: [`${cfnEventAPI.attrApiArn}/*`, `${cfnEventAPI.attrApiArn}`],
+      }),
+    ],
+  })
+);
+// highlight-end
+```
+</InlineFilter>
+
+### バックエンドのデプロイ
+
+変更をテストするには、Amplify Sandboxをデプロイします。
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox
+```
+
+<InlineFilter filters={['javascript', 'angular', 'react', 'vue', 'react-native', 'nextjs']}>
+### フロントエンドアプリケーションの接続
+
+サンドボックスがデプロイされた後、フロントエンドアプリケーションをEvent APIに接続します。[Amplify認証器コンポーネント](https://ui.docs.amplify.aws/react/connected-components/authenticator)を使用してCognito User Poolにサインインします。
+
+認証器をまだインストールしていない場合は、`npm add @aws-amplify/ui-react`を実行してインストールできます。
+
+```tsx title="src/App.tsx"
+import { useEffect, useState } from 'react';
+import { Amplify } from 'aws-amplify';
+import { events, type EventsChannel } from 'aws-amplify/data';
+import { Authenticator } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
+import outputs from '../amplify_outputs.json';
+
+Amplify.configure(outputs);
+
+export default function App() {
+  const [myEvents, setMyEvents] = useState<Record<string, any>[]>([]);
+
+  useEffect(() => {
+    let channel: EventsChannel;
+
+    const connectAndSubscribe = async () => {
+      channel = await events.connect('default/channel');
+
+      channel.subscribe({
+        next: (data) => {
+          console.log('received', data);
+          setMyEvents((prev) => [data, ...prev]);
+        },
+        error: (err) => console.error('error', err),
+      });
+    };
+
+    connectAndSubscribe();
+
+    return () => channel && channel.close();
+  }, []);
+
+  async function publishEvent() {
+    // HTTP POSTでパブリッシュします
+    await events.post('default/channel', { some: 'data' });
+
+    // または、WebSocketチャネル経由でイベントをパブリッシュします
+    const channel = await events.connect('default/channel');
+    await channel.publish({ some: 'data' });
+  }
+
+  return (
+    <Authenticator>
+      {({ signOut, user }) => (
+        <>
+          <div>
+            <h1>ようこそ、{user.username}さん</h1>
+            <button onClick={signOut}>Sign Out</button>
+          </div>
+          <div>
+            <button onClick={publishEvent}>Publish Event</button>
+            <ul>
+            {myEvents.map((data) => (
+              <li key={data.id}>{JSON.stringify(data.event)}</li>
+              ))}
+            </ul>
+          </div>
+        </>
+      )}
+    </Authenticator>
+  );
+}
+```
+</InlineFilter>
+
+<InlineFilter filters={['android', 'swift']}>
+## クライアントライブラリ使用ガイド
+</InlineFilter>
+
+<InlineFilter filters={['android']}>
+### Eventsクラスの作成
+
+エンドポイントはAWS AppSync Eventsコンソールで確認できます。`https`で始まり、`/event`で終わる必要があります。
+
+```kotlin
+val endpoint = "https://abcdefghijklmnopqrstuvwxyz.appsync-api.us-east-1.amazonaws.com/event"
+val events = Events(endpoint)
+```
+
+### RESTクライアントの使用
+
+`EventsRestClient`を作成してRESTでイベントをパブリッシュできます。クライアント内での任意のパブリッシュコールに対して使用される、パブリッシュ認可者を受け入れます。
+
+#### RESTクライアントの作成
+
+``` kotlin
+val events: Events // 設定されたEvents
+val restClient = events.createRestClient(
+  publishAuthorizer = ApiKeyAuthorizer("da2-abcdefghijklmnopqrstuvwxyz")
+)
+```
+
+さらに、カスタムオプションをRest Clientに渡すことができます。現在の機能には、Rest Clientが使用する`OkHttp.Builder`の変更とクライアントライブラリログの有効化が含まれます。
+[クライアントライブラリログの収集](#collecting-client-library-logs)のAndroidLoggerクラスを参照してください。
+
+``` kotlin
+val restClient = events.createRestClient(
+    publishAuthorizer = ApiKeyAuthorizer("da2-abcdefghijklmnopqrstuvwxyz"),
+    options = Events.Options.Rest(
+        loggerProvider = { namespace -> AndroidLogger(namespace, logLevel) },
+        okHttpConfigurationProvider = { okHttpBuilder ->
+            // EventsRestClientが使用するOkHttp.Builderを更新します
+        }
+    )
+)
+```
+
+#### 単一のイベントをパブリッシュする
+
+```kotlin
+val restClient: EventsRestClient // 設定されたEventRestClient
+// kotlinx.serialization.json.[JsonElement, JsonPrimitive, JsonArray, JsonObject]
+val jsonEvent = JsonObject(mapOf("some" to JsonPrimitive("data")))
+val publishResult = restClient.publish(
+  channelName = "default/channel", 
+  event = jsonEvent
+)
+when(publishResult) {
+  is PublishResult.Response -> {
+    val successfulEvents = publishResult.successfulEvents // 成功したイベントをインスペクトします
+    val failedEvents = publishResult.failedEvents // 失敗したイベントをインスペクトします
+  }
+  is PublishResult.Failure -> {
+    val error = result.error // パブリッシュ失敗、エラーをインスペクトします
+  }
+}
+```
+
+#### 複数のイベントをパブリッシュする
+
+一度に最大5つのイベントをパブリッシュできます。
+
+```kotlin
+val restClient: EventsRestClient // 設定されたEventRestClient
+// List of kotlinx.serialization.json.[JsonElement, JsonPrimitive, JsonArray, JsonObject]
+val jsonEvents = listOf(
+  JsonObject(mapOf("some" to JsonPrimitive("data1"))),
+  JsonObject(mapOf("some" to JsonPrimitive("data2")))
+)
+val publishResult = restClient.publish(
+  channelName = "default/channel",
+  events = jsonEvents
+)
+when(publishResult) {
+  is PublishResult.Response -> {
+    val successfulEvents = publishResult.successfulEvents // 成功したイベントをインスペクトします
+    val failedEvents = publishResult.failedEvents // 失敗したイベントをインスペクトします
+  }
+  is PublishResult.Failure -> {
+    val error = result.error // パブリッシュ失敗、エラーをインスペクトします
+  }
+}
+```
+
+#### 異なる認可者でパブリッシュする
+
+```kotlin
+restClient.publish(
+  channelName = "default/channel", 
+  event = JsonObject(mapOf("some" to JsonPrimitive("data"))),
+  authorizer = ApiKeyAuthorizer("da2-abcdefghijklmnopqrstuvwxyz")
+)
+```
+
+### WebSocketクライアントの使用
+
+`EventsWebSocketClient`を作成してチャネルにパブリッシュしたりサブスクライブしたりできます。WebSocket接続はライブラリによって管理され、最初のサブスクライブまたはパブリッシュ操作時に接続します。接続すると、WebSocketは開いたままになります。クライアントをサブスクライブまたはパブリッシュする必要がなくなった場合は、明示的に切断する必要があります。
+
+#### WebSocketクライアントの作成 
+
+```kotlin
+val events: Events // 設定されたEvents
+val apiKeyAuthorizer = ApiKeyAuthorizer("da2-abcdefghijklmnopqrstuvwxyz")
+val webSocketClient = events.createWebSocketClient(
+  connectAuthorizer = apiKeyAuthorizer, // websocketの接続に使用されます
+  subscribeAuthorizer = apiKeyAuthorizer, // サブスクライブコールに使用されます
+  publishAuthorizer = apiKeyAuthorizer // パブリッシュコールに使用されます
+)
+```
+
+さらに、カスタムオプションをWebSocket Clientに渡すことができます。現在の機能には、WebSocket Clientが使用する`OkHttp.Builder`の変更とクライアントライブラリログの有効化が含まれます。
+[クライアントライブラリログの収集](#collecting-client-library-logs)のAndroidLoggerクラスを参照してください。
+
+```kotlin
+val events: Events // 設定されたEvents
+val apiKeyAuthorizer = ApiKeyAuthorizer("da2-abcdefghijklmnopqrstuvwxyz")
+val webSocketClient = events.createWebSocketClient(
+  connectAuthorizer = apiKeyAuthorizer, // websocketの接続に使用されます
+  subscribeAuthorizer = apiKeyAuthorizer, // サブスクライブコールに使用されます
+  publishAuthorizer = apiKeyAuthorizer // パブリッシュコールに使用されます,
+  options = Events.Options.WebSocket(
+    loggerProvider = { namespace -> AndroidLogger(namespace, logLevel) },
+    okHttpConfigurationProvider = { okHttpBuilder ->
+            // EventsWebSocketClientが使用するOkHttpBuilderを更新します
+    }
+  )
+)
+```
+
+#### 単一のイベントをパブリッシュする
+
+```kotlin
+val webSocketClient: EventsWebSocketClient // 設定されたEventsWebSocketClient
+// kotlinx.serialization.json.[JsonElement, JsonPrimitive, JsonArray, JsonObject]
+val jsonEvent = JsonObject(mapOf("some" to JsonPrimitive("data")))
+val publishResult = webSocketClient.publish(
+  channelName = "default/channel",
+  event = jsonEvent
+)
+when(publishResult) {
+  is PublishResult.Response -> {
+    val successfulEvents = publishResult.successfulEvents // 成功したイベントをインスペクトします
+    val failedEvents = publishResult.failedEvents // 失敗したイベントをインスペクトします
+  }
+  is PublishResult.Failure -> {
+    val error = result.error // パブリッシュ失敗、エラーをインスペクトします
+  }
+}
+```
+
+#### 複数のイベントをパブリッシュする
+
+一度に最大5つのイベントをパブリッシュできます。
+
+```kotlin
+val webSocketClient: EventsWebSocketClient // 設定されたEventsWebSocketClient
+// List of kotlinx.serialization.json.[JsonElement, JsonPrimitive, JsonArray, JsonObject]
+val jsonEvents = listOf(
+  JsonObject(mapOf("some" to JsonPrimitive("data1"))),
+  JsonObject(mapOf("some" to JsonPrimitive("data2")))
+)
+val publishResult = webSocketClient.publish(
+  channelName = "default/channel",
+  events = jsonEvents
+)
+when(publishResult) {
+  is PublishResult.Response -> {
+    val successfulEvents = publishResult.successfulEvents // 成功したイベントをインスペクトします
+    val failedEvents = publishResult.failedEvents // 失敗したイベントをインスペクトします
+  }
+  is PublishResult.Failure -> {
+    val error = result.error // パブリッシュ失敗、エラーをインスペクトします
+  }
+}
+```
+
+#### 異なる認可者でパブリッシュする
+
+```kotlin
+val webSocketClient: EventsWebSocketClient // 設定されたEventsWebSocketClient
+val jsonEvent = JsonObject(mapOf("some" to JsonPrimitive("data")))
+val publishResult = webSocketClient.publish(
+  channelName = "default/channel",
+  event = jsonEvent,
+  authorizer = ApiKeyAuthorizer("da2-abcdefghijklmnopqrstuvwxyz")
+)
+when(publishResult) {
+  is PublishResult.Response -> {
+    val successfulEvents = publishResult.successfulEvents // 成功したイベントをインスペクトします
+    val failedEvents = publishResult.failedEvents // 失敗したイベントをインスペクトします
+  }
+  is PublishResult.Failure -> {
+    val error = result.error // パブリッシュ失敗、エラーをインスペクトします
+  }
+}
+```
+
+#### チャネルをサブスクライブする
+
+チャネルをサブスクライブするときは、特定のネームスペース/チャネル（例: "default/channel"）をサブスクライブするか、チャネルパスの末尾にワイルドカード（`*`）を指定して、マッチするすべてのチャネルにパブリッシュされたイベントを受け取ります（例: "default/*"）。
+
+サブスクリプションFlowに適切なコルーチンスコープを選択することが重要です。サブスクリプションが必要な時間に対応するスコープを選択する必要があります。たとえば、サブスクリプションを画面に関連付ける場合は、AndroidXの`ViewModel`から`viewModelScope`を使用することを検討する必要があります。サブスクリプションFlowは設定の変更を保持し、ViewModelで`onCleared()`がトリガーされるときにキャンセルされます。
+Flowのコルーチンスコープがキャンセルされると、ライブラリはチャネルからサブスクライブ解除します。
+
+```kotlin
+coroutineScope.launch {
+  // subscribeは冷たいFlowを返します。ターミナル演算子が呼び出されると、サブスクリプションが確立されます。
+  val subscription: Flow<EventsMessage> = webSocketClient.subscribe("default/channel").onCompletion {
+    // サブスクリプションがアンサブスクライブされました
+  }.catch { throwable ->
+    // サブスクリプションでエラーが発生し、アンサブスクライブされました
+    // 原因についてはthrowableを参照してください
+  }
+
+  // collectはサブスクリプションを開始します
+  subscription.collect { eventsMessage ->
+    // JsonElementタイプを返します。
+    // Kotlin Serializationを使用して、好みのデータ構造に変換します。
+    val jsonData = eventsMessage.data
+  }
+}
+```
+
+#### 異なる認可者でチャネルをサブスクライブする
+
+```kotlin
+coroutineScope.launch {
+  // subscribeは冷たいFlowを返します。ターミナル演算子が呼び出されると、サブスクリプションが確立されます。
+  val subscription: Flow<EventsMessage> = webSocketClient.subscribe(
+      channelName = "default/channel".
+      authorizer = ApiKeyAuthorizer("da2-abcdefghijklmnopqrstuvwxyz")
+  ).onCompletion {
+    // サブスクリプションがアンサブスクライブされました
+  }.catch { throwable ->
+    // サブスクリプションでエラーが発生し、アンサブスクライブされました
+    // 原因についてはthrowableを参照してください
+  }
+
+  // collectはサブスクリプションを開始します
+  subscription.collect { eventsMessage ->
+    // JsonElementタイプを返します。
+    val jsonData = eventsMessage.data
+    // Kotlin Serializationを使用して、好みのデータ構造に変換します。
+  }
+}
+```
+
+#### WebSocketを切断する
+
+WebSocketの使用を終了し、クライアントでサブスクライブまたはパブリッシュを呼び出すつもりがない場合は、WebSocketを切断する必要があります。これにより、すべてのチャネルがアンサブスクライブされます。
+
+```kotlin
+val webSocketClient: EventsWebSocketClient // 設定されたEventsWebSocketClient
+// 保留中のパブリッシュ操作をWebSocketにポストするのを待つ場合はflushEventsをtrueに設定します
+// 保留中のポストを破棄してすぐに切断する場合はflushEventsをfalseに設定します
+webSocketClient.disconnect(flushEvents = true) // またはfalseを指定してすぐに切断します
+```
+</InlineFilter>
+
+<InlineFilter filters={['swift']}>
+### Eventsクラスの作成
+
+エンドポイントはAWS AppSync Eventsコンソールで確認できます。`https`で始まり、`/event`で終わる必要があります。
+
+```swift
+let eventsEndpoint = "https://abcdefghijklmnopqrstuvwxyz.appsync-api.us-east-1.amazonaws.com/event"
+let events = Events(endpointURL: eventsEndpoint)
+```
+
+### RESTクライアントの使用
+
+`EventsRestClient`を作成してRESTでイベントをパブリッシュできます。クライアント内での任意のパブリッシュコールに対して使用される、パブリッシュ認可者を受け入れます。
+
+#### RESTクライアントの作成
+
+```swift
+let events = Events(endpointURL: eventsEndpoint)
+let restClient = events.createRestClient(
+  publishAuthorizer: APIKeyAuthorizer(apiKey: "apiKey")
+)
+```
+
+さらに、カスタムオプションをRest Clientに渡すことができます。現在の機能には、カスタム`URLSessionConfiguration`オブジェクトの渡し方、`URLRequestInterceptor`の前置き、およびクライアントライブラリログの有効化が含まれます。
+[クライアントライブラリログの収集](#collecting-client-library-logs)および`RestOptions`クラスの詳細については、を参照してください。
+
+```swift
+let restClient = events.createRestClient(
+  publishAuthorizer: apiKeyAuthorizer,
+  options: .init(
+    urlSessionConfiguration: urlSessionConfiguration, // `URLSessionConfiguration`のインスタンス
+    logger: AppSyncEventsLogger(), // `EventsLogger`の実装
+    interceptor: AppSyncEventsURLRequestInterceptor() // `URLRequestInterceptor`の実装
+  )
+)
+```
+
+#### 単一のイベントをパブリッシュする
+
+```swift
+let defaultChannel = "default/channel"
+let event = JSONValue(stringLiteral: "123")
+do {
+  let result = try await restClient.publish(
+    channelName: defaultChannel,
+    event: event
+  )
+  print("Publish success with result:\n status: \(result.status) \n, successful events: \(result.successfulEvents) \n, failed events: \(result.failedEvents)")
+} catch {
+  print("Publish failure with error: \(error)")
+}
+```
+
+#### 複数のイベントをパブリッシュする
+
+一度に最大5つのイベントをパブリッシュできます。
+
+```swift
+let defaultChannel = "default/channel"
+let eventsList = [
+    JSONValue(stringLiteral: "123"),
+    JSONValue(booleanLiteral: true),
+    JSONValue(floatLiteral: 1.25),
+    JSONValue(integerLiteral: 37),
+    JSONValue(dictionaryLiteral: ("key", "value"))
+]
+
+do {
+    let result = try await restClient.publish(
+        channelName: defaultChannel,
+        events: eventsList
+    )
+    print("Publish success with result:\n status: \(result.status) \n, successful events: \(result.successfulEvents) \n, failed events: \(result.failedEvents)")
+} catch {
+  print("Publish failure with error: \(error)")
+}
+```
+
+#### 異なる認可者でパブリッシュする
+
+```swift
+let defaultChannel = "default/channel"
+let event = JSONValue(stringLiteral: "123")
+let apiKeyAuthorizer = APIKeyAuthorizer(apiKey: "apiKey")
+do {
+  let result = try await restClient.publish(
+    channelName: defaultChannel,
+    event: event,
+    authorizer: apiKeyAuthorizer
+  )
+  print("Publish success with result:\n status: \(result.status) \n, successful events: \(result.successfulEvents) \n, failed events: \(result.failedEvents)")
+} catch {
+  print("Publish failure with error: \(error)")
+}
+```
+
+### WebSocketクライアントの使用
+
+`EventsWebSocketClient`を作成してチャネルにパブリッシュしたりサブスクライブしたりできます。WebSocket接続はライブラリによって管理され、最初のサブスクライブまたはパブリッシュ操作時に接続します。接続すると、WebSocketは開いたままになります。クライアントをサブスクライブまたはパブリッシュする必要がなくなった場合は、明示的に切断する必要があります。
+
+#### WebSocketクライアントの作成 
+
+```swift
+let apiKeyAuthorizer = APIKeyAuthorizer(apiKey: "apiKey")
+let webSocketClient = events.createWebSocketClient(
+  connectAuthorizer: apiKeyAuthorizer,
+  publishAuthorizer: apiKeyAuthorizer,
+  subscribeAuthorizer: apiKeyAuthorizer
+)
+```
+
+さらに、カスタムオプションをWebSocket Clientに渡すことができます。現在の機能には、カスタム`URLSessionConfiguration`オブジェクトの渡し方、`URLRequestInterceptor`の前置き、およびクライアントライブラリログの有効化が含まれます。
+[クライアントライブラリログの収集](#collecting-client-library-logs)および`WebSocketOptions`クラスの詳細については、を参照してください。
+
+```swift
+let apiKeyAuthorizer = APIKeyAuthorizer(apiKey: "apiKey")
+let webSocketClient = events.createWebSocketClient(
+  connectAuthorizer: apiKeyAuthorizer,
+  publishAuthorizer: apiKeyAuthorizer,
+  subscribeAuthorizer: apiKeyAuthorizer,
+  options: .init(
+    urlSessionConfiguration: urlSessionConfiguration, // `URLSessionConfiguration`のインスタンス
+    logger: AppSyncEventsLogger(), // `EventsLogger`の実装
+    interceptor: AppSyncEventsURLRequestInterceptor() // `URLRequestInterceptor`の実装
+  ) 
+)
+```
+
+#### 単一のイベントをパブリッシュする
+
+```swift
+let defaultChannel = "default/channel"
+let event = JSONValue(stringLiteral: "123")
+do {
+    let result = try await websocketClient.publish(
+        channelName: defaultChannel,
+        event: event
+    )
+    print("Publish success with result:\n status: \(result.status) \n, successful events: \(result.successfulEvents) \n, failed events: \(result.failedEvents)")
+} catch {
+  print("Publish failure with error: \(error)")
+}
+```
+
+#### 複数のイベントをパブリッシュする
+
+一度に最大5つのイベントをパブリッシュできます。
+
+```swift
+let defaultChannel = "default/channel"
+let eventsList = [
+    JSONValue(stringLiteral: "123"),
+    JSONValue(booleanLiteral: true),
+    JSONValue(floatLiteral: 1.25),
+    JSONValue(integerLiteral: 37),
+    JSONValue(dictionaryLiteral: ("key", "value"))
+]
+
+do {
+    let result = try await websocketClient.publish(
+        channelName: defaultChannel,
+        events: eventsList
+    )
+    print("Publish success with result:\n status: \(result.status) \n, successful events: \(result.successfulEvents) \n, failed events: \(result.failedEvents)")
+} catch {
+  print("Publish failure with error: \(error)")
+}
+```
+
+#### 異なる認可者でパブリッシュする
+
+```swift
+let defaultChannel = "default/channel"
+let event = JSONValue(stringLiteral: "123")
+let apiKeyAuthorizer = APIKeyAuthorizer(apiKey: "apiKey")
+do {
+  let result = try await websocketClient.publish(
+    channelName: defaultChannel,
+    event: event,
+    authorizer: apiKeyAuthorizer
+  )
+  print("Publish success with result:\n status: \(result.status) \n, successful events: \(result.successfulEvents) \n, failed events: \(result.failedEvents)")
+} catch {
+  print("Publish failure with error: \(error)")
+}
+```
+
+#### チャネルをサブスクライブする
+
+チャネルをサブスクライブするときは、特定のネームスペース/チャネル（例: `default/channel`）をサブスクライブするか、チャネルパスの末尾にワイルドカード（`*`）を指定して、マッチするすべてのチャネルにパブリッシュされたイベントを受け取ります（例: `default/*`）。
+
+
+```swift
+let defaultChannel = "default/channel"
+let subscription = try websocketClient.subscribe(channelName: defaultChannel)
+let task = Task {
+    for try await message in subscription {
+        print("Subscription received message: \(message))"
+    }
+}
+```
+`AsyncThrowingStream`の周囲のタスクをキャンセルして、チャネルをアンサブスクライブできます。
+
+```swift
+task.cancel()
+```
+
+#### 異なる認可者でチャネルをサブスクライブする
+
+```swift
+let defaultChannel = "default/channel"
+let apiKeyAuthorizer = APIKeyAuthorizer(apiKey: "apiKey")
+let subscription = try websocketClient.subscribe(
+  channelName: defaultChannel,
+  authorizer: apiKeyAuthorizer
+)
+let task = Task {
+    for try await message in subscription {
+        print("Subscription received message: \(message))"
+    }
+}
+```
+
+#### WebSocketを切断する
+
+WebSocketの使用を終了し、クライアントでサブスクライブまたはパブリッシュを呼び出すつもりがない場合は、WebSocketを切断する必要があります。これにより、すべてのチャネルがアンサブスクライブされます。
+
+```swift
+// 保留中のパブリッシュ操作をWebSocketにポストするのを待つ場合はflushEventsをtrueに設定します
+// 保留中のポストを破棄してすぐに切断する場合はflushEventsをfalseに設定します
+try await webSocketClient.disconnect(flushEvents: true) // またはfalseを指定してすぐに切断します
+```
+</InlineFilter>
+
+<InlineFilter filters={['android', 'swift']}>
+### クライアントライブラリログの収集
+</InlineFilter>
+
+<InlineFilter filters={['android']}>
+
+RESTクライアントおよびWebSocketクライアントの例では、カスタムロガーへのログを示しました。以下は、ログをAndroidのLogcatに書き込むカスタムロガーの例です。自由に独自の`Logger`タイプを実装できます。
+
+```kotlin
+class AndroidLogger(
+    private val namespace: String,
+    override val thresholdLevel: LogLevel
+) : Logger {
+
+    override fun error(message: String) {
+        if (!thresholdLevel.above(LogLevel.ERROR)) {
+            Log.e(namespace, message)
+        }
+    }
+
+    override fun error(message: String, error: Throwable?) {
+        if (!thresholdLevel.above(LogLevel.ERROR)) {
+            Log.e(namespace, message, error)
+        }
+    }
+
+    override fun warn(message: String) {
+        if (!thresholdLevel.above(LogLevel.WARN)) {
+            Log.w(namespace, message)
+        }
+    }
+
+    override fun warn(message: String, issue: Throwable?) {
+        if (!thresholdLevel.above(LogLevel.WARN)) {
+            Log.w(namespace, message, issue)
+        }
+    }
+
+    override fun info(message: String) {
+        if (!thresholdLevel.above(LogLevel.INFO)) {
+            Log.i(namespace, message)
+        }
+    }
+
+    override fun debug(message: String) {
+        if (!thresholdLevel.above(LogLevel.DEBUG)) {
+            Log.d(namespace, message)
+        }
+    }
+
+    override fun verbose(message: String) {
+        if (!thresholdLevel.above(LogLevel.VERBOSE)) {
+            Log.v(namespace, message)
+        }
+    }
+}
+```
+
+</InlineFilter>
+
+<InlineFilter filters={['swift']}>
+RESTクライアントおよびWebSocketクライアントの例では、カスタムロガーへのログを示しました。以下は、ログをXcodeコンソールに書き込むカスタムロガーの例です。自由に独自の`EventsLogger`タイプを実装できます。
+
+```swift
+import os
+import Foundation
+import AWSAppSyncEvents
+
+public final class AppSyncEventsLogger: EventsLogger {
+    static let lock: NSLocking = NSLock()
+
+    static var _logLevel = LogLevel.error
+    
+    public init() { }
+    
+    public var logLevel: LogLevel {
+        get {
+            AppSyncEventsLogger.lock.lock()
+            defer {
+                AppSyncEventsLogger.lock.unlock()
+            }
+
+            return AppSyncEventsLogger._logLevel
+        }
+        set {
+            AppSyncEventsLogger.lock.lock()
+            defer {
+                AppSyncEventsLogger.lock.unlock()
+            }
+
+            AppSyncEventsLogger._logLevel = newValue
+        }
+    }
+
+    public func error(_ log: @autoclosure () -> String) {
+        os_log("%@", type: .error, log())
+    }
+
+    public func error(_ error: @autoclosure () -> Error) {
+        os_log("%@", type: .error, error().localizedDescription)
+    }
+
+    public func warn(_ log: @autoclosure () -> String) {
+        guard logLevel.rawValue >= LogLevel.warn.rawValue else {
+            return
+        }
+
+        os_log("%@", type: .info, log())
+    }
+
+    public func info(_ log: @autoclosure () -> String) {
+        guard logLevel.rawValue >= LogLevel.info.rawValue else {
+            return
+        }
+
+        os_log("%@", type: .info, log())
+    }
+
+    public func debug(_ log: @autoclosure () -> String) {
+        guard logLevel.rawValue >= LogLevel.debug.rawValue else {
+            return
+        }
+
+        os_log("%@", type: .debug, log())
+    }
+
+    public func verbose(_ log: @autoclosure () -> String) {
+        guard logLevel.rawValue >= LogLevel.verbose.rawValue else {
+            return
+        }
+
+        os_log("%@", type: .debug, log())
+    }
+}
+
+```
+
+</InlineFilter>

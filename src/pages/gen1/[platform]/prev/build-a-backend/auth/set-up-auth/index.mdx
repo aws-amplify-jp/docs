@@ -1,0 +1,561 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify Authをセットアップする',
+  description: 'AmplifyはAmazon Cognitoをメイン認証プロバイダーとして使用します。ユーザー登録、認証、アカウント復旧、その他の操作を処理する方法について説明します。',
+  platforms: [
+    'javascript',
+    'flutter',
+    'swift',
+    'android',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios_maintenance from '/src/fragments/lib-v1/ios-maintenance.mdx';
+
+<Fragments fragments={{ swift: ios_maintenance }} />
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+
+import ios1 from '/src/fragments/lib-v1/auth/native_common/getting_started/common.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import android_maintenance from '/src/fragments/lib-v1/android-maintenance.mdx';
+
+<Fragments fragments={{ android: android_maintenance }} />
+
+import android2 from '/src/fragments/lib-v1/auth/native_common/getting_started/common.mdx';
+
+<Fragments fragments={{ android: android2 }} />
+
+import flutter3 from '/src/fragments/lib-v1/auth/native_common/getting_started/common.mdx';
+
+<Fragments fragments={{ flutter: flutter3 }} />
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+import guide from '/src/fragments/common/guide-header.mdx';
+
+<Fragments fragments={{ all: guide }} />
+
+このガイドでは、Amplify **Auth**をセットアップする方法について説明します。これには、バックエンドリソースのセットアップと接続、統合パスの決定、Authenticator UIコンポーネントを使用したサインアップ、サインイン、サインアウトの有効化が含まれます。また、Amplifyでリソースがどのように管理され作成されるかについてのコンテキストを提供し、決定を下すのに役立ちます。
+
+始める前に、以下が必要です：
+
+- [Node.js](https://nodejs.org/) v14.x以降
+- [npm](https://www.npmjs.com/) v6.14.4以降
+- [git](https://git-scm.com/) v2.14.1以降
+- フロントエンドアプリ
+- Amplifyにバックエンドリソースをセットアップして管理させたい場合は、[Amplify CLIをインストールおよび設定](/gen1/[platform]/start/project-setup/prerequisites/)する必要があります。ターミナルで`amplify init`を使用して新しいAmplifyプロジェクトを作成するか、`amplify pull`を使用して既存のAmplifyプロジェクトをフロントエンドアプリにプルしてください。
+
+## バックエンドリソースのセットアップと接続
+
+Amplify Authを統合するパスを確認してから、バックエンドリソースをセットアップおよび統合し、これらのリソースをフロントエンドアプリで接続して認証機能を構築します。
+
+### バックエンドリソースの作成と管理方法を決定する
+
+Amplifyを使用してAuthentication リソースを作成および管理するには、Amplify CLI、Amplify Studio、またはCDKやCloudFormationなどのツールを使用して自分で管理することができます。推奨されるパスはAmplify CLIを使用することです。これにより、新しい認証リソースを作成するか、既存のリソースをインポートできます。ただし、Amplify Studioコンソールを使用して既存のリソースを設定または使用し、Amplify Librariesを使用してアプリケーションに直接接続することもできます。これらのツールはリソースの作成と管理に役立ちます。
+
+Amplify Authを使用して、ユーザー名とパスワードを認証方法として使用したり、「Googleでサインイン」や「Appleでサインイン」などのソーシャルプロバイダーを使用したり、完全にカスタムの認証フローを作成したりできます。
+
+<Accordion title='Auth高度な概念を理解する' headingLevel='4' eyebrow='詳細はこちら'>
+
+Amplifyは、アプリケーションを保護しながら、ユーザーに簡単なサインイン体験を提供するのに役立ちます。この体験はセキュリティ戦略の影響を受けます。このセキュリティ戦略には、認証方法、セキュリティ資格情報、および必要に応じて追加の検証の有効化が含まれます。
+
+- _認証_は、**あなたが誰であるか**を検証するプロセスです（_AuthN_と略されます）。この検証を行うシステムは、Identity ProviderまたはIdPと呼ばれます。これは、独自の自己ホストIdPまたはクラウドサービスの場合があります。多くの場合、このIdPはFacebook、Google、またはAmazonなどのソーシャルプロバイダーです。
+- _認可_は、**アクセスできる内容**を検証するプロセスです（_AuthZ_と略されます）。これは、カスタムロジック、事前定義されたルール、またはポリシーを使用した署名付きリクエストでトークンを見て行われることがあります。
+
+一般的な認証方法と関連するリスクには、以下が含まれます：
+
+- ユーザー名/パスワード。セットアップは簡単ですが、侵害される傾向があります。
+- ソーシャルプロバイダーフェデレーション。ユーザーが簡単にアクセスできるようにしますが、データを第三者と共有します。
+
+これらの認証方法のセキュリティ資格情報と検証を改善することができます：
+
+- ユーザーがより強力なパスワードを作成するようにするパスワードポリシーを追加する。
+- ユーザーがパスワードをリセットする前に追加の連絡先情報を提供する必要があります。
+- 多要素認証（MFA）を追加します。これはサインイン時にセキュリティレイヤーを追加しますが、ユーザーに対する摩擦が増加する可能性があります。
+
+</Accordion>
+
+<br />
+
+Amplifyは[Amazon Cognito](https://aws.amazon.com/cognito/)をメイン認証プロバイダーとして使用します。Amazon Cognitoは、ユーザー登録、認証、アカウント復旧、その他の操作を処理する堅牢なユーザーディレクトリサービスです。Amazon Cognitoを以前に使用したことがない場合は、バックエンドリソースを作成する前にAmazon Cognitoの設定オプションをよく確認することをお勧めします。一部は作成後は取り消せません。
+
+<Accordion title='Amazon Cognito設定オプションを確認する' headingLevel='4' eyebrow='詳細はこちら'>
+
+Amazon Cognitoは、認証のセキュリティ戦略に基づいてカスタマイズできます。ただし、バックエンドリソースが設定された後は、初期設定オプションのいくつかを変更することはできません：
+
+- 個々のユーザーを識別するために使用されるユーザー属性（ユーザー名やメールなど）は、名前変更または削除することはできません。
+- サインイン方法（ユーザー名、メール、電話を含む）は、初期設定後に追加または変更することはできません。これには、サインインに使用される属性と必要な属性の両方の定義が含まれます。必要な属性は、設定されると、すべてのユーザーに値を持つ必要があります。
+- 検証方法（ユーザー名とメールを含む）は、必要な属性と同じであり、設定されると削除することはできません。
+- `sub`属性は、各ユーザープール内の一意の識別子であり、変更できず、ユーザーのインデックスと検索に使用できます。
+- MFAがすべてのユーザーに対して**必須**に設定されている場合、ユーザーがサインアップするときにMFAセットアップを含める必要があります。
+
+これらの設定の詳細については、[Amazon Cognito ドキュメンテーション](https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html)を参照してください。[ユーザープール属性](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html)および[ユーザープールへのMFAの追加](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-mfa.html)を含みます。
+
+</Accordion>
+
+### Amplify Authをセットアップして設定する
+
+このセクションでは、バックエンドリソースをセットアップしてAmplify Librariesをインストールしてアプリケーションで使用する方法について説明します。
+
+#### Authバックエンドリソースをセットアップする
+
+バックエンドリソースはAmplify CLI、Amplify Studio、または既存のリソースで設定できます。
+
+<BlockSwitcher>
+<Block name="Amplify CLI (作成)">
+
+> 前提条件：Amplify Librariesに加えて[Amplify CLIをインストールおよび設定](/gen1/[platform]/start/project-setup/prerequisites/)します。
+
+バックエンドで認証リソースのプロビジョニングを開始するには、プロジェクトディレクトリに移動して**コマンドを実行してください**：
+
+```bash
+amplify add auth
+```
+
+```console
+? Do you want to use the default authentication and security configuration? Default configuration
+? How do you want users to be able to sign in? Username
+? Do you want to configure advanced settings?  No, I am done.
+```
+
+> API カテゴリなど、舞台裏でAuthを使用するAmplifyカテゴリを以前に有効にした場合、`amplify update auth`コマンドを実行して、必要に応じて設定を編集できます。
+
+CLIプロンプトは、アプリのAuth フローをカスタマイズするのに役立ちます。提供されたオプションを使用して、以下を実行できます：
+
+- サインイン/登録フローをカスタマイズする
+- 多要素認証のメールとSMSメッセージをカスタマイズする
+- 名前やメールなど、ユーザーの属性をカスタマイズする
+- Facebook、Twitter、Google、Amazonなどのサードパーティソーシャルプロバイダーを有効にする
+
+ソーシャルプロバイダーとフェデレーションをする場合は、[最初にそれらを設定する必要があります](/gen1/[platform]/build-a-backend/auth/add-social-provider/#social-providers-and-federation)。
+
+Authentication オプションの設定後、`push`コマンドを実行してバックエンドを更新し、サービスをデプロイします：
+
+```bash
+amplify push
+```
+
+認証サービスがデプロイされたので、使用を開始できます。プロジェクトのデプロイされたサービスを任意の時点で表示するには、以下のコマンドを実行してAmplifyコンソールに移動します：
+
+```bash
+amplify console
+```
+
+アプリのエントリーポイント（具体的には**App.js**、**index.js**、**\_app.js**、または**main.js**）で、設定ファイルをインポートおよびロードします：
+
+```javascript
+import { Amplify, Auth } from 'aws-amplify';
+import awsconfig from './aws-exports';
+Amplify.configure(awsconfig);
+```
+
+</Block>
+
+<Block name="Amplify CLI (インポート)">
+
+> 前提条件：Amplify Librariesに加えて[Amplify CLIをインストールおよび設定](/gen1/[platform]/start/project-setup/prerequisites/)します。
+
+既存のAmazon CognitoリソースをAmplifyプロジェクトにインポートするには、**コマンドを実行してください**：
+
+```bash
+amplify import auth
+```
+
+```console
+? What type of auth resource do you want to import?
+   Cognito User Pool and Identity Pool
+   Cognito User Pool only
+```
+
+オプションを選択すると、AWSアカウント内の既存のCognito User PoolおよびIdentity Pool（またはUser Poolのみ）を検索およびインポートできます。`amplify import auth`コマンドは、以下も実行します：
+
+- Amplify Libraryの設定ファイル（aws-exports.js、amplifyconfiguration.json）に選択したAmazon Cognitoリソース情報を自動的に設定します
+- 指定された既存のCognitoリソースを、すべての認証依存カテゴリ（API、Storage、その他）の認証およびメカニズムとして提供します
+- 許可する場合、Lambda関数が選択されたCognitoリソースにアクセスできるようにします
+
+> API カテゴリなど、舞台裏でAuthを使用するAmplifyカテゴリを以前に有効にした場合、`amplify update auth`コマンドを実行して、必要に応じて設定を編集できます。
+
+Authentication オプションの設定後、`push`コマンドを実行してバックエンドを更新し、サービスをデプロイします：
+
+```bash
+amplify push
+```
+
+認証サービスがデプロイされたので、使用を開始できます。プロジェクトのデプロイされたサービスを任意の時点で表示するには、以下のコマンドを実行してAmplifyコンソールに移動します：
+
+```bash
+amplify console
+```
+
+アプリのエントリーポイント（具体的には**App.js**、**index.js**、**\_app.js**、または**main.js**）で、設定ファイルをインポートおよびロードします：
+
+```javascript
+import { Amplify, Auth } from 'aws-amplify';
+import awsconfig from './aws-exports';
+Amplify.configure(awsconfig);
+```
+
+</Block>
+
+<Block name="Amplify Studio">
+
+> 前提条件：Amplify Librariesに加えて[Amplify CLIをインストールおよび設定](/gen1/[platform]/start/project-setup/prerequisites/)します。
+
+Amplify Studioでは、認証リソースを作成したり、認可ルールをセットアップしたり、多要素認証（MFA）を実装したり、直感的なUIを通じて、その他の操作を実行したりできます。Amplify Studioを通じてAuthenticationをセットアップするには、以下の手順に従ってください：
+
+1. [AWS Management Console](https://console.aws.amazon.com/console/home)に**サインイン**してAWS Amplifyを開きます。
+2. ナビゲーションペインで、**アプリケーションを選択**します。
+3. アプリケーション情報ページで、**バックエンド環境**タブを選択してから、**Launch Studio**を選択します。
+4. **セットアップ**メニューで**Authentication**を選択します。
+5. **ログインの設定**セクションで、**ログインメカニズムの追加**リストからログインメカニズムを選択します。有効なオプションは_ユーザー名_、_電話番号_、_Facebook_、_Google_、_Amazon_、および_Appleでサインイン_です。ソーシャルサインインメカニズムの1つ（具体的には_Facebook_、_Google_、_Amazon_、または_Appleでサインイン_）を選択する場合、_App ID_、_App Secret_、およびリダイレクトURLも入力する必要があります。
+6. （オプション）多要素認証（MFA）を追加します。MFAはデフォルトで**オフ**に設定されています。MFAを有効にするには、**多要素認証**セクションで以下を実行します：
+
+- すべてのユーザーに対してMFAを要求するには**強制**を選択するか、個々のユーザーがMFAを有効にできるようにするには**オプション**を選択します。
+- （オプション）**SMS**を選択してSMSメッセージを入力します。
+- （オプション）アプリがサインアップとサインインを含む認証フローでロードされるようにしたい場合は**Authenticator Application**を選択します。
+
+7. **サインアップの設定**セクションで、**パスワード保護設定**を展開して、実装するパスワードポリシー設定をカスタマイズします。**Save and Deploy**を選択します。これにより、ページの右上隅に進行状況が表示されたCloudFormationデプロイが開始されます。
+8. 認証リソースを作成および設定した後、Amplify Studioからそれらをダウンロードする必要があります。これを行うには、Studioコンソールの右上隅から「Local setup instructions」を選択し、アプリのルートディレクトリで提供されるCLIコマンドを実行します。
+
+> Amplify Studio UIを通じて[既存のAmazon Cognitoリソースをインポート](/gen1/[platform]/tools/console/auth/import/)したり、[ユーザーとグループを管理](/gen1/[platform]/tools/console/auth/user-management/)することもできます。
+
+</Block>
+
+<Block name="既存のリソース">
+
+AWS からの既存のAuthentication リソース（Amazon Cognito User PoolsやIdentity Poolsなど）は、`Amplify.configure()`メソッドを呼び出すことによってAmplify Librariesで使用できます。
+
+アプリのエントリーポイント（具体的には**App.js**、**index.js**、**\_app.js**、または**main.js**）で、設定ファイルをインポートおよびロードします：
+
+```javascript
+import { Amplify, Auth } from 'aws-amplify';
+
+Amplify.configure({
+  Auth: {
+    // REQUIRED - フェデレーション認証専用 - Amazon Cognito Identity Pool ID
+    identityPoolId: 'XX-XXXX-X:XXXXXXXX-XXXX-1234-abcd-1234567890ab',
+
+    // REQUIRED - Amazon Cognito Region
+    region: 'XX-XXXX-X',
+
+    // OPTIONAL - Amazon Cognito フェデレーション Identity Pool Region
+    // Amazon Cognito Regionと異なる場合のみ必須です
+    identityPoolRegion: 'XX-XXXX-X',
+
+    // OPTIONAL - Amazon Cognito User Pool ID
+    userPoolId: 'XX-XXXX-X_abcd1234',
+
+    // OPTIONAL - Amazon Cognito Web Client ID (26文字の英数字文字列)
+    userPoolWebClientId: 'a1b2c3d4e5f6g7h8i9j0k1l2m3',
+
+    // OPTIONAL - AWSリソースにアクセスする前にユーザー認証を適用するかどうか
+    mandatorySignIn: false,
+
+    // OPTIONAL - Auth.signUpでautoSignInが有効になっている場合に使用されます
+    // 'code'はAuth.confirmSignUpに使用され、'link'はメールリンク検証に使用されます
+    signUpVerificationMethod: 'code', // 'code' | 'link'
+
+    // OPTIONAL - Cookie ストレージの設定
+    // 注：secure フラグがtrueに設定されている場合、Cookie送信にはセキュアプロトコルが必要です
+    cookieStorage: {
+      // REQUIRED - Cookieドメイン (cookieStorageが提供されている場合のみ必須)
+      domain: '.yourdomain.com',
+      // OPTIONAL - Cookie パス
+      path: '/',
+      // OPTIONAL - Cookie有効期限（日数）
+      expires: 365,
+      // OPTIONAL - 参照: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite
+      sameSite: 'strict' | 'lax',
+      // OPTIONAL - Cookie secure フラグ
+      // true または false。Cookie送信がセキュアプロトコル（https）を必要とするかどうかを示します。
+      secure: true
+    },
+
+    // OPTIONAL - カスタマイズされたストレージオブジェクト
+    storage: MyStorage,
+
+    // OPTIONAL - 認証フロータイプを手動で設定します。デフォルトは 'USER_SRP_AUTH'
+    authenticationFlowType: 'USER_PASSWORD_AUTH',
+
+    // OPTIONAL - Cognito Lambda Triggersに渡すことができるキー値ペアを手動で設定します
+    clientMetadata: { myCustomKey: 'myCustomValue' },
+
+    // OPTIONAL - Hosted UI設定
+    oauth: {
+      domain: 'your_cognito_domain',
+      scope: [
+        'phone',
+        'email',
+        'profile',
+        'openid',
+        'aws.cognito.signin.user.admin'
+      ],
+      redirectSignIn: 'http://localhost:3000/',
+      redirectSignOut: 'http://localhost:3000/',
+      responseType: 'code' // または 'token'。responseTypeが codeの場合のみREFRESHトークンが生成されることに注意してください
+    }
+  }
+});
+
+// 現在の設定オブジェクトを取得できます
+const currentConfig = Auth.configure();
+```
+
+<Callout warning={true}>
+  既存のユーザープールクライアントに_可変_に設定されていない必須属性がある場合、ソーシャルサインインを使用する際にログインの問題が発生する可能性があります。これを解決するには、以下を行う必要があります
+  <ExternalLink href="https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html">
+    新しいユーザープールクライアントを作成する
+  </ExternalLink>
+  そして、必須属性を可変としてマークします。
+</Callout>
+
+#### OAuth設定パラメーター：
+
+これらの設定はCognito User Poolsコンソールの**App Integration**セクションにあります
+
+- `domain`：**Domain name**サブセクションにあります
+- `scope`：Cognito App clientでスコープが許可されていることを確認してください。これは**App client settings**サブセクションにあります
+- `redirectSignIn`：URLは**Callback URL(s)**に存在する必要があります。**App client settings**サブセクションで確認してください
+- `redirectSignOut`：URLは**Sign out URL(s)**に存在する必要があります。**App client settings**サブセクションで確認してください
+- `responseType`：オプションはApp clientで有効にする必要があります。**App client settings**サブセクションで**Allowed OAuth Flows**を確認してください。_Authorization code grant_は「code」値の場合であり、_Implicit grant_は「token」値の場合です。
+
+</Block>
+
+</BlockSwitcher>
+
+Amplify Authのバックエンドリソースをセットアップして設定し、フロントエンドアプリをバックエンドに接続しました。これで、フロントエンドアプリケーションで作業する準備ができました。
+
+## Auth統合パスを決定する
+
+フロントエンドアプリケーションでAuthを実装する前に、Authenticator接続UIコンポーネントを使用するか、Amplify Library APIを直接使用するかのオプションを評価します。わずか数行のコードで、カスタマイズ可能なサインインと登録体験を作成するため、Authenticatorの使用をお勧めします。
+
+### 実装オプションを比較する
+
+必要なカスタマイズの量に応じて、Authを実装するオプションがいくつかあります：
+
+|  | Amplify Authenticator | Amplify Libraries |
+| :-- | :-- | :-- |
+| **説明** | 認証用のオープンソースドロップインUIコンポーネント | 認証を実装するための低レベルの構成要素 |
+| **利点** | 既存のAmplify設定と自動的に統合され、アプリケーションに認証フロー全体を簡単に追加できます。その後、テーマをカスタマイズして、色とスタイルを調整できます。 | UIとロジック実装を完全に制御できます。 |
+| **制約** | リソースプロビジョニングはAmplify CLIに依存しています。 | サインインと登録の体験を有効にするために、画面とフロントエンドロジックを構築する必要があります。 |
+
+<br />
+
+迅速で簡単なセットアップのためにAuthenticator UIコンポーネントを使用し、必要に応じてAmplify Librariesを使用してユーザー体験とロジックをカスタマイズすることをお勧めします。ユースケースに適したオプションを決定したら、フロントエンドアプリケーションで認証の実装を続けることができます。APIで直接作業することを希望する場合は、[_サインアップ、サインイン、およびサインアウトを有効にする_](/gen1/[platform]/build-a-backend/auth/enable-sign-up/)ガイドを確認できます。
+
+## Authenticatorを使用して認証体験を構築する
+
+サインインフローの作成は非常に困難で、時間がかかる場合があります。ただし、AmplifyにはAuthenticator UIコンポーネントがあり、バックエンド設定を使用して、アプリの認証フロー全体を素早く構築するために使用できます。
+
+Amplifyには、React、Vue、Angular、React Native、Swift、Android、およびFlutter用の事前構築されたUIコンポーネントがあります。このガイドでは、Webアプリケーション用のコンポーネントに焦点を当てています。
+
+<BlockSwitcher>
+<Block name="React">
+
+最初に、まだインストールしていない場合は、`@aws-amplify/ui-react`ライブラリと`aws-amplify`をインストールします：
+
+```sh
+npm install aws-amplify@^5 @aws-amplify/ui-react@^5
+```
+
+次に、**src/App.js**を開いて`withAuthenticator`コンポーネントを追加します。
+
+**withAuthenticator**
+
+`withAuthenticator`は、`Authenticator`をラップする高階コンポーネント（HoC）です。また、`user`と`signOut`がラップされたコンポーネントに提供されることに気付くでしょう。
+
+**使用方法**
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Amplify } from 'aws-amplify';
+import type { WithAuthenticatorProps } from '@aws-amplify/ui-react';
+import { withAuthenticator } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
+
+import awsconfig from '../aws-exports';
+Amplify.configure(awsconfig);
+
+export function App({ signOut, user }: WithAuthenticatorProps) {
+  return (
+    <>
+      <h1>Hello {user?.username}</h1>
+      <button onClick={signOut}>Sign out</button>
+    </>
+  );
+}
+
+export default withAuthenticator(App);
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { Amplify } from 'aws-amplify';
+
+import { withAuthenticator } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
+
+import awsExports from './aws-exports';
+Amplify.configure(awsExports);
+
+function App({ signOut, user }) {
+  return (
+    <>
+      <h1>Hello {user.username}</h1>
+      <button onClick={signOut}>Sign out</button>
+    </>
+  );
+}
+
+export default withAuthenticator(App);
+```
+
+</Block>
+</BlockSwitcher>
+
+</Block>
+<Block name="Vue 3">
+
+最初に、まだインストールしていない場合は、`@aws-amplify/ui-vue`ライブラリと`aws-amplify`をインストールします：
+
+```bash
+npm install aws-amplify@^5 @aws-amplify/ui-vue@^3
+```
+
+次に、**src/App.js**を開いて`Authenticator`コンポーネントを追加します。
+
+**Authenticator**
+
+`Authenticator`コンポーネントは、アプリに認証フローを追加する簡単な方法を提供します。このコンポーネントは、選択したフレームワークで認証ワークフローをカプセル化し、セットアップされたAuth クラウドリソースでサポートされています。また、`user`と`signOut`が内部テンプレートに渡されることに気付くでしょう。
+
+```html
+<script setup>
+  import { Authenticator } from '@aws-amplify/ui-vue';
+  import '@aws-amplify/ui-vue/styles.css';
+
+  import { Amplify } from 'aws-amplify';
+  import awsconfig from './aws-exports';
+
+  Amplify.configure(awsconfig);
+</script>
+
+<template>
+  <authenticator>
+    <template v-slot="{ user, signOut }">
+      <h1>Hello {{ user.username }}!</h1>
+      <button @click="signOut">Sign Out</button>
+    </template>
+  </authenticator>
+</template>
+```
+
+</Block>
+<Block name="Angular">
+
+最初に、まだインストールしていない場合は、`@aws-amplify/ui-angular`ライブラリと`aws-amplify`をインストールします：
+
+```bash
+npm install aws-amplify@^5 @aws-amplify/ui-angular@^4
+```
+
+ここで、**app.module.ts**を開いてAmplifyのインポートと設定を追加します：
+
+```js
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { AmplifyAuthenticatorModule } from '@aws-amplify/ui-angular';
+
+import { AppComponent } from './app.component';
+import awsconfig from '../aws-exports';
+
+Amplify.configure(awsconfig);
+
+@NgModule({
+  declarations: [AppComponent],
+  imports: [BrowserModule, AmplifyAuthenticatorModule],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+```
+
+次に、**styles.css**の内部にデフォルトテーマをインポートします：
+
+```css
+@import '~@aws-amplify/ui-angular/theme.css';
+```
+
+次に、**app.component.html**を開いて`amplify-authenticator`コンポーネントを追加します。
+
+**amplify-authenticator**
+
+`amplify-authenticator`コンポーネントは、アプリに認証フローを追加する簡単な方法を提供します。このコンポーネントは、選択したフレームワークで認証ワークフローをカプセル化し、セットアップされたAuth クラウドリソースでサポートされています。また、`user`と`signOut`が内部テンプレートに提供されることに気付くでしょう。
+
+```html
+<amplify-authenticator>
+  <ng-template
+    amplifySlot="authenticated"
+    let-user="user"
+    let-signOut="signOut"
+  >
+    <h1>Welcome {{ user.username }}!</h1>
+    <button (click)="signOut()">Sign Out</button>
+  </ng-template>
+</amplify-authenticator>
+```
+
+</Block>
+</BlockSwitcher>
+
+Authenticator コンポーネントをアプリに追加すると、サインアップ、サインイン、サインアウト機能をテストできます。必要に応じて[Authenticator UIコンポーネントをカスタマイズ](https://ui.docs.amplify.aws/react/connected-components/authenticator/customization)して、色とスタイルを調整することもできます。
+
+### AWSconsoleで作成されたユーザーを表示する
+
+新しいユーザーを作成した後、Amazon Cognitoコンソールで作成されたユーザーを検証できます。これを行うには、`amplify console auth`を使用してAWSコンソールを直接開きます。ユーザーを正常に確認した場合、ユーザーのステータスは`CONFIRMED`である必要があります。ただし、ユーザーがまだ確認されていない場合は`UNCONFIRMED`である可能性があります。また、ユーザー属性が正しく更新されていることを確認できます。
+
+これで、認証のサインアップ、サインイン、サインアウトを有効にし、テストユーザーで機能を確認しました。
+
+## まとめ
+
+**Amplify Authをセットアップ**ガイドを完了しました。このガイドでは、バックエンドリソースをセットアップおよび接続し、Auth統合パスを比較および決定し、サインアップ、サインイン、サインアウトを有効にしました。
+
+## 次のステップ
+
+ユーザー名とパスワードを使用してAmplify Authをセットアップしたので、追加機能を追加することもできます。以下についてさらに学習することをお勧めします：
+
+- [ソーシャルサインイン（OAuth）](/gen1/[platform]/prev/build-a-backend/auth/add-social-provider/)
+- [多要素認証](/gen1/[platform]/prev/build-a-backend/auth/manage-mfa/)
+
+</InlineFilter>
+
+import reactnative0 from '/src/fragments/lib-v1/auth/js/getting-started-rn.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative0 }} />

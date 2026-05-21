@@ -1,0 +1,462 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify APIへの移行',
+  description: 'DataStoreの保存、クエリ、削除、監視、およびクエリ監視をFlutterのAmplify API同等品に置き換えます。',
+  platforms: [
+    'flutter'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify DataStoreはAPIカテゴリの上に構築されており、GraphQLクエリ、ミューテーション、およびサブスクリプションを使用してAWS AppSyncと相互作用します。DataStoreから移行する場合、APIカテゴリはDataStoreのリモート同期機能を複製するためのコア構成要素を提供します。このページでは、すべてのDataStore操作をAmplify APIの同等品に移行する方法について説明します。
+
+## APIレスポンスの処理
+
+DataStoreとAPIカテゴリの主な違いはレスポンスの型です。DataStoreメソッドはモデルオブジェクトまたはリストを直接返しますが、APIメソッドはエラーを含む可能性がある`GraphQLResponse`ラッパーを返します。
+
+```dart
+// APIクエリはList<Todo>ではなくGraphQLResponse<PaginatedResult<Todo>>を返します
+final request = ModelQueries.list(Todo.classType);
+final response = await Amplify.API.query(request: request).response;
+
+// 常にエラーを確認してください
+if (response.hasErrors) {
+  safePrint('Errors: ${response.errors}');
+  return;
+}
+
+// PaginatedResultからアイテムにアクセス — アイテムがnullを含む可能性があります
+final todos = response.data?.items.nonNulls.toList() ?? [];
+```
+
+**エラー処理パターン:**
+
+| シナリオ | 検出方法 | アクション |
+|---|---|---|
+| ネットワークエラー | API呼び出しの周りの`try/catch` | オフラインメッセージを表示、後で再試行 |
+| GraphQL検証エラー | `response.hasErrors == true`かつ`response.data == null` | リクエストを修正またはエラーを表示 |
+| 部分的成功 | `response.hasErrors == true`かつ`response.data != null` | データを使用、エラーをログ |
+| 成功 | `response.hasErrors == false`かつ`response.data != null` | データを使用 |
+
+## 作成と更新（保存）
+
+DataStoreの`save()`は新しいアイテムの作成と既存のアイテムの更新の両方を処理しました。APIカテゴリでは、別の`ModelMutations.create()`および`ModelMutations.update()`メソッドを使用します。
+
+**前（DataStore）:**
+
+```dart
+// 作成または更新 — DataStoreがアイテムの存在に基づいて判断
+await Amplify.DataStore.save(todo);
+```
+
+**後（API）— 作成:**
+
+```dart
+// 作成 — _versionは不要で、AppSyncは自動的に1に設定します
+final todo = Todo(name: 'my first todo', description: 'todo description');
+final request = ModelMutations.create(todo);
+final response = await Amplify.API.mutate(request: request).response;
+
+if (response.hasErrors) {
+  safePrint('Create failed: ${response.errors}');
+} else {
+  safePrint('Created: ${response.data}');
+}
+```
+
+**後（API）— 更新:**
+
+```dart
+// 更新 — モデルインスタンスは内部的に_versionを保持します。
+// ConditionalCheckFailedExceptionを避けるため、常に新しくクエリされたインスタンスを使用してください。
+final todoWithNewName = originalTodo.copyWith(name: 'new name');
+final updateRequest = ModelMutations.update(todoWithNewName);
+final updateResponse =
+    await Amplify.API.mutate(request: updateRequest).response;
+
+if (updateResponse.hasErrors) {
+  safePrint('Update failed: ${updateResponse.errors}');
+} else {
+  safePrint('Updated: ${updateResponse.data}');
+}
+```
+
+<Callout warning>
+
+**更新には`_version`が必須です。** Amplify Flutterモデルオブジェクトは`_version`を内部的に保持するため、`ModelMutations.update()`はそれを自動的に含めます — ただし、モデルインスタンスが現在のバージョンを持っている場合のみです。常に最初にレコードをクエリして最新の`_version`を取得してください。`ConditionalCheckFailedException`が表示される場合は、古い`_version`を渡しています。
+
+</Callout>
+
+## 削除
+
+DataStoreの`delete()`メソッドはモデルインスタンスを渡すことでアイテムを削除します。APIの同等品は`ModelMutations.delete()`を使用します。競合解決が有効な場合、削除は**ソフト削除**です — レコードの`_deleted`フィールドはDynamoDBで`true`に設定されますが、レコードは物理的には削除されません。
+
+**前（DataStore）:**
+
+```dart
+await Amplify.DataStore.delete(todo);
+```
+
+**後（API）:**
+
+```dart
+final request = ModelMutations.delete(todo);
+final response = await Amplify.API.mutate(request: request).response;
+
+if (response.hasErrors) {
+  safePrint('Delete failed: ${response.errors}');
+} else {
+  safePrint('Deleted: ${response.data}');
+}
+```
+
+`ModelMutations.deleteById()`を使用してIDで削除することもできます:
+
+```dart
+final request = ModelMutations.deleteById(
+  Todo.classType,
+  TodoModelIdentifier(id: todoId),
+);
+final response = await Amplify.API.mutate(request: request).response;
+```
+
+<Callout warning>
+
+**削除には`_version`が必須です。** 更新と同様に、モデルインスタンスは現在の`_version`を保持する必要があります。最新のバージョンを確認していない場合は、最初にレコードをクエリしてください。
+
+</Callout>
+
+## ソフト削除と`_deleted`
+
+競合解決が有効な場合、削除は**ソフト削除**です — レコードの`_deleted`フィールドはDynamoDBで`true`に設定されますが、レコードは物理的には削除されません。DataStoreはこれらを自動的にフィルタリングしました。APIカテゴリはそうしません。つまり、`ModelQueries.list()`はソフト削除されたレコードをアクティブなレコードと共に返します。
+
+Amplify Flutterコード生成モデルはデフォルトでDartプロパティとして`_deleted`を公開しません。クライアント側フィルタリングを有効にするには、`schema.graphql`のモデルに`_deleted`を追加して`amplify codegen models`を再実行してください:
+
+```graphql
+type Todo @model {
+  id: ID!
+  name: String!
+  description: String
+  _deleted: Boolean
+}
+```
+
+次に、すべてのリストクエリでDartでフィルタリングします:
+
+```dart
+final todos = response.data?.items.nonNulls
+    .where((t) => t.deleted != true)
+    .toList() ?? [];
+```
+
+[競合解決を無効化](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/disable-conflict-resolution/)する最終移行ステップの後、ソフト削除が停止し、このフィルタリングは不要になります。
+
+## クエリ
+
+DataStoreの`query()`メソッドはクエリプレディケート、ソート、およびページベースのページネーションをサポートします。APIカテゴリは`where`パラメータを通じてクエリプレディケートをサポートしていますが、ソートとページネーションは異なる方法で処理します。
+
+**前（DataStore）:**
+
+```dart
+final todos = await Amplify.DataStore.query(
+  Todo.classType,
+  where: Todo.NAME.contains('important'),
+  sortBy: [Todo.CREATEDAT.descending()],
+  pagination: QueryPagination(page: 0, limit: 10),
+);
+// List<Todo>を直接返します
+```
+
+**後（API）— 単一アイテム:**
+
+```dart
+final request = ModelQueries.get(
+  Todo.classType,
+  queriedTodo.modelIdentifier,
+);
+final response = await Amplify.API.query(request: request).response;
+final todo = response.data; // Todo? — nullの可能性があります
+```
+
+**後（API）— プレディケート付きリスト:**
+
+```dart
+final request = ModelQueries.list(
+  Todo.classType,
+  where: Todo.NAME.contains('important'),
+);
+final response = await Amplify.API.query(request: request).response;
+final todos = response.data?.items.nonNulls
+    .where((t) => t.deleted != true)
+    .toList() ?? [];
+```
+
+### ソート
+
+APIカテゴリの`ModelQueries.list()`は`sortBy`パラメータをサポートしていません。結果を受け取った後、クライアント側でソートを実装する必要があります:
+
+```dart
+final request = ModelQueries.list(Todo.classType);
+final response = await Amplify.API.query(request: request).response;
+final todos = response.data?.items.nonNulls
+    .where((t) => t.deleted != true)
+    .toList() ?? [];
+
+// クライアント側のソート（例：作成日順、最新順）
+todos.sort((a, b) {
+  final aDate = a.createdAt?.getDateTimeInUtc() ?? DateTime(0);
+  final bDate = b.createdAt?.getDateTimeInUtc() ?? DateTime(0);
+  return bDate.compareTo(aDate);
+});
+```
+
+### ページネーション
+
+DataStoreはページベースのページネーション（`QueryPagination(page: N, limit: M)`）を使用し、APIカテゴリは`PaginatedResult`の`nextToken`を介して**トークンベースのページネーション**を使用します。すべての結果をページネーションするには:
+
+```dart
+List<Todo> allTodos = [];
+GraphQLRequest<PaginatedResult<Todo>> request = ModelQueries.list(
+  Todo.classType,
+  limit: 100,
+);
+
+while (true) {
+  final response = await Amplify.API.query(request: request).response;
+  final page = response.data;
+  if (page == null) break;
+
+  allTodos.addAll(page.items.nonNulls);
+
+  if (page.hasNextResult) {
+    request = page.requestForNextResult!;
+  } else {
+    break;
+  }
+}
+```
+
+UIでページベースのページネーションが必要な場合は、すべてのアイテムをフェッチしてからスライスすることで、クライアント側で実装できます:
+
+```dart
+final pageSize = 10;
+final pageIndex = 0; // ゼロベース
+
+// すべてをフェッチ（またはトークンベースのページネーションを使用して十分なアイテムをフェッチ）
+final allTodos = await _fetchAllTodos();
+
+// 表示用にスライス
+final pageItems = allTodos.skip(pageIndex * pageSize).take(pageSize).toList();
+final totalPages = (allTodos.length / pageSize).ceil();
+```
+
+## 監視
+
+DataStoreの`observe()`は、`EventType`（作成、更新、削除）を含むイベントを持つ単一ストリームを返します。APIカテゴリは3つの個別サブスクリプションストリーム — `onCreate`、`onUpdate`、`onDelete`それぞれ1つずつ使用します。
+
+**前（DataStore）:**
+
+```dart
+final stream = Amplify.DataStore.observe(Todo.classType);
+stream.listen((event) {
+  switch (event.eventType) {
+    case EventType.create:
+      safePrint('Created: ${event.item}');
+      break;
+    case EventType.update:
+      safePrint('Updated: ${event.item}');
+      break;
+    case EventType.delete:
+      safePrint('Deleted: ${event.item}');
+      break;
+  }
+});
+```
+
+**後（API）— 3つの個別サブスクリプション:**
+
+```dart
+late StreamSubscription<GraphQLResponse<Todo>> _createSub;
+late StreamSubscription<GraphQLResponse<Todo>> _updateSub;
+late StreamSubscription<GraphQLResponse<Todo>> _deleteSub;
+
+void _initSubscriptions() {
+  // onCreate
+  final onCreateRequest = ModelSubscriptions.onCreate(Todo.classType);
+  _createSub = Amplify.API
+      .subscribe(onCreateRequest,
+          onEstablished: () =>
+              safePrint('onCreate subscription established'))
+      .listen(
+    (event) {
+      safePrint('Created: ${event.data}');
+    },
+    onError: (Object e) => safePrint('onCreate error: $e'),
+  );
+
+  // onUpdate
+  final onUpdateRequest = ModelSubscriptions.onUpdate(Todo.classType);
+  _updateSub = Amplify.API
+      .subscribe(onUpdateRequest,
+          onEstablished: () =>
+              safePrint('onUpdate subscription established'))
+      .listen(
+    (event) {
+      safePrint('Updated: ${event.data}');
+    },
+    onError: (Object e) => safePrint('onUpdate error: $e'),
+  );
+
+  // onDelete
+  final onDeleteRequest = ModelSubscriptions.onDelete(Todo.classType);
+  _deleteSub = Amplify.API
+      .subscribe(onDeleteRequest,
+          onEstablished: () =>
+              safePrint('onDelete subscription established'))
+      .listen(
+    (event) {
+      safePrint('Deleted: ${event.data}');
+    },
+    onError: (Object e) => safePrint('onDelete error: $e'),
+  );
+}
+
+@override
+void dispose() {
+  _createSub.cancel();
+  _updateSub.cancel();
+  _deleteSub.cancel();
+  super.dispose();
+}
+```
+
+<Callout>
+
+DataStoreの単一`observe()`ストリームとは異なり、3つの個別サブスクリプションを管理するようになりました。ウィジェットまたはコントローラが破棄されるときは、3つすべてをキャンセルすることを忘れないでください。
+
+</Callout>
+
+## ObserveQuery
+
+DataStoreの`observeQuery()`は初期クエリをリアルタイム更新と組み合わせ、マッチするアイテムの完全なリストと`isSynced`フラグを含む`QuerySnapshot`を返します。APIカテゴリには直接的な同等品がありません — 初期リストクエリとサブスクリプションを使用してこの動作を自分で構成する必要があります。
+
+**前（DataStore）:**
+
+```dart
+final stream = Amplify.DataStore.observeQuery(
+  Todo.classType,
+  where: Todo.STATUS.eq(TodoStatus.ACTIVE),
+  sortBy: [Todo.CREATEDAT.descending()],
+);
+
+stream.listen((QuerySnapshot<Todo> snapshot) {
+  safePrint(
+      'Items: ${snapshot.items.length}, isSynced: ${snapshot.isSynced}');
+  setState(() {
+    _todos = snapshot.items;
+  });
+});
+```
+
+**後（API）— 初期クエリ+リアクティブ更新用サブスクリプション:**
+
+```dart
+List<Todo> _todos = [];
+bool _isLoading = true;
+late StreamSubscription _createSub;
+late StreamSubscription _updateSub;
+late StreamSubscription _deleteSub;
+
+Future<void> _initObserveQuery() async {
+  // ステップ1：初期リストクエリを実行
+  await _refreshList();
+
+  // ステップ2：変更にサブスクライブし、各イベントでリフレッシュ
+  final onCreate = ModelSubscriptions.onCreate(Todo.classType);
+  _createSub =
+      Amplify.API.subscribe(onCreate).listen((_) => _refreshList());
+
+  final onUpdate = ModelSubscriptions.onUpdate(Todo.classType);
+  _updateSub =
+      Amplify.API.subscribe(onUpdate).listen((_) => _refreshList());
+
+  final onDelete = ModelSubscriptions.onDelete(Todo.classType);
+  _deleteSub =
+      Amplify.API.subscribe(onDelete).listen((_) => _refreshList());
+}
+
+Future<void> _refreshList() async {
+  final request = ModelQueries.list(
+    Todo.classType,
+    where: Todo.STATUS.eq(TodoStatus.ACTIVE),
+  );
+  final response = await Amplify.API.query(request: request).response;
+
+  if (response.hasErrors) {
+    safePrint('Query errors: ${response.errors}');
+    return;
+  }
+
+  final items = response.data?.items.nonNulls
+      .where((t) => t.deleted != true)
+      .toList() ?? [];
+
+  // クライアント側のソート（APIはsortByをサポートしていません）
+  items.sort((a, b) {
+    final aDate = a.createdAt?.getDateTimeInUtc() ?? DateTime(0);
+    final bDate = b.createdAt?.getDateTimeInUtc() ?? DateTime(0);
+    return bDate.compareTo(aDate);
+  });
+
+  setState(() {
+    _todos = items;
+    _isLoading = false;
+  });
+}
+
+@override
+void dispose() {
+  _createSub.cancel();
+  _updateSub.cancel();
+  _deleteSub.cancel();
+  super.dispose();
+}
+```
+
+<Callout>
+
+DataStoreの`QuerySnapshot.isSynced`フラグはAPIカテゴリを通じて利用できません。このフラグを使用してUIに同期ステータスを表示していた場合は、読み込み状態を手動で追跡する必要があります（上記の`_isLoading`で示したように）。
+
+</Callout>
+
+<Callout>
+
+**パフォーマンスのヒント:** 最適化されたアプローチとしては、すべてのサブスクリプションイベントで全リストを再クエリする代わりに、サブスクリプションイベントデータからアイテムを追加、更新、または削除することでローカルリストをインプレイスで更新できます。これは不要なネットワーク呼び出しを回避しますが、リストの状態を管理するためにはより多くのコードが必要です。
+
+</Callout>
+
+## クイックリファレンステーブル
+
+| DataStoreメソッド | Amplify API同等品 | 主な違い |
+|---|---|---|
+| `Amplify.DataStore.save()`（作成） | `Amplify.API.mutate(request: ModelMutations.create(...))` | `response.hasErrors`を確認する必要があります。作成には`_version`は不要です |
+| `Amplify.DataStore.save()`（更新） | `Amplify.API.mutate(request: ModelMutations.update(...))` | 最初にクエリして最新の`_version`を取得する必要があります。モデルはそれを内部的に保持しています |
+| `Amplify.DataStore.delete()` | `Amplify.API.mutate(request: ModelMutations.delete(...))` | 最初にクエリして最新の`_version`を取得する必要があります。競合解決が有効な場合、削除はソフト削除です |
+| `Amplify.DataStore.query()`（単一） | `Amplify.API.query(request: ModelQueries.get(...))` | `GraphQLResponse`ラッパーを返します |
+| `Amplify.DataStore.query()`（リスト） | `Amplify.API.query(request: ModelQueries.list(...))` | トークンベースのページネーション、`sortBy`なし。ソフト削除されたレコードを返します |
+| `Amplify.DataStore.observe()` | `Amplify.API.subscribe(ModelSubscriptions.onCreate/onUpdate/onDelete(...))` | 3つの個別サブスクリプション |
+| `Amplify.DataStore.observeQuery()` | 初期リストクエリ+3つのサブスクリプション | 直接的な同等品なし。手動で構成してください |
+| `Amplify.DataStore.clear()` | 不要 | クリアするローカルDataStoreがありません |

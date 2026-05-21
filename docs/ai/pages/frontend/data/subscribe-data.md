@@ -1,0 +1,698 @@
+---
+title: "リアルタイムイベントの購読"
+section: "frontend/data"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/data/subscribe-data/"
+---
+
+<!-- Platform: javascript,  react-native, angular, nextjs, react, vue -->
+このガイドでは、リアルタイムデータ統合を有効にする利点と、これらのサブスクリプションを設定およびフィルターする方法について説明します。また、サブスクリプションの購読解除方法についても取り上げます。
+
+開始する前に、以下が必要です：
+
+- [APIに接続されたアプリケーション](/[platform]/frontend/data/connect-to-API/)
+- 変更対象のデータが既に作成されていること
+
+<ProtectedRedactionGen2Message />
+
+## リアルタイムリストクエリの設定
+
+リストデータをフェッチする推奨方法は、`observeQuery`を使用してアプリデータをすべて常にリアルタイムで取得することです。`observeQuery`をReactの`useState`および`useEffect`フックと統合するには、次のようにします：
+
+```ts
+import { useState, useEffect } from 'react';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../amplify/data/resource';
+
+type Todo = Schema['Todo']['type'];
+
+const client = generateClient<Schema>();
+
+export default function MyComponent() {
+  const [todos, setTodos] = useState<Todo[]>([]);
+
+  useEffect(() => {
+    const sub = client.models.Todo.observeQuery().subscribe({
+      next: ({ items, isSynced }) => {
+        setTodos([...items]);
+      },
+    });
+    return () => sub.unsubscribe();
+  }, []);
+
+  return (
+    <ul>
+      {todos.map((todo) => (
+        <li key={todo.id}>{todo.content}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+`observeQuery`はクラウド内で使用可能なすべてのデータをフェッチしてページネーションします。クラウドからデータが同期されている間、スナップショットには到着したすべてのアイテムと`false`の`isSynced`ステータスが含まれます。同期プロセスが完了すると、ローカルストア内のすべてのレコードと`true`の`isSynced`ステータスを含むスナップショットが発出されます。
+
+<Accordion title='リアルタイムイベントとモデルフィールドがない' headingLevel='4' eyebrow='トラブルシューティング'>
+
+期待するすべてのリアルタイムイベントとモデルフィールドが表示されない場合は、以下を確認してください。
+
+#### 認可
+
+モデルの[認可ルール](/[platform]/build-a-backend/data/customize-authz/)はユーザーに適切な権限を付与する必要があります。
+
+| 操作 | 認可 |
+| -- | -- |
+| `onCreate` | `read` OR `listen` |
+| `onUpdate` | `read` OR `listen` |
+| `onDelete` | `read` OR `listen` |
+| `observeQuery` | `read` OR (`listen` AND `list`) |
+
+認可ルールが正しい場合は、セッションが期待どおりに認証されていることを確認してください。
+
+#### セレクションセットのパリティ
+
+リアルタイム更新で表示されるすべてのフィールドは、それをトリガーする**ミューテーション**のセレクションセットに存在する必要があります。ミューテーションは基本的にセレクションセットを介してフィールドを「提供」し、対応するサブスクリプションがそこから選択できます。
+
+これに対処する1つの方法は、両方の操作に共通のセレクションセット変数を使用することです。例えば：
+
+```ts
+// セレクションセット `as const` を定義すると、型が
+// レスポンスオブジェクトに伝播することが保証されます。
+const selectionSet = ['title', 'author', 'posts.*'] as const;
+
+const sub = client.models.Blog.observeQuery(
+  filter: { id: { eq: 'blog-id' } },
+  selectionSet: [...selectionSet]
+).subscribe({
+  next(data) {
+    handle(data.items)
+  }
+});
+
+// 更新は同じセレクションセットを使用し、必要なすべての
+// フィールドがサブスクライバーに提供されることを保証します。
+const { data } = await client.models.Blog.update({
+  id: 'blog-id',
+  name: 'Updated Name'
+}, {
+  selectionSet: [...selectionSet]
+});
+```
+
+これは、`Blog`へのすべてのサブスクリプションが同じフィールドサブセットを必要とする場合に適切に機能します。複数のサブスクリプションが様々なセレクションセットを使用している場合は、すべての`Blog`ミューテーションがすべてのサブスクリプションからのフィールドのスーパーセットを含むことを確認する必要があります。
+
+別の方法として、カスタムセレクションセット全体をスキップできます。任意のモデルの内部生成されたセレクションセットは、デフォルトで操作全体で同じです。トレードオフは、デフォルトのセレクションセットが関連モデルを除外することです。したがって、関連モデルが必要な場合は、遅延ロードするか、別にフェッチするクエリを構築する必要があります。
+
+#### 関連モデルのミューテーション
+
+ミューテーションは*関連*モデルのリアルタイム更新をトリガーしません。これは、サブスクリプションがセレクションセットに関連モデルを含む場合でも当てはまります。例えば、特定の`Blog`を購読し、`Post`が追加または変更されたときに更新を表示したい場合、`Blog`にサブスクリプションを作成して「機能する」と仮定するのは魅力的です：
+
+```ts
+// `Blog`の詳細をいくつか取得しているが、主にセレクションセットを使用して
+// すべての関連投稿を取得していることに注意してください。
+const selectionSet = ['title', 'author', 'posts.*'] as const;
+
+const sub = client.models.Blog.observeQuery(
+  filter: { id: { eq: 'blog-id' } },
+  selectionSet: [...selectionSet]
+).subscribe({
+  next(data) {
+    handle(data.items)
+  }
+});
+```
+
+しかし、`Post`レコードのミューテーションは関連`Blog`のリアルタイムイベントをトリガーしません。`Post`が追加されたときに`Blog`の更新が必要な場合は、関連する`Blog`レコードを手動で「タッチ」する必要があります。
+
+```ts
+async function addPostToBlog(
+  post: Schema['Post']['createType'],
+  blog: Schema['Blog']['type']
+) {
+  // まずポストを作成します。
+  await client.models.Post.create({
+    ...post,
+    blogId: blog.id
+  });
+
+  // ブログを「タッチ」して、サブスクライバーに再レンダリングを通知します。
+  await client.models.Blog.update({
+    id: blog.id
+  }, {
+    // サブスクリプションが関連モデルフィールドを探している場合は
+    // セレクションセットを含めることを忘れないでください！
+    selectionSet: [...selectionSet]
+  });
+}
+```
+
+</details>
+
+## リアルタイムイベントサブスクリプションの設定
+
+サブスクリプションは、特定のイベントが発生したときにサーバーがクライアントにデータを送信できる機能です。例えば、新しいレコードが作成、更新、または削除されたときのイベントを購読できます。サブスクリプションは、Amplifyデータスキーマの任意の`a.model()`で自動的に利用可能です。
+
+```ts
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../amplify/data/resource';
+
+const client = generateClient<Schema>();
+
+// Todoの作成を購読
+const createSub = client.models.Todo.onCreate().subscribe({
+  next: (data) => console.log(data),
+  error: (error) => console.warn(error),
+});
+
+// Todoの更新を購読
+const updateSub = client.models.Todo.onUpdate().subscribe({
+  next: (data) => console.log(data),
+  error: (error) => console.warn(error),
+});
+
+// Todoの削除を購読
+const deleteSub = client.models.Todo.onDelete().subscribe({
+  next: (data) => console.log(data),
+  error: (error) => console.warn(error),
+});
+
+// サブスクリプションからデータ更新の受け取りを停止
+createSub.unsubscribe();
+updateSub.unsubscribe();
+deleteSub.unsubscribe();
+```
+
+## サーバー側のサブスクリプションフィルターの設定
+
+サブスクリプションは、サービス側のサブスクリプションフィルターを定義するオプショナルな`filter`引数を受け取ります：
+
+```ts
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../amplify/data/resource';
+
+const client = generateClient<Schema>();
+
+const sub = client.models.Todo.onCreate({
+  filter: {
+    content: {
+      contains: 'groceries',
+    },
+  },
+}).subscribe({
+  next: (data) => console.log(data),
+  error: (error) => console.warn(error),
+});
+```
+
+すべてのサブスクリプションイベントを取得する場合は、`filter`パラメータを指定しないでください。
+
+<Callout>
+
+**制限：**
+
+- フィルターとして空のオブジェクト`{}`を指定することは**推奨されません**。フィルターとして`{}`を使用すると、データモデルの認可ルールに基づいて矛盾した動作が発生する可能性があります。
+- 動的グループ認可を使用している場合、レコードごとに単一のグループに基づいて認可される場合、サブスクリプションはユーザーが5つ以下のユーザーグループの一部である場合にのみサポートされます。
+- さらに、グループの配列(`groups: [String]`)を使用して認可する場合、
+  - サブスクリプションはユーザーが20以下のグループの一部である場合にのみサポートされます
+  - レコードごとに20以下のユーザーグループのみを認可できます
+
+</Callout>
+
+### サブスクリプション接続ステータス更新
+
+アプリケーションが設定され、サブスクリプションを使用している状態で、サブスクリプションが最終的に確立されたときを知りたい場合があります。また、サブスクリプションが正常でない場合はユーザーに反映することができます。`Hub`ローカルイベントシステムを通じて接続状態の変化を監視できます。
+
+```ts
+import { CONNECTION_STATE_CHANGE, ConnectionState } from 'aws-amplify/data';
+import { Hub } from 'aws-amplify/utils';
+
+Hub.listen('api', (data: any) => {
+  const { payload } = data;
+  if (payload.event === CONNECTION_STATE_CHANGE) {
+    const connectionState = payload.data.connectionState as ConnectionState;
+    console.log(connectionState);
+  }
+});
+```
+
+#### サブスクリプション接続状態
+
+- **`Connected`** - 接続され、問題なく動作しています。
+- **`ConnectedPendingDisconnect`** - 接続にアクティブなサブスクリプションがなく、切断しています。
+- **`ConnectedPendingKeepAlive`** - 接続は開いていますが、予期されたキープアライブメッセージが失われています。
+- **`ConnectedPendingNetwork`** - 接続は開いていますが、ネットワーク接続が中断されています。ネットワークが復旧すると、接続はトラフィック処理を継続します。
+- **`Connecting`** - 接続を試みています。
+- **`ConnectionDisrupted`** - 接続が中断され、ネットワークが利用可能です。
+- **`ConnectionDisruptedPendingNetwork`** - 接続が中断され、ネットワーク接続が利用不可です。
+- **`Disconnected`** - 接続にアクティブなサブスクリプションがなく、切断しています。
+
+<Accordion title='接続の問題の解決と自動再接続' headingLevel='4' eyebrow='トラブルシューティング'>
+
+アプリケーションとバックエンドサブスクリプション間の接続は、ネットワーク障害やデバイスがスリープモードに入るなど、様々な理由で中断される可能性があります。サブスクリプションは接続可能になると自動的に再接続します。
+
+オフライン中、アプリケーションはメッセージを失い、再接続時に自動的に追いつくことはありません。ユースケースによっては、アプリがオンラインに戻ったときに追いつく処置を講じたい場合があります。
+
+```js
+import { generateClient, CONNECTION_STATE_CHANGE, ConnectionState } from 'aws-amplify/data'
+import { Hub } from 'aws-amplify/utils'
+import { Schema } from '../amplify/data/resource';
+
+const client = generateClient<Schema>()
+
+const fetchRecentData = () => {
+  const { data: allTodos } = await client.models.Todo.list();
+}
+
+let priorConnectionState: ConnectionState;
+
+Hub.listen("api", (data: any) => {
+  const { payload } = data;
+  if (
+    payload.event === CONNECTION_STATE_CHANGE
+  ) {
+
+    if (priorConnectionState === ConnectionState.Connecting && payload.data.connectionState === ConnectionState.Connected) {
+      fetchRecentData();
+    }
+    priorConnectionState = payload.data.connectionState;
+  }
+});
+
+const createSub = client.models.Todo.onCreate().subscribe({
+  next: payload => // 受信メッセージを処理
+});
+
+const updateSub = client.models.Todo.onUpdate().subscribe({
+  next: payload => // 受信メッセージを処理
+});
+
+const deleteSub = client.models.Todo.onDelete().subscribe({
+  next: payload => // 受信メッセージを処理
+});
+
+const cleanupSubscriptions = () => {
+  createSub.unsubscribe();
+  updateSub.unsubscribe();
+  deleteSub.unsubscribe();
+}
+```
+
+</details>
+
+## サブスクリプションから購読を解除
+
+以下を実装してイベントのサブスクリプションから購読を解除することもできます：
+
+```ts
+// サブスクリプションからデータ更新の受け取りを停止
+sub.unsubscribe();
+```
+
+## まとめ
+
+おめでとうございます！**リアルタイムイベントの購読**ガイドが完了しました。このガイドでは、リアルタイムイベントのサブスクリプションを設定し、必要に応じてこれらのサブスクリプションをフィルターしてキャンセルする方法を学びました。
+
+### 次のステップ
+
+推奨される次のステップには、データの情報アーキテクチャを構築およびカスタマイズし続けることが含まれます。このような作業に役立つリソースをいくつか紹介します：
+
+- [認可ルールをカスタマイズ](/[platform]/build-a-backend/data/customize-authz/)
+- [データモデルをカスタマイズ](/[platform]/build-a-backend/data/data-modeling/)
+- [カスタムビジネスロジックを追加](/[platform]/build-a-backend/data/custom-business-logic/)
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+リアルタイムクライアント作成のためのミューテーションを購読します。
+
+サブスクリプションの有効期間は単一関数の有効期間より長くなるため、クラスの上部にインスタンス変数を作成できます：
+
+#### [Async/Await]
+
+```swift
+var subscription: AmplifyAsyncThrowingSequence<GraphQLSubscriptionEvent<Todo>>
+```
+
+#### [Combine]
+
+```swift
+var subscription: AnyCancellable?
+```
+
+作成の更新をリッスンするには、次のコードサンプルを使用できます：
+
+#### [Async/Await]
+
+```swift
+func createSubscription() {
+    subscription = Amplify.API.subscribe(request: .subscription(of: Todo.self, type: .onCreate))
+    Task {
+        do {
+            for try await subscriptionEvent in subscription {
+                switch subscriptionEvent {
+                case .connection(let subscriptionConnectionState):
+                    print("Subscription connect state is \(subscriptionConnectionState)")
+                case .data(let result):
+                    switch result {
+                    case .success(let createdTodo):
+                        print("Successfully got todo from subscription: \(createdTodo)")
+                    case .failure(let error):
+                        print("Got failed result with \(error.errorDescription)")
+                    }
+                }
+            }
+        } catch {
+            print("Subscription has terminated with \(error)")
+        }
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func createSubscription() {
+    let sequence = Amplify.API.subscribe(request: .subscription(of: Todo.self, type: .onCreate))
+    subscription = Amplify.Publisher.create(sequence)
+        .sink {
+        if case let .failure(apiError) = $0 {
+            print("Subscription has terminated with \(apiError)")
+        } else {
+            print("Subscription has been closed successfully")
+        }
+    }
+    receiveValue: { result in
+        switch result {
+            case .connection(let subscriptionConnectionState):
+                print("Subscription connect state is \(subscriptionConnectionState)")
+            case .data(let result):
+                switch result {
+                case .success(let createdTodo):
+                    print("Successfully got todo from subscription: \(createdTodo)")
+                case .failure(let error):
+                    print("Got failed result with \(error.errorDescription)")
+            }
+        }
+    }
+}
+```
+
+## 更新から購読を解除
+
+### Async/Await
+
+更新から購読を解除するには、サブスクリプションで`cancel()`を呼び出すことができます。
+
+```swift
+func cancelSubscription() {
+    // 完了したら、サブスクリプションリスナーをキャンセルします
+    subscription?.cancel()
+}
+```
+
+### Combine
+
+シーケンスで`cancel()`を呼び出すと、バックエンドからサブスクリプションが切断されます。すべてのダウンストリーム購読者もキャンセルされます。
+
+```swift
+let sequence = Amplify.API.subscribe(...)
+let subscription = Amplify.Publisher.create(sequence)
+let allUpdates = subscription.sink(...)
+let filteredUpdates = subscription.filter{...}.sink(...)
+sequence.cancel()   // シーケンスは切断されました
+                    // allUpdatesとfilteredUpdatesはデータを受け取りなくなります
+```
+
+同様に、Combineサブスクライバー（例えば`sink()`から返された`AnyCancellable`）で`cancel()`を呼び出すと、基になるシーケンスがキャンセルされます。これにより、すべての接続されたサブスクライバーが更新受け取りを停止します。
+
+```swift
+allUpdates.cancel() // シーケンスは切断されました
+                    // filteredUpdatesはデータを受け取りなくなります
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+リアルタイムクライアント作成のためのミューテーションを購読します：
+
+#### [Java]
+
+```java
+ApiOperation subscription = Amplify.API.subscribe(
+    ModelSubscription.onCreate(Todo.class),
+    onEstablished -> Log.i("ApiQuickStart", "Subscription established"),
+    onCreated -> Log.i("ApiQuickStart", "Todo create subscription received: " + ((Todo) onCreated.getData()).getName()),
+    onFailure -> Log.e("ApiQuickStart", "Subscription failed", onFailure),
+    () -> Log.i("ApiQuickStart", "Subscription completed")
+);
+
+// 完了したら、サブスクリプションリスナーをキャンセルします
+subscription.cancel();
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+val subscription = Amplify.API.subscribe(
+    ModelSubscription.onCreate(Todo::class.java),
+    { Log.i("ApiQuickStart", "Subscription established") },
+    { Log.i("ApiQuickStart", "Todo create subscription received: ${(it.data as Todo).name}") },
+    { Log.e("ApiQuickStart", "Subscription failed", it) },
+    { Log.i("ApiQuickStart", "Subscription completed") }
+)
+
+// 完了したら、サブスクリプションリスナーをキャンセルします
+subscription.cancel();
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+val job = activityScope.launch {
+    try {
+        Amplify.API.subscribe(ModelSubscription.onCreate(Todo::class.java))
+            .catch { Log.e("ApiQuickStart", "Error on subscription", it) }
+            .collect { Log.i("ApiQuickStart", "Todo created!  ${it.data.name}") }
+    } catch (notEstablished: ApiException) {
+        Log.e("ApiQuickStart", "Subscription not established", it)
+    }
+}
+
+// サブスクリプション完了時
+job.cancel()
+```
+
+#### [RxJava]
+
+```java
+RxSubscriptionOperation<? extends GraphQLResponse<?>> subscription =
+        RxAmplify.API.subscribe(request);
+
+subscription
+        .observeConnectionState()
+        .subscribe(connectionStateEvent -> Log.i("ApiQuickStart", String.valueOf(connectionStateEvent)));
+
+subscription
+        .observeSubscriptionData()
+        .subscribe(
+            data -> Log.i("ApiQuickStart", data),
+            exception -> Log.e("ApiQuickStart", "Subscription failed.", exception),
+            () -> Log.i("ApiQuickStart", "Subscription completed.")
+        );
+
+// 完了したら、サブスクリプションリスナーをキャンセルします
+subscription.cancel();
+```
+
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+リアルタイムクライアント作成のためのミューテーションを購読します。
+
+## コールバック付きサブスクリプションの設定
+
+サブスクリプションを作成するとき、[`Stream`](https://api.dart.dev/dart-async/Stream-class.html)オブジェクトが返されます。この`Stream`はサブスクリプションがエラーに遭遇するか、サブスクリプションをキャンセルするまで、イベントを生成し続けます。出力されるデータの量を制限する必要がある場合は、`take`などのStreamのヘルパー関数を利用できます。キャンセルは定義されたイベント量が発生したときに発生します：
+
+```dart
+Stream<GraphQLResponse<Todo>> subscribe() {
+  final subscriptionRequest = ModelSubscriptions.onCreate(Todo.classType);
+  final Stream<GraphQLResponse<Todo>> operation = Amplify.API
+      .subscribe(
+        subscriptionRequest,
+        onEstablished: () => safePrint('Subscription established'),
+      )
+      // 5つの要素のみをリッスン
+      .take(5)
+      .handleError(
+    (Object error) {
+      safePrint('Error in subscription stream: $error');
+    },
+  );
+  return operation;
+}
+```
+
+別の方法として、[`Stream.listen`](https://api.dart.dev/dart-async/Stream/listen.html)を呼び出して、プログラムでキャンセルできる[`StreamSubscription`](https://api.dart.dev/dart-async/StreamSubscription-class.html)オブジェクトを作成できます。
+
+```dart
+// これをインポートすることを忘れないでください
+import 'dart:async';
+
+...
+
+StreamSubscription<GraphQLResponse<Todo>>? subscription;
+
+void subscribe() {
+  final subscriptionRequest = ModelSubscriptions.onCreate(Todo.classType);
+  final Stream<GraphQLResponse<Todo>> operation = Amplify.API.subscribe(
+    subscriptionRequest,
+    onEstablished: () => safePrint('Subscription established'),
+  );
+  subscription = operation.listen(
+    (event) {
+      safePrint('Subscription event data received: ${event.data}');
+    },
+    onError: (Object e) => safePrint('Error in subscription stream: $e'),
+  );
+}
+
+void unsubscribe() {
+  subscription?.cancel();
+  subscription = null;
+}
+```
+
+`onCreate`サブスクリプションに加えて、`.onUpdate()`または`.onDelete()`も呼び出すことができます。
+
+```dart
+final onUpdateSubscriptionRequest = ModelSubscriptions.onUpdate(Todo.classType);
+// または
+final onDeleteSubscriptionRequest = ModelSubscriptions.onDelete(Todo.classType);
+```
+
+## サブスクリプション接続ステータス
+
+アプリケーションを設定してサブスクリプションを使用している状態で、サブスクリプションが閉じたときを知りたい場合があります。また、サブスクリプションが正常でない場合はユーザーに反映することができます。`Amplify.Hub`を介してサブスクリプションステータスの変化を監視できます。
+
+```dart
+Amplify.Hub.listen(
+  HubChannel.Api,
+  (ApiHubEvent event) {
+    if (event is SubscriptionHubEvent) {
+      safePrint(event.status);
+    }
+  },
+);
+```
+
+### SubscriptionStatus
+
+- **`connected`** - 接続され、問題なく動作しています
+- **`connecting`** - 接続を試みています（初期接続と再接続の両方）
+- **`pendingDisconnect`** - 接続にアクティブなサブスクリプションがなく、シャットダウンしています
+- **`disconnected`** - 接続にアクティブなサブスクリプションがなく、切断されています
+- **`failed`** - 接続に障害が発生し、切断されています
+
+## 自動再接続
+
+内部的には、ネットワーク変更を通じて健全なウェブソケット接続を維持しようとします。例えば、デバイスの接続がWi-Fiから5gネットワークに変わる場合、プラグインは新しいネットワークを使用して再接続しようとします。
+
+同様に、インターネット接続が予期せず切断された場合、サブスクリプションは指数関数的な再試行/バックオフ戦略を使用して再接続を試みます。デフォルトでは、約50秒で8回の回復試行を行います。接続を確立できない場合、ウェブソケットは閉じられます。`RetryOptions`を通じてAPI プラグインを構成するときに、この戦略をカスタマイズできます。
+
+```dart
+Future<void> _configureAmplify() async {
+  final apiPlugin = AmplifyAPI(
+    options: APIPluginOptions(
+      modelProvider: ModelProvider.instance,
+      // オプション設定
+      subscriptionOptions: const GraphQLSubscriptionOptions(
+        retryOptions: RetryOptions(maxAttempts: 10),
+      ),
+    )
+  );
+  await Amplify.addPlugin(apiPlugin);
+
+  try {
+    await Amplify.configure(outputs);
+  } on AmplifyAlreadyConfiguredException {
+    safePrint(
+        "Tried to reconfigure Amplify; this can occur when your app restarts on Android.");
+  }
+}
+```
+
+<Callout>
+
+**重要**: オフライン中、アプリケーションはメッセージを失い、再接続が発生しても自動的に追いつくことはありません。ユースケースに応じて、アプリがオンラインに戻ったときに追いつく処置を講じたい場合があります。次の例では、再接続時にすべてのデータを取得することでこの問題を解決します。
+
+</Callout>
+
+```dart
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_api/amplify_api.dart';
+import './models/ModelProvider.dart'; // <--- プロジェクトを反映するようにインポートを更新
+import 'dart:async';
+
+// ...
+
+List<Todo?> allTodos = [];
+SubscriptionStatus prevSubscriptionStatus = SubscriptionStatus.disconnected;
+StreamSubscription<GraphQLResponse<Todo>>? subscription;
+
+/// ...
+
+// リスナーを初期化
+Amplify.Hub.listen(
+  HubChannel.Api,
+  (ApiHubEvent event) {
+    if (event is SubscriptionHubEvent) {
+      if (prevSubscriptionStatus == SubscriptionStatus.connecting &&
+          event.status == SubscriptionStatus.connected) {
+        getTodos(); // todoを再フェッチ
+      }
+      prevSubscriptionStatus = event.status;
+    }
+  },
+);
+
+subscribe();
+
+/// ...
+
+Future<void> getTodos() async {
+  try {
+    final request = ModelQueries.list(Todo.classType);
+    final response = await Amplify.API.query(request: request).response;
+
+    final todos = response.data?.items ?? [];
+    if (response.errors.isNotEmpty) {
+      safePrint('errors: ${response.errors}');
+    }
+
+    setState(() {
+      allTodos = todos;
+    });
+  } on ApiException catch (e) {
+    safePrint('Query failed: $e');
+    return;
+  }
+}
+
+void subscribe() {
+  final subscriptionRequest = ModelSubscriptions.onCreate(Todo.classType);
+  final Stream<GraphQLResponse<Todo>> operation = Amplify.API.subscribe(
+    subscriptionRequest,
+    onEstablished: () => safePrint('Subscription established'),
+  );
+  subscription = operation.listen(
+    (event) {
+      setState(() {
+        allTodos.add(event.data);
+      });
+    },
+    onError: (Object e) => safePrint('Error in subscription stream: $e'),
+  );
+}
+
+```
+<!-- /Platform -->

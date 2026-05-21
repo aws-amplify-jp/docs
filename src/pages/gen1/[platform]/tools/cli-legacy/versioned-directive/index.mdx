@@ -1,0 +1,118 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'バージョニングと競合解決',
+  description: '@versioned ディレクティブは、タイプにオブジェクトバージョニングと競合解決を追加します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+## @versioned
+
+`@versioned` ディレクティブは、タイプにオブジェクトバージョニングと競合解決を追加します。DataStore を活用する場合、競合検出および解決機能は AppSync 内で自動的に処理され、`@versioned` ディレクティブと互換性がないため、このディレクティブを使用しないでください。
+
+<Callout>
+
+**@versioned** は AppSync [codegen](/gen1/[platform]/tools/cli-legacy/client-codegen/) を使用して生成されたクライアントコード（ステートメントとタイプ）でのみサポートされます。
+**@versioned** は `amplify codegen models` を使用して生成されたモデルではサポートされません。
+オフラインアプリデータアクセスと組み込みの競合解決を提供するには、**@versioned** の代わりに [Amplify DataStore](/gen1/[platform]/build-a-backend/more-features/datastore/set-up-datastore/) を使用してください。
+
+</Callout>
+
+### 定義
+
+```graphql
+directive @versioned(versionField: String = "version", versionInput: String = "expectedVersion") on OBJECT
+```
+
+### 使用方法
+
+オブジェクトバージョニングと競合検出を有効にするには、`@model` で注釈されたタイプに `@versioned` を追加します。
+
+```graphql
+type Post @model @versioned {
+  id: ID!
+  title: String!
+  version: Int!   # <- 指定されない場合は自動的に追加されます。
+}
+```
+
+**Post を作成するとバージョンが自動的に 1 に設定されます**
+
+```graphql
+mutation Create {
+  createPost(input:{
+    title:"Conflict detection in the cloud!"
+  }) {
+    id
+    title
+    version  # will be 1
+  }
+}
+```
+
+**Post を更新するには、オブジェクトの最後に保存されたバージョンである「expectedVersion」を渡す必要があります**
+
+> 注: オブジェクトを更新するとき、バージョン番号は自動的にインクリメントされます。
+
+```graphql
+mutation Update($postId: ID!) {
+  updatePost(
+    input:{
+      id: $postId,
+      title: "Conflict detection in the cloud is great!",
+      expectedVersion: 1
+    }
+  ) {
+    id
+    title
+    version # will be 2
+  }
+}
+```
+
+**Post を削除するには、オブジェクトの最後に保存されたバージョンである「expectedVersion」を渡す必要があります**
+
+```graphql
+mutation Delete($postId: ID!) {
+  deletePost(
+    input: {
+      id: $postId,
+      expectedVersion: 2
+    }
+  ) {
+    id
+    title
+    version
+  }
+}
+```
+
+**expectedVersion** が DynamoDB に保存されているバージョンと一致しない場合、更新および削除操作は失敗します。タイプのバージョンフィールドのデフォルト名、および `@versioned` ディレクティブの **versionField** および **versionInput** 引数を使用して入力フィールドの名前を変更することができます。
+
+### 生成される内容
+
+`@versioned` ディレクティブはリゾルバマッピングテンプレートを操作し、バージョン管理されたオブジェクトに `version` フィールドを保存します。

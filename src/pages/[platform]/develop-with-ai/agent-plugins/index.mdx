@@ -1,0 +1,151 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'エージェントプラグイン',
+  description:
+    'AWS Amplifyエージェントプラグインをインストールして、Claude Code、Cursor、その他のAIコーディングアシスタントでフルスタックアプリを構築するためのガイド付きの段階的ワークフローを取得します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+[AWS用エージェントプラグイン](https://github.com/awslabs/agent-plugins)は、AIコーディングアシスタントをガイド付きワークフロー、MCPサーバー、フック、およびAWS開発用の参照資料で拡張する再利用可能なパッケージです。**aws-amplify**プラグインは、フルスタックAmplify Gen 2アプリケーション構築のための構造化された段階的ワークフローを提供します。
+
+エージェントプラグインは現在、**Claude Code**（バージョン2.1.29以降）および**Cursor**（バージョン2.5以降）でサポートされています。
+
+## Amplifyプラグインに含まれるもの
+
+aws-amplifyプラグインは4つのタイプの機能をパッケージ化しています。
+
+- **スキル** — 複雑なタスクを通じてAIをガイドするステップバイステップのワークフロー。Amplifyプラグインには、開発プロセス全体を調整する`amplify-workflow`スキルが含まれています。
+- **MCPサーバー** — AWS MCPサーバーを通じてAWSドキュメントと標準オペレーティングプロシージャ（SOP）へのアクセスを提供します。
+- **フック** — ビルドを開始する前に前提条件を検証する自動化。
+- **参照** — バックエンド、フロントエンド、および各フェーズ中にスキルが参照するデプロイメント手順。
+
+## 段階的ワークフロー
+
+Amplifyプラグインをインストールし、AIにアプリを構築するよう依頼すると、構造化された4フェーズのワークフローに従います。リクエストに基づいて、適用可能なフェーズのみが実行されます。
+
+**フェーズ1：バックエンド** — `amplify/`ディレクトリにAmplify Gen 2リソースを作成します。認証、データモデル、ストレージ、およびサーバーレス関数を含みます。
+
+**フェーズ2：サンドボックス** — バックエンドをクラウドサンドボックス環境にデプロイしてテストします。
+
+**フェーズ3：フロントエンド** — フロントエンドフレームワーク（React、Next.js、Vue、Angular、React Native、Flutter、Swift、またはAndroid）をAmplifyバックエンドに接続します。
+
+**フェーズ4：本番環境** — CI/CDを通じてアプリケーションを本番環境にデプロイします。
+
+例えば、「認証をAmplifyバックエンドに追加する」と依頼した場合、フェーズ1とフェーズ2のみが実行されます。「フルスタックタスク管理アプリを構築してほしい」と依頼した場合、4つのフェーズすべてが順に実行されます。AIは計画を提示し、各フェーズに進む前にあなたの確認を待ちます。
+
+## Claude Codeでのインストール
+
+Claude Codeは、[CLIツール](https://docs.anthropic.com/en/docs/claude-code)、[VS Code拡張機能](https://marketplace.visualstudio.com/items?itemName=anthropics.claude-code)、および[JetBrainsプラグイン](https://plugins.jetbrains.com/plugin/27189-claude-code)として利用可能です。エージェントプラグインはすべての環境で同じように機能します。
+
+### ステップ1：マーケットプレイスを追加する
+
+Claude Codeを開き、以下を実行します。
+
+```bash
+/plugin marketplace add awslabs/agent-plugins
+```
+
+これはAgent Plugins for AWSマーケットプレイスを登録し、利用可能なすべてのAWSプラグインにアクセスできるようにします。
+
+### ステップ2：Amplifyプラグインをインストールする
+
+```bash
+/plugin install aws-amplify@agent-plugins-for-aws
+```
+
+### ステップ3：インストールを確認する
+
+以下を実行してプラグインがインストールされたことを確認できます。
+
+```bash
+/plugin list
+```
+
+リストに`aws-amplify@agent-plugins-for-aws`が表示されるはずです。
+
+### ステップ4：ビルドを開始する
+
+プラグインはプロンプトがAmplify開発に関連するときに自動的にアクティブになります。以下のようなプロンプトを試してください。
+
+- 「Amplifyでタスク管理アプリを構築してほしい」
+- 「認証をAmplifyバックエンドに追加する」
+- 「ファイルアップロード用のストレージバケットを追加する」
+- 「Amplifyアプリをサンドボックスにデプロイしてほしい」
+- 「React フロントエンドをAmplifyバックエンドに接続する」
+
+プラグインは前提条件を検証し、段階的な計画を提示し、確認チェックポイント付きで各ステップをガイドします。
+
+<Callout informational>
+
+AWSの認証情報が設定されていない場合、プラグインは前提条件チェック中にこれを検出し、設定するようガイドします。詳細は[ローカル開発用のAWSの設定](/[platform]/start/account-setup/)を参照してください。
+
+</Callout>
+
+## Cursorでのインストール
+
+### 設定から
+
+1. **Cursor**を開き、**設定**（歯車アイコン）に移動します
+2. **プラグイン**に移動します
+3. **「AWS Amplify」**を検索します
+4. **「Cursorに追加」**をクリックし、インストールスコープ（ユーザーまたはワークスペース）を選択します
+
+### マーケットプレイスから
+
+代わりに、[cursor.com](https://cursor.com)にアクセスし、マーケットプレイスでAWS Amplifyプラグインを参照して、**インストール**をクリックします。
+
+インストール後、Cursorの AIチャットでAmplify関連の質問をするとプラグインがアクティブになります。
+
+## 前提条件
+
+Amplifyプラグインを使用する前に、以下があることを確認してください。
+
+- **Node.js**バージョン18以降
+- **npm**
+- 認証情報が設定された**AWS CLI**
+
+プラグインは前提条件チェックスクリプトを自動的に実行し、認証情報が不足している場合はプロンプトを表示します。認証情報のセットアップについては、[ローカル開発用のAWSの設定](/[platform]/start/account-setup/)を参照してください。
+
+## その他のAWSプラグイン
+
+Agent Plugins for AWsリポジトリには、Amplify開発を補完する追加プラグインが含まれています。
+
+| プラグイン | 説明 |
+|--------|-------------|
+| **aws-serverless** | Lambda、API Gateway、EventBridge、およびStep Functionsを使用したサーバーレスアプリの構築 |
+| **deploy-on-aws** | コードベースの分析、AWSアーキテクチャの推奨、コスト推定、およびインフラストラクチャアズコード生成 |
+| **databases-on-aws** | Aurora DSQLのデータベースアーキテクチャガイダンス |
+| **amazon-location-service** | マップ、ジオコーディング、ルーティング、およびロケーション機能の追加 |
+| **migration-to-aws** | GCPからAWSへのインフラストラクチャの移行 |
+
+任意のプラグインをインストールするには、以下を実行します。
+
+```bash
+/plugin install <plugin-name>@agent-plugins-for-aws
+```
+
+完全なリストとソースコードについては、[Agent Plugins for AWSリポジトリ](https://github.com/awslabs/agent-plugins)を参照してください。

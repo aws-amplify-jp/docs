@@ -1,0 +1,201 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify Codegen モデル - リストとリストコンポーネントのnullable性',
+  description: 'Amplify CLI 5.1.2でAmplifyモデルを生成',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## **何が変わったのか？**
+
+Amplify CLI 5.1.2は、モデル内の型のオプショナリティを正しく設定するようにコード生成プロセスを更新しました。
+
+_スキーマの例_
+
+```
+type ListStringContainer @model {
+  requiredElementRequiredList: [String!]!
+  requiredElementOptionalList: [String!]
+  optionalElementRequiredList: [String]!
+  optionalElementOptionalList: [String]
+}
+```
+
+この例では、4つのフィールドがオプショナリティの異なる組み合わせを持っています：
+
+- `requiredElementRequiredList` - リスト自体は必須です。含まれる要素は非nullである必要があります。空のリストは空の配列としてのみ表現できます。
+- `requiredElementOptionalList` - リスト自体はオプションです。存在する場合、含まれる要素は非nullである必要があります。空のリストは空の配列またはnullフィールドのいずれかで表現できます。
+- `optionalElementRequiredList` - リスト自体は必須です。存在する場合、含まれる要素はnullの可能性があります。
+- `optionalElementOptionalList` - リスト自体はオプションです。存在する場合、含まれる要素はnullの可能性があります。
+
+> この例ではリストコンポーネントはString型ですが、これはInt、Bool、および自分で定義した埋め込み型などの他の型にも適用されます。
+
+## **なぜこの変更を導入するのか？**
+
+これは、生成されたSwiftモデルのオプショナリティをスキーマで定義された型にできるだけ近づけるためです。
+
+## **誰が影響を受けるのか？**
+
+Amplify DataStoreまたはAmplify APIでiOSアプリを構築し、`amplify codegen models`コマンドを実行してSwiftモデルを生成する開発者です。
+
+_以前に生成されたSwiftコード_
+
+```swift
+public struct ListStringContainer: Model {
+  public var requiredElementRequiredList: [String]
+  public var requiredElementOptionalList: [String]
+  public var optionalElementRequiredList: [String]?
+  public var optionalElementOptionalList: [String]?
+  ...
+}
+```
+
+_現在生成されるSwiftコード_
+
+```swift
+public struct ListStringContainer: Model {
+  public var requiredElementRequiredList: [String]
+  public var requiredElementOptionalList: [String]?
+  public var optionalElementRequiredList: [String?]
+  public var optionalElementOptionalList: [String?]?
+  ...
+}
+```
+
+現在のコードと以前のコードの違い：
+
+- `requiredElementRequiredList` - 変更なし
+- `requiredElementOptionalList` - リストは必須でしたが、現在はオプションです。
+- `optionalElementRequiredList` - リストコンポーネントは必須でしたが、現在はオプションです。リストはオプションでしたが、現在は必須です
+- `optionalElementOptionalList` - リストコンポーネントは必須でしたが、現在はオプションです。
+
+## **いつアップグレードする必要があるのか？**
+
+これはAmplify CLI 5.1.2の機能フラグの背後にあり、2021年11月1日に廃止されます。既存アプリを持つ開発者は、最新のCLIにアップグレードし、機能フラグを設定し、型のオプショナリティの変更に対応するようにアプリコードまたはスキーマを更新する必要があります（以下の推奨事項を参照）。新しいアプリを構築する開発者は、最新の変更を使用してコードを自動生成でき、アクションは必要ありません。
+
+## **これらの変更はどこで行うのか？**
+
+1. Amplify CLIを最新バージョンに更新する
+
+```
+amplify upgrade
+```
+
+2. バージョンは少なくとも5.1.2である必要があります
+
+```
+amplify --v # at least 5.1.2
+```
+
+3. 既存アプリを構築する場合、Amplifyプロジェクトルートの`cli.json`で機能フラグ`handleListNullabilityTransparently`を`true`に設定します。
+
+4. `amplify codegen models`を実行して最新のモデルを生成します。
+
+5. アプリを開き、最新の生成されたモデルでアプリが正常にコンパイルされることを確認します。スキーマに応じて、次のシナリオのいずれかにある可能性があります。
+
+シナリオ1. スキーマ: `requiredElementOptionalList: [String!]`
+
+```swift
+// 以前 - Swiftの型
+public var requiredElementOptionalList: [String]
+
+// 現在 - Swiftの型
+public var requiredElementOptionalList: [String]?
+
+// 以前 - コード
+print(container.requiredElementOptionalList) // ["value1", "value2"]
+
+// 現在 - コード
+if let requiredElementList = container.requiredElementOptionalList {
+    print(requiredElementList) // ["value1", "value2"]
+}
+```
+
+リストは必須でしたが、現在はオプションなので、値を取得するためにオプショナルをアンラップします。
+
+**推奨事項:** nullリストを保存するアプリケースがない場合は、スキーマの型を`[String!]`から`[String!]!`に更新して、リストを必須にします。これにより、コード内でリストをアンラップする必要がなくなります。
+
+シナリオ2. スキーマ: `optionalElementRequiredList: [String]!`
+
+```swift
+// 以前 - Swiftの型
+public var optionalElementRequiredList: [String]?
+
+// 現在 - Swiftの型
+public var optionalElementRequiredList: [String?]
+
+// 以前 - コード
+if let optionalElementRequiredList = container.optionalElementRequiredList {
+    print(optionalElementRequiredList) // ["value1", "value2"]
+    for value in optionalElementRequiredList {
+        print(value) // "value1", "value2
+    }
+}
+
+// その後
+print(container.optionalElementRequiredList) // [Optional("value1"), Optional("value2")]
+for value in container.optionalElementRequiredList {
+    if let value = value {
+        print(value) // "value1", "value2
+    }
+}
+```
+
+リストコンポーネントは必須でしたが、現在はオプションなので、値を取得するためにオプショナル値をアンラップします。リストはオプションでしたが、現在は必須なので、リストに対して行われたアンラップをすべて削除します。
+
+**推奨事項:** リストに任意の値を保存しない場合は、スキーマの型を`[String]!`から`[String!]!`に更新して、リストコンポーネントを必須にします。これにより、コード内でリストコンポーネントをアンラップする必要がなくなります。
+
+シナリオ3. スキーマ: `optionalElementOptionalList: [String]`
+
+```swift
+// 以前 - Swiftの型
+public var optionalElementOptionalList: [String]?
+
+// 現在 - Swiftの型
+public var optionalElementOptionalList: [String?]?
+
+// 以前 - コード
+if let optionalElementOptionalList = container.optionalElementOptionalList zzz
+    print(optionalElementOptionalList) // ["value1", "value2"]
+    for value in optionalElementOptionalList {
+        print(value) // "value1", "value2
+    }
+}
+
+// その後
+if let optionalElementList = container.optionalElementOptionalList {
+    print(optionalElementList) // [Optional("value1"), Optional("value2")]
+    for value in optionalElementList {
+        if let value = value {
+            print(value) // "value1", "value2
+        }
+    }
+}
+```
+
+リストコンポーネントは必須でしたが、現在はオプションなので、値を取得するためにオプショナル値をアンラップします。
+
+**推奨事項:** リストにnull値を保存しない場合は、スキーマの型を`[String]`から`[String!]!`に更新して、リストとリストコンポーネントを必須にします。これにより、リストとリストコンポーネントをアンラップする必要がなくなります。

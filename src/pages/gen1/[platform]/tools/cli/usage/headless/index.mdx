@@ -1,0 +1,645 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'CI/CDのヘッドレスモード',
+  description: 'Amplify CLIの複数のコマンドは、CI/CDフローで使用できる引数をサポートしています。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify CLIの複数のコマンドは、CI/CDワークフローまたは他の非対話的なシェルで使用できる引数をサポートしています。必要な情報が引数で提供される場合、CLIは非対話的に動作します。
+
+引数は主にスクリプト作成用に使用されるため、コマンド実行フローがプロンプトで中断されません。この例は[こちら](https://github.com/aws-amplify/amplify-cli/tree/main/packages/amplify-cli/sample-headless-scripts)で確認できます。
+
+**`--yes` フラグ**
+
+`--yes` フラグまたはそのエイリアス `-y` は、デフォルト値が利用可能な場合、コマンドラインプロンプトを抑制し、コマンド実行でデフォルト値を使用します。以下のコマンドが `--yes` フラグに対応しています:
+
+- `amplify init`
+- `amplify configure project`
+- `amplify push`
+- `amplify publish`
+- `amplify pull`
+
+## `amplify init` パラメータ
+
+`amplify init` コマンドは、以下のパラメータを取ります:
+
+- `--amplify`
+- `--frontend`
+- `--providers`
+- `--categories`
+- `--yes`
+- `--app`
+
+### `--amplify`
+
+プロジェクトの基本情報を含み、以下のキーがあります:
+
+- `projectName`: 開発中のプロジェクトの名前
+- `appId`: Amplify Service プロジェクト ID (オプション、以下を参照)
+- `envName`: 最初の環境の名前
+- `defaultEditor`: デフォルトのコードエディター
+
+`appId` パラメータはオプションで、2つのユースケースで使用されます。
+
+- Amplify Service は、Amplify ウェブコンソールでプロジェクトを初期化する際に、これを内部的に使用します。
+- プロジェクト移行の場合。Amplify CLI バージョン 4.0.0 より前で初期化されたプロジェクトでは、バックエンド環境のリソースを追跡するための Amplify Service プロジェクトはオンラインで作成されません。最新バージョンの Amplify CLI は、ポストプッシュチェックで新しい Amplify Service プロジェクトを作成します。バックエンド環境を既存の Amplify Service プロジェクトに追加する代わりに新しいプロジェクトを作成したい場合は、`amplify init` を再度実行し、`--amplify` パラメータ内に `appId` を提供するか、明示的に `amplify init --appId <Amplify-Service-Project-AppId>` として実行できます。
+
+### `--frontend`
+
+CLI のフロントエンドプラグインの情報を含み、以下のキーがあります:
+
+- `frontend`: 選択されたフロントエンドプラグインの名前 (`amplify-frontend-` プレフィックスなし)。
+- `framework`: プロジェクトで使用されているフロントエンドフレームワーク (`react` など)。`javascript` フロントエンドハンドラのみがこれを取ります。
+- `config`: フロントエンドプラグインの設定。
+
+現在、3つの公式フロントエンドプラグインがあり、以下は各プラグインの `config` オブジェクトの仕様です:
+
+1. **`javascript` の `config`**
+   - `SourceDir`: プロジェクトのソースディレクトリ。CLI は `aws-exports.js` ファイルをこの中に配置および更新します。`aws-exports.js` ファイルは `Amplify JS` ライブラリを設定するために使用されます。
+   - `DistributionDir`: プロジェクトの配布ディレクトリ。ビルド成果物が保存される場所です。CLI は `amplify publish` コマンドの実行でこのディレクトリ内の内容を S3 ホスティングバケットにアップロードします。
+   - `BuildCommand`: プロジェクトのビルドコマンド。CLI は `amplify publish` コマンドの実行で配布ディレクトリ内の内容をアップロードする前にビルドコマンドを呼び出します。
+   - `StartCommand`: プロジェクトの起動コマンド。ローカルテストに使用されます。CLI は `amplify run` コマンドの実行でバックエンドの最新の開発をクラウドにプッシュした後、起動コマンドを呼び出します。
+2. **`android` の `config`**
+   - `ResDir`: Android プロジェクトのリソースディレクトリ (`app/src/main/res` など)。
+3. **`ios` の `config`**
+   - `ios` フロントエンドハンドラは `config` オブジェクトを取りません。
+
+### `--providers`
+
+プロバイダープラグインの設定を含みます。キーはプロバイダープラグインの名前 (`amplify-provider-` プレフィックスなし) で、値はその設定です。このオブジェクトに含まれるプロバイダープラグインが初期化され、クラウドリソースの作成と保守の機能を提供できます。
+
+現在、公式プロバイダープラグインは `amplify-provider-awscloudformation` のみです。その設定は、CLI が AWS 認証情報とリージョンを解決するためのもので、以下が仕様です:
+
+- `configLevel`: 設定レベルは `project` または `general` のいずれかです。明示的に `general` に設定されていない限り、`project` レベルが選択されます。`general` レベルは、CLI がプロジェクトレベルで設定を管理しないことを意味し、代わりに AWS SDK に AWS 認証情報とリージョンの解決を依存します。動作方法については、AWS SDK の[認証情報](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials-node.html)と[リージョン](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-region.html)に関するドキュメントを確認してください。`project` レベルは、CLI によってプロジェクトレベルで設定が管理されることを意味し、各プロジェクトは独立した設定を取得します。以下の属性は、設定がプロジェクトレベルの場合のみ使用されます。
+- `useProfile`: 共有設定ファイル (`~/.aws/config`) と認証情報ファイル (`~/.aws/credentials`) で定義されたプロフィールを使用するかどうかを示すブール値。<br/>
+- `profileName`: `useProfile` が true に設定されている場合のプロフィールの名前。
+- `accessKeyId`: `useProfile` が false に設定されている場合の AWS アクセスキー ID。
+- `secretAccessKey`: `useProfile` が false に設定されている場合の AWS シークレットアクセスキー。
+- `region`: `useProfile` が false に設定されている場合の AWS リージョン。
+
+### `--categories`
+
+指定されたカテゴリーのリソースの設定を含みます。キーはカテゴリー名で、値はその設定です。設定ファイルに永続化されないリソースパラメータがあり、ヘッドレス CLI 操作中のプロンプトが必要で、ヘッドレスワークフローをサポートするために各リソースに対して渡す必要があります。
+
+#### インポートされたリソース
+
+現在、`auth` と `storage` カテゴリーのリソースを Amplify CLI プロジェクトにインポートできます。
+
+#### `auth` カテゴリー
+
+- `userPoolId`: プロジェクトにインポートされた Cognito ユーザープールの ID。
+- `webClientId`: ウェブアプリケーションで使用するために設定された特定の Cognito ユーザープールのアプリクライアントの ID。
+- `nativeClientId`: ネイティブアプリケーションで使用するために設定された特定の Cognito ユーザープールのアプリクライアントの ID。
+- `identityPoolId`: `auth` リソースに対して Cognito Identity Pool も設定されている場合、このパラメータはそのリソースの ID です。関連する Cognito Identity Pool が設定されていない場合、このパラメータは渡されるべきではありません。
+
+`auth` カテゴリー設定のサンプル:
+
+```bash
+AUTHCONFIG="{\
+\"userPoolId\": \"myproject-userpool-id\",\
+\"webClientId\": \"appid-web\",\
+\"nativeClientId\": \"appid-native\",\
+\"identityPoolId\": \"myproject-idp-poolid\"\
+}"
+
+CATEGORIES="{\
+\"auth\":$AUTHCONFIG\
+}"
+```
+
+#### `storage` カテゴリー
+
+Storage カテゴリーは S3 バケットと DynamoDB テーブルのインポートをサポートしています。Storage カテゴリー内では異なるパラメータセットが必要です。
+
+#### S3 バケット
+
+- `region`: S3 バケットリソースのリージョン。S3 バケットはグローバルですが、CLI ではリージョンをパラメータとして保存する必要があるため、パラメータとして渡される必要があります。現在、Amplify プロジェクトが作成されたのと同じリージョンである必要があります。
+- `bucketName`: インポートされた S3 バケットの名前。
+
+```bash
+STORAGECONFIG="{\
+  \"region\": \"us-east-1\",\
+  \"bucketName\": \"my-project-bucket\"\
+}"
+
+CATEGORIES="{\
+  \"storage\":$STORAGECONFIG\
+}"
+```
+
+#### DynamoDB テーブル
+
+Amplify プロジェクトは複数の DynamoDB ストレージリソースをインポートでき、各リソースにパラメータを供給する必要があります。
+
+- `region`: DynamoDB テーブルリソースのリージョン。現在、Amplify プロジェクトが作成されたのと同じリージョンである必要があります。
+- `tables`: キーが Amplify リソース名で、値が DynamoDB テーブル名であるオブジェクト。
+
+```bash
+STORAGECONFIG="{\
+  \"region\": \"us-east-1\",
+  \"tables\": {\"
+    \"posts\": \"myproject-posts-dev\",\
+    \"comments\": \"myproject-comments-dev\",\
+  }"\
+}"
+
+CATEGORIES="{\
+  \"storage\":$STORAGECONFIG
+}"
+```
+
+### `--app`
+
+`amplify init --app git@github.com:<github-username>/<repository-name>.git`
+
+提供された GitHub リポジトリURL からサンプル Amplify プロジェクト用のリソースをインストール、初期化、およびプロビジョニングします。このオプションは空のディレクトリで実行される必要があります。サンプルリポジトリは amplify フォルダを含む必要があり、以下を含みます:
+
+- `.config` フォルダ内の `project-config.json`
+- `backend` フォルダ内の `backend-config.json`
+- `backend` フォルダ内の必要な CloudFormation ファイル
+
+  - 例えば stacks、API の `schema.graphql`
+  - 例えば auth の CloudFormation テンプレート
+
+- ローカルファイル `local-env.json` と `local-aws-info.json` は_不要です_
+
+リポジトリに `yarn.lock` ファイルと/または `package.json` ファイルが含まれている場合、対応するパッケージマネージャーでサンプルがインストールされ、リソースのプロビジョニング後に起動されます。
+
+### サンプルスクリプト
+
+```javascript
+const shell = require('shelljs');
+const amplify = require('./amplify-headless-init-payload.json');
+const cmd =
+  'amplify init --amplify "' +
+  JSON.stringify(amplify.amplify).replaceAll('"', '\\"') +
+  '" --frontend "' +
+  JSON.stringify(amplify.frontend).replaceAll('"', '\\"') +
+  '" --providers "' +
+  JSON.stringify(amplify.providers).replaceAll('"', '\\"') +
+  '" --yes';
+
+if (shell.exec(cmd).code !== 0) {
+  shell.echo('Error amplify init');
+  shell.exit(1);
+}
+```
+
+amplify-headless-init-payload.json コンテンツ
+
+```json
+{
+  "amplify": {
+    "projectName": "headlessProjectName",
+    "envName": "myenvname",
+    "defaultEditor": "code"
+  },
+  "frontend": {
+    "frontend": "javascript",
+    "framework": "react",
+    "config": {
+      "SourceDir": "src",
+      "DistributionDir": "build",
+      "BuildCommand": "npm run-script build",
+      "StartCommand": "npm run-script start"
+    }
+  },
+  "providers": {
+    "awscloudformation": {
+      "configLevel": "project",
+      "useProfile": false,
+      "profileName": "default"
+    }
+  }
+}
+```
+
+#### Unix プラットフォーム用のサンプル bash スクリプト
+
+```bash
+#!/bin/bash
+set -e
+IFS='|'
+
+REACTCONFIG="{\
+\"SourceDir\":\"src\",\
+\"DistributionDir\":\"build\",\
+\"BuildCommand\":\"npm run-script build\",\
+\"StartCommand\":\"npm run-script start\"\
+}"
+AWSCLOUDFORMATIONCONFIG="{\
+\"configLevel\":\"project\",\
+\"useProfile\":false,\
+\"profileName\":\"default\",\
+\"accessKeyId\":\"headlessaccesskeyid\",\
+\"secretAccessKey\":\"headlesssecrectaccesskey\",\
+\"region\":\"us-east-1\"\
+}"
+AMPLIFY="{\
+\"projectName\":\"headlessProjectName\",\
+\"envName\":\"myenvname\",\
+\"defaultEditor\":\"code\"\
+}"
+FRONTEND="{\
+\"frontend\":\"javascript\",\
+\"framework\":\"react\",\
+\"config\":$REACTCONFIG\
+}"
+PROVIDERS="{\
+\"awscloudformation\":$AWSCLOUDFORMATIONCONFIG\
+}"
+
+amplify init \
+--amplify $AMPLIFY \
+--frontend $FRONTEND \
+--providers $PROVIDERS \
+--yes
+```
+
+## `amplify configure project` パラメータ
+
+`amplify configure project` コマンドを使用すると、ユーザーは `amplify init` で最初に設定された設定を変更でき、`amplify init` コマンドと同じパラメータを取ります:
+
+- `--amplify`
+- `--frontend`
+- `--providers`
+- `--yes`
+
+### サンプルスクリプト
+
+```bash
+#!/bin/bash
+set -e
+IFS='|'
+
+REACTCONFIG="{\
+\"SourceDir\":\"src\",\
+\"DistributionDir\":\"build\",\
+\"BuildCommand\":\"npm run-script build\",\
+\"StartCommand\":\"npm run-script start\"\
+}"
+AWSCLOUDFORMATIONCONFIG="{\
+\"configLevel\":\"project\",\
+\"useProfile\":false,\
+\"profileName\":\"default\",\
+\"accessKeyId\":\"headlessaccesskeyid\",\
+\"secretAccessKey\":\"headlesssecrectaccesskey\",\
+\"region\":\"us-east-1\"\
+}"
+AMPLIFY="{\
+\"projectName\":\"headlessProjectName\",\
+\"defaultEditor\":\"code\"\
+}"
+FRONTEND="{\
+\"frontend\":\"javascript\",\
+\"framework\":\"react\",\
+\"config\":$REACTCONFIG\
+}"
+PROVIDERS="{\
+\"awscloudformation\":$AWSCLOUDFORMATIONCONFIG\
+}"
+
+amplify configure project \
+--amplify $AMPLIFY \
+--frontend $FRONTEND \
+--providers $PROVIDERS \
+--yes
+```
+
+## `amplify push/publish` パラメータ
+
+`amplify publish` コマンドは内部的に `amplify push` を実行するため、push コマンドと同じパラメータを取ります。`amplify push` コマンドは以下のパラメータを取ります:
+
+- `--codegen`
+- `--yes`
+- `--force`
+- `--allow-destructive-graphql-schema-updates`
+
+### `--codegen`
+
+AppSync [コード生成](/gen1/[platform]/build-a-backend/graphqlapi/client-code-generation/)の設定を含み、以下が仕様です:
+
+- `generateCode`: <br/> GraphQL API のコード生成を行うかどうかを示すブール値。<br/>
+- `codeLanguage`: <br/> 生成されたコードの対象言語 (`javascript` など)。<br/>
+- `fileNamePattern`: <br/> GraphQL クエリ、ミューテーション、サブスクリプションのファイル名パターン。<br/>
+- `generatedFileName`: <br/> 生成されたコードのファイル名。<br/>
+- `generateDocs`: <br/> GraphQL スキーマタイプに基づいて GraphQL ステートメント (クエリ、ミューテーション、サブスクリプション) を生成するかどうかを示すブール値。生成されたバージョンは現在の GraphQL クエリ、ミューテーション、サブスクリプションを上書きします。<br/>
+
+### `--yes`
+
+デフォルトオプションを選択してすべての対話型プロンプトをスキップします。
+
+### `--force`
+
+更新ステータスに関係なくすべてのリソースをプッシュし、ローカルの状態をクラウドにプッシュするためのすべての保護柵をバイパスします。非本番環境で変更をテストし、影響を完全に理解している場合にのみこのフラグを使用してください。
+
+`--allow-destructive-graphql-schema-updates` のすべての動作を含みます。
+
+### `--allow-destructive-graphql-schema-updates`
+
+基になるテーブルの削除または置換が必要なスキーマ変更をプッシュします。[スキーマ更新](/gen1/[platform]/build-a-backend/graphqlapi/#update-schema)を参照してください。
+
+### サンプルスクリプト
+
+```bash
+#!/bin/bash
+set -e
+IFS='|'
+
+CODEGEN="{\
+\"generateCode\":true,\
+\"codeLanguage\":\"javascript\",\
+\"fileNamePattern\":\"src/graphql/**/*.js\",\
+\"generatedFileName\":\"API\",\
+\"generateDocs\":true\
+}"
+
+amplify push \
+--codegen $CODEGEN \
+--yes
+```
+
+## `amplify pull` パラメータ
+
+`amplify pull` コマンドは最新のバックエンド環境をローカル開発にプルダウンします。2つのシナリオで使用されます:
+
+1. Amplify CLI によって既に初期化されたプロジェクトでは、クラウドから最新をプルダウンし、`amplify/#current-cloud-backend` ディレクトリ内のコンテンツを更新します。このシナリオで使用する場合、コマンドはパラメータを取りません。
+2. Amplify CLI によってまだ初期化されていないプロジェクトでは、特定のバックエンド環境をプルダウンし、プロジェクトに「接続」します。プロジェクトの `amplify` ディレクトリを完全にセットアップします。プルダウンされるバックエンド環境は、`amplify` パラメータ内の `appId` と `envName` で指定されます (以下を参照)。このシナリオで使用する場合、コマンドは以下のパラメータを取ります。
+
+- `--amplify`
+- `--frontend`
+- `--providers`
+- `--yes`
+
+### `--amplify`
+
+プロジェクトの基本情報を含み、以下のキーがあります:
+
+- `projectName`: 開発中のプロジェクトの名前
+- `appId`: Amplify Service プロジェクト ID
+- `envName`: プルダウンしたい上記の Amplify Service のバックエンド環境の名前
+- `defaultEditor`: デフォルトのコードエディター
+
+### `--frontend`
+
+CLI のフロントエンドプラグインの情報を含み、以下のキーがあります:
+
+- `frontend`: 選択されたフロントエンドプラグインの名前 (`amplify-frontend-` プレフィックスなし)。
+- `framework`: プロジェクトで使用されているフロントエンドフレームワーク (`react` など)。`javascript` フロントエンドハンドラのみがこれを取ります。
+- `config`: フロントエンドプラグインの設定。
+
+現在、3つの公式フロントエンドプラグインがあり、以下は各プラグインの `config` オブジェクトの仕様です:
+
+1. **`javascript` の `config`**
+   - `SourceDir`: プロジェクトのソースディレクトリ。CLI は `aws-exports.js` ファイルをこの中に配置および更新します。`aws-exports.js` ファイルは `Amplify JS` ライブラリを設定するために使用されます。
+   - `DistributionDir`: プロジェクトの配布ディレクトリ。ビルド成果物が保存される場所です。CLI は `amplify publish` コマンドの実行でこのディレクトリ内の内容を S3 ホスティングバケットにアップロードします。
+   - `BuildCommand`: プロジェクトのビルドコマンド。CLI は `amplify publish` コマンドの実行で配布ディレクトリ内の内容をアップロードする前にビルドコマンドを呼び出します。
+   - `StartCommand`: プロジェクトの起動コマンド。ローカルテストに使用されます。CLI は `amplify run` コマンドの実行でバックエンドの最新の開発をクラウドにプッシュした後、起動コマンドを呼び出します。
+2. **`android` の `config`**
+   - `ResDir`: Android プロジェクトのリソースディレクトリ (`app/src/main/res` など)。
+3. **`ios` の `config`**
+   - `ios` フロントエンドハンドラは `config` オブジェクトを取りません。
+
+### `--providers`
+
+pull コマンドは公式プロバイダープラグイン `amplify-provider-awscloudformation` に関連付けられており、フロントエンドプロジェクトにバックエンド環境をプルダウンして接続します。
+
+- `configLevel`: 設定レベルは `project` または `general` のいずれかです。明示的に `general` に設定されていない限り、`project` レベルが選択されます。`general` レベルは、CLI がプロジェクトレベルで設定を管理しないことを意味し、代わりに AWS SDK に AWS 認証情報とリージョンの解決を依存します。動作方法については、AWS SDK の[認証情報](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials-node.html)と[リージョン](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-region.html)に関するドキュメントを確認してください。`project` レベルは、CLI によってプロジェクトレベルで設定が管理されることを意味し、各プロジェクトは独立した設定を取得します。以下の属性は、設定がプロジェクトレベルの場合のみ使用されます。
+- `useProfile`: 共有設定ファイル (`~/.aws/config`) と認証情報ファイル (`~/.aws/credentials`) で定義されたプロフィールを使用するかどうかを示すブール値。<br/>
+- `profileName`: `useProfile` が true に設定されている場合のプロフィールの名前。
+- `accessKeyId`: `useProfile` が false に設定されている場合の AWS アクセスキー ID。
+- `secretAccessKey`: `useProfile` が false に設定されている場合の AWS シークレットアクセスキー。
+- `region`: `useProfile` が false に設定されている場合の AWS リージョン。
+
+### サンプルスクリプト
+
+```bash
+#!/bin/bash
+set -e
+IFS='|'
+
+REACTCONFIG="{\
+\"SourceDir\":\"src\",\
+\"DistributionDir\":\"build\",\
+\"BuildCommand\":\"npm run-script build\",\
+\"StartCommand\":\"npm run-script start\"\
+}"
+AWSCLOUDFORMATIONCONFIG="{\
+\"configLevel\":\"project\",\
+\"useProfile\":false,\
+\"profileName\":\"default\",\
+\"accessKeyId\":\"headlessaccesskeyid\",\
+\"secretAccessKey\":\"headlesssecrectaccesskey\",\
+\"region\":\"us-east-1\"\
+}"
+AMPLIFY="{\
+\"projectName\":\"headlessProjectName\",\
+\"appId\":\"amplifyServiceProjectAppId\",\
+\"envName\":\"myenvname\",\
+\"defaultEditor\":\"code\"\
+}"
+FRONTEND="{\
+\"frontend\":\"javascript\",\
+\"framework\":\"react\",\
+\"config\":$REACTCONFIG\
+}"
+PROVIDERS="{\
+\"awscloudformation\":$AWSCLOUDFORMATIONCONFIG\
+}"
+
+amplify pull \
+--amplify $AMPLIFY \
+--frontend $FRONTEND \
+--providers $PROVIDERS \
+--yes
+```
+
+## `amplify delete` パラメータ
+
+`amplify delete` コマンドは現在のプロジェクトに関連付けられたすべてのリソースをクラウド内で削除し、Amplify CLI によって作成されたすべてのローカルファイルをファイルシステムから削除します。`amplify delete` コマンドはこれらのパラメータを取ります:
+
+- `--force`
+
+### `--force`
+
+ヘッドレス環境での使用のために他のコマンドがサポートする `--yes` パラメータと同等です。
+
+### サンプルスクリプト
+
+```bash
+#!/bin/bash
+set -e
+
+amplify delete --force
+```
+
+## ヘッドレスカテゴリーペイロード
+
+一部のカテゴリーのヘッドレスモードは、コマンドパラメータを読み取る代わりに、`stdin` で JSON ペイロードを期待することで異なる方法で動作します。`--headless` フラグは、Amplify CLI が `stdin` から単一行の JSON ペイロードを読み取るべきであることを知らせるために使用されます。入力 JSON は期待される形状に対して検証されます (以下で説明)。検証に成功すると、操作が実行されます。
+
+> CLI は `stdin` から単一行を読み取るため、JSON に改行が含まれていないことを確認する必要があります。[jq](https://stedolan.github.io/jq/) を使用してこれを実現できます:
+
+```bash
+cat myAddApiRequest.json | jq -c | amplify add api --headless
+```
+
+jq の使用に代わる方法として、API を追加する Node.js スクリプトの例を以下に示します:
+
+```javascript
+const amplify_api = require('./myAddApiRequest.json');
+const fs = require('fs');
+const path = require('path');
+
+const schema = fs.readFileSync(
+  path.resolve(__dirname, './schema.graphql'),
+  'utf8'
+);
+
+import('execa').then((module) => {
+  amplify_api.serviceConfiguration.transformSchema = schema;
+  module
+    .execa('amplify', ['add', 'api', '--headless'], {
+      input: JSON.stringify(amplify_api)
+    })
+    .stdout.pipe(process.stdout);
+});
+```
+
+### サポートされるコマンド
+
+現在このメソッドを使用してヘッドレスパラメータを供給することをサポートしているコマンドは以下の通りです:
+
+- `amplify add auth --headless`
+- `amplify import auth --headless`
+- `amplify update auth --headless`
+- `amplify add api --headless`
+- `amplify update api --headless`
+- `amplify add storage --headless`
+- `amplify import storage --headless`
+- `amplify remove storage --headless`
+- `amplify update storage --headless`
+
+### ペイロード構造
+
+`stdin` で供給される JSON オブジェクトの構造は [amplify-headless-interface](https://www.npmjs.com/package/amplify-headless-interface) で定義されています。このパッケージには、以下の JSON スキーマと TypeScript 定義が含まれています:
+
+- [Add Auth ペイロード](https://github.com/aws-amplify/amplify-cli/blob/main/packages/amplify-headless-interface/src/interface/auth/add.ts)
+- [Import Auth ペイロード](https://github.com/aws-amplify/amplify-cli/blob/main/packages/amplify-headless-interface/src/interface/auth/import.ts)
+- [Update Auth ペイロード](https://github.com/aws-amplify/amplify-cli/blob/main/packages/amplify-headless-interface/src/interface/auth/update.ts)
+- [Add API ペイロード](https://github.com/aws-amplify/amplify-cli/blob/main/packages/amplify-headless-interface/src/interface/api/add.ts)
+- [Update API ペイロード](https://github.com/aws-amplify/amplify-cli/blob/main/packages/amplify-headless-interface/src/interface/api/update.ts)
+- [Add Storage ペイロード](https://github.com/aws-amplify/amplify-cli/blob/main/packages/amplify-headless-interface/src/interface/storage/add.ts)
+- [Import Storage ペイロード](https://github.com/aws-amplify/amplify-cli/blob/main/packages/amplify-headless-interface/src/interface/storage/import.ts)
+- [Remove Storage ペイロード](https://github.com/aws-amplify/amplify-cli/blob/main/packages/amplify-headless-interface/src/interface/storage/remove.ts)
+- [Update Storage ペイロード](https://github.com/aws-amplify/amplify-cli/blob/main/packages/amplify-headless-interface/src/interface/storage/update.ts)
+
+### (オプション) ヘッドレス開発の IDE セットアップ
+
+開始するには、`npm i amplify-headless-interface` を使用してインターフェースパッケージをインストールします。次に、エディターが対応している場合は、このパッケージ内のスキーマを認識するようにエディターを設定します。
+
+Visual Studio Code で、指定されたファイル拡張子をスキーマに関連付けるために `json.schemas` ブロック下の `settings.json` に以下を追加します:
+
+```json
+"json.schemas": [
+  {
+    "fileMatch": [
+      "*.addauth.json"
+    ],
+    "url": "./node_modules/amplify-headless-interface/schemas/auth/2/AddAuthRequest.schema.json"
+  },
+  {
+    "fileMatch": [
+      "*.updateauth.json"
+    ],
+    "url": "./node_modules/amplify-headless-interface/schemas/auth/2/UpdateAuthRequest.schema.json"
+  },
+  {
+    "fileMatch": [
+      "*.importauth.json"
+    ],
+    "url": "./node_modules/amplify-headless-interface/schemas/auth/1/ImportAuthRequest.schema.json"
+  },
+  {
+    "fileMatch": [
+      "*.addapi.json"
+    ],
+    "url": "./node_modules/amplify-headless-interface/schemas/api/1/AddApiRequest.schema.json"
+  },
+  {
+    "fileMatch": [
+      "*.updateapi.json"
+    ],
+    "url": "./node_modules/amplify-headless-interface/schemas/api/1/UpdateApiRequest.schema.json"
+  }
+]
+```
+
+`MyAuthTemplate.addauth.json` などのファイルを作成します。編集を開始すると、Visual Studio Code はスキーマに基づいてオートコンプリートと提案を提供します。
+
+> この設定を追加したくない場合は、JSON ボディに `$schema` ブロックを指定して、Visual Studio Code に JSON を検証する方法を指示することもできます。この設定の詳細については、Visual Studio Code の [JSON スキーマと設定](https://code.visualstudio.com/docs/languages/json#_json-schemas-and-settings)を参照してください。
+
+### 例: "amplify add api" ヘッドレス設定
+
+この例では、ヘッドレスモードを使用して `amplify add api` を設定する方法を示します。
+
+`newHeadlessApi.addapi.json` という名前のファイルを作成し、以下のコンテンツを貼り付けます:
+
+```json
+{
+  "version": 1,
+  "serviceConfiguration": {
+    "serviceName": "AppSync",
+    "apiName": "myNewHeadlessApi",
+    "transformSchema": "type Todo @model {\r\n  id: ID!\r\n  name: String!\r\n  description: String\r\n}",
+    "defaultAuthType": {
+      "mode": "API_KEY"
+    }
+  }
+}
+```
+
+`cat newHeadlessApi.addapi.json | jq -c | amplify add api --headless` を実行して API リソースを追加します。
+
+### 例: "amplify import auth" ヘッドレス設定
+
+この例では、ヘッドレスモードを使用して `amplify import auth` を設定する方法を示します。
+
+`authconfig.importauth.json` という名前のファイルを作成し、以下のコンテンツを貼り付けます:
+
+```json
+{
+  "version": 1,
+  "userPoolId": "myUserPoolId",
+  "webClientId": "myWebAppClientId",
+  "nativeClientId": "myNativeAppClientId",
+  "identityPoolId": "myIdentityPoolId" //optional
+}
+```
+
+`cat authconfig.importauth.json | jq -c | amplify import auth --headless` を実行して Cognito リソースをインポートします。
+
+> `jq` がインストールされていない場合は、[https://stedolan.github.io/jq/download](https://stedolan.github.io/jq/download) を参照してください。

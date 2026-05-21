@@ -1,0 +1,642 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'リゾルバーの上書きとカスタマイズ',
+  description: 'GraphQL リゾルバーは、型のスキーマ内のフィールドをデータソースに接続します。リゾルバーは、リクエストが満たされるメカニズムです。Amplify でリゾルバーを上書きまたはカスタムリゾルバーを追加する方法について説明します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert
+  isLegacy
+  url={'/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/'}
+/>
+
+## リゾルバーの上書き
+
+シンプルな _schema.graphql_ があるとします。
+
+```graphql
+type Todo @model {
+  id: ID!
+  name: String!
+  description: String
+}
+```
+
+プロジェクトがコンパイルされるときに生成される _Query.getTodo_ リゾルバーのリクエスト マッピング テンプレートの動作を変更したい場合、API プロジェクトの _resolvers_ ディレクトリに `Query.getTodo.req.vtl` という名前のファイルを作成します。次に `amplify push` または `amplify api gql-compile` を実行すると、自動生成されたテンプレートの代わりにリゾルバー テンプレートが使用されます。同様に `Query.getTodo.res.vtl` ファイルを作成して、リゾルバーのレスポンス マッピング テンプレートの動作を変更することができます。
+
+## カスタムリゾルバー
+
+生成されたリゾルバーでユースケースがカバーされていない場合、カスタム `Query`、`Mutation`、`Subscription` を追加できます。
+
+1. スキーマに必要な `Query`、`Mutation` または `Subscription` タイプを追加します。
+2. 新しく作成した `Query`、`Mutation` または `Subscription` 用のリゾルバーを作成するには、`<project-root>/amplify/backend/api/<api-name>/resolvers` フォルダー内にリクエストおよびレスポンス テンプレートを作成します。GraphQL Transformer は `<TypeName>.<FieldName>.<req/res>.vtl` という規則に従ってリゾルバーに名前を付けます。したがって、カスタム クエリ `myCustomQuery` を追加する場合、リゾルバーは `Query.myCustomQuery.req.vtl` および `Query.myCustomQuery.res.vtl` という名前になります。
+3. API の `<project-root>/amplify/backend/api/<api-name>/stacks` ディレクトリ内にカスタム スタックを作成してリゾルバー リソースを追加します。
+
+カスタム フィールドを追加するには、スキーマに次を追加します。
+
+```graphql
+  # <project-root>amplify/backend/api/<api-name>/schema.graphql
+
+  type Query {
+    # ここにすべてのカスタム クエリを追加します
+  }
+
+  type Mutation {
+    # ここにすべてのカスタム ミューテーションを追加します
+  }
+
+  type Subscription {
+    # ここにすべてのカスタム サブスクリプションを追加します
+  }
+
+```
+
+GraphQL Transformer は、デフォルトで `CustomResources.json` というファイルを `<project-root>/amplify/backend/api/<api-name>/stacks` 内に作成します。このファイルは、新しく追加された `Query`、`Mutation` または `Subscription` のカスタムリゾルバーを追加するために使用できます。カスタム スタックには、API に関する詳細を取得できるように、以下の引数が渡されます。
+
+<div class="table-wrapper" markdown="block">
+
+| パラメーター | タイプ | 可能な値 | 説明 |
+| :-- | :-- | --- | :-- |
+| AppSyncApiId | String |  | このプロジェクトに関連付けられた AppSync API の ID |
+| AppSyncApiName | String |  | AppSync API の名前 |
+| env | String |  | 環境名 |
+| S3DeploymentBucket | String |  | プロジェクトのすべてのデプロイ アセットを含む S3 バケット |
+| S3DeploymentRootKey | String |  | S3DeploymentBucket を基準とした S3 キー。デプロイ ディレクトリのルートを指します。 |
+| DynamoDBEnableServerSideEncryption | String | `true` または `false` | KMS により提供されるサーバー側暗号化を有効にします。 |
+| AuthCognitoUserPoolId | String |  | 接続する既存のユーザー プールの ID |
+| DynamoDBModelTableReadIOPS | Number |  | テーブルがサポートする読み取り IOPS の数 |
+| DynamoDBModelTableWriteIOPS | Number |  | テーブルがサポートする書き込み IOPS の数 |
+| DynamoDBBillingMode | String | `PAY_PER_REQUEST` または `PROVISIONED` | @model タイプを設定して、DynamoDB テーブルを PAY_PER_REQUEST または PROVISIONED 課金モードで作成します |
+| DynamoDBEnablePointInTimeRecovery | String | `true` または `false` | テーブルでポイント イン タイム リカバリを有効にするかどうか |
+| APIKeyExpirationEpoch | Number |  | API キーが期限切れになるべきエポック時刻 (秒単位) |
+| CreateAPIKey | Number | `0` または `1` | API キーを作成するかどうかを制御するブール値。プロパティの値は CLI によって自動的に設定されます。値が 0 に設定されている場合、API キーは作成されません |
+
+</div>
+
+カスタム スタックに追加された追加の値は、ルート スタックのパラメーターとして公開され、値は `<project-root>/amplify/backend/api/<api-name>/parameters.json` ファイルに値を追加することで設定できます。
+
+カスタムリゾルバーを追加するには、`CustomResource.json` のリソース セクションに以下を追加します。
+
+```json
+{
+  "Resources": {
+    "CustomQuery1": {
+      "Type": "AWS::AppSync::Resolver",
+      "Properties": {
+        "ApiId": {
+          "Ref": "AppSyncApiId"
+        },
+        "DataSourceName": "CommentTable",
+        "TypeName": "Query",
+        "FieldName": "myCustomQuery",
+        "RequestMappingTemplateS3Location": {
+          "Fn::Sub": [
+            "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.myCustomQuery.req.vtl",
+            {
+              "S3DeploymentBucket": {
+                "Ref": "S3DeploymentBucket"
+              },
+              "S3DeploymentRootKey": {
+                "Ref": "S3DeploymentRootKey"
+              }
+            }
+          ]
+        },
+        "ResponseMappingTemplateS3Location": {
+          "Fn::Sub": [
+            "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.myCustomQuery.res.vtl",
+            {
+              "S3DeploymentBucket": {
+                "Ref": "S3DeploymentBucket"
+              },
+              "S3DeploymentRootKey": {
+                "Ref": "S3DeploymentRootKey"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+リクエストおよびレスポンス テンプレートは `<project-root>/amplify/backend/api/<api-name>/resolvers` フォルダー内に配置する必要があります。リゾルバー テンプレートは [Apache Velocity Template Language](https://velocity.apache.org/engine/1.7/user-guide.html) (通常は VTL と呼ばれます) で記述されます。`Query.myCustomQuery.req.vtl` はリクエスト マッピング テンプレートであり、AppSync からの受信リクエストを受け取って、その後 GraphQL リゾルバーに渡される JSON ドキュメントに変換します。同様に、`Query.myCustomQuery.res.vtl` はレスポンス マッピング テンプレートです。これらのテンプレートは GraphQL リゾルバーのレスポンスを受け取り、ユーザーに返す前にデータを変換します。
+
+後でこのドキュメントで説明する VTL ファイルの例がいくつかあります。VTL の詳細情報、および GraphQL リゾルバーのコンテキストで VTL を使用する方法については、公式の [AppSync リゾルバー マッピング テンプレート リファレンス](https://docs.aws.amazon.com/appsync/latest/devguide/resolver-mapping-template-reference.html) を参照してください。
+
+### @model の DynamoDB テーブルをターゲットにするカスタムリゾルバーを追加する
+
+これは、_@model_ で作成された DynamoDB テーブルに対してより具体的なクエリを記述したい場合に便利です。たとえば、2 つの _@model_ タイプと _@connection_ ディレクティブのペアを持つこのスキーマがあるとします。
+
+```graphql
+type Todo @model {
+  id: ID!
+  name: String!
+  description: String
+  comments: [Comment] @connection(name: "TodoComments")
+}
+type Comment @model {
+  id: ID!
+  content: String
+  todo: Todo @connection(name: "TodoComments")
+}
+```
+
+このスキーマは、_Query.getTodo_、_Query.listTodos_、_Query.getComment_、_Query.listComments_ のトップ レベルのリゾルバーを生成し、_@connection_ を実装するための _Todo.comments_ および _Comment.todo_ のリゾルバーも生成します。内部的には、トランスフォーマーは Comment テーブル上の DynamoDB グローバル セカンダリ インデックスを作成しますが、_Query.getTodo.comments_ クエリ パスを介して特定の Todo オブジェクトのコメントをフェッチできるため、GSI をクエリするトップ レベルのクエリ フィールドは生成されません。_Query.commentsForTodo_ などのトップ レベルのクエリ フィールドを介して Todo オブジェクトのすべてのコメントをフェッチしたい場合は、以下を実行します。
+
+- 目的のフィールドを _schema.graphql_ に追加します。
+
+```graphql
+# ... 上記の Todo および Comment タイプ
+
+type CommentConnection {
+  items: [Comment]
+  nextToken: String
+}
+type Query {
+  commentsForTodo(todoId: ID!, limit: Int, nextToken: String): CommentConnection
+}
+```
+
+- リゾルバー リソースを _stacks/_ ディレクトリ内のスタックに追加します。`DataSourceName` は自動生成されます。ほとんどの場合、`{MODEL_NAME}Table` のようになります。データ ソース名を確認するには、**AppSync コンソール** (`amplify console api`) 内から検証し、**Data Sources** タブをクリックします。
+
+```json
+{
+  // ... テンプレートの残りの部分
+  "Resources": {
+    "QueryCommentsForTodoResolver": {
+      "Type": "AWS::AppSync::Resolver",
+      "Properties": {
+        "ApiId": {
+          "Ref": "AppSyncApiId"
+        },
+        "DataSourceName": "CommentTable",
+        "TypeName": "Query",
+        "FieldName": "commentsForTodo",
+        "RequestMappingTemplateS3Location": {
+          "Fn::Sub": [
+            "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.commentsForTodo.req.vtl",
+            {
+              "S3DeploymentBucket": {
+                "Ref": "S3DeploymentBucket"
+              },
+              "S3DeploymentRootKey": {
+                "Ref": "S3DeploymentRootKey"
+              }
+            }
+          ]
+        },
+        "ResponseMappingTemplateS3Location": {
+          "Fn::Sub": [
+            "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.commentsForTodo.res.vtl",
+            {
+              "S3DeploymentBucket": {
+                "Ref": "S3DeploymentBucket"
+              },
+              "S3DeploymentRootKey": {
+                "Ref": "S3DeploymentRootKey"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+- リゾルバー テンプレートを記述します。
+
+```text
+## Query.commentsForTodo.req.vtl **
+
+#set( $limit = $util.defaultIfNull($context.args.limit, 10) )
+{
+  "version": "2017-02-28",
+  "operation": "Query",
+  "query": {
+    "expression": "#connectionAttribute = :connectionAttribute",
+    "expressionNames": {
+        "#connectionAttribute": "commentTodoId"
+    },
+    "expressionValues": {
+        ":connectionAttribute": {
+            "S": "$context.args.todoId"
+        }
+    }
+  },
+  "scanIndexForward": true,
+  "limit": $limit,
+  "nextToken": #if( $context.args.nextToken ) "$context.args.nextToken" #else null #end,
+  "index": "gsi-TodoComments"
+}
+```
+
+```text
+## Query.commentsForTodo.res.vtl **
+
+$util.toJson($ctx.result)
+```
+
+### AWS Lambda 関数をターゲットにするカスタムリゾルバーを追加する
+
+Velocity は任意のコードを実行するための高速で安全な環境として便利ですが、複雑なビジネス ロジックを記述する場合、AWS Lambda 関数に同様に簡単に呼び出すことができます。以下はその方法です。
+
+- まず `amplify add function` を実行して関数を作成します。例の残りの部分では、`amplify add function` コマンドで「echofunction」という名前の関数を作成したことを前提としています。既に関数がある場合は、このステップをスキップできます。
+
+- AppSync Lambda 関数を呼び出す AWS Schema.graphql にフィールドを追加します。
+
+```graphql
+type Query {
+  echo(msg: String): String
+}
+```
+
+- スタックの _Resources_ ブロック内にデータソースとして関数を追加します。
+
+```json
+"EchoLambdaDataSource": {
+  "Type": "AWS::AppSync::DataSource",
+  "Properties": {
+    "ApiId": {
+      "Ref": "AppSyncApiId"
+    },
+    "Name": "EchoFunction",
+    "Type": "AWS_LAMBDA",
+    "ServiceRoleArn": {
+      "Fn::GetAtt": [
+        "EchoLambdaDataSourceRole",
+        "Arn"
+      ]
+    },
+    "LambdaConfig": {
+      "LambdaFunctionArn": {
+        "Fn::Sub": [
+          "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:echofunction-${env}",
+          { "env": { "Ref": "env" } }
+        ]
+      }
+    }
+  }
+}
+```
+
+- AppSync があなたに代わって Lambda 関数を呼び出すことを許可する AWS IAM ロールをスタックの _Resources_ ブロックに作成します。
+
+```json
+"EchoLambdaDataSourceRole": {
+  "Type": "AWS::IAM::Role",
+  "Properties": {
+    "RoleName": {
+      "Fn::Sub": [
+        "EchoLambdaDataSourceRole-${env}",
+        { "env": { "Ref": "env" } }
+      ]
+    },
+    "AssumeRolePolicyDocument": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Principal": {
+            "Service": "appsync.amazonaws.com"
+          },
+          "Action": "sts:AssumeRole"
+        }
+      ]
+    },
+    "Policies": [
+      {
+        "PolicyName": "InvokeLambdaFunction",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "lambda:invokeFunction"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub": [
+                    "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:echofunction-${env}",
+                    { "env": { "Ref": "env" } }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+- スタックの _Resources_ ブロックに AppSync リゾルバーを作成します。
+
+```json
+"QueryEchoResolver": {
+  "Type": "AWS::AppSync::Resolver",
+  "Properties": {
+    "ApiId": {
+      "Ref": "AppSyncApiId"
+    },
+    "DataSourceName": {
+      "Fn::GetAtt": [
+        "EchoLambdaDataSource",
+        "Name"
+      ]
+    },
+    "TypeName": "Query",
+    "FieldName": "echo",
+    "RequestMappingTemplateS3Location": {
+      "Fn::Sub": [
+        "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.echo.req.vtl",
+        {
+          "S3DeploymentBucket": {
+            "Ref": "S3DeploymentBucket"
+          },
+          "S3DeploymentRootKey": {
+            "Ref": "S3DeploymentRootKey"
+          }
+        }
+      ]
+    },
+    "ResponseMappingTemplateS3Location": {
+      "Fn::Sub": [
+        "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.echo.res.vtl",
+        {
+          "S3DeploymentBucket": {
+            "Ref": "S3DeploymentBucket"
+          },
+          "S3DeploymentRootKey": {
+            "Ref": "S3DeploymentRootKey"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+- プロジェクトの _resolvers_ ディレクトリにリゾルバー テンプレートを作成します。
+
+**resolvers/Query.echo.req.vtl**
+
+```text
+{
+  "version": "2017-02-28",
+  "operation": "Invoke",
+  "payload": {
+    "type": "Query",
+    "field": "echo",
+    "arguments": $utils.toJson($context.arguments),
+    "identity": $utils.toJson($context.identity),
+    "source": $utils.toJson($context.source)
+  }
+}
+```
+
+**resolvers/Query.echo.res.vtl**
+
+```
+$util.toJson($ctx.result)
+```
+
+`amplify push` を実行した後、`amplify api console` で AppSync コンソールを開き、この簡単なクエリで API をテストします。
+
+```graphql
+query {
+  echo(msg: "Hello, world!")
+}
+```
+
+### @searchable で作成された OpenSearch ドメインをターゲットにするカスタム ジオロケーション検索リゾルバーを追加する
+
+API にジオロケーション検索機能を追加するには、_@searchable_ ディレクティブを _@model_ タイプに追加します。
+
+```graphql
+type Todo @model @searchable {
+  id: ID!
+  name: String!
+  description: String
+  comments: [Comment] @connection(name: "TodoComments")
+}
+```
+
+次に `amplify push` を実行すると、Amazon OpenSearch ドメインが作成され、DynamoDB から OpenSearch にデータが自動的にストリーミングされるように設定されます。Todo タイプの _@searchable_ ディレクティブは _Query.searchTodos_ クエリ フィールドとリゾルバーを生成しますが、より具体的な検索機能が必要なことは珍しくありません。以下の手順に従ってカスタム検索リゾルバーを記述できます。
+
+- スキーマに関連するロケーションおよび検索フィールドを追加します。
+
+```graphql
+type Comment @model {
+  id: ID!
+  content: String
+  todo: Todo @connection(name: "TodoComments")
+}
+type Location {
+  lat: Float
+  lon: Float
+}
+type Todo @model @searchable {
+  id: ID!
+  name: String!
+  description: String
+  comments: [Comment] @connection(name: "TodoComments")
+  location: Location
+}
+type TodoConnection {
+  items: [Todo]
+  nextToken: String
+}
+input LocationInput {
+  lat: Float
+  lon: Float
+}
+type Query {
+  nearbyTodos(location: LocationInput!, km: Int): TodoConnection
+}
+```
+
+- スタックの _Resources_ ブロック内にリゾルバー レコードを作成します。
+
+```json
+"QueryNearbyTodos": {
+  "Type": "AWS::AppSync::Resolver",
+  "Properties": {
+    "ApiId": {
+      "Ref": "AppSyncApiId"
+    },
+    "DataSourceName": "ElasticSearchDomain",
+    "TypeName": "Query",
+    "FieldName": "nearbyTodos",
+    "RequestMappingTemplateS3Location": {
+      "Fn::Sub": [
+        "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.nearbyTodos.req.vtl",
+        {
+          "S3DeploymentBucket": {
+            "Ref": "S3DeploymentBucket"
+          },
+          "S3DeploymentRootKey": {
+            "Ref": "S3DeploymentRootKey"
+          }
+        }
+      ]
+    },
+    "ResponseMappingTemplateS3Location": {
+      "Fn::Sub": [
+        "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.nearbyTodos.res.vtl",
+        {
+          "S3DeploymentBucket": {
+            "Ref": "S3DeploymentBucket"
+          },
+          "S3DeploymentRootKey": {
+            "Ref": "S3DeploymentRootKey"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+- リゾルバー テンプレートを記述します。
+
+```
+## Query.nearbyTodos.req.vtl
+## Todo タイプのオブジェクトは /todo インデックスに格納されます
+
+#set( $indexPath = "/todo/doc/_search" )
+#set( $distance = $util.defaultIfNull($ctx.args.km, 200) )
+{
+  "version": "2017-02-28",
+  "operation": "GET",
+  "path": "$indexPath.toLowerCase()",
+  "params": {
+    "body": {
+      "query": {
+        "bool": {
+          "must": {
+            "match_all": {}
+          },
+          "filter": {
+            "geo_distance": {
+              "distance": "${distance}km",
+              "location": $util.toJson($ctx.args.location)
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+```
+## Query.nearbyTodos.res.vtl
+
+#set( $items = [] )
+#foreach( $entry in $context.result.hits.hits )
+  #if( !$foreach.hasNext )
+    #set( $nextToken = "$entry.sort.get(0)" )
+  #end
+  $util.qr($items.add($entry.get("_source")))
+#end
+$util.toJson({
+  "items": $items,
+  "total": $ctx.result.hits.total,
+  "nextToken": $nextToken
+})
+```
+
+- `amplify push` を実行します
+
+Amazon OpenSearch ドメインのデプロイには時間がかかる場合があります。この間に OpenSearch について読んで、これからアンロックしようとしている機能を確認してください。
+
+[OpenSearch の概要](https://docs.opensearch.org/latest/)
+
+- 更新が完了したら、オブジェクトを作成する前に、OpenSearch インデックス マッピングを更新します。
+
+インデックス マッピングは OpenSearch に対して、保存しようとしているデータをどのように扱うべきかを伝えます。デフォルトでは、`"location": { "lat": 40, "lon": -40 }` フィールドを持つオブジェクトを作成すると、OpenSearch はそのデータを _object_ タイプとして扱いますが、実際には _geo_point_ として扱う必要があります。マッピング API を使用して、OpenSearch にこの方法を伝えます。
+
+インデックス内のオブジェクトを作成する前に、必ず location フィールドが _geo_point_ であることを OpenSearch に伝えてください。そうしないと、インデックスを削除して再試行する必要があります。[Amazon OpenSearch コンソール](https://console.aws.amazon.com/aos/home) に移動して、この環境の GraphQL API ID を含む OpenSearch ドメインを見つけます。これをクリックして、OpenSearch ダッシュボード リンクを開きます。OpenSearch ダッシュボードを表示するには、[AWS Agent](https://addons.mozilla.org/en-US/firefox/addon/aws-agent/) などのブラウザー拡張機能をインストールし、AWS プロファイルの公開鍵と秘密鍵で設定して、ブラウザーがセキュリティの理由から OpenSearch ダッシュボードへのリクエストに署名できるようにする必要があります。OpenSearch ダッシュボードが開いたら、左側の「Dev Tools」タブをクリックして、ブラウザー内のコンソールを使用して以下のコマンドを実行します。
+
+```text
+# /todo インデックスが存在しない場合は作成します
+PUT /todo
+
+# location フィールドが geo_point であることを OpenSearch に伝えます
+PUT /todo/_mapping/doc
+{
+  "properties": {
+    "location": {
+      "type": "geo_point"
+    }
+  }
+}
+```
+
+- API を使用してオブジェクトを作成し、すぐにそれらを検索します。
+
+OpenSearch インデックス マッピングを更新した後、`amplify api console` で AWS AppSync コンソールを開き、これらのクエリを試してみてください。
+
+```graphql
+mutation CreateTodo {
+  createTodo(
+    input: {
+      name: "Todo 1"
+      description: "The first thing to do"
+      location: { lat: 43.476446, lon: -110.767786 }
+    }
+  ) {
+    id
+    name
+    location {
+      lat
+      lon
+    }
+    description
+  }
+}
+
+query NearbyTodos {
+  nearbyTodos(location: { lat: 43.476546, lon: -110.768786 }, km: 200) {
+    items {
+      id
+      name
+      location {
+        lat
+        lon
+      }
+    }
+  }
+}
+```
+
+_Mutation.createTodo_ を実行すると、データは AWS Lambda 経由で OpenSearch に自動的にストリーミングされ、_Query.nearbyTodos_ を介してほぼ即座に利用可能になります。

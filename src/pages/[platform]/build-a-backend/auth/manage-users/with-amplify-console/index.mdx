@@ -1,0 +1,81 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify コンソールでユーザーを管理する',
+  description:
+    'Amplify コンソールで アプリケーションの Cognito ユーザーとグループを管理する',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify コンソールの**ユーザー管理**ページは、アプリケーションのユーザーを管理するためのユーザーフレンドリーなインターフェイスを提供します。ユーザーとグループを作成および管理し、ユーザー属性を編集し、ユーザーを一時停止できます。
+
+まだ**auth**リソースを作成していない場合は、[Auth セットアップガイド](/[platform]/build-a-backend/auth/set-up-auth/)を参照してください。
+
+## ユーザー管理へのアクセス
+
+auth リソースをデプロイした後、Amplify コンソールでマネージャーにアクセスできます。
+
+1. [Amplify コンソール](https://console.aws.amazon.com/amplify/home)にログインしてアプリを選択します。
+2. アクセスするブランチを選択します。
+3. 左のナビゲーションバーから**認証**を選択します。
+4. 次に、**ユーザー管理**を選択します。
+
+<Video src="/images/gen2/manage/user-manager.mp4" description="ビデオ - [Amplify コンソールでユーザー管理にアクセス]"/>
+
+### ユーザーを作成するには
+
+1. **ユーザー管理**ページで、**ユーザー**タブを選択します。
+2. **ユーザーを作成**を選択します。
+3. **ユーザーを作成**ウィンドウで、一意の識別子にメールアドレス、ユーザー名、または電話番号を入力します。一時パスワードにパスワードを入力します。
+4. ユーザーを作成を選択します。
+
+<Callout>
+
+ユーザーは[事前構築された UI コンポーネント](/[platform]/frontend/auth/using-the-authenticator/)と [Amplify ライブラリ](/[platform]/frontend/auth/sign-up/)を使用して確認できます。
+
+</Callout>
+
+## グループを作成するには
+
+1. **ユーザー管理**ページで、**グループ**タブを選択し、**グループを作成**を選択します。
+2. **グループを作成**ウィンドウで、**タイトル**にグループの名前を入力します。
+3. **グループを作成**を選択します。
+
+
+## ユーザーをグループに追加するには
+
+1. **ユーザー管理**ページで、**グループ**タブを選択します。
+2. ユーザーを追加するグループの名前を選択します。
+3. **ユーザーを追加**を選択します。
+4. **グループにユーザーを追加**ウィンドウで、**検索**メニューから追加するユーザーを検索する方法を選択します。_メール_、_電話番号_、または_ユーザー名_を選択できます。
+5. グループに追加するユーザーを 1 人以上追加し、**ユーザーを追加**を選択します。
+
+## グループを削除するには
+
+1. **ユーザー管理**ページで、**グループ**タブを選択します。
+2. **グループ**セクションで、削除するグループの名前を選択します。
+3. **削除**を選択します。
+4. 確認ウィンドウが表示されます。_削除_を入力して、**削除を確認**を選択します。

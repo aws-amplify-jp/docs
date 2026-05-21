@@ -1,0 +1,149 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'フォームデータの検証',
+  description: "Amplify生成フォームに検証ルールを追加およびカスタマイズする",
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+検証ルールを追加してユーザー入力をサニタイズします。デフォルトでは、Amplify生成フォームはデータモデルに基づいて検証ルールの範囲を自動推論します。例えば、`AWSEmail`フィールドを持つデータモデルが与えられた場合、生成されたフォーム入力は自動的にメール検証ルールを実行します。
+
+## 設定可能な検証ルール
+
+デフォルトでは、以下の検証ルールを設定できます：
+
+| 入力タイプ | 設定可能な検証ルール |
+| --- | --- |
+| `String` | - で始まる <br/> - で終わる <br/> - を含む <br/> - を含まない <br/> - N文字未満である <br/> - 最低N文字である <br/> |
+| `Int`, `Float` | - より大きい <br/> - より小さい <br/> - と等しい <br/> |
+| `AWSDate`, `AWSTime`, `AWSDateTime` | - より前である <br/> - より後である <br/> |
+
+### 自動設定される検証ルール
+
+以下のタイプについては、フォーム入力に検証ルールを自動的に適用します：
+
+- `AWSIPAddress`: 入力値は有効なIPv4またはIPv6アドレスである必要があります。
+- `AWSURL`: 入力値はスキーマ（`http`、`mailto`）とパス部分で構成される必要があります。パス部分には2つの前方スラッシュ（//）を含めることはできません。
+- `AWSEmail`: 入力値は`<local-part>@<domain-part>`形式のメールアドレスである必要があります。
+- `AWSJSON`: 入力値は有効なJSONである必要があります。
+- `AWSPhone`: 入力値は、桁のグループを分離するためにスペースまたはハイフンを含むことができる電話番号である必要があります。
+
+## 検証ルールを追加する
+
+すべてのフォームは、コードを通じて追加の検証ルールを提供するための`onValidate`イベントハンドラーを提供します。検証したいフィールドの検証関数を含むオブジェクトを返します。以下の例では、`address`は数字で始まる必要があり、そうでない場合は既存の自動生成された検証応答を返します。
+
+```jsx
+<HomeCreateForm
+  onValidate={{
+    address: (value, validationResponse) => {
+      const firstWord = value.split('')[0];
+      if (!isNaN(firstWord)) {
+        // check if the first word is a number
+        return {
+          hasError: true,
+          errorMessage: 'Address must start with a number'
+        };
+      }
+      return validationResponse;
+    }
+  }}
+/>
+```
+
+**注：** 検証関数は以下の形状の検証応答を返す必要があります：
+
+```ts
+type ValidationResponse = {
+  hasError: boolean;
+  errorMessage?: string;
+};
+```
+
+### ネストされたJSONデータの検証ルールを追加する
+
+Amplify生成フォームはネストされたJSONオブジェクトも生成できます。例えば、以下のJSONオブジェクトに基づいて新しい`ProductForm`コンポーネントを作成できます：
+
+```json
+{
+  "name": "Piano",
+  "price": {
+    "maxDiscount": 0.15,
+    "default": 999,
+    "currency": "$"
+  }
+}
+```
+
+ネストされたオブジェクトに検証ルールを追加するには、データと同じネストされた構造で検証関数を渡します：
+
+```js
+<ProductForm
+  onValidate={{
+    price: {
+      currency: (value, validationResponse) => {
+        // Pass validation function to match the nested object
+        const allowedCurrencies = ['$', '€', '￥', '₹'];
+        if (!allowedCurrencies.includes(value)) {
+          return {
+            hasError: true,
+            errorMessage: 'Currency must be either "$", "€", "￥", or "₹".'
+          };
+        }
+        return validationResponse;
+      }
+    }
+  }}
+  onSubmit={(fields) => {
+    /* handle form data submission */
+  }}
+/>
+```
+
+### 非同期フォーム検証のための外部APIの呼び出し
+
+場合によっては、フォームデータが送信される前に、外部APIまたはデータベースで入力を非同期に検証する必要があります。
+
+`onValidate`プロップでPromiseを返して、非同期検証ルールを実行します。次の例では、ライセンス番号に基づいて不動産エージェントが存在するかどうかを外部APIで確認しています：
+
+```jsx
+<AgentContactForm
+  onValidate={{
+    licenseNumber: (value, validationResponse) => {
+      // fetch calls an external API,
+      // which ultimately returns a Promise<ValidationResponse>
+      return fetch(`http://localhost:3000/api/agent/${value}`).then(
+        (response) => {
+          if (response.status !== 200) {
+            return {
+              // If the request failed, return a validation error
+              hasError: true,
+              errorMessage: 'No agent was not found with that license number.'
+            };
+          }
+          return validationResponse;
+        }
+      );
+    }
+  }}
+  onSubmit={(fields) => {
+    /* Handle form submission */
+  }}
+/>
+```

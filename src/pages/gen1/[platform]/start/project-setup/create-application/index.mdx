@@ -1,0 +1,327 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'アプリケーションを作成する',
+  description: 'カテゴリ固有の例を追加する前のAmplifyのプロジェクトセットアップ。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'vue',
+    'swift',
+    'android',
+    'react-native',
+    'flutter'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import common_create_application from '/src/fragments/lib/project-setup/native_common/create-application/common.mdx';
+import reactnative_getting_started from '/src/fragments/start/getting-started/reactnative/setup.mdx';
+
+<Fragments
+  fragments={{
+    swift: common_create_application,
+    android: common_create_application,
+    flutter: common_create_application,
+    'react-native': reactnative_getting_started
+  }}
+/>
+
+<InlineFilter filters={['javascript', 'react', 'vue', 'nextjs', 'angular']}>
+
+<BlockSwitcher>
+
+<Block name="Next.js">
+
+<Callout warning>
+
+**注意:** Amplify JS v6はNext.jsの次のバージョン範囲をサポートしています: `>=13.5.0 <16.0.0`。
+Amplifyと統合するために、正しいバージョンがインストールされていることを確認してください。
+
+</Callout>
+
+プロジェクトをセットアップするには、[`create-next-app`](https://nextjs.org/docs/api-reference/create-next-app)ツールを使用して新しいNext.jsアプリを作成する必要があります。その後、Amplifyを追加して新しいプロジェクトを初期化します。
+
+以下のコマンドを実行し、指示に従ってNext.jsアプリを作成してください。
+
+```shellscript
+npx create-next-app@">=13.5.0 <16.0.0" next-amplified
+```
+
+次に、以下のコマンドを実行してNext.jsアプリのルートに移動します。
+
+```shellscript
+cd next-amplified
+```
+
+以下のコマンドを使用して、開発モードでアプリを実行できます:
+
+```bash
+npm run dev
+```
+
+</Block>
+
+<Block name="Angular">
+
+[Angular CLI](https://github.com/angular/angular-cli)を使用して新しいAngularアプリをブートストラップします:
+
+```bash
+npx -p @angular/cli ng new amplify-app
+
+? Would you like to add Angular routing? Y
+? Which stylesheet format would you like to use? (your preferred stylesheet provider)
+
+cd amplify-app
+```
+
+<BlockSwitcher>
+
+<Block name="Angular 15">
+
+まず、`src/polyfills.ts`を作成し、以下を追加します:
+
+```javascript
+(window as any).global = window;
+(window as any).process = {
+  env: { DEBUG: undefined },
+};
+```
+
+次に、`angular.json`ファイルを開き、`src/polyfills.ts`を`angular.json`の`polyfills`配列に追加します。これらの配列はprojects.`<project-name>.architect.<task-name>.options`にあります。
+
+```javascript
+"polyfills": [
+  "zone.js",
+  "src/polyfills.ts"
+],
+```
+
+最後に、`src/polyfills`を`tsconfig.app.json`のファイルに追加してください:
+
+```javascript
+{
+  "files": [
+    "src/main.ts",
+    "src/polyfills.ts"
+  ],
+}
+```
+
+</Block>
+
+<Block name="Angular 10-14">
+
+以下を`src/polyfills.ts`ファイルに追加して再度作成してください:
+
+```javascript
+(window as any).global = window;
+(window as any).process = {
+  env: { DEBUG: undefined },
+};
+```
+
+</Block>
+
+</BlockSwitcher>
+
+</Block>
+
+<Block name="ReactJS">
+
+開始するには、まずViteを使用して新しいReactアプリを作成し、Amplify CLIをインストールして使用してアプリにバックエンド機能を追加し始めます。
+
+プロジェクトディレクトリから、以下のコマンドを実行してプロンプトに従ってください:
+
+```bash
+npm create vite@latest
+```
+
+これにより、新しいディレクトリにReactアプリが作成されます。新しいディレクトリに移動して、以下のコマンドを使用してアプリを実行してください:
+
+```bash
+cd <your project directory>
+```
+
+次に、依存関係をインストールし、以下のコマンドを実行して開発サーバーを実行してください:
+
+```bash
+npm install
+npm run dev
+```
+
+これにより開発サーバーが実行され、アプリをローカルでプレビューできます。
+
+</Block>
+
+<Block name="VueJS">
+
+Vue Viteパワーの`create-app`を使用して新しいVue 3アプリをブートストラップします(必要な設定を選択し、このプロジェクトの例としてデフォルトを選択):
+
+```bash
+npm init vue@3
+
+Need to install the following packages:
+  create-vue@3
+Ok to proceed? (y) y
+
+✔ Project name: … myamplifyproject
+✔ Add TypeScript? … No
+✔ Add JSX Support? … No
+✔ Add Vue Router for Single Page Application development? … No
+✔ Add Pinia for state management? … No
+✔ Add Vitest for Unit Testing? … No
+✔ Add Cypress for both Unit and End-to-End testing? … No
+✔ Add ESLint for code quality? … No
+```
+
+これにより、新しいディレクトリにVueアプリが作成されます。新しいディレクトリに移動して、以下のコマンドを使用してアプリを実行してください:
+
+```bash
+cd <your project directory>
+```
+
+次に、依存関係をインストールし、以下のコマンドを実行して開発サーバーを実行してください:
+
+```bash
+npm install
+npm run dev
+```
+
+これにより開発サーバーが実行され、アプリをローカルでプレビューできます。
+
+</Block>
+
+</BlockSwitcher>
+
+## 新しいAmplifyバックエンドを作成する
+
+実行中のアプリができたので、Amplifyをセットアップして、必要なバックエンドサービスを設定する時間です。
+
+<Callout warning>
+
+システムのAmplify CLIバージョンが`12.5.1`より高いことを確認してください。CLIバージョンは`amplify --version`を実行することで確認できます。
+
+</Callout>
+
+新しいターミナルを開きます。プロジェクトのルートから以下を実行してください:
+
+```bash
+amplify init
+```
+
+Amplifyを初期化すると、アプリに関する情報の入力を求めるプロンプトが表示されます。
+
+```console
+? Enter a name for the project (nextamplified)
+The following configuration will be applied:
+
+Project information
+| Name: nextamplified
+| Environment: dev
+| Default editor: Visual Studio Code
+| App type: javascript
+| Javascript framework: <detected framework>
+| Source Directory Path: src
+| Distribution Directory Path: build
+| Build Command: npm run-script build
+| Start Command: npm run-script start
+
+? Initialize the project with the above configuration? Yes
+Using default provider  awscloudformation
+? Select the authentication method you want to use: AWS profile
+
+For more information on AWS Profiles, see:
+https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html
+
+? Please choose the profile you want to use default
+```
+
+新しいAmplifyプロジェクトを初期化すると、いくつかのことが起こります:
+
+- バックエンド定義を保存する`amplify`という最上位ディレクトリが作成されます。チュートリアル中に、GraphQL APIや認証などの機能を追加します。機能を追加するにつれて、`amplify`フォルダはバックエンドスタックを定義するインフラストラクチャ・アズ・コード・テンプレートで拡大します。インフラストラクチャ・アズ・コードは、再現可能なバックエンドスタックを作成するためのベストプラクティスです。
+- Amplifyで作成するサービスのすべての設定を保持する`amplifyconfiguration.json`ファイルが`src`ディレクトリに作成されます。これにより、Amplifyクライアントはバックエンドサービスに関する必要な情報を取得できます。
+- `.gitignore`ファイルが変更され、生成されたファイルの一部が無視リストに追加されます
+- AWS Amplify Consoleでクラウドプロジェクトが作成されます。このプロジェクトには`amplify console`を実行することでアクセスできます。Consoleはバックエンド環境のリスト、Amplifyカテゴリごとのプロビジョニングされたリソースへのディープリンク、最近のデプロイメントのステータス、バックエンドリソースの昇格、複製、プル、削除方法に関する指示を提供します。
+
+<InlineFilter filters={['react-native']}>
+<Callout>
+
+**注:** Expo EAS buildを使用している場合は、`eas build`コマンドを実行する前に`amplifyconfiguration.json`ファイルをローカルgitリポジトリに強制的にコミットする必要があります。これは`amplifyconfiguration.json`ファイルがデフォルトの`.gitignore`で除外されており、`eas build`コマンドはビルドに追跡されていないファイルを含めないためです。<b>ビルドが完了したら、`amplifyconfiguration.json`ファイルをgitリポジトリから削除し、リモートリポジトリにコミットおよびプッシュしないでください</b>。
+
+</Callout>
+</InlineFilter>
+
+Amplify CLIを使用してカテゴリを追加または削除し、バックエンド設定を更新すると、`amplifyconfiguration.json`の設定は自動的に更新されます。
+
+## Amplifyライブラリをインストールする
+
+<BlockSwitcher>
+
+<Block name="Next.js">
+
+Next.jsアプリにAmplifyの使用を開始するために必要な依存関係をインストールします。
+
+```bash
+npm install aws-amplify @aws-amplify/adapter-nextjs
+```
+
+`aws-amplify`パッケージはアプリでAmplifyを操作するためのメインライブラリです。`@aws-amplify/adapter-nextjs`はサーバーサイドレンダリング(SSR)などのユースケースのためにNext.jsアプリのサーバー側でAmplify APIを使用できるようにするアダプタ関数を提供します。
+
+Next.jsアプリでAmplifyを使用する詳細については、[Next.jsでAmplifyを使用する](/gen1/nextjs/build-a-backend/server-side-rendering/)を参照してください。
+
+</Block>
+
+<Block name="Angular">
+
+Angularアプリにамплify の使用を開始するために必要な依存関係をインストールします。
+
+```bash
+npm install aws-amplify
+```
+
+</Block>
+
+<Block name="ReactJS">
+
+Reactアプリにアンプリファイの使用を開始するために必要な依存関係をインストールします。
+
+```bash
+npm install aws-amplify
+```
+
+</Block>
+
+<Block name="VueJS">
+
+Vueアプリにアンプリファイの使用を開始するために必要な依存関係をインストールします。
+
+```bash
+npm install aws-amplify
+```
+
+</Block>
+
+</BlockSwitcher>
+
+これで、アプリケーションに機能を追加し始める準備が整いました。以下は、アプリに追加し始めることができる機能の例です。
+
+- [認証](/gen1/[platform]/prev/build-a-backend/auth/set-up-auth/)
+- [ファイルストレージ](/gen1/[platform]/prev/build-a-backend/storage/set-up-storage/)
+- [アナリティクス](/gen1/[platform]/prev/build-a-backend/more-features/analytics/set-up-analytics/)
+
+</InlineFilter>

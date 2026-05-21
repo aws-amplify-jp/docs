@@ -1,0 +1,332 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'アプリケーションデータの作成、更新、削除',
+  description: 'Amplify で GraphQL API を使用してデータを作成および更新する方法について詳しく説明します',
+  platforms: [
+    'flutter',
+    'swift',
+    'android',
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios_maintenance from '/src/fragments/lib-v1/ios-maintenance.mdx';
+
+<Fragments fragments={{ swift: ios_maintenance }} />
+
+import ios0 from '/src/fragments/lib-v1/graphqlapi/ios/mutate-data.mdx';
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+<Fragments fragments={{ swift: ios0 }} />
+
+import android_maintenance from '/src/fragments/lib-v1/android-maintenance.mdx';
+
+<Fragments fragments={{ android: android_maintenance }} />
+
+import android1 from '/src/fragments/lib-v1/graphqlapi/android/mutate-data.mdx';
+
+<Fragments fragments={{ android: android1 }} />
+
+import flutter3 from '/src/fragments/lib-v1/graphqlapi/flutter/mutate-data.mdx';
+
+<Fragments fragments={{ flutter: flutter3 }} />
+
+<InlineFilter filters={["javascript", "react-native", "angular", "nextjs", "react", "vue"]}>
+
+このガイドでは、Amplify ライブラリの GraphQL クライアントを使用してデータを作成、更新、削除する方法を学習します。
+
+開始する前に、以下が必要です:
+
+- [API に接続されたアプリケーション](/gen1/[platform]/prev/build-a-backend/graphqlapi/connect-to-api/)
+
+## ミューテーションを実行してアプリケーションデータを作成、更新、削除する
+
+GraphQL では、ミューテーションはデータを作成、更新、または削除するために使用される API です。これはデータを読み取るが変更しないために使用されるクエリとは異なります。以下の例は、Amplify GraphQL クライアントを使用してアイテムを作成、更新、削除する方法を示しています。
+
+### アイテムを作成する
+
+API とミューテーションをインポートしてからアイテムを追加できます:
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { API } from 'aws-amplify';
+import * as mutations from './graphql/mutations';
+import { GraphQLQuery } from '@aws-amplify/api';
+import { CreateTodoInput, CreateTodoMutation } from './API';
+
+const todoDetails: CreateTodoInput = {
+  name: 'Todo 1',
+  description: 'Learn AWS AppSync'
+};
+
+const newTodo = await API.graphql<GraphQLQuery<CreateTodoMutation>>({
+  query: mutations.createTodo,
+  variables: { input: todoDetails }
+});
+```
+
+作成されたアイテム `Learn AWS AppSync` が表示されます。
+
+</Block>
+
+<Block name="JavaScript">
+
+```js
+import { API } from 'aws-amplify';
+import * as mutations from './graphql/mutations';
+
+const todoDetails = {
+  name: 'Todo 1',
+  description: 'Learn AWS AppSync'
+};
+
+const newTodo = await API.graphql({
+  query: mutations.createTodo,
+  variables: { input: todoDetails }
+});
+```
+
+作成されたアイテム `Learn AWS AppSync` が表示されます。
+
+</Block>
+
+</BlockSwitcher>
+
+<Callout>
+
+**注:** `createdAt` フィールドを指定する必要はありません。Amplify は自動的にこのフィールドに値を入力します。
+
+</Callout>
+
+### アイテムを更新する
+
+アイテムを更新するには、GraphQL 更新ミューテーションを使用します:
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { API } from 'aws-amplify';
+import * as mutations from './graphql/mutations';
+import { GraphQLQuery } from '@aws-amplify/api';
+import { UpdateTodoInput, UpdateTodoMutation } from './API';
+
+const todoDetails: UpdateTodoInput = {
+  id: 'some_id',
+  description: 'Updated description'
+};
+
+const updatedTodo = await API.graphql<GraphQLQuery<UpdateTodoMutation>>({
+  query: mutations.updateTodo,
+  variables: { input: todoDetails }
+});
+```
+
+</Block>
+
+<Block name="JavaScript">
+
+```js
+import { API } from 'aws-amplify';
+import * as mutations from './graphql/mutations';
+
+const todoDetails = {
+  id: 'some_id',
+  //  _version: 'current_version', // add the "_version" field if your AppSync API has conflict detection (required for DataStore) enabled
+  description: 'Updated description'
+};
+
+const updatedTodo = await API.graphql({
+  query: mutations.updateTodo,
+  variables: { input: todoDetails }
+});
+```
+
+</Block>
+
+</BlockSwitcher>
+
+<Callout>
+
+**注:**
+
+- `updatedAt` フィールドを指定する必要はありません。Amplify は自動的にこのフィールドに値を入力します。
+- API で予想されていない _追加の_ 入力フィールドを指定する場合、このクエリは失敗します。これはクエリによって返される `error` フィールドで確認できます。GraphQL では、エラーは他の言語の例外のようにスローされません。代わりに、すべてのエラーはキャプチャされ、クエリ結果の `error` フィールドの一部として返されます。
+
+</Callout>
+
+### アイテムを削除する
+
+削除ミューテーションを使用して Todo を削除できます。削除するアイテムを指定するには、そのアイテムの `id` を指定するだけで済みます:
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { API } from 'aws-amplify';
+import * as mutations from './graphql/mutations';
+import { GraphQLQuery } from '@aws-amplify/api';
+import { DeleteTodoInput, DeleteTodoMutation } from './API';
+
+const todoDetails: DeleteTodoInput = {
+  id: 'some_id'
+};
+
+const deletedTodo = await API.graphql<GraphQLQuery<DeleteTodoMutation>>({
+  query: mutations.deleteTodo,
+  variables: { input: todoDetails }
+});
+```
+
+</Block>
+
+<Block name="JavaScript">
+
+```js
+import { API } from 'aws-amplify';
+import * as mutations from './graphql/mutations';
+
+const todoDetails = {
+  id: 'some_id'
+};
+
+const deletedTodo = await API.graphql({
+  query: mutations.deleteTodo,
+  variables: { input: todoDetails }
+});
+```
+
+</Block>
+
+</BlockSwitcher>
+
+<Callout>
+
+**注:** 関連するレコードを削除する前に、結合テーブルレコードを削除する必要があります。たとえば、Post と Tags 間の多対多の関係の場合、Post または Tag を削除する前に PostTags 結合レコードを削除してください。
+
+</Callout>
+
+<Accordion title='データをミューテーションするためのカスタム認可モード' headingLevel='4' eyebrow='詳しく学ぶ'>
+
+各 AWS AppSync API は、アプリを設定するときにデフォルトの認可モードを使用します。不正なエラーが発生した場合は、認可モードを更新する必要があります。このデフォルトをオーバーライドするには、`authMode` プロパティを渡します。以下の例は、カスタム認可モードでデータをミューテーションする方法を示しています:
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { API } from 'aws-amplify';
+import { GraphQLQuery, GRAPHQL_AUTH_MODE } from '@aws-amplify/api';
+import * as mutations from './graphql/mutations';
+import { CreateTodoInput, CreateTodoMutation } from './API';
+
+const todoDetails: CreateTodoInput = {
+  id: 'some_id',
+  name: 'My todo!',
+  description: 'Hello world!'
+};
+
+const todo = await API.graphql<GraphQLQuery<CreateTodoMutation>>({
+  query: mutations.createTodo,
+  variables: { input: todoDetails },
+  authMode: GRAPHQL_AUTH_MODE.AWS_IAM
+});
+```
+
+</Block>
+
+<Block name="JavaScript">
+
+```js
+import { API } from 'aws-amplify';
+import { GRAPHQL_AUTH_MODE } from '@aws-amplify/api';
+import * as mutations from './graphql/mutations';
+
+const todoDetails = {
+  id: 'some_id',
+  name: 'My todo!',
+  description: 'Hello world!'
+};
+
+const todo = await API.graphql({
+  query: mutations.createTodo,
+  variables: { input: todoDetails },
+  authMode: GRAPHQL_AUTH_MODE.AWS_IAM
+});
+```
+
+</Block>
+</BlockSwitcher>
+
+</Accordion>
+
+## ミューテーションリクエストをキャンセルする
+
+`API.graphql(...)` によって返される GraphQL リクエストプロミスで `.cancel` を呼び出すことで、任意の GraphQL API リクエストをキャンセルできます。
+
+```javascript
+const promise = API.graphql({ query: "..." });
+
+try {
+  await promise;
+} catch (error) {
+  console.log(error);
+  // If the error is because the request was cancelled you can confirm here.
+  if (API.isCancel(error)) {
+    console.log(error.message); // "my message for cancellation"
+    // handle user cancellation logic
+  }
+}
+
+...
+
+// To cancel the above request
+API.cancel(promise, "my message for cancellation");
+```
+
+`API.graphql()` から返されたプロミスが変更されていないことを確認する必要があります。通常、async 関数は返されるプロミスを別のプロミスにラップします。たとえば、以下は **機能しません**:
+
+```javascript
+async function makeAPICall() {
+  return API.graphql({ query: '...' });
+}
+const promise = makeAPICall();
+
+// The following will NOT cancel the request.
+API.cancel(promise, 'my error message');
+```
+
+## まとめ
+
+おめでとうございます! **アプリケーションデータの作成、更新、削除** ガイドが完了しました。このガイドでは、GraphQL API を通じてアプリデータを作成、更新、削除しました。
+
+## 次のステップ
+
+推奨される次のステップには、API を使用してデータをクエリし、リアルタイムイベントをサブスクライブして、データの変更を監視することが含まれます。このタスクに役立つリソースは以下のとおりです:
+
+- [アプリケーションデータを読み取る](/gen1/[platform]/prev/build-a-backend/graphqlapi/query-data/)
+- [リアルタイムイベントにサブスクライブする](/gen1/[platform]/prev/build-a-backend/graphqlapi/subscribe-data/)
+
+</InlineFilter>

@@ -1,0 +1,50 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '競合を解決する',
+  description: 'イベントが送信され、複数のアプリ内メッセージで設定された条件を満たす場合の競合の解決方法を学習します。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ],
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+イベントが送信され、複数のアプリ内メッセージで設定された条件を満たす稀なケースでは、ライブラリはどのメッセージを返すかを決定する必要があります。そのような競合が発生した場合、In-App Messagingは以下の方法でメッセージを選択します。
+
+1. メッセージをキャンペーン有効期限の順序でソートする
+2. ソートされたトップメッセージを返す(有効期限が最も近いメッセージ)
+
+ただし、このような競合解決方法が希望の方法でない場合があるため、独自の競合ハンドラーを設定することができます。
+
+```js title="src/index.js"
+import { setConflictHandler } from 'aws-amplify/in-app-messaging';
+
+/**
+ * 競合解決戦略がどのようなものであれ、ハンドラーは常に
+ * アプリ内メッセージの配列を受け入れ、単一のアプリ内メッセージを返す必要があります。
+ */
+const myConflictHandler = (messages) => {
+  // ランダムにメッセージを返す
+  const randomIndex = Math.floor(Math.random() * messages.length);
+  return messages[randomIndex];
+};
+
+setConflictHandler(myConflictHandler);
+```

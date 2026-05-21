@@ -1,0 +1,24 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'デバイストークンを受け取る',
+  description: 'プッシュ通知で使用するデバイストークンを受け取ります。',
+  platforms: ['react-native','flutter']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import commonRoute from '/src/fragments/lib/push-notifications/common/receive-device-token.mdx';
+
+<Fragments fragments={{ flutter: commonRoute, 'react-native': commonRoute }} />

@@ -1,0 +1,75 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'コレクション',
+  description: 'Figma から React コードへ (Amplify Studio)',
+  platforms: [
+    'javascript',
+    'nextjs',
+    'react'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify Studio では、個々の UI コンポーネントに基づいてリストとグリッドを構築することもできます。最新のホームを紹介する `NewHomes` グリッドを作成しましょう。
+
+## コレクションを作成する
+
+1. アプリの [Amplify Studio](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app) を起動します
+2. **Design** メニューから **UI Library** を選択します
+3. **Components** セクションの下にある **Component** を選択します
+4. UI コンポーネント エディタの右上にある **Create collection** ボタンを選択します
+
+新しいコレクション コンポーネントの名前を指定するか、Studio が提供するデフォルト名を使用します。この例では、コレクションを `NewHomes` という名前にします。
+
+## コレクション スタイルを変更する
+
+コンポーネント エディタの左側で、コレクションのすべてのスタイル設定を変更できます。この場合、グリッドを選択し、列とマージン設定を適用して、アイテム間にスペースを追加します。
+
+1. **Grid** を _Type_ として選択します
+2. _Columns_ を **3** に変更します
+3. すべての側面に _Padding_ を **10px** に追加します
+
+コレクションは次のようになります:
+
+![コレクション スタイルが適用されたスクリーンショット](/images/studio/collection-layout.png)
+
+## コレクション データを変更する
+
+次に、最近作成されたすべてのホームでリストを入力しましょう。デフォルトでは、Amplify Studio は指定されたモデルのすべてのレコードを含むコレクションをレンダリングします。この例では、最近作成されたホームでレコードをソートするソート条件を適用します。
+
+右側のパネルで **View/Edit** を選択してレンダリングされるデータセットを変更します。その後、**Add sort** を選択し、ソート条件として **createdAt** と **Descending** を選択します。
+
+![コレクション データが適用されたスクリーンショット](/images/studio/collection-data.png)
+
+設定したら、**Create data set** を選択して、最近作成されたタイムスタンプでソートされたコレクションを表示します。
+
+## アプリでコレクションを使用する
+
+個々のコンポーネントと同様に、**Get component code** を選択してコレクションの React コードを取得します。
+
+`amplify pull` を実行して、`NewHomes` コレクションを含むすべてのコンポーネントをローカルの `src/ui-components` フォルダに同期します。
+
+`./ui-components` から `NewHomes` コレクションをインポートし、React アプリでレンダリングします。例:
+
+```js
+import { NewHomes } from './ui-components'
+...
+  return <div>
+    <NewHomes />
+  </div>
+...
+```

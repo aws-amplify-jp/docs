@@ -1,0 +1,112 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amazon Cognito リソースのインポート',
+  description: '既存の Amazon Cognito ユーザープール と ID プール リソースを使用するように Amplify Studio を構成し、認証と認可のメカニズムとして他の Amplify カテゴリ (API、Storage など) で使用します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amazon Cognito リソースのインポートは、以下のことを試みている場合に特に役立ちます:
+
+- Amplify Studio のデータモデルのフィールド/テーブルへのユーザーアクセスを認可する
+- Amplify Studio からユーザーとグループを管理する (AWS コンソールにログインする必要はありません)
+- インポートされた認証リソースを複数の Amplify 環境で再利用する
+
+## 既存の Cognito ユーザープールをインポートする
+
+Amplify Studio を使用して、既存の Amazon Cognito リソースを Amplify プロジェクトにインポートできます。
+
+始めるには、アプリの Studio の **Set up** メニューから **Authentication** を選択します。**Authentication** ページで、**Reuse existing Amazon Cognito resources** を選択します。
+
+![Amazon Cognito ユーザープールリソースをインポートするために選択されたオプションが表示されている](/images/studio/import-auth.png)
+
+アプリケーションに必要な Cognito ユーザープール と App クライアントを選択します。
+
+![](/images/studio/import-auth-selection.png)
+
+次に `Import` をクリックして変更をデプロイします。
+
+ベストプラクティスとして、以下の条件で少なくとも 2 つのアプリクライアントを作成することをお勧めします:
+
+- 少なくとも 1 つの「Web アプリクライアント」: クライアントシークレットを持たないアプリクライアント
+- 少なくとも 1 つの「ネイティブアプリクライアント」: クライアントシークレットを持つアプリクライアント
+
+クライアントシークレットは、クライアントシークレットを保護するサーバー側コンポーネントを持つアプリケーションで使用されます。これが、ネイティブアプリクライアントが必要とする理由です。Cognito ユーザープールに App Client が 1 つだけ含まれている場合、これは Web クライアントとモバイルクライアントの両方に使用されます。
+
+[Cognito User Pools の詳細について](https://docs.aws.amazon.com/cognito/latest/developerguide/getting-started-with-cognito-user-pools.html)または[User Pool App Client の構成について](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html)を参照してください。
+
+また、Amplify CLI を使用して[Cognito ユーザープールリソースをインポート](/gen1/[platform]/tools/cli/commands/#auth-import)することもできます。
+
+## 既存の ID プールをインポートする
+
+![Amazon Cognito ID プールリソースをインポートするために有効にされた「Use identity pools」オプションが表示されている](/images/studio/import-identity-pool.png)
+
+ID プールを正常にインポートするために、以下の要件を満たす必要があります:
+
+- ID プールとの信頼関係を持つ認証済みロール
+- Amplify カテゴリのゲストユーザーアクセスを使用する場合のオプションの未認証ロール (例: Amazon S3 バケットまたは REST API エンドポイントへのゲストアクセス)。
+
+これらのロールは通常、「Unauthenticated」アクセスを有効にして新しい ID プールを作成し、Amazon Cognito ユーザープールを認証プロバイダーとして設定した場合に自動的に構成されます。
+
+[ID プール の詳細について](https://docs.aws.amazon.com/cognito/latest/developerguide/getting-started-with-identity-pools.html)を参照してください。
+
+また、Amplify CLI を使用して[Cognito ID プールリソースをインポート](/gen1/[platform]/tools/cli/commands/#auth-import)することもできます。
+
+<Callout>
+
+Cognito ID プールリソースをインポートするには、Cognito ユーザープールリソースが必要です。注: Amplify はインポートされたリソースのライフサイクルを管理しません。
+
+</Callout>
+
+## ソースコードを更新する
+
+以下のコマンドを実行して、ローカルアプリケーションのソースコードを更新します:
+
+```bash
+amplify pull
+```
+
+次に、以下のコマンドを実行して必要な GraphQL ファイルを生成します:
+
+```bash
+amplify codegen add
+```
+
+このコマンドを実行した後、以下が発生します:
+
+- Amplify ライブラリ設定ファイル (aws-exports.js、amplifyconfiguration.json) に選択した Amazon Cognito リソース情報が自動的に入力されます
+- 指定された既存の Amazon Cognito リソースが、すべての認証依存カテゴリ (API、Storage など) の認証と認可メカニズムとして提供されます
+- 許可した場合、Lambda 関数は選択した Amazon Cognito リソースにアクセスできるようになります。
+
+## マルチ環境サポート
+
+環境をクローンするか新しい環境を作成すると、Amazon Cognito リソースをインポートする必要があります。
+
+新しい環境で Amplify が認可リソースを管理するようにしたい場合は、インポートされた Cognito リソースのリンクを解除し、新しい環境に認可を追加します。これにより、新しい環境に新しい Amplify マネージド認可リソースが作成されます。
+
+## 既存の Amazon Cognito ユーザープールまたは ID プールのリンクを解除する
+
+既存の Amazon Cognito リソースのリンクを解除するには、**Authentication** ページの下部にある **Unlink Cognito User Pool and Identity Pool** をクリックし、プロンプトに従ってこのアクションを確認します。これにより、Amplify プロジェクトから参照される Amazon Cognito リソースのリンクが解除されるだけです。Amazon Cognito リソース自体は削除されません。

@@ -1,0 +1,141 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'GraphQL スキーマの進化',
+  description: '@mapsTo ディレクティブを使用して、モデルの名前を変更しながらテーブルを保持する方法',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+GraphQL スキーマはプロジェクトのライフサイクルの中で変化します。時には、これらの変化には破壊的な API 変更が含まれることもあります。その 1 つはスキーマ内のモデルの名前変更であり、Amplify はモデルの基礎となるレコードを保持しながらこれを行う方法を提供しています。
+
+## データを保持しながらモデルの名前を変更する
+
+Amplify は `@mapsTo` ディレクティブを使用して、GraphQL スキーマ内のモデル名を変更できます。
+通常、モデルの名前を変更する際、Amplify はモデルの基礎となるテーブルを削除し、新しい名前で新しいテーブルを作成します。テーブルに削除できない本番データが含まれている場合、`@mapsTo` を使用して元の名前を指定できます。Amplify は元の名前を使用して、基礎となる DynamoDB テーブルと他のリソースが既存のデータを指すようにします。
+モデルへの他の GraphQL API 参照は新しい名前を使用します。
+
+例えば、次のようなスキーマ：
+```graphql
+type Todo @model {
+  id: ID!
+  title: String!
+}
+```
+は以下のようになります：
+```graphql
+type Task @model @mapsTo(name: "Todo") {
+  id: ID!
+  title: String!
+}
+```
+Amplify はすべての GraphQL オペレーションと型を Task という名前を使用するように更新しますが、Task モデルは Todo が元々使用していたテーブルを指します。
+
+<Callout>
+
+- `@mapsTo` は、モデルを任意の名前のテーブルに指すために使用することはできません。名前が変更されたモデルを元の名前に指すためにのみ使用できます。
+- `@mapsTo` は、DynamoDB テーブルでサポートされている @model GraphQL 型に対してのみ使用できます。
+
+</Callout>
+
+他のモデルとの関係を持つモデルの名前を変更する場合、Amplify は自動生成される外部キー フィールドを元の名前に自動的にマップします。例えば、以下の場合：
+
+```graphql
+type Post @model {
+  id: ID!
+  title: String!
+  comments: [Comment] @hasMany
+}
+
+type Comment @model {
+  id: ID!
+  message: String!
+  # postCommentsId: String は Post の外部キーを含む自動生成フィールドです
+}
+```
+Amplify は Comment モデルに `postCommentsId` という名前のフィールドを自動的に追加します。このフィールドは Post の外部キーを含みます。Post 型が Article に名前変更された場合：
+
+```graphql
+type Article @model @mapsTo(name: "Post") {
+  id: ID!
+  title: String!
+  comments: [Comment] @hasMany
+}
+
+type Comment @model {
+  id: ID!
+  message: String!
+  # articleCommentsId: String は外部キーを含む新しい自動生成フィールドです
+}
+```
+基礎となるテーブルには、Comment テーブルの外部キー フィールドとして `postCommentsId` を持つレコードが含まれています。新しいスキーマでは、外部キー フィールドは `articleCommentsId` になりました。
+Amplify はこのことを認識しており、`articleCommentsId` を使用した受信リクエストを `postCommentsId` に自動的にマップし、結果に対して逆のマッピングを実行します。
+
+## 制限事項
+
+### @mapsTo を使用したリレーションシップ フィールド名の制約
+
+上の例で Comment を Reaction に名前変更した場合：
+```graphql
+type Post @model {
+  id: ID!
+  title: String!
+  comments: [Reaction] @hasMany # このフィールドは名前変更できず、既存のリレーションシップ データにアクセスできません
+}
+
+type Reaction @model @mapsTo(name: "Comment") {
+  id: ID!
+  message: String!
+  # 自動生成フィールド postCommentsId: String は外部キーを含みます
+}
+```
+`@hasMany` フィールド `comments` を `reactions` に名前変更することはできません。これは、Reaction の外部キー フィールドが親フィールド名をその名前の一部として使用しているためです。これが変更されると、Amplify は元の名前を決定できません。
+
+モデルが複数回名前変更された場合、`@mapsTo` で指定された値は、前の名前ではなく、元の名前である必要があります。
+
+### 命名競合を防ぐための制約
+
+スキーマ内のモデルは、別の型がマップされている名前と同じ名前を持つことはできません。例えば、次のスキーマは無効です：
+```graphql
+type Article @model @mapsTo(name: "Post") {
+  id: ID!
+}
+
+type Post @model {
+  id: ID!
+}
+```
+このスキーマは Post テーブルで競合を作成します。
+
+さらに、Post モデルが別の名前にマップされている場合でも、それは許可されません。このシナリオは技術的には競合を起こさないようですが、混乱を防ぐために許可されていません。
+
+名前が変更されたモデルのテーブルに直接アクセスする場合（つまり AppSync を介さない場合）、データベース内のレコードの外部キー フィールドは名前変更されていないことを認識する必要があります。下の「動作方法」を参照してください。
+
+## 動作方法
+`@mapsTo` は既存のテーブルやレコードを変更しません。代わりに、新しい名前の AppSync リゾルバーを元の名前の既存 DynamoDB テーブルにポイントします。
+
+リレーショナル ディレクティブを使用する際に、名前が変更された自動生成外部キー フィールドを処理するために、Amplify はデータベースからデータを取得する前後に追加の AppSync パイプライン リゾルバーを追加します。
+取得前のリゾルバーは、リクエスト内の名前が変更された外部キーが出現した場所を元の名前にマップします。その後、取得後のリゾルバーは、元の名前が出現した場所を結果を返す前に現在の名前にマップします。

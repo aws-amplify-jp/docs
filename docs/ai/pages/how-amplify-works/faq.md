@@ -1,0 +1,52 @@
+---
+title: "FAQ"
+section: "how-amplify-works"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/how-amplify-works/faq/"
+---
+
+**既存のAmplifyプロジェクトをGen 1からGen 2にアップグレードする方法はありますか?**
+
+Gen 1からGen 2への移行をサポートするための移行ツールを現在も積極的に開発しています。それまでの間は、既存のGen 1 Amplifyプロジェクトの使用を継続することをお勧めします。Gen 1とGen 2の機能サポートマトリックスは[こちら](https://docs.amplify.aws/react/start/migrate-to-gen2/)でご覧いただけます。当社は予見可能な将来において、Gen 1とGen 2の両方をサポートし続けることに専念しています。新しいプロジェクトについては、拡張機能を活かすためにGen 2の採用をお勧めします。一方、Gen 1を利用されているお客様は、引き続き高優先度のバグ修正と重要なセキュリティ更新を受け取ります。
+
+**Gen 1アプリがある場合、それでGen 2を使用できますか?**
+
+Amplify Gen 1とGen 2は異なるアーキテクチャとツール設計パラダイムに従っています。これはGen 1に関する一般的なカスタマーフィードバックに対応するために必要でした。Gen 1からGen 2アプリへ移行するには、今後リリースされる移行ツールを使用する必要があります。Amplify Gen 1 (Studio/CLI)とGen 2を同じアプリで使用することはできません。
+
+**新しいアプリではAmplify Gen 1とGen 2のどちらを使用すべきですか?**
+
+新しいアプリを構築している場合は、Amplify Gen 2の使用をお勧めします。
+
+**Amplify Gen 2はDataStoreをサポートしていますか?**
+
+Amplify Gen 2は、DataStoreなしのGraphQL APIをサポートしています。Gen 1 DataStoreアプリをGen 2に移行するためのサポートをリリース予定です。
+
+**Amplify Gen 2はどのプログラミング言語をサポートしていますか?**
+
+Amplify Gen 2は、クライアント側の開発向けに幅広いプログラミング言語をサポートしています。これには、JavaScript、TypeScript、Dart、Java、Kotlin、Swiftの専用クライアント側ライブラリが含まれます。バックエンド開発については、Amplify Gen 2はTypeScriptを使用しています。
+
+**Gen 1では、Amplifyはアプリケーション構築用のユースケースカテゴリセット(たとえば、認証、分析、API、DataStore、Geo、予測)を提供していました。Gen 2でも同じカテゴリが利用可能ですか?**
+
+Amplify Gen 2は、認証、データ、ストレージ、関数のサポートを組み込んでいます。その他のユースケースは、AWS Cloud Development Kit (AWS CDK)コンストラクトを使用してAmplify Gen 2で実装することもできます。これに関しては、各カテゴリ名の下のドキュメントがあります。
+
+**TypeScriptを使用しないJavaScriptフロントエンドでGen 2を使用できますか?**
+
+はい。Amplify Gen 2のTypeScriptバックエンド定義は、JavaScriptフロントエンドと連携します。さらに、純粋なJavaScriptフロントエンドでも、エンドツーエンドの型付けされたデータフェッチング体験を得ることができます。推奨されるJavaScriptクライアントコードについては、[データクライアントを生成する](/[platform]/frontend/data/connect-to-API/#generate-the-amplify-data-client)を参照してください。
+
+**Gen 2のアプリケーションにAI/MLやAmazon Location Serviceなどの機能を追加したい場合はどうすればよいですか?**
+
+AmplifyはAWS Cloud Development Kit (AWS CDK)上に構築されているため、CDKでサポートされているすべてのAWSサービスを、[カスタムリソース](/[platform]/build-a-backend/add-aws-services/custom-resources/)およびL2/L1 AWS CDKコンストラクトを使用してアプリに追加できます。
+
+**アプリケーションが成長しすぎて、アプリケーションをより詳しく設定したい場合(より多くの機能、他のAWSサービスなどを追加する場合)はどうなりますか?**
+
+アプリケーションがどれだけ大きくなっても、Amplifyを使用し続けることができます。AmplifyはAWS CDKおよびAWS CloudFormationの上層にあります。これらはAWSと対話する標準化された方法を提供しているため、[CDKでサポートされているすべてのAWSサービスをAmplifyアプリに追加](/[platform]/build-a-backend/add-aws-services/custom-resources/)することができます。CDKを使用してリソースの[Amplify生成設定をオーバーライド](/[platform]/build-a-backend/add-aws-services/overriding-resources/)することもできます。CIをより詳しく制御したい場合は、任意のデプロイメントパイプラインを使用できます。
+
+**Amplify Gen2を運用するのにどのくらいの費用がかかりますか?**
+
+Amplifyの価格についてのすべての詳細は、当社の[料金ページ](https://aws.amazon.com/amplify/pricing/)でご覧いただけます。
+
+**どのAmplify JavaScriptバージョンがGen 2と互換性がありますか?**
+
+Amplify JavaScriptバージョン6.2.0以上は、Amplify Gen 2で作成されたバックエンドと互換性があります。

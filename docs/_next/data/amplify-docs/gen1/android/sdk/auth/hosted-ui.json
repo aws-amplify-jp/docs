@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"android","meta":{"title":"ホステッド UI","description":"Amazon Cognito はホステッド UI を通じてカスタマイズ可能なユーザーエクスペリエンスを提供します。ホステッド UI は OAuth 2.0 フローであり、アプリケーションに Cognito SDK またはソーシャルプロバイダーの SDK を埋め込むことなく、ログイン画面を起動することができます。","platforms":["swift","android"]}},"__N_SSG":true}

@@ -1,0 +1,326 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'コードで拡張する',
+  description: 'Amplify StudioでFigmaをReactコードに変換',
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+`amplify pull`を実行すると、AmplifyはFigmaコンポーネントのJSXおよびTSバージョンを自動的に生成します。これらのコンポーネントのコードを直接編集することはできません。次の`pull`で上書きされるためです。ただし、コードを拡張するメカニズムが公開されています。
+
+## 生成されたコードを拡張する
+
+### コンポーネントプロップを使用して生成されたコードを拡張する
+
+Figmaで作成されたコンポーネントを使用する場合、公開されているコンポーネントプロップを使用できます。以下のコード例は、コレクションにページネーションを追加する方法を示しています。`isPaginated`プロップは[`<Collection/>`](https://ui.docs.amplify.aws/react/components/collection)コンポーネントのプロパティです。同様に、`gap`や`isSearchable`などのプロップを使用してコレクションを拡張できます。
+
+```
+import {AmpligramCollection} from './ui-components'
+
+<AmpligramCollection isPaginated itemsPerPage={3}/>
+
+```
+
+### オーバーライドプロップを使用して生成されたコンポーネントを拡張する
+
+生成されたすべてのコードは、すべてのコンポーネントと子要素に`overrides`プロップを公開して、生成されたコードを拡張するための完全な制御を提供します。次の例は、デフォルトのFigmaファイルの一部である`FAQItem`コンポーネントのタイトルの色を赤にオーバーライドする方法を示しています。
+
+1. Studioで`FAQItem`コンポーネントに移動します
+2. テキスト要素の名前を見つけます。この場合は`Title`です
+3. `FAQItem`をレンダリングしている場所の`overrides`プロップを追加します。
+
+<Grid templateColumns={{ base: '1fr', large: '240px 1fr' }} gap="small">
+  <View maxWidth="240px" margin="auto">
+    ![タイトルというテキスト要素の色をオーバーライドする](/images/console/ui-override.png)
+  </View>
+
+         <View minWidth="0">
+
+        ```jsx
+        import {FAQItem} from './ui-components'
+        ... ... //⬇️ Studioに表示される要素名
+        <FAQItem overrides={{ Title: { color: 'red' } }} />
+        ```
+
+      </View>
+
+</Grid>
+
+### overrideItemsプロップを使用してコレクションを拡張する
+
+生成されたすべてのCollectionコードは`overrideItems`プロップを公開して、各コレクションアイテムをそのデータアイテムのコンテキストで拡張するための完全な制御を提供します。`overrideItems`は`{ item, index }`パラメータを受け入れ、各コレクションアイテムに適用すべきオーバーライドプロップを返す関数を期待します。
+
+次の例は、各コレクションアイテムをオーバーライドして、コレクション内のインデックスに基づいて異なる色を表示し、ユーザーにどのホームがクリックされたかを通知する方法を示しています。
+
+```jsx
+<HomeCollection
+  overrideItems={({ item, index }) => ({
+    backgroundColor: index % 2 === 0 ? 'white' : 'lightgray',
+    onClick: () =>
+      alert(`Home with id: ${item.id} and ${item.address} clicked!`)
+  })}
+/>
+```
+
+![コレクションアイテムはコレクション内のインデックスに基づいて異なる色を表示し、ユーザーにどのホームがクリックされたかを通知する](/images/console/collection-override.gif)
+
+コレクションアイテム内の特定の要素のプロップをオーバーライドする場合は、オーバーライドオブジェクトを`overrideItems`に渡します。
+
+```jsx
+<HomeCollection
+  overrideItems={(item, index) => ({
+    overrides: { Share: { fontWeight: 'bold' } }
+  })}
+/>
+```
+
+### コレクションのネスト
+
+<Callout info>
+
+**注**: Studioは、Amplifyで作成されたGraphQL APIを使用したネストされたコレクションをサポートしています。[DataStoreの有無を問わず](/gen1/[platform]/tools/console/data/data-model/#datastore-and-graphql)です。ただし、これらの異なるデータタイプは異なる構文を持っています。
+
+</Callout>
+
+コレクション内のコンポーネントスロットを使用すると、条件付きで追加のネストされたコレクションをレンダリングできます。たとえば、ネストされたコレクションを使用して、投稿のコレクションを生成し、各投稿にはその関連コメントのコレクションがあります。
+
+この例では、2つのコレクション`AmpligramCollection`（`comments`という名前のスロットを持つ）と`CommentViewCollection`があります。これらは`Post`および`Comment`データモデルにバインドされており、[一対多の関係](/gen1/[platform]/tools/console/data/relationships/)を持っています。したがって、`Post`データモデルの各レコードには、`Comments`という名前のフィールドがあり、その値は`Comment`レコードの配列です。
+
+まず、`overrideItems`機能を使用して、`AmpligramCollection`の`comment`コンポーネントスロット内に`CommentViewCollection`をネストします。これにより、`CommentViewCollection`内のすべてのアイテムが各`Ampligram`スロットでレンダリングされます。
+
+```jsx
+import { AmpligramCollection, CommentViewCollection } from './ui-components';
+
+function App() {
+  return (
+    <AmpligramCollection
+      overrideItems={({ item, index }) => ({
+        comments: <CommentViewCollection /> //Add the child collection to the "comments" slot
+      })}
+    />
+  );
+}
+export default App;
+```
+
+次に、`CommentViewCollection`をフィルタリングして、各`Ampligram`に関連する`Comment`レコードのみを含めます。`CommentViewCollection`をフィルタリングするには、`items`プロップを`Comment`レコードの配列に等しく設定します。**この構文はDataStoreを使用しているかどうかによって異なります。**
+
+**DataStore**
+
+```jsx
+import { AmpligramCollection, CommentViewCollection } from './ui-components';
+
+function App() {
+  return (
+    <AmpligramCollection
+      overrideItems={({ item, index }) => ({
+        /*Set the items in this collection to be only related items*/
+        comments: <CommentViewCollection items={item.Comments} />
+      })}
+    />
+  );
+}
+export default App;
+```
+
+**DataStoreなしのGraphQL**
+
+```jsx
+import { AmpligramCollection, CommentViewCollection } from './ui-components';
+
+function App() {
+  return (
+    <AmpligramCollection
+      overrideItems={({ item, index }) => ({
+        /*Set the items in this collection to be only related items*/
+        comments: <CommentViewCollection items={item.Comments.items} />
+      })}
+    />
+  );
+}
+export default App;
+```
+
+### アクション実行中またはその後のビジネスロジックの追加
+
+コンポーネントが[DataStoreを使用するGraphQL API](/gen1/[platform]/tools/console/data/data-model/#datastore-and-graphql)にバインドされている場合、Amplify Hubを使用して[UIイベントハンドラー](/gen1/[platform]/build-ui/uibuilder/eventhandling/)を介して実行されるアクションをリッスンし、カスタムビジネスロジックを追加できます。
+
+```jsx
+import { Hub } from 'aws-amplify/utils'
+
+...
+Hub.listen("ui", (capsule) => {
+  if (capsule.payload.event === "actions:auth:signout:finished") {
+    // Post-signout logic
+  }
+});
+```
+
+上記の例では、顧客が「Sign out」ボタンをクリックしたときにカスタムビジネスロジックを追加できます。Amplify`Hub`は`ui`チャネルでStudio生成イベントを提供します。アクションバインディングHubイベントの形式は`actions:[category]:[action_name]:[status]`です。
+
+| アクション名 | 説明 |
+| --- | --- |
+| actions:core:navigate:started | [ナビゲーションアクション](/gen1/[platform]/build-ui/uibuilder/eventhandling/#bind-ui-to-navigation-actions)が開始されました |
+| actions:core:navigate:finished | [ナビゲーションアクション](/gen1/[platform]/build-ui/uibuilder/eventhandling/#bind-ui-to-navigation-actions)が完了しました（エラーの可能性もあります） |
+| actions:datastore:create:started | [DataStore作成アクション](/gen1/[platform]/build-ui/uibuilder/eventhandling/#create-a-record-in-database)が開始されました |
+| actions:datastore:create:finished | [DataStore作成アクション](/gen1/[platform]/build-ui/uibuilder/eventhandling/#create-a-record-in-database)が完了しました |
+| actions:datastore:update:started | [DataStore更新アクション](/gen1/[platform]/build-ui/uibuilder/eventhandling/#update-a-record-from-database)が開始されました |
+| actions:datastore:update:finished | [DataStore更新アクション](/gen1/[platform]/build-ui/uibuilder/eventhandling/#update-a-record-from-database)が完了しました（エラーの可能性もあります） |
+| actions:datastore:delete:started | [DataStore削除アクション](/gen1/[platform]/build-ui/uibuilder/eventhandling/#delete-a-record-from-database)が開始されました |
+| actions:datastore:delete:finished | [DataStore削除アクション](/gen1/[platform]/build-ui/uibuilder/eventhandling/#delete-a-record-from-database)が完了しました（エラーの可能性もあります） |
+| actions:auth:signout:started | [SignOutアクション](/gen1/[platform]/build-ui/uibuilder/eventhandling/#bind-ui-to-sign-out-actions)が開始されました |
+| actions:auth:signout:finished | [SignOutアクション](/gen1/[platform]/build-ui/uibuilder/eventhandling/#bind-ui-to-sign-out-actions)が完了しました（エラーの可能性もあります） |
+
+## 生成されたコードを変更する
+
+次の`amplify pull`で上書きされるため、生成されたすべてのコンポーネントコードを直接カスタマイズすることはできません。ただし、コンポーネント変更を制御したい場合は、以下の回避策が利用可能です。
+
+1. `ui-components`から生成されたJSXおよびTSファイルを新しいフォルダー（たとえば`Ampligram`）に複製します
+2. ファイルの名前を別の名前（たとえば`Ampligram2`）に変更し、関数名も一致するように更新します。
+3. 新しいフォルダーに新しい「index.js」ファイルを作成して、新しいエクスポートを含めます（たとえば`export { default as Ampligram2 } from "./Ampligram2";`）
+4. 複製されたコンポーネントを必要な場所にインポートします。
+
+次の`amplify pull`は新しいファイルを上書きしません。
+
+## 使用例
+
+次のコードスニペットは、アプリで特定のシナリオを処理する方法を示しています。
+
+### コレクションにページネーションを追加する
+
+```
+import {AmpligramCollection} from './ui-components'
+
+<AmpligramCollection isPaginated itemsPerPage={3}/>
+
+```
+
+### コンポーネントをレスポンシブにする
+
+_自動レイアウト_を使用するFigmaコンポーネントは自動的にレスポンシブReactコンポーネントにマップされます。ただし、一部のコンポーネントは追加のカスタマイズが必要な場合があります。
+
+ブレークポイントを使用して動作を定義します。
+
+```jsx
+<NavBar width={{ small: '300px', large: '600px', xl: '800px' }} />
+```
+
+または
+
+```jsx
+<NavBar width={'100vw'} />
+```
+
+### アイコンのホバー状態を設定する
+
+次の例は、CSSクラス名を使用してアイコンをオーバーライドする方法を示しています。
+
+<table>
+<tbody>
+<tr>
+<td>
+
+```jsx
+// App.css
+.custom-btn:hover {
+   transform: scale(1.2);
+}
+
+// App.jsx
+const iconOverrides = {
+  "Button": {
+     className: "custom-btn"
+  }
+}
+
+<HeroLayout1 overrides={iconOverrides} />
+```
+
+</td>
+<td>
+
+![クラス名を使用したホバーオーバーライド](/images/console/hover-override.gif)
+
+</td>
+</tr>
+</tbody>
+</table>
+
+### フォームデータを保存する
+
+<Callout warning>
+
+**注:** Amplify Studioはここで新しいReactフォーム構築エクスペリエンスを提供します。以下で記載されているデータアクションバインディングを使用する前に、まず[Form Builder (React)](/gen1/[platform]/build-ui/formbuilder/)をレビューすることをお勧めします。
+
+</Callout>
+
+Amplify Studioは[データアクションバインディング](/gen1/[platform]/build-ui/uibuilder/eventhandling/#bind-ui-to-create-update-or-delete-a-data-record)を提供していますが、コード内でフォーム送信状態とワークフローを自分で管理することもできます。
+
+Studioの要素名に基づいてオーバーライドキーを取得し、`onChange`ハンドラーを設定します。たとえば、`TextFieldzoh`は「name input field」コンポーネントの名前です。
+
+![フォームフィールド名を表示するStudioインターフェース](/images/console/form-override.png)
+
+```jsx
+const [name, setName] = useState("");
+const [location, setLocation] = useState("");
+const [email, setEmail] = useState("");
+
+const profileOverrides = {
+  "TextFieldzoh": {
+    onChange: (event) => { setName(event.target.value) }
+  },
+  "TextFieldzwu": {
+    onChange: (event) => { setLocation(event.target.value) }
+  },
+  "TextFieldsdk": {
+    onChange: (event) => { setEmail(event.target.value) }
+  },
+  "Button": {
+    onClick: () => alert(`Saving form ${name} ${location} ${email}`)
+  }
+}
+
+return (
+    ...
+    <EditProfile overrides={profileOverrides}/>
+    ...
+)
+```
+
+### 親ビューから詳細ビューへのナビゲーション
+
+Amplify Studioは[ナビゲーションアクションバインディング](/gen1/[platform]/build-ui/uibuilder/eventhandling/#bind-ui-to-navigation-actions)を提供していますが、独自のルーティングシステムと統合したい場合は、ナビゲーションアクションを自分で管理することもできます。
+
+たとえば、コレクション内のアイテムをクリックして詳細ビューに移動したい場合。`overrideItems`プロップを使用してコレクション内の各要素のプロパティを変更します。`overrideItems`の戻り値は、コレクションアイテムのコンポーネントのオーバーライドとして適用されます。
+
+```jsx
+<HomeCollection
+  overrideItems={({ item, index }) => ({
+    style: {
+      cursor: 'pointer'
+    },
+    onClick: () => {
+      // The actual redirect can happen whichever way you want
+      // `item` represent the data item that is passed into the
+      // collection item. In this case, it's a "home".
+    }
+  })}
+/>
+```

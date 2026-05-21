@@ -1,0 +1,43 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ファイル/添付ファイルの操作',
+  description: 'Amplify StorageファイルとAmplify GraphQL APIレコードを関連付ける方法について詳しく学びます。',
+  platforms: [
+    'javascript',
+    'swift',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import js0 from '/src/fragments/lib/graphqlapi/js/working-with-files.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>
+
+import ios0 from '/src/fragments/lib/graphqlapi/ios/working-with-files.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />

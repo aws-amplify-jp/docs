@@ -1,0 +1,74 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'アクセス制御',
+  description: '認可ルールを設定する',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+<Callout warning>
+
+[サンプルデータモデル](/gen1/[platform]/tools/console/data/data-model/#data-modeling-example)をクローンして一緒に進めてください。
+
+</Callout>
+
+書店の例で作成したモデルごとに、ロールベースの認可ルールを設定します。認可ルールは、特定の条件に基づいてテーブルをクエリまたは更新できるユーザーを制限するのに役立ちます。
+
+## オーナー認可ルールを設定するには
+1. [データモデルの作成例](/gen1/[platform]/tools/console/data/data-model/#Create-a-data-model-example)で作成した*Books*データモデルを使用して、認可モードを**Cognito user pool**に設定します。
+2. 右側の**Model**パネルで、**Owners**ウィンドウを展開します。
+3. **Create**、**Read**、**Update**、**Delete**を選択して、*Owners*が作成、読み取り、更新、削除アクセス権を持つことを指定します。設定は以下のようになります。
+
+![](/images/console/10_ownersaccess.png)
+
+## プライベート認可ルールを設定するには
+1. [データモデルの作成例](/gen1/[platform]/tools/console/data/data-model/#Create-a-data-model-example)で作成した*Books*データモデルを使用して、認可モードを**Cognito user pool**に設定します。
+2. 右側の**Model**パネルで、**Any signed-in users**ウィンドウを展開します。
+3. **Create**、**Read**、**Update**を選択して、サインインしている認証されたユーザーが作成、読み取り、更新アクセス権を持つことを指定します。
+
+![](/images/console/11_privatesaccess.png)
+
+
+## グループ認可ルールを設定するには
+1. [データモデルの作成例](/gen1/[platform]/tools/console/data/data-model/#Create-a-data-model-example)で作成した*Books*データモデルを使用して、認可モードを**Cognito user pool**に設定します。
+2. [グループを作成](/gen1/[platform]/tools/console/auth/user-management/#To-create-a-group)する手順を使用して*Editors*グループを作成します。または、**Add a new rule for...**メニューから新しいグループを作成できます。
+3. 右側の**Model**パネルで、**Add a new rule for...**メニューから*Editors*を選択します。
+
+![上記のステップ3のスクリーンショット](/images/console/8_menudetaileditors.png)
+
+4. **Create**、**Read**、**Update**、**Delete**を選択して、*Editors*グループにサインインしているユーザーが作成、読み取り、更新、削除アクセス権を持つことを指定します。
+
+![](/images/console/9_editorgroupaccess.png)
+
+## パブリック認可ルールを設定するには
+
+データモデルを公開アクセス可能にしたい場合は、API_KEYまたはIAMベースの認可に切り替えます。
+
+1. [データモデルの作成例](/gen1/[platform]/tools/console/data/data-model/#Create-a-data-model-example)で作成した*Books*データモデルを使用して、認可モードを**API Key**に設定します。
+2. 右側の**Model**パネルで、**Anyone**ウィンドウを展開します。**Read**を選択して、サインインしたユーザーが*Book*モデルのデータに読み取りアクセス権を持つことを指定します。
+
+![](/images/console/7_authreadonly.png)

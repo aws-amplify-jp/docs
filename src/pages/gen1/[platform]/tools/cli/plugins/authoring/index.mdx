@@ -1,0 +1,163 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: '新しいプラグインの作成',
+  description: 'プラグインを使用すると、既存の Amplify CLI に追加のコマンドと機能を追加できます。プラグインパッケージを作成、公開、使用する方法について説明します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+  
+
+Amplify CLI は、プラグイン開発用に `amplify plugin init` コマンド（別名 `amplify plugin new`）を提供します。このコマンドは最初に要件を収集し、その後プラグインパッケージのスケルトンを作成して開発を開始できます。新しく作成されたプラグインはローカル Amplify CLI プラグインプラットフォームに追加されるため、開発中に機能を簡単にテストできます。`amplify plugin remove` コマンドでローカルプラグインプラットフォームから簡単に削除でき、`amplify plugin add` コマンドで再度追加できます。
+
+## ステップ 1: Amplify CLI をインストール
+
+import all0 from "/src/fragments/cli-install-block.mdx";
+
+<Fragments fragments={{all: all0}} />
+
+## ステップ 2: プラグインを初期化
+
+```bash
+amplify plugin init
+```
+
+プラグイン名を入力するよう促され、その後プラグインタイプとイベント購読を選択します。CLI はプラグインパッケージを作成し、ローカル Amplify CLI プラグインプラットフォームに追加します。
+
+## ステップ 3: プラグインをテスト
+
+新しく作成されたプラグインパッケージはすでにローカル Amplify CLI に追加されているため、すぐにテストを開始できます。
+デフォルトプラグイン名 `my-amplify-plugin` を使用することにしたとしましょう。
+
+```console
+$ amplify my-amplify-plugin help
+help command to be implemented.
+```
+
+デフォルトのヘルプメッセージが出力されます。
+この時点では、プラグインパッケージには `help` と `version` の 2 つのサブコマンドのみあり、ダミー実装を持っています。他のコマンドを実行しようとすると、Amplify CLI プラグインプラットフォームが新規スキャンを実行し、コマンドが見つからない場合はデフォルトのヘルプメッセージを出力します。
+
+ここからプラグインパッケージの開発を開始できます。パッケージ構造の詳細については、下記を参照してください。
+
+## ステップ 4: npm に公開
+
+開発サイクルが完了し、プラグインを公開する準備ができたら、npm に公開できます: [https://docs.npmjs.com/getting-started/publishing-npm-packages](https://docs.npmjs.com/getting-started/publishing-npm-packages)
+
+## ステップ 5: インストールして使用
+
+プラグインが npm に公開されたら、他の開発者がそれをインストールして使用できます
+
+```bash
+npm install -g my-amplify-plugin
+amplify plugin add my-amplify-plugin
+amplify my-amplify-plugin help
+```
+
+## プラグインパッケージ構造
+
+プラグインパッケージのディレクトリ構造は以下の通りです
+
+```md
+|_my-amplify-plugin/
+  |_commands/
+  |   |_ help.js
+  |   |_ version.js
+  |
+  |_event-handlers
+  |   |_handle-PostInit.js
+  |   |_handle-PostPush.js
+  |   |_handle-PreInit.js
+  |   |_handle-PrePush.js
+  |
+  |_amplify-plugin.json
+  |_index.js
+  |_package.json
+```
+
+### amplify-plugin.json
+
+`amplify-plugin.json` ファイルはプラグインのマニフェストファイルで、プラグインの名前、タイプ、コマンド、イベントハンドラーを指定します。Amplify CLI はそれを使用してプラグインパッケージを確認し、プラグインプラットフォームに追加します。
+
+util プラグインの `amplify plugin init` コマンドで初めて生成されたときのファイル内容は以下の通りです。
+
+```json
+ {
+  "name": "my-amplify-plugin",
+  "type": "util",
+  "commands": [
+    "version",
+    "help"
+  ],
+  "eventHandlers": [
+    "PreInit",
+    "PostInit",
+    "PrePush",
+    "PostPush"
+  ]
+}
+```
+
+### index.js
+
+`package.json` で指定された `"main"` ファイルは、マニフェストファイル `amplify-plugin.json` で指定されたプラグインの機能を呼び出すための Amplify CLI のエントリポイントです。
+
+util プラグインの `amplify plugin init` コマンドで初めて生成されたときのファイル内容は以下の通りです。
+
+```js
+const path = require('path');
+
+async function executeAmplifyCommand(context) {
+  const commandsDirPath = path.normalize(path.join(__dirname, 'commands'));
+  const commandPath = path.join(commandsDirPath, context.input.command);
+  const commandModule = require(commandPath);
+  await commandModule.run(context);
+}
+
+async function handleAmplifyEvent(context, args) {
+  const eventHandlersDirPath = path.normalize(path.join(__dirname, 'event-handlers'));
+  const eventHandlerPath = path.join(eventHandlersDirPath, `handle-${args.event}`);
+  const eventHandlerModule = require(eventHandlerPath);
+  await eventHandlerModule.run(context, args);
+}
+
+module.exports = {
+  executeAmplifyCommand,
+  handleAmplifyEvent,
+};
+```
+
+### commands
+
+`commands` フォルダには、マニフェストファイル `amplify-plugin.json` で指定された `commands` を実装するファイルが含まれています。
+
+### event-handlers
+
+`event-handlers` フォルダには、マニフェストファイル `amplify-plugin.json` で指定された `eventHandlers` を実装するファイルが含まれています。
+
+import all1 from "/src/fragments/cli/plugins/custom-transformer.mdx";
+
+<Fragments fragments={{all: all1}} />

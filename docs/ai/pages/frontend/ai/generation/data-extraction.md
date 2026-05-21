@@ -1,0 +1,94 @@
+---
+title: "データ抽出"
+section: "frontend/ai/generation"
+platforms: ["javascript", "react-native", "angular", "nextjs", "react", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/ai/generation/data-extraction/"
+---
+
+データ抽出により、非構造化テキストを解析し、AIを使用して構造化データを抽出できます。これは、自由形式のテキストをアプリケーションで使用できる型付きオブジェクトに変換するのに便利です。
+
+以下の例は、非構造化製品説明から製品詳細を抽出する方法を示しています。AIモデルはテキストを分析し、製品名、概要、価格、およびカテゴリを含む構造化オブジェクトを返します。
+
+```typescript title="amplify/data/resource.ts"
+const schema = a.schema({
+  ProductDetails: a.customType({
+    name: a.string().required(),
+    summary: a.string().required(),
+    price: a.float().required(),
+    category: a.string().required(),
+  }),
+
+  extractProductDetails: a.generation({
+    aiModel: a.ai.model('Claude 3.5 Haiku'),
+    systemPrompt: 'Extract the property details from the text provided',
+  })
+    .arguments({
+      productDescription: a.string()
+    })
+    .returns(a.ref('ProductDetails'))
+    .authorization((allow) => allow.authenticated()),
+});
+```
+
+<!-- Platform: javascript,angular,vue -->
+```ts title="Data Client Request"
+import type { Schema } from "../amplify/data/resource";
+import { generateClient } from "aws-amplify/api";
+
+export const client = generateClient<Schema>();
+
+const productDescription = `The NBA Official Game Basketball is a premium
+regulation-size basketball crafted with genuine leather and featuring
+official NBA specifications. This professional-grade ball offers superior grip
+and durability, with deep channels and a moisture-wicking surface that ensures
+consistent performance during intense game play. Priced at $159.99, this high-end
+basketball belongs in our Professional Sports Equipment category and is the same model
+used in NBA games.`
+
+const { data, errors } = await client.generations
+  .extractProductDetails({ productDescription })
+
+/**
+Example response:
+{
+  "name": "NBA Official Game Basketball",
+  "summary": "Premium regulation-size NBA basketball made with genuine leather. Features official NBA specifications, superior grip, deep channels, and moisture-wicking surface for consistent game play performance.",
+  "price": 159.99,
+  "category": "Professional Sports Equipment"
+}
+*/
+```
+<!-- /Platform -->
+
+<!-- Platform: react,react-native,nextjs -->
+```ts title="src/components/Example.tsx"
+import type { Schema } from "../amplify/data/resource";
+import { generateClient } from "aws-amplify/api";
+import { createAIHooks } from "@aws-amplify/ui-react-ai";
+
+const client = generateClient<Schema>({ authMode: "userPool" });
+const { useAIGeneration } = createAIHooks(client);
+
+export default function Example() {
+  const productDescription = `The NBA Official Game Basketball is a premium
+  regulation-size basketball crafted with genuine leather and featuring
+  official NBA specifications. This professional-grade ball offers superior grip
+  and durability, with deep channels and a moisture-wicking surface that ensures
+  consistent performance during intense game play. Priced at $159.99, this high-end
+  basketball belongs in our Professional Sports Equipment category and is the same model
+  used in NBA games.`
+
+  // data is React state and will be populated when the generation is returned
+  const [{ data, isLoading }, extractProductDetails] =
+    useAIGeneration("extractProductDetails");
+
+  const productDetails = async () => {
+    extractProductDetails({
+      productDescription
+    });
+  };
+}
+```
+<!-- /Platform -->

@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"react","meta":{"title":"セッションを自動的に追跡する","description":"Amplify analytics プラグインは、アプリケーションが開く時と閉じる時を記録します。このセッション情報は、ローカルコンピュータのターミナルまたは AWS Pinpoint コンソールから表示できます。","platforms":["swift","android","flutter","javascript","react-native","angular","nextjs","react","vue"]}},"__N_SSG":true}

@@ -1,0 +1,26 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: '転送のクエリ',
+  description: "Amplify のストレージカテゴリを使用してローカルデータベースからキューに入っている転送をクエリする方法を学びます。",
+  platforms: ['android']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+
+import android0 from '/src/fragments/lib/storage/android/query-transfers.mdx';
+
+<Fragments fragments={{ android: android0 }} />

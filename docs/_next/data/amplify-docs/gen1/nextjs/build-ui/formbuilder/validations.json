@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"nextjs","meta":{"title":"フォームデータの検証","description":"検証ルールをフォームに追加してユーザー入力をサニタイズします。デフォルトでは、Amplify Studio はデータモデルに基づいて一連の検証ルールを推論します。たとえば、'AWSEmail' フィールドを持つデータモデルの場合、生成されたフォーム入力は自動的にメール検証ルールを実行します。","platforms":["javascript","react","nextjs"]}},"__N_SSG":true}

@@ -1,0 +1,93 @@
+---
+title: "データの取得"
+section: "frontend/rest-api"
+platforms: ["angular", "javascript", "nextjs", "react", "react-native", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/rest-api/fetch-data/"
+---
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+エンドポイントを呼び出すには、必須の `apiName` オプション、および `headers`、`queryParams`、`body` オプション（任意）を含む入力オブジェクトを設定する必要があります。ステータスコード レスポンス > 299 は `ApiError` インスタンスとしてスローされます。エラー インスタンスはレスポンスから解析された `name` および `message` プロパティを提供します。
+
+## GET リクエスト
+
+```ts
+import { get } from 'aws-amplify/api';
+
+async function getItem() {
+  try {
+    const restOperation = get({ 
+        apiName: 'myRestApi',
+        path: 'items' 
+        options: {
+          retryStrategy: {
+            strategy: 'no-retry' // Overrides default retry strategy
+          },
+        }
+    });
+    const response = await restOperation.response;
+    console.log('GET call succeeded: ', response);
+  } catch (error) {
+    console.log('GET call failed: ', JSON.parse(error.response.body));
+  }
+}
+```
+
+`retryStrategy` は以下で設定できます：
+- `no-retry`: 単一の試行、エラーで即座に失敗
+- `jittered-exponential-backoff`: デフォルト戦略で、遅延を増やして再試行し、最大 3 回の試行
+
+## レスポンス ペイロードへのアクセス
+
+レスポンス オブジェクトの `body` プロパティにアクセスして、レスポンス ペイロードを使用できます。ユース ケースとボディのコンテンツ タイプに応じて、ペイロードを文字列、blob、または JSON で使用できます。
+
+```ts
+// ...
+const { body } = await restOperation.response;
+// consume as a string:
+const str = await body.text();
+// OR consume as a blob:
+const blob = await body.blob();
+// OR consume as a JSON:
+const json = await body.json();
+```
+
+> **Warning:** レスポンス ペイロードは複数回使用できません。
+
+## エラーから HTTP レスポンスにアクセス
+
+REST API ハンドラーは `ApiError` エラー インスタンスをスローする可能性があります。エラーが 2xx 以外のステータス コードを持つ HTTP レスポンスによって発生した場合、エラー インスタンスは `response` プロパティを提供します。`response` プロパティには以下のプロパティが含まれます：
+* `statusCode`: HTTP ステータス コード
+* `headers`: HTTP レスポンス ヘッダー
+* `body`: HTTP レスポンス ボディ（文字列）
+
+次の例は、`ApiError` インスタンスから HTTP レスポンスにアクセスし、REST API エンドポイントからのエラー レスポンスを処理する方法を示しています：
+
+```ts
+import { ApiError, get } from 'aws-amplify/api';
+
+try {
+  const restOperation = get({ 
+    apiName: 'myRestApi',
+    path: 'items' 
+  });
+  await restOperation.response;
+} catch (error) {
+  if (error instanceof ApiError) {
+    if (error.response) {
+      const { 
+        statusCode, 
+        headers, 
+        body 
+      } = error.response;
+      console.error(`Received ${statusCode} error response with payload: ${body}`);
+    }
+    // Handle API errors not caused by HTTP response.
+  }
+  // Handle other errors.
+}
+```

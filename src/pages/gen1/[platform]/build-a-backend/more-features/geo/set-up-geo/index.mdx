@@ -1,0 +1,43 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify Geo のセットアップ',
+  description: 'AWS Amplify Geo モジュールは、マップデータの取得、場所の検索、逆ジオコーディングを簡単に行う方法を提供します。',
+  platforms: [
+    'javascript',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import nativeCommonGettingStarted from '/src/fragments/lib/geo/native_common/getting_started/common.mdx';
+import jsGettingStarted from '/src/fragments/lib/geo/js/getting-started.mdx';
+
+<Fragments
+  fragments={{
+    android: nativeCommonGettingStarted,
+    swift: nativeCommonGettingStarted,
+    javascript: jsGettingStarted,
+    angular: jsGettingStarted,
+    nextjs: jsGettingStarted,
+    react: jsGettingStarted,
+    vue: jsGettingStarted
+  }}
+/>

@@ -1,0 +1,151 @@
+---
+title: "コンテキスト"
+section: "frontend/ai/conversation"
+platforms: ["javascript", "react-native", "angular", "nextjs", "react", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/ai/conversation/context/"
+---
+
+LLMがユーザーの質問に対して高品質の回答を提供するには、適切な情報が必要です。この情報は、ユーザーまたはアプリケーションの状態に基づく、コンテキスト的なものである場合があります。これを可能にするために、ユーザーメッセージと共に`aiContext`をLLMに送信できます。これは、役立つ可能性のある構造化されていないデータまたは構造化されたデータの任意の形式です。
+
+> 注：`aiContext`はチャット中に利用でき、LLMに渡されますが、`metadata`はチャットで利用できず、LLMに渡されません。
+
+<!-- Platform: javascript,vue,angular -->
+```ts
+import { generateClient } from "aws-amplify/data";
+import type { Schema } from "../amplify/data/resource";
+
+const client = generateClient<Schema>({ authMode: 'userPool' });
+
+const { data: conversation } = await client.conversations.chat.create();
+
+conversation.sendMessage({
+  content: [{ text: "hello" }],
+  // aiContext can be any shape
+  aiContext: {
+    username: "danny"
+  }
+})
+```
+<!-- /Platform -->
+
+<!-- Platform: react-native -->
+```tsx
+export default function Chat() {
+  const [
+    {
+      data: { messages },
+      isLoading,
+    },
+    sendMessage,
+  ] = useAIConversation('chat');
+
+  function handleSendMessage(message) {
+    sendMessage({
+      ...message,
+      // this can be any object that can be stringified
+      aiContext: {
+        currentTime: new Date().toLocaleTimeString()
+      }
+    })
+  }
+
+  return (
+    //...
+  )
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: react, nextjs -->
+```tsx
+function Chat() {
+  const [
+    {
+      data: { messages },
+      isLoading,
+    },
+    sendMessage,
+  ] = useAIConversation('chat');
+
+  return (
+    <AIConversation
+      messages={messages}
+      isLoading={isLoading}
+      handleSendMessage={sendMessage}
+      // This will let the LLM know about the current state of this application
+      // so it can better respond to questions
+      aiContext={() => {
+        return {
+          currentTime: new Date().toLocaleTimeString(),
+        };
+      }}
+    />
+  );
+}
+```
+
+`aiContext`プロップに渡された関数は、リクエストが送信される直前に実行され、最新の情報を取得します。
+
+React contextまたは他の状態管理システムを使用して、`aiContext`に渡されるデータを更新できます。React contextを使用することで、アプリケーションの現在の状態についてより多くの情報を提供できます：
+
+```tsx
+// Create a context to share state across components
+const DataContext = React.createContext<{
+  data: any;
+  setData: (value: React.SetStateAction<any>) => void;
+}>({ data: {}, setData: () => {} });
+
+// Create a component that updates the shared state
+function Counter() {
+  const { data, setData } = React.useContext(AIContext);
+  const count = data.count ?? 0;
+  return (
+    <Button onClick={() => setData({ ...data, count: count + 1 })}>
+      {count}
+    </Button>
+  );
+}
+
+// reference shared data in aiContext
+function Chat() {
+  const { data } = React.useContext(DataContext);
+  const [
+    {
+      data: { messages },
+      isLoading,
+    },
+    sendMessage,
+  ] = useAIConversation('pirateChat');
+
+  return (
+    <AIConversation
+      messages={messages}
+      isLoading={isLoading}
+      handleSendMessage={sendMessage}
+      // This will let the LLM know about the current state of this application
+      // so it can better respond to questions
+      aiContext={() => {
+        return {
+          ...data,
+          currentTime: new Date().toLocaleTimeString(),
+        };
+      }}
+    />
+  );
+}
+
+export default function Example() {
+  const [data, setData] = React.useState({});
+  return (
+    <Authenticator>
+      <DataContext.Provider value={{ data, setData }}>
+        <Counter />
+        <Chat />
+      </DataContext.Provider>
+    </Authenticator>
+  )
+}
+```
+<!-- /Platform -->

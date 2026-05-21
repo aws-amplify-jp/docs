@@ -1,0 +1,58 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'デバイスを記憶する',
+  description: 'Amazon Cognito UserPoolsのデバイス関連機能を使用するには、デバイス機能を有効にします。Cognito UserPoolに移動し、左側のナビゲーションメニューから「デバイス」をクリックして、「ユーザーオプトイン」または「常に」のいずれかを選択します。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'flutter',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import js0 from '/src/fragments/lib/auth/common/device_features/common.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>
+
+import reactnative0 from '/src/fragments/lib/auth/common/device_features/common.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative0 }} />
+
+import ios1 from '/src/fragments/lib/auth/common/device_features/common.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import android2 from '/src/fragments/lib/auth/common/device_features/common.mdx';
+
+<Fragments fragments={{ android: android2 }} />
+
+import flutter3 from '/src/fragments/lib/auth/common/device_features/common.mdx';
+
+<Fragments fragments={{ flutter: flutter3 }} />

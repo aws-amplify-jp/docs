@@ -1,0 +1,422 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'サインアップ、サインイン、サインアウトの有効化',
+  description: "AmplifyのサインアップAPI、サインインAPI、サインアウトAPIの使用方法を学びます。",
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript" ,  "react-native", "angular", "nextjs", "react", "vue"]}>
+
+このガイドでは、Amplifyライブラリを使用してサインアップ、サインイン、サインアウトを設定し、この機能をテストします。これには、Amplifyが提供するサインアップ方法の確認、Amazon Cognitoが使用する特定のユーザー属性、初期サインアップ後のユーザー確認、ローカルサインアウトとグローバルサインアウトの違いが含まれます。設定後、この機能をフロントエンドUIに接続できます。
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+<Callout>
+
+このガイドは、Amplifyライブラリを使用してAmplify Authを設定したい方を対象としています。数行のコードでアプリのサインインと登録エクスペリエンスを作成したい場合は、カスタマイズ可能なUIと完全な認証フローを提供する[認証コンポーネント](https://ui.docs.amplify.aws/react/connected-components/authenticator)を使用することをお勧めします。
+
+</Callout>
+
+開始する前に、_Amplify Authの設定_ガイドの[_バックエンドリソースのセットアップと接続_](/gen1/[platform]/build-a-backend/auth/set-up-auth/#set-up-and-connect-backend-resources)セクションを完了しておく必要があります。
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+<Callout>
+
+このガイドは、Amplifyライブラリを使用してAmplify Authを設定したい方を対象としています。数行のコードでアプリのサインインと登録エクスペリエンスを作成したい場合は、カスタマイズ可能なUIと完全な認証フローを提供する[認証コンポーネント](https://ui.docs.amplify.aws/react-native/connected-components/authenticator)を使用することをお勧めします。
+
+</Callout>
+
+開始する前に、_Amplify Authの設定_ガイドの[_バックエンドリソースのセットアップ_](/gen1/[platform]/build-a-backend/auth/set-up-auth/#set-up-backend-resources)セクションを完了しておく必要があります。
+
+</InlineFilter>
+
+## 構築前に決定する
+
+サインアップ、サインイン、サインアウトを有効にする前に、プロセスを完了するための決定をいくつか行う必要があります。
+
+<Accordion title='サインアップ、サインイン、サインアウトのワークフローを確認する' headingLevel='4' eyebrow='詳細を学ぶ'>
+
+以下は、Amplify認証を使用したサインアップ、サインイン、サインアウトのワークフローの高レベルの概要です。
+
+**サインアップ:** ユーザー名とパスワードのセットアップでは、ユーザーにユーザー名（またはメール）とパスワードを求めます。これには、住所、生年月日、電話番号など、サインアップフォームに含める属性も含める必要があります。エンドユーザーがこの情報を送信すると、`signUp()` APIを通じてAmazon Cognito User Poolに渡され、ユーザーが作成されます。デフォルトでは、設定内容に応じてユーザーはメールまたはSMSで確認メッセージを受け取りますが、サインアップ後にユーザーを自動確認するオプションもあります。ユーザーは確認コードを入力してサインアッププロセスを完了する必要があります。ユーザーが検証されると、ユーザープロファイルは正式に確認され、Cognito User Poolでアクティブになります。プロファイルには、ユーザー名、パスワード、およびサインアップ時に収集されたその他の属性が含まれます。このユーザープロファイルを使用してサインインし、アプリケーションにアクセスできます。
+
+**サインイン:** ユーザーはサインアップで作成したユーザー名とパスワードを入力し、アプリケーションのフォームを送信してサインインします。アプリケーションは`signIn()` APIを呼び出し、ユーザー名とパスワードを渡してAmazon Cognitoで検証し、セッションを確立します。これにより、アクセスを許可するために必要なトークンが生成されます。Amazon Cognitoはサインイン時に一時的な短命トークンを発行します（デフォルト1時間）。ただし、ユーザーをより長くサインインしたままにするようにこれらの設定を更新できます（最大24時間）。
+
+**サインアウト:** Amplifyは`signOut()` APIを使用してユーザーをサインアウトし、現在のセッションを終了してAmazon Cognitoでトークンを失効させます。これはブラウザのユーザーセッションをクリアし、アプリケーションはユーザーをサインイン画面にナビゲートします。
+
+</Accordion>
+
+### サインアップのためにどのAmazon Cognito属性を渡しますか？
+
+ユーザー属性（ユーザー名、メールアドレスなど）は、ユーザーを識別するために使用されます。これらはCognito User Poolを設定するときに設定されており、追加後に名前変更または削除することはできません。Amplify CLIを使用してユーザー属性を追加するか、Amazon Cognitoコンソールにアクセスしてください。CLIでユーザー属性を追加するには、新しいプロジェクト用に`amplify add auth`コマンドを実行するか、既に設定済みのリソースがある場合は`amplify update auth`を使用できます。その後、Amplify CLIからプロンプトが表示されたときに`manual configuration`を選択できます。
+
+```sh
+? amplify update auth
+? What do you want to do?
+  'Walkthrough all the auth configurations'
+# Accept defaults for everything else
+
+# Select the attributes you want users to read/write
+? Specify read attributes:
+  'Birthdate, Email, Given Name'
+? Specify write attributes:
+  'Locale, Given Name'
+```
+
+<Callout>
+
+ユーザー属性はデフォルトでは必須ではありません。ユーザー属性を必須にすることはできますが、設定後に必須に戻すことはできません。
+
+</Callout>
+
+### サインアップ時にユーザーをどのように検証しますか？
+
+初期サインアップが完了したら、ユーザーはアカウントがアクティブになる前に連絡先情報を確認して確認する必要があります。これは、初期サインアップで収集できるメールアドレスまたは電話番号で検証コードを送信することで行われます。メール確認では、ユーザーにサインアップ時に提供したメールアドレスに送信されたリンクをクリックするか、コードを入力するよう求めます。電話確認は、ユーザーにSMSテキストメッセージで送信されたコードを入力するよう求めることで行われます。自動確認を有効にして、このステップをスキップし、サインアップ後にユーザーを自動的に確認することもできます。これは、[Amazon Cognitoドキュメント](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-sign-up.html)で説明されているpre sign-up Lambdaトリガーを使用して実現されます。
+
+これらの決定を念頭に置いたら、サインアップ、サインイン、サインアウトを有効にする準備が整いました。
+
+## サインアップ、サインイン、サインアウト機能を追加する
+
+Amplifyライブラリを使用して、サインアップ、サインイン、サインアウトを有効にする機能を追加できます。これを既存のUIに接続することも、独自のUIを作成することもできます。
+
+多くのアプリケーションの場合、ユーザー名とパスワードを使用したサインアップとサインインがすべて必要です。認証後、アプリケーションはAPIと通信してデータにアクセスし、変更できます。
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+ユーザー名とパスワード認証フローを使用して開始します。[サードパーティソーシャルプロバイダーフェデレーション](/gen1/[platform]/build-a-backend/auth/add-social-provider/)と[多要素認証](/gen1/[platform]/build-a-backend/auth/manage-mfa/)の両方をこの初期セットアップ後に追加できます。
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+ユーザー名とパスワード認証フローを使用して開始します。[サードパーティソーシャルプロバイダーフェデレーション](/gen1/[platform]/build-a-backend/auth/add-social-provider/)と[多要素認証](/gen1/[platform]/build-a-backend/auth/manage-mfa/)の両方をこの初期セットアップ後に追加できます。
+
+</InlineFilter>
+
+### サインアップ
+
+`signUp()`にユーザー名、パスワード、およびその他の属性を渡すことにより、バックエンドに新しいユーザーを作成できます。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { signUp } from 'aws-amplify/auth';
+
+type SignUpParameters = {
+  username: string;
+  password: string;
+  email: string;
+  phone_number: string;
+};
+
+async function handleSignUp({
+  username,
+  password,
+  email,
+  phone_number
+}: SignUpParameters) {
+  try {
+    const { isSignUpComplete, userId, nextStep } = await signUp({
+      username,
+      password,
+      options: {
+        userAttributes: {
+          email,
+          phone_number // E.164 number convention
+        },
+        // optional
+        autoSignIn: true // or SignInOptions e.g { authFlowType: "USER_SRP_AUTH" }
+      }
+    });
+
+    console.log(userId);
+  } catch (error) {
+    console.log('error signing up:', error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```javascript
+import { signUp } from 'aws-amplify/auth';
+
+async function handleSignUp({ username, password, email, phone_number }) {
+  try {
+    const { isSignUpComplete, userId, nextStep } = await signUp({
+      username,
+      password,
+      options: {
+        userAttributes: {
+          email,
+          phone_number // E.164 number convention
+        },
+        // optional
+        autoSignIn: true // or SignInOptions e.g { authFlowType: "USER_SRP_AUTH" }
+      }
+    });
+
+    console.log(userId);
+  } catch (error) {
+    console.log('error signing up:', error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+`signUp` APIレスポンスには`nextStep`プロパティが含まれます。これを使用して、さらなるアクションが必要かどうかを判定できます。次のステップを返す可能性があります：
+
+- `CONFIRM_SIGN_UP` - サインアップは、ユーザーからコードを収集して`confirmSignUp`を呼び出すことで確認される必要があります。
+- `DONE` - サインアッププロセスが完全に完了しました。
+- `COMPLETE_AUTO_SIGN_IN` - サインアッププロセスは`autoSignIn` APIを呼び出して完了する必要があります。
+
+### サインアップを確認する
+
+デフォルトでは、サインアップした各ユーザーはメールまたは電話番号に送信された確認コードで確認するまで、未確認ステータスのままです。以下に示すようにユーザーから確認コードを取得した後、サインアップを確認できます。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { confirmSignUp, type ConfirmSignUpInput } from 'aws-amplify/auth';
+
+async function handleSignUpConfirmation({
+  username,
+  confirmationCode
+}: ConfirmSignUpInput) {
+  try {
+    const { isSignUpComplete, nextStep } = await confirmSignUp({
+      username,
+      confirmationCode
+    });
+  } catch (error) {
+    console.log('error confirming sign up', error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { confirmSignUp } from 'aws-amplify/auth';
+
+async function handleSignUpConfirmation({ username, confirmationCode }) {
+  try {
+    const { isSignUpComplete, nextStep } = await confirmSignUp({
+      username,
+      confirmationCode
+    });
+  } catch (error) {
+    console.log('error confirming sign up', error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+### 自動サインイン
+
+`autoSignIn` APIは、以前に`signUp` APIで有効にされ、次のいずれかのケースが完了した後に、ユーザーを自動的にサインインします：
+
+- ユーザーが電話またはメールに送信された検証コードでアカウントを確認しました（デフォルトオプション）。
+- ユーザーが電話またはメールに送信された検証リンクでアカウントを確認しました。このオプションを有効にするには、[Amazon Cognitoコンソール](https://aws.amazon.com/pm/cognito)に移動し、ユーザープールを探して、`Messaging`タブに移動し、`Verification message`オプション内で`link`モードを有効にします。最後に、`Auth`設定の`Cognito`オプション内で`signUpVerificationMethod`を`link`に定義する必要があります。
+
+```ts
+import { autoSignIn } from 'aws-amplify/auth';
+
+async function handleAutoSignIn() {
+  try {
+    const signInOutput = await autoSignIn();
+    // handle sign-in steps
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+### サインイン
+
+ユーザー名とパスワードを`signIn` APIに渡して、エンドユーザーをサインインします。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { signIn, type SignInInput } from 'aws-amplify/auth';
+
+async function handleSignIn({ username, password }: SignInInput) {
+  try {
+    const { isSignedIn, nextStep } = await signIn({ username, password });
+  } catch (error) {
+    console.log('error signing in', error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { signIn } from 'aws-amplify/auth';
+
+async function signIn({ username, password }) {
+  try {
+    const { isSignedIn, nextStep } = await signIn({ username, password });
+  } catch (error) {
+    console.log('error signing in', error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+`signIn` APIレスポンスには`nextStep`プロパティが含まれます。これを使用して、さらなるアクションが必要かどうかを判定できます。次のステップを返す可能性があります：
+
+- `CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED` - ユーザーは一時パスワードで作成されており、新しいパスワードを設定する必要があります。`confirmSignIn`でプロセスを完了します。
+- `CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE` - サインインはカスタムチャレンジレスポンスで確認される必要があります。`confirmSignIn`でプロセスを完了します。
+- `CONFIRM_SIGN_IN_WITH_TOTP_CODE` - サインインはユーザーからのTOTPコードで確認される必要があります。`confirmSignIn`でプロセスを完了します。
+- `CONTINUE_SIGN_IN_WITH_TOTP_SETUP` - TOTPセットアップのプロセスを続ける必要があります。`confirmSignIn`でプロセスを完了します。
+- `CONFIRM_SIGN_IN_WITH_SMS_CODE` - サインインはユーザーからのSMSコードで確認される必要があります。`confirmSignIn`でプロセスを完了します。
+- `CONTINUE_SIGN_IN_WITH_MFA_SELECTION` - ユーザーはサインインする前にMFA検証方法を選択する必要があります。`confirmSignIn`でプロセスを完了します。
+- `RESET_PASSWORD` - ユーザーは`resetPassword`を介してパスワードをリセットする必要があります。
+- `CONFIRM_SIGN_UP` - ユーザーはサインアップフローを完全に完了していないため、`confirmSignUp`で確認する必要があります。
+- `DONE` - サインインプロセスが完了しました。
+
+TOTPおよびMFAステップの処理の詳細については、[_「多要素認証」_](/gen1/[platform]/prev/build-a-backend/auth/manage-mfa/)を参照してください。
+
+### サインアウト
+
+ユーザーをアプリケーションからサインアウトするには、`signOut` APIを使用できます。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { signOut } from 'aws-amplify/auth';
+
+async function handleSignOut() {
+  try {
+    await signOut();
+  } catch (error) {
+    console.log('error signing out: ', error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { signOut } from 'aws-amplify/auth';
+
+async function handleSignOut() {
+  try {
+    await signOut();
+  } catch (error) {
+    console.log('error signing out: ', error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+グローバルサインアウトを実行して、すべてのデバイスからユーザーをサインアウトすることもできます。これにより、ユーザーに発行されたすべてのリフレッシュトークンも無効になります。ユーザーの現在のアクセストークンとIDトークンは、リフレッシュトークンが期限切れになるまで他のデバイスで有効なままです（アクセストークンとIDトークンは発行後1時間で期限切れになります）。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { signOut } from 'aws-amplify/auth';
+
+async function handleSignOut() {
+  try {
+    await signOut({ global: true });
+  } catch (error) {
+    console.log('error signing out: ', error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { signOut } from 'aws-amplify/auth';
+
+async function handleSignOut() {
+  try {
+    await signOut({ global: true });
+  } catch (error) {
+    console.log('error signing out: ', error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+アプリケーション内にAmplifyライブラリメソッドを実装したら、サインアップ、サインイン、サインアウト機能をテストできます。
+
+### AWSコンソールで作成されたユーザーを表示する
+
+サインアップ、サインイン、サインアウト機能をテストした後、Amazon Cognitoコンソールで作成されたユーザーを確認できます。これを行うには、`amplify console auth`を使用してCLIからコンソールを直接開くか、コンソール内の既存のUser Poolsを確認できます。ユーザーを正常に検証した場合、ユーザーステータスは`CONFIRMED`となります。ただし、ユーザーがまだ検証されていない場合は`UNCONFIRMED`となる可能性があります。また、その他の必要な属性が正しく更新されていることも確認できます。
+
+これで、認証用のサインアップ、サインイン、サインアウトを有効にし、テストユーザーで機能を確認しました。
+
+## 結論
+
+おめでとうございます！**サインアップ、サインイン、サインアウトを有効にする**ガイドを完了し、機能が期待どおりに機能することを確認しました。
+
+## 次のステップ
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+ユーザー名とパスワードを使用してAmplify Authの設定を完了したので、追加機能を追加することもできます。以下をお勧めします：
+
+- [ソーシャルプロバイダーサインインを追加する](/gen1/[platform]/build-a-backend/auth/add-social-provider/)
+- [多要素認証](/gen1/[platform]/build-a-backend/auth/manage-mfa/)
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+ユーザー名とパスワードを使用してAmplify Authの設定を完了したので、追加機能を追加することもできます。以下をお勧めします：
+
+- [ソーシャルプロバイダーサインインを追加する](/gen1/[platform]/build-a-backend/auth/add-social-provider/)
+- [多要素認証](/gen1/[platform]/build-a-backend/auth/manage-mfa/)
+
+</InlineFilter>
+
+</InlineFilter>

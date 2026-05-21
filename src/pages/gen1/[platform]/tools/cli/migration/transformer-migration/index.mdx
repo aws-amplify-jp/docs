@@ -1,0 +1,123 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'GraphQL Transformer v1 から v2 への移行',
+  description: '',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+[GraphQL Transformer v2](/gen1/[platform]/build-a-backend/graphqlapi/)により、Amplify はアプリバックエンドをより迅速かつ簡単に作成できるようにする新機能の範囲を導入しています。
+
+## 何が変わっていますか？
+
+新しい GraphQL Transformer v2 では、テーブルインデックス設定、認可ルール、エンティティ関係、および OpenSearch 統合が変わります。また、新しい GraphQL Transformer のコアには、[AWS AppSync パイプラインリゾルバー](https://docs.aws.amazon.com/appsync/latest/devguide/pipeline-resolvers.html)を活用した新しいアーキテクチャがあります。
+
+### テーブルインデックス設定の変更:
+
+- `@key` ディレクティブが 2 つの新しいディレクティブに置き換わります。
+- お客様は、フィールドに `@primaryKey` を指定してテーブルの主キーとして定義できます。また、ディレクティブ引数を使用してソートキーフィールドを指定することもできます。
+- お客様は、フィールドに `@index` を指定して、DynamoDB グローバルセカンダリインデックスのパーティションキーとして使用できます。オプションで、追加のパラメータを渡すことで、queryField またはソートキーフィールドを指定することもできます。
+- `@versioned` ディレクティブは AppSync の組み込みコンフリクト検出および解決機能により廃止されました。
+
+### 認可ルールの変更:
+
+- _この移行より前_に、Amplify CLI は、指定されない限り、デフォルトの認可タイプ（API キー、UserPools、OIDC のみ）ですべてのデータへのアクセスを自動的に許可します。_*新しい GraphQL Transformer では*_、すべてのデータアクセスはデフォルトで拒否され、お客様は明示的に認可ルールを指定してクライアントがデータにアクセスできるようにする必要があります。
+- _この移行より前_に、お客様が所有者ベースの認可 `@auth(rules: [{allow: owner, operations: [read, update, delete]}])` を使用した場合、「operations」フィールドは_他者のアクセスを拒否_するために使用されました。この例では、「他者は読み取り、更新、削除ができません」という意味です。_*新しい GraphQL Transformer では*_、新しいデフォルト拒否パラダイムを考えると、所有者ベースの認可の操作は所有者が何を実行できるかを指定します。上記と同じ例は、「所有者は読み取り、更新、削除ができます」という意味になります。
+- _この移行より前_に、お客様がフィールドに `@auth` ルールを指定した場合、認可はモデルにも適用されました。_*新しい GraphQL Transformer では*_、フィールドで指定された `@auth` ルールはモデルレベルで定義されたすべての認可ルールをオーバーライドします。モデルレベルの認可ルールをフィールドレベルに適用する必要がある場合は、明示的に指定する必要があります。
+
+### 関係マッピング/接続の変更:
+
+- `@connection` が複数の新しいディレクティブに置き換わります。
+- `@hasOne` はターゲットモデルとの「1 対 1」関係を作成します。
+- `@hasMany` はターゲットモデルとの「1 対多」関係を作成します。
+- `@belongsTo` は 2 つのモデル間の双方向関係を促進します。たとえば、`@hasMany` 関係のターゲットモデルで `@belongsTo` ディレクティブを使用して、ソースモデルに戻る関係を作成します。
+- `@manyToMany` は Amplify の GraphQL Transformer の新しい関係カーディナリティを作成します。従来、お客様はこの機能の回避策として 2 つのモデル間に「結合テーブル」を作成し、両方のモデルからその結合テーブルへの hasMany 関係を作成する必要がありました。_*新しいトランスフォーマーでは*_、お客様はモデル間に `@manyToMany` 関係を指定でき、Amplify CLI は舞台裏で結合テーブルを作成します。
+  - 注: 結合テーブルに追加のプロパティを保存したい場合、または既存の結合テーブルがある場合は、2 つの `@hasMany` \<=> `@belongsTo` 関係を使用して多対多関係を促進できます。
+  - 注: テーブル結合を使用する際のDataStore同期エラーを防ぐには、GraphQL スキーマの `@model(queries: null)` から `queries: null` を削除してください。
+  - 注: 結合テーブルに追加のプロパティを保存したい場合、または既存の結合テーブルがある場合は、2 つの `@hasMany` &lt;=&gt; `@belongsTo` 関係を使用して多対多関係を促進できます
+
+### OpenSearch 統合の変更:
+
+- DataStore が有効な GraphQL API は OpenSearch 統合をサポートするようになりました。
+- 集計クエリ（最小値、最大値、合計、平均）および合計カウントが利用可能になり、ユーザーアクセス許可に基づいてスコープ設定されます
+- OpenSearch バージョン 7.10 が新しいデフォルトバージョンになりました。
+- バックフィルバッチサイズが 100 に増加され、バックフィルのコストが削減され、既存データのより高速なバックフィルが可能になります。
+- お客様は OpenSearch 検索結果を複数のフィールドで並べ替えて、検索クエリをより細かく調整できるようになりました。
+
+## 重大な変更は何ですか。移行方法は？
+
+### Amplify CLI が手動で移行する必要がある変更
+
+- リレーショナルデータベースデータソースを GraphQL API で使用しています
+  - 現在のところ、新しい GraphQL Transformer はリレーショナルデータソースをサポートしていません。現在の GraphQL Transformer バージョンにとどまり、`amplify/cli.json` の `suppressschemamigrationprompt` フィーチャーフラグを `true` に変更することで、さらなる移行警告を抑制できます。
+- GraphQL API でカスタムリゾルバーを使用しています
+  - 新しい GraphQL Transformer にカスタムリゾルバーを追加するには、[こちら](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#vtl-resolver)の指示に従ってください。
+- resolvers/ フォルダにカスタム .vtl ファイルを配置して、Amplify で生成されたリゾルバーをオーバーライドしました。
+  - GraphQL Transformer v2 では、すべてのリゾルバーは「パイプラインリゾルバー」です。これは、自動生成されたリゾルバーをカスタマイズする際により多くのモジュール性と柔軟性を提供することを意味します。
+    - まず、`build/resolvers/` フォルダ内のすべてのユニットリゾルバーを確認し、オーバーライドしたいユニットリゾルバー VTL ファイルを特定します。
+    - 次に、resolvers/ フォルダの VTL ファイル名を `build/resolvers/` フォルダでオーバーライドしたいものに基づいて名前変更します。VTL ファイル名は次の命名規則に従う必要があります。`{Query|Mutation}.{Model}.{Field}.{Slot}.{Position}.{req|res}.vtl` ここで「Slot」は以下の通りです:
+      - リクエストマッピングテンプレート用の init、preAuth、auth、postAuth、preDataLoad のいずれか。
+      - レスポンスマッピングテンプレート用の postDataLoad、finish のいずれか。
+    - [Amplify で生成されたリゾルバーを拡張する](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#extend-amplify-generated-resolvers)方法をご確認ください
+- GraphQL スキーマで `@searchable` を使用しました。新しい GraphQL Transformer に移行する場合、OpenSearch ドメインは OpenSearch バージョン 7.10 に置き換わり、OpenSearch のバージョン 6.x.x からの重大な変更(https://docs.aws.amazon.com/opensearch-service/latest/developerguide/version-migration.html)により、データが失われる可能性があります。
+  - OpenSearch ドメインデータを保持するには、opensearch ドメインのスナップショットを手動で取得し、v2 トランスフォーマーに移行して、[こちら](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/managedomains-snapshots.html)に記載されているようにスナップショットを復元します。
+- 自動生成された検索可能なクエリを使用しています
+  - OpenSearch バージョン >= 1.1 を使用しているお客様は、[リゾルバーオーバーライド](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#override-amplify-generated-resolvers)を使用して検索可能なリゾルバーを変更する必要があります。バージョン >= 1.1 を使用しているお客様は、クエリの indexPath を `name/doc/_search` から `name/_search` に変更する必要があります。これを行わないと、自動生成されたすべての検索可能なクエリが失敗します。built テンプレートをコピーして、build フォルダと同じレベルのリゾルバーフォルダに移動することで、これを簡単に実行できます。
+
+### Amplify CLI が自動的に移行する変更
+
+GraphQL トランスフォーマー v2 への移行を支援するため、Amplify CLI に `amplify migrate api` が追加されました。このツールは多くのスキーマシナリオを自動的に移行します。移行されたスキーマを開発環境でテストすることをお勧めします。スキーマを手動で移行する方法または正確さについて移行ツールの出力を二重チェックする方法については、引き続きをお読みください。
+
+- `@key` ディレクティブが廃止され、`@primaryKey` と `@index` に置き換わります。
+  - _*移行*_: 新しい `@primaryKey` および `@index` ディレクティブは `@key` 機能を完全に置き換え、より直感的なインターフェイスを提供します。
+    - 主キーを移行するには:
+      - モデルから `@key` ディレクティブを削除します。
+      - 主キーのフィールドに `@primaryKey` ディレクティブを追加します。
+      - ソートキーが使用されている場合: ソートキーフィールド名を配列として `@primaryKey` の sortKeyFields パラメータに提供します。
+    - GSI を移行するには:
+      - モデルから `@key` ディレクティブを削除します。
+      - フィールドに `@index` ディレクティブを追加し、name パラメータに `@key` ディレクティブの keyName パラメータを指定します。
+      - ソートキーが使用されている場合: ソートキーフィールド名を配列として `@index` の sortKeyFields パラメータに提供します。
+      - カスタム queryField が使用されている場合: queryField 名を `@index` の queryField パラメータ経由で提供します。
+  - ![スクリーンショット @key ディレクティブ移行を視覚的に示す](/images/cli/graphql/key-migration.png)
+- GraphQL API の認可は「デフォルトで拒否」になります。つまり、クライアントは認可ルールが指定されていない限り、保存されたデータにアクセスできません。
+  - _*移行:*_
+    - GraphQL API のデフォルト認可モードに基づいて認可ルールが設定されていない `@model` タイプの場合、デフォルト認可モードを使用して `@auth` ルールを明示的に設定する必要があります。
+  - ![スクリーンショット デフォルト認可モード移行を視覚的に示す](/images/cli/graphql/default-auth-mode-migration.png)
+- `@auth` の所有者ベースの認可は、「拒否ベース」システムではなく「許可ベース」のモデルで設定されます
+  - _*移行:*_ まず、「operations」パラメータから省略した「operations」があるかどうかを特定します。トランスフォーマー v1 では、指定された操作は「他者」がアクセスを拒否される操作です。トランスフォーマー v2 では、省略された操作を「private」ルールに適用します。
+  - ![スクリーンショット 元の所有者認可ルールとデフォルト拒否での移行されたルールを示す](/images/cli/graphql/owner-auth-migration.png)
+- フィールドレベルの認可ルールを書き直して、特定のフィールドに対してだれがどのタイプのアクセスを許可されているかを明示的に指定する必要があります。フィールドルールはすべての既存のオブジェクトルールをオーバーライドします。オブジェクトルールを保持するには、フィールドで再度指定する必要があります。ルールがフィールドにのみ記載されていてオブジェクトに記載されていない場合、他のすべてのフィールドへのアクセスが拒否されます。
+  - 暗黙的にフィールドを作成するディレクティブがあります。これらのフィールドは入力スキーマで指定されていないため、フィールドレベルの認可を利用できません。
+- GraphQL Transformer の v1 では、`@searchable` と `@auth` を組み合わせた場合、検索結果の総カウントには、ユーザーがアクセスを許可されていないレコードが含まれていました。GraphQL Transformer の v2 では、総カウントには、ユーザーがアクセスを許可されている結果のみが含まれます。同様に、フィールドで集計を実行するには、ユーザーがそのフィールドに読み取りアクセスしている必要があります。
+- `@connection` は、関係のセマンティクスを詳しく説明する以下の明示的なディレクティブを優先して廃止されます: `@hasOne`、`@hasMany`、`@belongsTo`、`@manyToMany`
+  - _*移行*_: 最初に、すべての接続とそれぞれの関係タイプを特定します: 「1 対 1」、「1 対多」、「の所属」、または「多対多」。
+    - 「1 対 1」関係を移行するには、`@connection` ディレクティブを `@hasOne` に置き換えます。必要に応じて、`@connection` ディレクティブのフィールドで fields パラメータを指定します。
+    - 「1 対多」関係を移行するには、`@connection` ディレクティブを `@hasMany` に置き換えます。`@connection` ディレクティブの keyName および fields 値を、`@hasMany` ディレクティブの indexName および fields パラメータとして提供します。
+    - 「の所属」関係を移行するには、`@connection` ディレクティブを `@belongsTo` に置き換えます。`@connection` ディレクティブの fields 値を `@belongsTo` ディレクティブの fields パラメータとして指定します。
+    - 既存の多対多関係は、基になる結合テーブルとインデックス名が既存の名前と同じではないため、新しい `@manyToMany` ディレクティブを使用できません。多対多関係を構成する `@connection` ディレクティブは、上記のルールに基づいて `@hasMany` および `@belongsTo` に置き換える必要があります。新しく作成された多対多関係は `@manyToMany` ディレクティブを活用してこの関係タイプの定義を簡素化できます。
+- `improvePluralization` フィーチャーフラグは新しい GraphQL Transformer では尊重されません。新しいトランスフォーマーは常に改善されたプロローションを使用してリストクエリを作成します。プロジェクトにこのフィーチャーフラグが有効でなく、フラグの影響を受けるリストクエリがある場合（listCactuss vs listCacti など）、アプリケーションコードを新しいリストクエリ名を使用するように移行する必要があります。
+- `validateTypeNameReservedWords` フィーチャーフラグは新しい GraphQL Transformer では尊重されません。新しいトランスフォーマーは、型名が予約語の場合、常にエラーをスローします。

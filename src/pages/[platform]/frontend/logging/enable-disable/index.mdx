@@ -1,0 +1,98 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ロギングの有効化と無効化',
+  description: 'ロギングを有効または無効にする方法について詳しく説明します',
+  platforms: [
+    'android',
+    'swift'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+このセクションでは、Amplify Loggerを使用する際にロギングを有効または無効にする方法を学習します。デフォルトでは有効になっていますが、`amplifyconfiguration_logging`ファイルで無効にすることができます。
+
+
+
+<InlineFilter filters={['android']}>
+
+<BlockSwitcher>
+<Block name="Java">
+
+Amplify Loggerを有効にします。
+
+```java
+Amplify.Logging.enable();
+```
+
+Amplify Loggerを無効にします。
+
+```java
+Amplify.Logging.disable();
+```
+
+</Block>
+<Block name="Kotlin">
+
+Amplify Loggerを有効にします。
+
+```kotlin
+Amplify.Logging.enable()
+```
+
+Amplify Loggerを無効にします。
+
+```kotlin
+Amplify.Logging.disable()
+```
+
+</Block>
+<Block name="RxJava">
+
+Amplify Loggerを有効にします。
+
+```java
+Amplify.Logging.enable();
+```
+
+Amplify Loggerを無効にします。
+
+```java
+Amplify.Logging.disable();
+```
+
+</Block>
+</BlockSwitcher>
+
+
+
+</InlineFilter>
+
+
+<InlineFilter filters={['swift']}>
+
+Amplify Loggerを有効にします。
+
+```swift
+Amplify.Logging.enable()
+```
+
+Amplify Loggerを無効にします。
+
+```swift
+Amplify.Logging.disable()
+```
+
+</InlineFilter>

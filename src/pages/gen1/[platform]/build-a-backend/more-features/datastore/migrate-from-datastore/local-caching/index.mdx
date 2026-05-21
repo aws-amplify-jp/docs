@@ -1,0 +1,310 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'オプション: ローカルキャッシング',
+  description: 'FlutterおよびAndroidのDataStoreローカルストレージの代替として、ローカルキャッシングを設定します。',
+  platforms: [
+    'android',
+    'flutter',
+    'swift'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+顧客への迅速で継続的なアクセスを保証するために、Amplify DataStoreはリモートデータのローカルキャッシュ版を採用しています。Amplify DataStoreからの移行中に、不要な複雑さを避けるために、モデルに合わせたローカルストレージソリューションを選択する必要があります。
+
+<InlineFilter filters={["flutter"]}>
+
+サードパーティパッケージの提案については、[ヘルプリソース](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/helpful-resources/)ページを参照してください。
+
+## ローカルモデル
+
+Amplify GraphQLで生成されたモデルに対応する、ローカルストレージ用の別のモデルを作成する必要があります。Amplifyモデルのみを使用するには、AmplifyモデルとローカルモデルをマップするためのFunctionを開発し、ローカルモデルが実装の残りの部分から隠された状態を保つようにする必要があります。
+
+```dart
+static LocalModel _toLocalModel(RemoteModel remote) {
+  return LocalModel(
+    id: remote.id,
+    someString: remote.someString,
+    createdAt: remote.createdAt?.getDateTimeInUtc(),
+    updatedAt: remote.updatedAt?.getDateTimeInUtc(),
+  );
+}
+
+static RemoteModel _toRemoteModel(LocalModel local) {
+  return RemoteModel(
+    id: local.id,
+    someString: local.someString,
+  );
+}
+```
+
+特定のデータベースライブラリは、カスタム主キーのサポートがないか、サポートが限定されています。ライブラリの限定的な主キーをモデルの主キーと共に使用するオプションがありますが、モデルの構造に対応するデータベースを選択することをお勧めします。スキーマバージョンを変更する場合、DataStoreはモデルの非互換性を防ぐためにデータを破棄します。
+
+## CRUD
+
+ローカルストア操作の標準的な慣行には、Create、Read、Update、およびDeleteのためのInterfaceの実装が含まれます。ただし、モデル間の関係を考慮することが重要です。SQLでは、1:1または1:多の関係を持つモデルを処理する場合、CRUD操作のために複数のテーブルと対応する結合を作成する必要があります。NoSQLを扱う場合、多対多関係を持つモデルの基本的なクエリは、関連データをリンクするために複数のサブクエリの使用が必要になる場合があります。
+
+### クエリ
+
+Amplify DataStoreはクエリの述語、ページネーション、およびソートパラメータを使用して、Amplify APIとそのローカルストア ソリューションのクエリを生成します。すべてのデータをローカルに保存することで、ローカルストアのクエリの処理のみが必要になることで実装を簡略化します。そうでない場合は、Amplify APIとローカルストアの両方に一致するクエリを生成する必要があります。
+
+### 可観測性
+
+レスポンシブなアプリをサポートするには、データの変更を監視するローカルストアを選択してください。または、Create、Update、またはDeleteの後にトリガーする独自のobserve Streamを作成することもできます。
+
+```dart
+Stream<void> observe() {
+  return localRepository.observe();
+}
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+DataStoreは[SQLite](https://github.com/stephencelis/SQLite.swift) APIを直接使用しますが、選択するオプションはキャッシング要件によって異なる可能性があります。
+
+## Apolloの正規化されたキャッシュ
+
+Apollo iOSには、SQLiteを[正規化されたキャッシュ](https://www.apollographql.com/docs/ios/caching/introduction)として使用するオプションが含まれています。正規化されたキャッシュは設定が簡単で、Apolloがキャッシュから以前のクエリを再生して、遅延を改善し、帯域幅消費を削減し、オフライン中にクエリを再生できます。
+
+正規化されたキャッシュのセットアップ手順については、[Migrate DataStore to Apollo — ObserveQuery](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-datastore-to-apollo/#observequery)セクションを参照してください。このセクションではキャッシュを活用する`watch()`関数について説明しています。
+
+## SwiftDataを使用したカスタムキャッシング
+
+キャッシュされたデータへのより豊富なアクセスが必要な高度な使用例については、Apolloが提供するキャッシュの代わりに、または追加として、独自のキャッシング層を使用できます。このアプローチの2つの一般的なフレームワークは[SwiftData](https://developer.apple.com/documentation/swiftdata)と[CoreData](https://developer.apple.com/documentation/coredata)です。以下の例ではSwiftDataを使用しています。
+
+### ローカルモデル
+
+`Model()`マクロを使用して、Apollo生成モデルに対応するローカルストレージ用の別のエンティティに注釈を付けることができます:
+
+```swift
+@Model
+class PostEntity {
+  @Attribute(.unique) var id: String
+  var updatedAt: String
+  var createdAt: String
+  var status: PostEntityStatus?
+  var title: String
+  var rating: Int?
+  var content: String?
+
+  init(id: String,
+       updatedAt: String,
+       createdAt: String,
+       status: PostEntityStatus? = nil,
+       title: String,
+       rating: Int? = nil,
+       content: String? = nil) {
+    self.id = id
+    self.updatedAt = updatedAt
+    self.createdAt = createdAt
+    self.status = status
+    self.title = title
+    self.rating = rating
+    self.content = content
+  }
+}
+
+enum PostEntityStatus: Codable {
+  case active
+  case inactive
+}
+```
+
+その後、`ModelContainer`を使用してモデルストレージを構成できます:
+
+```swift
+let container = try ModelContainer(for: PostEntity.self)
+```
+
+### モデルマッピング
+
+拡張初期化子は、リモートモデルをローカルモデルにマップするのに役立ちます:
+
+```swift
+extension PostEntity {
+  convenience init(postDetails: PostDetails) {
+    self.init(id: postDetails.id,
+              updatedAt: postDetails.updatedAt ?? "",
+              createdAt: postDetails.createdAt ?? "",
+              status: (postDetails.status == .case(.active)) ? .active : .inactive,
+              title: postDetails.title,
+              rating: postDetails.rating,
+              content: postDetails.content)
+  }
+}
+```
+
+### キャッシュの入力
+
+SwiftDataモデルが設定されたら、Apolloクエリの結果をキャッシュに書き込むことでデータを入力できます:
+
+```swift
+func populate(apolloClient: ApolloClient, context: ModelContext) {
+  var nextToken: String? = nil
+  repeat {
+    let query = GetPostsQuery(
+      nextToken: nextToken.flatMap { .some($0) } ?? .none)
+    apolloClient.fetch(query: query) { result in
+      guard let data = try? result.get().data else { return }
+      if let items = data.listPosts?.items {
+        for item in items {
+          guard let postDetails = item?.fragments.postDetails
+            else { continue }
+          let model = PostEntity(postDetails: postDetails)
+          context.insert(model)
+          try? context.save()
+        }
+      }
+      nextToken = data.listPosts?.nextToken
+    }
+  } while (nextToken != nil)
+}
+```
+
+### 可観測性
+
+[`.NSPersistentStoreRemoteChange`](https://developer.apple.com/documentation/foundation/nsnotification/name/3180044-nspersistentstoreremotechange)通知を監視して、永続ストアの変更をリッスンできます。通知オブジェクトにはトランザクションの履歴トークンが含まれており、これを使用してトランザクション履歴を取得および処理できます。
+
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+
+DataStoreはAndroidの組み込みSQLiteデータベースAPIを直接使用しますが、選択するオプションはキャッシング要件によって異なる可能性があります。ライブラリの提案については、[ヘルプリソース](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/helpful-resources/)ページを参照してください。
+
+## Apolloの正規化されたキャッシュ
+
+Apollo Kotlinには、SQLiteを[正規化されたキャッシュ](https://www.apollographql.com/docs/kotlin/caching/normalized-cache#sqlite-cache)として使用するオプションが含まれています。正規化されたキャッシュは設定が簡単で、Apolloがキャッシュから以前のクエリを再生して、遅延を改善し、帯域幅消費を削減し、オフライン中にクエリを再生できます。
+
+正規化されたキャッシュのセットアップ手順については、[Migrate DataStore to Apollo — ObserveQuery](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-datastore-to-apollo/#observequery)セクションを参照してください。このセクションでは依存関係の追加とキャッシュの構成について説明しています。
+
+## Roomを使用したカスタムキャッシング
+
+キャッシュされたデータへのより豊富なアクセスが必要な高度な使用例については、Apolloが提供するキャッシュの代わりに、または追加として、独自のキャッシング層を使用できます。このアプローチの2つの一般的なライブラリは[SQLDelight](https://sqldelight.github.io/sqldelight)と[Room](https://developer.android.com/training/data-storage/room)です。以下の例ではRoomを使用しています。
+
+### ローカルモデル
+
+独自のキャッシュでモデルをキャッシュするには、Apollo生成モデルに対応するローカルストレージ用の別のエンティティを作成します。Roomでは、`PostDetails`フラグメントに対応するエンティティは次のようになります:
+
+```kotlin
+@Entity(tableName = "post")
+data class PostEntity(
+  @PrimaryKey val id: String,
+  val updatedAt: String,
+  val createdAt: String,
+  val title: String,
+  val content: String,
+  val status: PostStatus,
+  val rating: Int
+)
+```
+
+その後、DAOを使用してこれらのエンティティを保存、クエリ、および変更できます:
+
+```kotlin
+@Dao
+interface PostDao {
+  @Query("SELECT * FROM post")
+  suspend fun getAll(): List<PostEntity>
+
+  @Query("SELECT * FROM post WHERE id = :id")
+  suspend fun get(id: String): PostEntity
+
+  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  suspend fun insert(vararg posts: PostEntity)
+
+  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  suspend fun insertAll(posts: List<PostEntity>)
+
+  @Delete
+  suspend fun delete(post: PostEntity)
+}
+```
+
+### モデルマッピング
+
+拡張関数を使用して、あるモデルタイプを別のモデルタイプにマップできます:
+
+```kotlin
+fun PostDetails.toLocalModel() = PostEntity(
+  id = id,
+  updatedAt = updatedAt,
+  createdAt = createdAt,
+  title = title,
+  content = content,
+  status = status,
+  rating = rating
+)
+
+fun PostEntity.toRemoteModel() = PostDetails(
+  id = id,
+  updatedAt = updatedAt,
+  createdAt = createdAt,
+  title = title,
+  content = content,
+  status = status,
+  rating = rating
+)
+```
+
+スキーマバージョンを変更する場合、DataStoreはモデルの非互換性を防ぐためにデータを破棄します。Roomでは、キャッシュされたデータを保持するために[マイグレーション](https://developer.android.com/training/data-storage/room/migrating-db-versions)を代わりに使用できます。
+
+### キャッシュの入力
+
+Roomデータベースが作成されたら、Apolloクエリの結果をキャッシュに書き込むことでデータを入力できます。次のコードはすべての`Post`オブジェクトをローカルデータベースに保存します:
+
+```kotlin
+suspend fun syncAllPosts() {
+  // Sync all pages of posts until there is no nextToken
+  var nextToken: String? = null
+  do {
+    val query = GetPostsQuery(nextToken = Optional.presentIfNotNull(nextToken))
+    val response = apolloClient.query(query).execute()
+    response.data?.listPosts?.items?.let { posts ->
+      val mapped = posts.mapNotNull { it?.postDetails?.toLocalModel() }
+      postDao.insertAll(mapped)
+    }
+    nextToken = response.data?.listPosts?.nextToken
+  } while (nextToken != null)
+}
+```
+
+### 可観測性
+
+レスポンシブなアプリをサポートするには、データの変更を監視するローカルストアを選択してください。Roomを使用する場合、DAOを変更して[Kotlin Flowを返す](https://developer.android.com/training/data-storage/room/async-queries#observable)ことで、データベースの変更に対応できます。更新された監視可能なDAOは次のようになります:
+
+```kotlin
+@Dao
+interface PostDao {
+  @Query("SELECT * FROM post")
+  fun getAll(): Flow<List<PostEntity>>
+
+  @Query("SELECT * FROM post WHERE id = :id")
+  fun get(id: String): Flow<PostEntity>
+
+  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  suspend fun insert(vararg posts: PostEntity)
+
+  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  suspend fun insertAll(posts: List<PostEntity>)
+
+  @Delete
+  suspend fun delete(post: PostEntity)
+}
+```
+
+</InlineFilter>

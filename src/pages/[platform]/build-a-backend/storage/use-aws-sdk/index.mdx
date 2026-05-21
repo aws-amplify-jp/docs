@@ -1,0 +1,87 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'AWS SDK for S3 APIを使用する',
+  description: 'エスケープハッチを使用してS3Clientにアクセスする',
+  platforms: [
+    'android',
+    'swift'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplifyが機能を提供していない高度なユースケースの場合、エスケープハッチを取得して`S3Client`インスタンスにアクセスできます。
+
+<InlineFilter filters={["android"]}>
+
+<BlockSwitcher>
+
+<Block name="Java">
+
+<Callout>
+
+ブロッキングインターフェースまたはフューチャーに基づいた同等の非同期インターフェースのいずれかを使用して、JavaからKotlinクライアントを使用する方法について詳しくは、[こちら](https://github.com/awslabs/smithy-kotlin/blob/main/docs/design/kotlin-smithy-sdk.md#java-interop)を参照してください。
+
+</Callout>
+
+```java
+AWSS3StoragePlugin plugin = (AWSS3StoragePlugin) Amplify.Storage.getPlugin("awsS3StoragePlugin");
+S3Client client = plugin.getEscapeHatch();
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+val plugin = Amplify.Storage.getPlugin("awsS3StoragePlugin") as AWSS3StoragePlugin
+val client = plugin.escapeHatch
+```
+
+</Block>
+</BlockSwitcher>
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+以下のインポートを追加します。
+
+```swift
+import AWSS3StoragePlugin
+```
+
+次に、このコードを使用してエスケープハッチを取得します。
+
+```swift
+do {
+    // Retrieve the reference to AWSS3StoragePlugin
+    let plugin = try Amplify.Storage.getPlugin(for: "awsS3StoragePlugin")
+    guard let storagePlugin = plugin as? AWSS3StoragePlugin else {
+        return
+    }
+
+    // Retrieve the reference to S3Client
+    let s3Client = storagePlugin.getEscapeHatch()
+
+    // Make requests using s3Client...
+    // ...
+} catch {
+    print("Get escape hatch failed with error - \(error)")
+}
+```
+
+クライアント追加ドキュメントについては、[AWS SDK for Swift クライアントドキュメント](https://docs.aws.amazon.com/sdk-for-swift/latest/developer-guide/using-client-services.html)を参照してください。S3Clientコード例については、[SDK for Swiftを使用したAmazon S3の例](https://docs.aws.amazon.com/sdk-for-swift/latest/developer-guide/swift_s3_code_examples.html)を参照してください。
+
+</InlineFilter>

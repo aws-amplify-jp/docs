@@ -1,0 +1,97 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'パスの使用',
+  description: "Amplify Storage APIでパスを使用することについて詳しく学びます。",
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ],
+  canonicalObjects: [
+    {
+      platforms: [
+        'react',
+        'javascript',
+        'vue',
+        'react-native',
+        'nextjs',
+        'angular'
+      ],
+      canonicalPath: '/javascript/build-a-backend/storage/path/'
+    }
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={['javascript', 'react-native', 'angular', 'nextjs', 'react', 'vue']}>
+APIで`path`パラメータを使用して、S3バケット内の任意のパスにアクセスできます。これは定義済みの`protected`、`private`、または`guest`フォルダアクセスレベルよりも多くの柔軟性を提供し、ニーズに合わせたストレージ構造を作成および管理できます。
+
+<Callout>注：`path`パラメータは空にしたり、'/'（先頭スラッシュ）で始まることはできません</Callout>
+
+以下のセクションでは、パスベースのAPIで既存の`guest`、`protected`、および`private`リソースを使用する方法について説明しています。
+
+## ゲストアクセスレベルの使用
+
+```javascript
+import { getProperties } from 'aws-amplify/storage';
+
+try {
+  const result = await getProperties({
+    path: 'public/album/2024/1.jpg',
+  });
+  console.log('File Properties ', result);
+} catch (error) {
+  console.log('Error ', error);
+}
+```
+
+## 保護されたアクセスレベルの使用
+
+```javascript
+import { getProperties } from 'aws-amplify/storage';
+
+try {
+  const result = await getProperties({
+    // `identityId`は、現在認証されているユーザーのIDを提供します
+    path: ({identityId}) => `protected/${identityId}/album/2024/1.jpg`,
+  });
+  console.log('File Properties ', result);
+} catch (error) {
+  console.log('Error ', error);
+}
+```
+
+## プライベートアクセスレベルの使用
+
+```javascript
+import { getProperties } from 'aws-amplify/storage';
+
+try {
+  const result = await getProperties({
+    // `identityId`は、現在認証されているユーザーのIDを提供します
+    path: ({identityId}) => `private/${identityId}/album/2024/1.jpg`,
+  });
+  console.log('File Properties ', result);
+} catch (error) {
+  console.log('Error ', error);
+}
+```
+
+
+</InlineFilter>

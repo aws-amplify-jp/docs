@@ -1,0 +1,366 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '例',
+  description: "これらの例を参照して、さまざまなサンプルアプリケーションの GraphQL スキーマについて学習してください。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert
+  isLegacy
+  url={'/gen1/[platform]/build-a-backend/graphqlapi/best-practice/'}
+/>
+
+## シンプルな Todo
+
+```graphql
+type Todo @model {
+  id: ID!
+  name: String!
+  description: String
+}
+```
+
+## ブログ
+
+```graphql
+type Blog @model {
+  id: ID!
+  name: String!
+  posts: [Post] @connection(name: "BlogPosts")
+}
+type Post @model {
+  id: ID!
+  title: String!
+  blog: Blog @connection(name: "BlogPosts")
+  comments: [Comment] @connection(name: "PostComments")
+}
+type Comment @model {
+  id: ID!
+  content: String
+  post: Post @connection(name: "PostComments")
+}
+```
+
+### ブログクエリ
+
+```graphql
+# Create a blog. Remember the returned id.
+# Provide the returned id as the "blogId" variable.
+mutation CreateBlog {
+  createBlog(input: { name: "My New Blog!" }) {
+    id
+    name
+  }
+}
+
+# Create a post and associate it with the blog via the "postBlogId" input field.
+# Provide the returned id as the "postId" variable.
+mutation CreatePost($blogId: ID!) {
+  createPost(input: { title: "My Post!", postBlogId: $blogId }) {
+    id
+    title
+    blog {
+      id
+      name
+    }
+  }
+}
+
+# Create a comment and associate it with the post via the "commentPostId" input field.
+mutation CreateComment($postId: ID!) {
+  createComment(input: { content: "A comment!", commentPostId: $postId }) {
+    id
+    content
+    post {
+      id
+      title
+      blog {
+        id
+        name
+      }
+    }
+  }
+}
+
+# Get a blog, its posts, and its posts comments.
+query GetBlog($blogId: ID!) {
+  getBlog(id: $blogId) {
+    id
+    name
+    posts(filter: { title: { eq: "My Post!" } }) {
+      items {
+        id
+        title
+        comments {
+          items {
+            id
+            content
+          }
+        }
+      }
+    }
+  }
+}
+
+# List all blogs, their posts, and their posts comments.
+query ListBlogs {
+  listBlogs {
+    # Try adding: listBlog(filter: { name: { eq: "My New Blog!" } })
+    items {
+      id
+      name
+      posts {
+        # or try adding: posts(filter: { title: { eq: "My Post!" } })
+        items {
+          id
+          title
+          comments {
+            # and so on ...
+            items {
+              id
+              content
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## タスクアプリ
+
+**注: @auth ディレクティブを使用するには、API が Amazon Cognito ユーザープールを使用するように設定されている必要があります。**
+
+```graphql
+type Task
+  @model
+  @auth(
+    rules: [
+      {
+        allow: groups
+        groups: ["Managers"]
+        mutations: [create, update, delete]
+        queries: null
+      }
+      {
+        allow: groups
+        groups: ["Employees"]
+        mutations: null
+        queries: [get, list]
+      }
+    ]
+  ) {
+  id: ID!
+  title: String!
+  description: String
+  status: String
+}
+type PrivateNote @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  content: String!
+}
+```
+
+### タスククエリ
+
+```graphql
+# Create a task. Only allowed if a manager.
+mutation CreateTask {
+  createTask(
+    input: {
+      title: "A task"
+      description: "A task description"
+      status: "pending"
+    }
+  ) {
+    id
+    title
+    description
+  }
+}
+
+# Get a task. Allowed if an employee.
+query GetTask($taskId: ID!) {
+  getTask(id: $taskId) {
+    id
+    title
+    description
+  }
+}
+
+# Automatically inject the username as owner attribute.
+mutation CreatePrivateNote {
+  createPrivateNote(input: { content: "A private note of user 1" }) {
+    id
+    content
+  }
+}
+
+# Unauthorized error if not owner.
+query GetPrivateNote($privateNoteId: ID!) {
+  getPrivateNote(id: $privateNoteId) {
+    id
+    content
+  }
+}
+
+# Return only my own private notes.
+query ListPrivateNote {
+  listPrivateNote {
+    items {
+      id
+      content
+    }
+  }
+}
+```
+
+## 競合検出
+
+```graphql
+type Note @model @versioned {
+  id: ID!
+  content: String!
+  version: Int! # You can leave this out. Validation fails if this is not a int like type (Int/BigInt) and is always coerced to non-null.
+}
+```
+
+### 競合検出クエリ
+
+```graphql
+mutation Create {
+  createNote(input: { content: "A note" }) {
+    id
+    content
+    version
+  }
+}
+
+mutation Update($noteId: ID!) {
+  updateNote(
+    input: { id: $noteId, content: "A second version", expectedVersion: 1 }
+  ) {
+    id
+    content
+    version
+  }
+}
+
+mutation Delete($noteId: ID!) {
+  deleteNote(input: { id: $noteId, expectedVersion: 2 }) {
+    id
+    content
+    version
+  }
+}
+```
+
+## API カテゴリの一般的なパターン
+
+Amplify CLI は GraphQL Transform ライブラリを公開して、一般的なパターンとベストプラクティスが組み込まれた API を作成するのに役立てます。ただし、より詳細な制御が必要な状況のために多くの脱出口も提供しています。ここでは、役立つ可能性のある一般的なユースケースをいくつか紹介します。
+
+### モデルフィールドおよび/または関連によるサブスクリプションのフィルタリング
+
+マルチテナントシナリオでは、サブスクライブされたクライアントは、常にモデルタイプのすべての変更を受け取りたいわけではありません。これらは、クライアントサブスクリプションによって返されるオブジェクトを制限するのに役立つ機能です。サブスクリプションは、ミューテーションクエリから返されたフィールドによってのみフィルタリングできることを覚えておくことが重要です。これら 2 つの方法を組み合わせて使用して、非常に堅牢なフィルタリングオプションを作成できることに注意してください。
+
+この例に使用する簡単なスキーマを考えてみましょう。
+
+```graphql
+type Todo @model {
+  id: ID!
+  name: String!
+  description: String
+  comments: [Comment] @connection(name: "TodoComments")
+}
+type Comment @model {
+  id: ID!
+  content: String
+  todo: Todo @connection(name: "TodoComments")
+}
+```
+
+**タイプフィールドによるフィルタリング**
+
+これはサブスクリプションをフィルタリングするより簡単な方法です。関連によるフィルタリングよりもモデルへの変更が少なくて済みます。
+
+1. _@model_ ディレクティブに subscriptions 引数を追加して、Amplify に Comment タイプのサブスクリプションを生成_しない_ように指示します。
+
+```graphql
+type Comment @model(subscriptions: null) {
+  id: ID!
+  content: String
+  todo: Todo @connection(name: "TodoComments")
+}
+```
+
+2. この時点で `amplify push` を実行してください。Subscription タイプを追加した後に実行すると、スキーマに 2 つの Subscription 定義を持つことはできないというエラーが発生します。
+
+3. プッシュ後、フィルタリングに使用する Comment スカラーフィールド (この場合は content) を含む Subscription タイプをスキーマに追加する必要があります。
+
+```graphql
+type Subscription {
+  onCreateComment(content: String): Comment
+    @aws_subscribe(mutations: ["createComment"])
+  onUpdateComment(id: ID, content: String): Comment
+    @aws_subscribe(mutations: ["updateComment"])
+  onDeleteComment(id: ID, content: String): Comment
+    @aws_subscribe(mutations: ["deleteComment"])
+}
+```
+
+**関連 (_@connection_ 指定) タイプによるフィルタリング**
+
+これは、コメントが接続される Todo オブジェクトでフィルタリングする必要がある場合に便利です。これを有効にするには、スキーマを少し拡張する必要があります。
+
+1. _@model_ ディレクティブに subscriptions 引数を追加して、Amplify に Comment タイプのサブスクリプションを生成_しない_ように指示します。同様に重要なことに、DynamoDB の自動生成列を使用して Comment モデルに `commentTodoId` を追加します。
+
+```graphql
+type Comment @model(subscriptions: null) {
+  id: ID!
+  content: String
+  todo: Todo @connection(name: "TodoComments")
+  commentTodoId: String # This references the commentTodoId field in DynamoDB
+}
+```
+
+2. この時点で `amplify push` を実行する必要があります。Subscription タイプを追加した後に実行すると、スキーマに 2 つの Subscription 定義を持つことはできないというエラーが発生します。
+
+3. プッシュ後、`commentTodoId` をオプションの引数として含む Subscription タイプをスキーマに追加する必要があります。
+
+```graphql
+type Subscription {
+  onCreateComment(commentTodoId: String): Comment
+    @aws_subscribe(mutations: ["createComment"])
+  onUpdateComment(id: ID, commentTodoId: String): Comment
+    @aws_subscribe(mutations: ["updateComment"])
+  onDeleteComment(id: ID, commentTodoId: String): Comment
+    @aws_subscribe(mutations: ["deleteComment"])
+}
+```
+
+次回 `amplify push` または `amplify api gql-compile` を実行すると、サブスクリプションは Comment サブスクリプションで `id` および/または `commentTodoId` 引数を許可します。Comment タイプのミューテーションが、指定された引数フィールドをそのクエリから返す限り、AppSync は、サブスクライブされたクライアントにプッシュされるサブスクリプションイベントをフィルタリングします。

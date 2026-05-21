@@ -1,0 +1,881 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '認可ルールの設定',
+  description: 'GraphQL スキーマに認可ルールを追加して、データへのアクセスを制御します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert isLegacy url={'/gen1/[platform]/tools/cli/graphqlapi/'} />
+
+## @auth
+
+GraphQL API と相互作用するアプリケーションには認可が必要です。**API キー**は公開 API（またはスキーマの公開したい部分）またはプロトタイピングに最適で、デプロイ前に有効期限を指定する必要があります。**IAM** 認可は [Signature Version 4](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html) を使用してロールにアタッチされたポリシーでリクエストを行います。**Amazon Cognito User Pools** または第三者の OpenID Connect プロバイダーによって提供される OIDC トークンも認可に使用でき、これを有効にするだけで API アクションへのトップレベルアクセスを許可するためにユーザーが認証される必要がある簡単なアクセス制御が提供されます。スキーマで `@auth` を使用して、より粒度の細かいアクセス制御を設定でき、これらのトークンの一部として提供される認可メタデータまたはデータベースアイテム自体に設定されたメタデータを活用できます。
+
+`@auth` で注釈が付けられたオブジェクト型は、トップレベルの API 認可よりも追加の制御を提供する一連の認可ルールで保護されます。プロジェクトのスキーマのオブジェクト型定義とフィールド定義に `@auth` ディレクティブを使用できます。
+
+`@model` で注釈が付けられているオブジェクト型定義に `@auth` ディレクティブを使用する場合、その型のオブジェクトを返すすべてのリゾルバーが保護されます。フィールド定義に `@auth` ディレクティブを使用する場合、親型で見つかった属性に基づいてアクセスを認可するリゾルバーがフィールドに追加されます。
+
+### 定義
+
+```graphql
+# When applied to a type, augments the application with
+# owner and group-based authorization rules.
+directive @auth(rules: [AuthRule!]!) on OBJECT | FIELD_DEFINITION
+input AuthRule {
+  allow: AuthStrategy!
+  provider: AuthProvider
+  ownerField: String # defaults to "owner" when using owner auth
+  identityClaim: String # defaults to "username" when using owner auth
+  groupClaim: String # defaults to "cognito:groups" when using Group auth
+  groups: [String] # Required when using Static Group auth
+  groupsField: String # defaults to "groups" when using Dynamic Group auth
+  operations: [ModelOperation] # Required for finer control
+  # The following arguments are deprecated. It is encouraged to use the 'operations' argument.
+  queries: [ModelQuery]
+  mutations: [ModelMutation]
+}
+enum AuthStrategy {
+  owner
+  groups
+  private
+  public
+}
+enum AuthProvider {
+  apiKey
+  iam
+  oidc
+  userPools
+}
+enum ModelOperation {
+  create
+  update
+  delete
+  read
+}
+
+# The following objects are deprecated. It is encouraged to use ModelOperations.
+enum ModelQuery {
+  get
+  list
+}
+enum ModelMutation {
+  create
+  update
+  delete
+}
+```
+
+> 注: `operations` 引数は 'queries' および 'mutations' 引数を置き換えるために追加されました。'queries' および 'mutations' 引数は引き続き動作しますが、'operations' に移行することをお勧めします。両方が提供される場合、'operations' 引数は 'queries' よりも優先されます。
+
+### オーナー認可
+
+デフォルトでは、`owner` 認可を有効にすると、サインインしたユーザーはレコードを作成できます。
+
+```graphql
+# The simplest case
+type Post @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  title: String!
+}
+
+# The long form way
+type Post
+  @model
+  @auth(
+    rules: [
+      {
+        allow: owner
+        ownerField: "owner"
+        operations: [create, update, delete, read]
+      }
+    ]
+  ) {
+  id: ID!
+  title: String!
+  owner: String
+}
+```
+
+<Callout>
+
+オーナー認可には、アプリで有効になっている **Amazon Cognito User Pools** の認証型が必要です。
+
+</Callout>
+
+オーナー認可は、ユーザーがオブジェクトにアクセスまたは操作できるかどうかを指定します。これを行うために、各オブジェクトは `ownerField` フィールド（指定されていない場合、デフォルトでは `owner` がオブジェクトに追加されます）を取得し、オーナーシップ情報を保存し、リゾルバー実行中にさまざまな方法で検証されます。
+
+`operations` 引数を使用して、次のように有効な操作を指定できます。
+
+- **read**: ユーザーが API に対してクエリ（`get` および `list` 操作）を実行できるようにします。
+- **create**: サインインしているユーザーのアイデンティティを `ownerField` に自動的に挿入します。
+- **update**: 保存された `ownerField` がサインインしているユーザーと同じかどうかをチェックする条件付き更新を追加します。
+- **delete**: 保存された `ownerField` がサインインしているユーザーと同じかどうかをチェックする条件付き更新を追加します。
+
+レコードに保存されたオーナーのアイデンティティを確認して、後続のリクエストで検証できるようにするために、`create` 操作ルールが明示的に指定されるか、デフォルトから推論されることを確認する必要があります。
+
+```graphql
+# owner identity inferred from defaults on every object
+type Post @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  title: String!
+}
+
+# owner identity specified explicitly on every object
+type Post @model @auth(rules: [{ allow: owner, operations: [create] }]) {
+  id: ID!
+  title: String!
+}
+
+# owner identity not stored on objects
+type Post @model @auth(rules: [{ allow: owner, operations: [read] }]) {
+  id: ID!
+  title: String!
+}
+```
+
+<Callout>
+
+`@auth` ルールの一部として操作を指定する場合、リストに含まれていない操作はデフォルトでは保護されません。
+
+</Callout>
+
+いくつかの例を見てみましょう。
+
+```graphql
+type Todo @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  updatedAt: AWSDateTime!
+  content: String!
+}
+```
+
+このスキーマでは、オブジェクトのオーナーだけがオーナーが作成したオブジェクトに対して読み取り（`getTodo` および `listTodos`）、更新（`updateTodo`）、削除（`deleteTodo`）操作を実行する認可を持っています。これにより、作成者以外のユーザーがオブジェクトを更新または削除されるのを防ぎます。
+
+次の表は、どのユーザーがどの操作を実行する権限があるかを説明しています。**owner** はオブジェクトを作成したユーザーを指し、**other** は他のすべての認証済みユーザーを指します。
+
+|       | getTodo | listTodos | createTodo | updateTodo | deleteTodo |
+| :---- | :-----: | :-------: | :--------: | :--------: | :--------: |
+| owner |   ✅    |    ✅     |     ✅     |     ✅     |     ✅     |
+| other |   ❌    |    ❌     |     ✅     |     ❌     |     ❌     |
+
+次に、スキーマを変更して、オブジェクトのオーナーだけが更新または削除できるようにしますが、認証済みユーザーなら誰でもオブジェクトを読み取ることができるようにするとします。
+
+```graphql
+type Todo
+  @model
+  @auth(rules: [{ allow: owner, operations: [create, delete, update] }]) {
+  id: ID!
+  updatedAt: AWSDateTime!
+  content: String!
+}
+```
+
+このスキーマでは、オブジェクトのオーナーだけがオーナーが作成したオブジェクトに対して更新（`updateTodo`）および削除（`deleteTodo`）操作を実行する認可を持っていますが、誰でもそれらを読み取ることができます（`getTodo`、`listTodos`）。これにより、作成者以外のユーザーがオブジェクトを更新または削除されるのを防ぎながら、アプリのすべての認証済みユーザーがそれらを読み取ることができるようになります。
+
+次の表は、どのユーザーがどの操作を実行する権限があるかを説明しています。**owner** はオブジェクトを作成したユーザーを指し、**other** は他のすべての認証済みユーザーを指します。
+
+|       | getTodo | listTodos | createTodo | updateTodo | deleteTodo |
+| :---- | :-----: | :-------: | :--------: | :--------: | :--------: |
+| owner |   ✅    |    ✅     |     ✅     |     ✅     |     ✅     |
+| other |   ✅    |    ✅     |     ✅     |     ❌     |     ❌     |
+
+次に、スキーマを変更して、オブジェクトのオーナーだけが削除でき、他のユーザーなら誰でも作成、読み取り、および更新できるようにするとします。
+
+```graphql
+type Todo
+  @model
+  @auth(rules: [{ allow: owner, operations: [create, delete] }]) {
+  id: ID!
+  updatedAt: AWSDateTime!
+  content: String!
+}
+```
+
+このスキーマでは、オブジェクトのオーナーだけがオーナーが作成したオブジェクトに対して削除操作を実行する認可を持っていますが、誰でもそれらを読み取ったり更新したりできます。これは、`read` および `update` がオーナーのみのアクションとして指定されていないため、すべてのユーザーがそれらを実行できるためです。`delete` がオーナーのみのアクションとして指定されているため、オブジェクトの作成者だけがオブジェクトを削除できます。
+
+次の表は、どのユーザーがどの操作を実行する権限があるかを説明しています。**owner** はオブジェクトを作成したユーザーを指し、**other** は他のすべての認証済みユーザーを指します。
+
+|       | getTodo | listTodos | createTodo | updateTodo | deleteTodo |
+| :---- | :-----: | :-------: | :--------: | :--------: | :--------: |
+| owner |   ✅    |    ✅     |     ✅     |     ✅     |     ✅     |
+| other |   ✅    |    ✅     |     ✅     |     ✅     |     ❌     |
+
+### 複数の認可ルール
+
+単一の `@model` 型に複数のオーナーシップルールを適用することもできます。
+
+たとえば、ブログの未完成の投稿を保存する **Draft** 型があるとします。**Draft** のオーナーが `create`、`update`、`delete`、`read` **Draft** オブジェクトを実行できるようにしたいかもしれません。ただし、**Draft** のエディタも **Draft** オブジェクトを更新および読み取ることができるようにしたいかもしれません。
+
+このユースケースを実現するために、次の型定義を使用できます。
+
+```graphql
+type Draft
+  @model
+  @auth(
+    rules: [
+      # Defaults to use the "owner" field.
+      { allow: owner }
+      # Authorize the update mutation and both queries.
+      { allow: owner, ownerField: "editors", operations: [update, read] }
+    ]
+  ) {
+  id: ID!
+  title: String!
+  content: String
+  owner: String
+  editors: [String]
+}
+```
+
+### 作成ミューテーションでのオーナーシップ
+
+オーナーシップ認可ルールは、明示的に指示されない限り、オーナーシップフィールドを自動的に記入します。これがどのように機能するかを示すために、上記の **Draft** 型の作成ミューテーションがどのように機能するかを見てみましょう。
+
+```graphql
+mutation CreateDraft {
+  createDraft(input: { title: "A new draft" }) {
+    id
+    title
+    owner
+    editors
+  }
+}
+```
+
+このミューテーションを呼び出す際に、`someuser@my-domain.com` としてログインしているとします。結果は次のようになります。
+
+```json
+{
+  "data": {
+    "createDraft": {
+      "id": "...",
+      "title": "A new draft",
+      "owner": "someuser@my-domain.com",
+      "editors": null
+    }
+  }
+}
+```
+
+`Mutation.createDraft` リゾルバーは十分に賢く、認可ルールを属性に一致させ、デフォルトでそれらを記入します。
+
+**editors** のリストを指定するには、以下を実行できます。
+
+```graphql
+mutation CreateDraft {
+  createDraft(
+    input: {
+      title: "A new draft"
+      editors: ["editor1@my-domain.com", "editor2@my-domain.com"]
+    }
+  ) {
+    id
+    title
+    owner
+    editors
+  }
+}
+```
+
+これにより、以下が返されます。
+
+```json
+{
+  "data": {
+    "createDraft": {
+      "id": "...",
+      "title": "A new draft",
+      "owner": "someuser@my-domain.com",
+      "editors": ["editor1@my-domain.com", "editor2@my-domain.com"]
+    }
+  }
+}
+```
+
+**owner** の修正を試みることはできますが、これは **Unauthorized** 例外をスローします。これは、作成しようとしているオブジェクトのオーナーではなくなったためです。
+
+```graphql
+mutation CreateDraft {
+  createDraft(input: { title: "A new draft", editors: [], owner: null }) {
+    id
+    title
+    owner
+    editors
+  }
+}
+```
+
+### 静的グループ認可
+
+静的グループ認可により、`@model` 型を既知のグループセットへのアクセスを制限することで保護できます。たとえば、すべての **Admin** ユーザーが Salary オブジェクトを作成、更新、削除、取得、リストできるようにすることができます。
+
+```graphql
+type Salary @model @auth(rules: [{ allow: groups, groups: ["Admin"] }]) {
+  id: ID!
+  wage: Int
+  currency: String
+}
+```
+
+GraphQL API を呼び出すときに、ユーザー認証情報（リゾルバーの `$ctx.identity` で指定）が _Admin_ グループに登録されていない場合、操作は失敗します。
+
+高度な認可ユースケースを有効にするために、認可ルールをレイヤーして特殊な機能を提供できます。これを行う方法を示すために、上記の **Owner Authorization** セクションで開始した **Draft** の例を拡張しましょう。最後に終了した時点では、**Draft** オブジェクトはそのオーナーおよびそのエディタの両方によって更新および読み取られ、オーナーによってのみ作成および削除されました。これを変更して、"Admin" グループの任意のメンバーが **Draft** オブジェクトを作成、更新、削除、および読み取ることができるようにしましょう。
+
+```graphql
+type Draft
+  @model
+  @auth(
+    rules: [
+      # Defaults to use the "owner" field.
+      { allow: owner }
+      # Authorize the update mutation and both queries.
+      { allow: owner, ownerField: "editors", operations: [update] }
+      # Admin users can access any operation.
+      { allow: groups, groups: ["Admin"] }
+    ]
+  ) {
+  id: ID!
+  title: String!
+  content: String
+  owner: String
+  editors: [String]!
+}
+```
+
+### 動的グループ認可
+
+```graphql
+# Dynamic group authorization with multiple groups
+type Post @model @auth(rules: [{ allow: groups, groupsField: "groups" }]) {
+  id: ID!
+  title: String
+  groups: [String]
+}
+
+# Dynamic group authorization with a single group
+type Post @model @auth(rules: [{ allow: groups, groupsField: "group" }]) {
+  id: ID!
+  title: String
+  group: String
+}
+```
+
+動的グループ認可では、各レコードには、それにアクセスできる Cognito グループを指定する属性が含まれています。`groupsField` 引数を使用して、基になるデータストア内にこのグループ情報が保持されているアトリビュートを指定します。単一のグループがアクセスを持つことを指定するには、`String` 型のフィールドを使用します。複数のグループがアクセスを持つことを指定するには、`[String]` 型のフィールドを使用します。
+
+他の認可ルールと同様に、動的グループルールを他のルールの上にレイヤーできます。上記の **Owner Authorization** および **Static Group Authorization** セクションから **Draft** の例を再度拡張しましょう。最後に終了した時点では、エディタはオブジェクトの更新および読み取り、オーナーは完全なアクセス、admin グループのメンバーは **Draft** オブジェクトへの完全なアクセスを持つことができました。これで、各レコードがドラフトを読み取ることができるグループのオプションリストを指定できるという新しい要件があります。これにより、たとえば、個々のドキュメントを外部チームと共有できます。
+
+```graphql
+type Draft
+  @model
+  @auth(
+    rules: [
+      # Defaults to use the "owner" field.
+      { allow: owner }
+      # Authorize the update mutation and both queries.
+      { allow: owner, ownerField: "editors", operations: [update] }
+      # Admin users can access any operation.
+      { allow: groups, groups: ["Admin"] }
+      # Each record may specify which groups may read them.
+      { allow: groups, groupsField: "groupsCanAccess", operations: [read] }
+    ]
+  ) {
+  id: ID!
+  title: String!
+  content: String
+  owner: String
+  editors: [String]!
+  groupsCanAccess: [String]!
+}
+```
+
+このセットアップでは、"BizDev" グループが読み取ることができるオブジェクトを作成できます。
+
+```graphql
+mutation CreateDraft {
+  createDraft(
+    input: { title: "A new draft", editors: [], groupsCanAccess: ["BizDev"] }
+  ) {
+    id
+    groupsCanAccess
+  }
+}
+```
+
+"Marketing" グループが読み取ることができる別のドラフトを作成できます。
+
+```graphql
+mutation CreateDraft {
+  createDraft(
+    input: {
+      title: "Another draft"
+      editors: []
+      groupsCanAccess: ["Marketing"]
+    }
+  ) {
+    id
+    groupsCanAccess
+  }
+}
+```
+
+### `public` 認可
+
+```graphql
+# The simplest case
+type Post @model @auth(rules: [{ allow: public }]) {
+  id: ID!
+  title: String!
+}
+```
+
+`public` 認可は、すべてのユーザーが API にアクセスできることを指定し、舞台裏では API は API キーで保護されます。`public` を使用するには、API に API キーが設定されている必要があります。ローカル実行の場合、このキーは JavaScript ライブラリの `aws-exports.js` ファイルおよび Android と iOS の `amplifyconfiguration.json` ファイルに `aws_appsync_apiKey` キーの下に存在します。
+
+```graphql
+# public authorization with provider override
+type Post @model @auth(rules: [{ allow: public, provider: iam }]) {
+  id: ID!
+  title: String!
+}
+```
+
+`@auth` ディレクティブにより、特定の認可モードのデフォルトプロバイダーをオーバーライドできます。上記のサンプルでは、`iam` が指定されており、API キーの代わりに Cognito Identity Pools の "UnAuthenticated Role" を使用して公開アクセスを実現できます。`amplify add auth` と併用すると、CLI は "UnAuthenticated" ロールのスコープダウンされた IAM ポリシーを自動的に生成します。
+
+### `private` 認可
+
+```graphql
+# The simplest case
+type Post @model @auth(rules: [{ allow: private }]) {
+  id: ID!
+  title: String!
+}
+```
+
+`private` 認可は、設定された Cognito User Pool の有効な JWT トークンですべてのユーザーが API にアクセスできることを指定します。`private` を使用するには、API に Cognito User Pool が設定されている必要があります。
+
+```graphql
+# private authorization with provider override
+type Post @model @auth(rules: [{ allow: private, provider: iam }]) {
+  id: ID!
+  title: String!
+}
+```
+
+`@auth` ディレクティブにより、特定の認可モードのデフォルトプロバイダーをオーバーライドできます。上記のサンプルでは、`iam` が指定されており、API キーの代わりに Cognito Identity Pools の "Authenticated Role" を使用して公開アクセスを実現できます。`amplify add auth` と併用すると、CLI は "Authenticated" ロールのスコープダウンされた IAM ポリシーを自動的に生成します。
+
+### `oidc` プロバイダーを使用した認可
+
+```graphql
+# owner authorization with provider override
+type Profile
+  @model
+  @auth(rules: [{ allow: owner, provider: oidc, identityClaim: "sub" }]) {
+  id: ID!
+  displayNAme: String!
+}
+```
+
+API に設定された `oidc` プロバイダーを使用することで、ユーザーをそれに対して認証することが可能です。上記のサンプルでは、`oidc` が型の `owner` 認可のプロバイダーとして指定されています。フィールド `identityClaim: "sub"` は、JWT トークンから `"sub"` クレームを使用してオーナーシップを提供することを指定し、Amazon Cognito JWT によって使用されるデフォルトの `username` クレームの代わりに使用します。
+
+### 複数の認可タイプの組み合わせ
+
+Amplify GraphQL API には、プライマリ **デフォルト** 認証型があり、オプションで追加のセカンダリ認証型があります。GraphQL スキーマのオブジェクトとフィールドには、アプリで設定された認証型に基づいて割り当てられた異なる認可プロバイダーを持つルールを持つことができます。
+
+複数の認可ルールの最も一般的なシナリオの 1 つは、公開アクセスと非公開アクセスの組み合わせです。たとえば、ブログは通常、投稿を表示するための公開アクセスを許可しますが、投稿の作成者だけが投稿を更新または削除することを許可します。
+
+公開アクセスと非公開アクセスを組み合わせてこれを実現する方法を見てみましょう。
+
+```graphql
+type Post
+  @model
+  @auth(
+    rules: [
+      # allow all authenticated users ability to create posts
+      # allow owners ability to update and delete their posts
+      { allow: owner }
+      # allow all authenticated users to read posts
+      { allow: private, operations: [read] }
+      # allow all guest users (not authenticated) to read posts
+      { allow: public, operations: [read] }
+    ]
+  ) {
+  id: ID!
+  title: String
+  owner: String
+}
+```
+
+<Callout>
+
+上記のスキーマは **Amazon Cognito User Pools** および **API キー** 認証型の組み合わせを想定しています。
+
+</Callout>
+
+別の例を見てみましょう。ここでは、`Post` モデルはデフォルトで Cognito User Pools によって保護され、`owner` は `Post` 型に対して任意の操作を実行できます。`Post` モデルを適切な IAM ポリシーで設定された AWS Lambda 関数から呼び出すこともできます。
+
+```graphql
+type Post
+  @model
+  @auth(
+    rules: [
+      { allow: owner }
+      { allow: private, provider: iam, operations: [read] }
+    ]
+  ) {
+  id: ID!
+  title: String
+  owner: String
+}
+```
+
+<Callout>
+
+上記のスキーマは **Amazon Cognito User Pools** および **IAM** 認証型の組み合わせを想定しています。
+
+</Callout>
+
+### 許可された認可モードとプロバイダーの組み合わせ
+
+次の表に、認可モードとプロバイダーの許可された組み合わせを示します。
+
+|           | owner | groups | public | private |
+| :-------- | :---: | :----: | :----: | :-----: |
+| userPools |  ✅   |   ✅   |        |   ✅    |
+| oidc      |  ✅   |   ✅   |        |         |
+| apiKey    |       |        |   ✅   |         |
+| iam       |       |        |   ✅   |   ✅    |
+
+`groups` は Cognito User Pools を活用していますが、プロバイダーの割り当ては必要/可能ではありません。
+
+### カスタムクレーム
+
+`@auth` は、JWT トークンから Amazon Cognito によって入力されるデフォルトの `username` または `cognito:groups` クレームを使用しない場合、カスタムクレームの使用をサポートしています。これは、第三者の OIDC システムからトークンを使用している場合、または外部システムから読み取る [Pre Token Generation Lambda Trigger](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html) など、外部システムからのグループのリストを使用してクレームを入力する場合に役に立つ可能性があります。カスタムクレームを使用するには、次の例のように `identityClaim` または `groupClaim` を指定します。
+
+```graphql
+type Post
+  @model
+  @auth(
+    rules: [
+      { allow: owner, identityClaim: "user_id" }
+      { allow: groups, groups: ["Moderator"], groupClaim: "user_groups" }
+    ]
+  ) {
+  id: ID!
+  owner: String
+  postname: String
+  content: String
+}
+```
+
+この例では、オブジェクトオーナーは `user_id` クレームに対してチェックされます。このクレームは、Cognito によって生成されたトークンの場合、デフォルトでは利用できません。Cognito で生成されたトークンを使用している場合は、代わりに `sub` を使用してください。同様に、`user_groups` クレームに "Moderator" 文字列が含まれている場合、アクセスが許可されます。
+
+<Callout>
+
+`identityField` は `identityClaim` のために廃止されています。
+
+</Callout>
+
+### サブスクリプションの認可
+
+<Callout warning>
+
+CLI のバージョン 2.0 より前では、`@auth` ルールはサブスクリプションに適用されていませんでした。代わりに、それらをオフにするか、[カスタムリゾルバー](/gen1/[platform]/tools/cli-legacy/overwrite-customize-resolvers/#custom-resolvers) を使用して認可チェックを手動で追加する必要がありました。最新バージョンでは、`@auth` 保護がサブスクリプションに追加されていますが、これは既存のアプリケーションに異なる動作をもたらす可能性があります。まず、下記に示すように、Owner ベースの認可では `owner` が必要な引数になりました。次に、フィールドレベルの `@auth` がそのフィールドに設定されている場合、選択セットはミューテーションが呼び出されるときにフィールドを `null` に設定します。[詳細はこちら](#per-field-with-subscriptions) をお読みください。前の動作を保持する場合は、下記で定義されているように `level: public` を モデルに設定してください。
+
+</Callout>
+
+`@auth` が使用されると、サブスクリプションにはイベントベースの性質に基づいてクエリとミューテーションよりも微妙な動作差があります。オーナー認可戦略を使用してモデルを保護する場合、各サブスクリプションリクエストでは、ユーザーがサブスクリプションリクエストに引数として渡されることが **必須** になります。ユーザーフィールドが渡されない場合、サブスクリプション接続は失敗します。渡された場合、ユーザーはオーナーであるレコードへの更新のみが通知されます。
+
+<Callout warning>
+  サブスクリプションフィルタリングはミューテーションからのデータを使用してフィルタリングを行います。ミューテーションがオーナーベースの認可の選択セットに `owner` フィールドを含まない場合、サブスクリプションメッセージは発火しません。
+</Callout>
+
+または、静的グループ認可戦略を使用してモデルを保護する場合、サブスクリプションリクエストは、ユーザーが許可されたグループにいる場合にのみ成功します。さらに、ユーザーはユーザーが許可されたグループにいる場合にのみ、レコードへの更新が通知されます。注: サブスクリプションリクエストでユーザーを引数として渡す必要はありません。リゾルバーは代わりに JWT トークンの内容をチェックするためです。
+
+たとえば、次のスキーマがあるとします。
+
+```graphql
+type Post @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  owner: String
+  postname: String
+  content: String
+}
+```
+
+これは、サブスクリプションが次のように見える必要があることを意味しています。そうでなければ失敗します。
+
+```graphql
+subscription OnCreatePost {
+  onCreatePost(owner: "Bob"){
+    postname
+    content
+  }
+}
+```
+
+ご自分の型にはまだ `owner` フィールドがない場合、Transformer が自動的にこれを追加することにご注意ください。
+
+<InlineFilter filters={["javascript", "nextjs", "react", "react-native", "vue", "angular"]}>
+
+現在のユーザーを渡すのは、JavaScript で [Auth.currentAuthenticatedUser()](/gen1/[platform]/build-a-backend/auth/manage-user-session/#retrieve-a-user-session) を使用することで、コードで動的に行うことができます。
+
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+
+現在のユーザーを渡すのは、Android で [AWSMobileClient.getInstance().getUsername()](/gen1/[platform]/sdk/auth/working-with-api/#utility-properties) を使用することで、コードで動的に行うことができます。
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+現在のユーザーを渡すのは、iOS で [AWSMobileClient.default().username](/gen1/[platform]/sdk/auth/working-with-api/#utility-properties) を使用することで、コードで動的に行うことができます。
+
+</InlineFilter>
+
+グループの場合、次を定義する場合：
+
+```graphql
+type Post @model @auth(rules: [{ allow: groups, groups: ["Admin"] }]) {
+  id: ID!
+  owner: String
+  postname: String
+  content: String
+}
+```
+
+リゾルバーがサブスクリプション時に JWT トークンの内容をチェックし、あなたが "Admin" グループにいることを確認するため、引数を渡す必要はありません。
+
+最後に、オーナーとグループの認可の両方を使用する場合、username 引数はオプションになります。これは以下を意味します。
+
+- ユーザーを渡さないが、許可されたグループのメンバーである場合、サブスクリプションはレコードが追加されると通知されます。
+- ユーザーを渡さないが、許可されたグループのメンバーでない場合、サブスクリプションは接続に失敗します。
+- ユーザーを渡す場合で、そのユーザーがオーナーでしたが、グループのメンバーでない場合、サブスクリプションはオーナーであるレコードの追加について通知されます。
+- ユーザーを渡す場合で、そのユーザーがオーナーではなく、グループのメンバーでない場合、サブスクリプションはアクセス可能なレコードがないため、何も通知されません。
+
+サブスクリプションの認可チェックを無効にするか、`@model` で `public` または `off` を指定してサブスクリプションを完全にオフにすることもできます。
+
+```graphql
+@model (subscriptions: { level: public })
+```
+
+### フィールドレベルの認可
+
+`@auth` ディレクティブは、特定のフィールドへのアクセスが独自のルールセットに従って制限されることを指定します。これが役立つ状況がいくつかあります。
+
+**親モデルと異なるアクセス許可を持つフィールドへのアクセスを保護する**
+
+ユーザー型を持つ場合、_username_ などのいくつかのフィールドは公開プロファイルの一部であり、_ssn_ フィールドはオーナーに表示されるとします。
+
+```graphql
+type User @model {
+  id: ID!
+  username: String
+  ssn: String @auth(rules: [{ allow: owner, ownerField: "username" }])
+}
+```
+
+**親オブジェクトの属性に基づいて `@connection` リゾルバーへのアクセスを保護する**
+
+このスキーマは、User モデルの属性に基づいて、ユーザーに接続された Post オブジェクトへのアクセスを保護します。`@model` 宣言で `queries: null` を指定することで、トップレベルクエリをオフにすることができ、これにより、`@connection` リゾルバー経由でモデルに到達する必要があるクエリを制限できます。
+
+```graphql
+type User @model {
+  id: ID!
+  username: String
+  posts: [Post]
+    @connection(name: "UserPosts")
+    @auth(rules: [{ allow: owner, ownerField: "username" }])
+}
+type Post @model(queries: null) { ... }
+```
+
+**ミューテーションを保護して、特定のフィールドが親モデルと異なるアクセスルールを持つようにする**
+
+フィールド定義で使用される場合、`@auth` ディレクティブはデフォルトすべての操作を保護します。読み取り操作を保護するため、保護されたフィールドにリゾルバーが追加されて認可ロジックを実装します。ミューテーション操作を保護するため、ミューテーションの入力に保護されたフィールドが含まれている場合に実行される既存のミューテーションにロジックが追加されます。たとえば、ここでは従業員の給与をオーナーと管理者が読み取ることができ、管理者だけが作成または更新できるモデルです。
+
+```graphql
+type Employee @model {
+  id: ID!
+  email: String
+  username: String
+
+  # Owners & members of the "Admin" group may read employee salaries.
+  # Only members of the "Admin" group may create an employee with a salary
+  # or update a salary.
+  salary: String
+    @auth(
+      rules: [
+        { allow: owner, ownerField: "username", operations: [read] }
+        { allow: groups, groups: ["Admin"], operations: [create, update, read] }
+      ]
+    )
+}
+```
+
+**注:** フィールド定義で `@auth` ディレクティブで使用される場合、`delete` 操作は、ユーザーが認可されていない限りフィールドを null に設定できないようにするため、ミューテーション更新の保護に変換されます。
+
+**注:** フィールドの `@auth` ルールの一部として操作を指定する場合、操作リストに含まれていない操作はデフォルトでは保護されません。たとえば、次のスキーマがあるとします。
+
+```graphql
+type Todo @model {
+  id: ID!
+  owner: String
+  updatedAt: AWSDateTime!
+  content: String! @auth(rules: [{ allow: owner, operations: [update] }])
+}
+```
+
+このスキーマでは、オブジェクトのオーナーだけが `content` フィールドの更新操作を実行する認可を持っています。ただし、これは他のオーナー（別のユーザーのオブジェクトの作成者またはオーナーではない他のユーザー）が別のユーザーのオブジェクトの他のフィールドを更新するのを防ぎません。フィールドの更新操作を防止したい場合、ユーザーは明示的に認可ルールを追加して、そのフィールドへのアクセスを制限する必要があります。その方法の 1 つは、次のように保護したいフィールドで明示的に @auth ルールを指定することです。
+
+```graphql
+type Todo @model {
+  id: ID!
+  owner: String
+  updatedAt: AWSDateTime! @auth(rules: [{ allow: owner, operations: [update] }]) // or @auth(rules: [{ allow: groups, groups: ["Admins"] }])
+  content: String! @auth(rules: [{ allow: owner, operations: [update] }])
+}
+```
+
+次のようにフィールドに明示的な拒否ルールを提供することもできます。
+
+```graphql
+type Todo @model {
+  id: ID!
+  owner: String
+  updatedAt: AWSDateTime!
+    @auth(
+      rules: [{ allow: groups, groups: ["ForbiddenGroup"], operations: [] }]
+    )
+  content: String! @auth(rules: [{ allow: owner, operations: [update] }])
+}
+```
+
+型のトップレベル @auth ルールをフィールドレベルの認可ルールと組み合わせることもできます。たとえば、次のスキーマを考えてみましょう。
+
+```graphql
+type Todo
+  @model
+  @auth(rules: [{ allow: groups, groups: ["Admin"], operations: [update] }]) {
+  id: ID!
+  owner: String
+  updatedAt: AWSDateTime!
+  content: String! @auth(rules: [{ allow: owner, operations: [update] }])
+}
+```
+
+上記のスキーマでは、`Admin` グループのユーザーは Todo 型に対して作成、読み取り、削除、および更新（別のオーナーのオブジェクトの `content` フィールドを除く）を行う認可を持っています。オブジェクトの `owner` は Todo 型を作成し、Todo 型のすべてのオブジェクトを読み取ることを認可されています。さらに、`owner` はコンテンツフィールドが入力の一部として存在する場合にのみ、Todo オブジェクトの更新操作を実行できます。他のユーザー（オブジェクトのオーナーでなく、グループのメンバーでない）はそのオブジェクトを更新する認可を持っていません。
+
+#### サブスクリプションを使用したフィールドごと
+
+フィールドレベルで `@auth` を設定すると、Transformer はサブスクリプション経由での機密データの送信を防ぐため、それらのフィールドを `null` に設定することでミューテーションの応答を変更します。たとえば、下記のスキーマで：
+
+```graphql
+type Employee
+  @model
+  @auth(rules: [{ allow: owner }, { allow: groups, groups: ["Admins"] }]) {
+  id: ID!
+  name: String!
+  address: String!
+  ssn: String @auth(rules: [{ allow: owner }])
+}
+```
+
+サブスクライバーが "Admins" グループのメンバーであり、新しいアイテムが通知されるべきですが、`ssn` フィールドを取得することはできません。次のミューテーションを実行する場合：
+
+```graphql
+mutation {
+  createEmployee(
+    input: { name: "Nadia", address: "123 First Ave", ssn: "392-95-2716" }
+  ) {
+    name
+    address
+    ssn
+  }
+}
+```
+
+ミューテーションは正常に実行されますが、GraphQL 応答で `ssn` は null を返します。これにより、更新をサブスクライブしている "Admins" グループのメンバーが機密情報を受け取るのを防ぎます。サブスクライバーは引き続き `name` と `address` を受け取ります。データはまだ書き込まれており、これはクエリを実行することで検証できます。
+
+#### 生成する
+
+`@auth` ディレクティブは、コンパイル時に関連するリゾルバーマッピングテンプレートに認可スニペットを追加します。異なる操作は異なる認可方法を使用します。
+
+**オーナー認可**
+
+```graphql
+type Post @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  title: String!
+}
+```
+
+生成されたリゾルバーは次のように保護されます。
+
+- `Mutation.createX`: リクエストするユーザーが有効な認証情報を持っていることを確認し、**owner** 属性を `$ctx.identity.username` に自動的に設定します。
+- `Mutation.updateX`: DynamoDB `UpdateItem` 操作がレコードの **owner** 属性が呼び出し元の `$ctx.identity.username` と等しい場合にのみ成功するように条件式を更新します。
+- `Mutation.deleteX`: DynamoDB `DeleteItem` 操作がレコードの **owner** 属性が呼び出し元の `$ctx.identity.username` と等しい場合にのみ成功するように条件式を更新します。
+- `Query.getX`: 応答マッピングテンプレート内で、結果の **owner** 属性が `$ctx.identity.username` と同じであることを確認します。そうでない場合は `null` を返します。
+- `Query.listX`: 応答マッピングテンプレート内で、結果の **items** をフィルタリングして、**owner** 属性が `$ctx.identity.username` と同じアイテムのみが返されるようにします。
+- `@connection` リゾルバー: 応答マッピングテンプレート内で、結果の **items** をフィルタリングして、**owner** 属性が `$ctx.identity.username` と同じアイテムのみが返されるようにします。これは `queries` 引数を使用する場合は有効になりません。
+
+### 静的グループ認可
+
+```graphql
+type Post @model @auth(rules: [{ allow: groups, groups: ["Admin"] }]) {
+  id: ID!
+  title: String!
+  groups: String
+}
+```
+
+静的グループ認可は他の認可よりも単純です。生成されたリゾルバーは次のように保護されます。
+
+- `Mutation.createX`: リクエストするユーザーが有効な認証情報を持っていることを確認し、`$ctx.identity.claims.get("cognito:groups")` に **Admin** グループが含まれていることを確認します。そうでない場合は失敗します。
+- `Mutation.updateX`: リクエストするユーザーが有効な認証情報を持っていることを確認し、`$ctx.identity.claims.get("cognito:groups")` に **Admin** グループが含まれていることを確認します。そうでない場合は失敗します。
+- `Mutation.deleteX`: リクエストするユーザーが有効な認証情報を持っていることを確認し、`$ctx.identity.claims.get("cognito:groups")` に **Admin** グループが含まれていることを確認します。そうでない場合は失敗します。
+- `Query.getX`: リクエストするユーザーが有効な認証情報を持っていることを確認し、`$ctx.identity.claims.get("cognito:groups")` に **Admin** グループが含まれていることを確認します。そうでない場合は失敗します。
+- `Query.listX`: リクエストするユーザーが有効な認証情報を持っていることを確認し、`$ctx.identity.claims.get("cognito:groups")` に **Admin** グループが含まれていることを確認します。そうでない場合は失敗します。
+- `@connection` リゾルバー: リクエストするユーザーが有効な認証情報を持っていることを確認し、`$ctx.identity.claims.get("cognito:groups")` に **Admin** グループが含まれていることを確認します。そうでない場合は失敗します。これは `queries` 引数を使用する場合は有効になりません。
+
+### 動的グループ認可
+
+```graphql
+type Post @model @auth(rules: [{ allow: groups, groupsField: "groups" }]) {
+  id: ID!
+  title: String!
+  groups: String
+}
+```
+
+生成されたリゾルバーは次のように保護されます。
+
+- `Mutation.createX`: リクエストするユーザーが有効な認証情報を持っていることを確認し、`$ctx.args.input.groups` 引数でクエリに渡された少なくとも 1 つのグループに対するクレームが含まれていることを確認します。
+- `Mutation.updateX`: DynamoDB `UpdateItem` 操作がレコードの **groups** 属性に `$ctx.identity.claims.get("cognito:groups")`経由で呼び出し元の要求グループの少なくとも 1 つが含まれている場合にのみ成功するように条件式を更新します。
+- `Mutation.deleteX`: DynamoDB `DeleteItem` 操作がレコードの **groups** 属性に `$ctx.identity.claims.get("cognito:groups")` 経由で呼び出し元の要求グループの少なくとも 1 つが含まれている場合にのみ成功するように条件式を更新します。
+- `Query.getX`: 応答マッピングテンプレート内で、結果の **groups** 属性に `$ctx.identity.claims.get("cognito:groups")` 経由で呼び出し元の要求グループの少なくとも 1 つが含まれていることを確認します。
+- `Query.listX`: 応答マッピングテンプレート内で、結果の **items** をフィルタリングして、**groups** 属性に `$ctx.identity.claims.get("cognito:groups")` 経由で呼び出し元の要求グループの少なくとも 1 つが含まれているアイテムのみが返されるようにします。
+- `@connection` リゾルバー: 応答マッピングテンプレート内で、結果の **items** をフィルタリングして、**groups** 属性に `$ctx.identity.claims.get("cognito:groups")` 経由で呼び出し元の要求グループの少なくとも 1 つが含まれているアイテムのみが返されるようにします。これは `queries` 引数を使用する場合は有効になりません。

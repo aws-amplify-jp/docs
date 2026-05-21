@@ -1,0 +1,684 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { JS_PLATFORMS } from '@/data/platforms';
+
+export const meta = {
+  title: 'サーバー側ランタイムからデータに接続',
+  description: 'NodeJSアプリまたはLambda関数からAppSync GraphQL APIを呼び出す方法について詳しく学びます',
+  platforms: [
+    'javascript',
+    'nextjs',
+    'vue',
+    'angular',
+    'react',
+    'react-native'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+このガイドでは、任意のサーバー側ランタイムからAmplify GraphQL APIに接続する方法について説明します。Next.jsアプリケーションの場合、Amplifyは[App Router（React Server Components、Route Handlers、Server Actions）](https://nextjs.org/docs/app)と[Pages Router（Components、API Routes）](https://nextjs.org/docs/pages)、および[Middleware](https://nextjs.org/docs/app/building-your-application/routing/middleware)のファーストクラスサポートを提供します。Node.js AWS Lambda関数からAmplify GraphQL APIを呼び出す必要がある場合は、[AWS LambdaからGraphQL APIに接続](#connect-to-graphql-api-from-aws-lambda)を確認してください。
+
+## Next.jsサーバーランタイムからGraphQL APIに接続
+
+始める前に、以下が必要です:
+
+- [作成されたNext.jsアプリケーション](/gen1/nextjs/start/project-setup/create-application/)
+- [Next.js用のAmplifyライブラリがインストールおよび設定されている](/gen1/nextjs/build-a-backend/server-side-rendering/)
+- [Amplify CLI、AWS CDK](/gen1/[platform]/build-a-backend/graphqlapi/set-up-graphql-api/)を使用してGraphQL APIがデプロイされているか、[AWS AppSync](https://aws.amazon.com/appsync/)を直接使用している
+
+### ステップ1 - Next.jsサーバーランタイム用の正しいGraphQL APIクライアントを選択
+
+Amplifyは、`@aws-amplify/adapter-nextjs/api`から2つの特化したGraphQL APIクライアントを提供しており、[`cookies`](https://nextjs.org/docs/app/api-reference/functions/cookies)または[`NextRequest`と`NextResponse`](https://nextjs.org/docs/app/api-reference/functions/next-request)を使用してユーザートークンを取得するかによって使い分けます:
+
+- `generateServerClientUsingCookies()` 🍪 は`next/headers`からNext.jsの`cookies`関数を使用してAPIクライアントを生成します。各APIリクエストはランタイムで動的にクッキーを再取得します。
+- `generateServerClientUsingReqRes()` 🌐 は`NextRequest`と`NextResponse`を必要とするAPIクライアントを生成し、トークン汚染を防ぐために`runWithAmplifyServerContext`関数に提供されます。
+
+Next.jsルーター（AppまたはPages）とそのユースケースに基づいて正しいGraphQL APIクライアントを選択します:
+
+<BlockSwitcher>
+
+<Block name="App Router">
+
+| ユースケース | 必要なGraphQL APIクライアント |
+| ---------------------- | --------------------------------------- |
+| React Server Component | `generateServerClientUsingCookies()` 🍪 |
+| Server Actions | `generateServerClientUsingCookies()` 🍪 |
+| Route Handler | `generateServerClientUsingCookies()` 🍪 |
+| Middleware | `generateServerClientUsingReqRes()` 🌐 |
+
+</Block>
+
+<Block name="Pages Router">
+
+**Pages Router**
+
+| ユースケース | 必要なGraphQL APIクライアント |
+| -------------------------- | -------------------------------------- |
+| Server-side component code | `generateServerClientUsingReqRes()` 🌐 |
+| API Route | `generateServerClientUsingReqRes()` 🌐 |
+| Middleware | `generateServerClientUsingReqRes()` 🌐 |
+
+</Block>
+
+</BlockSwitcher>
+
+### ステップ2 - Next.jsサーバーランタイム用のGraphQL APIクライアントを生成
+
+<BlockSwitcher>
+
+<Block name="generateServerClientUsingCookies() 🍪">
+
+クッキーを使用してNext.jsサーバーランタイム用のGraphQL APIクライアントを生成するには、Amplify設定とNext.jsのcookies関数の両方を提供する必要があります。
+
+```ts
+import { generateServerClientUsingCookies } from '@aws-amplify/adapter-nextjs/api';
+import amplifyConfig from '@/amplifyconfiguration.json';
+import { cookies } from 'next/headers';
+
+export const cookieBasedClient = generateServerClientUsingCookies({
+  config: amplifyConfig,
+  cookies
+});
+```
+
+<Callout>
+
+サーバーAPIクライアントをユーティリティファイルで生成することをお勧めします。その後、生成されたクライアントをNext.jsのReact Server Components、Server Actions、またはRoute Handlersにインポートします。
+
+</Callout>
+
+</Block>
+
+<Block name="generateServerClientUsingReqRes() 🌐">
+
+`NextRequest`と`NextResponse`を使用してNext.jsサーバーランタイム用のGraphQL APIクライアントを生成するには、Amplify設定のみを提供する必要があります。個々のAPIリクエストを行うときは、[`runWithAmplifyServerContext`](/gen1/[platform]/build-a-backend/server-side-rendering)関数に渡してリクエストとレスポンス変数からクッキーを渡す必要があります。
+
+```ts
+import { createServerRunner } from '@aws-amplify/adapter-nextjs';
+import { generateServerClientUsingReqRes } from '@aws-amplify/adapter-nextjs/api';
+import amplifyConfig from '@/amplifyconfiguration.json';
+
+export const { runWithAmplifyServerContext } = createServerRunner({
+  config: amplifyConfig
+});
+
+export const reqResBasedClient = generateServerClientUsingReqRes({
+  config: amplifyConfig
+});
+```
+
+<Callout>
+
+サーバーAPIクライアントをユーティリティファイルで生成することをお勧めします。その後、生成されたクライアントをNext.jsのMiddleware、コンポーネントのサーバーランタイムコード、およびAPI Routesにインポートします。
+
+</Callout>
+
+</Block>
+
+</BlockSwitcher>
+
+### ステップ3 - 生成されたサーバーAPIクライアントを使用してGraphQL APIを呼び出す
+
+生成されたサーバーAPIクライアントを使用して、任意のGraphQLクエリまたはミューテーションリクエストを作成できます。サブスクリプションはサーバーランタイム内では利用できません。
+
+<BlockSwitcher>
+
+<Block name="generateServerClientUsingCookies() 🍪">
+
+クッキーベースのGraphQL APIのサーバークライアントをNext.jsのReact Server Componentコードにインポートし、GraphQLを作成します。
+
+```ts
+import { generateServerClientUsingCookies } from '@aws-amplify/adapter-nextjs/api';
+import amplifyConfig from '@/amplifyconfiguration.json'
+import { cookies } from 'next/headers'
+import { listTodos } from '@/graphql/queries'
+
+export const cookieBasedClient = generateServerClientUsingCookies({
+  config: amplifyConfig,
+  cookies
+})
+
+async fetchTodos() {
+  const request = await cookieBasedClient.graphql({
+    query: listTodos
+  })
+
+  return request.data.listTodos.items
+}
+```
+
+</Block>
+
+<Block name="generateServerClientUsingReqRes() 🌐">
+
+NextRequest/NextResponseベースのGraphQL APIのサーバークライアントをNext.jsのサーバーランタイムコードにインポートし、`runWithAmplifyServerContext`関数内でGraphQLを作成します。Amplifyサーバーコンテキストの作成についての詳細は、[サーバー側レンダリング](/gen1/[platform]/build-a-backend/server-side-rendering)を確認してください。
+
+例えば、Next.js Pages Router APIルートで、`handler`関数の`req`と`res`パラメータを`runWithAmplifyServerContext`で使用します:
+
+```ts
+import type { NextApiRequest, NextApiResponse } from 'next'
+import type { Todo } from '@/API'
+import { runWithAmplifyServerContext, reqResBasedClient } from '@/utils/amplifyServerUtils'
+import { listTodos } from '@/graphql/queries'
+
+type ResponseData = {
+  todos: Todo[]
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<ResponseData>
+) {
+  const todos = await runWithAmplifyServerContext({
+    nextServerContext: { req, res}
+    operation: async (contextSpec) => {
+      const request = await reqResBasedClient.graphql(contextSpec, {
+        query: listTodos
+      })
+
+      return request.data.listTodos.items
+    }
+  })
+  res.status(200).json({ todos })
+}
+```
+
+</Block>
+
+</BlockSwitcher>
+
+## AWS LambdaからGraphQL APIに接続
+
+Node.jsアプリまたはLambda関数からAppSync GraphQL APIを呼び出すことができます。基本的な`Todo`アプリを例に見てみましょう:
+
+```graphql
+type Todo @model @auth(rules: [{ allow: public }]) {
+  name: String
+  description: String
+}
+```
+
+このAPIには`Query`、`Mutation`、および`Subscription`の操作が利用可能になります。Node.jsを使用してLambda関数から**クエリ**と**ミューテーション**の両方を実行する方法を見てみましょう。
+
+### Lambdaファンクションテンプレートの利用（IAM認可）
+
+まず、`amplify add function`でLambda関数を作成し、`AppSync - GraphQL API request (with IAM)`を選択して開始します。CLI からGraphQL APIへのアクセスを付与するよう促されたときに、プロジェクト内の他のリソースへのアクセスを許可してください。または、[ゼロから関数を作成](#create-from-scratch)することもできます。
+
+```console
+amplify add function
+? Select which capability you want to add: Lambda function (serverless function)
+? Provide an AWS Lambda function name: myfunction
+? Choose the runtime that you want to use: NodeJS
+? Choose the function template that you want to use: AppSync - GraphQL API request (with IAM)
+
+Available advanced settings:
+- Resource access permissions
+- Scheduled recurring invocation
+- Lambda layers configuration
+- Environment variables configuration
+- Secret values configuration
+
+? Do you want to configure advanced settings? Yes
+? Do you want to access other resources in this project from your Lambda function? Yes
+? Select the categories you want this function to have access to. api
+? Select the operations you want to permit on <YOUR_API_NAME> Query, Mutation, Subscription
+
+You can access the following resource attributes as environment variables from your Lambda function
+	API_<YOUR_API_NAME>_GRAPHQLAPIENDPOINTOUTPUT
+	API_<YOUR_API_NAME>_GRAPHQLAPIIDOUTPUT
+	API_<YOUR_API_NAME>_GRAPHQLAPIKEYOUTPUT
+	ENV
+	REGION
+```
+
+<Callout>
+
+関数はIAM認可を使用したGraphQL APIが存在する場合にのみ追加できます。
+
+</Callout>
+
+### ゼロから作成
+
+```console
+amplify add function
+? Select which capability you want to add: Lambda function (serverless function)
+? Provide an AWS Lambda function name: myfunction
+? Choose the runtime that you want to use: NodeJS
+? Choose the function template that you want to use: Hello World
+
+Available advanced settings:
+- Resource access permissions
+- Scheduled recurring invocation
+- Lambda layers configuration
+- Environment variables configuration
+- Secret values configuration
+
+? Do you want to configure advanced settings? Yes
+? Do you want to access other resources in this project from your Lambda function? Yes
+? Select the categories you want this function to have access to. api
+? Select the operations you want to permit on <YOUR_API_NAME> Query, Mutation, Subscription
+
+You can access the following resource attributes as environment variables from your Lambda function
+	API_<YOUR_API_NAME>_GRAPHQLAPIENDPOINTOUTPUT
+	API_<YOUR_API_NAME>_GRAPHQLAPIIDOUTPUT
+	API_<YOUR_API_NAME>_GRAPHQLAPIKEYOUTPUT
+	ENV
+	REGION
+```
+
+このページの例では[`node-fetch`](https://www.npmjs.com/package/node-fetch)を使用してGraphQL APIにHTTPリクエストを送信します。Node.jsのv18ランタイムがLambdaにリリースされると、この依存関係を[ネイティブ`fetch`](https://nodejs.org/dist/latest-v18.x/docs/api/globals.html#fetch)に置き換えることができます。開始するには、`node-fetch`モジュールを依存関係として追加します:
+
+**CommonJS**:
+
+CommonJSを使用して記述された関数の場合、`node-fetch`のバージョン2をインストールする必要があります
+
+```diff
+{
+  "name": "myfunction",
+  "version": "2.0.0",
+  "description": "Lambda function generated by Amplify",
+  "main": "index.js",
+  "license": "Apache-2.0",
++ "dependencies": {
++   "node-fetch": "2"
++ },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.92"
+  }
+}
+```
+
+**ESM**:
+
+```diff
+{
+  "name": "myfunction",
++ "type": "module",
+  "version": "2.0.0",
+  "description": "Lambda function generated by Amplify",
+  "main": "index.js",
+  "license": "Apache-2.0",
++ "dependencies": {
++   "node-fetch": "^3.2.3"
++ },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.92"
+  }
+}
+```
+
+### クエリ
+
+APIキーを使用してリクエストを認証し、GraphQL APIに問い合わせて、すべての`Todo`のリストを取得できます。リストクエリをページネーションするには、`listTodos`クエリで`limit`と`nextToken`を渡す必要があります。詳細は[GraphQLページネーション](/gen1/[platform]/build-a-backend/graphqlapi/graphql-pagination/)を参照してください。
+
+{/* prettier-ignore */}
+```js
+import { default as fetch, Request } from 'node-fetch';
+
+const GRAPHQL_ENDPOINT = process.env.API_<YOUR_API_NAME>_GRAPHQLAPIENDPOINTOUTPUT;
+const GRAPHQL_API_KEY = process.env.API_<YOUR_API_NAME>_GRAPHQLAPIKEYOUTPUT;
+
+const query = /* GraphQL */ `
+  query LIST_TODOS {
+    listTodos {
+      items {
+        id
+        name
+        description
+      }
+    }
+  }
+`;
+
+/**
+ * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
+ */
+export const handler = async (event) => {
+  console.log(`EVENT: ${JSON.stringify(event)}`);
+
+  /** @type {import('node-fetch').RequestInit} */
+  const options = {
+    method: 'POST',
+    headers: {
+      'x-api-key': GRAPHQL_API_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ query })
+  };
+
+  const request = new Request(GRAPHQL_ENDPOINT, options);
+
+  let statusCode = 200;
+  let body;
+  let response;
+
+  try {
+    response = await fetch(request);
+    body = await response.json();
+    if (body.errors) statusCode = 400;
+  } catch (error) {
+    statusCode = 400;
+    body = {
+      errors: [
+        {
+          status: response.status,
+          message: error.message,
+          stack: error.stack
+        }
+      ]
+    };
+  }
+
+  return {
+    statusCode,
+    body: JSON.stringify(body)
+  };
+};
+```
+
+### ミューテーション
+
+この例では、`Todo`レコードを作成するために、変数を引数として渡す方法を示すミューテーションを作成します。
+
+{/* prettier-ignore */}
+```js
+import { default as fetch, Request } from 'node-fetch';
+
+const GRAPHQL_ENDPOINT = process.env.API_<YOUR_API_NAME>_GRAPHQLAPIENDPOINTOUTPUT;
+const GRAPHQL_API_KEY = process.env.API_<YOUR_API_NAME>_GRAPHQLAPIKEYOUTPUT;
+
+const query = /* GraphQL */ `
+  mutation CREATE_TODO($input: CreateTodoInput!) {
+    createTodo(input: $input) {
+      id
+      name
+      createdAt
+    }
+  }
+`;
+
+/**
+ * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
+ */
+export const handler = async (event) => {
+  console.log(`EVENT: ${JSON.stringify(event)}`);
+
+  const variables = {
+    input: {
+      name: 'Hello, Todo!'
+    }
+  };
+
+  /** @type {import('node-fetch').RequestInit} */
+  const options = {
+    method: 'POST',
+    headers: {
+      'x-api-key': GRAPHQL_API_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ query, variables })
+  };
+
+  const request = new Request(GRAPHQL_ENDPOINT, options);
+
+  let statusCode = 200;
+  let body;
+  let response;
+
+  try {
+    response = await fetch(request);
+    body = await response.json();
+    if (body.errors) statusCode = 400;
+  } catch (error) {
+    statusCode = 400;
+    body = {
+      errors: [
+        {
+          status: response.status,
+          message: error.message,
+          stack: error.stack
+        }
+      ]
+    };
+  }
+
+  return {
+    statusCode,
+    body: JSON.stringify(body)
+  };
+};
+```
+
+### IAM認可
+
+(TK authorization rules from Lambda)
+
+`iam`認可を使用する別のスキーマ例を見てみましょう。
+
+```graphql
+type Todo @model @auth(rules: [{ allow: private, provider: iam }]) {
+  name: String
+  description: String
+}
+```
+
+CLIはLambda実行IAMロールを自動的に設定してGraphQL APIを呼び出すようにします。Lambda関数を記述する前に、まず適切なAWS SDK v3依存関係をインストールする必要があります:
+
+```diff
+{
+  "name": "myfunction",
++ "type": "module",
+  "version": "2.0.0",
+  "description": "Lambda function generated by Amplify",
+  "main": "index.js",
+  "license": "Apache-2.0",
++ "dependencies": {
++   "@aws-crypto/sha256-js": "^2.0.1",
++   "@aws-sdk/credential-provider-node": "^3.76.0",
++   "@aws-sdk/protocol-http": "^3.58.0",
++   "@aws-sdk/signature-v4": "^3.58.0",
++   "node-fetch": "^3.2.3"
++ },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.92"
+  }
+}
+```
+
+次に、以下の例はIAM認可を使用してGraphQL APIへのリクエストに署名します。
+
+{/* due to placeholder text */}
+
+{/* prettier-ignore */}
+```js
+import crypto from '@aws-crypto/sha256-js';
+import { defaultProvider } from '@aws-sdk/credential-provider-node';
+import { SignatureV4 } from '@aws-sdk/signature-v4';
+import { HttpRequest } from '@aws-sdk/protocol-http';
+import { default as fetch, Request } from 'node-fetch';
+
+const { Sha256 } = crypto;
+const GRAPHQL_ENDPOINT = process.env.API_<YOUR_API_NAME>_GRAPHQLAPIENDPOINTOUTPUT;
+const AWS_REGION = process.env.AWS_REGION || 'us-east-1';
+
+const query = /* GraphQL */ `
+  query LIST_TODOS {
+    listTodos {
+      items {
+        id
+        name
+        description
+      }
+    }
+  }
+`;
+
+/**
+ * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
+ */
+export const handler = async (event) => {
+  console.log(`EVENT: ${JSON.stringify(event)}`);
+
+  const endpoint = new URL(GRAPHQL_ENDPOINT);
+
+  const signer = new SignatureV4({
+    credentials: defaultProvider(),
+    region: AWS_REGION,
+    service: 'appsync',
+    sha256: Sha256
+  });
+
+  const requestToBeSigned = new HttpRequest({
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      host: endpoint.host
+    },
+    hostname: endpoint.host,
+    body: JSON.stringify({ query }),
+    path: endpoint.pathname
+  });
+
+  const signed = await signer.sign(requestToBeSigned);
+  const request = new Request(GRAPHQL_ENDPOINT, signed);
+
+  let statusCode = 200;
+  let body;
+  let response;
+
+  try {
+    response = await fetch(request);
+    body = await response.json();
+    if (body.errors) statusCode = 400;
+  } catch (error) {
+    statusCode = 500;
+    body = {
+      errors: [
+        {
+          message: error.message
+        }
+      ]
+    };
+  }
+
+  return {
+    statusCode,
+    body: JSON.stringify(body)
+  };
+};
+```
+
+### CommonJS
+
+CommonJSで関数を記述する場合、`node-fetch`のバージョン2をインストールする必要があります:
+
+```diff
+{
+  "name": "myfunction",
+  "version": "2.0.0",
+  "description": "Lambda function generated by Amplify",
+  "main": "index.js",
+  "license": "Apache-2.0",
++ "dependencies": {
++   "@aws-crypto/sha256-js": "^2.0.1",
++   "@aws-sdk/credential-provider-node": "^3.76.0",
++   "@aws-sdk/protocol-http": "^3.58.0",
++   "@aws-sdk/signature-v4": "^3.58.0",
++   "node-fetch": "2"
++ },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.92"
+  }
+}
+```
+
+上記の例と同様に、ハンドラーを記述できます。ここでの違いは、`import ... from`ではなく`require()`を使用することです
+
+```js
+const { Sha256 } = require('@aws-crypto/sha256-js');
+const { defaultProvider } = require('@aws-sdk/credential-provider-node');
+const { SignatureV4 } = require('@aws-sdk/signature-v4');
+const { HttpRequest } = require('@aws-sdk/protocol-http');
+const { default: fetch, Request } = require('node-fetch');
+
+const GRAPHQL_ENDPOINT =
+  process.env.API_ < YOUR_API_NAME > _GRAPHQLAPIENDPOINTOUTPUT;
+const AWS_REGION = process.env.AWS_REGION || 'us-east-1';
+
+const query = /* GraphQL */ `
+  query LIST_TODOS {
+    listTodos {
+      items {
+        id
+        name
+        description
+      }
+    }
+  }
+`;
+
+/**
+ * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
+ */
+exports.handler = async (event) => {
+  console.log(`EVENT: ${JSON.stringify(event)}`);
+
+  const endpoint = new URL(GRAPHQL_ENDPOINT);
+
+  const signer = new SignatureV4({
+    credentials: defaultProvider(),
+    region: AWS_REGION,
+    service: 'appsync',
+    sha256: Sha256
+  });
+
+  const requestToBeSigned = new HttpRequest({
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      host: endpoint.host
+    },
+    hostname: endpoint.host,
+    body: JSON.stringify({ query }),
+    path: endpoint.pathname
+  });
+
+  const signed = await signer.sign(requestToBeSigned);
+  const request = new Request(GRAPHQL_ENDPOINT, signed);
+
+  let statusCode = 200;
+  let body;
+  let response;
+
+  try {
+    response = await fetch(request);
+    body = await response.json();
+    if (body.errors) statusCode = 400;
+  } catch (error) {
+    statusCode = 500;
+    body = {
+      errors: [
+        {
+          message: error.message
+        }
+      ]
+    };
+  }
+
+  return {
+    statusCode,
+    body: JSON.stringify(body)
+  };
+};
+```

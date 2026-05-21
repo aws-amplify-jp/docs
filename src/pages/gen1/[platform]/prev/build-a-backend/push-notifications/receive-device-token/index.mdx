@@ -1,0 +1,31 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'デバイストークンを受け取る',
+  description: 'プッシュ通知で使用するデバイストークンを受け取ります。',
+  platforms: [
+    'react-native',
+    'flutter',
+    ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+
+import receiveDeviceToken from '/src/fragments/lib-v1/push-notifications/common/receive-device-token.mdx';
+
+<Fragments fragments={{ 'react-native': receiveDeviceToken, flutter: receiveDeviceToken }} />

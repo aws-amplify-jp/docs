@@ -1,0 +1,66 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'AWS MCP Server のセットアップ',
+  description: 'AI コーディング アシスタントで AWS MCP Server を構成する方法を学習します。',
+  route: '/[platform]/develop-with-ai/mcp-server/set-up-mcp',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+[AWS MCP Server セットアップ ガイド](https://docs.aws.amazon.com/aws-mcp/latest/userguide/getting-started-aws-mcp-server.html)に従って、AI コーディング アシスタントで AWS MCP Server を構成します。このガイドでは以下をカバーしています。
+
+- 前提条件のインストール (AWS CLI、uv パッケージ マネージャー)
+- MCP クライアントの構成 (Amazon Kiro、Cursor、Claude Desktop など)
+- AWS 認証情報と IAM アクセス権限の設定
+- 接続のテスト
+
+## Amplify 固有のセットアップ ヒント
+
+AWS MCP Server を構成したら、Amplify 開発のための以下のヒントをご確認ください。
+
+### Amplify 用の AWS 認証情報
+
+Amplify 開発用の AWS 認証情報をまだセットアップしていない場合は、[ローカル開発用に AWS を構成](/[platform]/start/account-setup/)ガイドに従ってください。これにより、AWS MCP Server と Amplify CLI の操作の両方に必要な適切なアクセス権限があることが保証されます。
+
+### IAM アクセス権限
+
+基本的な AWS MCP Server アクセス権限により、AI アシスタントはガイド付きワークフローとドキュメントにアクセスできます。Amplify 開発の場合、認証情報には Amplify リソースを作成および管理するアクセス権限も必要です。
+
+Amplify 開発に `AmplifyBackendDeployFullAccess` マネージド ポリシーを使用している場合は、十分なアクセス権限がある可能性があります。アクセス権限エラーが発生した場合は、AWS 管理者に確認してください。
+
+### Amplify ワークフローが利用可能であることを確認
+
+セットアップ後、AI アシスタントに以下を尋ねて、Amplify ワークフローにアクセス可能であることを確認します。
+
+```
+Amplify 開発で利用できるガイド付きワークフローはどれですか?
+```
+
+アシスタントは、バックエンド実装、フロントエンド統合、およびデプロイメント ガイド ワークフローについて説明する必要があります。
+
+## 次のステップ
+
+AWS MCP Server を構成したので、Amplify 開発を加速するために利用可能な[ガイド付きワークフロー](/[platform]/develop-with-ai/mcp-server/amplify-workflows/)について学習します。

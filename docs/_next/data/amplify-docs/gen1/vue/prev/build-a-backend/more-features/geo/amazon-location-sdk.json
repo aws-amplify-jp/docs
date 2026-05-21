@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"vue","meta":{"title":"Amazon Location Service SDKを使用する","description":"Amplifyが機能を提供していない特殊なユースケースでは、エスケープハッチを使用してAmazon Location Serviceの低レベルクライアントインスタンスにアクセスできます。","platforms":["swift","android","javascript","angular","nextjs","react","vue"]}},"__N_SSG":true}

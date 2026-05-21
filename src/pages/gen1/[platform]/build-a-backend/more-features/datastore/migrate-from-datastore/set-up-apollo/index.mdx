@@ -1,0 +1,767 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Apollo Clientのセットアップ',
+  description: 'Apollo Clientをインストールし、Cognitoで認証を設定し、エラーハンドリングと再試行ロジックをセットアップし、Amplifyでリアルタイムサブスクリプションを構成し、AppSyncバックエンド用のGraphQL操作を記述します。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+このページでは、Apollo ClientをAppSyncエンドポイントで動作させるために必要なすべてのことについて説明します。前提条件、Apollo Clientのインストール、GraphQL操作の記述、`_version`メタデータの理解、認証とエラーハンドリング用のリンクチェーンの構成、およびAmplifyでのリアルタイムサブスクリプションのセットアップについて説明しています。
+
+## 開始前に
+
+開始する前に、次のことを確認してください：
+
+- デプロイされて動作している既存の**Amplify Gen 1バックエンド**とデータモデル
+- プロジェクト内のAmplify設定ファイル（`amplifyconfiguration.json`または`aws-exports.js`）
+- インストールされて設定済みの`aws-amplify` v6パッケージ（アプリのスタートアップで`Amplify.configure(config)`が呼び出されている）
+- **GraphQL構文**の理解 -- クエリ、ミューテーション、サブスクリプション
+
+<Callout>
+
+**このガイドはフロントエンドマイグレーションを最初にカバーしています。** DataStoreクライアントライブラリをApollo Clientに置き換えます。その間、Gen 1バックエンドは変わりません。`aws-amplify` v6ライブラリはGen 1バックエンドで動作します。APIの呼び出し方法を更新するだけで構いません。フロントエンドマイグレーションを完了し、[競合解決を無効にした](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/disable-conflict-resolution/)後、バックエンドをAmplify Gen 2に移行できます。
+
+</Callout>
+
+## Apollo Clientのインストール
+
+Apollo Clientをインストールします：
+
+```bash
+npm install @apollo/client@^3.14.0
+```
+
+`graphql`を個別にインストールする必要は**ありません** -- `aws-amplify`によって既に提供されています。`graphql`を明示的にインストールすると、npmはより新しいバージョン（v16）を解決するため、`aws-amplify`の固定された`graphql@15.8.0`と競合し、`ERESOLVE`エラーで失敗します。
+
+<Callout>
+
+**なぜApollo Client v3（v4ではなく）？** `apollo3-cache-persist`ライブラリ -- 後で[ローカルキャッシュを追加する](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/add-local-caching/)場合に必要 -- はApollo Client v3のみをサポートしています。v3から開始することで、プロジェクトの途中での破壊的なバージョンマイグレーションを回避できます。`@apollo/client@^3.14.0`を使用すると、すべての安定性修正を含む最新のv3リリースが確保されます。
+
+</Callout>
+
+## GraphQLエンドポイントを見つける
+
+GraphQLエンドポイントと認証設定は`aws-exports.js`（または`amplifyconfiguration.json`）にあります：
+
+```json
+{
+  "aws_appsync_graphqlEndpoint": "https://xxxxx.appsync-api.us-east-1.amazonaws.com/graphql",
+  "aws_appsync_authenticationType": "AMAZON_COGNITO_USER_POOLS",
+  "aws_appsync_region": "us-east-1"
+}
+```
+
+Apollo Clientを構成するときに`aws_appsync_graphqlEndpoint`の値を使用します。
+
+<Callout warning>
+
+**Gen 1フィールド名の大文字小文字。** Gen 1バックエンドは**大文字**のIDサフィックス付きの外部キーフィールド（例：`postID`、`tagID`）を生成していますが、Gen 2は小文字（`postId`、`tagId`）を使用します。このガイドのコード例はGen 2の小文字の慣例を使用しています。**バックエンドがまだGen 1を使用している場合、GraphQL操作のすべてのフィールド名を実際のスキーマと一致するように調整する必要があります。** 不一致のフィールド名はエラーを生成しません -- AppSyncは静かに`null`を返すため、デバッグするのが非常に困難です。GraphQL操作を記述する前に、`src/graphql/queries.js`またはAppSyncコンソールのSchemaタブで、すべての外部キーフィールドの正しい大文字小文字を確認してください。
+
+</Callout>
+
+## 型付き操作の生成（オプション）
+
+Gen 1プロジェクトには、`src/graphql/`にすでに自動生成されたGraphQL操作（クエリ、ミューテーション、サブスクリプション）があります。これらの操作はGen 1バックエンドで引き続き機能し、以下のApollo Client操作を記述するときに参照できます。
+
+または、操作を再生成するか、**AWS AppSyncコンソール**からクエリ、ミューテーション、サブスクリプションを直接コピーできます。Schemaタブとqueriesタブに移動してください。
+
+Apollo Clientでの生成された型の統合の詳細については、[高度なパターン](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/advanced-patterns/)ページを参照してください。
+
+## GraphQL操作を記述する
+
+Apollo Clientは`gql`タグ付きテンプレートリテラルを使用してGraphQL操作を定義します。このセクションでは、`Post`モデルを実行例として、標準的なパターンを示します。
+
+### 再利用可能なフィールド選択用のGraphQLフラグメント
+
+フラグメントを使用すると、再利用可能なフィールドセットを定義できます。すべての操作がこのフラグメントを参照し、アプリ全体で一貫したフィールド選択を確保します：
+
+```graphql
+fragment PostDetails on Post {
+  id
+  title
+  content
+  status
+  rating
+  createdAt
+  updatedAt
+  _version
+  _deleted
+  _lastChangedAt
+  owner
+}
+```
+
+モデルが**所有者ベースの認可**（`@auth(rules: [{ allow: owner }])`）を使用する場合、フラグメントに`owner`フィールドを含めてください。このフィールドは所有者スコープのサブスクリプションに必要です。
+
+<Callout warning>
+
+`_version`、`_deleted`、`_lastChangedAt`フィールドは、競合解決が有効になっているバックエンドに必須です。アプリがDataStoreを使用していた場合、バックエンドは競合解決が有効になっています。下記の[_versionメタデータセクション](#understand-_version-metadata)を参照してください。
+
+</Callout>
+
+### 完全な操作定義
+
+```ts title="src/graphql/operations.ts"
+import { gql } from '@apollo/client';
+
+// Fragment for consistent field selection
+const POST_DETAILS_FRAGMENT = gql`
+  fragment PostDetails on Post {
+    id
+    title
+    content
+    status
+    rating
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    owner
+  }
+`;
+
+// List all posts
+export const LIST_POSTS = gql`
+  ${POST_DETAILS_FRAGMENT}
+  query ListPosts($filter: ModelPostFilterInput, $limit: Int, $nextToken: String) {
+    listPosts(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        ...PostDetails
+      }
+      nextToken
+    }
+  }
+`;
+
+// Get a single post by ID
+export const GET_POST = gql`
+  ${POST_DETAILS_FRAGMENT}
+  query GetPost($id: ID!) {
+    getPost(id: $id) {
+      ...PostDetails
+    }
+  }
+`;
+
+// Create a new post
+export const CREATE_POST = gql`
+  ${POST_DETAILS_FRAGMENT}
+  mutation CreatePost($input: CreatePostInput!) {
+    createPost(input: $input) {
+      ...PostDetails
+    }
+  }
+`;
+
+// Update an existing post
+export const UPDATE_POST = gql`
+  ${POST_DETAILS_FRAGMENT}
+  mutation UpdatePost($input: UpdatePostInput!) {
+    updatePost(input: $input) {
+      ...PostDetails
+    }
+  }
+`;
+
+// Delete a post
+export const DELETE_POST = gql`
+  ${POST_DETAILS_FRAGMENT}
+  mutation DeletePost($input: DeletePostInput!) {
+    deletePost(input: $input) {
+      ...PostDetails
+    }
+  }
+`;
+```
+
+すべての操作 -- ミューテーションを含む -- は完全な`PostDetails`フラグメントを返します。これにより、後続のミューテーション用に常に最新の`_version`値を持つことが保証されます。
+
+<Callout>
+
+**マルチモデルアプリ：** アプリの**各モデル**に対して結果インターフェースを定義します。単一の`src/graphql/operations.ts`ファイルに操作と共に同じ場所に配置します（より大きなスキーマでは、`operations/post.ts`、`operations/comment.ts`などに分割）。自動生成された`src/graphql/queries.js`と`src/graphql/mutations.js`ファイルには、すべてのモデルの正確なフィールド名と操作シグネチャが含まれています。型付き操作を記述するときにそれらを参照として使用してください。
+
+</Callout>
+
+<Callout>
+
+**DataStore列挙型の置き換え：** DataStoreモデルファイルはTypeScript`enum`型をエクスポートします（例：`PostStatus`）。マイグレーション後、`./models`からインポートしなくなるため、これらの値を自分で定義する必要があります。TypeScript設定に`erasableSyntaxOnly: true`がある場合（TypeScript 5.9+とVite 8スキャフォルドのデフォルト -- Vite 8は`tsconfig.json`ではなく`tsconfig.app.json`で設定することに注意）、`enum`宣言はランタイムコードを生成するため許可されません。代わりに`as const`を使用した`const`オブジェクトを使用してください：
+
+```ts
+// Instead of: enum PostStatus { DRAFT = 'DRAFT', PUBLISHED = 'PUBLISHED' }
+const PostStatus = { DRAFT: 'DRAFT', PUBLISHED: 'PUBLISHED', ARCHIVED: 'ARCHIVED' } as const;
+type PostStatus = (typeof PostStatus)[keyof typeof PostStatus];
+```
+
+また注意：Vite 8スキャフォルドは`tsconfig.app.json`で`verbatimModuleSyntax: true`を設定しています。これには、型専用インポートに`import type`を使用する必要があります（例：`import { TypedDocumentNode }`の代わりに`import type { TypedDocumentNode } from '@apollo/client'`）。
+
+</Callout>
+
+## _versionメタデータを理解する
+
+これはこのガイドの最も重要なセクションの1つです。アプリがDataStoreを使用していた場合、バックエンドは**競合解決が有効になっており**、3つのメタデータフィールドを正しく処理しないとミューテーションが失敗します。
+
+### これらのフィールドが存在する理由
+
+DataStoreはAppSyncバックエンド上でDynamoDBを介して**競合解決**を有効にします。このメカニズムはすべてのモデルに3つのメタデータフィールドを追加します：
+
+| フィールド | 型 | 目的 |
+|-------|------|---------|
+| `_version` | `Int` | オプティミスティックロックカウンター。正常なミューテーションのたびにインクリメントされます。 |
+| `_deleted` | `Boolean` | ソフト削除フラグ。`true`の場合、レコードは論理的に削除されますが、DynamoDBに存在します。 |
+| `_lastChangedAt` | `AWSTimestamp` | 最後の変更のミリ秒タイムスタンプ。AppSyncによって自動的に設定されます。 |
+
+### それらが必要な場合
+
+- **すべてのミューテーションには`_version`が必要です**（作成を除く）。省略すると`ConditionalCheckFailedException`が発生します。
+- **すべてのクエリは**`_version`、`_deleted`、`_lastChangedAt`を応答フィールドで選択する必要があります。
+- **リストクエリはソフト削除されたレコードを返します。** アプリケーションコードでそれらをフィルタリングする必要があります。
+
+### それらを処理する方法
+
+これら3つのルールに従ってください：
+
+**1.常にメタデータフィールドを応答選択に含めます。** すべてのクエリとミューテーション応答には、`_version`、`_deleted`、`_lastChangedAt`を含める必要があります（上記の`PostDetails`フラグメントはこれを行います）。
+
+**2.クエリ結果から常に`_version`をミューテーション入力に渡します：**
+
+```ts
+// First, query the current post (includes _version in response)
+const { data } = await apolloClient.query({
+  query: GET_POST,
+  variables: { id: postId },
+});
+const post = data.getPost;
+
+// Then, pass _version when updating
+await apolloClient.mutate({
+  mutation: UPDATE_POST,
+  variables: {
+    input: {
+      id: post.id,
+      title: 'Updated Title',
+      _version: post._version, // REQUIRED
+    },
+  },
+});
+```
+
+**3.リストクエリ結果からソフト削除されたレコードをフィルタリングします：**
+
+```ts
+const { data } = await apolloClient.query({ query: LIST_POSTS });
+const activePosts = data.listPosts.items.filter(post => !post._deleted);
+```
+
+### ヘルパー：ソフト削除されたレコードをフィルタリング
+
+リストクエリからソフト削除されたレコードをフィルタリングするシンプルなユーティリティ関数：
+
+```ts title="src/utils/filterDeleted.ts"
+function filterDeleted<T extends { _deleted?: boolean | null }>(items: T[]): T[] {
+  return items.filter(item => !item._deleted);
+}
+
+// Usage
+const { data } = await apolloClient.query({ query: LIST_POSTS });
+const activePosts = filterDeleted(data.listPosts.items);
+```
+
+## Apollo Clientを構成する
+
+Apollo Clientは**リンクチェーン** -- 各リクエストを処理する一連のミドルウェア関数を介してAppSyncと通信します。4つのリンクを構築します：
+
+1. **HTTPリンク** -- 実際のGraphQLリクエストをAppSyncに送信します
+2. **認証リンク** -- 各リクエストにCognito IDトークンを挿入します
+3. **エラーリンク** -- GraphQLおよびネットワークエラーをインターセプトしてログします
+4. **再試行リンク** -- バックオフを使用して失敗したネットワークリクエストを自動的に再試行します
+
+### HTTPリンク
+
+```ts
+import { createHttpLink } from '@apollo/client';
+import config from '../amplifyconfiguration.json';
+
+const httpLink = createHttpLink({
+  uri: config.aws_appsync_graphqlEndpoint,
+});
+```
+
+<Callout warning>
+
+**`BatchHttpLink`を使用しないでください。** AppSyncはHTTPリクエストバッチングをサポートしていません。バッチ処理されたリクエストはサイレントに失敗し、バッチ内のすべての操作についてエラーが返されます。
+
+</Callout>
+
+### 認証リンク
+
+認証リンクはすべてのリクエストにCognito User Pools IDトークンを挿入します：
+
+```ts
+import { setContext } from '@apollo/client/link/context';
+import { fetchAuthSession } from 'aws-amplify/auth';
+
+const authLink = setContext(async (_, { headers }) => {
+  try {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken?.toString();
+    return {
+      headers: {
+        ...headers,
+        authorization: token || '',
+      },
+    };
+  } catch (error) {
+    console.error('Auth session error:', error);
+    return { headers };
+  }
+});
+```
+
+`fetchAuthSession()`はすべてのリクエストで呼び出されるため、トークンが常に新鮮であることが保証されます。Amplifyはリフレッシュトークンを使用して有効期限切れのアクセストークンを自動的にリフレッシュします。
+
+### エラーリンク
+
+エラーリンクはすべてのGraphQLおよびネットワークエラーをグローバルにインターセプトします：
+
+```ts
+import { onError } from '@apollo/client/link/error';
+
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+  if (graphQLErrors) {
+    for (const { message, locations, path } of graphQLErrors) {
+      console.error(
+        `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+      );
+
+      if (message.includes('Unauthorized') || message.includes('401')) {
+        // Token expired or invalid -- redirect to sign-in
+      }
+    }
+  }
+
+  if (networkError) {
+    console.error(`[Network error]: ${networkError}`);
+  }
+});
+```
+
+**一般的なAppSyncエラー：**
+
+| エラーメッセージ | 原因 | アクション |
+|---------------|-------|--------|
+| `Unauthorized`または`401` | 有効期限切れまたは欠落している認証トークン | サインインページにリダイレクト |
+| `ConditionalCheckFailedException` | ミューテーション入力に欠落または古い`_version` | 再クエリして最新の`_version`を取得してから再試行 |
+| `ConflictUnhandled` | 競合解決がミューテーションを拒否した | 再クエリして新鮮なデータで再試行 |
+| `Network error` | 接続性の問題 | 再試行リンクが自動的に処理 |
+
+### 再試行リンク
+
+```ts
+import { RetryLink } from '@apollo/client/link/retry';
+
+const retryLink = new RetryLink({
+  delay: {
+    initial: 300,
+    max: 5000,
+    jitter: true,
+  },
+  attempts: {
+    max: 3,
+    retryIf: (error) => !!error,
+  },
+});
+```
+
+ネットワークエラーで最大3回、指数バックオフで再試行します。`jitter: true`設定は、thundering herd問題を防ぐためにランダム性を追加します。
+
+### すべてを組み合わせる
+
+4つのリンクをすべて単一のApollo Clientインスタンスに組み合わせます：
+
+```ts title="src/apolloClient.ts"
+import {
+  ApolloClient,
+  InMemoryCache,
+  createHttpLink,
+  from,
+} from '@apollo/client';
+
+export const apolloClient = new ApolloClient({
+  link: from([retryLink, errorLink, authLink, httpLink]),
+  cache: new InMemoryCache(),
+});
+```
+
+### リンクチェーン順序
+
+`from()`関数は、送信リクエストで**左から右に**、受信応答で**右から左に**リンクを組み立てます：
+
+```
+Request  --> RetryLink --> ErrorLink --> AuthLink --> HttpLink --> AppSync
+Response <-- RetryLink <-- ErrorLink <-- AuthLink <-- HttpLink <-- AppSync
+```
+
+- **RetryLinkが最初** -- チェーン全体をラップするため、ダウンストリームリンクまたはネットワークリクエストが失敗した場合、RetryLinkは完全なチェーン（認証トークンの再取得を含む）を再実行できます
+- **ErrorLinkが2番目** -- すべてのエラーを見ることができ、ログまたはリダイレクトできます
+- **AuthLinkが3番目** -- HTTPリクエストの直前にCognitoトークンを挿入します
+- **HttpLinkが最後** -- 実際のリクエストをAppSyncに送信します
+
+<InlineFilter filters={["react", "nextjs", "react-native"]}>
+
+### Reactに接続
+
+アプリケーションを`ApolloProvider`でラップして、クライアントをすべてのコンポーネントで利用可能にします：
+
+```tsx title="src/App.tsx"
+import { ApolloProvider } from '@apollo/client';
+import { apolloClient } from './apolloClient';
+
+function App() {
+  return (
+    <ApolloProvider client={apolloClient}>
+      {/* Your app components can now use useQuery, useMutation, etc. */}
+    </ApolloProvider>
+  );
+}
+```
+
+`ApolloProvider`内のコンポーネントは、Apolloの Reactフック（`useQuery`、`useMutation`）を使用してAppSync APIと対話できます。
+
+</InlineFilter>
+
+## サインアウトとキャッシュクリーンアップ
+
+ユーザーがサインアウトするとき、Apollo Clientのメモリ内キャッシュをクリアして、次のユーザーが古いデータを見ないようにする必要があります：
+
+```ts title="src/auth.ts"
+import { signOut } from 'aws-amplify/auth';
+import { apolloClient } from './apolloClient';
+
+async function handleSignOut() {
+  // 1. Clear Apollo Client's in-memory cache
+  await apolloClient.clearStore();
+
+  // 2. Sign out from Amplify (clears Cognito tokens)
+  await signOut();
+}
+```
+
+<Callout warning>
+
+**関数の名前を`handleSignOut`にしてください（`signOut`ではなく）。** Amplifyインポートをシャドウイングするのを避けるためです。`signOut`と名付けると、再帰呼び出しが作成されます -- 関数はAmplifyの`signOut`の代わりに自身を呼び出し、スタックオーバーフローが発生します。
+
+</Callout>
+
+**主な詳細：**
+
+- **`clearStore()`** はメモリ内キャッシュをクリアし、アクティブなすべてのクエリをキャンセルします。キャッシュをクリア**して**アクティブなすべてのクエリを再フェッチしたい場合は、代わりに`resetStore()`を使用してください。
+- **順序が重要：** 最初にキャッシュをクリアしてから、サインアウトします。最初にサインアウトすると、認証トークンが既に無効化されているため、`clearStore()`が再フェッチをトリガーする可能性があります。
+- **ローカルキャッシュを追加する場合**（[ローカルキャッシュの追加](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/add-local-caching/)ページで説明）、サインアウト関数も永続キャッシュをパージする必要があります。
+
+<Accordion title="完全なapolloClie.tsセットアップファイル">
+
+上記のすべてを組み合わせた完全な`src/apolloClient.ts`ファイルは以下のとおりです：
+
+```ts title="src/apolloClient.ts"
+import {
+  ApolloClient,
+  InMemoryCache,
+  createHttpLink,
+  from,
+} from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
+import { onError } from '@apollo/client/link/error';
+import { RetryLink } from '@apollo/client/link/retry';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import config from '../amplifyconfiguration.json';
+
+// --- HTTP Link ---
+const httpLink = createHttpLink({
+  uri: config.aws_appsync_graphqlEndpoint,
+});
+
+// --- Auth Link ---
+const authLink = setContext(async (_, { headers }) => {
+  try {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken?.toString();
+    return {
+      headers: {
+        ...headers,
+        authorization: token || '',
+      },
+    };
+  } catch (error) {
+    console.error('Auth session error:', error);
+    return { headers };
+  }
+});
+
+// --- Error Link ---
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+  if (graphQLErrors) {
+    for (const { message, locations, path } of graphQLErrors) {
+      console.error(
+        `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+      );
+
+      if (message.includes('Unauthorized') || message.includes('401')) {
+        // Token expired or invalid -- redirect to sign-in
+      }
+    }
+  }
+
+  if (networkError) {
+    console.error(`[Network error]: ${networkError}`);
+  }
+});
+
+// --- Retry Link ---
+const retryLink = new RetryLink({
+  delay: { initial: 300, max: 5000, jitter: true },
+  attempts: { max: 3, retryIf: (error) => !!error },
+});
+
+// --- Apollo Client ---
+// Link chain: RetryLink -> ErrorLink -> AuthLink -> HttpLink -> AppSync
+export const apolloClient = new ApolloClient({
+  link: from([retryLink, errorLink, authLink, httpLink]),
+  cache: new InMemoryCache(),
+});
+```
+
+</Accordion>
+
+## リアルタイムサブスクリプションのセットアップ
+
+サブスクリプションはAmplifyライブラリを使用します（Apolloではなく）。AppSyncは標準的なGraphQLサブスクリプションライブラリが処理できないカスタムWebSocketプロトコルを使用するためです。
+
+<Callout warning>
+
+**AppSyncで`graphql-ws`、`subscriptions-transport-ws`、またはApolloの`WebSocketLink`を使用しないでください。** これらのライブラリはAppSyncのカスタムWebSocketプロトコルを話さないため、サイレントに失敗します -- WebSocket接続は正常に確立されますが、サブスクリプションコールバックは発火しません。
+
+</Callout>
+
+### Amplifyサブスクリプションクライアントを作成
+
+Apollo Clientと一緒にAmplifyクライアントを作成します。アプリのスタートアップ時にAmplifyが既に構成されています：
+
+```ts
+import { generateClient } from 'aws-amplify/api';
+
+const amplifyClient = generateClient();
+```
+
+これで2つのクライアントが完成しました：
+- **`apolloClient`** -- クエリ、ミューテーション、キャッシング用
+- **`amplifyClient`** -- サブスクリプションのみ用
+
+<Callout>
+
+**ヒント：** 自動生成された`src/graphql/subscriptions.js`ファイルには、`$owner`や`$filter`パラメータを含むスキーマの正確なサブスクリプション署名が含まれています。このファイルを参照して、独自のサブスクリプションを記述する前に、各サブスクリプションタイプの正確なフィールド名と利用可能な引数を確認してください。
+
+</Callout>
+
+### サブスクリプションパターン：イベント時に再フェッチ（推奨）
+
+最もシンプルで信頼性の高いアプローチ：サブスクリプションイベントが発火すると、リストクエリをサーバーから再フェッチします。
+
+<InlineFilter filters={["react", "nextjs", "react-native"]}>
+
+```tsx
+import { useQuery } from '@apollo/client';
+import { generateClient } from 'aws-amplify/api';
+import { useEffect } from 'react';
+import { LIST_POSTS } from './graphql/operations';
+
+const amplifyClient = generateClient();
+
+function PostList() {
+  const { data, loading, error, refetch } = useQuery(LIST_POSTS);
+
+  useEffect(() => {
+    const subscriptions = [
+      amplifyClient.graphql({
+        query: `subscription OnCreatePost {
+          onCreatePost { id }
+        }`
+      }).subscribe({
+        next: () => refetch(),
+        error: (err) => console.error('Create subscription error:', err),
+      }),
+      amplifyClient.graphql({
+        query: `subscription OnUpdatePost {
+          onUpdatePost { id }
+        }`
+      }).subscribe({
+        next: () => refetch(),
+        error: (err) => console.error('Update subscription error:', err),
+      }),
+      amplifyClient.graphql({
+        query: `subscription OnDeletePost {
+          onDeletePost { id }
+        }`
+      }).subscribe({
+        next: () => refetch(),
+        error: (err) => console.error('Delete subscription error:', err),
+      }),
+    ];
+
+    return () => subscriptions.forEach(sub => sub.unsubscribe());
+  }, [refetch]);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  const activePosts = data?.listPosts?.items?.filter(
+    (post) => !post._deleted
+  ) || [];
+
+  return (
+    <ul>
+      {activePosts.map((post) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+</InlineFilter>
+
+**このパターンがうまく機能する理由：**
+
+- サブスクリプションペイロードはリスト全体を再フェッチするためだけに`id`が必要なため、サブスクリプションは軽量のままです
+- キャッシュ操作ロジックはありません。再フェッチはサーバーとの一貫性を保証します
+- イベントあたり1つの追加ネットワークラウンドトリップ。通常100ms未満であり、ほとんどのアプリケーションに対しては知覚できません
+
+<Accordion title="高度：直接キャッシュ更新パターン">
+
+サブスクリプションデータから再フェッチの代わりにApolloのキャッシュを直接更新する必要があるアプリケーションの場合、これにより追加のネットワークラウンドトリップが回避されますが、より多くのコードと慎重なキャッシュ管理が必要です。
+
+```ts
+import { useQuery } from '@apollo/client';
+import { generateClient } from 'aws-amplify/api';
+import { useEffect } from 'react';
+import { LIST_POSTS, POST_DETAILS_FRAGMENT } from './graphql/queries';
+import { apolloClient } from './apolloClient';
+
+const amplifyClient = generateClient();
+
+function PostListAdvanced() {
+  const { data, loading, error } = useQuery(LIST_POSTS);
+
+  useEffect(() => {
+    const sub = amplifyClient.graphql({
+      query: `subscription OnCreatePost {
+        onCreatePost {
+          id title content status rating
+          _version _deleted _lastChangedAt
+          createdAt updatedAt
+        }
+      }`
+    }).subscribe({
+      next: ({ data }) => {
+        const newPost = data.onCreatePost;
+        apolloClient.cache.modify({
+          fields: {
+            listPosts(existingData = { items: [] }) {
+              const newRef = apolloClient.cache.writeFragment({
+                data: newPost,
+                fragment: POST_DETAILS_FRAGMENT,
+              });
+              return {
+                ...existingData,
+                items: [...existingData.items, newRef],
+              };
+            },
+          },
+        });
+      },
+      error: (err) => console.error('Create subscription error:', err),
+    });
+
+    return () => sub.unsubscribe();
+  }, []);
+
+  // ... render logic
+}
+```
+
+**推奨事項：** 再フェッチパターンから開始してください。測定可能なパフォーマンス問題がある場合にのみ、直接キャッシュ更新に移動してください。
+
+</Accordion>
+
+### DataStoreの比較
+
+| DataStore | Amplify + Apollo（ハイブリッド） |
+|-----------|--------------------------|
+| `DataStore.observe(Post).subscribe(...)` | `amplifyClient.graphql({ query: onCreatePost }).subscribe(...)` |
+| `DataStore.observeQuery(Post)` | `useQuery(LIST_POSTS)` +サブスクリプション再フェッチ |
+| モデルごとの自動サブスクリプション | イベントタイプごとの手動セットアップ（作成、更新、削除） |
+| すべてのイベントタイプ用の単一の観察呼び出し | イベントタイプごとに別のサブスクリプション |
+
+### サブスクリプションのトラブルシューティング
+
+<Accordion title="一般的なサブスクリプションの問題">
+
+**サブスクリプションは接続するが発火しない：**
+
+サブスクリプション名はスキーマと完全に一致する必要があります。AppSyncサブスクリプションは`onCreateModelName`、`onUpdateModelName`、`onDeleteModelName`として生成されます（キャメルケース）。AWSコンソールのAppSyncスキーマを確認してください。
+
+**サブスクリプションで認証エラー：**
+
+サブスクリプションクライアントを作成する前に、Amplifyを構成する必要があります。`Amplify.configure(config)`がアプリのスタートアップ時に`generateClient()`への呼び出しの前に実行されることを確認してください。
+
+**サブスクリプションは～5分の非アクティビティ後に切断：**
+
+これは正常な動作です。Amplifyの`AWSAppSyncRealTimeProvider`は自動再接続を処理します。アクション不要です。
+
+**開発では機能するがプロダクションでは機能しない：**
+
+`amplifyconfiguration.json`（または`aws-exports.js`）設定がプロダクション環境で正しいこと、およびCORSがプロダクションドメインからのWebSocket接続を許可するようにAppSync APIに構成されていることを確認してください。
+
+**サブスクリプションは接続するがイベントを受け取らない（所有者ベースの認可）：**
+
+モデルが**所有者ベースの認可**（`@auth(rules: [{ allow: owner }])`）を使用する場合、サブスクリプション内で`$owner`変数を渡す必要があります。それなしでは、サブスクリプションは正常に接続しますが、AppSyncはサイレントにすべてのイベントをフィルタリングアウトします。これは**最も一般的な原因**です「サブスクリプションは機能するが何も起こらない。」
+
+現在の認証セッションから所有者値を取得し、変数として渡します：
+
+```ts
+import { fetchAuthSession } from 'aws-amplify/auth';
+
+const session = await fetchAuthSession();
+const owner = session.tokens?.idToken?.payload?.sub as string;
+
+(amplifyClient.graphql({
+  query: `subscription OnCreatePost($owner: String!) {
+    onCreatePost(owner: $owner) { id }
+  }`,
+  variables: { owner },
+}) as any).subscribe({ next: () => refetch() });
+```
+
+3つのサブスクリプションタイプ（`onCreate`、`onUpdate`、`onDelete`）すべてが、所有者ベースの認可モデルに`$owner`変数を必要とします。完全なReactコンポーネントパターンについては、[高度なパターン](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/advanced-patterns/)ページを参照してください。
+
+</Accordion>

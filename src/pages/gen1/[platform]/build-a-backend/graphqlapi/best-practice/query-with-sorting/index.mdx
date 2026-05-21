@@ -1,0 +1,132 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '日付でソートするGraphQLクエリ',
+  description: 'GraphQLクエリでソート機能を実装する方法',
+  platforms: [
+    'javascript',
+    'angular',
+    'nextjs',
+    'react',
+    'vue',
+    'swift',
+    'android',
+    'flutter',
+    'react-native'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+このガイドでは、GraphQL APIにソート機能を実装する方法について学習します。この例では、`@index` GraphQL Transformer ディレクティブを使用して DynamoDB Global Secondary Index を活用し、日付で昇順または降順にソート結果を実装します。
+
+## 概要
+
+まず、Todoアプリの基本的なGraphQLスキーマから始めましょう:
+
+```graphql
+type Todo @model {
+  id: ID!
+  title: String!
+}
+```
+
+`@model` ディレクティブで API が作成されると、以下のクエリが自動的に生成されます:
+
+```graphql
+type Query {
+  getTodo(id: ID!): Todo
+  listTodos(
+    filter: ModelTodoFilterInput
+    limit: Int
+    nextToken: String
+  ): ModelTodoConnection
+}
+```
+
+次に、`ModelTodoConnection` タイプを確認して、`listTodos` クエリが実行されたときに返されるデータについて理解しましょう:
+
+```graphql
+type ModelTodoConnection {
+  items: [Todo]
+  nextToken: String
+}
+```
+
+デフォルトでは、`listTodos` クエリは `items` 配列を**順序なしで**返します。多くの場合、これらのアイテムをタイトルで、作成日で、またはその他の方法でソートする必要があります。
+
+これを実現するには、[@index](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/) ディレクティブを使用できます。このディレクティブにより、API内の任意のフィールドにカスタム `sortKey` を設定できます。
+
+## 実装
+
+この例では、`createdAt` フィールドでソートを有効にします。デフォルトでは、何も渡されない場合、Amplify はこの `createdAt` フィールドにタイムスタンプを自動的に入力します。
+
+これを有効にするには、スキーマを以下のように更新します:
+
+```graphql
+type Todo @model {
+  id: ID!
+  title: String!
+  type: String!
+    @index(
+      name: "todosByDate"
+      queryField: "todosByDate"
+      sortKeyFields: ["createdAt"]
+    )
+  createdAt: String!
+}
+```
+
+<Callout>
+
+Todo を作成する際は、これが正しく機能するために `type` フィールドに値を入力する必要があります。
+
+</Callout>
+
+次に、`type` フィールドに値を入力して、いくつかの Todo を作成します:
+
+```graphql
+mutation createTodo {
+  createTodo(input: { title: "Todo 1", type: "Todo" }) {
+    id
+    title
+  }
+}
+```
+
+これで、新しい `todosByDate` クエリを使用して、日付で昇順または降順に Todo をクエリできます:
+
+```graphql
+query todosByDate {
+  todosByDate(type: "Todo", sortDirection: ASC) {
+    items {
+      id
+      title
+      createdAt
+    }
+  }
+}
+
+query todosByDateDescending {
+  todosByDate(type: "Todo", sortDirection: DESC) {
+    items {
+      id
+      title
+      createdAt
+    }
+  }
+}
+```
+
+`@index` ディレクティブの詳細については、[こちら](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/)のドキュメントを参照してください。

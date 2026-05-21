@@ -1,0 +1,92 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'トラブルシューティング',
+  description: 'GraphQL スキーマに認可ルールを追加して、データへのアクセスを制御します。',
+  platforms: [
+    'swift',
+    'android',
+    'javascript',
+    'flutter',
+    'angular',
+    'nextjs',
+    'react',
+    'vue',
+    'react-native'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## 複数のインデックス変更を一度にデプロイする
+
+`amplify push` を 1 回で複数の `@index` 更新を行うことができます。内部では、Amplify CLI は `@index` で管理される各グローバルセカンダリインデックス (GSI) の変更に時間がかかるため、DynamoDB テーブルへの複数の個別デプロイをローカルで順序付ける必要があります。
+
+複数の GSI を更新する際にローカルでデプロイが失敗した場合、以下を実行できます:
+
+- `amplify push --iterative-rollback` - 最後の既知の良い状態にロールバック
+- `amplify push --force` - 最後の既知の良い状態にロールバックしてから変更の再デプロイを試行
+
+```console
+Attempting to mutate more than 1 global secondary index at the same time.
+```
+
+`amplify push` 中に上記のエラーが発生した場合、このフィーチャーが有効になっていない可能性があります。複数の GSI 更新を有効にするには、`amplify/cli.json` ファイルで "enableIterativeGsiUpdates" フィーチャーフラグを true に設定します。
+
+## DynamoDB テーブルから OpenSearch インデックスをバックフィルする
+
+既存データを持つ `@model` タイプに `@searchable` を追加した場合、OpenSearch インデックスをバックフィルする必要があります。以下の Python スクリプトをダウンロードして、OpenSearch インデックスをバックフィルするのに役立てます:
+
+[DynamoDB から OpenSearch へのバックフィルスクリプト](https://raw.githubusercontent.com/aws-amplify/amplify-category-api/release-api-plugin-stable/packages/graphql-elasticsearch-transformer/scripts/ddb_to_es.py)
+
+このスクリプトは、DynamoDB レコードのイベントストリームを作成し、OpenSearch インデックスに送信します。バックフィルを開始するには、以下のパラメータを使用してスクリプトを実行します:
+
+| パラメータ | 説明 | 必須 |
+| --- | --- | --- |
+| `--rn` | DynamoDB テーブルリージョン。利用可能なオプションについては [AWS Regions](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html) を参照してください | はい |
+| `--tn` | DynamoDB テーブル名。形式: `{@model type name}-{AppSync API ID}-{Amplify environment}` | はい |
+| `--lf` | 「DynamoDB から OpenSearch へのストリーミング」Lambda 関数の ARN。形式: `arn:aws:lambda:{region}:{AWS Account ID}:function:amplify-{Amplify project name}-{Amplify environment}-{Random string}-OpenSearchStreamingLambd-{Random string}` | はい |
+| `--esarn` | DynamoDB テーブルストリームの ARN。形式: `arn:aws:dynamodb:{region}:{AWS Account ID}:table/{@model type name}-{AppSync API ID}-{Amplify environment}/stream/{Table creation date}` | はい |
+| `--ak` | AWS アクセスキー ID。ローカルの AWS プロフィールが設定されていない場合、AWS アカウントで認証するために使用されます。 | いいえ |
+| `--sk` | AWS シークレットアクセスキー。ローカルの AWS プロフィールが設定されていない場合、AWS アカウントで認証するために使用されます。 | いいえ |
+| `--st` | AWS セッショントークン。ローカルの AWS プロフィールが設定されていない場合、AWS アカウントで認証するために使用されます。 | いいえ |
+
+以下の例では、`us-west-2` 内の `Post` テーブルデータが OpenSearch インデックスにバックフィルされます。
+
+```bash
+python3 ddb_to_es.py \
+  --rn 'us-west-2' \ # Use the region in which your table and OpenSearch domain reside
+  --tn 'Post-XXXX-dev' \ # Table name
+  --lf 'arn:aws:lambda:us-west-2:<...>:function:amplify-<...>-OpenSearchStreamingLambd-<...>' \ # Lambda function ARN, find the DynamoDB to OpenSearch streaming functions, copy entire ARN
+  --esarn 'arn:aws:dynamodb:us-west-2:<...>:table/Post-<...>/stream/2019-20-03T00:00:00.350' # Event source ARN, copy the full DynamoDB table ARN
+```
+
+## 複数のソートキーフィールドを持つインデックス
+
+2 つ以上のソートキーフィールドで `@index` ディレクティブを追加した場合、既存データの新しい複合ソートキーをバックフィルする必要があります。`@index(sortKeyFields: ["status", "date"])` の場合、各オブジェクトの `status` と `date` フィールドを `#` で結合した複合キー値で `status#date` フィールドをバックフィルする必要があります。ソートキーフィールドが 0 個または 1 個の `@index` ディレクティブの場合、データをバックフィルする必要はありません。
+
+## DynamoDB テーブルのグローバルセカンダリインデックスの上限を超えた
+
+DynamoDB の [GSI のソフトリミット（テーブルごと）](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ServiceQuotas.html) を 20 を超えて増加させた場合、段階的デプロイは以下の警告で失敗します。
+
+```console
+DynamoDB <Table Name> can have max of 20 GSIs.
+To disable this check, use the --disable-gsi-limit-check option.
+```
+
+この動作を無効にするには、デプロイスクリプトまたは CI コマンドを更新して、プッシュ中にこの検証を回避するために `--disable-gsi-limit-check` オプションを含めます。
+
+```bash
+amplify push --disable-gsi-limit-check
+```

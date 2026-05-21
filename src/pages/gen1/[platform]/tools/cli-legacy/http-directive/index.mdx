@@ -1,0 +1,411 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'HTTP リゾルバーの設定',
+  description: "'@http' ディレクティブを使用して、AWS AppSync HTTP リゾルバーを作成することで、HTTP または HTTPS エンドポイントを AppSync API に迅速に接続できます。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert
+  isLegacy
+  url={'/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/'}
+/>
+
+## @http
+
+`@http` ディレクティブを使用すると、AWS AppSync API 内で HTTP リゾルバーを迅速に設定できます。
+
+### 定義
+
+```graphql
+directive @http(
+  method: HttpMethod
+  url: String!
+  headers: [HttpHeader]
+) on FIELD_DEFINITION
+enum HttpMethod {
+  PUT
+  POST
+  GET
+  DELETE
+  PATCH
+}
+input HttpHeader {
+  key: String
+  value: String
+}
+```
+
+### 使用方法
+
+`@http` ディレクティブを使用すると、AWS AppSync HTTP リゾルバーを作成することで、HTTP または HTTPS エンドポイントを AppSync API に迅速に接続できます。エンドポイントに接続するには、`schema.graphql` ファイル内のフィールドに `@http` ディレクティブを追加します。このディレクティブを使用して、URL パスパラメータを定義し、クエリ文字列やリクエストボディを指定できます。例えば、post タイプの定義があるとします。
+
+```graphql
+type Post {
+  id: ID!
+  title: String
+  description: String
+  views: Int
+}
+
+type Query {
+  listPosts: Post @http(url: "https://www.example.com/posts")
+}
+```
+
+Amplify は以下の定義を生成し、`listPosts` クエリが使用されると URL にリクエストを送信します。
+
+```graphql
+type Query {
+  listPosts: Post
+}
+```
+
+**リクエストヘッダー**
+
+`@http` ディレクティブは、XML および JSON レスポンスを処理できるリゾルバーを生成します。HTTP メソッドが定義されていない場合、デフォルトで `GET` が使用されます。ディレクティブ定義でバックエンドへの HTTP リクエストと一緒に渡される静的ヘッダーのリストを指定できます。
+
+```graphql
+type Query {
+  listPosts: Post
+    @http(
+      url: "https://www.example.com/posts"
+      headers: [{ key: "X-Header", value: "X-Header-Value" }]
+    )
+}
+```
+
+**パスパラメータ**
+
+特別な `:<parameter>` 記法を使用してディレクティブ URL にパラメータを指定することで、動的パスを作成できます。パラメータのセットは、クエリの `params` 入力オブジェクトで指定できます。パスパラメータはリクエストボディやクエリ文字列に追加されないことに注意してください。複数のパラメータを定義できます。
+
+定義がある場合
+
+```graphql
+type Query {
+  getPost: Post @http(url: "https://www.example.com/posts/:id")
+}
+```
+
+Amplify は以下を生成します
+
+```graphql
+type Query {
+  getPost(params: QueryGetPostParamsInput!): Post
+}
+
+input QueryGetPostParamsInput {
+  id: String!
+}
+```
+
+`params` 入力オブジェクトに `id` を含めることで、特定の post を取得できます。
+
+```graphql
+query post {
+  getPost(params: { id: "POST_ID" }) {
+    id
+    title
+  }
+}
+```
+
+これにより以下のリクエストが送信されます
+
+```text
+GET /posts/POST_ID
+Host: www.example.com
+```
+
+**クエリ文字列**
+
+クエリの変数を指定することで、リクエストと一緒にクエリ文字列を送信できます。クエリ文字列はすべてのリクエストメソッドでサポートされています。
+
+定義がある場合
+
+```graphql
+type Query {
+  listPosts(sort: String!, from: String!, limit: Int!): Post
+    @http(url: "https://www.example.com/posts")
+}
+```
+
+Amplify は以下を生成します
+
+```graphql
+type Query {
+  listPosts(query: QueryListPostsQueryInput!): Post
+}
+
+input QueryListPostsQueryInput {
+  sort: String!
+  from: String!
+  limit: Int!
+}
+```
+
+`query` 入力オブジェクトを使用して post をクエリできます
+
+```graphql
+query posts {
+  listPosts(query: { sort: "DESC", from: "last-week", limit: 5 }) {
+    id
+    title
+    description
+  }
+}
+```
+
+これにより以下のリクエストが送信されます：
+
+```text
+GET /posts?sort=DESC&from=last-week&limit=5
+Host: www.example.com
+```
+
+**リクエストボディ**
+
+`@http` ディレクティブを使用すると、リクエストのボディを指定することもできます。これは `POST`、`PUT`、および `PATCH` リクエストで使用されます。新しい post を作成するには、以下を定義できます。
+
+```graphql
+type Mutation {
+  addPost(title: String!, description: String!, views: Int): Post
+    @http(method: POST, url: "https://www.example.com/post")
+}
+```
+
+Amplify は `addPost` クエリフィールドを `query` および `body` 入力オブジェクトで生成します。これはこのタイプのリクエストがクエリ文字列もサポートしているためです。生成されたリゾルバーは、null 以外の引数（例：`title` および `description`）が少なくとも 1 つの入力オブジェクトで渡されることを検証します。そうでない場合はエラーが返されます。
+
+```graphql
+type Mutation {
+  addPost(query: QueryAddPostQueryInput, body: QueryAddPostBodyInput): Post
+}
+
+input QueryAddPostQueryInput {
+  title: String
+  description: String
+  views: Int
+}
+
+input QueryAddPostBodyInput {
+  title: String
+  description: String
+  views: Int
+}
+```
+
+`body` 入力オブジェクトを使用して post を追加できます：
+
+```graphql
+mutation add {
+  addPost(body: { title: "new post", description: "fresh content" }) {
+    id
+  }
+}
+```
+
+これにより以下のリクエストが送信されます
+
+```text
+POST /post
+Host: www.example.com
+{
+  title: "new post"
+  description: "fresh content"
+}
+```
+
+**環境の指定**
+
+`@http` ディレクティブを使用すると、`${env}` を使用して現在の Amplify CLI 環境を参照できます。
+
+```graphql
+type Query {
+  listPosts: Post @http(url: "https://www.example.com/${env}/posts")
+}
+```
+
+これにより、`DEV` 環境では以下のリクエストが送信されます
+
+```text
+GET /DEV/posts
+Host: www.example.com
+```
+
+**リージョンの指定**
+
+`@http` ディレクティブを使用すると、`${aws_region}` を使用して環境の AWS リージョンを参照できます。
+
+```graphql
+type Query {
+  listPosts: Post @http(url: "https://www.example.com/${aws_region}/posts")
+}
+```
+
+これにより、`us-east-1` リージョンでは以下のリクエストが送信されます
+
+```text
+GET /us-east-1/posts
+Host: www.example.com
+```
+
+**異なるコンポーネントの組み合わせ**
+
+`@http` ディレクティブ定義でパラメータ、クエリ、ボディ、ヘッダー、および環境の組み合わせを使用できます。
+
+定義がある場合
+
+```graphql
+type Post {
+  id: ID!
+  title: String
+  description: String
+  views: Int
+  comments: [Comment]
+}
+
+type Comment {
+  id: ID!
+  content: String
+}
+
+type Mutation {
+  updatePost(
+    title: String!
+    description: String!
+    views: Int
+    withComments: Boolean
+  ): Post
+    @http(
+      method: PUT
+      url: "https://www.example.com/${env}/posts/:id"
+      headers: [{ key: "X-Header", value: "X-Header-Value" }]
+    )
+}
+```
+
+post を以下のように更新できます
+
+```graphql
+mutation update {
+  updatePost(
+    body: { title: "new title", description: "updated description", views: 100 }
+    params: { id: "EXISTING_ID" }
+    query: { withComments: true }
+  ) {
+    id
+    title
+    description
+    comments {
+      id
+      content
+    }
+  }
+}
+```
+
+これにより、`DEV` 環境では以下のリクエストが送信されます
+
+```text
+PUT /DEV/posts/EXISTING_ID?withComments=true
+Host: www.example.com
+X-Header: X-Header-Value
+{
+  title: "new title"
+  description: "updated description"
+  views: 100
+}
+```
+
+**高度なケース**
+
+場合によっては、既存のフィールドデータに基づいてリクエストを送信することができます。post があり、単一のクエリで post に関連付けられたコメントを取得する場合を考えてみましょう。`Post` と `Comment` の以前の定義を使用します。
+
+```graphql
+type Post {
+  id: ID!
+  title: String
+  description: String
+  views: Int
+  comments: [Comment]
+}
+
+type Comment {
+  id: ID!
+  content: String
+}
+```
+
+post は `/posts/:id` で、post のコメントは `/posts/:id/comments` で取得できます。以下の更新された定義を使用して、post ID に基づいてコメントを取得できます。`$ctx.source` は親フィールド（`Post`）の解決を含むマップであり、`id` へのアクセスを提供します。
+
+```graphql
+type Post {
+  id: ID!
+  title: String
+  description: String
+  views: Int
+  comments: [Comment]
+    @http(url: "https://www.example.com/posts/${ctx.source.id}/comments")
+}
+
+type Comment {
+  id: ID!
+  content: String
+}
+
+type Query {
+  getPost: Post @http(url: "https://www.example.com/posts/:id")
+}
+```
+
+以下のクエリと選択セットを使用して、特定の post のコメントを取得できます。
+
+```graphql
+query post {
+  getPost(params: { id: "POST_ID" }) {
+    id
+    title
+    description
+    comments {
+      id
+      content
+    }
+  }
+}
+```
+
+`getPost` が ID `POST_ID` の post を取得したと仮定すると、comments フィールドは以下のリクエストをエンドポイントに送信することで解決されます
+
+```text
+GET /posts/POST_ID/comments
+Host: www.example.com
+```
+
+参照変数（ここでは post ID）が存在することを確認するチェックはないことに注意してください。このテクニックを使用する場合、参照されるフィールドが null 以外であることを確認することをお勧めします。
+
+### 生成される
+
+`@http` トランスフォーマーは、識別された各ベース URL に対して 1 つの HTTP データソースを作成します。例えば、複数の HTTP リゾルバーが「https://www.example.com」エンドポイントと相互作用するために作成された場合、1 つのデータソースのみが作成されます。各ディレクティブは 1 つのリゾルバーを生成します。定義に応じて、適切な `body`、`params`、および `query` 入力タイプが作成されます。`@http` トランスフォーマーは、Signature Version 4 署名プロセスが必要な他の AWS サービスの呼び出しをサポートしないことに注意してください。

@@ -1,0 +1,260 @@
+---
+title: "Function をセットアップする"
+section: "build-a-backend/functions"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2025-03-25T21:50:31.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/functions/set-up-function/"
+---
+
+Amplify Functions は [AWS Lambda](https://aws.amazon.com/lambda/) によって実装されており、自己完結型の _関数_ を通じて多くのカスタマイズを実行することができます。関数は他のリソースからのイベントに応答したり、認証フローなどのイベント間で何らかのロジックを実行したり、スタンドアロンジョブとして機能したりすることができます。これらは様々な設定とユースケースで使用されます:
+
+- 認証フローのカスタマイズ (例: 属性検証、メールドメインのホワイトリスト)
+- GraphQL API のリゾルバー
+- 個別の REST API ルートのハンドラー、または API 全体をホストするためのハンドラー
+- スケジュール済みジョブ
+
+開始するには、新しいディレクトリとリソースファイル `amplify/functions/say-hello/resource.ts` を作成します。その後、`defineFunction` で Function を定義します:
+
+```ts title="amplify/functions/say-hello/resource.ts"
+import { defineFunction } from '@aws-amplify/backend';
+
+export const sayHello = defineFunction({
+  // optionally specify a name for the Function (defaults to directory name)
+  name: 'say-hello',
+  // optionally specify a path to your handler (defaults to "./handler.ts")
+  entry: './handler.ts'
+});
+```
+
+次に、`amplify/functions/say-hello/handler.ts` に対応するハンドラーファイルを作成します。ここに関数コードが入ります。
+
+```ts title="amplify/functions/say-hello/handler.ts"
+import type { Handler } from 'aws-lambda';
+
+export const handler: Handler = async (event, context) => {
+  // your function code goes here
+  return 'Hello, World!';
+};
+```
+
+ハンドラーファイルは「handler」という名前の関数をエクスポートする _必要があります_。これは関数のエントリーポイントです。関数の記述の詳細については、[Node.js を使用した Lambda 関数ハンドラーに関する AWS ドキュメント](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-handler.html)を参照してください。
+
+最後に、この関数をバックエンドに追加する必要があります。
+
+```ts title="amplify/backend.ts"
+import { defineBackend } from '@aws-amplify/backend';
+// highlight-next-line
+import { sayHello } from './functions/say-hello/resource';
+
+defineBackend({
+  // highlight-next-line
+  sayHello
+});
+```
+
+`npx ampx sandbox` を実行するか、Amplify でアプリをデプロイすると、Function が含まれます。
+
+Function を呼び出すには、[Function を Amplify Data リソースのカスタムクエリのハンドラーとして追加する](/[platform]/build-a-backend/data/custom-business-logic/)ことをお勧めします。これにより、Function の引数とリターンステートメントに強い型付けを行い、これを使用して Function のビジネスロジックを作成することができます。開始するには、`amplify/data/resource.ts` ファイルを開き、スキーマで新しいクエリを指定します:
+
+```ts title="amplify/data/resource.ts"
+import { type ClientSchema, a, defineData } from "@aws-amplify/backend"
+import { sayHello } from "../functions/say-hello/resource"
+
+const schema = a.schema({
+  // highlight-start
+  sayHello: a
+    .query()
+    .arguments({
+      name: a.string(),
+    })
+    .returns(a.string())
+    .authorization(allow => [allow.guest()])
+    .handler(a.handler.function(sayHello)),
+  // highlight-end
+})
+
+export type Schema = ClientSchema<typeof schema>
+
+export const data = defineData({
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: "iam",
+  },
+})
+```
+
+これで、`Schema` エクスポートからこのクエリを使用して Function ハンドラーに強い型付けを行うことができます:
+
+```ts title="amplify/functions/say-hello/handler.ts"
+import type { Schema } from "../../data/resource"
+
+export const handler: Schema["sayHello"]["functionHandler"] = async (event) => {
+  // arguments typed from `.arguments()`
+  const { name } = event.arguments
+  // return typed from `.returns()`
+  return `Hello, ${name}!`
+}
+```
+
+最後に、データクライアントを使用して、関連するクエリを呼び出すことで Function を呼び出します。
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+```ts title="src/main.ts"
+import type { Schema } from "./amplify/data/resource"
+import { Amplify } from "aws-amplify"
+import { generateClient } from "aws-amplify/api"
+import outputs from "./amplify_outputs.json"
+
+Amplify.configure(outputs)
+
+const client = generateClient<Schema>()
+
+// highlight-start
+client.queries.sayHello({
+  name: "Amplify",
+})
+// highlight-end
+```
+<!-- /Platform -->
+<!-- Platform: android -->
+```kt
+data class SayHelloDetails(
+    val name: String,
+)
+
+data class SayHelloResponse(
+    val sayHello: SayHelloDetails
+)
+
+val document = """
+    query SayHelloQuery(${'$'}name: String!) {
+        sayHello(name: ${'$'}name) {
+            name
+            executionDuration
+        }
+    }
+""".trimIndent()
+val sayHelloQuery = SimpleGraphQLRequest<String>(
+    document,
+    mapOf("name" to "Amplify"),
+    String::class.java,
+    GsonVariablesSerializer())
+
+Amplify.API.query(
+    sayHelloQuery,
+    {
+        var gson = Gson()
+        val response = gson.fromJson(it.data, SayHelloResponse::class.java)
+        Log.i("MyAmplifyApp", "${response.sayHello.name}")
+    },
+    { Log.e("MyAmplifyApp", "$it")}
+)
+```
+<!-- /Platform -->
+<!-- Platform: flutter -->
+まず、レスポンス形状に一致するクラスを定義します:
+
+```dart
+class SayHelloResponse {
+  final SayHello sayHello;
+
+  SayHelloResponse({required this.sayHello});
+
+  factory SayHelloResponse.fromJson(Map<String, dynamic> json) {
+    return SayHelloResponse(
+      sayHello: SayHello.fromJson(json['sayHello']),
+    );
+  }
+}
+
+class SayHello {
+  final String name;
+  final double executionDuration;
+
+  SayHello({required this.name, required this.executionDuration});
+
+  factory SayHello.fromJson(Map<String, dynamic> json) {
+    return SayHello(
+      name: json['name'],
+      executionDuration: json['executionDuration'],
+    );
+  }
+}
+```
+
+次に、リクエストを実行し、レスポンスを上記で定義したクラスにマッピングします:
+
+```dart
+// highlight-next-line
+import 'dart:convert';
+
+// highlight-start
+const graphQLDocument = '''
+  query SayHello(\$name: String!) {
+    sayHello(name: \$name) {
+      name
+      executionDuration
+    }
+  }
+''';
+
+final echoRequest = GraphQLRequest<String>(
+  document: graphQLDocument,
+  variables: <String, String>{"name": "Amplify"},
+);
+
+final response =
+    await Amplify.API.query(request: echoRequest).response;
+safePrint(response);
+
+Map<String, dynamic> jsonMap = json.decode(response.data!);
+SayHelloResponse SayHelloResponse = SayHelloResponse.fromJson(jsonMap);
+safePrint(SayHelloResponse.sayHello.name);
+// highlight-end
+```
+<!-- /Platform -->
+<!-- Platform: swift -->
+```swift
+struct SayHelloResponse: Codable {
+    public let sayHello: SayHello
+    
+    struct SayHello: Codable {
+        public let name: String
+        public let executionDuration: Float
+    }
+}
+
+let document = """
+    query EchoQuery($name: String!) {
+        sayHello(name: $name) {
+            name
+            executionDuration
+        }
+    }
+    """
+
+let result = try await Amplify.API.query(request: GraphQLRequest<SayHelloResponse>(
+    document: document,
+    variables: [
+        "name": "Amplify"
+    ],
+    responseType: SayHelloResponse.self
+))
+switch result {
+case .success(let response):
+    print(response.sayHello)
+case .failure(let error):
+    print(error)
+}
+```
+<!-- /Platform -->
+
+## 次のステップ
+
+最初の Function のセットアップが完了したので、追加の機能を追加したり、いくつかの設定を変更したりすることもお勧めします。以下について詳しく学ぶことをお勧めします:
+
+- [環境変数とシークレット](/[platform]/build-a-backend/functions/environment-variables-and-secrets/)
+- [他のリソースへのアクセスを許可する](/[platform]/build-a-backend/functions/grant-access-to-other-resources/)
+- [ユースケースの例を探索する](/[platform]/build-a-backend/functions/examples/)
+- [CDK を使用して基盤となるリソースを変更する](/[platform]/build-a-backend/functions/modify-resources-with-cdk/)

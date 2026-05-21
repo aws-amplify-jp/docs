@@ -1,0 +1,108 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: '単一環境の共有',
+  description: '複数のチームメンバーが単一のAmplify環境を共有するための推奨ワークフローを学びます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+クラウド上に2つの独立した環境（`main` & `dev`）があり、Amplifyバックエンド基盤コードを含むGitの対応するブランチがあります。すべてのチームメンバーが同じAmplifyプロジェクトで作業し、バックエンド関連の変更を同じ`dev`環境にプッシュして変更をテストしたいとします。各チームメンバーは以下を実行します：
+
+```bash
+cd <project-dir>
+amplify init
+```
+
+<Callout warning>
+
+既存の環境を再利用できるようにするために、プロジェクトのルートに`amplify`フォルダがセットアップされていることを確認してください。
+
+**team-provider-info.json**ファイルが見つからない場合：
+
+1. `amplify`フォルダをバックアップして削除します
+2. プロジェクトフォルダのルートからAmplify ConsoleのアプリケーションのためにAPIされた`amplify pull --appId <app-id> --envName <env-name>`コマンドを使用して環境をプルします
+
+</Callout>
+
+```console
+Do you want to use an existing environment? Yes
+Choose the environment you would like to use:
+❯ dev
+main
+# The rest of init steps
+# amplify add/update 
+amplify push
+```
+
+チームが同じ`dev`バックエンドを共有しているため、チームメンバーは定期的に`dev`環境が同期されている状態に保つためにチームメンバーがプッシュした変更をプルする必要があります。`dev`ブランチと環境から変更をプルしましょう。
+
+```bash
+amplify pull
+```
+
+## チーム内でのプロジェクトの共有
+
+<Callout warning>
+
+チームメンバーは、スタックにプッシュするために[正しい認証情報（アクセスキー/シークレットキー）](/gen1/[platform]/tools/cli/start/set-up-cli/#pre-requisites-for-installation)を持っていない限り、スタックをプッシュすることはできません。
+
+</Callout>
+
+`amplify`ディレクトリのファイル構造内には、以下のような構造を含む**team-provider-info.json**ファイルが見られます：
+
+```json
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "multenvtest-20181115101929-authRole",
+      "UnauthRoleArn": "arn:aws:iam::132393967379:role/multenvtest-20181115101929-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::132393967379:role/multenvtest-20181115101929-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "multenvtest-20181115101929-deployment",
+      "UnauthRoleName": "multenvtest-20181115101929-unauthRole",
+      "StackName": "multenvtest-20181115101929",
+      "StackId": "arn:aws:cloudformation:us-east-1:132393967379:stack/multenvtest-20181115101929/fc7b1010-e902-11e8-a9bd-50fae97e0835"
+    }
+  },
+  "main": {
+    "awscloudformation": {
+      "AuthRoleName": "multenvtest-20181115102119-authRole",
+      "UnauthRoleArn": "arn:aws:iam::345090917734:role/multenvtest-20181115102119-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::345090917734:role/multenvtest-20181115102119-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "multenvtest-20181115102119-deployment",
+      "UnauthRoleName": "multenvtest-20181115102119-unauthRole",
+      "StackName": "multenvtest-20181115102119",
+      "StackId": "arn:aws:cloudformation:us-east-1:345090917734:stack/multenvtest-20181115102119/3e907b70-e903-11e8-a18b-503acac41e61"
+    }
+  }
+}
+```
+
+このファイルはチームメンバー間で共有され、同じCloudFormationスタックにリソースをプッシュ/プロビジョニングする能力を持つことができます。そうすることで、チームはプッシュ/プル方式で作業でき、常にクラウド上のプロジェクトの最新の状態と同期を保つことができます。
+
+プロジェクトを公開してサーバーレスインフラストラクチャをオープンソース化したい場合は、`amplify/team-provider-info.json`ファイルを`.gitignore`ファイルから削除するか、`.gitignore`ファイルに入れる必要があります。

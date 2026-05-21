@@ -1,0 +1,278 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify v2 互換性',
+  description:
+    'Amplify v2 で AWS SDK を使用する方法について説明します。',
+  platforms: ['android']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["android"]}>
+<Callout warning>
+AWS Mobile Client (com.amazonaws:aws-android-sdk-mobile-client) と Amplify Android v2 は相互に互換性がありません。Amplify v2 は AWS Mobile Client から別の形式に認証情報を移行し、AWS Mobile Client は認証情報を読み取ることができなくなります。この移行が行われた後に AWS Mobile Client が起動されると、Amplify v2 の認証情報も消去されます。
+</Callout>
+
+## Amplify V2 Auth と AWS Android SDK プラグインの使用
+
+Amplify v2 では、AWS Android SDK ではなく、[AWS Kotlin SDK](https://aws.amazon.com/sdk-for-kotlin/) を使用することをお勧めします。既存の実装をサポートするために、このガイドでは Amplify v2 で AWS Android SDK プラグインを継続して使用する方法について説明します。
+
+### AmplifyCredentialsProvider の作成
+
+AWS Android SDK プラグインの多くは、カスタム `AWSCredentialsProvider` 実装を受け入れます。Amplify Android v2 を使用して認証情報を提供する独自の `AWSCredentialsProvider` を実装できます。
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.BasicSessionCredentials;
+import com.amplifyframework.auth.AWSTemporaryCredentials;
+import com.amplifyframework.auth.cognito.AWSCognitoAuthSession;
+import com.amplifyframework.auth.options.AuthFetchSessionOptions;
+import com.amplifyframework.core.Amplify;
+
+import java.util.concurrent.CompletableFuture;
+
+class AmplifyCredentialsProvider implements AWSCredentialsProvider {
+
+    @Override
+    public AWSCredentials getCredentials() {
+        CompletableFuture<AWSCredentials> sdkCredentials = new CompletableFuture<>();
+
+        Amplify.Auth.fetchAuthSession((authSession) -> {
+            BasicSessionCredentials credentials = null;
+            if (authSession instanceof AWSCognitoAuthSession) {
+                AWSCognitoAuthSession cognitoAuthSession = (AWSCognitoAuthSession) authSession;
+                com.amplifyframework.auth.AWSCredentials awsCredentials =
+                        cognitoAuthSession.getAwsCredentialsResult().getValue();
+                if (awsCredentials instanceof AWSTemporaryCredentials) {
+                    AWSTemporaryCredentials temporaryAwsCredentials =
+                            (AWSTemporaryCredentials) awsCredentials;
+                    credentials = new BasicSessionCredentials(
+                            temporaryAwsCredentials.getAccessKeyId(),
+                            temporaryAwsCredentials.getSecretAccessKey(),
+                            temporaryAwsCredentials.getSessionToken()
+                    );
+                }
+            }
+
+            if (credentials != null) {
+                sdkCredentials.complete(credentials);
+            } else {
+                sdkCredentials.completeExceptionally(
+                        new RuntimeException("Failed to get credentials")
+                );
+            }
+        }, (exception) -> sdkCredentials.completeExceptionally(
+                new RuntimeException("Failed to get credentials", exception)
+        ));
+
+        return sdkCredentials.join();
+    }
+
+    @Override
+    public void refresh() {
+        CompletableFuture<Void> result = new CompletableFuture<>();
+        Amplify.Auth.fetchAuthSession(
+                AuthFetchSessionOptions.builder().forceRefresh(true).build(),
+                // We do not need to capture value if refresh succeeds
+                (authSession) -> result.complete(null),
+                // We do not need to throw if refresh fails
+                (exception) -> result.complete(null)
+        );
+
+        result.join();
+    }
+}
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+import com.amazonaws.auth.AWSCredentials
+import com.amazonaws.auth.AWSCredentialsProvider
+import com.amazonaws.auth.BasicSessionCredentials
+import com.amplifyframework.auth.AWSTemporaryCredentials
+import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.core.Amplify
+import java.lang.RuntimeException
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.runBlocking
+
+class AmplifyCredentialsProvider : AWSCredentialsProvider {
+
+    override fun getCredentials(): AWSCredentials = runBlocking {
+        suspendCoroutine { continuation ->
+            Amplify.Auth.fetchAuthSession(
+                { authSession ->
+                    val awsTemporaryCredentials = (authSession as? AWSCognitoAuthSession)
+                        ?.awsCredentialsResult?.value as? AWSTemporaryCredentials
+
+                    val sdkCredentials = awsTemporaryCredentials?.let {
+                        BasicSessionCredentials(it.accessKeyId, it.secretAccessKey, it.sessionToken)
+                    }
+
+                    if (sdkCredentials != null) {
+                        continuation.resume(sdkCredentials)
+                    } else {
+                        val authException = RuntimeException("Failed to get credentials")
+                        continuation.resumeWithException(authException)
+                    }
+                },
+                {
+                    continuation.resumeWithException(
+                        RuntimeException("Failed to get credentials. See exception.", it)
+                    )
+                }
+            )
+        }
+    }
+
+    override fun refresh() = runBlocking {
+        suspendCoroutine { continuation ->
+            Amplify.Auth.fetchAuthSession(
+                AuthFetchSessionOptions.builder().forceRefresh(true).build(),
+                // We do not need to capture value if refresh succeeds
+                { continuation.resume(Unit) },
+                // We do not need to throw if refresh fails
+                { continuation.resume(Unit) }
+            )
+        }
+    }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+これで、`AWSCredentialsProvider` を受け入れるプラグインで `AmplifyCredentialsProvider` を使用できるようになりました。`AWSMobileClient.getInstance()` を AWSCredentialsProvider として使用する代わりに使用できます。
+
+
+## AWS 設定情報の提供
+
+Amplify v2 は `amplify_outputs.json` ファイルを使用しますが、AWS Android SDK は `awsconfiguration.json` ファイルを使用します。プロジェクトで Amplify v2 と AWS Android SDK の両方を使用している場合、リソースが同期されていることを確認することが重要です。Amplify CLI はこれらのファイル タイプの両方を生成および更新していますが、手動でカスタマイズした場合は、両方のファイルに適用する必要があります。
+
+AWS Android SDK プラグインで設定情報が必要な場合は、`AWSConfiguration` クラスを継続して使用できます。
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+AWSConfiguration awsConfiguration = new AWSConfiguration(context);
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+val awsConfiguration = AWSConfiguration(context)
+```
+
+</Block>
+</BlockSwitcher>
+
+## Amplify v2 を使用した AWS Android SDK プラグインの使用例
+
+これはサポートされているプラグインの完全なリストではありません。`AWSCredentialsProvider` を受け入れ、AWS Mobile Client に依存しないプラグインはすべて機能します。
+
+### S3 ストレージ (com.amazonaws:aws-android-sdk-s3)
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+AWSConfiguration awsConfiguration = new AWSConfiguration(context);
+TransferUtility transferUtility = TransferUtility.builder()
+    .context(context)
+    .awsConfiguration(awsConfig)
+    .s3Client(
+        new AmazonS3Client(
+            new AmplifyCredentialsProvider(),
+            Region.getRegion(Regions.US_EAST_1)
+        )
+    )
+    .build();
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+val awsConfiguration = AWSConfiguration(context)
+val transferUtility = TransferUtility.builder()
+    .context(context)
+    .awsConfiguration(awsConfiguration)
+    .s3Client(
+        AmazonS3Client(
+            AmplifyCredentialsProvider(),
+            Region.getRegion(Regions.US_EAST_1)
+        )
+    )
+    .build()
+```
+
+</Block>
+</BlockSwitcher>
+
+### IoT (com.amazonaws:aws-android-sdk-iot)
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+AWSIotClient client = new AWSIotClient(new AmplifyCredentialsProvider());
+
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+val client = AWSIotClient(AmplifyCredentialsProvider())
+```
+
+</Block>
+</BlockSwitcher>
+
+
+
+### API Gateway で生成された Android SDK (aws-android-sdk-apigateway-core)
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+ApiClientFactory clientFactory = new ApiClientFactory();
+clientFactory.credentialsProvider(new AmplifyCredentialsProvider());
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+val clientFactory = ApiClientFactory()
+clientFactory.credentialsProvider(AmplifyCredentialsProvider())
+```
+
+</Block>
+</BlockSwitcher>
+
+</InlineFilter>

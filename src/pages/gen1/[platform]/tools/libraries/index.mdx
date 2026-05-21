@@ -1,0 +1,55 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ライブラリ',
+  description: 'Amplifyのオープンソースクライアントライブラリは、ユースケース中心で、意見を持つ、宣言型で、使いやすいインターフェースを提供し、クラウド駆動のさまざまなカテゴリにわたる操作を可能にし、モバイルおよびウェブ開発者がバックエンドと簡単にやり取りできるようにします。',
+  disableTOC: 'true',
+  platforms: [
+    'android',
+    'flutter',
+    'javascript',
+    'react-native',
+    'swift',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplifyのオープンソースクライアントライブラリは、ユースケース中心で使いやすいインターフェースを提供し、クラウド駆動のさまざまなカテゴリにわたる操作を可能にし、モバイルおよびウェブ開発者がバックエンドと簡単にやり取りできるようにします。これらのライブラリはAWS Cloudによって提供されています。ライブラリはAmplify CLIで作成された新しいバックエンドと既存のバックエンドリソースの両方で使用できます。
+
+import ios0 from '/src/fragments/lib/ios.mdx';
+import android1 from '/src/fragments/lib/android.mdx';
+import flutter2 from '/src/fragments/lib/flutter.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+<Fragments fragments={{ android: android1 }} />
+<Fragments fragments={{ flutter: flutter2 }} />
+<InlineFilter filters={["javascript",  "react-native", "angular", "nextjs", "react", "vue"]}>
+
+## Amplify JavaScript
+
+Amplify JavaScriptライブラリは、React、React Native、Angular、Vueを含む異なるウェブおよびモバイルフレームワークでサポートされています。
+
+次は何ですか？アプリに追加できるものは以下の通りです：
+
+- [認証](/gen1/[platform]/build-a-backend/auth/set-up-auth/)
+- [ファイルストレージ](/gen1/[platform]/build-a-backend/storage/set-up-storage/)
+- [分析](/gen1/[platform]/build-a-backend/more-features/analytics/set-up-analytics/)
+- [REST API](/gen1/[platform]/build-a-backend/restapi/set-up-rest-api/)
+
+</InlineFilter>

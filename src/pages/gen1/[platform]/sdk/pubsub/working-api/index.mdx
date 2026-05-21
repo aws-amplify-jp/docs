@@ -1,0 +1,33 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'APIの操作',
+  description:
+    'AWS Mobile SDK上のPubSubで接続の確立、トピックへのサブスクライブ、トピックへの公開、トピックからのアンサブスクライブ、接続のクローズの方法を学びます。',
+  platforms: ['swift', 'android']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import all0 from '/src/fragments/sdk/library-callout.mdx';
+
+<Fragments fragments={{ all: all0 }} />
+
+import ios1 from '/src/fragments/sdk/pubsub/ios/working-api.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import android2 from '/src/fragments/sdk/pubsub/android/working-api.mdx';
+
+<Fragments fragments={{ android: android2 }} />

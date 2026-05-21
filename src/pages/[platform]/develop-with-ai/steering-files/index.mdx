@@ -1,0 +1,126 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ステアリングファイル',
+  description:
+    'プロジェクトレベルのコンテキストファイルを設定して、Amplifyアプリケーションを構築する際のAIコーディングアシスタントをガイドします。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+ステアリングファイルは、プロジェクトレベルの設定ファイルで、AIコーディングアシスタントをプロジェクトの慣例、パターン、制約でガイドします。AIアシスタントがこれらのファイルを読むと、チームの標準とAmplifyベストプラクティスに従うコードを生成します。
+
+## ステアリングファイルを使用する理由
+
+AIアシスタントは、プロジェクトのコンテキストを理解するときに最も効果的に機能します。ステアリングファイルがない場合、アシスタントは以下のことを行う可能性があります：
+- 古いAPIパターンまたは正しくないインポートパスを使用する
+- 認証またはデータモデルの慣例に一致しないコードを生成する
+- `defineAuth()`、`defineData()`、`defineStorage()` などのAmplify固有のパターンを見落とす
+
+ステアリングファイルは、プロジェクトに関する永続的なコンテキストをアシスタントに提供することでこの問題を解決します。
+
+## Kiroステアリング
+
+[Kiro](/[platform]/develop-with-ai/kiro/) はステアリングファイルを使用してプロジェクト全体で一貫性を保ちます。Amplifyプロジェクトの慣例を説明するステアリングルールを作成します：
+
+- データモデルの命名パターンと認可ルール
+- 認証設定の優先設定（ソーシャルプロバイダー、MFA設定）
+- フロントエンドフレームワークのパターン（Reactフック、Next.js AppRouter vs Pages Router）
+- テストの慣例
+
+詳細は、[Kiroステアリングドキュメント](https://kiro.dev/docs/features/steering/) を参照してください。
+
+## Claude CodeのためのCLAUDE.md
+
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code) を使用する場合は、プロジェクトルートに `CLAUDE.md` ファイルを作成します。このファイルはすべての会話に自動的に読み込まれます。
+
+Amplifyプロジェクト用の `CLAUDE.md` の例：
+
+```markdown
+# Project conventions
+
+This is an AWS Amplify Gen 2 project using TypeScript.
+
+## Structure
+- `amplify/` — Backend resources (auth, data, storage, functions)
+- `amplify/data/resource.ts` — Data model schema using `@aws-amplify/backend`
+- `amplify/auth/resource.ts` — Auth configuration using `defineAuth()`
+- `src/` — Frontend application code
+
+## Amplify patterns
+- Use `a.model()` for data models with `.authorization()` chains
+- Use `allow.owner()` for user-owned data, `allow.guest()` for public read
+- Import client operations from `aws-amplify/api` with `generateClient<Schema>()`
+- Use `Amplify.configure(outputs)` with the generated `amplify_outputs.json`
+
+## Testing
+- Run `npx ampx sandbox` for local development
+- Backend changes auto-deploy on file save during sandbox
+```
+
+## Cursorルール
+
+[Cursor](https://cursor.com) の場合は、`.cursor/rules/` ディレクトリにルールを作成します：
+
+```
+.cursor/
+  rules/
+    amplify.mdc     # Amplify-specific conventions
+```
+
+`.cursor/rules/amplify.mdc` の例：
+
+```markdown
+---
+description: Amplify Gen 2 conventions
+globs: amplify/**/*
+---
+
+- Backend resources are defined in `amplify/` using TypeScript
+- Data models use `a.schema({})` with `a.model()` definitions
+- Authorization uses `.authorization(allow => [...])` chains
+- Auth is configured with `defineAuth()` in `amplify/auth/resource.ts`
+- Storage uses `defineStorage()` in `amplify/storage/resource.ts`
+- Use `@aws-amplify/backend` for backend definitions
+- Use `aws-amplify` for frontend client operations
+```
+
+## Amazon Q Developer コンテキスト
+
+[Amazon Q Developer](/[platform]/develop-with-ai/q-developer/) は `@workspace` コマンドを通じてワークスペースコンテキストをサポートしています。参照ファイルを追加して、Q DeveloperがAmplifyの慣例を理解するのを支援できます：
+
+- <a href="/images/gen2/q-developer/general.md" download>general.md</a> — 一般的なAmplify Gen 2の慣例とファイル構造
+- <a href="/images/gen2/q-developer/authentication.md" download>authentication.md</a> — 認証設定のパターンと例
+- <a href="/images/gen2/q-developer/modeling-schema.md" download>modeling-schema.md</a> — データモデルスキーマのベストプラクティス
+- <a href="/images/gen2/q-developer/modeling-relationships.md" download>modeling-relationships.md</a> — データ関係のパターン
+
+これらのファイルをダウンロードして、プロジェクトルートの `context/` フォルダに配置します。
+
+## 効果的なステアリングのための高い秘訣
+
+- **インポートについて具体的に説明する** — アシスタントにどのパッケージからインポートするかを指示します（バックエンド用は `@aws-amplify/backend`、フロントエンド用は `aws-amplify`）
+- **認証モデルを文書化する** — アプリが使用する認可戦略（オーナーベース、グループベース、パブリック）について説明します
+- **ファイルパスを含める** — バックエンドリソースが定義されている場所を参照して、アシスタントが正しいファイルを編集できるようにします
+- **最新に保つ** — 新しいAmplify機能を追加したり、慣例を変更したりするときにステアリングファイルを更新します

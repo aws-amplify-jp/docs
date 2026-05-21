@@ -1,0 +1,500 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify生成リソースの変更',
+  description: 'Amplify GraphQL APIのAmplify生成リソースを変更する方法について詳しく学びます。これにより、基礎となるAppSync、DynamoDB、Lambda、およびOpenSearchリソースを変更できます。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'vue',
+    'react',
+    'nextjs',
+    'swift',
+    'android',
+    'flutter'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify GraphQL APIは、さまざまな自動生成された基礎となるAWSサービスとリソースを使用します。これらの基礎となるリソースをカスタマイズして、特定のユースケースに合わせてデプロイされたスタックを最適化できます。
+
+<BlockSwitcher>
+
+<Block name="Amplify CLI">
+
+```bash
+amplify override api
+```
+
+上記のコマンドを実行して、AWS AppSync API、Amazon DynamoDBテーブル、Amazon OpenSearchドメインなど、Amplify生成GraphQL APIリソースをオーバーライドします。
+
+<Callout>
+
+特定のAmplify生成VTLリゾルバーをカスタマイズする必要がある場合は、まず[Amplify生成リゾルバーのオーバーライド](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#override-amplify-generated-resolvers)を確認してください。
+
+</Callout>
+
+このコマンドは、`amplify/backend/api/<resource-name>/`の下に新しい`overrides.ts`ファイルを作成します。このファイルは、[CDKコンストラクト](https://docs.aws.amazon.com/cdk/latest/guide/home.html)としてAmplify生成リソースを提供します。
+
+</Block>
+<Block name="AWS CDK">
+
+CDKプロジェクトでは、すべての基礎となるリソースに["L2"](https://docs.aws.amazon.com/cdk/v2/guide/constructs.html#constructs_using)または["L1"コンストラクト](https://docs.aws.amazon.com/cdk/v2/guide/constructs.html#constructs_l1_using)としてアクセスできます。返されたスタックの`.resources`プロパティを経由してL2コンストラクトとして生成リソースにアクセスするか、`.resources.cfnResources`プロパティを使用してL1コンストラクトとして生成リソースにアクセスします。
+
+```ts
+const api = new AmplifyGraphQlApi(this, 'api', { <params> });
+
+// Access L2 resources under `.resources`
+api.resources.tables["Todo"].tableArn;
+
+// Access L1 resources under `.resources.cfnResources`
+api.resources.cfnResources.cfnGraphqlApi.xrayEnabled = true;
+Object.values(api.resources.cfnResources.cfnTables).forEach(table => {
+  table.pointInTimeRecoverySpecification = { pointInTimeRecoveryEnabled: false };
+});
+```
+
+</Block>
+
+</BlockSwitcher>
+
+## Amplify生成AppSync GraphQL APIリソースのカスタマイズ
+
+<BlockSwitcher>
+
+<Block name="Amplify CLI">
+
+すべてのオーバーライドを`override(...)`関数に適用します。例えば、AppSync GraphQL APIのX-Rayトレーシングを有効にするには：
+
+```ts
+import { AmplifyApiGraphQlResourceStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyApiGraphQlResourceStackTemplate) {
+  resources.api.GraphQLAPI.xrayEnabled = true;
+}
+```
+
+Amplifyが生成する以下のGraphQL APIリソースをオーバーライドできます：
+
+| Amplify生成リソース | 説明 |
+| --- | --- |
+| [GraphQLAPI](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-appsync-graphqlapi.html) | AWS AppSync GraphQL APIリソース |
+| [GraphQLAPIDefaultApiKey](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-appsync-apikey.html) | AppSync GraphQL APIのAPIキーリソース |
+| [GraphQLAPITransformerSchema](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-appsync-graphqlschema.html) | デプロイされるGraphQLスキーマ。（GraphQL Transformerの出力） |
+| [GraphQLAPINONEDS](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-appsync-datasource.html) | AppSync APIを終了しないリクエスト用の「none」データソース |
+| [AmplifyDataStore](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html) | Amplify DataStoreの競合解決に使用されるデルタ同期テーブル |
+| [AmplifyDataStoreIAMRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html) | DataStoreのデルタ同期テーブルにアクセスするために使用されるIAMロール |
+| [DynamoDBAccess](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | AppSyncからDynamoDBリソースにアクセスするためのIAMポリシー |
+
+</Block>
+<Block name="AWS CDK">
+
+`.resources.graphqlApi`または`.resources.cfnResources.cfnGraphqlApi`にすべてのカスタマイズを適用します。例えば、AppSync GraphQL APIのX-Rayトレーシングを有効にするには：
+
+```ts
+const amplifyApi = new AmplifyGraphqlApi(this, 'MyNewApi', {
+  definition: AmplifyGraphqlDefinition.fromFiles(
+    path.join(__dirname, 'schema.graphql')
+  ),
+  authorizationModes: {
+    defaultAuthorizationMode: 'API_KEY',
+    apiKeyConfig: {
+      expires: cdk.Duration.days(30)
+    }
+  }
+});
+
+amplifyApi.resources.cfnResources.cfnGraphqlApi.xrayEnabled = true;
+```
+
+</Block>
+
+</BlockSwitcher>
+
+## @modelディレクティブのAmplify生成リソースのカスタマイズ
+
+<BlockSwitcher>
+
+<Block name="Amplify CLI">
+
+すべてのオーバーライドを`override(...)`関数に適用します。`resources.models[...]`に@modelタイプ名を渡して、その特定の@modelタイプ用に生成されるリソースを変更します。例えば、Todo`@model`タイプのDynamoDBテーブルでtime-to-liveを有効にするには：
+
+```ts
+import { AmplifyApiGraphQlResourceStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyApiGraphQlResourceStackTemplate) {
+  resources.models['Todo'].modelDDBTable.timeToLiveSpecification = {
+    attributeName: 'ttl',
+    enabled: true
+  };
+}
+```
+
+Amplifyが生成する以下の@modelディレクティブリソースをオーバーライドできます：
+
+| Amplify生成リソース | 説明 |
+| --- | --- |
+| [modelStack](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-stack.html) | @modelタイプのすべてのリソースを含むネストされたスタック |
+| [modelDDBTable](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html) | このこの@modelタイプのデータを含むDynamoDBテーブル |
+| [modelIamRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html) | このこの@modelタイプのDynamoDBテーブルにアクセスするためのIAMロール |
+| [modelIamRoleDefaultPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | DataStoreが有効な場合、このこの@modelタイプのデルタ同期テーブルにアクセスするためのIAMポリシー |
+| [dynamoDBAccess](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | このこの@modelタイプのDynamoDBテーブルにアクセスするためのIAMロールに関連付けられたデフォルトポリシー |
+| [modelDatasource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-appsync-datasource.html) | DynamoDBテーブルを表すAppSyncデータソース |
+| [invokeLambdaFunction](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | Lambdaベースの競合解決関数のIAMポリシー |
+
+例えば、モデル生成DynamoDBテーブル設定をオーバーライドできます。
+
+```ts
+import { AmplifyApiGraphQlResourceStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyApiGraphQlResourceStackTemplate) {
+  resources.models['Todo'].modelDatasource.dynamoDbConfig['deltaSyncConfig'][
+    'baseTableTtl'
+  ] = '3600';
+}
+```
+
+</Block>
+<Block name="AWS CDK">
+
+`.resources.tables["MODEL_NAME"]`または`.resources.cfnResources.cfnTables["MODEL_NAME"]`にすべてのカスタマイズを適用します。`.resources.cfnResources.cfnTables["MODEL_NAME"]`に@modelタイプ名を渡して、その特定の@modelタイプ用に生成されるリソースを変更します。例えば、Todo`@model`タイプのDynamoDBテーブルでtime-to-liveを有効にするには：
+
+```ts
+const amplifyApi = new AmplifyGraphqlApi(this, 'MyNewApi', {
+  definition: AmplifyGraphqlDefinition.fromFiles(
+    path.join(__dirname, 'schema.graphql')
+  ),
+  authorizationModes: {
+    defaultAuthorizationMode: 'API_KEY',
+    apiKeyConfig: {
+      expires: cdk.Duration.days(30)
+    }
+  }
+});
+
+amplifyApi.resources.cfnResources.cfnTables['Todo'].timeToLiveSpecification = {
+  attributeName: 'ttl',
+  enabled: true
+};
+```
+
+</Block>
+
+</BlockSwitcher>
+
+### 例 - DynamoDBテーブルの課金モードを構成する
+
+[DynamoDB課金モード](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html#cfn-dynamodb-table-billingmode)をDynamoDBテーブルに設定します。「PROVISIONED」または「PAY_PER_REQUEST」のいずれか。
+
+<BlockSwitcher>
+
+<Block name="Amplify CLI">
+
+```ts
+import { AmplifyApiGraphQlResourceStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyApiGraphQlResourceStackTemplate) {
+  resources.models['Post'].modelDDBTable.billingMode = 'PAY_PER_REQUEST';
+}
+```
+
+</Block>
+<Block name="AWS CDK">
+
+```ts
+const amplifyApi = new AmplifyGraphqlApi(this, 'MyNewApi', {
+  definition: AmplifyGraphqlDefinition.fromFiles(
+    path.join(__dirname, 'schema.graphql')
+  ),
+  authorizationModes: {
+    defaultAuthorizationMode: 'API_KEY',
+    apiKeyConfig: {
+      expires: cdk.Duration.days(30)
+    }
+  }
+});
+
+amplifyApi.resources.cfnResources.cfnTables['Todo'].billingMode =
+  'PAY_PER_REQUEST';
+```
+
+</Block>
+
+</BlockSwitcher>
+
+### 例 - DynamoDBテーブルまたはグローバルセカンダリインデックスのプロビジョニングされたスループットを構成する
+
+デフォルトの[ProvisionedThroughput](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html#cfn-dynamodb-table-provisionedthroughput)を各`@model`テーブルおよびそのグローバルセカンダリインデックス（GSI）のためにオーバーライドします。
+
+「DynamoDBBillingMode」が「PROVISIONED」に設定されている場合にのみ有効
+
+```ts
+import { AmplifyApiGraphQlResourceStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyApiGraphQlResourceStackTemplate) {
+  resources.models['Post'].modelDDBTable.provisionedThroughput = {
+    readCapacityUnits: 5,
+    writeCapacityUnits: 5
+  };
+
+  /**
+   * 課金モードが「PROVISIONED」に設定されている場合、テーブルに存在するすべてのグローバルセカンダリインデックス（GSI）に対して`provisionedThroughput`を指定する必要があります。
+   */
+
+  resources.models[
+    'Post'
+  ].modelDDBTable.globalSecondaryIndexes[0].provisionedThroughput = {
+    readCapacityUnits: 5,
+    writeCapacityUnits: 5
+  };
+}
+```
+
+### 例 - DynamoDBテーブルのポイントインタイムリカバリーを有効にする
+
+各`@model`テーブルの[DynamoDBポイントインタイムリカバリー](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-dynamodb-table-pointintimerecoveryspecification.html)を有効/無効にします。
+
+<BlockSwitcher>
+
+<Block name="Amplify CLI">
+
+```ts
+import { AmplifyApiGraphQlResourceStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyApiGraphQlResourceStackTemplate) {
+  resources.models['Post'].modelDDBTable.pointInTimeRecoverySpecification = {
+    pointInTimeRecoveryEnabled: true
+  };
+}
+```
+
+</Block>
+<Block name="AWS CDK">
+
+```ts
+const amplifyApi = new AmplifyGraphqlApi(this, 'MyNewApi', {
+  definition: AmplifyGraphqlDefinition.fromFiles(
+    path.join(__dirname, 'schema.graphql')
+  ),
+  authorizationModes: {
+    defaultAuthorizationMode: 'API_KEY',
+    apiKeyConfig: {
+      expires: cdk.Duration.days(30)
+    }
+  }
+});
+
+amplifyApi.resources.cfnResources.cfnTables[
+  'Todo'
+].pointInTimeRecoverySpecification = {
+  pointInTimeRecoveryEnabled: true
+};
+```
+
+</Block>
+
+</BlockSwitcher>
+
+## @searchable（OpenSearch）ディレクティブのAmplify生成リソースのカスタマイズ
+
+`override(...)`関数にすべてのオーバーライドを適用します。例えば、OpenSearchインスタンス数を変更するには：
+
+```ts
+import { AmplifyApiGraphQlResourceStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyApiGraphQlResourceStackTemplate) {
+  resources.opensearch.OpenSearchDomain.elasticsearchClusterConfig = {
+    ...resources.opensearch.OpenSearchDomain.elasticsearchClusterConfig,
+    instanceCount: 6
+  };
+}
+```
+
+Amplifyが生成する以下の@searchableディレクティブリソースをオーバーライドできます：
+
+| Amplify生成リソース | 説明 |
+| --- | --- |
+| [OpenSearchDataSource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-appsync-datasource.html) | OpenSearch統合を表すAppSyncデータソース |
+| [OpenSearchAccessIAMRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html) | OpenSearchドメインにアクセスするためのIAMロール |
+| [OpenSearchAccessIAMRoleDefaultPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | OpenSearchドメインにアクセスするためのIAMポリシー |
+| [OpenSearchDomain](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticsearch-domain.html) | @searchableデータを含むOpenSearchドメイン |
+| [OpenSearchStreamingLambdaIAMRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html) | DynamoDBデータをOpenSearchドメインにストリーミングするためのIAMロール |
+| [OpenSearchStreamingLambdaIAMRoleDefaultPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | DynamoDBデータをOpenSearchドメインにストリーミングするためのIAMポリシー |
+| [CloudwatchLogsAccess](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | CloudWatch Logsアクセスを付与するためのIAMポリシー |
+| [OpenSearchStreamingLambdaFunction](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html) | DynamoDBデータをOpenSearchドメインにストリーミングするためのLambda関数 |
+| [OpenSearchModelLambdaMapping](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-eventsourcemapping.html) | DynamoDBテーブルストリームからLambda関数へのイベントソースマッピング |
+
+### 例 - ストリーミングLambdaのランタイムを構成する
+
+関数オブジェクト自体にランタイム値を設定して、`@searchable`のランタイムを定義できます。これはAmplify CLIのバージョンをアップグレードできない場合に非推奨のランタイムを解決するために行うことができます。
+
+```ts
+import { AmplifyApiGraphQlResourceStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyApiGraphQlResourceStackTemplate) {
+  resources.opensearch.OpenSearchStreamingLambdaFunction.runtime = 'python3.9';
+}
+```
+
+### 例 - OpenSearchストリーミング関数名を構成する
+
+AWS Lambda検索可能ストリーミング関数の名前をオーバーライドします
+
+```ts
+import { AmplifyApiGraphQlResourceStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyApiGraphQlResourceStackTemplate) {
+  resources.opensearch.OpenSearchStreamingLambdaFunction.FunctionName =
+    'CustomFunctionName';
+}
+```
+
+### 例 - OpenSearchインスタンスバージョンを構成する
+
+`@searchable`で作成されたOpenSearchドメインの`elasticsearchVersion`をオーバーライドします
+
+```ts
+import { AmplifyApiGraphQlResourceStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyApiGraphQlResourceStackTemplate) {
+  resources.opensearch.OpenSearchDomain.elasticsearchVersion = 'OpenSearch_1.3';
+}
+```
+
+### 例 - OpenSearchインスタンスタイプを構成する
+
+`@searchable`で作成されたOpenSearchドメインにデプロイされるインスタンスのタイプをオーバーライドします
+
+```ts
+import { AmplifyApiGraphQlResourceStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyApiGraphQlResourceStackTemplate) {
+  resources.opensearch.OpenSearchDomain.elasticsearchClusterConfig = {
+    ...resources.opensearch.OpenSearchDomain.elasticsearchClusterConfig,
+    instanceType: 'm3.medium.elasticsearch'
+  };
+}
+```
+
+### 例 - OpenSearchインスタンス数を構成する
+
+`@searchable`で作成されたOpenSearchドメインにデプロイされるインスタンスの数をオーバーライドします
+
+```ts
+import { AmplifyApiGraphQlResourceStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyApiGraphQlResourceStackTemplate) {
+  resources.opensearch.OpenSearchDomain.elasticsearchClusterConfig = {
+    ...resources.opensearch.OpenSearchDomain.elasticsearchClusterConfig,
+    instanceCount: 2
+  };
+}
+```
+
+### 例 - OpenSearch EBSボリュームサイズを構成する
+
+`@searchable`で作成されたOpenSearchドメイン内の各インスタンスに割り当てられるディスク容量をオーバーライドします
+
+```ts
+import { AmplifyApiGraphQlResourceStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyApiGraphQlResourceStackTemplate) {
+  resources.opensearch.OpenSearchDomain.ebsOptions = {
+    ...resources.opensearch.OpenSearchDomain.ebsOptions,
+    volumeSize: 10
+  };
+}
+```
+
+## @predictionsディレクティブのAmplify生成リソースのカスタマイズ
+
+`override(...)`関数にすべてのオーバーライドを適用します。例えば、テキスト翻訳を容易にするIAMロールにパスを追加するには：
+
+```ts
+import { AmplifyApiGraphQlResourceStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyApiGraphQlResourceStackTemplate) {
+  resources.predictions.TranslateDataSourceServiceRole.path =
+    '/my/organization/';
+}
+```
+
+Amplifyが生成する以下の@predictionsディレクティブリソースをオーバーライドできます：
+
+| Amplify生成リソース | 説明 |
+| --- | --- |
+| [RekognitionDataSource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-appsync-datasource.html) | Amazon Rekognitionサービスに接続するAppSync HTTPデータソース |
+| [RekognitionDataSourceServiceRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html) | Amazon Rekognitionに接続するためのAppSyncサービスロール |
+| [TranslateDataSource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-appsync-datasource.html) | Amazon Translateサービスに接続するAppSync HTTPデータソース |
+| [translateTextAccess](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | Amazon Translateに接続するためのIAMポリシー |
+| [LambdaDataSource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-appsync-datasource.html) | Amazon Pollyに接続するためのAppSync Lambdaデータソース |
+| [LambdaDataSourceServiceRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html) | Amazon Pollyを呼び出すLambda関数に接続するためのAppSyncサービスロール |
+| [LambdaDataSourceServiceRoleDefaultPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | Amazon Pollyを呼び出すLambda関数に接続するためのAppSyncのIAMポリシー |
+| [TranslateDataSourceServiceRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html) | Amazon Translateに接続するためのAppSyncサービスロール |
+| [predictionsLambdaIAMRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html) | Amazon Pollyを呼び出すLambda関数のIAMロール |
+| [predictionsLambdaFunction](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html) | Amazon Pollyを呼び出すLambda関数 |
+| [PredictionsLambdaAccess](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | Lambda関数がAmazon PollyにアクセスするためのIAMポリシー |
+| [predictionsIAMRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html) | @predictionsで使用されるS3バケットにアクセスするためのIAMロール |
+| [PredictionsStorageAccess](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | @predictionsで使用されるS3バケットにアクセスするためのIAMポリシー |
+| [identifyTextAccess](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | テキスト識別を有効にするためのIAMポリシー |
+| [identifyLabelsAccess](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | テキスト識別を有効にするためのIAMポリシー |
+
+## AppSyncリゾルバーをカスタム名スタックに配置する
+
+GraphQLスキーマが特に大きい場合、スタックに定義されたリソースが多すぎることの問題が発生する可能性があります。このケースが最も一般的なのはConnectionStackで、これはスキーマ内のすべてのリレーショナルディレクティブのリゾルバーを含んでいます。
+
+スタックマッピングを作成しても、Amplify環境用の追加のルートスタックは作成されません。すべてのマップされたスタックは、既存のAmplify環境ルートスタック下に配置されます。リゾルバーを別のスタックにマップするには、`<プロジェクトルート>/amplify/api/<api名>/transform.conf.json`を「StackMapping」ブロックで更新します。StackMappingはリゾルバーロジックIDからスタック名へのマップを定義します。
+
+```json
+{
+  "Version": 5,
+  "ElasticsearchWarning": true,
+  "StackMapping": {
+    "<Resolver logical ID>": "Custom stack name"
+  }
+}
+```
+
+リゾルバーロジックIDを決定する最も簡単な方法は、`amplify api gql-compile`を実行し、生成されたCloudFormationスタックのリソースのリストでリゾルバーロジックIDに注目することです。モデル操作のリゾルバーは`<Get | List | Create | Update | Delete><モデル名>Resolver`の形式になります。リレーショナルディレクティブのリゾルバーは`<モデル名><フィールド名>Resolver`の形式になります。
+
+### 例
+
+以下のスキーマが与えられた場合：
+
+```graphql
+type Blog @model {
+  id: ID!
+  name: String!
+  posts: [Post] @hasMany
+}
+
+type Post @model {
+  id: ID!
+  title: String!
+  content: String
+  blog: Blog @belongsTo
+}
+```
+
+CreatePostResolverおよびリレーショナルリゾルバーを「MyCustomStack」という名前のスタックにマップするには、`transform.conf.json`に以下を追加します：
+
+```json
+"StackMapping": {
+  "CreatePostResolver": "MyCustomStack",
+  "BlogpostsResolver": "MyCustomStack",
+  "PostblogResolver": "MyCustomStack",
+}
+```

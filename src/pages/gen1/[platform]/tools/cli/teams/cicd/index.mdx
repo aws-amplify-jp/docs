@@ -1,0 +1,35 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: '継続的デプロイメント',
+  description: 'Amplify Consoleのマルチ環境機能を使用して、完全にマネージドされたWebアプリケーションホスティングと継続的デプロイメントソリューションを実現します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+## Amplify Consoleの使用
+
+Amplify Consoleのマルチ環境機能を使用することで、完全にマネージドされたWebアプリケーションホスティングと継続的デプロイメントソリューションを実現できます。詳細については、[公式ドキュメント](https://docs.aws.amazon.com/amplify/latest/userguide/multi-environments.html)を参照してください。

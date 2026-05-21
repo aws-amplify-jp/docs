@@ -1,0 +1,4091 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'v5からv6への移行',
+  description: 'Amplify JavaScript v5からv6へのAuth APIのアップグレードに関する移行手順について詳しく説明します',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'vue',
+    'react-native'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+`Auth` カテゴリはAmplify v6において関数型アプローチと名前付きパラメータに移行されました。以下の例に示すように、`aws-amplify/auth` パスから関数型APIを直接インポートするようになり、入力と出力の変更点に注意する必要があります。APIの例のスイッチャーを使用してv5とv6の実装の違いを確認できます（デフォルトではv6が表示されます）。
+
+## Auth.signUp
+
+`Auth.signUp` への入力全体は大きく変わっていませんが、オブジェクトの構造が若干異なります: `attributes` が `userAttributes` になり、`userAttributes` と `validationData` が `options` オブジェクトの下に置かれるようになりました。また、`autoSignIn` は単純なboolean値として指定できるようになりました。
+
+大きな変更点として、`signUp` から `CognitoUser` が返されなくなりました。すべてのAuth APIは現在サインインしているユーザー情報を使用して操作を実行するようになったため、すべてのAPIで `CognitoUser` を送受信する必要がなくなりました。
+
+また、`userConfirmed` が返されなくなり、代わりに `nextStep` が返されるようになりました。これは `signUp`、`signIn`、`resetPassword`、`updateUserAttributes` フローで共有される標準化されたフォーマットに従っており、追加の認証ステップが同じオブジェクト内の追加情報（この場合は `codeDeliveryDetails`）と共に返されます。
+
+<Callout>v6では `autoSignIn` は自動的にトリガーされなくなり、`nextStep.signUpStep` が `COMPLETE_AUTO_SIGN_IN` の場合に別のAPIを通じて手動で呼び出す必要があります</Callout>
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      // Standard
+      params: SignUpParams {
+        username: string;
+        password: string;
+        attributes?: object;
+        validationData?: {
+          [key: string]: string;
+        }
+        clientMetadata?: { [key: string]: string; };
+        autoSignIn?: {
+          enabled: boolean;
+          clientMetaData?: { [key: string]: string; };
+          validationData?: {
+            [key: string]: string;
+          }
+        };
+      }
+
+      // Legacy
+      username: string
+      password: string
+      email: string
+      phone_number: string
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: SignUpInput {
+        username: string;
+        password: string;
+        options?: {
+          userAttributes?: { [key: string]?: string; }
+          validationData?: { [key: string]: string; };
+          clientMetadata?: { [key: string]: string; };
+          autoSignIn?: boolean | {
+            authFlowType?:
+              | 'USER_SRP_AUTH'
+              | 'CUSTOM_WITH_SRP'
+              | 'CUSTOM_WITHOUT_SRP'
+              | 'USER_PASSWORD_AUTH';
+            clientMetadata?: { [key: string]: string; };
+          };
+        };
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      ISignUpResult {
+        user: CognitoUser;
+        userConfirmed: boolean;
+        userSub: string;
+        codeDeliveryDetails: {
+          AttributeName: string;
+          DeliveryMedium: string;
+          Destination: string;
+        };
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      SignUpOutput {
+        isSignUpComplete: boolean;
+        userId?: string;
+        nextStep: {
+          signUpStep:
+            | 'DONE'
+            | 'CONFIRM_SIGN_UP'
+            | 'COMPLETE_AUTO_SIGN_IN',
+          codeDeliveryDetails: { // signUpStep が 'DONE' の場合は含まれません
+            destination?: string;
+            deliveryMedium?: 
+              | 'EMAIL'
+              | 'SMS'
+              | 'PHONE'
+              | 'UNKNOWN';
+            attributeName?: UserAttributeKey;
+          }
+        };
+      }
+      ```
+    
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+      ```js
+      import { signUp } from 'aws-amplify/auth';
+
+      const handleSignUp = async ({
+        username,
+        password,
+        email,
+        phone_number,
+        validationData
+      }) => {
+        const {
+          isSignUpComplete,
+          userId,
+          nextStep
+        } = await signUp({
+          username,
+          password,
+          options: {
+            userAttributes: {
+              email,
+              phone_number
+            },
+            validationData
+          }
+        });
+      }
+      ```
+
+  </Block>
+  <Block name="V5">    
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleSignUp = async ({
+      username,
+      password,
+      email,
+      phone_number,
+      validationData
+    }) => {
+        const { user } = await Auth.signUp({
+          username,
+          password,
+          attributes: {
+            email,
+            phone_number
+          },
+          validationData
+        });
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+### 自動サインイン
+
+<Callout>v6では `autoSignIn` は自動的にトリガーされなくなりました</Callout>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import {
+      autoSignIn,
+      confirmSignUp,
+      signUp
+    } from 'aws-amplify/auth';
+
+    // 1. autoSignIn を有効にしてサインアップ
+    const handleSignUp = async ({
+      username,
+      password,
+      email,
+      phone_number,
+      validationData
+    }) => {
+      const {
+        isSignUpComplete,
+        userId,
+        nextStep
+      } = await signUp({
+        username,
+        password,
+        options: {
+          userAttributes: {
+            email,
+            phone_number
+          },
+          validationData,
+          autoSignIn: true
+        },
+      });
+    }
+
+    // 2. サインアップを確認
+    const handleConfirmSignUp = async ({
+      username,
+      confirmationCode
+    }) => {
+      const {
+        isSignUpComplete,
+        userId,
+        nextStep
+      } = await confirmSignUp({
+        username,
+        confirmationCode
+      });
+
+      // 3. autoSignIn イベントをトリガー - 自動的にはトリガーされません
+      const { isSignedIn } = await autoSignIn();
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth, Hub } from 'aws-amplify';
+
+    // 1. autoSignIn イベントのリスナーを追加
+    Hub.listen('auth', ({ payload }) => {
+      const { event } = payload;
+      if (event === 'autoSignIn') {
+        const confirmedUser = payload.data;
+      } else if (event === 'autoSignIn_failure') {
+        // サインインページにリダイレクト
+      }
+    });
+
+    // 2. autoSignIn を有効にしてサインアップ
+    const handleSignUp = async ({
+      username,
+      password,
+      email,
+      phone_number,
+      validationData
+    }) => {
+      const { user } = await Auth.signUp({
+        username,
+        password,
+        attributes: {
+          email,
+          phone_number
+        },
+        validationData,
+        autoSignIn: {
+          enabled: true
+        }
+      });
+    }
+
+    // 3. サインアップを確認 - これにより autoSignIn がトリガーされます
+    const handleConfirmSignUp = async ({
+      username,
+      confirmationCode
+    }) => {
+      await Auth.confirmSignUp(username, confirmationCode);
+    }
+
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+### レガシー
+
+以前は、Amplify JavaScriptの古いバージョンとの後方互換性のために、`Auth.signUp` の `username`、`password`、`email`、`phone_number` を名前付き入力パラメータではなく位置パラメータとして渡す機能をサポートしていました。以下のガイドでは、`Auth.signUp` のレガシーな呼び出しパターンからの移行方法を示します：
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { signUp } from 'aws-amplify/auth';
+
+    const handleSignUp = async ({
+      username,
+      password,
+      email,
+      phone_number,
+      validationData
+    }) => {
+      const {
+        isSignUpComplete,
+        userId,
+        nextStep
+      } = await signUp({
+        username,
+        password,
+        options: {
+          userAttributes: {
+            email,
+            phone_number
+          }
+        }
+      });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleSignUp = async ({
+      username,
+      password,
+      email,
+      phone_number,
+      validationData
+    }) => {
+      const { user } = await Auth.signUp(
+        username,
+        password,
+        email,
+        phone_number
+      );
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.confirmSignUp
+
+v6では、`confirmSignUp` は位置パラメータの代わりに名前付きパラメータを使用するようになりました。`username`、`confirmationCode`、`options` プロパティを含むオブジェクトを渡します。このAPIはv6の `autoSignIn` ユースケース向けに、`isSignUpComplete` フラグ、`userId`、`nextStep` を含むオブジェクトも返すようになりました。
+
+<Callout>v6では `autoSignIn` は自動的にトリガーされなくなり、`nextStep.signUpStep` が `COMPLETE_AUTO_SIGN_IN` の場合に別のAPIを通じて手動で呼び出す必要があります</Callout>
+
+<Callout>v5では `forceAliasCreation` のデフォルトが `true` でしたが、v6ではデフォルトで `undefined` のままです</Callout>
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      username: string
+      code: string
+      options?: ConfirmSignUpOptions {
+          forceAliasCreation?: boolean;
+          clientMetadata?: { [key: string]: string; };
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: ConfirmSignUpInput = {
+          username: string;
+          confirmationCode: string;
+          options?: {
+              clientMetadata?: { [key: string]: string; };
+              forceAliasCreation?: boolean;
+          };
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      'SUCCESS'
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      type ConfirmSignUpOutput = {
+          isSignUpComplete: boolean;
+          userId?: string | undefined;
+          nextStep: {
+              signUpStep:
+                  | 'DONE'
+                  | 'CONFIRM_SIGN_UP'
+                  | 'COMPLETE_AUTO_SIGN_IN',
+              codeDeliveryDetails: { // signUpStep が 'DONE' の場合は含まれません
+                  destination?: string;
+                  deliveryMedium?: 
+                    | 'EMAIL'
+                    | 'SMS'
+                    | 'PHONE'
+                    | 'UNKNOWN';
+                  attributeName?: UserAttributeKey;
+              }
+          };
+      }
+      ```
+    
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { confirmSignUp } from 'aws-amplify/auth';
+
+    const handleConfirmSignUp = async ({
+      username,
+      confirmationCode
+    }) => {
+      const {
+        isSignUpComplete,
+        userId,
+        nextStep
+      } = await confirmSignUp({
+        username,
+        confirmationCode
+      });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleConfirmSignUp = async ({
+      username,
+      confirmationCode
+    }) => {
+      await Auth.confirmSignUp(
+        username,
+        confirmationCode
+      );
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+### エイリアス強制作成
+
+<Callout>v5では `forceAliasCreation` のデフォルトが `true` でしたが、v6ではデフォルトで `undefined` のままです</Callout>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { confirmSignUp } from 'aws-amplify/auth';
+
+    const handleConfirmSignUp = async ({
+      username,
+      confirmationCode
+    }) => {
+      const {
+        isSignUpComplete,
+        userId,
+        nextStep
+      } = await confirmSignUp({
+        username,
+        confirmationCode,
+        options: {
+          // デフォルトはfalsy (undefined)
+          forceAliasCreation: true
+        }
+      });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleConfirmSignUp = async ({
+      username,
+      confirmationCode
+    }) => {
+      await Auth.confirmSignUp(
+        username,
+        confirmationCode,
+        options: {
+          // デフォルトは true
+          forceAliasCreation: false
+        }
+      );
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.resendSignUp
+
+v6では、`resendSignUp` は位置パラメータの代わりに名前付きパラメータを使用するようになりました。`username` と `options` プロパティを含むオブジェクトを渡し、APIの一貫性のために `clientMetadata` は `options` の下に置かれるようになりました。出力も他のAPIに合わせて更新され、PascalCaseの `CodeDeliveryDetails` の代わりに `destination`、`deliveryMedium`、`attributeName` プロパティを含むオブジェクトが返されます。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      username: string
+      clientMetadata?: ClientMetaData {
+        [key: string]: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: ResendSignUpCodeInput {
+          username: string;
+          options?: {
+              clientMetadata?: { [key: string]: string; };
+          };
+      }
+      ```
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      {
+        CodeDeliveryDetails: {
+            AttributeName: string,
+            DeliveryMedium: string,
+            Destination: string
+        }
+      }
+      ```
+    
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      ResendSignUpCodeOutput {
+          destination?: string;
+          deliveryMedium?: 
+            | 'EMAIL'
+            | 'SMS'
+            | 'PHONE'
+            | 'UNKNOWN';
+          attributeName?: AuthVerifiableAttributeKey;
+      }
+      ```
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { resendSignUpCode } from 'aws-amplify/auth';
+
+    const handleResendCode = async ({ username }) => {
+      const {
+        destination,
+        deliveryMedium,
+        attributeName
+      } = await resendSignUpCode({ username });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleResendCode = async ({ username }) => {
+      const { CodeDeliveryDetails } = await Auth.resendSignUp(username);
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.signIn
+
+v6の `signIn` APIへの入力は大きく変わっていませんが、オブジェクトの構造が若干異なります: `clientMetadata` は `options` オブジェクトの下に置かれるようになり、必要に応じて `authFlowType` オプションも含まれます。
+
+大きな変更点として、`signIn` から `CognitoUser` が返されなくなりました。すべてのAuth APIは現在サインインしているユーザー情報を使用して操作を実行するようになったため、すべてのAPIで `CognitoUser` を送受信する必要がなくなりました。
+
+また、`challengeName` と `challengeParam`（v5では `CognitoUser` の追加プロパティとして返されていた）が出力オブジェクトの `nextStep` プロパティに置き換えられました。`nextStep` には `signInStep` と、ステップに応じた追加プロパティが含まれる場合があります。新しい `signIn` フローの詳細な例については、[確認が必要な例](/gen1/[platform]/build-a-backend/auth/auth-migration-guide/#example-2-confirmation-required)を参照してください。
+
+<Callout>v6では `signIn` APIは `validationData` を受け付けなくなりました: v5では基盤となるCognito APIが `validationData` を受け付けないため、`validationData` は使用されていませんでした</Callout>
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      // Standard
+      usernameOrSignInOpts: SignInOpts {
+        username: string;
+        password: string;
+        validationData?: {
+          [key: string]: any;
+        };
+      }
+      pw?: undefined
+      clientMetadata?: ClientMetaData {
+        [key: string]: string;
+      }
+
+      // Legacy
+      usernameOrSignInOpts: string
+      pw?: string
+      clientMetadata?: ClientMetaData {
+        [key: string]: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: SignInInput {
+        username: string;
+        password?: string;
+        options?: {
+          authFlowType?:
+            | 'USER_SRP_AUTH'
+            | 'CUSTOM_WITH_SRP'
+            | 'CUSTOM_WITHOUT_SRP'
+            | 'USER_PASSWORD_AUTH';
+          clientMetadata?: ClientMetaData {
+            [key: string]: string;
+          }
+        };
+      }
+      ```
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      CognitoUser {
+        challengeName?: string;
+        challengeParam?: string;
+        username: string;
+        signInUserSession: {
+          idToken: string;
+          refreshToken: string;
+          accessToken: string;
+          clockDrift: number;
+        } | null;
+        authenticationFlowType: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      type SignInOutput = {
+        isSignedIn: boolean;
+        nextStep: {
+          signInStep: {
+            | 'CONTINUE_SIGN_IN_WITH_MFA_SELECTION'
+            | 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP'
+            | 'CONFIRM_SIGN_IN_WITH_SMS_CODE'
+            | 'CONFIRM_SIGN_IN_WITH_TOTP_CODE'
+            | 'CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE'
+            | 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'
+            | 'CONFIRM_SIGN_UP'
+            | 'RESET_PASSWORD'
+            | 'DONE';
+          },
+          // ステップによっては追加のプロパティが含まれる場合があります
+        }
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { signIn } from 'aws-amplify/auth';
+
+    const handleSignIn = async ({
+      username,
+      password
+    }) => {
+      const {
+        isSignedIn,
+        nextStep
+      } = await signIn({ username, password });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleSignIn = async ({
+      username,
+      password,
+      validationData
+    }) => {
+      const user = await Auth.signIn({
+        username,
+        password,
+        validationData
+      });
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+### 確認が必要な場合
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import {
+      confirmSignIn,
+      signIn
+    } from 'aws-amplify/auth';
+
+    const handleSignIn = async ({
+      username,
+      password
+    }) => {
+      const {
+        isSignedIn,
+        nextStep
+      } = await signIn({ username, password });
+
+      switch (nextStep.signInStep) {
+        case 'CONFIRM_SIGN_IN_WITH_TOTP_CODE':
+        case 'CONFIRM_SIGN_IN_WITH_SMS_CODE':
+          // ステップが CONFIRM_SIGN_IN_WITH_SMS_CODE の場合、nextStep に codeDeliveryDetails が含まれます
+          const {
+            isSignedIn,
+            nextStep
+          } = await confirmSignIn({ challengeResponse: 'code' });
+          break;
+        case 'CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE':
+          const { additionalInfo } = nextStep;
+          const {
+            isSignedIn,
+            nextStep
+          } = await confirmSignIn({ challengeResponse: 'answer' });
+          break;
+        case 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP':
+          // このシナリオでは setupTOTP の呼び出しは不要です
+          // totpSetupDetails はすでに nextStep と共に返されています
+          const { totpSetupDetails } = nextStep;
+          const appName = 'my_app_name';
+          const setupUri = totpSetupDetails.getSetupUri(appName);
+          // 認証アプリで setupUri を開いて OTP コードを取得します
+          // 認証アプリからコードを取得します
+          const {
+            isSignedIn,
+            nextStep
+          } = await confirmSignIn({ challengeResponse: 'code' });
+          break;
+        case 'CONTINUE_SIGN_IN_WITH_MFA_SELECTION':
+          const mfaType = 'SMS' // または TOTP
+          const {
+            isSignedIn,
+            nextStep
+          } = await confirmSignIn({ challengeResponse: mfaType});
+
+          // confirmSignIn が 'SMS' で呼び出された場合、次のステップは
+          // 'CONFIRM_SIGN_IN_WITH_SMS_CODE' になります。
+          // ただし 'TOTP' が入力として使用された場合は 'CONFIRM_SIGN_IN_WITH_TOTP_CODE'
+          // が返されます。
+
+          const otpCode = '123456' // 認証アプリまたは携帯電話から取得したコード
+          const {
+            isSignedIn,
+            nextStep
+          } = await confirmSignIn({ challengeResponse: otpCode});
+          break;
+        case 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED':
+          const { missingAttributes } = nextStep;
+          const userAttributes = { ... };
+
+          const {
+            isSignedIn,
+            nextStep
+          } = await confirmSignIn({
+            challengeResponse: 'newPassword',
+            options: {
+              userAttributes
+            }
+          });
+          break;
+        case 'DONE':
+          break;
+      }
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleSignIn = async ({
+      username,
+      password,
+      validationData
+    }) => {
+      const user = await Auth.signIn({
+        username,
+        password
+      });
+
+      if (user.challengeName) {
+        switch(user.challengeName) {
+          case 'SMS_MFA':
+          case 'SOFTWARE_TOKEN':
+            const confirmedUser = await Auth.confirmSignIn(
+              user,
+              'code',
+              user.challengeName
+            );
+            break;
+          case 'CUSTOM_CHALLENGE':
+            const confirmedUser = await Auth.confirmSignIn(
+              user,
+              'answer',
+              user.challengeName
+            );
+            break;
+          case 'MFA_SETUP':
+            const secretCode = await Auth.setupTOTP(user);
+            // Auth.confirmSignIn に進む
+            break;
+          case 'SELECT_MFA_TYPE':
+            const mfaType = 'SMS_MFA' // または 'SOFTWARE_TOKEN_MFA'
+            // signIn から返されたユーザー
+            user.sendMFASelectionAnswer(mfaType, {
+              onFailure: (err) => {
+                console.log(err);
+              },
+              mfaRequired: (challengeName, parameters) => {
+                // 携帯電話に送信された OTP コードで confirmSignIn を呼び出す
+              },
+              totpRequired: (challengeName, parameters) => {
+                // 認証アプリから取得した OTP コードで confirmSignIn を呼び出す
+            }
+          });
+            break;
+          case 'NEW_PASSWORD_REQUIRED':
+            const {
+              userAttributes,
+              requiredAttributes
+            } = user.challengeParams;
+            const attributes = { ... };
+
+            const confirmedUser = await Auth.completeNewPassword(
+              user,
+              'newPassword',
+              attributes
+            );
+            break;
+        }
+      }
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+### レガシー
+
+以前は、Amplify JavaScriptの古いバージョンとの後方互換性のために、`Auth.signIn` の `username`、`password` を名前付き入力パラメータではなく位置パラメータとして渡す機能をサポートしていました。以下のガイドでは、`Auth.signIn` のレガシーな呼び出しパターンからの移行方法を示します：
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { signIn } from 'aws-amplify/auth';
+
+    const username = 'username';
+    const password = 'password';
+
+    const handleSignIn = async ({
+      username,
+      password
+    }) => {
+      const {
+        isSignedIn,
+        nextStep
+      } = await signIn({ username, password });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleSignIn = async ({
+      username,
+      password
+    }) => {
+      const user = await Auth.resendSignUp(
+        username,
+        password
+      );
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.federatedSignIn
+
+`Auth.federatedSignIn` はv6では `signInWithRedirect` になりましたが、それ以外は概ね同様です。`provider` プロパティはenumの代わりに特定の文字列を受け付けるようになり、デフォルトリストにないプロバイダーを使用したい場合はカスタムプロバイダーを送信するオプションも含まれています。このユースケースでは、事前定義された文字列の1つの代わりに、`custom` プロパティを含むオブジェクトを `provider` に渡します。
+
+<Callout>Identity Poolsで `federatedSignIn` を使用することは非推奨になりました。認証にIdentity Poolを使用している場合は、[このガイド](/gen1/[platform]/build-a-backend/auth/advanced-workflows/#identity-pool-federation)に従ってください。</Callout>
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      // Standard
+      options?: FederatedSignInOptions {
+        provider: { // enum
+          Cognito = 'COGNITO',
+          Google = 'Google',
+          Facebook = 'Facebook',
+          Amazon = 'LoginWithAmazon',
+          Apple = 'SignInWithApple',
+        };
+        customState?: string;
+      }
+
+      // Custom Provider
+      options?: FederatedSignInOptionsCustom {
+        customProvider: string;
+        customState?: string;
+      }
+
+      // Legacy
+      provider:
+        | 'google'
+        | 'facebook'
+        | 'amazon'
+        | 'developer'
+        | string
+      response: FederatedResponse {
+        token: string;
+        identity_id?: string;
+        expires_at: number;
+      }
+      user: FederatedUser {
+        name: string;
+        email?: string;
+        picture?: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input?: SignInWithRedirectInput {
+        provider?:
+          | 'Amazon'
+          | 'Apple'
+          | 'Facebook'
+          | 'Google'
+          | { custom: string; };
+        customState?: string;
+        options?: {
+          preferPrivateSession?: boolean;
+        };
+      }
+      ```
+    
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      // Identity Pools から FederatedResponse が提供された場合のみ返されます
+      ICredentials {
+        accessKeyId: string;
+        sessionToken: string;
+        secretAccessKey: string;
+        identityId: string;
+        authenticated: boolean;
+        expiration?: Date;
+      }
+      ```
+    
+    </div>
+    <div>
+      **V6**
+
+      v6では出力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import {
+      fetchAuthSession,
+      signInWithRedirect
+    } from 'aws-amplify/auth';
+
+    const handleSocialSignIn = async () => {
+      await signInWithRedirect({
+        provider: 'Google'
+      });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleSocialSignIn = async () => {
+      await Auth.federatedSignIn({
+        provider: CognitoHostedUIIdentityProvider.Google
+      });
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+### カスタムプロバイダー
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { signInWithRedirect } from 'aws-amplify/auth';
+
+    const handleSocialSignIn = () => {
+      signInWithRedirect({
+        provider: {
+          custom: 'SocialProvider'
+        }
+      });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleSocialSignIn = () => {
+      Auth.federatedSignIn({
+        customProvider: 'SocialProvider'
+      });
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+### デフォルト
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { signInWithRedirect } from 'aws-amplify/auth';
+
+    const handleSocialSignIn = () => {
+      signInWithRedirect();
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleSocialSignIn = () => {
+      Auth.federatedSignIn();
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+### Identity Pools - 非推奨
+
+`signInWithRedirect` では、Amplifyが使用するために事前認証されたユーザーとトークンを渡すことができません。v6でこれを実現する方法の例として、[このガイド](/gen1/[platform]/build-a-backend/auth/advanced-workflows/#identity-pool-federation)に従ってください。
+
+## Auth.confirmSignIn
+
+v6では、`confirmSignIn` はMFA確認だけでなく、`Auth.completeNewPassword` や `Auth.sendCustomChallengeAnswer` の代わりにも使用されます。入力に `mfaType` と `code` が別々に含まれるのではなく、`challengeAnswer` が含まれるようになり、必要な情報（MFAタイプや新しいパスワードを含む）を値として渡すことができます。新しい `signIn` フローの詳細な例については、[Auth.signIn: 確認が必要な例](/gen1/[platform]/build-a-backend/auth/auth-migration-guide/#example-2-confirmation-required)を参照してください。
+
+もう一つの大きな違いは、`CognitoUser` が `confirmSignIn` の入力パラメータとして不要になり、返されなくなったことです。すべてのAuth APIは現在サインインしているユーザー情報を使用して操作を実行するようになったため、すべてのAPIで `CognitoUser` を送受信する必要がなくなりました。
+
+また、`challengeName` と `challengeParam`（v5では `CognitoUser` の追加プロパティとして返されていた）が出力オブジェクトの `nextStep` プロパティに置き換えられました。`nextStep` には `signInStep` と、ステップに応じた追加プロパティが含まれる場合があります。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      code: string
+      mfaType?: 'SMS_MFA' | 'SOFTWARE_TOKEN_MFA' | null
+      clientMetadata?: ClientMetaData {
+        [key: string]: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: ConfirmSignInInput {
+        challengeResponse: string;
+        options?: {
+          userAttributes?: AuthUserAttributes;
+          clientMetadata?: ClientMetaData {
+            [key: string]: string;
+          }
+          friendlyDeviceName?: string;
+        };
+      }
+      ```
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      CognitoUser {
+        challengeName?: string;
+        challengeParam?: string;
+        username: string;
+        signInUserSession: {
+          idToken: string;
+          refreshToken: string;
+          accessToken: string;
+          clockDrift: number;
+        } | null;
+        authenticationFlowType: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      ConfirmSignInOutput {
+        isSignedIn: boolean;
+        nextStep: {
+          signInStep: {
+            | 'CONTINUE_SIGN_IN_WITH_MFA_SELECTION'
+            | 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP'
+            | 'CONFIRM_SIGN_IN_WITH_SMS_CODE'
+            | 'CONFIRM_SIGN_IN_WITH_TOTP_CODE'
+            | 'CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE'
+            | 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'
+            | 'CONFIRM_SIGN_UP'
+            | 'RESET_PASSWORD'
+            | 'DONE';
+          },
+          // ステップによっては追加のプロパティが含まれる場合があります
+        }
+      }
+      ```
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { confirmSignIn } from 'aws-amplify/auth';
+
+    const handleConfirmSignIn = async ({ challengeResponse }) => {
+      const {
+        isSignedIn,
+        nextStep
+      } = await confirmSignIn({ challengeResponse });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleConfirmSignIn = async ({
+      user,
+      code,
+      mfaType
+    }) => {
+      const user = await Auth.confirmSignIn(
+        user,
+        code,
+        mfaType
+      );
+    }
+
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.setupTOTP
+
+v6では `setupTOTP` への入力がなくなりました。v6のすべてのAuth APIは現在サインインしているユーザー情報を使用して操作を実行するようになったため、すべてのAPIで `CognitoUser` を送受信する必要がなくなりました。
+
+出力は単なるシークレットコードを表す文字列ではなく、`sharedSecret` プロパティとそのシークレットに基づいてTOTP認証に必要なセットアップURIを構築して返す `getSetupUri` メソッドを持つオブジェクトになりました。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+
+      ```
+      user: CognitoUser
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      v6では入力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      string // secretCode
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      ```
+      SetUpTOTPOutput {
+        sharedSecret: string;
+        getSetupUri: (appName: string, accountName?: string | undefined) => URL;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { setUpTOTP } from 'aws-amplify/auth';
+
+    const handleSetupTOTP = async () => {
+      const output = await setUpTOTP();
+      const secretCode = output.sharedSecret;
+      const setupUri = output.getSetupUri('sample-app');
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleSetupTOTP = async ({ user }) => {
+      const secretCode = await Auth.setupTOTP(user);
+      const setupUri = `otpauth://totp/AWSCognito:${user}?secret=${secretCode}&issuer=sample-app`;
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.verifyTotpToken
+
+v6では、`Auth.verifyTotpToken` は `verifyTOTPSetup` になり、入力が変更されました: CognitoUserを送信する必要がなくなり、`challengeAnswer` パラメータが入力オブジェクトの `code` プロパティになりました。このメソッドはCognitoSessionも返さなくなりました: v5で返された現在のセッション詳細を取得する方法については、[Auth.currentSession](/gen1/[platform]/build-a-backend/auth/auth-migration-guide/#authcurrentsession)を参照してください。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      challengeAnswer: string
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: VerifyTOTPSetupInput {
+        code: string;
+        options?: {
+          friendlyDeviceName?: string;
+        }
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      CognitoUserSession {
+        idToken: string;
+        refreshToken: string;
+        accessToken: string;
+        clockDrift: number;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      v6では出力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { verifyTOTPSetup } from 'aws-amplify/auth';
+
+    const handleVerifyTOTP = async ({ code }) => {
+      await verifyTOTPSetup({ code , options });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleVerifyTOTP = async ({ user, code }) => {
+      const userSession = await Auth.verifyTotpToken(user, code);
+    }
+
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.completeNewPassword（非推奨）
+
+このAPIは非推奨になりました: 既存のユースケースは `confirmSignIn` APIに移行できます。このAPIは `challengeName` と `challengeParam` を持つ `CognitoUser` の代わりに `nextStep` を含むオブジェクトを返します。v6の完全な `signIn` フローと各 `nextStep` 値への対応方法の包括的な例については、[Auth.signIn 確認が必要な例](/gen1/[platform]/build-a-backend/auth/auth-migration-guide/#confirmation-required)を参照してください。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      password: string
+      requiredAttributes?: any
+      clientMetadata?: ClientMetaData {
+        [key: string]: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: ConfirmSignInInput {
+        challengeResponse: string;
+        options?: {
+          userAttributes?: AuthUserAttributes;
+          clientMetadata?: ClientMetaData {
+            [key: string]: string;
+          }
+          friendlyDeviceName?: string;
+        };
+      }
+      ```
+    
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      CognitoUser {
+        challengeName?: string;
+        challengeParam?: string;
+        username: string;
+        signInUserSession: {
+          idToken: string;
+          refreshToken: string;
+          accessToken: string;
+          clockDrift: number;
+        } | null;
+        authenticationFlowType: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      ConfirmSignInOutput {
+        isSignedIn: boolean;
+        nextStep: { // nextStep の型の詳細については Auth.signIn の例2を参照してください
+          signInStep: {
+            | 'CONTINUE_SIGN_IN_WITH_MFA_SELECTION'
+            | 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP'
+            | 'CONFIRM_SIGN_IN_WITH_SMS_CODE'
+            | 'CONFIRM_SIGN_IN_WITH_TOTP_CODE'
+            | 'CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE'
+            | 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'
+            | 'CONFIRM_SIGN_UP'
+            | 'RESET_PASSWORD'
+            | 'DONE';
+          },
+          // ステップによっては追加のプロパティが含まれる場合があります
+        }
+      }
+      ```
+    
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { confirmSignIn } from 'aws-amplify/auth';
+
+    const handleUpdatePassword = async ({ newPassword }) => {
+      const {
+        isSignedIn,
+        nextStep
+      } = await confirmSignIn({ challengeResponse: newPassword });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleUpdatePassword = async ({
+      user,
+      newPassword,
+      attributes
+    }) => {
+      const user = await Auth.completeNewPassword(
+        user,
+        newPassword,
+        attributes
+      );
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.sendCustomChallengeAnswer（非推奨）
+
+このAPIは非推奨になりました: 既存のユースケースは `confirmSignIn` APIに移行できます。このAPIは `challengeName` と `challengeParam` を持つ `CognitoUser` の代わりに `nextStep` を含むオブジェクトを返します。v6の完全なsignInフローと各 `nextStep` 値への対応方法の包括的な例については、Auth.signIn 確認が必要な例を参照してください。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      challengeResponses: string
+      clientMetadata?: ClientMetaData {
+        [key: string]: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: ConfirmSignInInput {
+        challengeResponse: string;
+        options?: {
+          userAttributes?: AuthUserAttributes;
+          clientMetadata?: ClientMetaData {
+            [key: string]: string;
+          }
+          friendlyDeviceName?: string;
+        };
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      CognitoUser {
+        challengeName?: string;
+        challengeParam?: string;
+        username: string;
+        signInUserSession: {
+          idToken: string;
+          refreshToken: string;
+          accessToken: string;
+          clockDrift: number;
+        } | null;
+        authenticationFlowType: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      ConfirmSignInOutput {
+        isSignedIn: boolean;
+        nextStep: { // nextStep の型の詳細については Auth.signIn の例2を参照してください
+          signInStep: {
+            | 'CONTINUE_SIGN_IN_WITH_MFA_SELECTION'
+            | 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP'
+            | 'CONFIRM_SIGN_IN_WITH_SMS_CODE'
+            | 'CONFIRM_SIGN_IN_WITH_TOTP_CODE'
+            | 'CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE'
+            | 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'
+            | 'CONFIRM_SIGN_UP'
+            | 'RESET_PASSWORD'
+            | 'DONE';
+          },
+          // ステップによっては追加のプロパティが含まれる場合があります
+        }
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { confirmSignIn } from 'aws-amplify/auth';
+
+    const handleConfirmSignIn = async ({ challengeResponse }) => {
+      const {
+        isSignedIn,
+        nextStep
+      } = await confirmSignIn({ challengeResponse });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleConfirmSignIn = async ({
+      user,
+      code
+    }) => {
+      const user = await Auth.confirmSignIn(
+        user,
+        code
+      );
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.getPreferredMFA
+
+v6では、`Auth.getPreferredMFA` は `fetchMFAPreference` APIになりました。このAPIは `CognitoUser` を受け付けなくなりました: すべてのAuth APIは現在サインインしているユーザー情報を使用して操作を実行するようになったため、すべてのAPIで `CognitoUser` を送受信する必要がなくなりました。v6では `fetchMFAPreference` が常にサーバーへの呼び出しを行うため、bypassCacheオプションもなくなりました。
+
+v6の戻り値は単なる文字列ではなく、`enabled` 配列と `preferred` 文字列を含むオブジェクトになりました。
+
+Cognitoは複数の `enabled` MFAオプションを持つことができます: 現時点では `TOTP` と `SMS` のみをサポートしています。MFAオプションは事前に設定された場合に `enabled` とみなされます。例えば、`TOTP` の設定は、`signIn` APIが `CONTINUE_SIGN_IN_WITH_TOTP_SETUP` ステップを返した際のサインインプロセス中に行うことができます。また、ユーザーが認証されているときに `setupTOTP` と `verifyTOTPSetup` を呼び出すことでも設定できます。
+
+さらに、Cognitoは1つのオプションのみを `preferred` として設定できます。これは `updateMFAPreference` APIを呼び出すことで実現できます。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      params?: GetPreferredMFAOpts {
+        bypassCache: boolean;
+      }
+      ```
+    </div>
+    <div>
+      **V6**
+
+      v6では入力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      'SMS' | 'TOTP'
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      FetchMFAPreferenceOutput: {
+        enabled?: ('SMS' | 'TOTP')[];
+        preferred?: 'SMS' | 'TOTP';
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { fetchMFAPreference } from 'aws-amplify/auth';
+
+    const getPreferredMFA = async () => {
+      const { preferred } = await fetchMFAPreference();
+      return preferred;
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const getPreferredMFA = async ({ user }) => {
+      const preferredMFA = await Auth.getPreferredMFA(user);
+      return preferredMFA;
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.setPreferredMFA
+
+v6では、`Auth.setPreferredMFA` は `updateMFAPreference` に置き換えられました。このメソッドはMFAメソッドの有効化と無効化にも使用できます。`sms` と `mfa` プロパティを持つオブジェクトを受け付け、それぞれ `ENABLED`、`DISABLED`、`PREFERRED`、`NOT_PREFERRED` に設定できます。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      mfaMethod: 
+        | 'TOTP'
+        | 'SMS'
+        | 'NOMFA'
+        | 'SMS_MFA'
+        | 'SOFTWARE_TOKEN_MFA'
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: UpdateMFAPreferenceInput {
+        sms?:
+          | 'ENABLED'
+          | 'DISABLED'
+          | 'PREFERRED'
+          | 'NOT_PREFERRED'
+        mfa?:
+          | 'ENABLED'
+          | 'DISABLED'
+          | 'PREFERRED'
+          | 'NOT_PREFERRED'
+      }
+      ```
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+
+      ```
+      'No change for mfa type' | 'SUCCESS'
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      v6では出力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { updateMFAPreference } from 'aws-amplify/auth';
+
+    const handleSetPreferredMFA = async () => {
+      await updateMFAPreference({ totp: 'PREFERRED' });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleSetPreferredMFA = async ({ user }) => {
+      await Auth.setPreferredMFA(user, 'TOTP');
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.getMFAOptions（非推奨）
+
+このAPIは非推奨になり、結果はSMS MFA設定にのみ適用されます: 既存のユースケースは `fetchMFAPreference`（[Auth.getPreferredMFA](/gen1/[platform]/build-a-backend/auth/auth-migration-guide/#authgetpreferredmfa)を参照）に移行できます。これはSMSとTOTPの両方の設定に適用されます。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      v6では入力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      MFAOption[]: {
+        DeliveryMedium: 'SMS' | ~~'EMAIL'~~;
+        AttributeName: string;
+      }[]
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      FetchMFAPreferenceOutput: {
+        enabled?: ('SMS' | 'TOTP')[];
+        preferred?: 'SMS' | 'TOTP';
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { fetchMFAPreference } from 'aws-amplify/auth';
+
+    const getEnabledMFAOptions = async () => {
+      const { enabled } = await fetchMFAPreference();
+      return enabled;
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const getEnabledMFAOptions = async ({ user }) => {
+      const mfaOptions = await Auth.getMFAOptions(user);
+      const enabled: string[] = [];
+      for(let option of mfaOptions) {
+        enabled.push(option.DeliverMedium);
+      }
+      return enabled;
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.signOut
+
+`signOut` APIはv5からv6への変更で関数型APIになったこと以外は変わっていません。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      opts?: SignOutOpts {
+        global?: boolean;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input?: SignOutInput {
+        global: boolean;
+      }
+      ```
+    
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { signOut } from 'aws-amplify/auth';
+
+    const handleSignOut = async () => {
+      await signOut();
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleSignOut = async () => {
+      await Auth.signOut();
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.changePassword
+
+`Auth.changePassword` APIはv6では `updatePassword` になりました。位置パラメータの代わりに名前付きパラメータを受け付けるようになりました。入力は `oldPassword` と `newPassword` を含むオブジェクトになりました。
+
+`updatePassword` では `CognitoUser` は入力として不要です。すべてのAuth APIは現在サインインしているユーザー情報を使用して操作を実行するようになったため、すべてのAPIで `CognitoUser` を送受信する必要がなくなりました。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      oldPassword: string
+      newPassword: string
+      clientMetadata?: ClientMetaData {
+        [key: string]: string
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: UpdatePasswordInput {
+        oldPassword: string;
+        newPassword: string;
+      }
+      ```
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      'SUCCESS'
+      ```
+      
+    </div>
+    <div>
+      **V6**
+
+      v6では出力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { updatePassword } from 'aws-amplify/auth';
+
+    const handleChangePassword = async ({
+      oldPassword,
+      newPassword
+    }) => {
+      await updatePassword({
+        oldPassword,
+        newPassword
+      });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleChangePassword = async ({
+      user,
+      oldPassword,
+      newPassword
+    }) => {
+      await Auth.changePassword(
+        user,
+        oldPassword,
+        newPassword
+      );
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.forgotPassword
+
+v6では、`Auth.forgotPassword` APIは `resetPassword` になりました。位置パラメータの代わりに名前付きパラメータを使用するようになり、入力は `username` と `options`（必要に応じて `clientMetadata` を `options` に渡せます）を含むオブジェクトになりました。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      username: string
+      clientMetadata?: ClientMetaData {
+        [key: string]: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: ResetPasswordInput {
+        username: string;
+        options?: {
+          clientMetadata?: {
+            [key: string]: string;
+          };
+        };
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      {
+        CodeDeliveryDetails: {
+          AttributeName: string;
+          DeliveryMedium: string;
+          Destination: string;
+        }
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      ResetPasswordOutput {
+        isPasswordReset: boolean;
+        nextStep: {
+          resetPasswordStep: 
+            | 'CONFIRM_RESET_PASSWORD_WITH_CODE'
+            | 'DONE';
+          additionalInfo?: { 
+            [key: string]: string;
+          };
+          codeDeliveryDetails: {
+            destination?: string;
+            deliveryMedium?: 
+              | 'EMAIL'
+              | 'SMS'
+              | 'PHONE'
+              | 'UNKNOWN';
+            attributeName?: 'email' | 'phone_number';
+          };
+        };
+      }
+      ```
+    
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { resetPassword } from 'aws-amplify/auth';
+
+    const handleResetPassword = async ({
+      username,
+      clientMetadata
+    }) => {
+      const result = await resetPassword({
+        username,
+        options: {
+          clientMetadata
+        }
+      });
+      const {
+        attributeName,
+        deliveryMedium,
+        destination
+      } = result.nextStep.codeDeliveryDetails;
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleResetPassword = async ({
+      username,
+      clientMetadata
+    }) => {
+      const result = await Auth.forgotPassword(
+        username,
+        clientMetadata
+      );
+
+      const {
+        AttributeName,
+        DeliveryMedium,
+        Destination
+      } = result.CodeDeliveryDetails;
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.forgotPasswordSubmit
+
+`Auth.forgotPasswordSubmit` は `confirmResetPassword` になり、位置パラメータの代わりに名前付きパラメータを受け付けるようになりました。期待される入力は `username`、`newPassword`、`confirmationCode`、`options` を含むオブジェクトになりました。必要に応じて `customMetadata` は `options` プロパティを通じて送信できます。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns="2">
+    <div>
+      **V5**
+      
+      ```
+      username: string
+      code: string
+      password: string
+      clientMetadata?: ClientMetaData {
+        [key: string]: string;
+      };
+      ```
+    
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: ConfirmResetPasswordInput {
+        username: string;
+        newPassword: string;
+        confirmationCode: string;
+        options?: {
+          clientMetadata?: {
+            [key: string]: string;
+          };
+        };
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns="2">
+    <div>
+      **V5**
+      ```
+      'SUCCESS'
+      ```
+      
+    </div>
+    <div>
+      **V6**
+
+      v6では出力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { confirmResetPassword } from 'aws-amplify/auth';
+
+    const handleConfirmResetPassword = async ({
+      username,
+      newPassword,
+      confirmationCode,
+      clientMetadata
+    }) => {
+      await confirmResetPassword: ({
+        username,
+        newPassword,
+        confirmationCode,
+        options: {
+          clientMetadata
+        }
+      });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleConfirmResetPassword = async ({
+      username,
+      newPassword,
+      confirmationCode,
+      clientMetadata
+    }) => {
+      await Auth.forgotPasswordSubmit(
+        username,
+        confirmationCode,
+        newPassword,
+        clientMetadata
+      );
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.deleteUser
+
+`deleteUser` APIはv5からv6への変更で関数型APIになったこと以外は変わっていません。
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { deleteUser } from 'aws-amplify/auth';
+
+    const handleDeleteAttributes = async ({ attributes }) => {
+      await deleteUser();
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleDeleteUser = async () => {
+      await Auth.deleteUser();
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.currentAuthenticatedUser（非推奨）
+
+このAPIは非推奨になりました: 既存のユースケースは `getCurrentUser` と `fetchAuthSession` APIの組み合わせに移行できます。
+
+また、`AuthSession` では `refreshToken` や `clockDrift` が返されなくなりました。これらの値はユーザーセッションのリフレッシュ/検証のために内部的に使用されます。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      params?: CurrentUserOpts {
+        bypassCache: boolean;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      // fetchAuthSession
+      options?: FetchAuthSessionOptions {
+        forceRefresh?: boolean;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      CognitoUser {
+        username: string;
+        signInUserSession: {
+          idToken: string;
+          refreshToken: string;
+          accessToken: string;
+          clockDrift: number;
+        } | null;
+        authenticationFlowType: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      // getCurrentUser
+      GetCurrentUserOutput: {
+        username: string;
+        userId: string;
+        signInDetails?: {
+          loginId?: string;
+          authFlowType?: 
+            | 'USER_SRP_AUTH'
+            | 'CUSTOM_WITH_SRP'
+            | 'CUSTOM_WITHOUT_SRP'
+            | 'USER_PASSWORD_AUTH';;
+        };
+      }
+
+      // fetchAuthSession
+      AuthSession {
+        tokens?: {
+          idToken?: JWT;
+          accessToken: JWT;
+        };
+        credentials?: {
+          accessKeyId: string;
+          secretAccessKey: string;
+          sessionToken?: string;
+          expiration?: Date;
+        };
+        identityId?: string;
+        userSub?: string;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import {
+      fetchAuthSession,
+      getCurrentUser
+    } from 'aws-amplify/auth';
+
+    const getAuthenticatedUser = async () => {
+      const {
+        username,
+        signInDetails
+      } = await getCurrentUser();
+
+      const {
+        tokens: session
+      } = await fetchAuthSession();
+
+      // セッションには refreshToken と clockDrift が含まれなくなりました
+      return {
+        username,
+        session,
+        authenticationFlowType: signInDetails.authFlowType
+      };
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const getAuthenticatedUser = async () => {
+      const {
+        username,
+        signInUserSession: session,
+        authenticationFlowType
+      } = await Auth.currentAuthenticatedUser();
+
+      return {
+        username,
+        session,
+        authenticationFlowType
+      };
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.currentUserPoolUser（非推奨）
+
+このAPIは非推奨になりました: 既存のユースケースは `getCurrentUser` と `fetchAuthSession` APIの組み合わせに移行できます。
+
+また、`AuthSession` では `refreshToken` や `clockDrift` が返されなくなりました。これらの値はユーザーセッションのリフレッシュ/検証のために内部的に使用されます。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      params?: CurrentUserOpts {
+        bypassCache: boolean;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      // fetchAuthSession
+      options?: FetchAuthSessionOptions {
+        forceRefresh?: boolean;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      CognitoUser {
+        username: string;
+        signInUserSession: {
+          idToken: string;
+          refreshToken: string;
+          accessToken: string;
+          clockDrift: number;
+        } | null;
+        authenticationFlowType: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      // getCurrentUser
+      GetCurrentUserOutput: {
+        username: string;
+        userId: string;
+        signInDetails?: {
+          loginId?: string;
+          authFlowType?: 
+            | 'USER_SRP_AUTH'
+            | 'CUSTOM_WITH_SRP'
+            | 'CUSTOM_WITHOUT_SRP'
+            | 'USER_PASSWORD_AUTH';;
+        };
+      }
+
+      // fetchAuthSession
+      AuthSession {
+        tokens?: {
+          idToken?: JWT;
+          accessToken: JWT;
+        };
+        credentials?: {
+          accessKeyId: string;
+          secretAccessKey: string;
+          sessionToken?: string;
+          expiration?: Date;
+        };
+        identityId?: string;
+        userSub?: string;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import {
+      fetchAuthSession,
+      getCurrentUser
+    } from 'aws-amplify/auth';
+
+    const getAuthenticatedUser = async () => {
+      const {
+        username,
+        authFlowType: authenticationFlowType
+      } = await getCurrentUser();
+
+      // セッションには refreshToken と clockDrift が含まれなくなりました
+      const {
+        tokens: session
+      } = await fetchAuthSession();
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const getAuthenticatedUser = async () => {
+      const {
+        username,
+        signInUserSession: session,
+        authenticationFlowType
+      } = await Auth.currentUserPoolUser();
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.currentSession
+
+`Auth.currentSession` はv6では `fetchAuthSession` になりました。オプションとして `forceRefresh` フラグを含むオブジェクトを入力として渡せるようになりました。
+
+`AuthSession` では `refreshToken` や `clockDrift` が返されなくなりました。これらの値はユーザーセッションのリフレッシュ/検証のために内部的に使用されます。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+
+      v5では入力なし
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      options?: FetchAuthSessionOptions {
+        forceRefresh?: boolean;
+      }
+      ```
+    
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      CognitoUserSession {
+        idToken: string;
+        refreshToken: string;
+        accessToken: string;
+        clockDrift: number;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      AuthSession {
+        tokens?: {
+          idToken?: JWT;
+          accessToken: JWT;
+        };
+        credentials?: {
+          accessKeyId: string;
+          secretAccessKey: string;
+          sessionToken?: string;
+          expiration?: Date;
+        };
+        identityId?: string;
+        userSub?: string;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { fetchAuthSession } from 'aws-amplify/auth';
+
+    const getSession = async () => {
+      const {
+        tokens,
+        credentials,
+        identityId,
+        userSub
+      } = await fetchAuthSession();
+
+      const {
+        idToken,
+        accessToken
+      } = tokens;
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const getSession = async () => {
+      const {
+        idToken,
+        refreshToken,
+        accessToken,
+        clockDrift
+      } = await Auth.currentSession();
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.userSession（非推奨）
+
+**注意:** `AuthSession` では `refreshToken` や `clockDrift` が返されなくなりました。これらの値はユーザーセッションのリフレッシュ/検証のために内部的に使用されます。
+
+`Auth.userSession` は `fetchUserSession` に置き換えられ非推奨になりました。すべてのAuth APIが現在サインインしているユーザー情報を使用して操作を実行するようになったため、すべてのAPIで `CognitoUser` を送受信する必要がなくなりました。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      options?: FetchAuthSessionOptions {
+        forceRefresh?: boolean;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      CognitoUserSession {
+        idToken: string;
+        refreshToken: string;
+        accessToken: string;
+        clockDrift: number;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      AuthSession {
+        tokens?: {
+          idToken?: JWT;
+          accessToken: JWT;
+        };
+        credentials?: {
+          accessKeyId: string;
+          secretAccessKey: string;
+          sessionToken?: string;
+          expiration?: Date;
+        };
+        identityId?: string;
+        userSub?: string;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { fetchAuthSession } from 'aws-amplify/auth';
+
+    const getSession = async () => {
+      const {
+        tokens,
+        credentials,
+        identityId,
+        userSub
+      } = await fetchAuthSession();
+
+      const {
+        idToken,
+        accessToken
+      } = tokens;
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const getSession = async ({ user }) => {
+      const {
+        idToken,
+        refreshToken,
+        accessToken,
+        clockDrift
+      } = await Auth.userSession(user);
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.userAttributes
+
+`Auth.userAttributes` はv6では `fetchUserAttributes` になりました。このAPIは `CognitoUser` を入力として受け付けなくなりました。すべてのAuth APIは現在サインインしているユーザー情報を使用して操作を実行するようになったため、すべてのAPIで `CognitoUser` を送受信する必要がなくなりました。
+
+出力も変更されました: `Name` と `Value` を含むオブジェクトの配列の代わりに、汎用的なキーと値のペアを持つオブジェクト（例: `{ email: 'email@email.com', phone_number: '+15555555555'}`）が返されます。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      v6では入力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      CognitoUserAttribute[]: {
+        Name: string;
+        Value: string;
+      }[]
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      FetchUserAttributesOutput {
+        [key: string]?: string;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { fetchUserAttributes } from 'aws-amplify/auth';
+
+    const getUserAttributes = async ({ userAttributes }) => {
+      // 戻り値の型が配列からオブジェクトに変更されました
+      const attributes = await fetchUserAttributes();
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const getUserAttributes = async ({
+      user
+    }) => {
+      // 戻り値の型が配列からオブジェクトに変更されました
+      const attributes = await Auth.userAttributes(user);
+      return attributes;
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.updateUserAttributes
+
+v6では、`updateUserAttributes` APIは位置パラメータの代わりに名前付きパラメータを受け付けます。入力は `userAttributes` と `options`（必要に応じて `clientMetadata` を送信する場所）プロパティを含むオブジェクトになりました。
+
+このAPIは `CognitoUser` を入力として受け付けなくなりました。すべてのAuth APIは現在サインインしているユーザー情報を使用して操作を実行するようになったため、すべてのAPIで `CognitoUser` を送受信する必要がなくなりました。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      attributes: object
+      clientMetadata?: ClientMetaData {
+        [key: string]: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: UpdateUserAttributesInput {
+        userAttributes: {
+          [key: string]?: string;
+        };
+        options?: {
+          clientMetadata?: ClientMetaData {
+            [key: string]: string;
+          }
+        };
+      }
+      ```
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      'SUCCESS'
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      UpdateUserAttributesOutput {
+        [authKey in UserAttributeKey]: {
+          isUpdated: boolean;
+          nextStep: {
+            updateAttributeStep: 
+              | 'CONFIRM_ATTRIBUTE_WITH_CODE'
+              | 'DONE';
+            codeDeliveryDetails?: {
+              destination?: string;
+              deliveryMedium?: 
+                | 'EMAIL'
+                | 'SMS'
+                | 'PHONE'
+                | 'UNKNOWN';
+              attributeName?: UserAttributeKey;
+            };
+          };
+        };
+      }
+      ```
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { updateUserAttributes } from 'aws-amplify/auth';
+
+    const handleUpdateProfile = async ({ userAttributes }) => {
+      // 結果には更新された属性の次のステップが含まれるようになりました
+      const updateResults = await updateUserAttributes({
+        userAttributes
+      });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleUpdateProfile = async ({
+      user,
+      attributes
+    }) => {
+      await Auth.updateUserAttributes(user, attributes);
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.deleteUserAttributes
+
+v6では、`deleteUserAttributes` APIは位置パラメータの代わりに名前付きパラメータを受け付けます。入力は `userAttributeKeys`（`attributeNames` に代わる）プロパティを含むオブジェクトになりました。
+
+このAPIは `CognitoUser` を入力として受け付けなくなりました。すべてのAuth APIは現在サインインしているユーザー情報を使用して操作を実行するようになったため、すべてのAPIで `CognitoUser` を送受信する必要がなくなりました。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      attributeNames: string[]
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: DeleteUserAttributesInput {
+        userAttributeKeys: [UserAttributeKey, ...UserAttributeKey[]];
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      'SUCCESS'
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      v6では出力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { deleteUserAttributes } from 'aws-amplify/auth';
+
+    const handleDeleteAttributes = async ({ attributes }) => {
+      await deleteUserAttributes({
+        userAttributeKeys: attributes
+      });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleDeleteAttributes = async ({ user, attributes }) => {
+      await Auth.deleteUserAttributes(
+        user,
+        attributes
+      );
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.verifyCurrentUserAttribute
+
+v6では、`Auth.verifyCurrentUserAttribute` は `sendUserAttributeVerificationCode` になり、位置パラメータ `attr` の代わりに名前付きパラメータを使用します。このパラメータは `userAttributeKey`（`email` または `phone_number`）と `options`（必要に応じて `clientMetadata` を送信する場所）を含むオブジェクトです。
+
+`sendUserAttributeVerificationCode` は配信情報を含むオブジェクトも返すようになりました。詳細については出力を参照してください。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      attr: string
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: SendUserAttributeVerificationCodeInput {
+        userAttributeKey: 'email' | 'phone_number';
+        options?: {
+          clientMetadata?: {
+            [key: string]: string;
+          };
+        };
+      }
+      ```
+    
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+
+      v5では出力なし
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      SendUserAttributeVerificationCodeOutput {
+        destination?: string;
+        deliveryMedium?:
+          | 'EMAIL'
+          | 'SMS'
+          | 'PHONE'
+          | 'UNKNOWN';
+        attributeName?: 'email' | 'phone_number';
+      }
+      ```
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { sendUserAttributeVerificationCode } from 'aws-amplify/auth';
+
+    const handleVerifyAttribute = async ({
+      userAttributeKey
+    }) => {
+      const result = await sendUserAttributeVerificationCode({
+        userAttributeKey
+      });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleVerifyAttribute = async ({
+      attr
+    }) => {
+      await Auth.verifyCurrentUserAttribute(attr);
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.verifyCurrentUserAttributeSubmit
+
+v6では、`Auth.verifyCurrentUserAttributeSubmit` は `confirmUserAttribute` になりました。入力が位置パラメータから名前付きパラメータに変更され、`userAttributeKey`（`email` または `phone_number`）と `confirmationCode` プロパティを含むオブジェクトを渡すようになりました。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      attr: string
+      code: string
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: ConfirmUserAttributeInput {
+        userAttributeKey: 'email' | 'phone_number';
+        confirmationCode: string;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      'SUCCESS'
+      ```
+      
+    </div>
+    <div>
+      **V6**
+
+      v6では出力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { confirmUserAttribute } from 'aws-amplify/auth';
+
+    const handleConfirmAttribute = async ({
+      userAttributeKey,
+      confirmationCode
+    }) => {
+      await confirmUserAttribute({
+        userAttributeKey,
+        confirmationCode
+      });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleConfirmAttribute = async ({
+      attr,
+      code
+    }) => {
+      await Auth.verifyCurrentUserAttributeSubmit(
+        attr,
+        code
+      );
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.verifyUserAttribute（非推奨）
+
+`Auth.verifyUserAttribute` はv6では `sendUserAttributeVerificationCode` に置き換えられ非推奨になりました。すべてのAuth APIが現在サインインしているユーザー情報を使用して操作を実行するようになったため、すべてのAPIで `CognitoUser` を送受信する必要がなくなりました。追加の移行詳細については、[Auth.verifyCurrentUserAttribute](/gen1/[platform]/build-a-backend/auth/auth-migration-guide/#authverifycurrentuserattribute)の移行ノートを参照してください。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      attr: string
+      clientMetadata?: ClientMetadata {
+        [key: string]: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: SendUserAttributeVerificationCodeInput {
+        userAttributeKey: 'email' | 'phone_number';
+        options?: {
+          clientMetadata?: {
+            [key: string]: string;
+          };
+        };
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+
+      v5では出力なし
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      SendUserAttributeVerificationCodeOutput {
+        destination?: string;
+        deliveryMedium?:
+          | 'EMAIL'
+          | 'SMS'
+          | 'PHONE'
+          | 'UNKNOWN';
+        attributeName?: 'email' | 'phone_number';
+      }
+      ```
+    
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { sendUserAttributeVerificationCode } from 'aws-amplify/auth';
+
+    const handleVerifyAttribute = async ({
+      userAttributeKey,
+      clientMetadata
+    }) => {
+      const result = await sendUserAttributeVerificationCode({
+        userAttributeKey,
+        options: {
+          clientMetadata
+        }
+      });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleVerifyAttribute = async ({
+      user,
+      attr,
+      clientMetadata
+    }) => {
+      await Auth.verifyUserAttribute(
+        user,
+        attr,
+        clientMetadata
+      );
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.verifyUserAttributeSubmit（非推奨）
+
+`Auth.verifyUserAttributeSubmit` はv6では `confirmUserAttribute` に置き換えられ非推奨になりました。すべてのAuth APIが現在サインインしているユーザー情報を使用して操作を実行するようになったため、すべてのAPIで `CognitoUser` を送受信する必要がなくなりました。追加の移行詳細については、[Auth.verifyCurrentUserAttributeSubmit](/gen1/[platform]/build-a-backend/auth/auth-migration-guide/#authverifycurrentuserattributesubmit)の移行ノートを参照してください。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      attr: string
+      code: string
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: ConfirmUserAttributeInput {
+        userAttributeKey: 'email' | 'phone_number';
+        confirmationCode: string;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+
+      ```
+      'SUCCESS'
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      v6では出力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { confirmUserAttribute } from 'aws-amplify/auth';
+
+    const handleConfirmAttribute = async ({
+      userAttributeKey,
+      confirmationCode
+    }) => {
+      await Auth.verifyUserAttributeSubmit(
+        userAttributeKey,
+        confirmationCode
+      );
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleConfirmAttribute = async ({
+      user,
+      attr,
+      code
+    }) => {
+      await Auth.verifyUserAttributeSubmit(
+        user,
+        attr,
+        code
+      );
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.rememberDevice
+
+`rememberDevice` APIはv5からv6への変更で関数型APIになったこと以外は大きく変わっていません。
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns="2">
+    <div>
+      **V5**
+      
+      ```
+      'SUCCESS'
+      ```
+      
+    </div>
+    <div>
+      **V6**
+
+      v6では出力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { rememberDevice } from 'aws-amplify/auth';
+
+    const handleRememberDevice = async () => {
+      await rememberDevice();
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleRememberDevice = async () => {
+      await Auth.rememberDevice();
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.forgetDevice
+
+`forgetDevice` APIはv5からv6への変更で関数型APIになったこと以外は大きく変わっていません。また、デバイスIDを含むオブジェクトをオプションで渡せるようになりました（入力を参照）。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns="2">
+    <div>
+      **V5**
+
+      v5では入力なし
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input?: ForgetDeviceInput {
+        device?: {
+          id: string;
+        }
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { forgetDevice } from 'aws-amplify/auth';
+
+    const handleForgetDevice = async () => {
+      await forgetDevice();
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleForgetDevice = async () => {
+      await Auth.forgetDevice();
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.currentCredentials（非推奨）
+
+このAPIは非推奨になりました: 既存のユースケースは `fetchAuthSession` APIに移行できます。認証済みユーザーがいない場合、`fetchAuthSession` はエラーをスローすることに注意してください。v5とv6でクレデンシャルがどのように異なるかの詳細については、[Auth.currentSession](/gen1/[platform]/build-a-backend/auth/auth-migration-guide/#authcurrentsession)の移行ノートを参照してください。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+
+      v5では入力なし
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      options?: FetchAuthSessionOptions {
+        forceRefresh?: boolean;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      ICredentials {
+        accessKeyId: string;
+        sessionToken: string;
+        secretAccessKey: string;
+        identityId: string;
+        authenticated: boolean;
+        expiration?: Date;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      AuthSession {
+        tokens?: {
+          idToken?: JWT;
+          accessToken: JWT;
+        };
+        credentials?: {
+          accessKeyId: string;
+          secretAccessKey: string;
+          sessionToken?: string;
+          expiration?: Date;
+        };
+        identityId?: string;
+        userSub?: string;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { fetchAuthSession } from 'aws-amplify/auth';
+
+    const getSession = async () => {
+      try {
+        const {
+            tokens,
+            credentials,
+            identityId,
+            userSub
+        } = await fetchAuthSession();
+
+        const {
+            accessKeyId,
+            sessionToken,
+            secretAccessKey,
+            expiration
+        } = credentials;
+
+        const authenticated = true;
+      } catch(e) {
+        if (e.name === 'UserUnAuthenticatedException') {
+          const authenticated = false;
+        }
+      }
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const getSession = async () => {
+      const {
+        accessKeyId,
+        sessionToken,
+        secretAccessKey,
+        identityId,
+        authenticated,
+        expiration
+      } = await Auth.currentCredentials();
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.currentUserCredentials（非推奨）
+
+このAPIは非推奨になりました: 既存のユースケースは `fetchAuthSession` APIに移行できます。認証済みユーザーがいない場合、`fetchAuthSession` はエラーをスローすることに注意してください。v5とv6でクレデンシャルがどのように異なるかの詳細については、[Auth.currentSession](/gen1/[platform]/build-a-backend/auth/auth-migration-guide/#authcurrentsession)の移行ノートを参照してください。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+
+      v5では入力なし
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      options?: FetchAuthSessionOptions {
+        forceRefresh?: boolean;
+      }
+      ```
+    
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      ICredentials {
+        accessKeyId: string;
+        sessionToken: string;
+        secretAccessKey: string;
+        identityId: string;
+        authenticated: boolean;
+        expiration?: Date;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      AuthSession {
+        tokens?: {
+          idToken?: JWT;
+          accessToken: JWT;
+        };
+        credentials?: {
+          accessKeyId: string;
+          secretAccessKey: string;
+          sessionToken?: string;
+          expiration?: Date;
+        };
+        identityId?: string;
+        userSub?: string;
+      }
+      ```
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { fetchAuthSession } from 'aws-amplify/auth';
+
+    const getSession = async () => {
+      try {
+        const {
+            tokens,
+            credentials,
+            identityId,
+            userSub
+        } = await fetchAuthSession();
+
+        const {
+            accessKeyId,
+            sessionToken,
+            secretAccessKey,
+            expiration
+        } = credentials;
+
+        const authenticated = true;
+      } catch(e) {
+        if (e.name === 'UserUnAuthenticatedException') {
+          const authenticated = false;
+        }
+      }
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const getSession = async () => {
+      const {
+        accessKeyId,
+        sessionToken,
+        secretAccessKey,
+        identityId,
+        authenticated,
+        expiration
+      } = await Auth.currentUserCredentials();
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.currentUserInfo（非推奨）
+
+このAPIは非推奨になりました: 既存のユースケースは `getCurrentUser` と `fetchUserAttributes` APIの組み合わせを使用して移行できます。
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns="2">
+    <div>
+      **V5**
+      
+      ```
+      {
+        id?: string;
+        username: string;
+        attributes: {
+          [key: string]: string;
+        };
+      }
+      ```
+    
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      // getCurrentUser
+      GetCurrentUserOutput: {
+        username: string;
+        userId: string;
+        signInDetails?: {
+          loginId?: string;
+          authFlowType?: 
+            | 'USER_SRP_AUTH'
+            | 'CUSTOM_WITH_SRP'
+            | 'CUSTOM_WITHOUT_SRP'
+            | 'USER_PASSWORD_AUTH';;
+        };
+      }
+
+      // fetchUserAttributes
+      FetchUserAttributesOutput {
+        [key: string]?: string;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { 
+      getCurrentUser, 
+      fetchUserAttributes 
+    } from 'aws-amplify/auth';
+
+    const getCurrentUserInfo = async () => {
+      const {
+        username,
+        userId: id
+      } = await getCurrentUser();
+
+      const attributes = fetchUserAttributes();
+
+      return {
+        id,
+        username,
+        attributes
+      };
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const getCurrentUserInfo = async () => {
+      return await Auth.currentUserInfo();
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.essentialCredentials（非推奨）
+
+このAPIは非推奨になり、v6では `essentialCredentials` に対応するメソッドはありません。`fetchAuthSession` を使用したクレデンシャルの取得については、[Auth.currentUserCredentials](/gen1/[platform]/build-a-backend/auth/auth-migration-guide/#authcurrentusercredentials-deprecated)を参照してください。
+
+## Auth.verifiedContact（非推奨）
+
+このAPIは非推奨になりました: 既存のユースケースは `fetchUserAttributes` APIを使用して `output.email_verified` と `output.phone_number_verified` 属性に移行できます。追加の詳細については、[Auth.userAttributes](/gen1/[platform]/build-a-backend/auth/auth-migration-guide/#authuserattributes)の移行ノートを参照してください。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      ```
+      
+    </div>
+    <div>
+      **V6**
+
+      v6では入力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      {
+        verified: {
+          email?: boolean;
+          phone_number?: boolean;
+        },
+        unverified: {
+          email?: boolean;
+          phone_number?: boolean;
+        }
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      ```
+      FetchUserAttributesOutput {
+        [key: string]?: string;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { fetchUserAttributes } from 'aws-amplify/auth';
+
+    const checkAttributeVerification = await () => {
+      const attributes = await fetchUserAttributes();
+
+      const emailVerified = isTruthyString(attributes.email_verified);
+      const phoneVerified = isTruthyString(attributes.phone_number_verified);
+    }
+
+    const isTruthyString = (value) => {
+      return (
+        value && typeof value.toLowerCase === 'function' && value.toLowerCase() === 'true'
+      );
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const checkAttributeVerification = await ({ user }) => {
+      const {
+        verified,
+        unverified
+      } = await Auth.verifiedContact(user);
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.disableSMS（非推奨）
+
+このAPIは非推奨になりました: 既存のユースケースは `updateMFAPreference` APIに移行できます。`updateMFAPreference` APIを使用して同じ機能を実現するには、`{sms: 'DISABLED'}` というオブジェクトを入力として渡します。
+
+このAPIは `CognitoUser` を入力として受け付けません。すべてのAuth APIは現在サインインしているユーザー情報を使用して操作を実行するようになったため、すべてのAPIで `CognitoUser` を送受信する必要がなくなりました。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: UpdateMFAPreferenceInput {
+        sms?:
+          | 'ENABLED'
+          | 'DISABLED'
+          | 'PREFERRED'
+          | 'NOT_PREFERRED'
+        mfa?:
+          | 'ENABLED'
+          | 'DISABLED'
+          | 'PREFERRED'
+          | 'NOT_PREFERRED'
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      'SUCCESS'
+      ```
+    
+    </div>
+    <div>
+      **V6**
+
+      v6では出力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { updateMFAPreference } from 'aws-amplify/auth';
+
+    const handleDisableSMS = async () => {
+      await updateMFAPreference({ sms: 'DISABLED' });
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleDisableSMS = async ({ user }) => {
+      await Auth.disableSMS(user);
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Auth.enableSMS（非推奨）
+
+このAPIは非推奨になりました: 既存のユースケースは `updateMFAPreference` APIに移行できます。`updateMFAPreference` APIを使用して同じ機能を実現するには、`{sms: 'ENABLED'}` というオブジェクトを入力として渡します。
+
+このAPIは `CognitoUser` を入力として受け付けません。すべてのAuth APIは現在サインインしているユーザー情報を使用して操作を実行するようになったため、すべてのAPIで `CognitoUser` を送受信する必要がなくなりました。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      user: CognitoUser
+      ```
+
+    </div>
+    <div>
+      **V6**
+      
+      ```
+      input: UpdateMFAPreferenceInput {
+        sms?:
+          | 'ENABLED'
+          | 'DISABLED'
+          | 'PREFERRED'
+          | 'NOT_PREFERRED'
+        mfa?:
+          | 'ENABLED'
+          | 'DISABLED'
+          | 'PREFERRED'
+          | 'NOT_PREFERRED'
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<Accordion title='出力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+      
+      ```
+      'SUCCESS'
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      v6では出力なし
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```js
+    import { updateMFAPreference } from 'aws-amplify/auth';
+
+    const handleEnableSMS = async () => {
+      await updateMFAPreference({sms: 'ENABLED'});
+    }
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```js
+    import { Auth } from 'aws-amplify';
+
+    const handleEnableSMS = async ({ user }) => {
+      const result = await Auth.enableSMS(user);
+    }
+    ```
+
+  </Block>
+</BlockSwitcher>

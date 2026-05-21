@@ -1,0 +1,83 @@
+---
+title: "IDトークンクレームのオーバーライド"
+section: "build-a-backend/functions/examples"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2024-12-09T21:42:11.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/functions/examples/override-token/"
+---
+
+`defineAuth` と `defineFunction` を使用して、[Amazon Cognito Pre トークン生成 AWS Lambda トリガー](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html)を作成し、新しいクレームを追加するか、ユーザーのグループメンバーシップを変更することでトークンをオーバーライドできます。
+
+まず、ハンドラータイプの定義に使用される `aws-lambda` パッケージをインストールしてください。
+
+```bash title="Terminal" showLineNumbers={false}
+npm add --save-dev @types/aws-lambda
+```
+
+新しいディレクトリとリソースファイル `amplify/auth/pre-token-generation/resource.ts` を作成します。次に、`defineFunction` で関数を定義します：
+
+```ts title="amplify/auth/pre-token-generation/resource.ts"
+import { defineFunction } from '@aws-amplify/backend';
+
+export const preTokenGeneration = defineFunction({
+  name: 'pre-token-generation',
+  resourceGroupName: 'auth'
+});
+```
+
+次に、対応するハンドラーファイル `amplify/auth/post-confirmation/pre-token-generation/handler.ts` を以下の内容で作成します：
+
+```ts title="amplify/auth/pre-token-generation/handler.ts"
+import type { PreTokenGenerationTriggerHandler } from "aws-lambda";
+
+export const handler: PreTokenGenerationTriggerHandler = async (event) => {
+  event.response = {
+    claimsOverrideDetails: {
+      groupOverrideDetails: {
+        // This will add the user to the cognito group "amplify_group_1" 
+        groupsToOverride: ["amplify_group_1"],
+      },
+      claimsToAddOrOverride: {
+        // This will add the custom claim "amplfy_attribute" to the id token
+        amplfy_attribute: "amplify_gen_2",
+      },
+    },
+  };
+  return event;
+};
+
+```
+
+最後に、新しく作成した関数リソースを認証リソースに設定します：
+
+```ts title="amplify/auth/resource.ts"
+import { defineAuth } from '@aws-amplify/backend';
+import { preTokenGeneration } from './pre-token-generation/resource';
+
+export const auth = defineAuth({
+  loginWith: {
+    email: true,
+  },
+  triggers: {
+    preTokenGeneration
+  }
+});
+```
+
+変更をデプロイした後、ユーザーの idToken は上記のトリガーに従って変更されます。
+
+```json showLineNumbers={false}
+{
+  "cognito:groups": [
+    "amplify_group_1"
+  ],
+  "email_verified": true,
+  "iss": "...",
+  "cognito:username": "...",
+  "origin_jti": "...",
+  "amplfy_attribute": "amplify_gen_2",
+  "aud": "...",
+}
+
+```

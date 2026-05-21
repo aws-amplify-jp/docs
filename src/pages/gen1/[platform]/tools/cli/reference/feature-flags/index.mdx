@@ -1,0 +1,133 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'フィーチャーフラグ',
+  description: 'Amplify CLI のフィーチャーフラグについての詳細情報',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+import FeatureFlags from "/src/components/FeatureFlags";
+
+フィーチャーフラグにより、Amplify CLI の特定の機能を細かく調整することが可能になります。
+
+機能領域に基づいてセクションにグループ化されています。領域はカテゴリまたは他のスコープにすることができます。定義されているフィーチャーフラグにはいくつかの種類があり、そのライフタイムはライフサイクルプロセスで制御されます。
+
+## フィーチャーフラグの種類
+
+### Release
+
+この種類のフィーチャーフラグは、アクティブに開発中の Amplify CLI の特定の機能を有効または無効にするために使用されます。これらのフィーチャーフラグは、機能がリリースされると削除され、サポートされなくなります。
+
+### Feature
+
+Amplify CLI の歴史を通じて、新しいプロジェクトに利益をもたらす可能性がある拡張がありますが、既存のデプロイメントで破棄的な変更を引き起こす可能性があります。これらのフィーチャーフラグはライフサイクルプロセスによって制御され、緩和と移行の時間を提供します。このタイプのフラグは既存プロジェクトでは無効になり、新しいプロジェクトでは有効になります。
+
+例
+
+- 異なるコードを生成することによって既存プロジェクトを破壊し、バックエンドのデプロイメントが必要になる場合。
+- 変更されたリソースのプッシュ操作にはリソースの再作成が必要となり、データ損失につながる可能性がある場合。
+- 変更されたリソースのプッシュ操作には、クライアントアプリケーションを動作させるためのデータバックフィルが必要な場合。
+- クライアントアプリケーション用に生成されたコードには、新しくプッシュされたバックエンドと互換性を持つようにリビルドと再発行が必要な場合。
+
+### Experimental
+
+実験的なフィーチャーフラグは、特定の機能を使った実験を可能にし、Amplify CLI チームにフィードバックを提供するためのものです。これらの機能を本番環境で有効にすることは強くお勧めしません。
+
+実験的な機能の結果は以下のようになる可能性があります。
+
+- その機能が製品に組み込まれるため、Release タイプのフィーチャーフラグに変換されます。
+- 実験的な機能が製品に組み込まれず、コード自体とともにコードベースから削除されます。
+
+## ライフサイクル
+
+各種類のフィーチャーフラグはライフサイクル管理プロセスの下で管理されます。フィーチャーフラグが Amplify CLI に追加されると、リリースノートに記載され、このページも詳細情報で更新されます。フィーチャーフラグを追加した後、このページにはどのバージョンでフィーチャーフラグが追加されたか、計画されている廃止日（ある場合）、どのバージョンでフィーチャーフラグが非推奨になったか、どのバージョンでフィーチャーフラグが削除されたかについての情報が含まれます。
+
+フィーチャーフラグが非推奨になると、まだ使用できますが、使用されると Amplify CLI コマンドの実行中に画面に警告が印刷されます。
+
+削除前に削除日がフィーチャーフラグに追加され、フィーチャーフラグが削除された後、Amplify CLI はそれに関するエラーメッセージと、フィーチャーフラグが削除されたバージョンを表示します。
+
+## 設定
+
+フィーチャーフラグの設定は、主にプロジェクトの `amplify` フォルダに `cli.json` ファイルを持つことで行われます。ファイルが存在しない場合、Amplify CLI は `amplify init` コマンド中にそれを作成します。発行される値は、新しいプロジェクトのデフォルト値を表しています。このファイルはバージョン管理下にある必要があり、ローカル、CI/CD 環境、チームメンバー間で同じ機能が使用されることを確認する必要があります。現在チェックアウトされている환경用の環境固有ファイルが存在する場合、`amplify env add` コマンド中に同じファイルが新しく作成された環境にもコピーされます。
+
+設定ファイルの例
+
+```json
+{
+  "features": {
+    "graphQLTransformer": {
+      "addMissingOwnerFields": true,
+      "validateTypeNameReservedWords": true,
+      "useExperimentalPipelinedTransformer": false,
+      "enableIterativeGSIUpdates": false
+    },
+    "frontend-ios": {
+      "enableXcodeIntegration": true
+    },
+    "auth": {
+      "enableCaseInsensitivity": true,
+      "useInclusiveTerminology": true,
+      "breakCircularDependency": true
+    },
+    "codegen": {
+      "useAppSyncModelgenPlugin": true
+    }
+  }
+}
+```
+
+何らかの理由で異なる機能を特定の Amplify CLI 環境に対して有効にする必要がある場合は、プロジェクトレベルのファイルのコピーを次の命名規則で作成できます：`cli.{environment name}.json`。
+
+### 環境変数
+
+Amplify CLI は環境変数と `.env` ファイルからのフィーチャーフラグ値の定義と上書きをサポートしています。
+
+環境変数は Amplify CLI によってピックアップされるために、命名規則に従う必要があります：
+
+- プロジェクトレベルの上書き：`AMPLIFYCLI_{SECTION}__{PROPERTY}`、例：`AMPLIFYCLI_GRAPHQLTRANSFORMER__TRANSFORMERVERSION`
+- 環境固有の上書き：`AMPLIFYCLI_{ENVNAME}_{SECTION}__{PROPERTY}`、例：`AMPLIFYCLI_PROD_GRAPHQLTRANSFORMER__TRANSFORMERVERSION`
+
+`.env` ファイルがプロジェクトのルートフォルダで使用されている場合、現在のプロセスの環境変数の上にマージされ、それらを上書きします。
+
+### 評価順序
+
+複数のレベルの設定オプションとオーバーライドがあるため、Amplify CLI は以下のようにトップダウン評価を行います：
+
+- `cli.json`
+- `cli.{environment name}.json`
+- プロジェクトレベルの環境変数
+- CLI 環境レベルの環境変数
+
+## フィーチャーフラグ
+
+<Callout>
+
+**注：** フィーチャーフラグは大文字と小文字を区別しませんが、読みやすくするため camelCase で説明されています 
+
+</Callout>
+
+<FeatureFlags />

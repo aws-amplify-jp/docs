@@ -1,0 +1,37 @@
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '始める',
+  description: 'AWS Amplify Gen 2 を使い始める方法を学びます。',
+  route: '/[platform]/start',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+AWS Amplify は、フルスタックアプリケーション開発のためのクラウドサービスとライブラリのコレクションです。Amplify は、フロントエンドライブラリ、UI コンポーネント、バックエンド構築、フロントエンドホスティングを提供し、AWS にデプロイされるフルスタッククラウドアプリを構築できます。このチュートリアルでは、Amplify の新しいコード優先開発者体験を使用して、データ、認証、フロントエンドホスティング機能を備えたフルスタックアプリケーションを構築する方法を学びます。AWS Amplify が初めての場合は、このチュートリアルで使用される [AWS Amplify 第 2 世代がどのように機能し、その背後にある概念](/[platform]/how-amplify-works/concepts/) についてさらに詳しく読むことをお勧めします。
+
+<Overview childPageNodes={props.childPageNodes} />

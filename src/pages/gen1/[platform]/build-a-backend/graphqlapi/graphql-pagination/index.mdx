@@ -1,0 +1,127 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'GraphQLページネーション',
+  description: 'GraphQLを使用したページネーションの実装方法',
+  platforms: [
+    'javascript',
+    'react-native',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      showBreadcrumbs: false,
+      meta
+    }
+  };
+}
+
+このガイドでは、GraphQL APIにページネーションを実装する方法を学びます。
+
+大量のレコードセットを扱う場合、最初の**N**個の項目のみを取得したいことがあります。例えば、Todoアプリの基本的なGraphQLスキーマから始めましょう:
+
+```graphql
+type Todo @model {
+  id: ID!
+  title: String!
+  description: String
+}
+```
+
+`@model`ディレクティブでAPIが作成されると、以下のクエリが自動的に生成されます:
+
+```graphql
+type Query {
+  getTodo(id: ID!): Todo
+  listTodos(
+    filter: ModelTodoFilterInput
+    limit: Int
+    nextToken: String
+  ): ModelTodoConnection
+}
+```
+
+次に、`ModelTodoConnection`型を見て、`listTodos`クエリを実行したときに返されるデータのアイデアを得ます:
+
+```graphql
+type ModelTodoConnection {
+  items: [Todo]
+  nextToken: String
+}
+```
+
+`listTodos`クエリを使用してAPIをクエリする場合、戻り値の型は`ModelTodoConnection`になります。つまり、`Todos`の配列と`nextToken`の両方を返すことができます。
+
+`nextToken`はページネーションを処理するために使用されます。`nextToken`が`null`の場合、APIから返すデータがこれ以上ないことを意味します。`nextToken`が存在する場合、その値を次の`listTodos`クエリの引数として使用して、APIから次の選択セットを返すことができます。
+
+これを試すために、以下のようなミューテーションを使用して5つのtodosを作成してみてください:
+
+```sh
+mutation createTodo {
+  createTodo(input: {
+    title: "Todo 1"
+    description: "My first todo"
+  }) {
+    id
+    title
+    description
+  }
+}
+```
+
+次に、クエリに`limit`引数を渡すことで、クエリ内のtodosの数の制限を設定できます。このクエリでは、制限を2項目に設定し、戻り値として`nextToken`をリクエストします:
+
+```graphql
+query listTodos {
+  listTodos(limit: 2) {
+    items {
+      id
+      title
+      description
+    }
+    nextToken
+  }
+}
+```
+
+次に、APIから次の2つの項目をクエリするために、この`nextToken`を引数として渡すことができます:
+
+```graphql
+query listTodos {
+  listTodos(limit: 2, nextToken: <your_token>) {
+    items {
+      id
+      title
+      description
+    }
+    nextToken
+  }
+}
+```
+
+返すその他の項目がない場合、レスポンス内の`nextToken`はnullに設定されます。
+
+import js0 from '/src/fragments/guides/api-graphql/js/graphql-pagination.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>

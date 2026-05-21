@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"javascript","meta":{"title":"Amazon Cognito リソースのインポート","description":"既存の Amazon Cognito ユーザープール と ID プール リソースを使用するように Amplify Studio を構成し、認証と認可のメカニズムとして他の Amplify カテゴリ (API、Storage など) で使用します。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

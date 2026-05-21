@@ -1,0 +1,100 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'アーキテクチャ',
+  description: 'Amplify CLIはプラグイン可能なアーキテクチャを持っています。CLIコアはプラグイン可能なプラットフォームを提供し、ほとんどのCLIカテゴリ機能はプラグインとして実装されています。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+  
+
+Amplify CLIはプラグイン可能なアーキテクチャを持っています。CLIコアはプラグイン可能なプラットフォームを提供し、ほとんどのCLIカテゴリ機能はプラグインとして実装されています。
+
+## 概要
+
+![Image](/images/plugin-platform.png)
+
+Amplify CLI コアは `plugins.json` ファイルを保持して、プラグイン管理設定情報とインストールされたすべてのプラグイン情報を保存します。<br/>
+Amplify CLI プラグインはそれぞれ `amplify-plugin.json` ファイルを含んでおり、自身を有効なプラグインとして宣言します。<br/>
+Amplify CLI コアは `amplify plugin` の下に一連のユーティリティコマンドを提供して、プラグイン管理とプラグイン開発を支援します。
+
+Amplify CLI コアは各コマンド実行の開始時にプラグインを動的にスキャンしません。代わりに、インストールされたプラグインに関する情報は `plugins.json` ファイルから取得され、コマンド実行に必要なプラグインのみが読み込まれます。
+
+`plugins.json` ファイルは `<os.homedir>/.amplify/plugins.json` パスに保存されます。本当に理解している場合を除き、このファイルを手動で編集すべきではありません。そうしないと、Amplify CLIのローカルインストールが破損するリスクがあります。
+
+`plugins.json` ファイルは以下の状況で作成または更新されます:
+
+- Amplify CLI コアがアクセスを試みた時に `plugins.json` ファイルが見つからない場合、Amplify CLI コアはこのファイルを作成し、ローカル環境をスキャンしてプラグインを探し、その情報をファイルに保存します。
+- 最後のスキャン時刻が1日以上前（設定可能）である場合、Amplify CLI コアは再度スキャンして情報を更新します。
+- 精度の問題が検出された場合（例えば、指定されたプラグインが読み込めない場合）、Amplify CLI コアは再度スキャンして情報を更新します。
+- `amplify plugin scan`、`amplify plugin add/remove` などの変更につながる可能性のある `amplify plugin` コマンドの実行後。
+
+デフォルトでは、CLIコアはその親ディレクトリ、ローカル `node_modules` ディレクトリ、およびグローバル `node_modules` ディレクトリでプラグインを検索します。プラグインはパッケージ名の `amplify-` プレフィックスで認識されます。
+
+プラグインはプロジェクトメタデータを通じてCLIコアと相互に通信します。CLIコアはプラグイン向けにプロジェクトメタデータへの読み書きアクセスを提供します。プロジェクトメタデータはユーザープロジェクト内の `amplify/backend/amplify-meta.json` ファイルに保存されます。
+
+## プラグインタイプ
+
+![Image](/images/AmplifyCliConcept.jpg)
+
+プラグインには4つのタイプがあります
+
+- category
+- provider
+- frontend
+- util
+
+### カテゴリプラグイン
+
+Amplifyが保持するカテゴリプラグインはパッケージ名の `amplify-category-` プレフィックスで認識されます。<br/>
+カテゴリプラグインはクラウド内の1つのカテゴリのバックエンドリソースを作成・管理するロジックをラップします。ユーザー（開発者）入力に基づいてクラウドリソースの「形状」を定義し、クラウドリソースをCRUDするためのパラメータを構築し、関連するクラウドリソース情報をプロジェクトメタデータにエクスポートします。
+
+カテゴリはAWSによって管理され、サービス実装というより、クライアントエンジニアがUXの一部として構築する機能的なユースケースです。
+
+### プロバイダプラグイン
+
+Amplifyが保持するプロバイダプラグインはパッケージ名の `amplify-provider-` プレフィックスで認識されます。<br/>
+プロバイダプラグインは実際のクラウドリソースプロバイダを抽象化します。アクセス認証情報、API呼び出し、待機ロジック、レスポンスデータ解析などの通信詳細をラップします。また、カテゴリプラグインがクラウドリソースをCRUDするためのシンプルなインターフェースメソッドも公開します。
+
+#### AWS CloudFormation プロバイダ
+
+現在、唯一の公式プロバイダプラグインである amplify-provider-awscloudformation は、AWS CloudFormation を使用してAmplifyカテゴリ向けのAWS内のバックエンドリソースを形成・更新します。AWS CloudFormationの詳細については、ユーザーガイドをご確認ください:
+[AWS CloudFormation ユーザーガイド](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html)。`amplify-provider-awscloudformation` は
+[ネストされたスタック](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-nested-stacks.html) を使用します。
+
+### フロントエンドプラグイン
+
+Amplifyが保持するフロントエンドプラグインはパッケージ名の `amplify-frontend-` プレフィックスで認識されます。<br/>
+フロントエンドプラグインはJavaScript、AndroidまたはiOSプロジェクトなど、特定のタイプのフロントエンドプロジェクトを処理します。他の機能の中でも、以下の機能を提供します:
+
+- クラウドリソース情報をフォーマットし、フロントエンドプロジェクトによって認識・使用できるように適切な場所のファイルに書き込みます
+- バックエンドをクラウドリソースに接続した状態でフロントエンドアプリケーションをローカルでビルド・実行します
+- アプリケーション（フロントエンドとバックエンド）をビルド・公開し、意図したユーザーに配信します
+
+### ユーティリティプラグイン
+
+公式ユーティリティプラグインはパッケージ名の `amplify-` プレフィックスで認識されます。プラグインタイプの修飾がない場合、ユーティリティ目的のプラグインはクラウド内のバックエンドリソースを管理しませんが、CLIコアおよび他のプラグインに特定のCLIコマンドおよび/または特定の機能を提供します。

@@ -1,0 +1,385 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'アプリコードをAPIに接続する',
+  description: 'アプリコードをAPIに接続する方法を学びます。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript", "react-native", "angular", "nextjs", "react", "vue"]}>
+
+このガイドでは、Amplifyライブラリを使用してアプリケーションコードをバックエンドAPIに接続します。Amplifyライブラリのインストールと設定方法について説明します。
+
+開始する前に、以下が必要です:
+- [Amplify CLI](/gen1/[platform]/tools/cli/)経由またはベースの[AWS AppSyncサービス](https://docs.aws.amazon.com/appsync/latest/devguide/designing-a-graphql-api.html)経由で既にセットアップされたGraphQL API。
+- セットアップされたフロントエンドアプリケーション。アプリのセットアップについては、[プロジェクトセットアップ: アプリケーションを作成する](/gen1/[platform]/prev/start/project-setup/create-application/)を参照してください。
+- [npmがインストールされていること](https://docs.npmjs.com/getting-started)
+
+## Amplifyライブラリのインストール
+
+Amplifyライブラリは、GraphQL APIに接続するために推奨されるクライアントライブラリです。Amplifyクライアントライブラリをインストールするには、フロントエンドのルートフォルダに移動し、ターミナルで次のコマンドを実行します:
+
+```bash
+npm install aws-amplify@^5
+```
+
+## Amplifyライブラリの設定
+
+次に、ライブラリを設定して、Amplify CLIでプロビジョニングされたAPIまたは既存のAppSync GraphQL APIに接続します:
+
+<BlockSwitcher>
+
+<Block name="Amplify CLIでプロビジョニングされたAPI">
+
+バックエンドをデプロイすると(`amplify push`)、`aws-exports.js`ファイルが生成されます。このファイルには、APIのエンドポイント情報と認証設定が含まれています。
+
+```ts
+import { Amplify } from 'aws-amplify'
+// highlight-next-line
+import awsconfig from './aws-exports'
+
+// highlight-next-line
+Amplify.configure(awsconfig)
+```
+
+</Block>
+<Block name="既存のAppSync GraphQL API">
+
+アプリコードをGraphQL APIに接続するには、2つの設定を提供する必要があります:
+
+1. APIエンドポイントURL
+2. デフォルトの認可モード
+
+#### GraphQL APIエンドポイントURLの設定
+
+Amplifyライブラリは、`Amplify.configure()`に提供された情報に基づいて、GraphQL APIエンドポイントに接続します。
+
+既存のGraphQL APIを使用している場合は、APIエンドポイントと認証設定を手動で提供する必要があります。まず、GraphQL APIエンドポイントURLを設定するには、`aws_appsync_graphqlEndpoint`と`aws_appsync_region`の値を設定します。
+
+```ts
+import { Amplify } from 'aws-amplify'
+
+Amplify.configure({
+  // highlight-start
+  aws_appsync_graphqlEndpoint: 'https://abcxyz.appsync-api.us-east-1.amazonaws.com/graphql',
+  aws_appsync_region: 'us-east-1',
+  // highlight-end
+})
+```
+
+#### デフォルトの認可モードの設定
+
+**デフォルト認可モード**は、リクエスト時に他の認可モードが指定されていない場合に、GraphQL APIが認可される認可モードです。**デフォルト認可モード**は、AWS Amplifyで生成されたAPIおよびAWS AppSync GraphQL APIに対して設定できる設定です。下のタブからデフォルト認可モードを選択して続行します:
+
+<BlockSwitcher>
+
+<Block name="APIキー">
+
+```ts
+import { Amplify } from 'aws-amplify'
+
+Amplify.configure({
+  aws_appsync_graphqlEndpoint: 'https://abcxyz.appsync-api.us-east-1.amazonaws.com/graphql',
+  aws_appsync_region: 'us-east-1',
+
+  // 認可タイプを「API_KEY」に設定し、APIキー値を渡します
+  // highlight-start
+  aws_appsync_authenticationType: 'API_KEY',
+  aws_appsync_apiKey: 'da2-xxxxxxxxxxxxxxxxxxxxxxxxxx'
+  // highlight-end
+})
+```
+
+</Block>
+<Block name="Amazon Cognitoユーザープール">
+
+```ts
+import { Amplify } from 'aws-amplify'
+
+Amplify.configure({
+  aws_appsync_graphqlEndpoint: 'https://abcxyz.appsync-api.us-east-1.amazonaws.com/graphql',
+  aws_appsync_region: 'us-east-1',
+
+  // 認可タイプを「AMAZON_COGNITO_USER_POOLS」に設定します
+  // highlight-start
+  aws_appsync_authenticationType: 'AMAZON_COGNITO_USER_POOLS',
+  // highlight-end
+})
+```
+</Block>
+<Block name="AWS IAM">
+
+```ts
+import { Amplify } from 'aws-amplify'
+
+Amplify.configure({
+  aws_appsync_graphqlEndpoint: 'https://abcxyz.appsync-api.us-east-1.amazonaws.com/graphql',
+  aws_appsync_region: 'us-east-1',
+
+  // 認可タイプを「AWS_IAM」に設定します
+  // highlight-start
+  aws_appsync_authenticationType: 'AWS_IAM',
+  // highlight-end
+})
+```
+</Block>
+<Block name="OpenID Connect (OIDC)">
+
+```ts
+import { Amplify } from 'aws-amplify'
+
+Amplify.configure({
+  aws_appsync_graphqlEndpoint: 'https://abcxyz.appsync-api.us-east-1.amazonaws.com/graphql',
+  aws_appsync_region: 'us-east-1',
+
+  // 認可タイプを「OPENID_CONNECT」に設定します
+  // highlight-start
+  aws_appsync_authenticationType: 'OPENID_CONNECT',
+  // highlight-end
+})
+```
+
+</Block>
+<Block name="Lambdaオーソライザー">
+
+AWS Lambda関数を使用して、独自のカスタムAPI認可ロジックを実装できます。AppSync APIの認可モードとしてLambdaを追加するには、AppSyncコンソールの*設定*セクションにアクセスします。
+
+AppSync APIの認可モードとしてLambda関数を使用している場合は、各APIリクエストで認証トークンを渡す必要があり、アプリケーションでトークンリフレッシュを管理する必要があります。
+
+```ts
+import { Amplify } from 'aws-amplify'
+
+Amplify.configure({
+  aws_appsync_graphqlEndpoint: 'https://abcxyz.appsync-api.us-east-1.amazonaws.com/graphql',
+  aws_appsync_region: 'us-east-1',
+
+  // 認可タイプを「AWS_LAMBDA」に設定します
+  // highlight-start
+  aws_appsync_authenticationType: 'AWS_LAMBDA',
+  // highlight-end
+})
+```
+
+次に、GraphQL APIリクエストを行うときに、`authToken`パラメータをリクエストヘッダーに追加できます。
+
+```ts
+const getAuthToken = () => 'myAuthToken';
+const lambdaAuthToken = getAuthToken();
+
+const createdTodo = await client.graphql({
+  query: queries.listTodos,
+  // highlight-next-line
+  authToken: lambdaAuthToken
+});
+```
+
+</Block>
+</BlockSwitcher>
+
+</Block>
+
+</BlockSwitcher>
+
+
+## GraphQLクライアントコードとタイピングの生成
+
+バックエンドGraphQLスキーマから直接、一般的なGraphQLクエリ、ミューテーション、およびサブスクリプションを生成できます。これにより、APIを迅速に開発する際にGraphQLドキュメントを手動で作成する必要がなく、エンドツーエンドのタイピングも提供されます。
+
+<BlockSwitcher>
+
+<Block name="Amplify CLIでプロビジョニングされたAPI">
+
+デフォルトでは、`amplify push`でAPIをデプロイするときに、GraphQLクエリ、ミューテーション、およびサブスクリプション用のクライアントコードを生成するかどうかを確認するプロンプトが表示されます。生成されたGraphQLドキュメントは`src/graphql/**/`に保存されます。
+
+```bash
+amplify push
+```
+```console
+? Do you want to generate code for your newly created GraphQL API
+> Yes
+? Choose the code generation language target
+> javascript
+? Enter the file name pattern of graphql queries, mutations and subscriptions
+> src/graphql/**/*.js
+? Do you want to generate/update all possible GraphQL operations - queries, mutations and subscriptions
+> Yes
+? Enter maximum statement depth [increase from default if your schema is deeply nested]
+> 2
+```
+
+上記のコード生成設定をカスタマイズするには、ターミナルで次のコマンドを実行します:
+```bash
+amplify update codegen
+```
+
+</Block>
+
+<Block name="既存のAppSync GraphQL API">
+フロントエンドアプリのルートディレクトリに移動し、ターミナルで次のコマンドを実行します:
+
+```bash
+npx @aws-amplify/cli codegen add --apiId <...> --region <...>
+```
+
+これにより、APIのスキーマがダウンロードされ、デフォルトではsrc/graphqlフォルダにクライアントヘルパーコードが生成されます。APIをデプロイするたびに、次のコマンドを再実行して、更新されたGraphQLステートメントとタイプを生成できます:
+
+```bash
+npx @aws-amplify/cli codegen
+```
+
+</Block>
+
+</BlockSwitcher>
+
+## 生成されたGraphQLクエリ、ミューテーション、およびサブスクリプションの使用
+
+生成されたGraphQLコードは、コードベースにインポートして`API.graphql()`操作に渡した後に使用できます。GraphQLでは、通常、JavaScriptクライアントからAPIと対話するための次のタイプの操作があります:
+
+- __ミューテーション__ - APIにデータを書き込む(作成、更新、削除操作)
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { API } from 'aws-amplify';
+import { createTodo, updateTodo, deleteTodo } from './graphql/mutations';
+import { GraphQLQuery } from '@aws-amplify/api';
+import { CreateTodoInput, CreateTodoMutation, UpdateTodoMutation, DeleteTodoMutation } from './API';
+
+const todo: CreateTodoInput = { name: "My first todo", description: "Hello world!" };
+
+/* create a todo */
+await API.graphql<GraphQLQuery<CreateTodoMutation>>({
+  query: createTodo,
+  variables: {
+    input: todo
+  }
+});
+
+/* update a todo */
+await API.graphql<GraphQLQuery<UpdateTodoMutation>>({
+  query: updateTodo,
+  variables: {
+    input: {
+      id: "ENTER_TODO_ID_HERE",
+      name: "Updated todo info"
+    }
+  }
+});
+
+/* delete a todo */
+await API.graphql<GraphQLQuery<DeleteTodoMutation>>({
+  query: deleteTodo,
+  variables: {
+    input: {
+      id: "ENTER_TODO_ID_HERE"
+    }
+  }
+});
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { API } from 'aws-amplify';
+import { createTodo, updateTodo, deleteTodo } from './graphql/mutations';
+
+const todo = { name: "My first todo", description: "Hello world!" };
+
+/* create a todo */
+await API.graphql({
+  query: createTodo,
+  variables: {
+    input: todo
+  }
+});
+
+/* update a todo */
+await API.graphql({
+  query: updateTodo,
+  variables: {
+    input: {
+      id: "ENTER_TODO_ID_HERE",
+      name: "Updated todo info"
+    }
+  }
+});
+
+/* delete a todo */
+await API.graphql({
+  query: deleteTodo,
+  variables: {
+    input: {
+      id: "ENTER_TODO_ID_HERE"
+    }
+  }
+});
+```
+
+</Block>
+</BlockSwitcher>
+
+- __クエリ__ - APIからデータを読み取る(リストおよび取得操作)
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { API } from 'aws-amplify';
+import { GraphQLQuery } from '@aws-amplify/api';
+import { listTodos } from './graphql/queries';
+import { ListTodosQuery } from './API';
+
+const todos = await API.graphql<GraphQLQuery<ListTodosQuery>>({ query: listTodos });
+```
+
+</Block>
+
+
+<Block name="JavaScript">
+
+```js
+import { API } from 'aws-amplify';
+import { listTodos } from './graphql/queries';
+
+const todos = await API.graphql({ query: listTodos });
+```
+
+</Block>
+</BlockSwitcher>
+
+クエリ、ミューテーション、サブスクリプションについてさらに詳しく学ぶには、[_アプリケーションデータの作成、更新、削除_](/gen1/[platform]/prev/build-a-backend/graphqlapi/mutate-data/)および[_アプリケーションデータの読取_](/gen1/[platform]/prev/build-a-backend/graphqlapi/query-data/)のガイドを参照してください。
+
+## まとめ
+
+おめでとうございます! **アプリコードをAPIに接続する**ガイドを完了しました。このガイドでは、必要な設定を確認し、Amplifyライブラリをインストールして設定しました。また、このデータを書き込みおよび読み取るいくつかの簡単な方法についても説明しました。
+
+## 次のステップ
+
+推奨される次のステップには、APIを使用してデータを変更およびクエリしことが含まれます。また、リアルタイムイベントをサブスクライブして、データの変更を確認する方法も確認できます。この作業に役立つリソースは次のとおりです:
+- [アプリケーションデータの作成、更新、削除](/gen1/[platform]/prev/build-a-backend/graphqlapi/mutate-data/)
+- [アプリケーションデータの読取](/gen1/[platform]/prev/build-a-backend/graphqlapi/query-data/)
+- [リアルタイムイベントへのサブスクライブ](/gen1/[platform]/prev/build-a-backend/graphqlapi/subscribe-data/)
+
+</InlineFilter>

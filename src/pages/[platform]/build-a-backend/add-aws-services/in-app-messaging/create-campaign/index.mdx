@@ -1,0 +1,91 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'AWS コンソールでアプリ内メッセージングキャンペーンを作成する',
+  description: '新しい Pinpoint キャンペーンを作成し、Amplify プロジェクトで使用するように構成します。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ],
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+AWS Cloud Development Kit (CDK) コードを書く代わりに、AWS コンソールを使用して、Amazon Pinpoint でサポートされている単一チャネル (Mobile Push、In-App、Email、SMS、またはカスタムチャネル) を通じてメッセージを送信するキャンペーンを作成できます。[Amazon Pinpoint を使用してキャンペーンを作成する方法を学ぶ](https://docs.aws.amazon.com/pinpoint/latest/userguide/campaigns.html)して、Amplify でアプリにアプリ内メッセージを統合し続けてください。
+
+1. [AWS コンソール](https://console.aws.amazon.com/console/home)にログインし、**Pinpoint** を検索します。
+2. 利用可能なプロジェクトのリストからプロジェクトをクリックします。プロジェクト名は、CDK を使用して pinpoint プロジェクトを作成したときに指定した名前になります。
+
+3. 左側のナビゲーションメニューから **Campaigns** をクリックし、**Create a campaign** をクリックします。
+
+   ![AWS コンソールの pinpoint キャンペーンページのスクリーンショット。左側のナビゲーションメニューの「Campaigns」オプションとメインページの「Create a campaign」ボタンがハイライトされています](/images/lib/in-app-messaging/create-pinpoint-campaign.png)
+
+4. キャンペーンに名前を追加し、次のオプションを以下のように設定してから「Next」をクリックします。
+
+   1. Campaign type: **Standard campaign**
+   2. Channel: **In-App messaging**
+   3. set prioritization: **Fairly important**
+
+5. **Create a segment** ラジオボタンをクリックし、セグメントの名前を追加してから、**Next** をクリックします。
+
+   1. キャンペーンに必要な数のセグメントを追加できます。このクイックスタートでは、_Segment group 1_ セクションで **Include any audiences** を使用できます。
+   2. セグメントに基準を追加して、その基準を満たすオーディエンスがアプリ内メッセージを受け取ることができるようにすることができます。
+   3. _Segment might include multiple channels_ というエラーメッセージが表示された場合は、**I understand** をクリックして続行します。
+
+   ![pinpoint ページのスクリーンショット。「Create a campaign」ページで「Create a segment」オプションが選択されている状態が表示されています。ページには「Name」という入力ボックスが表示され、入力値として「All my users」が記載されています。ページには「Segment details」セクションも表示されており、「Include any audiences」でラジオボタンが選択されています](/images/lib/in-app-messaging/choose-campaign-segment.png)
+
+6. **Create a new in-app message** ラジオボタンをクリックします。
+7. アプリ内メッセージの次の属性をカスタマイズできます:
+   - **Layout**: すべての異なるメッセージングレイアウトオプションを含みます。
+   - **Header**: アプリ内メッセージのタイトル (テキストの色/配置を含む)。
+   - **Message**: メッセージの本文 (テキストの色/配置を含む)。
+   - **Background**: アプリ内メッセージの背景色を制御します。
+   - **Image URL**: アプリ内メッセージ本文の一部として表示される画像を追加します。
+   - **Primary button**: アプリ内メッセージに機能を追加するためのボタンの追加を許可します。
+   - **Secondary button**: 追加の機能用の追加ボタンの追加を許可します。
+   - **Custom Data**: イベントによってトリガーされると、アプリ内メッセージが追加データをフロントエンドアプリに渡すことを許可します。
+
+<InlineFilter filters={['react-native']}>
+   <Callout informational>
+      React Native ではデフォルトで SVG レンダリングをサポートしていないため、Amplify はデフォルトで SVG 画像をレンダリングできません。In-App Messaging での SVG 画像サポートについては、カスタム UI 実装が必要です。
+   </Callout>
+</InlineFilter>
+
+このチュートリアルでは、以下に示すような単純なメッセージを作成できます。アプリケーション内の顧客は、イベントがトリガーされると同じメッセージを表示します。
+
+![「In-app message details」ページのスクリーンショット。レイアウトオプション、ヘッダー、メッセージ、およびページの右側にサンプルの電話表示を提供しています。ページでは、さまざまなデバイス表示に表示されるアプリケーションのアプリ内メッセージをカスタマイズできます](/images/lib/in-app-messaging/in-app-message-details.png)
+
+8. アプリ内メッセージのカスタマイズが完了したら、**Next** をクリックします。
+9. _Trigger events_ で、フロントエンドアプリから送信される分析トリガーの名前を追加します。
+   - トリガーをカスタマイズして、分析イベントで渡される特定の属性またはメトリクスのみがアプリ内メッセージをトリガーするようにすることができます。(オプション)
+
+![キャンペーンセットアップページのスクリーンショット。「Choose when to send the campaign」というタイトルが付けられています。ページには、トリガーイベント、属性、メトリクス、キャンペーン日付、タイムゾーンなどのオプションが表示されています。これらのオプションを使用して、トリガーイベントを構成し、キャンペーンをいつ開始および終了するかをタイムゾーン内で設定できます](/images/lib/in-app-messaging/campaign-setup.png)
+
+10. デフォルトでは、セッションあたりに表示されるメッセージの数は 1 です。キャンペーン設定中にこのしきい値を更新できます。
+
+![オプションの「Edit campaign settings」ページのスクリーンショット。「Maximum number of session messages viewed per endpoint」、「Maximum number of daily messages viewed per endpoint」、「Maximum number of messages viewed per endpoint」などの構成オプションが提供されています。「Maximum number of session messages viewed per endpoint」はこのキャンペーンのセッションあたりに表示できるメッセージの最大数であり、デフォルトでは 1 に設定されており、キャンペーン作成時に増加させることができます](/images/lib/in-app-messaging/campaign-settings.png)
+
+11. キャンペーンを確認してから、**Launch campaign** をクリックします。
+
+キャンペーンがセットアップされ、アプリへの In-App Messaging 機能の統合を開始する準備が整いました。
+
+<Callout informational>
+
+**注:** キャンペーンの開始時刻は、少なくとも将来の 15 分である必要があります。アプリ内メッセージは、キャンペーンがアクティブになった後 (Pinpoint コンソールのキャンペーン画面で status が「In Progress」になっている必要があります) のみ、ローカルデバイスに同期できます。
+
+</Callout>

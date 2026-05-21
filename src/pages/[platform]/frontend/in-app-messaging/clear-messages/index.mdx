@@ -1,0 +1,41 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'メッセージをクリア',
+  description: "ユーザーのデバイスから同期されたアプリ内メッセージをクリアする方法について詳しく学習します。",
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue'
+  ],
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+メッセージがユーザーのデバイスに同期されたら、`clearMessages()` を使用して同期されたメッセージをクリアできます。
+
+```js title="src/index.js"
+import { clearMessages } from 'aws-amplify/in-app-messaging';
+
+await clearMessages();
+```
+
+<Callout informational>
+
+**注：** アプリに認証機能が実装されている場合は、ユーザーのログイン間で `clearMessages()` を呼び出して、特定のユーザーセグメント向けのメッセージを削除することをお勧めします。これは、アプリケーションが共有デバイスのシナリオで使用されることが予想される場合に特に重要です。
+
+</Callout>

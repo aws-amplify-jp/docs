@@ -1,0 +1,302 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ユーザーの識別',
+  description: 'Amplify analytics プラグインを使用して、Pinpoint にユーザーについて通知します。',
+  platforms: [
+    'swift',
+    'android',
+    'flutter',
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={['android']}>
+この呼び出しは、ユーザーについて指定した情報を Amazon Pinpoint に送信します。これは、認証されていないユーザーでも認証されたユーザーでも構いません。
+
+さらに、`identifyUser` を呼び出すときに `customProperties` と `userAttributes` も提供できます。Amazon Pinpoint コンソールでは、そのデータはセグメント作成の条件の一部として利用可能になります。`customProperties` を通じて渡された属性は **Custom Endpoint Attributes** の下に表示され、`userAttributes` は **Custom User Attributes** の下に表示されます。セグメント作成の詳細については、[Amazon Pinpoint ドキュメント](https://docs.aws.amazon.com/pinpoint/latest/userguide/segments-building.html#choosecriteria)を参照してください。
+
+下に示すように、Amplify Auth カテゴリから現在のユーザーの ID を取得できます。[Auth カテゴリドキュメント](/[platform]/build-a-backend/auth/set-up-auth/)に従って追加とセットアップが完了していることを確認してください。
+
+位置情報へのアクセスを要求して許可を受けた場合、`UserProfile.Location` でそれを提供することもできます。
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+UserProfile.Location location = UserProfile.Location.builder()
+    .latitude(47.606209)
+    .longitude(-122.332069)
+    .postalCode("98122")
+    .city("Seattle")
+    .region("WA")
+    .country("USA")
+    .build();
+
+AnalyticsProperties customProperties = AnalyticsProperties.builder()
+    .add("property1", "Property value")
+    .build();
+
+AnalyticsProperties userAttributes = AnalyticsProperties.builder()
+    .add("someUserAttribute", "User attribute value")
+    .build();
+
+AWSPinpointUserProfile profile = AWSPinpointUserProfile.builder()
+    .name("test-user")
+    .email("user@test.com")
+    .plan("test-plan")
+    .location(location)
+    .customProperties(customProperties)
+    .userAttributes(userAttributes)
+    .build();
+
+Amplify.Auth.getCurrentUser(authUser -> {
+    String userId = authUser.getUserId();
+    Amplify.Analytics.identifyUser(userId, profile);
+}, exception -> {
+    Log.e("MyAmplifyApp", "Error getting current user", exception);
+});
+
+
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+val location = UserProfile.Location.builder()
+    .latitude(47.606209)
+    .longitude(-122.332069)
+    .postalCode("98122")
+    .city("Seattle")
+    .region("WA")
+    .country("USA")
+    .build();
+
+val customProperties = AnalyticsProperties.builder()
+    .add("property1", "Property value")
+    .build();
+
+val userAttributes = AnalyticsProperties.builder()
+    .add("someUserAttribute", "User attribute value")
+    .build();
+
+val profile = AWSPinpointUserProfile.builder()
+    .name("test-user")
+    .email("user@test.com")
+    .plan("test-plan")
+    .location(location)
+    .customProperties(customProperties)
+    .userAttributes(userAttributes)
+    .build();
+
+Amplify.Auth.getCurrentUser({ authUser ->
+    Amplify.Analytics.identifyUser(authUser.userId, profile);
+}, { exception ->
+    Log.e("MyAmplifyApp", "Error getting current user", exception)
+})
+```
+
+</Block>
+<Block name="RxJava">
+
+```java
+UserProfile.Location location = UserProfile.Location.builder()
+    .latitude(47.606209)
+    .longitude(-122.332069)
+    .postalCode("98122")
+    .city("Seattle")
+    .region("WA")
+    .country("USA")
+    .build();
+
+AnalyticsProperties customProperties = AnalyticsProperties.builder()
+    .add("property1", "Property value")
+    .build();
+
+AnalyticsProperties userAttributes = AnalyticsProperties.builder()
+    .add("someUserAttribute", "User attribute value")
+    .build();
+
+AWSPinpointUserProfile profile = AWSPinpointUserProfile.builder()
+    .name("test-user")
+    .email("user@test.com")
+    .plan("test-plan")
+    .location(location)
+    .customProperties(customProperties)
+    .userAttributes(userAttributes)
+    .build();
+
+RxAmplify.Auth.getCurrentUser()
+    .subscribe(
+        result -> {
+            String userId = result.getUserId();
+            RxAmplify.Analytics.identifyUser(userId, profile);
+        },
+        error -> Log.e("AuthQuickStart", error.toString())
+    );
+```
+
+</Block>
+</BlockSwitcher>
+</InlineFilter>
+
+<InlineFilter filters={['swift']}>
+この呼び出しは、現在のユーザー(認証されていないか認証されているかのいずれか)に関する情報を Amazon Pinpoint に送信します。
+
+`name`、`email`、`plan` の他に、`AnalyticsUserProfile.Location` で位置情報を提供できます。`AnalyticsProperties` を使用して追加のカスタム属性を送信することもできます。
+
+ユーザーが [Amplify.Auth.signIn](/[platform]/frontend/auth/sign-in/) を通じてサインインしている場合、下に示すように現在のユーザーの ID を取得できます:
+
+```swift
+
+let user = try await Amplify.Auth.getCurrentUser()
+
+let location = AnalyticsUserProfile.Location(
+    latitude: 47.606209,
+    longitude: -122.332069,
+    postalCode: "98122",
+    city: "Seattle",
+    region: "WA",
+    country: "USA"
+)
+
+let properties: AnalyticsProperties = [
+    "phoneNumber": "+11234567890",
+    "age": 25
+]
+
+let userProfile = AnalyticsUserProfile(
+    name: "username",
+    email: "name@example.com",
+    plan: "plan",
+    location: location,
+    properties: properties
+)
+
+Amplify.Analytics.identifyUser(
+    userId: user.userId,
+    userProfile: userProfile
+)
+```
+</InlineFilter>
+
+<InlineFilter filters={['flutter']}>
+この呼び出しは、ユーザーについて指定した情報を Amazon Pinpoint に送信します。これは、認証されていない(ゲスト)ユーザーでも認証されたユーザーでも構いません。
+
+Amplify Auth カテゴリから現在のユーザーの ID を取得できます。下に示すように設定する前に準備ができていることを確認してください([認証のはじめに](/[platform]/build-a-backend/auth/set-up-auth/)ガイドを確認してください)。
+
+位置情報へのアクセスを要求して許可を受けた場合、`UserProfileLocation` でそれを提供することもできます
+
+<Callout>
+
+v0 から v1 への破壊的変更:  
+
+元の `AnalyticsUserProfile` と `AnalyticsUserProfileLocation` クラスの Analytics プレフィックスは削除されました。さらに、`AnalyticsProperties` は `CustomProperties` に名前が変更されました。 
+
+
+</Callout>
+
+```dart
+Future<void> addAnalyticsWithLocation({
+  required String userId,
+  required String name,
+  required String email,
+  required String phoneNumber,
+  required int age,
+}) async {
+  final userProfile = UserProfile(
+    name: name,
+    email: email,
+    location: const UserProfileLocation(
+      latitude: 47.606209,
+      longitude: -122.332069,
+      postalCode: '98122',
+      city: 'Seattle',
+      region: 'WA',
+      country: 'USA',
+    ),
+    customProperties: CustomProperties()
+      ..addStringProperty('phoneNumber', phoneNumber)
+      ..addIntProperty('age', age),
+  );
+
+  await Amplify.Analytics.identifyUser(
+    userId: userId,
+    userProfile: userProfile,
+  );
+}
+```
+</InlineFilter>
+
+<InlineFilter filters={['javascript', 'react-native', "angular", "nextjs", "react", "vue"]}>
+
+この API は現在のユーザーに関する情報を Amazon Pinpoint に送信します。
+
+ユーザーの名前、メール、位置情報、デバイスなどの追加情報は、`UserProfile` を指定することで含めることができます。カスタム属性は、`UserProfile.customProperties` を設定することで含めることもできます。
+
+ユーザーが [signIn](/[platform]/frontend/auth/sign-up/) を通じてサインインしている場合、下に示すように現在のユーザーの ID を取得できます:
+
+```js title="src/index.js"
+import { identifyUser } from 'aws-amplify/analytics';
+import { getCurrentUser } from 'aws-amplify/auth';
+
+const location = {
+  latitude: 47.606209,
+  longitude: -122.332069,
+  postalCode: '98122',
+  city: 'Seattle',
+  region: 'WA',
+  country: 'USA'
+};
+
+const customProperties = {
+  plan: ['plan'],
+  phoneNumber: ['+11234567890'],
+  age: ['25']
+};
+
+const userProfile = {
+  location,
+  name: 'username',
+  email: 'name@example.com',
+  customProperties
+};
+
+async function sendUserData() {
+  const user = await getCurrentUser();
+
+  identifyUser({
+    userId: user.userId,
+    userProfile
+  });
+}
+```
+
+</InlineFilter>
+
+ユーザー情報を送信することで、ユーザーをそのユーザープロファイルとアプリ内のアクティビティまたはアクションに関連付けることができます。ユーザーのアクションと属性は、同じ `userId` を使用することで、デバイスおよびプラットフォーム間で追跡することもできます。
+
+ユーザーを識別し、関連するアプリアクティビティを追跡するシナリオの例:
+* ユーザーがアプリのサインアップを完了したとき
+* ユーザーがサインインプロセスを完了したとき
+* ユーザーがアプリを起動したとき
+* ユーザーがユーザープロファイルを変更または更新したとき

@@ -1,0 +1,164 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ユーザーアカウントの削除',
+  description: 'ユーザーが自分のアカウントを削除できるようにします。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+ユーザーがアカウントを削除できるようにすることで、信頼性と透明性を向上させることができます。Amplify Auth を使用してプログラムでセルフサービスアカウント削除を有効にできます。
+
+まだ Amplify Gen 2 アプリを作成していない場合は、[クイックスタート](/[platform]/start/quickstart)にアクセスしてください。
+
+## ユーザーがアカウントを削除できるようにする
+
+Amplify ライブラリを使用して、ユーザーのアカウント削除をすばやく設定できます。`deleteUser` API を呼び出して Auth カテゴリからユーザーを削除すると、ユーザーもサインアウトします。
+
+アプリケーションがデフォルト設定である Cognito User Pool を使用している場合、このアクションは Cognito User Pool からのみユーザーを削除します。Cognito Identity Pool だけでフェデレーションしている場合は効果がありません。
+
+<Callout warning>
+
+`deleteUser` API を呼び出す前に、Cognito に保存されていない関連するユーザーデータを削除する必要がある場合があります。たとえば、Amplify Data を使用してユーザーデータを永続化している場合は、[これらの手順](https://gist.github.com/aws-amplify-ops/27954c421bd72930874d48c15c284807)に従って関連するユーザーデータを削除できます。これにより、アカウントを削除するユーザーに関連するデータを削除する必要があるガイドライン（GDPR など）に対応できます。
+
+</Callout>
+
+次のメソッドを使用してアカウント削除を有効にできます。
+
+<InlineFilter filters={["javascript",  "react-native", "angular", "nextjs", "react", "vue"]}>
+```ts
+import { deleteUser } from 'aws-amplify/auth';
+
+async function handleDeleteUser() {
+  try {
+    await deleteUser();
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+</InlineFilter>
+<InlineFilter filters={['flutter']}>
+```dart
+Future<void> deleteUser() async {
+  try {
+    await Amplify.Auth.deleteUser();
+    safePrint('Delete user succeeded');
+  } on AuthException catch (e) {
+    safePrint('Delete user failed with error: $e');
+  }
+}
+```
+</InlineFilter>
+<InlineFilter filters={['android']}>
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+Amplify.Auth.deleteUser(
+    () -> Log.i("AuthQuickStart", "Delete user succeeded"),
+    error -> Log.e("AuthQuickStart", "Delete user failed with error " + error.toString())
+);
+```
+
+</Block>
+<Block name="Kotlin - Callbacks">
+
+```kotlin
+Amplify.Auth.deleteUser(
+    { Log.i("AuthQuickStart", "Delete user succeeded") },
+    { Log.e("AuthQuickStart", "Delete user failed with error", it) }
+)
+```
+
+</Block>
+<Block name="Kotlin - Coroutines">
+
+```kotlin
+try {
+    Amplify.Auth.deleteUser()
+    Log.i("AuthQuickStart", "Delete user succeeded")
+} catch (error: AuthException) {
+    Log.e("AuthQuickStart", "Delete user failed with error", error)
+}
+```
+
+</Block>
+<Block name="RxJava">
+
+```java
+RxAmplify.Auth.deleteUser()
+    .subscribe(
+      () -> Log.i("AuthQuickStart", "Delete user succeeded"),
+      error -> Log.e("AuthQuickStart", "Delete user failed with error " + error.toString())
+    );
+```
+
+</Block>
+</BlockSwitcher>
+</InlineFilter>
+<InlineFilter filters={['swift']}>
+<BlockSwitcher>
+
+<Block name="Async/Await">
+
+```swift
+func deleteUser() async {
+    do {
+        try await Amplify.Auth.deleteUser()
+        print("Successfully deleted user")
+    } catch let error as AuthError {
+        print("Delete user failed with error \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+</Block>
+
+<Block name="Combine">
+
+```swift
+func deleteUser() -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.deleteUser()
+    }.sink {
+            if case let .failure(authError) = $0 {
+                print("Delete user failed with error \(authError)")
+            }
+        }
+        receiveValue: {
+            print("Successfully deleted user")
+        }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+</InlineFilter>
+
+UI を更新してユーザーにアカウントが削除されたことを知らせ、テストユーザーで機能をテストすることをお勧めします。ユーザーがアカウントを削除するとアプリケーションからサインアウトすることに注意してください。

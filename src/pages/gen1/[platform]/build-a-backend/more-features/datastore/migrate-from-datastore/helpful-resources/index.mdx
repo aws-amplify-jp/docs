@@ -1,0 +1,131 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '役立つリソース',
+  description: 'DataStore移行のための追加ドキュメント、サードパーティパッケージ、およびリファレンス。',
+  platforms: [
+    'android',
+    'flutter',
+    'swift'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["flutter"]}>
+
+## Amplify API
+
+- [Amplify API Category — GraphQL](https://docs.amplify.aws/gen1/flutter/build-a-backend/graphqlapi/)
+- [Amplify API — Mutate Data](https://docs.amplify.aws/gen1/flutter/build-a-backend/graphqlapi/mutate-data/)
+- [Amplify API — Query Data](https://docs.amplify.aws/gen1/flutter/build-a-backend/graphqlapi/query-data/)
+- [Amplify API — Subscribe to Data](https://docs.amplify.aws/gen1/flutter/build-a-backend/graphqlapi/subscribe-data/)
+
+## AWS AppSync
+
+- [競合検出と解決](https://docs.aws.amazon.com/appsync/latest/devguide/conflict-detection-and-sync.html)
+
+## Amplify DataStore (レガシー)
+
+- [DataStoreの仕組み](https://docs.amplify.aws/gen1/flutter/build-a-backend/more-features/datastore/how-it-works/)
+- [スキーマアップデート](https://docs.amplify.aws/gen1/flutter/build-a-backend/more-features/datastore/schema-updates/)
+
+## 一般
+
+- [Android Offline First ガイド](https://developer.android.com/topic/architecture/data-layer/offline-first)
+- [指数バックオフとジッター](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/)
+
+## ローカルストレージパッケージ
+
+DataStoreからの移行時に、いくつかのサードパーティパッケージを見つけました。これらのパッケージはメンテナンスされておらず、テストしたバージョンに限定した経験があります。
+
+| 機能 | [isar-community](https://pub.dev/packages/isar_community) | [Drift](https://pub.dev/packages/drift) | [sqlite3](https://pub.dev/packages/sqlite3) |
+|---|---|---|---|
+| モデルスキーマ | ✅ | ✅ | ✅ |
+| ネストされたモデル | ✅ | ✅ | ✅ |
+| カスタム主キー | ✅ | ✅ | ✅ |
+| CRUD | ✅ | ✅ | ✅ |
+| クエリ述語 | ✅ | [where()を使用する必要あり](https://drift.simonbinder.eu/docs/dart-api/select/#where) | ✅ |
+| Observe/ObserveQuery | ✅ | ✅ | [`updates`ストリーム経由](https://pub.dev/documentation/sqlite3/latest/common/CommonDatabase/updates.html) |
+
+<Callout>
+
+IsarはGradle 8をサポートしていません。これはAmplify Flutter Androidの要件ですが、これを解決する[フォーク](https://github.com/isar/isar/issues/1470#issuecomment-1978766200)があります。DriftはAmplify Flutterパッケージで使用されているため、使用できるDriftバージョンに制限が生じる可能性があります。
+
+</Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+## AWS AppSync
+
+- [AWS AppSync Apollo Extensions ドキュメント (Swift)](https://docs.amplify.aws/swift/build-a-backend/data/aws-appsync-apollo-extensions/)
+- [AWS AppSync Apollo Extensions GitHubリポジトリ](https://github.com/aws-amplify/aws-appsync-apollo-extensions-swift)
+- [AWS AppSync Delta Sync ガイド](https://docs.aws.amazon.com/appsync/latest/devguide/tutorial-delta-sync.html)
+- [競合検出と解決](https://docs.aws.amazon.com/appsync/latest/devguide/conflict-detection-and-sync.html)
+
+## Apollo iOS
+
+- [Apollo iOS ドキュメント](https://www.apollographql.com/docs/ios)
+- [Apollo iOS 始めるには](https://www.apollographql.com/docs/ios/get-started)
+- [Apollo iOS GitHubリポジトリ](https://github.com/apollographql/apollo-ios)
+- [Apollo iOS 正規化キャッシュ](https://www.apollographql.com/docs/ios/caching/introduction)
+- [Apollo iOS クエリの監視](https://www.apollographql.com/docs/ios/fetching/queries#watching-queries)
+
+## Amplify DataStore (レガシー)
+
+- [DataStoreの仕組み](https://docs.amplify.aws/gen1/swift/build-a-backend/more-features/datastore/how-it-works/)
+- [スキーマアップデート](https://docs.amplify.aws/gen1/swift/build-a-backend/more-features/datastore/schema-updates/)
+- [クライアントコード生成 (Amplify CLI)](https://docs.amplify.aws/gen1/swift/tools/cli-legacy/client-codegen/)
+
+## ローカルストレージフレームワーク
+
+- [SwiftData ドキュメント](https://developer.apple.com/documentation/swiftdata/)
+- [CoreData ドキュメント](https://developer.apple.com/documentation/coredata)
+
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+
+## Android
+
+- [Android Offline First ガイド](https://developer.android.com/topic/architecture/data-layer/offline-first)
+
+## AWS AppSync
+
+- [AWS AppSync Apollo Extensions ドキュメント](https://docs.amplify.aws/android/build-a-backend/data/aws-appsync-apollo-extensions/)
+- [AWS AppSync Delta Sync ガイド](https://docs.aws.amazon.com/appsync/latest/devguide/tutorial-delta-sync.html)
+- [競合検出と解決](https://docs.aws.amazon.com/appsync/latest/devguide/conflict-detection-and-sync.html)
+
+## Apollo Kotlin
+
+- [Apollo Kotlin ドキュメント](https://www.apollographql.com/docs/kotlin)
+- [Apollo Kotlin 始めるには](https://www.apollographql.com/docs/kotlin#getting-started)
+- [Apollo Kotlin Gradle プラグイン設定](https://www.apollographql.com/docs/kotlin/advanced/plugin-configuration)
+- [Apollo Kotlin 正規化キャッシュ](https://www.apollographql.com/docs/kotlin/caching/normalized-cache)
+- [Apollo Kotlin クエリ監視](https://www.apollographql.com/docs/kotlin/caching/query-watchers)
+
+## Amplify DataStore (レガシー)
+
+- [DataStoreの仕組み](https://docs.amplify.aws/gen1/android/build-a-backend/more-features/datastore/how-it-works/)
+- [スキーマアップデート](https://docs.amplify.aws/gen1/android/build-a-backend/more-features/datastore/schema-updates/)
+- [クライアントコード生成 (Amplify CLI)](https://docs.amplify.aws/gen1/android/tools/cli-legacy/client-codegen/)
+
+## ローカルストレージライブラリ
+
+- [Room (Android)](https://developer.android.com/training/data-storage/room)
+- [SQLDelight](https://sqldelight.github.io/sqldelight)
+
+</InlineFilter>

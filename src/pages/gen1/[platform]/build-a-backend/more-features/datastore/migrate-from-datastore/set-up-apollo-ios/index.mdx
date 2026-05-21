@@ -1,0 +1,358 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Apollo iOS をセットアップする',
+  description: 'Apollo iOS 依存関係を追加し、CLI をインストールし、コード生成を実行し、AppSync エンドポイントと認証を使用して Apollo クライアントを設定します。',
+  platforms: [
+    'swift'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Apollo iOS の[入門セクション](https://www.apollographql.com/docs/ios/get-started)を参照して、Apollo iOS をプロジェクトに追加する方法を確認してください。
+
+## 依存関係を追加する
+
+Xcode で必要なパッケージを追加するには、以下の手順に従います：
+
+### ステップ 1: Apollo iOS パッケージを追加する
+
+1. Xcode で、**File → Add Package Dependencies...** に移動します
+2. 表示されたダイアログで、右上の検索フィールドに以下の URL をペーストします：
+
+```
+https://github.com/apollographql/apollo-ios.git
+```
+
+3. Xcode がパッケージメタデータを取得するまで待機します（10～30 秒かかる場合があります）。
+4. **バージョン制約を設定する:** バージョンドロップダウンを選択し、**「Up to Next Major Version」** を選択します。範囲を **`1.0.0`** から開始し、上限を **`2.0.0`** に設定します。これにより、AWS AppSync Apollo Extensions ライブラリで必要な Apollo iOS 1.x が取得されることを確認します。**Apollo iOS 2.x は使用しないでください。**
+5. **「Add Package」** を選択します。
+6. プロダクト選択ダイアログで、**「Apollo」** チェックボックスにチェックを入れます。アプリターゲットが選択されていることを確認します。**「Add Package」** を選択します。
+
+### ステップ 2: AWS AppSync Apollo Extensions パッケージを追加する
+
+1. **File → Add Package Dependencies...** に移動します
+2. 以下の URL をペーストします：
+
+```
+https://github.com/aws-amplify/aws-appsync-apollo-extensions-swift.git
+```
+
+3. バージョンを **`1.0.0`** から **「Up to Next Major Version」** に設定します。
+4. **「Add Package」** を選択し、**「AWSAppSyncApolloExtensions」** を選択してターゲットに追加します。
+
+### ステップ 3: Amplify Auth を保持する（必要な場合）
+
+認証に Amplify を使用する場合、既存の `amplify-swift` パッケージはプロジェクトに既に含まれているはずです。**`AWSPluginsCore`** がターゲットの **Frameworks, Libraries, and Embedded Content** に追加されていることを確認します。Apollo クライアントを Cognito 認証で設定する場合に `AuthCognitoTokensProvider` に必要です。確認するには：
+
+1. ナビゲータで **青いプロジェクトアイコン** を選択し、**TARGETS** の下のアプリを選択し、**General** タブを選択します。
+2. **Frameworks, Libraries, and Embedded Content** までスクロールします。
+3. `AWSPluginsCore` がリストされていない場合、**+ (プラス)** ボタンを選択し、リストから選択します。
+
+### パッケージの概要
+
+| パッケージ | URL | バージョン | 追加するプロダクト |
+|---|---|---|---|
+| Apollo iOS | `https://github.com/apollographql/apollo-ios.git` | `1.0.0..<2.0.0` | `Apollo` |
+| AWS AppSync Apollo Extensions | `https://github.com/aws-amplify/aws-appsync-apollo-extensions-swift.git` | `1.0.0..<2.0.0` | `AWSAppSyncApolloExtensions` |
+| Amplify Swift (Amplify Auth を使用する場合) | `https://github.com/aws-amplify/amplify-swift.git` | 既存を保持 | `AWSPluginsCore` |
+
+## Apollo iOS CLI をインストールする
+
+Apollo iOS CLI (`apollo-ios-cli`) はコード生成に使用されます。Homebrew では利用できません。以下の方法のいずれかで取得できます：
+
+1. **GitHub Releases からダウンロード**（推奨）：[Apollo iOS Releases](https://github.com/apollographql/apollo-ios/releases) に移動し、Apollo iOS ライブラリバージョンと一致するリリースを見つけ、リリースアセットから `apollo-ios-cli.tar.gz` アセットをダウンロードします。
+
+ダウンロード後：
+
+```bash
+# アーカイブからバイナリを抽出
+tar -xzf apollo-ios-cli.tar.gz
+
+# バイナリを実行可能にする（macOS では必要な場合があります）
+chmod +x apollo-ios-cli
+
+# プロジェクトディレクトリに移動します（apollo-codegen-config.json と同じレベル）
+mv apollo-ios-cli /path/to/your/project/
+```
+
+2. **ソースからビルドする**：一致するタグで `apollo-ios` リポジトリをクローンし、CLI をビルドします。
+
+<Callout warning>
+
+**バージョン一致は重要です。** Apollo iOS CLI バージョンは、解決された Apollo iOS ライブラリバージョンと**正確に一致する** 必要があります。一致しない CLI バージョンは、ライブラリと互換性のない Swift ファイルを生成し、すべての生成されたタイプで `Type 'PostDetails' does not conform to protocol 'SelectionSet'` のようなコンパイルエラーを引き起こします。
+
+**解決されたライブラリバージョンを確認するには：**
+- Xcode：**File → Packages → Resolved Versions**（または `.xcworkspace/xcshareddata/swiftpm/` ディレクトリの `Package.resolved` を確認）
+- `apollo-ios` エントリを探して、正確なバージョンをメモしてください（例：`1.25.3`）
+- **その正確なバージョン番号** の CLI リリースをダウンロードします
+
+**推奨ワークフロー：**
+1. Apollo iOS パッケージをプロジェクトに追加します（上記のステップ 1）
+2. Xcode/SPM にパッケージバージョンを解決させます
+3. 解決されたバージョンを確認します
+4. 一致する Apollo iOS CLI バージョンをダウンロードします
+5. その後、コード生成に進みます
+
+</Callout>
+
+## コード生成
+
+`schema.json` と `.graphql` オペレーションファイルをプロジェクトの `graphql/` サブディレクトリに配置します（[スキーマと GraphQL オペレーション](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/schema-and-operations/)ページで行っているはずです）。プロジェクトディレクトリは以下のようになります：
+
+```
+YourProject/
+├── YourProject.xcodeproj
+├── schema.json
+├── apollo-ios-cli
+├── apollo-codegen-config.json
+├── graphql/
+│   ├── fragments.graphql
+│   ├── mutations.graphql
+│   ├── queries.graphql
+│   └── subscriptions.graphql
+└── YourProject/
+    └── (your Swift source files)
+```
+
+設定を初期化して変更することも、`apollo-codegen-config.json` を直接作成することもできます。以下が必要な設定です：
+
+```json
+{
+  "schemaNamespace": "ApolloCodeGen",
+  "input": {
+    "operationSearchPaths": [
+      "./graphql/fragments.graphql",
+      "./graphql/mutations.graphql",
+      "./graphql/queries.graphql",
+      "./graphql/subscriptions.graphql"
+    ],
+    "schemaSearchPaths": [
+      "./schema.json"
+    ]
+  },
+  "output": {
+    "testMocks": {
+      "none": {}
+    },
+    "schemaTypes": {
+      "path": "./ApolloCodeGen",
+      "moduleType": {
+        "swiftPackageManager": {}
+      }
+    },
+    "operations": {
+      "inSchemaModule": {}
+    }
+  }
+}
+```
+
+<Callout>
+
+ご希望であれば、`./apollo-ios-cli init --schema-namespace ApolloCodeGen --module-type swiftPackageManager` を使用して初期設定を生成してから、`operationSearchPaths` と `schemaSearchPaths` を上記のパスに一致するように変更できます。デフォルト設定は `schemaSearchPaths` に `**/*.graphqls` を使用していますが、AppSync はスキーマを `schema.json` としてエクスポートするため、パスを更新する必要があります。
+
+</Callout>
+
+Swift ファイルを生成します：
+
+```bash
+./apollo-ios-cli generate
+```
+
+これにより、生成されたすべてのタイプを含む Swift パッケージを含む `ApolloCodeGen` ディレクトリが作成されます。
+
+## 生成されたコードを Xcode プロジェクトに追加する
+
+コード生成の後、生成された Swift パッケージをプロジェクトに追加します：
+
+1. Xcode で、**File → Add Package Dependencies...** に移動します
+2. ダイアログの **左下** で、**「Add Local...」** ボタンを選択します（これは上部の URL 検索フィールドではありません）。
+3. ファイルピッカーで、プロジェクト内の生成された `ApolloCodeGen` ディレクトリに移動して選択します。
+4. Xcode はこれをローカル Swift パッケージとして認識します。**「Add Package」** を選択します。
+5. **ApolloCodeGen** ライブラリプロダクトがアプリターゲットに追加されていることを確認します。自動的に表示されない場合、ターゲットの **General** タブ → **Frameworks, Libraries, and Embedded Content** → **+ (プラス)** を選択 → リストから **ApolloCodeGen** を選択します。
+
+<Callout>
+
+**生成されたタイプとネーミング：** すべての生成されたタイプは `ApolloCodeGen` モジュール内に存在します。Swift コード（列挙型など）で生成されたタイプを参照する場合、完全修飾名 `ApolloCodeGen.PostStatus` を使用するか、ファイルの最上部に `import ApolloCodeGen` を追加する必要があります。これは、生成されたモデルがアプリモジュール内に直接存在していた Amplify DataStore とは異なります。例えば：
+
+```swift
+// 以前 (DataStore):
+let status: PostStatus = .active
+
+// 現在 (Apollo):
+let status: ApolloCodeGen.PostStatus = .case(.active)
+// または: import ApolloCodeGen を使用してから GraphQLEnum<PostStatus> を使用
+```
+
+</Callout>
+
+## Apollo クライアントを設定する
+
+Apollo のランタイムコンポーネントは、認可モードとサブスクリプションプロトコルの処理を含む AWS AppSync に接続するように設定する必要があります。[AWS AppSync Apollo Extensions ライブラリ](https://docs.amplify.aws/swift/build-a-backend/data/aws-appsync-apollo-extensions/)は必要なロジックを実装しています。
+
+### Amplify Gen 2 設定（`amplify_outputs.json`）を使用する
+
+プロジェクトが Amplify Gen 2 を使用している場合（または Gen 1 設定を変換している場合—下記を参照）、`AWSAppSyncConfiguration` を使用してエンドポイントを読み取り、認可を自動的に設定できます。
+
+**API キー認証の場合：**
+
+```swift
+let store = ApolloStore(cache: InMemoryNormalizedCache())
+// 1. amplify_outputs.json から AWS AppSync API 設定を読み取る
+let configuration = try AWSAppSyncConfiguration(with: .amplifyOutputs)
+
+// 2. APIKeyAuthorizer で configuration.apiKey を使用
+let authorizer = APIKeyAuthorizer(apiKey: configuration.apiKey ?? "")
+let interceptor = AppSyncInterceptor(authorizer)
+let interceptorProvider = DefaultPrependInterceptorProvider(
+  interceptor: interceptor,
+  store: store)
+
+// 3. RequestChainNetworkTransport で configuration.endpoint を使用
+let transport = RequestChainNetworkTransport(
+  interceptorProvider: interceptorProvider,
+  endpointURL: configuration.endpoint)
+let apolloClient = ApolloClient(
+  networkTransport: transport,
+  store: store)
+```
+
+**Cognito ユーザープール認証の場合（所有者ベースの認可）：**
+
+```swift
+import AWSPluginsCore
+
+let store = ApolloStore(cache: InMemoryNormalizedCache())
+let configuration = try AWSAppSyncConfiguration(with: .amplifyOutputs)
+
+let authorizer = AuthTokenAuthorizer {
+  let session = try await Amplify.Auth.fetchAuthSession()
+  if let tokenProvider = session as? AuthCognitoTokensProvider {
+    let tokens = try tokenProvider.getCognitoTokens().get()
+    return tokens.accessToken
+  }
+  throw AuthError.unknown("Unable to get Cognito tokens")
+}
+
+let interceptor = AppSyncInterceptor(authorizer)
+let interceptorProvider = DefaultPrependInterceptorProvider(
+  interceptor: interceptor,
+  store: store)
+let transport = RequestChainNetworkTransport(
+  interceptorProvider: interceptorProvider,
+  endpointURL: configuration.endpoint)
+let apolloClient = ApolloClient(
+  networkTransport: transport,
+  store: store)
+```
+
+<Callout>
+
+`AuthCognitoTokensProvider` は `amplify-swift` パッケージから **`AWSPluginsCore`** をインポートする必要があります。このライブラリプロダクトをターゲットに必ず追加してください。
+
+</Callout>
+
+<Callout>
+
+**Gen 1 から Gen 2 への設定変換：** プロジェクトが Amplify Gen 1（`amplifyconfiguration.json`）を使用している場合、`AWSAppSyncConfiguration(with: .amplifyOutputs)` は直接動作しません—Gen 2 形式（`amplify_outputs.json`）が必要です。`ampx` CLI を使用して既存の Gen 1 バックエンドから `amplify_outputs.json` を生成できます：
+
+```bash
+npx ampx generate outputs \
+  --stack <your-cloudformation-stack-name> \
+  --out-dir . \
+  --outputs-version 1
+```
+
+スタック名は `amplify/backend/amplify-meta.json`（`providers.awscloudformation.StackName` の下）または AWS CloudFormation コンソールで見つかります。または Amplify App ID を使用します：
+
+```bash
+npx ampx generate outputs \
+  --app-id <your-amplify-app-id> \
+  --branch <branch-name> \
+  --out-dir . \
+  --outputs-version 1
+```
+
+`--outputs-version 1` フラグにより、正しい形式が生成されることを確認します。このコマンドを実行した後、生成された `amplify_outputs.json` を Xcode プロジェクトに追加します。
+
+</Callout>
+
+### Amplify なし（または Gen 1 設定を保持）
+
+設定形式を変換しない場合（例えば、Amplify Auth に既存の Gen 1 `amplifyconfiguration.json` を引き続き使用したい場合）、Apollo クライアントを手動で設定できます：
+
+**API キー認証の場合：**
+
+```swift
+let store = ApolloStore(cache: InMemoryNormalizedCache())
+let authorizer = APIKeyAuthorizer(apiKey: "<your-api-key>")
+
+let interceptor = AppSyncInterceptor(authorizer)
+let interceptorProvider = DefaultPrependInterceptorProvider(
+  interceptor: interceptor,
+  store: store)
+let transport = RequestChainNetworkTransport(
+  interceptorProvider: interceptorProvider,
+  endpointURL: URL(string: "<your-appsync-endpoint>")!)
+let apolloClient = ApolloClient(
+  networkTransport: transport,
+  store: store)
+```
+
+**Cognito ユーザープール認証の場合（トークン取得に Amplify Auth を使用）：**
+
+Cognito 認証に Amplify を使用するが Apollo を手動で設定する場合、AppSync 設定からエンドポイント URL を指定し、`AuthCognitoTokensProvider` を使用して認証トークンを取得する必要があります：
+
+```swift
+import AWSPluginsCore
+
+let store = ApolloStore(cache: InMemoryNormalizedCache())
+
+// amplifyconfiguration.json または AppSync コンソールからエンドポイント URL を取得
+let endpointURL = URL(string: "<your-appsync-endpoint>")!
+
+let authorizer = AuthTokenAuthorizer {
+  let session = try await Amplify.Auth.fetchAuthSession()
+  if let tokenProvider = session as? AuthCognitoTokensProvider {
+    let tokens = try tokenProvider.getCognitoTokens().get()
+    return tokens.accessToken
+  }
+  throw AuthError.unknown("Unable to get Cognito tokens")
+}
+
+let interceptor = AppSyncInterceptor(authorizer)
+let interceptorProvider = DefaultPrependInterceptorProvider(
+  interceptor: interceptor,
+  store: store)
+let transport = RequestChainNetworkTransport(
+  interceptorProvider: interceptorProvider,
+  endpointURL: endpointURL)
+let apolloClient = ApolloClient(
+  networkTransport: transport,
+  store: store)
+```
+
+<Callout>
+
+AppSync エンドポイント URL は `amplifyconfiguration.json` の `api.<api-name>.endpoint` で見つけることができます。または [AWS AppSync コンソール](https://console.aws.amazon.com/appsync/home)の API 設定で見つけることができます。
+
+</Callout>
+
+<Callout>
+
+**どのアプローチを使用すればよいですか？** Gen 1 プロジェクトを移行していて、設定変換に対処したくない場合、手動エンドポイントアプローチが最も簡単なパスです—Amplify Auth に `amplifyconfiguration.json` を保持し、Apollo を AppSync エンドポイントに直接ポイントします。統一された単一の設定を使用したい場合は、上記の Gen 2 Config セクションの `ampx` CLI を使用して `amplify_outputs.json` に変換します。
+
+</Callout>

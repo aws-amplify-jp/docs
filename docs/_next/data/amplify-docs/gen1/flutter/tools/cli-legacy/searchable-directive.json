@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"flutter","meta":{"title":"データを検索可能にする","description":"@searchable ディレクティブは、@model オブジェクト型のデータを Amazon OpenSearch Service にストリーミングし、そのデータを検索する検索リゾルバーを設定します。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

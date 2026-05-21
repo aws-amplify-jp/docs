@@ -1,0 +1,73 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ディレクティブ',
+  description: 'Amplify CLIは、カスタムインデックス、認可ルール、関数トリガーなど、スキーマに追加機能を付与するGraphQLディレクティブを提供します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert isLegacy url={'/gen1/[platform]/build-a-backend/graphqlapi/'} />
+
+Amplify CLIは、カスタムインデックス、認可ルール、関数トリガーなど、スキーマに追加機能を付与するGraphQLディレクティブを提供します。
+
+## Amplify提供のディレクティブ
+
+- [`@model`: Amazon DynamoDBでサポートされるAPIの最上位オブジェクトタイプを定義します](/gen1/[platform]/tools/cli-legacy/model-directive/)
+- [`@key`: @modelタイプのカスタムインデックス構造を設定します](/gen1/[platform]/tools/cli-legacy/key-directive/)
+- [`@auth`: @modelタイプおよびフィールドの認可ルールを定義します](/gen1/[platform]/tools/cli-legacy/auth-directive/)
+- [`@connection`: @modelタイプ間の1:1、1:M、およびN:M関係を定義します](/gen1/[platform]/tools/cli-legacy/connection-directive/)
+- [`@function`: フィールドのLambda関数リゾルバーを設定します](/gen1/[platform]/tools/cli-legacy/function-directive/)
+- [`@http`: フィールドのHTTPリゾルバーを設定します](/gen1/[platform]/tools/cli-legacy/http-directive/)
+- [`@predictions`: Amazon Rekognition、Amazon Translate、および/またはAmazon Pollyなどのai/MLサービスのオーケストレーションをクエリします](/gen1/[platform]/tools/cli-legacy/predictions-directive/)
+- [`@searchable`: Amazon OpenSearchにストリーミングしてデータを検索可能にします](/gen1/[platform]/tools/cli-legacy/searchable-directive/)
+- [`@versioned`: @modelタイプのバージョン管理と競合解決戦略を定義します](/gen1/[platform]/tools/cli-legacy/versioned-directive/)
+
+<Callout warning>
+  DataStoreの制限: カスタム主キーはGraphQL Transformer v1でサポートされていません。
+  DataStoreでカスタム主キーを活用するには、GraphQL Transformer v2にアップグレードしてください。
+</Callout>
+
+## AWS AppSync提供のディレクティブ
+
+以下のディレクティブはAppSyncサービスでサポートされており、Amplify GraphQLスキーマ内で使用できます。これらはAmplify CLIでは処理されず、サービスにそのまま渡され、出力スキーマに存在します。例えば、Amplifyの`@auth`ディレクティブは、出力スキーマの下でこれらのディレクティブを追加します。
+
+- `@aws_api_key`
+- `@aws_iam`
+- `@aws_oidc`
+- `@aws_cognito_user_pools`
+- `@aws_auth`
+- `@aws_subscribe`
+
+これらのディレクティブの詳細については、[AWS AppSync Developer Guide](https://docs.aws.amazon.com/appsync/latest/devguide/security-authz.html)をご覧ください。
+
+## サードパーティディレクティブ
+
+- [`@algolia`: Algoliaを使用してAmplify APIにサーバーレス検索を追加します](https://github.com/thefinnomenon/graphql-algolia-transformer)
+- [`@ttl`: DynamoDBのTime-to-Live機能を有効にしてAWS Amplify APIの古いエントリを自動削除します](https://github.com/flogy/graphql-ttl-transformer)
+- [`@firehose`: Amplify APIのすべてのミューテーションとクエリに簡単なインターセプターを追加します](https://github.com/LaugnaHealth/graphql-firehose-transformer)
+- [`@retain`: Amplifyが生成したDynamoDBテーブルの「Retain」削除ポリシーを有効にします](https://github.com/flogy/graphql-retain-transformer)
+
+> 独自のトランスフォーマーとディレクティブを構築したいですか？[独自のトランスフォーマーとディレクティブを作成する方法](/gen1/[platform]/tools/cli/plugins/authoring/#authoring-custom-graphql-transformers--directives)に関するガイドをご覧ください。

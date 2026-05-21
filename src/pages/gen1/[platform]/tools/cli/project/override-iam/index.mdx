@@ -1,0 +1,99 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'Amplifyが生成したプロジェクトレベルのIAMリソースをオーバーライドする',
+  description: "'amplify override project'コマンドは、開発者が構成可能な'overrides'TypeScriptファイルを生成します。このファイルは、認証済みユーザーと未認証ユーザーのためにAmplifyが生成したIAMロールをCDK構成として提供します。例えば、開発者は'amplify override project'を実行して、認証済みおよび未認証のIAMロール名を組織固有の命名規則に準拠するように変更できます。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+```bash
+amplify override project
+```
+
+上記のコマンドを実行して、認証済みおよび未認証ユーザーのIAMロールなど、Amplifyが生成したプロジェクトレベルのリソースをオーバーライドします。
+
+<Callout warning>
+
+**警告：** 認証済みおよび未認証ユーザーロールの深い依存関係のため、他のリソースが追加される前のプロジェクトの開始段階で**のみ**これらのリソースを変更することをお勧めします。
+</Callout>
+
+このコマンドは、`amplify/backend/awscloudformation/`の下に新しい`overrides.ts`ファイルを作成します。このファイルは、Amplifyが生成したリソースを[CDK構成](https://docs.aws.amazon.com/cdk/latest/guide/home.html)として提供します。
+
+`override(...)`関数内にすべてのオーバーライドを適用します。例えば、認証済みユーザーのIAMロールの名前を変更してパスを追加するには：
+```ts
+import { AmplifyRootStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyRootStackTemplate) {
+  resources.authRole.roleName = "myCustomName"
+  resources.authRole.path = "/<my-organization>/"
+  // 注意：CloudFormationでは、リソースを再作成しない場合、パスの更新が制限されます。
+  // ロール名を変更するとリソースが再作成されます。
+}
+```
+
+Amplifyが生成する次のプロジェクトレベルのリソースをオーバーライドできます：
+
+|Amplifyが生成したリソース|説明|
+|-|-|
+|[authRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html)|アプリバックエンドへの認証済みアクセス用のIAMロール|
+|[unauthRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html)|アプリバックエンドへの認証済みまたはゲストアクセス用のIAMロール|
+
+
+## 例：authRoleのIAMポリシーを変更する
+
+例えば、`amplify override project`を使用して、デフォルトのポリシーステートメントを超えてGeoカテゴリのauthRoleポリシーをさらに変更します：
+
+```ts
+import { AmplifyRootStackTemplate } from "@aws-amplify/cli-extensibility-helper";
+
+export function override(resources: AmplifyRootStackTemplate) {
+  const authRole = resources.authRole;
+
+  const basePolicies = Array.isArray(authRole.policies)
+    ? authRole.policies
+    : [authRole.policies];
+
+  authRole.policies = [
+    ...basePolicies,
+    {
+      policyName: "amplify-permissions-custom-resources",
+      policyDocument: {
+        Version: "2012-10-17",
+        Statement: [
+          //? ルートカルキュレータ
+          {
+            Resource: "<ARN of Geo>",
+            Action: ["geo:CalculateRoute*"],
+            Effect: "Allow",
+          },
+        ],
+      },
+    },
+  ];
+}
+
+```

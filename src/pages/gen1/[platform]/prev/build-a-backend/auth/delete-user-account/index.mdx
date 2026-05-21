@@ -1,0 +1,139 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ユーザーアカウントの削除',
+  description: 'ユーザーを削除',
+  platforms: [
+    'flutter',
+    'swift',
+    'android',
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios_maintenance from '/src/fragments/lib-v1/ios-maintenance.mdx';
+
+<Fragments fragments={{ swift: ios_maintenance }} />
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+
+import ios0 from '/src/fragments/lib-v1/auth/native_common/delete_user/common.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import android_maintenance from '/src/fragments/lib-v1/android-maintenance.mdx';
+
+<Fragments fragments={{ android: android_maintenance }} />
+
+import android3 from '/src/fragments/lib-v1/auth/native_common/delete_user/common.mdx';
+
+<Fragments fragments={{ android: android3 }} />
+
+import flutter1 from '/src/fragments/lib-v1/auth/native_common/delete_user/common.mdx';
+
+<Fragments fragments={{ flutter: flutter1 }} />
+
+<InlineFilter filters={["javascript",  "react-native", "angular", "nextjs", "react", "vue"]}>
+
+ユーザーがアカウントを削除できるようにすることで、信頼性と透明性を向上させることができます。Amplify Auth を使用してプログラム的にセルフサービスアカウント削除を有効にできます。このガイドでは、ユーザーのためにこの機能を有効にする方法を確認します。
+
+始める前に、以下が必要です:
+
+- Auth カテゴリが設定された Amplify プロジェクト
+- Amplify ライブラリのインストールと設定
+- 削除するテストユーザー
+
+## ユーザーがアカウントを削除できるようにする
+
+Amplify ライブラリを使用して、ユーザーのアカウント削除をすばやく設定できます。Auth カテゴリから `deleteUser` API を呼び出してユーザーを削除すると、ユーザーもサインアウトします。
+
+アプリケーションが Cognito User Pool を使用している場合（デフォルト設定）、このアクションは Cognito User Pool からユーザーを削除するだけです。Cognito Identity Pool のみとフェデレーションしている場合は、何も起こりません。
+
+<Callout warning>
+
+`deleteUser` API を呼び出す前に、Cognito に保存されていない関連するユーザーデータを最初に削除する必要がある場合があります。たとえば、Amplify GraphQL API を使用してユーザーデータを永続化している場合は、[こちらの手順](https://gist.github.com/aws-amplify-ops/27954c421bd72930874d48c15c284807)に従って関連するユーザーデータを削除できます。これにより、アカウント削除をするユーザーに関連するデータを削除する必要があるガイドライン（GDPR など）に対応できます。
+
+</Callout>
+
+以下の方法を使用してアカウント削除を有効にできます:
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Auth } from 'aws-amplify';
+
+async function deleteUser() {
+  try {
+    const result = await Auth.deleteUser();
+    console.log(result);
+  } catch (error) {
+    console.log('Error deleting user', error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { Auth } from 'aws-amplify';
+
+async function deleteUser() {
+  try {
+    const result = await Auth.deleteUser();
+    console.log(result);
+  } catch (error) {
+    console.log('Error deleting user', error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+UI を更新してユーザーにアカウントが削除されたことを知らせ、テストユーザーで機能をテストすることをお勧めします。ユーザーがアカウントを削除すると、アプリケーションからサインアウトされることに注意してください。
+
+## まとめ
+
+おめでとうございます！**ユーザーアカウント削除**ガイドが完了しました。このガイドでは、ユーザーのアカウント削除を有効にする方法を学びました。
+
+## 次のステップ
+
+アカウント削除を有効にしたので、他の機能を追加することもできます。以下の詳細を学ぶことをお勧めします:
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+- [ユーザープロフィールの管理](/gen1/[platform]/build-a-backend/auth/manage-user-profile/)
+- [パスワード変更と回復の設定](/gen1/[platform]/build-a-backend/auth/manage-passwords/)
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+- [ユーザープロフィールの管理](/gen1/[platform]/build-a-backend/auth/manage-user-profile/)
+- [パスワード変更と回復の設定](/gen1/[platform]/build-a-backend/auth/manage-passwords/)
+
+</InlineFilter>
+
+</InlineFilter>

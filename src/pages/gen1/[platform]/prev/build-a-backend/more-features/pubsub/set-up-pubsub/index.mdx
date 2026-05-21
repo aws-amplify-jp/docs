@@ -1,0 +1,40 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify PubSub のセットアップ',
+  description: 'PubSub を使用してアプリケーションインスタンス間およびバックエンド間でメッセージを渡し、リアルタイムでインタラクティブなエクスペリエンスを作成する方法について詳しく説明します。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import pubsubGettingStarted from '/src/fragments/lib-v1/pubsub/js/getting-started.mdx';
+
+<Fragments
+  fragments={{
+    javascript: pubsubGettingStarted,
+    angular: pubsubGettingStarted,
+    nextjs: pubsubGettingStarted,
+    react: pubsubGettingStarted,
+    vue: pubsubGettingStarted,
+    'react-native': pubsubGettingStarted
+  }}
+/>

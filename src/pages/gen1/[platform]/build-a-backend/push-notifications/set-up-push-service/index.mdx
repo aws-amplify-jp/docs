@@ -1,0 +1,36 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'プッシュ通知サービスのセットアップ',
+  description: 'モバイルアプリの各種プッシュ通知サービスのセットアップ方法を学びます。',
+  platforms: [
+    'react-native',
+    'android',
+    'flutter',
+    'swift'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import commonRoute from '/src/fragments/lib/push-notifications/common/setup_push_service/setup-push-service.mdx';
+
+<Fragments
+  fragments={{
+    android: commonRoute,
+    flutter: commonRoute,
+    swift: commonRoute,
+    'react-native': commonRoute
+  }}
+/>

@@ -1,0 +1,52 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'メール',
+  description: 'Amplify Authがプロビジョニングおよびサポートする内容について詳しく学ぶ',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps() {
+  return {
+    props: {
+      meta
+    }
+  };
+}
+
+デフォルトでは、Amplify Authは `email` をユーザーサインインのデフォルト方法としてスカフォールドされます。
+
+```ts title="amplify/auth/resource.ts"
+import { defineAuth } from "@aws-amplify/backend"
+
+export const auth = defineAuth({
+  loginWith: {
+    email: true,
+  },
+})
+```
+
+これにより、サインアップで必須であり、変更できない `email` 属性が設定されます。
+
+{/* how to use client-side */}
+{/* callout for moving to prod */}
+
+## 次のステップ
+
+- [`signIn` APIの使用方法を学ぶ](/[platform]/frontend/auth/sign-in/)
+- [メールをカスタマイズする方法を学ぶ](/[platform]/build-a-backend/auth/customize-auth-lifecycle/email-customization/)
+- [本番ワークロード向けに認証リソースを設定する方法を学ぶ](/[platform]/build-a-backend/auth/moving-to-production/)

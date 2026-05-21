@@ -1,0 +1,517 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'v5 から v6 への移行',
+  description: 'Amplify JavaScript v5 から v6 への Analytics API のアップグレード手順について詳しく学習します',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+このガイドでは、Amplify JavaScript v5 の Analytics API を新しい v6 の Analytics API に移行するのに役立つ手順を説明します。
+
+Amplify v6 では、Pinpoint プロバイダーを使用する場合、API を `aws-amplify/analytics` パスから直接インポートします。Personalize、Kinesis、または Kinesis (Firehose) プロバイダーを使用している場合は、`provider` または `options.provider` パラメーターを渡す代わりに、適切なサブパスから個別の API をインポートする必要があります（例えば、`AmazonPersonalize` プロバイダーで `record` API を使用する場合は `import { record } from 'aws-amplify/analytics/personalize'` のようにします）。
+
+> 注: v6 では `startSession` API を削除しました。v6 では、代わりに `record` API とイベント `{ name: '_session.start' }` を使用することをお勧めします。
+
+## 有効化と無効化
+
+v5 と v6 の両方で、Analytics はデフォルトで有効になっています。`aws-amplify/analytics` パスからエクスポートされた `enable` および `disable` API を使用して、すべての Analytics プロバイダーを無効および有効にできます。
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```ts
+    import { enable, disable } from 'aws-amplify/analytics';
+
+    // すべての Analytics プロバイダーを無効化（デフォルトで有効）
+    disable();
+
+    // すべての Analytics プロバイダーを有効化
+    enable();
+    ```
+
+  </Block>
+  <Block name="V5">    
+    ```ts
+    import { Analytics } from 'aws-amplify';
+
+    Analytics.disable();
+
+    Analytics.enable();
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Pinpoint
+
+v6 では、`provider` はインポートパスで決定されます。Pinpoint API を使用するには、`aws-amplify/analytics` から直接インポートします。これらの API は、Kinesis または Personalize に固有のパラメーターを受け入れなくなりました。
+
+### Analytics.record
+
+v6 の `record` API の動作は変わっていませんが、v6 で注意すべき変更がいくつかあります:
+
+- `record` API は現在同期的であり、イベントが常にバッファリングされるため、Promise を返さなくなりました。
+- v6 では `record` API から `immediate` オプションが削除されました。代わりに、[flushEvents API](/gen1/[platform]/build-a-backend/more-features/analytics/record-events/#flush-events) を使用して、`record` を呼び出す前にバッファからすべてのイベントをクリアできます。
+- `provider` パラメーターが削除され、プロバイダーはインポートパスで決定されます。Pinpoint `record` API は v6 で Personalize または Kinesis イベントを受け入れません。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+
+      ```
+      event: AnalyticsEvent | PersonalizeAnalyticsEvent | KinesisAnalyticsEvent
+      provider?: string // v6 で削除
+
+      // Pinpoint
+      AnalyticsEvent {
+        name: string;
+        attributes?: EventAttributes;
+        metrics?: EventMetrics;
+        immediate?: boolean; // v6 で削除
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      ```
+      input: {
+        name: string;
+        attributes?: Record<string, string>;
+        metrics?: Record<string, number>;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```ts
+    import { record } from 'aws-amplify/analytics';
+
+    record({
+      name: 'albumVisit',
+      attributes: { genre: '', artist: '' },
+      metrics: { minutesListened: 30 }
+    });
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```ts
+    import { Analytics } from 'aws-amplify';
+
+    Analytics.record({
+      name: 'albumVisit',
+      attributes: { genre: '', artist: '' },
+      metrics: { minutesListened: 30 }
+    });
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+### Analytics.autoTrack
+
+`autoTrack` API は v6 で `configureAutoTrack` に名前が変更されました。この API の目的をより明確にするためです。v6 では、`provider` はインポートパスで決定されます。Pinpoint `configureAutoTrack` API を使用するには、`aws-amplify/analytics` から直接インポートします。
+
+この API の機能は変わっていませんが、入力構造は次のように変更されています:
+
+- 位置パラメーターから名前付きパラメーターに移行しました。
+- `opts` プロパティは `options` に名前が変更されました。
+- 必須の `enable` プロパティは `options` フィールドの外に移動されました。
+- `trackerType` は `type` に名前が変更されました。
+- オプションのトラッカーオプションは、すべてのトラッカータイプについて `options` フィールドに移動されました。
+- `pageView` 入力型の `type` パラメーターは `appType` に名前が変更されました（トラッカー `type` と区別するため）。
+- `appType` の値 `SPA` と `multiPageApp` は、それぞれ `singlePage` と `multiPage` に名前が変更されました。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+
+      ```
+      trackerType: 'pageView' | 'event' | 'session'
+		  opts: { 
+        provider: string; // v6 で削除
+        enable: boolean;
+        attributes?: // v6 で簡略化：関数を受け入れなくなります
+          | (() => [key: string]: string | Promise<[key: string]: string>)
+	        | [key: string]: string;
+        // trackerType: pageView
+        eventName?: string;
+        type?: 'SPA' | 'multiPageApp';
+        getUrl?: () => string; // v6 で urlProvider に名前変更
+        // trackerType: event
+        events?: string[];
+	      selectorPrefix?: string;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      ```
+      input {
+        enable: boolean;
+        type: 'session' | 'pageView' | 'event'
+        options?: {
+          attributes?: Record<string, string>;
+          // type: pageView
+          eventName?: string;
+          urlProvider?: (() => string);
+          appType?: 'multiPage' | 'singlePage';
+          // type: event
+          events?: (keyof GlobalEventHandlersEventMap)[]; // 'abort' | 'animationcancel' | 'animationend' | ...
+          selectorPrefix?: string;
+        };
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```ts
+    import { configureAutoTrack } from 'aws-amplify/analytics';
+    
+    configureAutoTrack({
+      enable: true,
+      type: 'session',
+      options: {
+        attributes: {
+          customizableField: 'attr'
+        }
+      }
+    });
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```ts
+    import { Analytics } from 'aws-amplify';
+    
+    Analytics.autoTrack('session', {
+      enable: true,
+      attributes: {
+        customizableField: 'attr'
+      }
+    });
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+### Analytics.updateEndpoint
+
+この API は v6 で `identifyUser` に名前が変更されました。他のプラットフォームと統一するためです。機能は同じですが、型定義がより具体的になっています。
+
+- `address`、`optOut`、および `channelType` オプションは Analytics エンドポイントに影響を与えないため、利用できなくなりました。
+- `attributes` は `customProperties` に名前が変更されました。
+- `provider` パラメーターが削除され、プロバイダーはインポートパスで決定されます。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+
+      ```
+      attrs: { [key: string]: any; }
+      provider?: string
+
+      // attrs パラメーターの型は v5 ではジェネリックです
+      // 以下は API が期待するプロパティです
+      attrs: {
+        address?: string; // v6 で削除
+        attributes?: { [key: string]: any; }; // v6 で customProperties に名前変更
+        channelType?: string; // v6 で削除
+        demographic?: {
+          appVersion?: string;
+          locale?: string;
+          make?: string;
+          model?: string;
+          modelVersion?: string;
+          platform?: string;
+          platformVersion?: string;
+          timezone?: string;
+        },
+        location?: {
+          city?: string;
+          country?: string;
+          latitude?: number;
+          longitude?: number;
+          postalCode?: string;
+          region?: string;
+        },
+        metrics?: { [key: string]: any; };
+        optOut?: string; // v6 で削除
+        userId: string;
+        userAttributes?: { [key: string]: any; }; // v6 で options の下に移動
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      ```
+      input: {
+        userId: string;
+        userProfile: {
+          customProperties?: Record<string, string[]>;
+          demographic?: {
+            appVersion?: string;
+            locale?: string;
+            make?: string;
+            model?: string;
+            modelVersion?: string;
+            platform?: string;
+            platformVersion?: string;
+            timezone?: string;
+          };
+          email?: string;
+          location?: {
+            city?: string;
+            country?: string;
+            latitude?: number;
+            longitude?: number;
+            postalCode?: string;
+            region?: string;
+          };
+          metrics?: Record<string, number>;
+          name?: string;
+          plan?: string;
+        };
+        options?: { userAttributes?: Record<string, string[]>; };
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```ts
+    import { identifyUser } from 'aws-amplify/analytics';
+
+    identifyUser({
+      userId: 'xxxxxxx',
+      userProfile: {
+        customProperties: { hobbies: ['piano', 'hiking'] },
+      },
+      options: {
+        userAttributes: {
+          interests: ['football', 'basketball', 'AWS']
+        }
+      }
+    });
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```ts
+    import { Analytics } from 'aws-amplify';
+
+    Analytics.updateEndpoint({
+      userId: 'xxxxxxx',
+      attributes: { hobbies: ['piano', 'hiking'] },
+      userAttributes: {
+        interests: ['football', 'basketball', 'AWS']
+      }
+    });
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Kinesis と Kinesis (Firehose)
+
+v6 では、`provider` はインポートパスで決定されます。Kinesis API を使用するには `aws-amplify/analytics/kinesis` からインポートし、Kinesis (Firehose) API を使用するには `aws-amplify/analytics/kinesis-firehose` からインポートします。これらの API は、Pinpoint または Personalize に固有のパラメーターを受け入れなくなりました。
+
+### Analytics.record
+
+v6 の Kinesis および Kinesis (Firehose) `record` API の動作は変わっていませんが、v6 で注意すべき変更がいくつかあります:
+
+- `record` API は現在同期的であり、イベントが常にバッファリングされるため、Promise を返さなくなりました。
+- v6 では `record` API から `immediate` オプションが削除されました。代わりに v6 では、[flushEvents API](/gen1/[platform]/build-a-backend/more-features/analytics/record-events/#flush-events) を使用してバッファからすべてのイベントをクリアしてから `record` を呼び出すことができます。
+- v6 では、Kinesis (Firehose) `record` API から `partitionKey` オプションが削除されました。
+- `provider` パラメーターが削除され、プロバイダーはインポートパスで決定されます。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+
+      ```
+      event: AnalyticsEvent | PersonalizeAnalyticsEvent | KinesisAnalyticsEvent
+      provider?: string // v6 で削除
+
+      // Kinesis または Kinesis (Firehose)
+      KinesisAnalyticsEvent {
+        data: object | string;
+        partitionKey: string;
+        streamName: string;
+        immediate?: boolean;
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      ```
+      input: {
+        streamName: string;
+        data: Record<string, unknown> | Uint8Array;
+        // Kinesis のみ
+        partitionKey: string;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```ts
+    import { record } from 'aws-amplify/analytics/kinesis'; // または 'aws-amplify/analytics/kinesis-firehose'
+
+    // Kinesis
+    kinesisRecord({
+      data: {
+        // レコードに入れるデータ blob
+      },
+      partitionKey: 'myPartitionKey', // v6 で Kinesis (Firehose) から削除
+      streamName: 'myKinesisStream'
+    });
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```ts
+    import { Analytics, AWSKinesisProvider, AWSKinesisFirehoseProvider } from 'aws-amplify';
+    Analytics.addPluggable(new AWSKinesisProvider());
+    Analytics.addPluggable(new AWSKinesisFirehoseProvider());
+
+    // Kinesis
+    Analytics.record({
+      data: {
+        // レコードに入れるデータ blob
+      },
+      partitionKey: 'myPartitionKey', // firehose プロバイダーで受け入れられますが使用されません
+      streamName: 'myKinesisStream'
+    }, 'AWSKinesisProvider'); // または 'AWSKinesisFirehoseProvider'
+
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+## Personalize
+
+v5 で personalize プロバイダーを使用するには、Analytics API にスト文字列値 `AmazonPersonalize` を持つ追加パラメーターを渡す必要がありました。しかし v6 では、代わりに `aws-amplify/analytics/personalize` サブパスから API をインポートします。
+
+### Analytics.record
+
+v6 の Personalize `record` API の動作は変わっていませんが、v6 で注意すべき変更がいくつかあります:
+
+- `record` API は現在同期的であり、イベントが常にバッファリングされるため、Promise を返さなくなりました。
+- `provider` パラメーターが削除され、プロバイダーはインポートパスで決定されます。
+
+<Accordion title='入力' headingLevel='3'>
+  <Columns columns={2}>
+    <div>
+      **V5**
+
+      ```
+      event: AnalyticsEvent | PersonalizeAnalyticsEvent | KinesisAnalyticsEvent
+      provider?: string // v6 で削除
+
+      // Personalize
+      PersonalizeAnalyticsEvent {
+        userId?: string;
+        eventType?: string;
+        properties?: {
+          [key: string]: string;
+        };
+      }
+      ```
+
+    </div>
+    <div>
+      **V6**
+
+      ```
+      input: {
+        userId?: string;
+        eventId?: string;
+        eventType: string;
+        properties: Record<string, unknown>;
+      }
+      ```
+
+    </div>
+  </Columns>
+</Accordion>
+
+<BlockSwitcher>
+  <Block name="V6">
+    ```ts
+    import { record } from 'aws-amplify/analytics/personalize';
+
+    // Personalize
+    record({
+      eventType: 'Identify',
+      properties: {
+        userId: 'userId'
+      }
+    });
+    ```
+
+  </Block>
+  <Block name="V5">
+    ```ts
+    import { Analytics, AmazonPersonalizeProvider, AWSKinesisProvider, AWSKinesisFirehoseProvider } from 'aws-amplify';
+    Analytics.addPluggable(new AmazonPersonalizeProvider());
+    Analytics.addPluggable(new AWSKinesisProvider());
+    Analytics.addPluggable(new AWSKinesisFirehoseProvider());
+
+    Analytics.record({
+      eventType: 'Identify',
+      properties: {
+        userId: 'userId'
+      }
+    }, 'AmazonPersonalize');
+
+    ```
+
+  </Block>
+</BlockSwitcher>

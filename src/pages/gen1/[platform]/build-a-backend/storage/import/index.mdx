@@ -1,0 +1,277 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: '既存のS3バケットまたはDynamoDBテーブルをインポートする',
+  description: 'Amplify CLIを使用して、既存のS3バケットまたはDynamoDBテーブルリソースをストレージリソースとして他のAmplifyカテゴリ（API、Function、その他）にインポートする方法を学びます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+既存のS3バケットまたはDynamoDBテーブルをAmplifyプロジェクトにインポートします。`amplify import storage`コマンドを実行して、アカウントからS3またはDynamoDBリソースを検索してインポートします。
+
+```bash
+amplify import storage
+```
+
+`amplify push`を実行してインポートプロセスを完了し、このバックエンド変更をクラウドにデプロイしてください。
+
+`amplify import storage`コマンドは以下を実行します:
+
+- Amplifyライブラリ設定ファイル（aws-exports.js、amplifyconfiguration.json）に選択したS3バケット情報を自動的に入力します
+- 指定したS3バケットまたはDynamoDBテーブルを、すべてのストレージに依存するカテゴリ（API、Function、Predictionsなど）のストレージメカニズムとして提供します
+- 許可した場合、Lambdaファンクションが選択したS3またはDynamoDBリソースにアクセスできるようにします
+
+この機能は特に以下の場合に便利です:
+
+- Amplifyカテゴリ（APIやFunctionなど）が既存のストレージリソースにアクセスできるようにしたい場合
+- アプリケーションスタックにAmplifyを段階的に導入したい場合
+- Amplifyを使用しながらS3とDynamoDBリソースを独立して管理したい場合
+
+> 注記: Amplifyはインポートされたリソースのライフサイクルを管理しません。
+
+## 既存のS3バケットをインポートする
+
+`amplify import storage`を実行したときに、「S3 bucket - Content (Images, audio, video, etc.)」オプションを選択します。
+
+`amplify push`を実行してインポート手順を完了します。
+
+> Amplifyプロジェクトは正確に1つのS3バケットに限定されています。
+
+### Amplifyライブラリで既存のS3バケットに接続する
+
+デフォルトでは、AmplifyライブラリはS3バケットが以下のアクセスパターンで設定されていると想定します:
+
+- `public/` - アプリのすべてのユーザーがアクセス可能
+- `protected/{user_identity_id}/` - すべてのユーザーが読み取り可能ですが、作成したユーザーのみが書き込み可能
+- `private/{user_identity_id}/` - 個別のユーザーのみアクセス可能
+
+<InlineFilter filters={[
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue'
+]}>
+
+IAMロールをAmplifyが推奨するポリシーを使用するように設定するか、[`path`](/gen1/[platform]/build-a-backend/storage/path/)を使用して独自のパスを指定できます。
+
+</InlineFilter>
+
+<InlineFilter filters={[
+    'android',
+    'swift',
+    'flutter'
+]}>
+
+IAMロールをAmplifyが推奨するポリシーを使用するように設定するか、[`StoragePath`](/gen1/[platform]/build-a-backend/storage/storagepath/)を使用して独自のパスを指定できます。
+
+</InlineFilter>
+
+S3バケットのCORS設定を確認することを強くお勧めします。[こちらの推奨ガイドを確認してください](/gen1/[platform]/build-a-backend/storage/set-up-storage/#amazon-s3-bucket-cors-policy-setup)。
+
+### IAMロールをAmplifyが推奨するポリシーで設定する
+
+インポートされたS3バケットとインポートされたCognitoリソースを使用している場合、Cognito Identity Poolの認証済みロールおよび未認証ロールのポリシーを更新する必要があります。以下のステートメントを使用して、これらのロールに新しい__マネージドポリシー__（*インラインポリシー*ではなく）を作成します:
+
+> `{YOUR_S3_BUCKET_NAME}`をS3バケットの名前に置き換えてください。
+
+#### 未認証ロールポリシー
+
+- `public/`のIAMポリシーステートメント:
+
+```json
+{
+  "Action": [
+    "s3:PutObject",
+    "s3:GetObject",
+    "s3:DeleteObject"
+  ],
+  "Resource": [
+    "arn:aws:s3:::{YOUR_S3_BUCKET_NAME}/public/*"
+  ],
+  "Effect": "Allow"
+}
+```
+
+- `public/`、`protected/`、および`private/`への読み取りアクセス用のIAMポリシーステートメント:
+
+```json
+{
+  "Action": [
+    "s3:GetObject"
+  ],
+  "Resource": [
+    "arn:aws:s3:::{YOUR_S3_BUCKET_NAME}/protected/*"
+  ],
+  "Effect": "Allow"
+},
+{
+  "Condition": {
+    "StringLike": {
+      "s3:prefix": [
+        "public/",
+        "public/*",
+        "protected/",
+        "protected/*"
+      ]
+    }
+  },
+  "Action": [
+    "s3:ListBucket"
+  ],
+  "Resource": [
+    "arn:aws:s3:::{YOUR_S3_BUCKET_NAME}"
+  ],
+  "Effect": "Allow"
+}
+```
+
+#### 認証済みロールポリシー
+
+- `public/`のIAMポリシーステートメント:
+
+```json
+{
+  "Action": [
+    "s3:PutObject",
+    "s3:GetObject",
+    "s3:DeleteObject"
+  ],
+  "Resource": [
+    "arn:aws:s3:::{YOUR_S3_BUCKET_NAME}/public/*"
+  ],
+  "Effect": "Allow"
+}
+```
+
+- `protected/`のIAMポリシーステートメント:
+
+```json
+{
+  "Action": [
+    "s3:PutObject",
+    "s3:GetObject",
+    "s3:DeleteObject"
+  ],
+  "Resource": [
+    "arn:aws:s3:::{YOUR_S3_BUCKET_NAME}/protected/${cognito-identity.amazonaws.com:sub}/*"
+  ],
+  "Effect": "Allow"
+}
+```
+
+- `private/`のIAMポリシーステートメント:
+
+```json
+{
+  "Action": [
+    "s3:PutObject",
+    "s3:GetObject",
+    "s3:DeleteObject"
+  ],
+  "Resource": [
+    "arn:aws:s3:::{YOUR_S3_BUCKET_NAME}/private/${cognito-identity.amazonaws.com:sub}/*"
+  ],
+  "Effect": "Allow"
+}
+```
+
+- `public/`、`protected/`、および`private/`への読み取りアクセス用のIAMポリシーステートメント:
+
+```json
+{
+  "Action": [
+    "s3:GetObject"
+  ],
+  "Resource": [
+    "arn:aws:s3:::{YOUR_S3_BUCKET_NAME}/protected/*"
+  ],
+  "Effect": "Allow"
+},
+{
+  "Condition": {
+    "StringLike": {
+      "s3:prefix": [
+        "public/",
+        "public/*",
+        "protected/",
+        "protected/*",
+        "private/${cognito-identity.amazonaws.com:sub}/",
+        "private/${cognito-identity.amazonaws.com:sub}/*"
+      ]
+    }
+  },
+  "Action": [
+    "s3:ListBucket"
+  ],
+  "Resource": [
+    "arn:aws:s3:::{YOUR_S3_BUCKET_NAME}"
+  ],
+  "Effect": "Allow"
+}
+```
+
+## 既存のDynamoDBテーブルをインポートする
+
+`amplify import storage`を実行したときに、「DynamoDB table - NoSQL Database」オプションを選択します。DynamoDBテーブルを正常にインポートするには、DynamoDBテーブルがAmplifyプロジェクトと同じリージョンに配置されている必要があります。
+
+`amplify push`を実行してインポート手順を完了します。
+
+> Amplifyプロジェクトには複数のDynamoDBテーブルを含めることができます。
+
+## マルチ環境サポート
+
+`amplify env add`を使用して新しい環境を作成するとき、Amplify CLIはデフォルトで、アプリのストレージリソースをAmplifyプロジェクトの外で管理していると想定します。異なるS3バケットまたはDynamoDBテーブルをインポートするか、同じインポートされたストレージリソースを維持するかを選択するように求められます。
+
+新しい環境でAmplifyがストレージリソースを管理したい場合は、`amplify remove storage`を実行してインポートされたストレージリソースのリンクを解除し、`amplify add storage`を実行して新しい環境で新しいAmplify管理のS3バケットとDynamoDBテーブルを作成します。
+
+## 既存のS3バケットまたはDynamoDBテーブルのリンクを解除する
+
+既存のストレージリソースのリンクを解除するには、`amplify remove storage`を実行します。これにより、Amplifyプロジェクトから参照されているS3バケットまたはDynamoDBテーブルのリンクが解除されるだけです。S3バケットまたはDynamoDBテーブル自体は削除されません。
+
+`amplify push`を実行してリンク解除手順を完了します。
+
+## Amplify Hostingビルドの環境変数を設定する
+
+Amplify Hostingでアプリケーションを正常にビルドするには、以下の環境変数をビルド環境に追加してください:
+
+|環境変数|説明|インポートされたリソース|必須
+|-|-|-|-|
+|AMPLIFY_STORAGE_BUCKET_NAME|ストレージ用にインポートされるS3バケットの名前|S3バケット|はい
+|AMPLIFY_STORAGE_REGION|S3バケットまたはDynamoDBテーブルが配置されているAWSリージョン（例: us-east-1、us-west-2など）|S3バケットまたはDynamoDBテーブル|はい
+|AMPLIFY_STORAGE_TABLES|ストレージ用にインポートされるストレージリソースとDynamoDBテーブルの名前|DynamoDBテーブル|はい
+
+<Callout warning>
+AMPLIFY_STORAGE_TABLES環境変数の値はJSON形式である必要があります。例えば: 
+
+```
+{
+  "STORAGE_RESOURCE_NAME_1":"DDB_TABLE_NAME_1",
+  "STORAGE_RESOURCE_NAME_2":"DDB_TABLE_NAME_2"  // 複数のDynamoDBテーブルをインポートする場合
+}
+```
+`STORAGE_RESOURCE_NAME`および`DDB_TABLE_NAME`フィールドの値は、amplify/team-provider-info.jsonファイルから取得できます。
+</Callout>

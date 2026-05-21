@@ -1,0 +1,132 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Hub',
+  description: 'Amplifyはローカルイベントシステムであるhubを備えています。これはパブリッシャー/サブスクライバーパターンの軽量実装であり、アプリ内のモジュールとコンポーネント間でデータを共有するために使用されます。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import common_hub from '/src/fragments/lib/utilities/native_common/hub/common.mdx';
+
+<Fragments fragments={{ android: common_hub, swift: common_hub }} />
+
+<InlineFilter filters={["javascript", "react-native", "angular", "nextjs", "react", "vue"]}>
+
+Amplifyはローカルイベントシステムであるhubを備えています。これはパブリッシャー/サブスクライバーパターンの軽量実装であり、アプリ内のモジュールとコンポーネント間でデータを共有するために使用されます。Amplifyはhubを異なるカテゴリで使用して、ユーザーのサインインなどの認証イベントや、ファイルダウンロードの通知など、特定のイベントが発生したときに相互に通信します。
+
+## インストール
+
+```javascript
+import { Hub } from 'aws-amplify/utils';
+```
+
+## APIの使用
+
+### チャネル
+
+チャネルは、メッセージを整理し、リッスンするための論理的なグループ名です。これらは文字列であり、ディスパッチまたはリッスンするための定義は完全に開発者に任せられています。ただし、任意のチャネルにディスパッチできますが、**_Amplifyは特定のチャネルを保護_** し、予期しないペイロードを送信すると望ましくない副作用（認証フローに影響を与えるなど）が生じる可能性があるため、警告を表示します。現在保護されているチャネルは以下の通りです:
+
+- core
+- auth
+- analytics
+- storage
+
+### メッセージのリッスン
+
+`listen(channel: string, callback: HubCallback): StopListenerCallback` は、ディスパッチされたメッセージをリッスンするために使用されます。名前付き`channel` または正規表現のいずれかと、コールバックを指定する必要があります。正規表現の場合、ペイロード内に`message` を含むディスパッチのみがパターンと照合されます。複数のリスナーを異なるチャネルやパターンに追加して、汎用イベントをキャッチして独自のフィルタリングを実行できます。
+
+```javascript
+import { Hub } from 'aws-amplify/utils';
+
+class MyClass {
+  constructor() {
+    Hub.listen('auth', (data) => {
+      const { payload } = data;
+      this.onAuthEvent(payload);
+      console.log(
+        'A new auth event has happened: ',
+        data.payload.data.username + ' has ' + data.payload.event
+      );
+    });
+  }
+
+  onAuthEvent(payload) {
+    // ... your implementation
+  }
+}
+```
+
+### メッセージの送信
+
+異なるチャネルへのイベント送信は、`dispatch` 関数で行われます:
+
+```javascript
+Hub.dispatch('DogsChannel', {
+  event: 'buttonClick',
+  data: { color: 'blue' },
+  message: ''
+});
+
+setTimeout(() => {
+  Hub.dispatch('CatsChannel', {
+    event: 'drinkMilk',
+    data: {
+      breed: 'Persian',
+      age: 5
+    },
+    message: `The cat ${cat.name} has finished her milk`
+  });
+}, 5000);
+```
+
+`Hub.dispatch(channel: string, payload: HubPayload)` は、`HubPayload` を `channel` にディスパッチするために使用できます。`channel` は組織の論理的グループ化であり、`HubPayload` は以下のように定義される型です:
+
+```javascript
+export type HubPayload = {
+  event: string,
+  data?: any,
+  message?: string
+};
+```
+
+`event` フィールドは、`signIn` や `hang_up` などのスペースのない小さな文字列にすることが推奨されます。これはペイロードグループをチェックするのに役立ちます。`data` フィールドは自由形式の構造で、多くの場合、大きなJSONオブジェクトまたはカスタムデータ型に使用されます。最後に、`message` はオプションです。
+
+### リッスンの停止
+
+Hubは`.listen` 関数の結果を呼び出すことでメッセージのリッスンを停止する方法を提供しています。これは、アプリケーションフローでメッセージを受け取る必要がなくなった場合、および複数のチャネルでhubを通じて大量のデータを送信している場合に低電力デバイスのメモリリークを回避するのに便利です。
+
+特定のイベントのリッスンを停止するには、リスナー関数を変数にラップしてから、不要になったら呼び出します:
+
+```javascript
+/* start listening for messages */
+const hubListenerCancel = Hub.listen('auth', (data) => {
+  console.log('Listening for all messages: ', data.payload.data);
+});
+
+/* later */
+hubListenerCancel(); // stop listening for messages
+```
+
+</InlineFilter>

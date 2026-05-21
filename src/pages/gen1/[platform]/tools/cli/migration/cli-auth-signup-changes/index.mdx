@@ -1,0 +1,104 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'CLI Auth サインアップの変更',
+  description: '',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## 対象者
+
+このドキュメントは、CLI バージョン 5.2.0 〜 5.6.0 で `amplify add auth` を使用して作成された Auth リソースを持つ場合に該当します。
+
+Auth リソースが Amplify CLI バージョン 5.1.2 以前、または Amplify CLI バージョン 6.0.0 以降の `amplify add auth` で作成された場合は、この記事に該当しません。このドキュメントの残りの部分は無視してください。
+
+## 変更点
+
+### **_元の_ CLI `amplify add auth` の動作（バージョン 5.2.0 より前）**
+
+CLI バージョン 5.2.0 より前は、開発者は以下の選択肢の中から**1 つ**を選択できました:
+
+```
+How do you want users to be able to sign in? (Use the arrow keys)
+>Email
+ Username
+ Phone Number
+ Email or Phone Number
+```
+
+### **_変更された_ CLI `amplify add auth` の動作（CLI バージョン 5.2.0 〜 5.6.0）**
+
+CLI リリース 5.2.0（2021 年 7 月 27 日）では、Auth を設定する開発者向けに追加機能が追加されました。CLI バージョン 5.2.0 以降、開発者は以下の選択肢の**すべて**を選択できるようになりました
+
+```
+How do you want users to be able to sign in?
+[x] Email Address
+[ ] Phone Number
+[ ] Username
+```
+
+### **_元の_動作に戻す（CLI バージョン 6.0.0 以降）**
+
+CLI v6.0.0 以降、元の動作が復元され、開発者は再び以下の選択肢の中から**1 つ**を選択できるようになりました:
+
+```
+How do you want users to be able to sign in? (Use the arrow keys)
+>Email
+ Username
+ Phone Number
+ Email or Phone Number
+```
+
+## この変更の影響
+
+変更された `amplify add auth` の動作（CLI v5.2 〜 v5.6）で Auth リソースを設定した場合、互換性のある設定を取得するために `amplify add auth` を実行するたびに変更された `amplify add auth` の動作を使用する必要があります。CLI v6.0.0 で変更された `amplify add auth` の動作を使用するには、"**auth.forceAliasAttributes**" フィーチャーフラグを有効にします。
+
+以下のコードセグメントは、CLI バージョン 5.2.0 〜 5.6.0 で作成された Auth リソースで Auth.signup() を使用する方法を示しています:
+
+```ts
+const username = getGUID();
+const { user } = await Auth.signUp({
+  username,
+  password: 'your-secure-password',
+  attributes: {
+    email: 'youremail@yourdomain.com'
+  }
+});
+await Auth.confirmSignUp(username, code);
+await Auth.signIn('youremail@yourdomain.com', 'your-secure-password');
+```
+
+以下のコードセグメントは、CLI バージョン 6.0 以降で作成された Auth リソースで Auth.signup() を使用する方法を示しています（このセグメントは CLI 5.2.0 〜 5.6.0 で設定された Auth では機能しません）:
+
+```ts
+const { user } = await Auth.signUp({
+  username: 'youremail@yourdomain.com',
+  password: 'your-secure-password',
+  attributes: {
+    email: 'youremail@yourdomain.com'
+  }
+});
+```

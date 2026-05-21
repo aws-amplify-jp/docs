@@ -1,0 +1,1756 @@
+---
+title: "ファイルのアップロード"
+section: "frontend/storage"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-05-11T17:58:46.000Z"
+url: "https://docs.amplify.aws/react/frontend/storage/upload-files/"
+---
+
+<!-- Platform: javascript,nextjs,react -->
+アプリにアップロード機能を実装するには、File Uploader UIコンポーネントを使用するか、アップロードAPIを使用してアップロードエクスペリエンスをさらにカスタマイズする方法があります。
+
+## File Uploader React UIコンポーネント
+
+クラウド接続型のFile Uploader UIコンポーネントを使用して、数分でアプリからファイルをアップロードできます。
+
+```bash title="Terminal" showLineNumbers={false}
+npm add @aws-amplify/ui-react-storage aws-amplify
+```
+次に、アプリ内でコンポーネントを使用します。
+
+```tsx
+import { FileUploader } from '@aws-amplify/ui-react-storage';
+import '@aws-amplify/ui-react/styles.css';
+
+export const DefaultFileUploaderExample = () => {
+  return (
+    <FileUploader
+      acceptedFileTypes={['image/*']}
+      path="public/"
+      maxFileCount={1}
+      isResumable
+    />
+  );
+};
+```
+
+![File Uploader UIコンポーネントの表示](/images/gen2/storage/upload-ui-component.png)
+
+UIコンポーネントのカスタマイズについて詳しくは、[File Uploaderのドキュメント](https://ui.docs.amplify.aws/react/connected-components/storage/fileuploader)をご参照ください。
+<!-- /Platform -->
+
+## アップロード機能の実装
+
+<Callout>
+
+**注意:** ストレージAPIのTransfer Accelerationを有効にする方法については、[Transfer Accelerationのドキュメント](/[platform]/build-a-backend/storage/extend-s3-resources/#example---enable-transfer-acceleration)を参照してください。
+
+</Callout>
+
+<!-- Platform: react, angular, javascript, vue, nextjs, react-native -->
+
+### ファイルからのアップロード
+
+以下は、ファイルオブジェクトからファイルをアップロードする方法の例です。ファイルオブジェクトはローカルマシンや別のソースから取得できます。
+
+<!-- Platform: react, react-native -->
+```jsx
+import React from 'react';
+import { uploadData } from 'aws-amplify/storage';
+
+function App() {
+  const [file, setFile] = React.useState();
+
+  const handleChange = (event) => {
+    setFile(event.target.files?.[0]);
+  };
+
+  const handleClick = () => {
+    if (!file) {
+      return;
+    }
+    uploadData({
+      path: `photos/${file.name}`,
+      data: file,
+    });
+  };
+
+  return (
+    <div>
+      <input type="file" onChange={handleChange} />
+      <button onClick={handleClick}>Upload</button>
+    </div>
+  );
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: javascript, angular, vue, nextjs -->
+```javascript
+import { uploadData } from "aws-amplify/storage";
+
+const file = document.getElementById("file");
+const upload = document.getElementById("upload");
+
+upload.addEventListener("click", () => {
+  const fileReader = new FileReader();
+  fileReader.readAsArrayBuffer(file.files[0]);
+
+  fileReader.onload = async (event) => {
+    console.log("Complete File read successfully!", event.target.result);
+    try {
+      await uploadData({
+                data: event.target.result,
+                path: file.files[0].name
+            });
+    } catch (e) {
+      console.log("error", e);
+    }
+  };
+});
+```
+<!-- /Platform -->
+
+### データからのアップロード
+
+メモリに保存されたデータをクラウドにアップロードしたい場合は、この例に従ってください。
+
+```javascript
+import { uploadData } from 'aws-amplify/storage';
+
+try {
+  const result = await uploadData({
+    path: "album/2024/1.jpg",
+    // Alternatively, path: ({identityId}) => `album/${identityId}/1.jpg`
+    data: file,
+  }).result;
+  console.log('Succeeded: ', result);
+} catch (error) {
+  console.log('Error : ', error);
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+### ファイルからのアップロード
+
+#### [Java]
+
+```java
+private void uploadFile() {
+    File exampleFile = new File(getApplicationContext().getFilesDir(), "example");
+
+    try {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(exampleFile));
+        writer.append("Example file contents");
+        writer.close();
+    } catch (Exception exception) {
+        Log.e("MyAmplifyApp", "Upload failed", exception);
+    }
+
+    Amplify.Storage.uploadFile(
+            StoragePath.fromString("public/example"),
+            exampleFile,
+            result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getPath()),
+            storageFailure -> Log.e("MyAmplifyApp", "Upload failed", storageFailure)
+    );
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+private fun uploadFile() {
+    val exampleFile = File(applicationContext.filesDir, "example")
+    exampleFile.writeText("Example file contents")
+
+    Amplify.Storage.uploadFile(StoragePath.fromString("public/example"), exampleFile,
+        { Log.i("MyAmplifyApp", "Successfully uploaded: ${it.path}") },
+        { Log.e("MyAmplifyApp", "Upload failed", it) }
+    )
+}
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+private suspend fun uploadFile() {
+    val exampleFile = File(applicationContext.filesDir, "example")
+    exampleFile.writeText("Example file contents")
+
+    val upload = Amplify.Storage.uploadFile(StoragePath.fromString("public/example"), exampleFile)
+    try {
+        val result = upload.result()
+        Log.i("MyAmplifyApp", "Successfully uploaded: ${result.path}")
+    } catch (error: StorageException) {
+        Log.e("MyAmplifyApp", "Upload failed", error)
+    }
+}
+```
+
+#### [RxJava]
+
+```java
+private void uploadFile() {
+    File exampleFile = new File(getApplicationContext().getFilesDir(), "example");
+
+    try {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(exampleFile));
+        writer.append("Example file contents");
+        writer.close();
+    } catch (Exception exception) {
+        Log.e("MyAmplifyApp", "Upload failed", exception);
+    }
+
+    RxProgressAwareSingleOperation<StorageUploadFileResult> rxUploadOperation =
+            RxAmplify.Storage.uploadFile(StoragePath.fromString("public/example"), exampleFile);
+
+    rxUploadOperation
+            .observeResult()
+            .subscribe(
+                result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getPath()),
+                error -> Log.e("MyAmplifyApp", "Upload failed", error)
+            );
+}
+```
+
+<!-- /Platform -->
+
+<!-- Platform: android -->
+### Input Streamからのアップロード
+
+#### [Java]
+
+```java
+private void uploadInputStream() {
+    try {
+        InputStream exampleInputStream = getContentResolver().openInputStream(uri);
+
+        Amplify.Storage.uploadInputStream(
+                StoragePath.fromString("public/example"),
+                exampleInputStream,
+                result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getPath()),
+                storageFailure -> Log.e("MyAmplifyApp", "Upload failed", storageFailure)
+        );
+    }  catch (FileNotFoundException error) {
+        Log.e("MyAmplifyApp", "Could not find file to open for input stream.", error);
+    }
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+private fun uploadInputStream(uri: Uri) {
+    val stream = contentResolver.openInputStream(uri)
+
+    Amplify.Storage.uploadInputStream(StoragePath.fromString("public/example"), stream,
+        { Log.i("MyAmplifyApp", "Successfully uploaded: ${it.path}") },
+        { Log.e("MyAmplifyApp", "Upload failed", it) }
+    )
+}
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+private suspend fun uploadInputStream(uri: Uri) {
+    val stream = contentResolver.openInputStream(uri)
+
+    val upload = Amplify.Storage.uploadInputStream(StoragePath.fromString("public/example"), stream)
+    try {
+        val result = upload.result()
+        Log.i("MyAmplifyApp", "Successfully uploaded: ${result.path}.")
+    } catch (error: StorageException) {
+        Log.e("MyAmplifyApp", "Upload failed")
+    }
+}
+```
+
+#### [RxJava]
+
+```java
+private void uploadInputStream() {
+    try {
+        InputStream exampleInputStream = getContentResolver().openInputStream(uri);
+
+        RxProgressAwareSingleOperation<StorageUploadInputStreamResult> rxUploadOperation =
+                RxAmplify.Storage.uploadInputStream(StoragePath.fromString("public/example"), exampleInputStream);
+
+        rxUploadOperation
+                .observeResult()
+                .subscribe(
+                    result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getPath()),
+                    error -> Log.e("MyAmplifyApp", "Upload failed", error)
+                );
+    } catch (FileNotFoundException error) {
+        Log.e("MyAmplifyApp", "Could not find file to open for input stream.", error);
+    }
+}
+```
+
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+### ファイルからのアップロード
+
+アップロードしたいファイルがある場合は、`local`パラメータにファイルのURLを指定できます。
+同じ`path`を持つファイルがS3にすでに存在する場合、既存のS3ファイルは上書きされます。
+
+```swift
+let dataString = "My Data"
+let fileName = "myFile.txt"
+guard let fileUrl = FileManager.default.urls(
+    for: .documentDirectory,
+    in: .userDomainMask
+).first?.appendingPathComponent(fileName)
+else { return }
+
+try dataString.write(
+    to: fileUrl,
+    atomically: true,
+    encoding: .utf8
+)
+
+let uploadTask = Amplify.Storage.uploadFile(
+    path: .fromString("public/example/path/myFile.txt"),
+    local: fileUrl
+)
+
+```
+
+### データからのアップロード
+
+データオブジェクトからファイルをアップロードするには、`path`とアップロードする`data`オブジェクトを指定します。
+
+```swift
+let dataString = "My Data"
+let data = Data(dataString.utf8)
+let uploadTask = Amplify.Storage.uploadData(
+    path: .fromString("public/example/path/myFile.txt"),
+    data: data
+)
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+### ファイルからのアップロード
+
+<Callout>
+
+**注意**: `AWSFilePlatform`を使用するには、`flutter pub add aws_common`を実行してFlutterプロジェクトに[aws_common](https://pub.dev/packages/aws_common)パッケージを追加してください。
+
+</Callout>
+
+#### [All Platforms]
+
+```dart
+import 'package:amplify_flutter/amplify_flutter.dart';
+
+Future<void> uploadFile() async {
+  try {
+    final result = await Amplify.Storage.uploadFile(
+      localFile: AWSFile.fromPath('/path/to/local/file.txt'),
+      path: const StoragePath.fromString('public/file.txt'),
+    ).result;
+    safePrint('Uploaded file: ${result.uploadedItem.path}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+
+<Block name= "Mobile & Desktop">
+
+```dart
+import 'dart:io' show File;
+
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:aws_common/vm.dart';
+
+Future<void> uploadFile(File file) async {
+  try {
+    final result = await Amplify.Storage.uploadFile(
+      localFile: AWSFilePlatform.fromFile(file),
+      path: const StoragePath.fromString('public/file.png'),
+    ).result;
+    safePrint('Uploaded file: ${result.uploadedItem.path}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+
+#### [Web]
+
+```dart
+import 'dart:html' show File;
+
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:aws_common/web.dart';
+
+Future<void> uploadFile(File file) async {
+  final awsFile = AWSFilePlatform.fromFile(file);
+  try {
+    final result = await Amplify.Storage.uploadFile(
+      localFile: awsFile,
+      path: const StoragePath.fromString('public/file.png'),
+    ).result;
+    safePrint('Uploaded file: ${result.uploadedItem.path}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+
+### Flutterの`file_picker`プラグインからのアップロード
+
+[file_picker](https://pub.dev/packages/file_picker)プラグインを使用すると、ユーザーのデバイスから任意のファイルタイプを取得できます。
+
+```dart
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:file_picker/file_picker.dart';
+
+Future<void> uploadImage() async {
+  // デバイスからファイルを選択する
+  final result = await FilePicker.platform.pickFiles(
+    type: FileType.custom,
+    withData: false,
+    // パフォーマンス向上のためファイルストリームを取得するようにする
+    withReadStream: true,
+    allowedExtensions: ['jpg', 'png', 'gif'],
+  );
+
+  if (result == null) {
+    safePrint('No file selected');
+    return;
+  }
+
+  // ファイル名を使用してファイルをアップロードする
+  final platformFile = result.files.single;
+  try {
+    final result = await Amplify.Storage.uploadFile(
+      localFile: AWSFile.fromStream(
+        platformFile.readStream!,
+        size: platformFile.size,
+      ),
+      path: StoragePath.fromString('public/${platformFile.name}'),
+      onProgress: (progress) {
+        safePrint('Fraction completed: ${progress.fractionCompleted}');
+      },
+    ).result;
+    safePrint('Successfully uploaded file: ${result.uploadedItem.path}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+
+### データからのアップロード
+
+データオブジェクトからアップロードするには、`path`と`data`を指定します。`data`は様々なデータ形式から作成された`S3DataPayload`のインスタンスです。
+
+#### [String]
+
+```dart
+Future<void> uploadData() async {
+  try {
+    final result = await Amplify.Storage.uploadData(
+      data: StorageDataPayload.string(
+        'hello world',
+        contentType: 'text/plain',
+      ),
+      path: const StoragePath.fromString('public/example.txt'),
+    ).result;
+    safePrint('Uploaded data: ${result.uploadedItem.path}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+
+#### [JSON Object]
+
+```dart
+Future<void> uploadData() async {
+  try {
+    final result = await Amplify.Storage.uploadData(
+      data: StorageDataPayload.json({
+        'title': 'example',
+        'author': {
+          'firstName': 'Jane',
+          'lastName': 'Doe',
+        },
+      }),
+      path: const StoragePath.fromString('public/example.json'),
+    ).result;
+    safePrint('Uploaded data: ${result.uploadedItem.path}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+
+#### [Data URL]
+
+[data URL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URLs)の詳細はこちらをご参照ください。
+
+```dart
+Future<void> uploadData() async {
+  // dataUrl should be a valid Data Url.
+  // see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URLs
+  const dataUrl = 'data:text/plain;charset=utf-8;base64,aGVsbG8gd29ybGQ=';
+  try {
+    final result = await Amplify.Storage.uploadData(
+      data: StorageDataPayload.dataUrl(dataUrl),
+      path: const StoragePath.fromString('public/example.txt'),
+    ).result;
+    safePrint('Uploaded data: ${result.uploadedItem.path}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+
+#### [Bytes]
+
+```dart
+Future<void> uploadBytes() async {
+  try {
+    final bytes = 'hello world'.codeUnits;
+    final result = await Amplify.Storage.uploadData(
+      data: StorageDataPayload.bytes(
+        bytes,
+        contentType: 'text/plain',
+      ),
+      path: const StoragePath.fromString('public/example.txt'),
+    ).result;
+    safePrint('Uploaded data: ${result.uploadedItem.path}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+### アップロードの進捗を監視する
+
+```dart
+final operation = Amplify.Storage.uploadFile(
+  localFile: AWSFile.fromPath('/path/to/local/file'),
+  path: const StoragePath.fromString('public/example.txt'),
+  onProgress: (progress) {
+    safePrint('fraction totalBytes: ${progress.totalBytes}');
+    safePrint('fraction transferredBytes: ${progress.transferredBytes}');
+    safePrint('fraction completed: ${progress.fractionCompleted}');
+  }
+);
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+### アップロードの一時停止、再開、キャンセル
+
+`Amplify.Storage.uploadFile`または`Amplify.Storage.uploadData`の呼び出しは、アップロードを実行している操作への参照を返します。
+
+```dart
+Future<void> upload() async {
+  final operation = Amplify.Storage.uploadFile(
+    localFile: AWSFile.fromPath('/path/to/local/file'),
+    path: const StoragePath.fromString('public/example.txt'),
+  );
+
+  // 操作を一時停止する
+  await operation.pause();
+
+  // 操作を再開する
+  await operation.resume();
+
+  // 操作をキャンセルする
+  await operation.cancel();
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+### 指定したバケットへのアップロード
+
+`bucket`オプションを指定することで、特定のバケットに対して`upload`操作を実行することもできます。Amplify Backendで定義した名前を使ってターゲットバケットを表す`StorageBucket`オブジェクトを渡すことができます。
+
+```dart
+final data = 'multi bucket upload data byte'.codeUnits;
+final result = await Amplify.Storage.uploadData(
+  data: StorageDataPayload.bytes(data),
+  path: const StoragePath.fromString('path/to/file.txt'),
+  options: StorageUploadDataOptions(
+    // highlight-start
+    // Amplify Backendで割り当てられた名前を使ってターゲットバケットを指定する
+    bucket: StorageBucket.fromOutputs('secondBucket'),
+    // highlight-end
+  ),
+).result;
+```
+あるいは、コンソールからバケット名とリージョンを指定してオブジェクトを渡すこともできます。
+
+```dart
+final data = 'multi bucket upload data byte'.codeUnits;
+final result = await Amplify.Storage.uploadData(
+  data: StorageDataPayload.bytes(data),
+  path: const StoragePath.fromString('path/to/file.txt'),
+  options: StorageUploadDataOptions(
+    // highlight-start
+    // あるいは、コンソールからバケット名と関連するリージョンを指定する
+   bucket: StorageBucket.fromBucketInfo(
+        BucketInfo(
+          bucketName: 'second-bucket-name-from-console',
+          region: 'us-east-2',
+        ),
+      ),
+      // highlight-end
+  ),
+).result;
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+### その他のアップロードオプション
+
+オプション | 型 | 説明 |
+| -- | -- | ----------- |
+| bucket | StorageBucket | Amplify Backendで割り当てられた名前またはコンソールのバケット名とリージョンから指定するターゲットバケット。<br/><br/>このオプションが指定されていない場合は、Amplify設定のデフォルトバケットとリージョンが使用されます。<br/><br/>詳細は[追加のストレージバケットの設定](/[platform]/build-a-backend/storage/set-up-storage/#configure-additional-storage-buckets)をご覧ください。 |
+| getProperties | boolean | 操作完了後に`Amplify.Storage.getProperties()`を使用してアップロードされたオブジェクトのプロパティを取得するかどうか。`true`に設定すると、返されるアイテムにメタデータやコンテンツタイプなどの追加情報が含まれます。 |
+| useAccelerateEndpoint | boolean | アクセラレートエンドポイントを使用するかどうか。<br/><br/>詳細は[Transfer Acceleration](/[platform]/frontend/storage/upload-files/#transfer-acceleration)をご覧ください。 |
+
+`uploadFile`のオプション使用例:
+
+```dart
+final operation = Amplify.Storage.uploadFile(
+  localFile: AWSFile.fromPath('/path/to/local/file'),
+  path: const StoragePath.fromString('public/example.txt'),
+  options: const StorageUploadFileOptions(
+    metadata: {'key': 'value'},
+    pluginOptions: S3UploadFilePluginOptions(
+      getProperties: true,
+      useAccelerateEndpoint: true,
+    ),
+  ),
+);
+```
+
+`uploadData`のオプション使用例:
+
+```dart
+final operation = Amplify.Storage.uploadData(
+  data: StorageDataPayload.string('example'),
+  path: const StoragePath.fromString('public/example.txt'),
+  options: const StorageUploadDataOptions(
+    metadata: {'key': 'value'},
+    pluginOptions: S3UploadDataPluginOptions(
+      getProperties: true,
+      useAccelerateEndpoint: true,
+    ),
+  ),
+);
+```
+<!-- /Platform -->
+<!-- Platform: react, angular, javascript, vue, nextjs, react-native -->
+### 指定したバケットへのアップロード
+
+`bucket`オプションを指定することで、特定のバケットへのアップロード操作を実行することもできます。Amplify Backendでのターゲットバケットの割り当て名を表す文字列を渡すことができます。
+
+```ts
+import { uploadData } from 'aws-amplify/storage';
+
+const result = await uploadData({
+  path: 'album/2024/1.jpg',
+  data: file,
+  options: {
+    // highlight-start
+    // Amplify Backendで割り当てられた名前を使ってターゲットバケットを指定する
+    bucket: 'assignedNameInAmplifyBackend'
+    // highlight-end
+  }
+}).result;
+```
+あるいは、コンソールからバケット名とリージョンを指定してオブジェクトを渡すこともできます。
+
+```ts
+import { uploadData } from 'aws-amplify/storage';
+
+const result = await uploadData({
+  path: 'album/2024/1.jpg',
+  data: file,
+  options: {
+    // highlight-start
+    // あるいは、コンソールからバケット名と関連するリージョンを指定する
+    bucket: {
+      bucketName: 'bucket-name-from-console',
+      region: 'us-east-2'
+    }
+    // highlight-end
+  }
+}).result;
+
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+### 指定したバケットへのアップロード
+
+`bucket`オプションを指定することで、特定のバケットへのアップロード操作を実行することもできます。Amplify Backendでのターゲットバケットの割り当て名を表す文字列を渡すことができます。
+
+#### [Java]
+
+```java
+private void uploadFile() {
+    File exampleFile = new File(getApplicationContext().getFilesDir(), "example");
+
+    try {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(exampleFile));
+        writer.append("Example file contents");
+        writer.close();
+    } catch (Exception exception) {
+        Log.e("MyAmplifyApp", "Upload failed", exception);
+    }
+
+    StorageBucket secondBucket = StorageBucket.fromOutputs("secondBucket");
+    StorageUploadFileOptions options = StorageUploadFileOptions.builder().bucket(secondBucket).build();
+
+    Amplify.Storage.uploadFile(
+            StoragePath.fromString("public/example"),
+            exampleFile,
+            options,
+            result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getPath()),
+            storageFailure -> Log.e("MyAmplifyApp", "Upload failed", storageFailure)
+    );
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+private fun uploadFile() {
+    val exampleFile = File(applicationContext.filesDir, "example")
+    exampleFile.writeText("Example file contents")
+
+    val secondBucket = StorageBucket.fromOutputs("secondBucket")
+    val options = StorageUploadFileOptions.builder().bucket(secondBucket).build()
+
+    Amplify.Storage.uploadFile(StoragePath.fromString("public/example"), exampleFile, options,
+        { Log.i("MyAmplifyApp", "Successfully uploaded: ${it.path}") },
+        { Log.e("MyAmplifyApp", "Upload failed", it) }
+    )
+}
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+private suspend fun uploadFile() {
+    val exampleFile = File(applicationContext.filesDir, "example")
+    exampleFile.writeText("Example file contents")
+
+    val secondBucket = StorageBucket.fromOutputs("secondBucket")
+    val options = StorageUploadFileOptions.builder().bucket(secondBucket).build()
+
+    val upload = Amplify.Storage.uploadFile(StoragePath.fromString("public/example"), exampleFile, options)
+    try {
+        val result = upload.result()
+        Log.i("MyAmplifyApp", "Successfully uploaded: ${result.path}")
+    } catch (error: StorageException) {
+        Log.e("MyAmplifyApp", "Upload failed", error)
+    }
+}
+```
+
+#### [RxJava]
+
+```java
+private void uploadFile() {
+    File exampleFile = new File(getApplicationContext().getFilesDir(), "example");
+
+    try {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(exampleFile));
+        writer.append("Example file contents");
+        writer.close();
+    } catch (Exception exception) {
+        Log.e("MyAmplifyApp", "Upload failed", exception);
+    }
+
+    StorageBucket secondBucket = StorageBucket.fromOutputs("secondBucket");
+    StorageUploadFileOptions options = StorageUploadFileOptions.builder().bucket(secondBucket).build();
+
+    RxProgressAwareSingleOperation<StorageUploadFileResult> rxUploadOperation =
+            RxAmplify.Storage.uploadFile(StoragePath.fromString("public/example"), exampleFile, options);
+
+    rxUploadOperation
+            .observeResult()
+            .subscribe(
+                result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getPath()),
+                error -> Log.e("MyAmplifyApp", "Upload failed", error)
+            );
+}
+```
+
+あるいは、コンソールからバケット名とリージョンを指定してオブジェクトを渡すこともできます。
+
+#### [Java]
+
+```java
+private void uploadFile() {
+    File exampleFile = new File(getApplicationContext().getFilesDir(), "example");
+
+    try {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(exampleFile));
+        writer.append("Example file contents");
+        writer.close();
+    } catch (Exception exception) {
+        Log.e("MyAmplifyApp", "Upload failed", exception);
+    }
+
+    BucketInfo bucketInfo = new BucketInfo("second-bucket-name-from-console", "us-east-2");
+    StorageBucket secondBucket = StorageBucket.fromBucketInfo(bucketInfo);
+    StorageUploadFileOptions options = StorageUploadFileOptions.builder().bucket(secondBucket).build();
+
+    Amplify.Storage.uploadFile(
+            StoragePath.fromString("public/example"),
+            exampleFile,
+            options,
+            result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getPath()),
+            storageFailure -> Log.e("MyAmplifyApp", "Upload failed", storageFailure)
+    );
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+private fun uploadFile() {
+    val exampleFile = File(applicationContext.filesDir, "example")
+    exampleFile.writeText("Example file contents")
+
+    val bucketInfo = new BucketInfo("second-bucket-name-from-console", "us-east-2");
+    val secondBucket = StorageBucket.fromBucketInfo(bucketInfo);
+    val options = StorageUploadFileOptions.builder().bucket(secondBucket).build();
+
+    Amplify.Storage.uploadFile(StoragePath.fromString("public/example"), exampleFile, options,
+        { Log.i("MyAmplifyApp", "Successfully uploaded: ${it.path}") },
+        { Log.e("MyAmplifyApp", "Upload failed", it) }
+    )
+}
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+private suspend fun uploadFile() {
+    val exampleFile = File(applicationContext.filesDir, "example")
+    exampleFile.writeText("Example file contents")
+
+    val bucketInfo = new BucketInfo("second-bucket-name-from-console", "us-east-2");
+    val secondBucket = StorageBucket.fromBucketInfo(bucketInfo);
+    val options = StorageUploadFileOptions.builder().bucket(secondBucket).build();
+
+    val upload = Amplify.Storage.uploadFile(StoragePath.fromString("public/example"), exampleFile, options)
+    try {
+        val result = upload.result()
+        Log.i("MyAmplifyApp", "Successfully uploaded: ${result.path}")
+    } catch (error: StorageException) {
+        Log.e("MyAmplifyApp", "Upload failed", error)
+    }
+}
+```
+
+#### [RxJava]
+
+```java
+private void uploadFile() {
+    File exampleFile = new File(getApplicationContext().getFilesDir(), "example");
+
+    try {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(exampleFile));
+        writer.append("Example file contents");
+        writer.close();
+    } catch (Exception exception) {
+        Log.e("MyAmplifyApp", "Upload failed", exception);
+    }
+
+    BucketInfo bucketInfo = new BucketInfo("second-bucket-name-from-console", "us-east-2");
+    StorageBucket secondBucket = StorageBucket.fromBucketInfo(bucketInfo);
+    StorageUploadFileOptions options = StorageUploadFileOptions.builder().bucket(secondBucket).build();
+
+    RxProgressAwareSingleOperation<StorageUploadFileResult> rxUploadOperation =
+            RxAmplify.Storage.uploadFile(StoragePath.fromString("public/example"), exampleFile, options);
+
+    rxUploadOperation
+            .observeResult()
+            .subscribe(
+                result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getPath()),
+                error -> Log.e("MyAmplifyApp", "Upload failed", error)
+            );
+}
+```
+
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+### 指定したバケットへのアップロード
+
+`bucket`オプションを指定することで、特定のバケットへのアップロード操作を実行できます。
+
+#### [From Outputs]
+`.fromOutputs(name:)`を使用して、Amplify Backendでのターゲットバケットの割り当て名を表す文字列を指定できます。
+
+```swift
+// ファイルからアップロード
+let uploadTask = Amplify.Storage.uploadFile(
+    path: .fromString("public/example/path/myFile.txt"),
+    local: fileUrl,
+    options: .init(
+        bucket: .fromOutputs(name: "secondBucket")
+    )
+)
+
+// データからアップロード
+let uploadTask = Amplify.Storage.uploadData(
+    path: .fromString("public/example/path/myFile.txt"),
+    data: data,
+    options: .init(
+        bucket: .fromOutputs(name: "secondBucket")
+    )
+)
+```
+
+#### [From Bucket Info]
+`.fromBucketInfo(_:)`を使用してバケット名とリージョンを直接指定することもできます。
+
+```swift
+// ファイルからアップロード
+let uploadTask = Amplify.Storage.uploadFile(
+    path: .fromString("public/example/path/myFile.txt"),
+    local: fileUrl,
+    options: .init(
+        bucket: .fromBucketInfo(.init(
+            bucketName: "another-bucket-name",
+            region: "another-bucket-region")
+        )    
+    )
+)
+
+// データからアップロード
+let uploadTask = Amplify.Storage.uploadData(
+    path: .fromString("public/example/path/myFile.txt"),
+    data: data,
+    options: .init(
+        bucket: .fromBucketInfo(.init(
+            bucketName: "another-bucket-name",
+            region: "another-bucket-region")
+        )
+    )
+)
+```
+
+<!-- /Platform -->
+
+<!-- Platform: angular,javascript,nextjs,react,vue,react-native -->
+### アップロードの進捗を監視する
+
+`onProgress`オプションを使用してアップロードの進捗を監視します。
+
+```javascript
+import { uploadData } from 'aws-amplify/storage';
+
+const monitorUpload = async () => {
+  try {
+    const result = await uploadData({
+      path: "album/2024/1.jpg",
+      // Alternatively, path: ({identityId}) => `album/${identityId}/1.jpg`
+      data: file,
+      options: {
+        onProgress: ({ transferredBytes, totalBytes }) => {
+          if (totalBytes) {
+            console.log(
+              `Upload progress ${Math.round(
+                (transferredBytes / totalBytes) * 100
+              )} %`
+            );
+          }
+        },
+      },
+    }).result;
+    console.log("Path from Response: ", result.path);
+  } catch (error) {
+    console.log("Error : ", error);
+  }
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+### アップロードの進捗を監視する
+
+アップロードの進捗を追跡するには、以下に示すように`uploadFile`または`uploadData`から返された参照を使用します。
+
+#### [Async/Await]
+```swift
+Task {
+    for await progress in await uploadTask.progress {
+        print("Progress: \(progress)")
+    }
+}
+
+let value = try await uploadTask.value
+print("Completed: \(value)")
+```
+
+#### [Combine]
+
+```swift
+let progressSink = uploadTask
+    .inProcessPublisher
+    .sink { progress in
+        print("Progress: \(progress)")
+    }
+
+let resultSink = uploadTask
+    .resultPublisher
+    .sink {
+        if case let .failure(storageError) = $0 {
+            print("Failed: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+        }
+    }
+    receiveValue: { data in
+        print("Completed: \(data)")
+    }
+```
+
+<!-- /Platform -->
+
+<!-- Platform: android -->
+### アップロードの進捗を監視する
+
+アップロードの進捗を追跡するには、進捗リスナーコールバックを含む`uploadFile` APIを使用します。
+
+#### [Java]
+
+```java
+private void uploadFile() {
+    File exampleFile = new File(getApplicationContext().getFilesDir(), "example");
+
+    try {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(exampleFile));
+        writer.append("Example file contents");
+        writer.close();
+    } catch (Exception exception) {
+        Log.e("MyAmplifyApp", "Upload failed", exception);
+    }
+
+    Amplify.Storage.uploadFile(
+        StoragePath.fromString("public/example"),
+        exampleFile,
+        StorageUploadFileOptions.defaultInstance(),
+        progress -> Log.i("MyAmplifyApp", "Fraction completed: " + progress.getFractionCompleted()),
+        result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getPath()),
+        storageFailure -> Log.e("MyAmplifyApp", "Upload failed", storageFailure)
+    );
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+private fun uploadFile() {
+    val exampleFile = File(applicationContext.filesDir, "example")
+    exampleFile.writeText("Example file contents")
+
+    val options = StorageUploadFileOptions.defaultInstance()
+    Amplify.Storage.uploadFile(StoragePath.fromString("public/example"), exampleFile, options,
+        { Log.i("MyAmplifyApp", "Fraction completed: ${it.fractionCompleted}") },
+        { Log.i("MyAmplifyApp", "Successfully uploaded: ${it.path}") },
+        { Log.e("MyAmplifyApp", "Upload failed", it) }
+    )
+}
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+private suspend fun uploadFile() {
+    val exampleFile = File(applicationContext.filesDir, "example")
+    exampleFile.writeText("Example file contents")
+
+    val options = StorageUploadFileOptions.defaultInstance()
+    val upload = Amplify.Storage.uploadFile(StoragePath.fromString("public/example"), exampleFile, options)
+    val progressJob = activityScope.async {
+        upload.progress().collect {
+            Log.i("MyAmplifyApp", "Fraction completed: ${it.fractionCompleted}")
+        }
+    }
+    try {
+        val result = upload.result()
+        Log.i("MyAmplifyApp", "Successfully uploaded: ${result.path}")
+    } catch (error: StorageException) {
+        Log.e("MyAmplifyApp", "Upload failed", error)
+    }
+    progressJob.cancel()
+}
+```
+
+#### [RxJava]
+
+```java
+RxProgressAwareSingleOperation<StorageUploadFileResult> upload =
+        RxAmplify.Storage.uploadFile("example", exampleFile);
+
+upload
+    .observeProgress()
+    .subscribe(
+      progress -> Log.i("MyAmplifyApp", progress.getFractionCompleted())
+    );
+```
+
+<!-- /Platform -->
+
+<!-- Platform: android -->
+### すべての`upload`オプション
+
+オプション | 型 | 説明 |
+| -- | -- | ----------- |
+| metadata | Map\<String\, String\> | 保存するオブジェクトのメタデータ。 |
+| contentType | String | 保存するオブジェクトの形式を説明する標準MIMEタイプ。 |
+| bucket | StorageBucket | オブジェクトを保存するバケット。 |
+| serverSideEncryption | ServerSideEncryption | サーバー側の暗号化アルゴリズム。 |
+| useAccelerateEndpoint | boolean | アクセラレーションエンドポイントを使用するかどうかのフラグ。 |
+<!-- /Platform -->
+
+<!-- Platform: android -->
+### 転送のクエリ
+
+Amplify Androidライブラリを使用してアップロードまたはダウンロード操作がリクエストされると、まずローカルのSQLiteデータベースに永続化され、その後実行キューに追加されます。アップロードまたはダウンロードAPIから返された転送IDを使用して、ローカルデータベースにキューイングされた転送操作をクエリできます。Get-Transfer APIは、以前にエンキューされた保留中の転送を取得し、進捗変更、エラー、成功の更新を受け取るリスナーをアタッチしたり、一時停止、キャンセル、再開したりすることができます。
+
+#### [Java]
+
+```java
+Amplify.Storage.getTransfer("TRANSFER_ID",
+    operation -> {
+        Log.i("MyAmplifyApp", "Current State" + operation.getTransferState());
+        // 更新を受け取るリスナーを設定する
+        operation.setOnProgress( progress -> {});
+        operation.setOnSuccess( result -> {});
+        operation.setOnError(error -> {});
+
+        // 可能なアクション
+        operation.pause();
+        operation.resume();
+        operation.start();
+        operation.cancel();
+    },
+    {
+        error -> Log.e("MyAmplifyApp", "Failed to query transfer", error)
+    }
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+Amplify.Storage.getTransfer("TRANSFER_ID",
+    { operation ->
+        Log.i("MyAmplifyApp", "Current State" + operation.transferState)
+        // 更新を受け取るリスナーを設定する
+        operation.setOnProgress {  }
+        operation.setOnSuccess {  }
+        operation.setOnError {  }
+
+        // 可能なアクション
+        operation.pause()
+        operation.resume()
+        operation.start()
+        operation.cancel()
+    },
+    {
+        Log.e("MyAmplifyApp", "Failed to query transfer", it)
+    }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    val operation = Amplify.Storage.getTransfer("TRANSFER_ID")
+    Log.i("MyAmplifyApp", "Current State" + operation.transferState)
+    // 更新を受け取るリスナーを設定する
+    operation.setOnProgress {  }
+    operation.setOnSuccess {  }
+    operation.setOnError {  }
+
+    // 可能なアクション
+    operation.pause()
+    operation.resume()
+    operation.start()
+    operation.cancel()
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "Failed to query transfer", error)
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.Storage.getTransfer("TRANSFER_ID")
+    .subscribe(
+        operation -> {
+            Log.i("MyAmplifyApp", "Current State" + operation.getTransferState());
+            // 更新を受け取るリスナーを設定する
+            operation.setOnProgress( progress -> {});
+            operation.setOnSuccess( result -> {});
+            operation.setOnError(error -> {});
+
+            // 可能なアクション
+            operation.pause();
+            operation.resume();
+            operation.start();
+            operation.cancel();
+        },
+        error -> Log.e("MyAmplifyApp", "Failed to query transfer", error);
+    );
+```
+
+<!-- /Platform -->
+
+<!-- Platform: android -->
+### オブジェクトメタデータ付きの転送
+
+メタデータを伴うファイルをアップロードするには、`StorageUploadFileOptions`ビルダーを使用します。まずhashMapオブジェクトを作成し、ビルドプロセス中に`StorageUploadFileOptions`に組み込んでから、アップロード関数に渡します。
+
+#### [Java]
+```java
+private void uploadFile() {
+    File exampleFile = new File(getApplicationContext().getFilesDir(), "example");
+    try {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(exampleFile));
+        writer.append("Example file contents");
+        writer.close();
+    } catch (Exception exception) {
+        Log.e("MyAmplifyApp", "Upload failed", exception);
+    }
+
+    // メタデータを作成する
+    Map<String, String> userMetadata = new HashMap<>();
+    userMetadata.put("myKey", "myVal");
+
+    // メタデータ付きのアップロードオプションを設定する
+    StorageUploadFileOptions options = StorageUploadFileOptions.builder()
+        .metadata(userMetadata)
+        .build();
+
+    // アップロードを実行する
+    Amplify.Storage.uploadFile(
+        StoragePath.fromString("public/example"),
+        exampleFile,
+        options,
+        result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getPath()),
+        error -> Log.e("MyAmplifyApp", "Upload failed", error)
+    );
+}
+```
+
+#### [Kotlin - Callbacks]
+```kotlin
+fun uploadFile() {
+    val exampleFile = File(applicationContext.filesDir, "example")
+    exampleFile.writeText("Example file contents")
+
+    // メタデータを作成する
+    val userMetadata: MutableMap<String, String> = HashMap()
+    userMetadata["myKey"] = "myVal"
+
+    // メタデータ付きのアップロードオプションを設定する
+    val options = StorageUploadFileOptions.builder()
+        .metadata(userMetadata)
+        .build()
+
+    // アップロードを実行する
+    Amplify.Storage.uploadFile(
+        StoragePath.fromString("public/example"),
+        exampleFile,
+        options,
+        { result -> Log.i("MyAmplifyApp", "Successfully uploaded: ${result.path}") },
+        { error -> Log.e("MyAmplifyApp", "Upload failed", error) }
+    )
+}
+```
+
+#### [Kotlin - Coroutines]
+```kotlin
+fun uploadFile() {
+    val exampleFile = File(applicationContext.filesDir, "example")
+    exampleFile.writeText("Example file contents")
+
+    // メタデータを作成する
+    val userMetadata: MutableMap<String, String> = HashMap()
+    userMetadata["myKey"] = "myVal"
+
+    // メタデータ付きのアップロードオプションを設定する
+    val options = StorageUploadFileOptions.builder()
+        .metadata(userMetadata)
+        .build()
+
+    val upload = Amplify.Storage.uploadFile(StoragePath.fromString("public/example"), exampleFile, options)
+    val progressJob = activityScope.async {
+        upload.progress().collect {
+            Log.i("MyAmplifyApp", "Fraction completed: ${it.fractionCompleted}")
+        }
+    }
+    try {
+        val result = upload.result()
+        Log.i("MyAmplifyApp", "Successfully uploaded: ${result.path}")
+    } catch (error: StorageException) {
+        Log.e("MyAmplifyApp", "Upload failed", error)
+    }
+    progressJob.cancel()
+}
+```
+
+#### [RxJava]
+```Java
+private void uploadFile() {
+    File exampleFile = new File(getApplicationContext().getFilesDir(), "example");
+
+    try {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(exampleFile));
+        writer.append("Example file contents");
+        writer.close();
+    } catch (Exception exception) {
+        Log.e("MyAmplifyApp", "Upload failed", exception);
+    }
+
+    Map<String, String> userMetadata = new HashMap<>();
+    userMetadata.put("myKey", "myVal");
+
+    StorageUploadFileOptions options = StorageUploadFileOptions.builder()
+            .metadata(userMetadata)
+            .build();
+
+    RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> rxUploadOperation =
+            RxAmplify.Storage.uploadFile(StoragePath.fromString("public/example"), exampleFile, options);
+
+    rxUploadOperation
+            .observeResult()
+            .subscribe(
+                    result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getPath()),
+                    error -> Log.e("MyAmplifyApp", "Upload failed", error)
+            );
+}
+ ```
+
+<!-- /Platform -->
+
+<!-- Platform: android -->
+## 署名付きURLを使用したアップロード
+
+`StorageAccessMethod.PUT`を指定した`getUrl` APIを使用して、S3に直接ファイルをアップロードするための署名付きURLを生成できます。これは以下のような場合に便利です:
+
+- 標準HTTPURLエンドポイントのみを受け付けるサードパーティのツールやライブラリと統合する必要がある場合
+- 一時的なアップロードリンクを別のクライアントやサービスと共有したい場合
+- Amplify SDKが利用できないコンテキストからアップロードする必要がある場合
+
+#### [Java]
+
+```java
+AWSS3StorageGetPresignedUrlOptions options = AWSS3StorageGetPresignedUrlOptions.builder()
+    .method(StorageAccessMethod.PUT)
+    .expires(3600)
+    .build();
+
+Amplify.Storage.getUrl(
+    StoragePath.fromString("public/uploads/photo.jpg"),
+    options,
+    result -> {
+        URL presignedUrl = result.getUrl();
+        Log.i("MyAmplifyApp", "Presigned upload URL: " + presignedUrl);
+    },
+    error -> Log.e("MyAmplifyApp", "Failed to generate URL", error)
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+val options = AWSS3StorageGetPresignedUrlOptions.builder()
+    .method(StorageAccessMethod.PUT)
+    .expires(3600)
+    .build()
+
+Amplify.Storage.getUrl(
+    StoragePath.fromString("public/uploads/photo.jpg"),
+    options,
+    { Log.i("MyAmplifyApp", "Presigned upload URL: ${it.url}") },
+    { Log.e("MyAmplifyApp", "Failed to generate URL", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+val options = AWSS3StorageGetPresignedUrlOptions.builder()
+    .method(StorageAccessMethod.PUT)
+    .expires(3600)
+    .build()
+
+try {
+    val result = Amplify.Storage.getUrl(
+        StoragePath.fromString("public/uploads/photo.jpg"),
+        options
+    )
+    Log.i("MyAmplifyApp", "Presigned upload URL: ${result.url}")
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "Failed to generate URL", error)
+}
+```
+
+#### [RxJava]
+
+```java
+AWSS3StorageGetPresignedUrlOptions options = AWSS3StorageGetPresignedUrlOptions.builder()
+    .method(StorageAccessMethod.PUT)
+    .expires(3600)
+    .build();
+
+RxAmplify.Storage.getUrl(StoragePath.fromString("public/uploads/photo.jpg"), options)
+    .subscribe(
+        result -> Log.i("MyAmplifyApp", "Presigned upload URL: " + result.getUrl()),
+        error -> Log.e("MyAmplifyApp", "Failed to generate URL", error)
+    );
+```
+
+次に署名付きURLを使用して標準HTTPの`PUT`リクエストでファイルをアップロードします:
+
+```kotlin
+val presignedUrl = result.url
+val connection = presignedUrl.openConnection() as HttpURLConnection
+connection.doOutput = true
+connection.requestMethod = "PUT"
+connection.setRequestProperty("Content-Type", "image/jpeg")
+
+connection.outputStream.use { outputStream ->
+    outputStream.write(imageData)
+}
+
+val responseCode = connection.responseCode
+Log.i("MyAmplifyApp", "Upload status: $responseCode")
+connection.disconnect()
+```
+
+> **Warning:** `StorageAccessMethod.PUT`が指定された場合、オブジェクトがまだ存在しない可能性があるため、`validateObjectExistence`オプションは無視されます。
+
+### 署名付きURLアップロードオプション
+
+オプション | 型 | デフォルト | 説明 |
+| -- | -- | :--: | ----------- |
+| method | StorageAccessMethod | GET | `GET`はダウンロードURLを生成します。`PUT`はアップロードURLを生成します。 |
+| expires | int | 18000 | URLが期限切れになるまでの秒数。 |
+| bucket | StorageBucket | Amplify設定のデフォルトバケット | オブジェクトが保存されているバケット。 |
+| validateObjectExistence | boolean | false | URLを生成する前にオブジェクトが存在するかチェックするかどうか。methodが`PUT`の場合はスキップされます。 |
+| useAccelerateEndpoint | boolean | false | S3 Transfer Accelerationエンドポイントを使用するかどうか。 |
+<!-- /Platform -->
+
+<!-- Platform: react, angular, javascript, vue, nextjs, react-native -->
+### アップロードの一時停止、再開、キャンセル
+
+`uploadData`リクエストの再開、一時停止、キャンセルをサポートするコールバック関数があります。
+
+```javascript
+import { uploadData, isCancelError } from 'aws-amplify/storage';
+
+// タスクの一時停止、再開、キャンセル
+const uploadTask = uploadData({ path, data: file });
+//...
+uploadTask.pause();
+//...
+uploadTask.resume();
+//...
+uploadTask.cancel();
+//...
+try {
+  await uploadTask.result;
+} catch (error) {
+  if (isCancelError(error)) {
+    // タスクのキャンセルによってスローされたエラーを処理する
+  }
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+### アップロードの一時停止、再開、キャンセル
+
+`uploadData`または`uploadFile`の呼び出しは、実際にアップロードを実行しているタスクへの参照を返します。
+
+以下に示すように、タスクを一時停止してから再開したり、タスクをキャンセルしたりすることができます。
+
+```swift
+uploadTask.pause()
+uploadTask.resume()
+uploadTask.cancel()
+```
+
+<Callout>
+
+アップロードタスクは内部的に`URLSessionTask`インスタンスを使用して実行されます。詳細については[Appleの公式ドキュメント](https://developer.apple.com/documentation/foundation/urlsessiontask)を参照してください。
+
+</Callout>
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+### すべての`upload`オプション
+
+オプション | 型 | 説明 |
+| -- | -- | ----------- |
+| metadata | [String: String] | 保存するオブジェクトのメタデータ。 |
+| contentType | String | 保存するオブジェクトの形式を説明する標準MIMEタイプ。 |
+| bucket | StorageBucket | オブジェクトを保存するバケット。 |
+| progressStallTimeout | ProgressStallTimeout | アップロードの進捗停滞タイムアウトの設定。 |
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+## セキュリティスコープリソース（iCloudから）の操作
+セキュリティスコープリソースとは、iCloudやその他のクラウドストレージプロバイダーから取得したファイルを指します。iCloudに保存されているファイルへのアクセスを提供するシステムコンポーネント（例: [UIDocumentBrowserViewController](https://developer.apple.com/documentation/uikit/uidocumentbrowserviewcontroller)）を使用する際によく遭遇するファイルタイプです。
+
+セキュリティスコープリソースをアップロードするには、以下の手順が必要です:
+1. [startAccessingSecurityScopedResource()](https://developer.apple.com/documentation/foundation/url/1779698-startaccessingsecurityscopedreso)と[stopAccessingSecurityScopedResource()](https://developer.apple.com/documentation/foundation/url/1780153-stopaccessingsecurityscopedresou)を使用してセキュリティスコープファイル内のデータにアクセスする
+2. セキュリティスコープファイルのデータをアプリのサンドボックスに一時的に永続化する
+3. 一時的なURLを使用してファイルをアップロードする
+4. 一時的に永続化したファイルを削除する（オプション）
+```swift
+struct ScopedResourceFile {
+    let name: String
+    let data: Data
+}
+
+func getTempUrls(securityScopedUrls: [URL]) -> [URL] {
+    // 1. セキュリティスコープリソースのコンテンツをScopedResourceFile構造体に取得する
+    let fileContents = securityScopedUrls.compactMap { url -> ScopedResourceFile? in
+        let startAccess = url.startAccessingSecurityScopedResource()
+        guard startAccess else {
+            print("Issue accessing security scoped resource at :\(url)")
+            return nil
+        }
+        defer { url.stopAccessingSecurityScopedResource() }
+        do {
+            let data = try Data(contentsOf: url)
+            let fileName = url.lastPathComponent
+            return ScopedResourceFile(name: fileName, data: data)
+        } catch {
+            print("Couldn't create Data from contents of file at url: \(url)")
+            return nil
+        }
+    }
+
+    // 2. ファイルコンテンツを一時ファイルに書き込み、一時ファイルのURLを返す
+    let localFileURLs = persistTemporaryFiles(fileContents)
+
+    // 3. アップロードしたいファイルのローカルURLが取得できました
+    return localFileURLs
+}
+```
+
+## 署名付きURLを使用したアップロード
+
+`method: .put`を指定した`getURL` APIを使用して、S3に直接ファイルをアップロードするための署名付きURLを生成できます。これは以下のような場合に便利です:
+
+- 標準HTTPURLエンドポイントのみを受け付けるサードパーティのツールやライブラリと統合する必要がある場合
+- 一時的なアップロードリンクを別のクライアントやサービスと共有したい場合
+- Amplify SDKが利用できないコンテキストからアップロードする必要がある場合
+
+```swift
+import Amplify
+import AWSS3StoragePlugin
+
+// アップロード用の署名付きURLを生成する
+let uploadUrl = try await Amplify.Storage.getURL(
+    path: .fromString("public/uploads/photo.jpg"),
+    options: .init(
+        pluginOptions: AWSStorageGetURLOptions(
+            method: .put
+        )
+    )
+)
+```
+
+次に署名付きURLを使用して標準HTTPの`PUT`リクエストでファイルをアップロードします:
+
+```swift
+var request = URLRequest(url: uploadUrl)
+request.httpMethod = "PUT"
+request.httpBody = imageData
+
+let (_, response) = try await URLSession.shared.data(for: request)
+let httpResponse = response as? HTTPURLResponse
+print("Upload status: \(httpResponse?.statusCode ?? 0)")
+```
+
+> **Warning:** `method: .put`が指定された場合、オブジェクトがまだ存在しない可能性があるため、`validateObjectExistence`オプションは無視されます。
+
+### 署名付きURLアップロードオプション
+
+オプション | 型 | デフォルト | 説明 |
+| -- | -- | :--: | ----------- |
+| pluginOptions.method | StorageAccessMethod | .get | `.get`はダウンロードURLを生成します。`.put`はアップロードURLを生成します。 |
+| expires | Int | 18000 | URLが期限切れになるまでの秒数。 |
+| bucket | StorageBucket | Amplify設定のデフォルトバケット | オブジェクトが保存されているバケット。 |
+| pluginOptions.validateObjectExistence | Bool | false | URLを生成する前にオブジェクトが存在するかチェックするかどうか。methodが`.put`の場合はスキップされます。 |
+<!-- /Platform -->
+
+<!-- Platform: react, angular, javascript, vue, nextjs, react-native -->
+### オブジェクトメタデータ付きの転送
+
+`metadata`オプションを渡すことで、カスタムメタデータをアップロードされたオブジェクトに関連付けることができます。
+
+```ts
+import { uploadData } from 'aws-amplify/storage';
+
+const result = await uploadData({
+  path: 'album/2024/1.jpg',
+  data: file,
+  options: {
+    metadata: {
+      customKey: 'customValue',
+    },
+  },
+});
+```
+
+### その他のアップロードオプション
+
+`uploadData`の動作とアップロードされたオブジェクトのプロパティは、追加のオプションを渡すことでカスタマイズできます。
+
+```ts
+import { uploadData } from 'aws-amplify/storage';
+
+const result = await uploadData({
+  path: 'album/2024/1.jpg',
+  data: file,
+  options: {
+    // ダウンロード時に使用するcontent-typeヘッダー
+    contentType: "image/jpeg",
+    // オブジェクトの表示方法を設定する
+    contentDisposition: "attachment",
+    // アクセラレートエンドポイントを使用するかどうか
+    useAccelerateEndpoint: true,
+    // リクエストされたバケットを所有するアカウントID
+    expectedBucketOwner: "123456789012",
+    // アップロード完了前に同じキーを持つオブジェクトがすでに存在するかチェックするかどうか
+    preventOverwrite: true,
+    // S3がデータの整合性を検証できるよう、アップロードするデータのチェックサムを計算するかどうか
+    checksumAlgorithm: "crc-32", // 現在は'crc-32'のみサポート
+  },
+});
+```
+オプション | 型 | デフォルト | 説明 |
+| -- | :--: | :--: | ----------- |
+| bucket | string \| <br />\{ bucketName: string;<br/> region: string; \} | Amplify設定のデフォルトバケットとリージョン | Amplify Backendでの割り当て名を表す文字列、またはコンソールのバケット名とリージョンを指定するオブジェクト。<br/><br/>詳細は[追加のストレージバケットの設定](/[platform]/build-a-backend/storage/set-up-storage/#configure-additional-storage-buckets)をご覧ください。 |
+| contentType | string | application/octet-stream | ファイルをダウンロードする際のデフォルトcontent-typeヘッダー値。<br/><br/>詳細は[Content-Typeのドキュメント](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type)をご覧ください。 |
+| contentEncoding | string | — | ファイルをダウンロードする際のデフォルトcontent-encodingヘッダー値。<br/><br/>詳細は[Content-Encodingのドキュメント](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding)をご覧ください。 |
+| contentDisposition | string | — | オブジェクトの表示情報を指定します。<br/><br/>詳細は[Content-Dispositionのドキュメント](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition)をご覧ください。 |
+| metadata | map\<string\> | — | S3のオブジェクトと一緒に保存するメタデータのマップ。<br/><br/>詳細は[S3メタデータのドキュメント](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingMetadata.html#UserMetadata)をご覧ください。 |
+| useAccelerateEndpoint | boolean | false | アクセラレートエンドポイントを使用するかどうか。<br/><br/>詳細は[Transfer Acceleration](/[platform]/frontend/storage/upload-files/#transfer-acceleration)をご覧ください。 |
+| expectedBucketOwner | string | - | リクエストされたバケットを所有するアカウントID。 |
+| preventOverwrite | boolean | false | アップロード完了前に同じキーを持つオブジェクトがすでに存在するかチェックするかどうか。存在する場合、`Precondition Failed`エラーがスローされます。 |
+| checksumAlgorithm | "crc-32" | - | S3がデータ整合性を検証できるよう、アップロードするデータのチェックサムを計算するかどうか。現在は'crc-32'のみサポートされています。 |
+
+<Callout>
+
+1時間以上前に開始されたアップロードは自動的にキャンセルされます。デバイスがオフラインになったりユーザーがログアウトするなどの場合、不完全なファイルがAmazon S3アカウントに残ることがあります。不完全なアップロードリクエストを自動的にクリーンアップするために、[S3ライフサイクルルールの設定](https://aws.amazon.com/blogs/aws-cloud-financial-management/discovering-and-deleting-incomplete-multipart-uploads-to-lower-amazon-s3-costs/)を推奨します。
+
+</Callout>
+<!-- /Platform -->
+
+## マルチパートアップロード
+
+Amplifyは5MBを超えるオブジェクトに対して自動的にAmazon S3マルチパートアップロードを実行します。S3のマルチパートアップロードの詳細については、[マルチパートアップロードを使用したオブジェクトのアップロードとコピー](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html)を参照してください。
+
+<!-- Platform: react, angular, javascript, vue, nextjs, react-native -->
+## 署名付きURLを使用したアップロード
+
+`method: 'PUT'`を指定した`getUrl` APIを使用して、S3に直接ファイルをアップロードするための署名付きURLを生成できます。これは以下のような場合に便利です:
+
+- 標準HTTPURLエンドポイントのみを受け付けるサードパーティのツールやライブラリと統合する必要がある場合（例: DuckDB、データベースエクスポートツール）
+- Next.js APIルートやその他のSSRフレームワークなど、サーバーサイドの環境からアップロードしたい場合
+- 一時的なアップロードリンクを別のクライアントやサービスと共有したい場合
+
+```typescript
+import { getUrl } from 'aws-amplify/storage';
+
+// アップロード用の署名付きURLを生成する
+const { url, expiresAt } = await getUrl({
+  path: 'album/2024/1.jpg',
+  options: {
+    method: 'PUT',
+    expiresIn: 3600, // URLは1時間有効
+    contentType: 'image/jpeg',
+  }
+});
+
+console.log('Upload URL: ', url);
+console.log('URL expires at: ', expiresAt);
+```
+
+次に署名付きURLを使用して標準HTTPの`PUT`リクエストでファイルをアップロードします:
+
+```typescript
+await fetch(url, {
+  method: 'PUT',
+  body: file,
+  headers: {
+    'Content-Type': 'image/jpeg',
+  },
+});
+```
+
+> **Warning:** `method: 'PUT'`が指定された場合、オブジェクトがまだ存在しない可能性があるため、`validateObjectExistence`オプションは無視されます。
+
+<Callout>
+
+署名付きURLを生成する際に`contentType`を指定した場合、アップロードリクエストに一致する`Content-Type`ヘッダーを**必ず**含める必要があります。不一致があるとS3が署名エラーでリクエストを拒否します。
+
+</Callout>
+
+### サードパーティツールでの署名付きURLの使用
+
+署名付きURLは標準HTTPエンドポイントであるため、HTTPアップロードをサポートする任意のツールで使用できます:
+
+```typescript
+import { getUrl } from 'aws-amplify/storage';
+
+const { url } = await getUrl({
+  path: 'analytics/data.parquet',
+  options: {
+    method: 'PUT',
+    contentType: 'application/octet-stream',
+  }
+});
+
+// 例: DuckDBを使用してクエリ結果をS3に直接エクスポートする
+await duckdb.query(`
+  COPY (SELECT * FROM processed_data)
+  TO '${url}'
+  (FORMAT PARQUET)
+`);
+```
+
+### 署名付きURLアップロードオプション
+
+オプション | 型 | デフォルト | 説明 |
+| :--: | :--: | :--: | ----------- |
+| method | 'GET' \| 'PUT' | 'GET' | 署名付きURLのHTTPメソッド。アップロードURLを生成するには`'PUT'`を使用します。 |
+| bucket | string \| <br />\{ bucketName: string;<br/> region: string; \} | Amplify設定のデフォルトバケットとリージョン | Amplify Backendでの割り当て名を表す文字列、またはコンソールのバケット名とリージョンを指定するオブジェクト。<br/><br/>詳細は[追加のストレージバケットの設定](/[platform]/build-a-backend/storage/set-up-storage/#configure-additional-storage-buckets)をご覧ください。 |
+| expiresIn | number | 900 | URLが期限切れになるまでの秒数。<br/><br/>署名付きURLの有効期限はセッションに依存し、最大1時間となります。 |
+| contentType | string | — | アップロードするファイルのMIMEタイプ。指定した場合、アップロードリクエストに一致する`Content-Type`ヘッダーを含める必要があります。 |
+| contentDisposition | string \| object | — | オブジェクトの表示情報を指定します。文字列（例: `'attachment; filename="file.jpg"'`）またはオブジェクト（例: `{ type: 'attachment', filename: 'file.jpg' }`）で指定できます。 |
+| expectedBucketOwner | string | — | リクエストされたバケットを所有するアカウントID。 |
+<!-- /Platform -->

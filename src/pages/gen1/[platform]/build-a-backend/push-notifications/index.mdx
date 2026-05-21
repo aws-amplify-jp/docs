@@ -1,0 +1,27 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+
+export const meta = {
+  title: 'プッシュ通知',
+  description:
+    'キャンペーン分析とターゲティング機能を備えたプッシュ通知を使用して顧客エンゲージメントを促進',
+  platforms: ['android', 'flutter', 'react-native', 'swift'],
+  route: '/gen1/[platform]/build-a-backend/push-notifications'
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      platform: context.params.platform,
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+<Overview childPageNodes={props.childPageNodes} />

@@ -1,0 +1,48 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'データの削除',
+  description: 'Amplifyでの削除API RESTの使用',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue'
+  ],
+};
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## DELETEリクエスト
+
+APIエンドポイント経由でアイテムを削除するには:
+
+```ts
+import { del } from 'aws-amplify/api';
+
+async function deleteItem() {
+  try {
+    const restOperation = del({
+      apiName: 'myRestApi',
+      path: 'items/1',
+    });
+    await restOperation.response;
+    console.log('DELETE call succeeded');
+  } catch (e) {
+    console.log('DELETE call failed: ', JSON.parse(e.response.body));
+  }
+}
+```

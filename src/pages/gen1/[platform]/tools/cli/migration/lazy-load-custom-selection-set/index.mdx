@@ -1,0 +1,308 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'レイジーローディングとカスタム選択セット',
+  description: "Swift用のAmplifyライブラリはAPI (GraphQL)を通じたカスタム選択セットをサポートするようになりました。モデルは「has one」および「belongs to」関係のレイジーローディングのサポートを拡張しました。Amplify Studioとandroidからのクロスプラットフォームモデル更新をSwiftで構築されたDataStoreアプリでリアルタイムに監視できます。Amplify swiftは双方向の「has one」データモデリングユースケースをサポートします。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## **何が変わるのか？**
+
+最新のSwift用Amplifyライブラリにより、開発者は接続されたモデルに対してより優れたクエリ制御を備えるようになりました。レイジーローディングとイーガーローディング接続モデルとして説明されています。
+
+- **API (GraphQL)** は、`includes`パラメータを使用した選択セットのカスタマイズを許可し、選択セットの深さを制御して、どの接続されたモデルをイーガーローディングするか、またはレイジーローディングするかを指定できるようになりました。
+- **モデル** は、接続されたモデルのレイジーローディング機能を拡張して、`@hasOne`および`@belongsTo`関係を含むようになりました。
+- **DataStore (Swift)** はクロスプラットフォームアプリ開発のためのサポートが向上しました。Amplify StudioおよびAmplifyライブラリ（JavaScriptおよびAndroidを含む）からのモデル更新を、Swiftで構築されたDataStoreアプリでリアルタイムに監視できるようになりました。
+- **DataStore (Swift)** は双方向の`@hasOne`データモデリングユースケースをサポートするようになりました。
+
+## カスタム選択セット
+
+**API (GraphQL)** を使用する開発者は、GraphQLサービスから返されるデータを制御できます。特定のモデルの要求には、接続されたモデルを含めることも除外することもできます。以下の例で、PostおよびCommentモデルを含むスキーマを見てみましょう。コメントは投稿に属し、投稿には多くのコメントがあります。
+
+```graphql
+enum PostStatus {
+  ACTIVE
+  INACTIVE
+}
+
+type Post @model @auth(rules: [{ allow: public }]) {
+  id: ID!
+  title: String!
+  rating: Int!
+  status: PostStatus!
+  comments: [Comment] @hasMany
+}
+
+type Comment @model @auth(rules: [{ allow: public }]) {
+  id: ID!
+  content: String
+  post: Post @belongsTo
+}
+```
+
+現在、`Comment`をクエリする開発者は、`Post`がイーガーローディングされた状態で取得します:
+
+```swift
+let response = try await Amplify.API.query(request: .get(Comment.self, byId: "commentId"))
+if case .success(let queriedComment) = response {
+    print("Queried Comment eager loaded post: \(queriedComment?.post)")
+}
+```
+
+新しいモデルタイプとライブラリの変更により、同じリクエストは投稿をイーガーローディングしなくなります。投稿にアクセスしたときに、GraphQLサービスからレイジーローディングされます。
+
+```swift
+let response = try await Amplify.API.query(request: .get(Comment.self, byId: "commentId"))
+if case .success(let queriedComment) = response {
+    print("Queried Comment \(String(describing: queriedComment))")
+    // レイジーロード投稿
+    if let post = try await queriedComment?.post {
+        print("Lazy loaded the post: \(post)")
+    }
+}
+```
+
+以前の動作を実現するには、新しい`includes`パラメータを使用してモデルパスを指定します:
+
+```swift
+let response = try await Amplify.API.query(request:
+        .get(Comment.self,
+             byId: "commentId",
+             includes: { comment in [comment.post]} ))
+if case .success(let queriedComment) = response {
+    print("Queried Comment \(String(describing: queriedComment))")
+
+    if let post = try await queriedComment?.post {
+        print("Eager loaded post: \(post)")
+    }
+}
+```
+
+これは、GraphQLドキュメント内の投稿の選択セットを設定します。これはGraphQLサービスに操作の一部として投稿モデルを取得するよう指示します。投稿を待つと、ネットワークリクエストを行わずに投稿モデルが即座に返されます。
+
+このカスタマイズは`@hasMany`関係にも拡張されます。たとえば、クエリされた投稿を見てみましょう。
+
+```swift
+let response = try await Amplify.API.query(request:
+    .get(Post.self,
+         byId: "postId"))
+
+if case .success(let queriedPost) = response {
+    print("Queried Post \(String(describing: queriedPost))")
+    if let comments = queriedPost?.comments {
+        // コメントをレイジーロード
+        try await comments.fetch()
+        for comment in comments {
+            print("Lazy loaded comment: \(comment)")
+        }
+    }
+}
+```
+
+クエリされた投稿は、`fetch()`を呼び出してコメントをレイジーローディングでき、ネットワークリクエストを行います。
+
+コメントは、投稿のモデルパスをコメントに含めることでイーガーローディングできます:
+
+```swift
+let response = try await Amplify.API.query(request:
+    .get(Post.self,
+         byId: "postId",
+         includes: { post in [ post.comments] }))
+
+if case .success(let queriedPost) = response {
+    print("Queried Post \(String(describing: queriedPost))")
+    if let comments = queriedPost?.comments {
+        for comment in comments {
+            print("Eager loaded comment: \(comment)")
+        }
+    }
+}
+```
+
+投稿のネットワークリクエストにはコメントが含まれており、コメントを1回のネットワーク呼び出しでイーガーローディングします。
+
+このカスタマイズは、深く接続されたモデルを含めたり除外したりすることに拡張できます。PostとCommentの各々が「author」フィールドで指定されたユーザーに属する場合、ネストされたモデルを取得するために単一のリクエストを構築できます。
+
+```swift
+let response = try await Amplify.API.query(request: .get(
+    Post.self,
+    byId: "postId",
+    includes: { post in [
+        post.author,
+        post.comments,
+        post.comments.author] }))
+```
+
+投稿、そのコメント、投稿とそのコメント各々の作者がすべて1回のネットワーク呼び出しで取得されます。
+
+## 接続されたモデルのレイジーローディング
+
+**DataStore** または **API** を使用しているかに関わらず、モデルを取得したら、利用可能なAPIを通じて単一のモデルインスタンスからその接続されたモデルへモデルグラフをトラバースできます。
+
+`@hasOne`および`@belongsTo`関係の場合、投稿を待つことでアクセスします。これはGraphQLサービスまたはDataStoreのローカルデータベースからモデルを取得します。
+
+```swift
+let comment = /* queried from Amplify.API or Amplify.DataStore, or lazy loaded from a post */
+let post = try await comment.post
+let authorOfPost = try await post.author
+```
+
+`@hasMany`関係の場合、`fetch()`を呼び出して投稿をロードします。これはデータソースからモデルのリストを取得します。
+
+```swift
+let post = /* queried from Amplify.API or Amplify.DataStore, or lazy loaded from a comment */
+if let allCommentsForPost = post.comments {
+    try await allCommentsForPost.fetch()
+    for comment in allCommentsForPost {
+        print("Comment \(comment) for post \(post)")
+    }
+}
+```
+
+追加のデータページが利用可能な場合、`hasNextPage()`はtrueを返します。`getNextPage()`を呼び出してコメントの次のページを取得します。
+
+```swift
+if allCommentsForPost.hasNextPage() {
+    let nextPageOfComments = try await allCommentsForPost.getNextPage()
+}
+```
+
+以下は、`@belongsTo`および`@hasMany`接続されたモデルのレイジーローディングの完全な例です。
+
+```swift
+let comment = /* queried from Amplify.API or Amplify.DataStore, or lazy loaded from a post */
+guard let post = try await comment.post else {
+    print("No post associated with this comment")
+    return
+}
+let authorOfPost = try await post.author
+
+if let allCommentsForPost = post.comments {
+    try await allCommentsForPost.fetch()
+    for comment in allCommentsForPost {
+        let commentAuthor = try await comment.author
+        print("Author \(commentAuthor) wrote comment \(comment) for post \(post)")
+    }
+
+    if allCommentsForPost.hasNextPage() {
+        let nextPageOfComments = try await allCommentsForPost.getNextPage()
+    }
+}
+```
+
+クエリされたコメントは、その投稿をレイジーローディングするために使用されます。投稿の作者は投稿からレイジーローディングされます。投稿のすべてのコメントは、`allCommentsForPost`としてレイジーローディングされます。各コメントについて、作者は`commentAuthor`としてロードされます。ロードするコメントがさらにある場合、`hasNextPage()`はtrueを返し、`getNextPage()`は基になるデータソースから次のページをロードします。
+
+## DataStore (Swift)によるクロスプラットフォームアプリ開発
+
+**DataStore (Swift)** で構築している開発者は、Amplify StudioおよびAmplify JavaScriptおよびAndroidライブラリなどの他のプラットフォームから来るリアルタイムモデル更新を受け取ることができるようになりました。以前は、他のプラットフォームからのモデル更新（保存/更新/削除）は、**DataStore (Swift)** を実行するiOS/macOSアプリによって正常に監視されることはありませんでした。最新のcodegenおよびライブラリの変更により、DataStoreは他のプラットフォームから来るモデル更新を正常に調整するように更新され、その後、`DataStore.observe` APIにイベントを発行します。
+
+これを試すには、[詳細ログ](/gen1/[platform]/start/project-setup/create-application/#2-install-amplify-libraries)および[DataStore起動](/gen1/[platform]/build-a-backend/more-features/datastore/additional-methods/#start)でiOSアプリを起動します。他のプラットフォームのDataStoreを使用してモデル更新を実行すると、iOS/macOSアプリに自動的に同期されます。DataStoreがモデル更新を正常に受け取り、すぐに調整したことを示すログが表示されます。アプリでの更新にアクセスするには、[リアルタイムガイドに従ってデータの更新を監視](/gen1/[platform]/build-a-backend/more-features/datastore/real-time/)します。
+
+## DataStore (Swift)双方向「has one」関係サポート
+
+**DataStore (Swift)** は[双方向「has one」関係](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#belongs-to-relationship)をサポートするようになりました。以前は、Swiftの言語制限により、生成されたSwiftモデルタイプはコンパイルされませんでした。
+
+```
+type Project @model {
+  id: ID!
+  name: String
+  team: Team @hasOne
+}
+
+type Team @model {
+  id: ID!
+  name: String!
+  project: Project @belongsTo
+}
+```
+
+## 変更はどこで行いますか？
+
+1. Amplify CLIを最新バージョンにアップグレードする
+
+```
+amplify upgrade
+```
+
+2. バージョンは少なくとも10.8.0である必要があります
+
+```
+amplify --v # at least 10.8.0
+```
+
+3. featureフラグ`generateModelsForLazyLoadAndCustomSelectionSet`をamplifyプロジェクトルートの`cli.json`で`true`に設定する
+
+4. `amplify codegen models`を実行して最新のモデルを生成する
+
+5. Amplifyライブラリを2.4.0以上にアップグレードする
+
+6. アプリを開き、最新の生成されたモデルでアプリがコンパイルされることを確認する
+
+## 重大な変更は何ですか？
+
+featureフラグ`generateModelsForLazyLoadAndCustomSelectionSet`を明示的に有効化し、最新のAmplifyライブラリを使用することで、いくつかのシナリオが考えられます。
+
+### シナリオ1. API (GraphQL)を使用
+
+最新codegenを使用する場合、**Amplify.API** は`@belongsTo`および`@hasOne`接続されたモデルをイーガーローディングしなくなります。アプリを以前のバージョンのアプリとの後方互換性を持つようにするには、すべての`@belongsTo`および`@hasOne`関係に対して`includes`でモデルパスを指定します。これは、新しいバージョンのアプリから取得されたミューテーションを以前のバージョンのアプリが正常にデコードできるようにするために重要です。
+
+リリースされたアプリは、サブスクリプションおよびミューテーションリクエストを行います:
+
+```swift
+let subscription = Amplify.API.subscribe(request: .onCreate(Comment.self))
+```
+
+```swift
+let graphQLResponse = try await Amplify.API.mutate(request: .create(comment))
+```
+
+ミューテーションリクエストの選択セットは、サブスクリプションリクエストの選択セットと一致します。投稿フィールドが含まれ、サブスクリプションが受け取る応答ペイロードは以前のCommentモデルタイプにデコードできます。
+
+モデルタイプがレイジーローディング用の最新codegenに置き換えられた場合、同じミューテーションは投稿フィールドを含まなくなり、以前のアプリ内のサブスクリプションの応答ペイロードのデコードが失敗します。新しいバージョンのアプリが以前のバージョンで動作することを確認するには、ミューテーションリクエストの`includes`パラメータを使用して、`@belongsTo`および`@hasOne`接続されたモデルを選択セットに含めます。
+
+```swift
+let graphQLResponse = try await Amplify.API.mutate(request: .create(comment, includes: { comment in [ comment.post ]}))
+```
+
+### シナリオ2. DataStore (Swift)を使用
+
+最新codegenを使用する場合、DataStoreはbelongs-toおよび`@hasOne`接続されたモデルをイーガーローディングしなくなります。新しいアプリは以前のバージョンとの後方互換性を保ちますが、これらの接続されたモデルを取得するためのコールパターンは変更されました。次のシナリオでコールサイトで行わなければならない変更を参照してください。
+
+### シナリオ3. 「Belongs to」/「Has One」アクセスパターン
+
+以前
+
+```swift
+let comment = /* queried Comment through DataStore or API */
+let post = comment.post
+```
+
+最新codegenで
+
+```swift
+let comment = /* queried Comment through DataStore or API */
+let post = try await comment.post
+```

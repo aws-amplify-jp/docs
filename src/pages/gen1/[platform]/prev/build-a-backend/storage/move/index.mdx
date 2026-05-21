@@ -1,0 +1,26 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ファイルの移動',
+  description: "Amplifyのストレージカテゴリーを使用してファイルを移動する方法の詳細を学びます。",
+  platforms: ['flutter']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+
+
+import flutter0 from '/src/fragments/lib-v1/storage/flutter/move.mdx';
+
+<Fragments fragments={{ flutter: flutter0 }} />

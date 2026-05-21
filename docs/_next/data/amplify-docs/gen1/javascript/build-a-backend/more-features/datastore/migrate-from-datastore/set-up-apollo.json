@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"javascript","meta":{"title":"Apollo Clientのセットアップ","description":"Apollo Clientをインストールし、Cognitoで認証を設定し、エラーハンドリングと再試行ロジックをセットアップし、Amplifyでリアルタイムサブスクリプションを構成し、AppSyncバックエンド用のGraphQL操作を記述します。","platforms":["angular","javascript","nextjs","react","react-native","vue"]}},"__N_SSG":true}

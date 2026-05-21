@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"swift","meta":{"title":"Lambdaトリガー","description":"Lambdaトリガーは、ユーザーのジャーニーの特定のライフサイクル中に機能を追加する場合に便利です。Lambdaトリガーを認証シナリオ、S3バケット、DynamoDBテーブル、またはAmplify CLIで管理されるKinesis Streamに関連付けます。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

@@ -1,0 +1,53 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '言語を翻訳する',
+  description: 'Amplifyを使用してアプリケーションに翻訳機能を統合する方法について詳しく学びます',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue',
+  ]
+};
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps() {
+  return {
+    props: {
+      meta
+    }
+  };
+}
+
+<Callout informational>
+
+**注:** 最初に[はじめに](../set-up-predictions)セクションを完了していることを確認してください。そこで、適切なポリシーアクションを持つIAMロールを設定します
+
+</Callout>
+
+
+## APIの使用
+
+テキストをソース言語から目的言語に翻訳します。
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const result = await Predictions.convert({
+  translateText: {
+    source: {
+      text: textToTranslate,
+      language : "es"
+    },
+    targetLanguage: "en"
+  }
+})
+```
+
+サポートされている言語と言語コードの完全なリストについては、[サポートされている言語と言語コード](https://docs.aws.amazon.com/translate/latest/dg/what-is-languages.html)を参照してください。

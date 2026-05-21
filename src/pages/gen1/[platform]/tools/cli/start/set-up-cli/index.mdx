@@ -1,0 +1,53 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'Amplify CLIのセットアップ',
+  description: 'Amplify CLIのインストールと設定方法',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## Amplify CLIのインストール
+
+Amplify Command Line Interface（CLI）は、アプリ用のAWSクラウドサービスを作成するための統合ツールチェーンです。Amplify CLIをインストールしましょう。
+
+import all0 from '/src/fragments/cli-install-block.mdx';
+
+<Fragments fragments={{ all: all0 }} />
+
+### インストール前提条件
+
+- [Node.js®](https://nodejs.org/en/download/)と[npm](https://www.npmjs.com/get-npm)がマシンにインストールされていない場合はインストールしてください。
+- ターミナル/コンソールウィンドウで`node -v`と`npm -v`を実行して、少なくともNode.js バージョン12.x以上およびnpm バージョン6.x以上を実行していることを確認してください
+- [AWSアカウントを作成](https://portal.aws.amazon.com/billing/signup?redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start)します。AWSアカウントをまだお持ちでない場合は、このチュートリアルで説明されている手順に従うために、アカウントを作成する必要があります。
+- Apple Silicon Macの場合、Rosettaをまだインストールしていなければ、`softwareupdate --install-rosetta`を使用してインストールしてください。
+
+import config from '/src/fragments/cli-config.mdx';
+
+<Fragments fragments={{ all: config }} />
+
+### フロントエンドプロジェクト内で作業する
+
+CLIをインストールした後、JavaScriptまたはiOsまたはAndroidプロジェクトのルートに移動し、`amplify init`を実行して新しいディレクトリでAWS Amplifyを初期化します。いくつかの設定質問の後、任意の時点で`amplify help`を使用して全体的なコマンド構造を確認できます。機能を追加する準備ができたら、`amplify add <category>`を実行します。

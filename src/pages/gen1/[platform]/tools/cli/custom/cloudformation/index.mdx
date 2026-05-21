@@ -1,0 +1,147 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'CloudFormationを使用してカスタムAWSリソースを追加する',
+  description: "Amplify CLIは、AWS CloudFormationを使用してカスタムAWSリソースを追加する機能を提供します。Amplifyプロジェクトで'amplify add custom'コマンドを実行すると、CloudFormationスターターテンプレートと他のAmplify生成リソースを参照するメカニズムが提供されます。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify CLIは、AWS CloudFormationを使用してカスタムAWSリソースを追加する機能を提供します。Amplifyプロジェクトで`amplify add custom`コマンドを実行すると、CloudFormationスターターテンプレートと他のAmplify生成リソースを参照するメカニズムが提供されます。
+
+AWS CloudFormationを使用してカスタムAWSリソースを追加するには、次のコマンドを実行します。
+
+```bash
+amplify add custom
+```
+```console
+? How do you want to define this custom resource? …  (Use arrow keys or type to filter)
+  AWS CDK
+❯ AWS CloudFormation
+```
+
+スケルトンCloudFormationテンプレートは、`amplify/backend/custom/<resource-name>`ディレクトリに生成されます。追加のAWSリソースは、`<resource-name>-cloudformation-template.json`CloudFormationテンプレートファイルで定義できます。
+
+```json
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "env": {
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "snstopic1234": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "TopicName": {
+          "Fn::Join": [ "", [ "sns-topic-1234-", { "Ref": "env" } ] ]
+        }
+      }
+    },
+    "snstopicemailsub1234": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "Protocol": "email",
+        "TopicArn": {
+          "Ref": "snstopic1234"
+        },
+        "Endpoint": "<your-email-address>"
+      }
+    }
+  },
+  "Outputs": {}
+}
+```
+
+> 注: Amplifyのマルチ環境ワークフローで正しく動作するようにするために、常にAmplify環境名(`env`パラメータ)をリソース名に追加してください。
+
+## Amplifyバックエンド名の参照
+
+Amplify CLIは、CloudFormationテンプレートの上部にある`env`パラメータを自動的に設定します。
+
+```json
+...
+  "Parameters": {
+    "env": {
+      "Type": "String"
+    }
+  },
+...
+```
+
+パラメータを参照するには、[`Ref`](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html)組み込み関数を使用します。
+
+```json
+...
+  "Resources": {
+    "snstopic1234": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "TopicName": {
+          "Fn::Join": [ "", [ "sns-topic-1234-", { "Ref": "env" } ] ]
+        }
+      }
+    }
+  }
+...
+```
+
+## Amplify生成リソースの参照
+
+カスタムAWSリソースのCloudFormationテンプレートは、Amplify生成リソースのCloudFormation出力を参照できます。別のリソースの出力を参照するには、次を実行します。
+
+```bash
+amplify update custom
+```
+```console
+✔ Do you want to access Amplify generated resources in your custom CloudFormation file? (y/N) · yes
+? Select the categories you want this custom resource to have access to:
+❯ <category>
+? Function has 2 resources in this project. Select the one you would like your custom resource to access
+❯ ...
+```
+
+リソースが選択されると、CloudFormationテンプレートの上部にパラメータとしてリストされているリソース出力を参照できます。パラメータを参照するには、[`Ref`](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html)組み込み関数を使用します。
+
+```json
+...
+  "Parameters": {
+    ...,
+    "myFunctionArn": {
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    ...: {
+      "Type": ...,
+      "Properties": {
+        ...: { "Ref": "myFunctionArn"}
+      }
+    }
+  }
+...
+```

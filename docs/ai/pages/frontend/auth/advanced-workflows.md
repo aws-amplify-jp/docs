@@ -1,0 +1,822 @@
+---
+title: "高度なワークフロー"
+section: "frontend/auth"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/auth/advanced-workflows/"
+---
+
+<!-- Platform: flutter -->
+## IDプール連携
+
+IDプール連携を使用すると、カスタムサインインコードを作成したり、独自のユーザーアイデンティティを管理したりする必要はありません。代わりに、アプリのユーザーは、Login with Amazon、Facebook、Google、またはその他のOpenID Connect（OIDC）互換のIDプロバイダ（IdP）などの、よく知られている外部IDプロバイダを使用してサインインできます。認証トークンを受け取り、そのトークンをAWS内の一時的なセキュリティ認証情報と交換して、AWSアカウント内のリソースを使用する権限を持つIAMロールにマップできます。IdPを使用することで、アプリケーションに長期的なセキュリティ認証情報を埋め込んで配布する必要がないため、AWSアカウントを安全に保つことができます。
+
+モバイルデバイスで実行され、Amazon S3およびDynamoDBを使用してプレイヤーとスコア情報を保存するゲームなど、AWSリソースにアクセスするモバイルアプリを作成しているとします。
+
+このようなアプリを作成する場合、AWSアクティビティへのリクエストに署名する必要があるAWSアクセスキーを使用します。ただし、ユーザーがデバイスにダウンロードするアプリに長期的なAWS認証情報を埋め込んだり配布したりしないことを強くお勧めします。これは、暗号化されたストア内であっても同様です。代わりに、IDプール連携を使用して、必要に応じて一時的なAWSセキュリティ認証情報を動的にリクエストするようにアプリを構築してください。提供された一時的な認証情報は、モバイルアプリが必要とするタスクを実行するために必要な権限のみを持つAWSロールにマップされます。
+
+`federateToIdentityPool`を使用して、AWSCognito連携アイデンティティから直接AWS認証情報を取得し、ユーザープール連携を使用しないようにすることができます。`Auth.signIn`でログインした場合、Amplifyがバックグラウンドでこの連携を自動的に実行するため、`federateToIdentityPool`を呼び出す**ことはできません**。一般的に、`Auth.federatedSignIn()`を呼び出すのはOAuthフローを使用している場合だけにしてください。
+
+他のソーシャルプロバイダからの有効なトークンを使用して、エスケープハッチAPI`federateToIdentityPool`を使用できます。
+
+```dart
+final cognitoPlugin =
+    Amplify.Auth.getPlugin(AmplifyAuthCognito.pluginKey);
+const googleIdToken = 'idToken';
+final session = await cognitoPlugin.federateToIdentityPool(
+  token: googleIdToken,
+  provider: AuthProvider.google,
+);
+```
+
+<Callout>
+
+連携時、`Auth.getCurrentUser`などのAPIはエラーをスローします。これは、ユーザーがユーザープールで認証されていないためです。
+
+</Callout>
+
+### セッションを取得する
+
+連携ログイン後、`Auth.fetchAuthSession` APIを使用してセッションを取得できます。
+
+### トークンの更新
+
+<Callout>
+
+連携時、自動認証トークン更新は**サポートされていません**。
+
+</Callout>
+
+デフォルトでは、Amplifyは連携プロバイダからのトークンを自動的に更新**しません**。トークンの更新ロジックを処理して、新しいトークンを`federateToIdentityPool` APIに提供する必要があります。
+
+### セッションをクリアする
+
+`clearFederationToIdentityPool` APIを使用して、連携セッションをクリアできます。
+
+```dart
+final cognitoPlugin =
+    Amplify.Auth.getPlugin(AmplifyAuthCognito.pluginKey);
+await cognitoPlugin.clearFederationToIdentityPool();
+```
+
+<Callout>
+
+`clearFederationToIdentityPool`はローカルキャッシュからセッションをクリアするだけです。開発者は連携IDプロバイダからのサインアウト処理を行う必要があります。
+
+</Callout>
+
+### カスタムアイデンティティIDを提供する
+
+`federateToIdentityPool` APIにカスタムアイデンティティIDを提供できます。これは、複数のセッション間で同じアイデンティティIDを使用したい場合に便利です。
+
+```dart
+final cognitoPlugin =
+    Amplify.Auth.getPlugin(AmplifyAuthCognito.pluginKey);
+const googleIdToken = 'idToken';
+const identityId = 'us-west-2:b4cd4809-7ab1-42e1-b044-07dab9eaa768';
+final session = await cognitoPlugin.federateToIdentityPool(
+  token: googleIdToken,
+  provider: AuthProvider.google,
+  options: FederateToIdentityPoolOptions(
+    developerProvidedIdentityId: identityId,
+  ),
+);
+```
+<!-- /Platform -->
+<!-- Platform: android -->
+## イベントの購読
+
+ユーザーがサインインまたはサインアウトするときに特定のアクションを実行するには、アプリで認証イベントを購読します。詳細については、[Hub Module開発者ガイド](/[platform]/frontend/auth/listen-to-auth-events/)を参照してください。
+
+## IDプール連携
+
+モバイルデバイスで実行され、Amazon S3およびDynamoDBを使用してプレイヤーとスコア情報を保存するゲームなど、AWSリソースにアクセスするモバイルアプリを作成しているとします。
+
+このようなアプリを作成する場合、AWSサービスへのリクエストに署名する必要があるAWSアクセスキーを使用します。ただし、ユーザーがデバイスにダウンロードするアプリに長期的なAWS認証情報を埋め込んだり配布したりしないことを強くお勧めします。これは、暗号化されたストア内であっても同様です。代わりに、Webアイデンティティ連携を使用して、必要に応じて一時的なAWSセキュリティ認証情報を動的にリクエストするようにアプリを構築してください。提供された一時的な認証情報は、モバイルアプリが必要とするタスクを実行するために必要な権限のみを持つAWSロールにマップされます。
+
+Webアイデンティティ連携を使用すると、カスタムサインインコードを作成したり、独自のユーザーアイデンティティを管理したりする必要はありません。代わりに、アプリのユーザーは、Login with Amazon、Facebook、Google、またはその他のOpenID Connect（OIDC）互換のIDプロバイダ（IdP）などの、よく知られている外部IDプロバイダを使用してサインインできます。認証トークンを受け取り、そのトークンをAWS内の一時的なセキュリティ認証情報と交換して、AWSアカウント内のリソースを使用する権限を持つIAMロールにマップできます。IdPを使用することで、アプリケーションに長期的なセキュリティ認証情報を埋め込んで配布する必要がないため、AWSアカウントを安全に保つことができます。
+
+`federateToIdentityPool`を使用して、AWSCognito連携アイデンティティから直接AWS認証情報を取得し、ユーザープール連携を使用しないようにすることができます。`Auth.signIn`でログインした場合、Amplifyがバックグラウンドでこの連携を自動的に実行するため、`federateToIdentityPool`を呼び出す**ことはできません**。一般的に、`Auth.federatedSignIn()`を呼び出すのはOAuthフローを使用している場合だけにしてください。
+
+他のソーシャルプロバイダからの有効なトークンを使用して、エスケープハッチAPI`federateToIdentityPool`を使用できます。
+
+#### [Java]
+
+```java
+if (Amplify.Auth.getPlugin("awsCognitoAuthPlugin") instanceof AWSCognitoAuthPlugin) {
+    AWSCognitoAuthPlugin plugin = (AWSCognitoAuthPlugin) Amplify.Auth.getPlugin("awsCognitoAuthPlugin");
+    plugin.federateToIdentityPool(
+        "YOUR_TOKEN",
+        AuthProvider.facebook(),
+        result -> {
+            Log.i("AuthQuickstart", "Successful federation to Identity Pool.");
+            // use result.getCredentials()
+        },
+        e -> {
+            Log.e("AuthQuickstart", "Failed to federate to Identity Pool.", e)
+        }
+    );
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+(Amplify.Auth.getPlugin("awsCognitoAuthPlugin") as? AWSCognitoAuthPlugin)?.let { plugin ->
+    plugin.federateToIdentityPool(
+        "YOUR_TOKEN",
+        AuthProvider.facebook(),
+        {
+            Log.i("AuthQuickstart", "Successful federation to Identity Pool.")
+            // use "it.credentials"
+        },
+        {
+            Log.e("AuthQuickstart", "Failed to federate to Identity Pool.", it)
+        }
+    )
+}
+```
+
+<Callout>
+連携時、Auth.getCurrentUser()などのAPIはエラーをスローします。これは、ユーザーがユーザープールで認証されていないためです。
+</Callout>
+
+### セッションを取得する
+
+連携ログイン後、`Auth.fetchAuthSession` APIを使用してセッションを取得できます。
+
+### トークンの更新
+
+<Callout>
+自動認証トークン更新は連携時に**サポートされていません**。
+</Callout>
+
+デフォルトでは、Amplifyは連携プロバイダからのトークンを自動的に更新**しません**。トークンの更新ロジックを処理して、新しいトークンを`federateToIdentityPool` APIに提供する必要があります。
+
+### セッションをクリアする
+
+`clearFederationToIdentityPool` APIを使用して、連携セッションをクリアできます。
+
+#### [Java]
+
+```java
+if (Amplify.Auth.getPlugin("awsCognitoAuthPlugin") instanceof AWSCognitoAuthPlugin) {
+    AWSCognitoAuthPlugin plugin = (AWSCognitoAuthPlugin) Amplify.Auth.getPlugin("awsCognitoAuthPlugin");
+    plugin.clearFederationToIdentityPool(
+        () -> Log.i("AuthQuickstart", "Federation cleared successfully."),
+        e -> Log.e("AuthQuickstart", "Failed to clear federation.", e)
+    );
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+(Amplify.Auth.getPlugin("awsCognitoAuthPlugin") as? AWSCognitoAuthPlugin)?.let { plugin ->
+    plugin.clearFederationToIdentityPool(
+        { Log.i("AuthQuickstart", "Federation cleared successfully.") },
+        { Log.e("AuthQuickstart", "Failed to clear federation.", it) }
+    )
+}
+```
+
+<Callout>
+`clearFederationToIdentityPool`はローカルキャッシュからセッションをクリアするだけで、開発者は連携プロバイダからのサインアウト処理を行う必要があります。
+</Callout>
+
+### カスタムアイデンティティIDを提供する
+
+`federateToIdentityPool` APIにカスタムアイデンティティIDを提供できます。これは、複数のデバイス間で同じアイデンティティIDを使用したい場合に便利です。
+
+#### [Java]
+
+```java
+FederateToIdentityPoolOptions options = FederateToIdentityPoolOptions.builder()
+    .developerProvidedIdentityId("YOUR_CUSTOM_IDENTITY_ID")
+    .build();
+
+if (Amplify.Auth.getPlugin("awsCognitoAuthPlugin") instanceof AWSCognitoAuthPlugin) {
+    AWSCognitoAuthPlugin plugin = (AWSCognitoAuthPlugin) Amplify.Auth.getPlugin("awsCognitoAuthPlugin");
+    plugin.federateToIdentityPool(
+        "YOUR_TOKEN",
+        AuthProvider.facebook(),
+        options,
+        result -> {
+            Log.i("AuthQuickstart", "Successful federation to Identity Pool.");
+            // use result.getCredentials()
+        },
+        e -> {
+            Log.e("AuthQuickstart", "Failed to federate to Identity Pool.", e)
+        }
+    );
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+val options = FederateToIdentityPoolOptions.builder()
+    .developerProvidedIdentityId("YOUR_CUSTOM_IDENTITY_ID")
+    .build()
+
+(Amplify.Auth.getPlugin("awsCognitoAuthPlugin") as? AWSCognitoAuthPlugin)?.let { plugin ->
+    plugin.federateToIdentityPool(
+        "YOUR_TOKEN",
+        AuthProvider.facebook(),
+        options,
+        {
+            Log.i("AuthQuickstart", "Successful federation to Identity Pool.")
+            // use "it.credentials"
+        },
+        {
+            Log.e("AuthQuickstart", "Failed to federate to Identity Pool.", it)
+        }
+    )
+}
+```
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+## イベントの購読
+
+ユーザーがサインインまたはサインアウトするときに特定のアクションを実行するには、アプリで認証イベントを購読します。詳細については、[Hub Module開発者ガイド](/[platform]/frontend/auth/listen-to-auth-events/)を参照してください。
+
+## IDプール連携
+
+モバイルデバイスで実行され、Amazon S3およびDynamoDBを使用してプレイヤーとスコア情報を保存するゲームなど、AWSリソースにアクセスするモバイルアプリを作成しているとします。
+
+このようなアプリを作成する場合、AWSサービスへのリクエストに署名する必要があるAWSアクセスキーを使用します。ただし、ユーザーがデバイスにダウンロードするアプリに長期的なAWS認証情報を埋め込んだり配布したりしないことを強くお勧めします。これは、暗号化されたストア内であっても同様です。代わりに、Webアイデンティティ連携を使用して、必要に応じて一時的なAWSセキュリティ認証情報を動的にリクエストするようにアプリを構築してください。提供された一時的な認証情報は、モバイルアプリが必要とするタスクを実行するために必要な権限のみを持つAWSロールにマップされます。
+
+Webアイデンティティ連携を使用すると、カスタムサインインコードを作成したり、独自のユーザーアイデンティティを管理したりする必要はありません。代わりに、アプリのユーザーは、Login with Amazon、Facebook、Google、またはその他のOpenID Connect（OIDC）互換のIDプロバイダ（IdP）などの、よく知られている外部IDプロバイダを使用してサインインできます。認証トークンを受け取り、そのトークンをAWS内の一時的なセキュリティ認証情報と交換して、AWSアカウント内のリソースを使用する権限を持つIAMロールにマップできます。IdPを使用することで、アプリケーションに長期的なセキュリティ認証情報を埋め込んで配布する必要がないため、AWSアカウントを安全に保つことができます。
+
+`federateToIdentityPool`を使用して、AWSCognito連携アイデンティティから直接AWS認証情報を取得し、ユーザープール連携を使用しないようにすることができます。`Auth.signIn`でログインした場合、Amplifyがバックグラウンドでこの連携を自動的に実行するため、`federateToIdentityPool`を呼び出す**ことはできません**。一般的に、`Auth.federateToIdentityPool`を呼び出すのはOAuthフローを使用している場合だけにしてください。
+
+他のソーシャルプロバイダからの有効なトークンを使用して、エスケープハッチAPI`federateToIdentityPool`を使用できます。
+
+```swift
+func federateToIdentityPools() async throws {
+    guard let authCognitoPlugin = try Amplify.Auth.getPlugin(
+        for: "awsCognitoAuthPlugin") as? AWSCognitoAuthPlugin else {
+        fatalError("Unable to get the Auth plugin")
+    }
+    do {
+        let result = try await authCognitoPlugin.federateToIdentityPool(
+            withProviderToken: "YOUR_TOKEN", for: .facebook)
+        print("Federation successful with result: \(result)")
+    } catch {
+        print("Failed to federate to identity pools with error: \(error)")
+    }
+}
+```
+
+<Callout>
+連携時、Auth.getCurrentUser()などのAPIはエラーをスローします。これは、ユーザーがユーザープールで認証されていないためです。
+</Callout>
+
+### セッションを取得する
+
+連携ログイン後、`Auth.fetchAuthSession` APIを使用してセッションを取得できます。
+
+### トークンの更新
+
+<Callout>
+注：自動認証トークン更新は連携時に**サポートされていません**。
+</Callout>
+
+デフォルトでは、Amplifyは連携プロバイダからのトークンを自動的に更新**しません**。トークンの更新ロジックを処理して、新しいトークンを`federateToIdentityPool` APIに提供する必要があります。
+
+### セッションをクリアする
+
+`clearFederationToIdentityPool` APIを使用して、連携セッションをクリアできます。
+
+```swift
+func clearFederationToIdentityPools() async throws {
+    guard let authCognitoPlugin = try Amplify.Auth.getPlugin(
+        for: "awsCognitoAuthPlugin") as? AWSCognitoAuthPlugin else {
+        fatalError("Unable to get the Auth plugin")
+    }
+    do {
+        try await authCognitoPlugin.clearFederationToIdentityPool()
+        print("Federation cleared successfully")
+    } catch {
+        print("Clear federation failed with error: \(error)")
+    }
+}
+```
+
+<Callout>
+clearFederationToIdentityPoolはローカルキャッシュからセッションをクリアするだけです。開発者は連携プロバイダからのサインアウト処理を行う必要があります。
+</Callout>
+
+### カスタムアイデンティティIDを提供する
+
+`federateToIdentityPool` APIにカスタムアイデンティティIDを提供できます。これは、複数のデバイス間で同じアイデンティティIDを使用したい場合に便利です。
+
+```swift
+func federateToIdentityPoolsUsingCustomIdentityId() async throws {
+    guard let authCognitoPlugin = try Amplify.Auth.getPlugin(
+        for: "awsCognitoAuthPlugin") as? AWSCognitoAuthPlugin else {
+        fatalError("Unable to get the Auth plugin")
+    }
+    do {
+        let identityId = "YOUR_CUSTOM_IDENTITY_ID"
+        let result = try await authCognitoPlugin.federateToIdentityPool(
+            withProviderToken: "YOUR_TOKEN",
+            for: .facebook,
+            options: .init(developerProvidedIdentityID: identityId))
+        print("Federation successful with result: \(result)")
+    } catch {
+        print("Failed to federate to identity pools with error: \(error)")
+    }
+}
+```
+
+## キーチェーン共有
+
+### 共有キーチェーンへの移行
+
+共有キーチェーンを使用するには、次の手順を実行します。
+
+1. Xcodeで [プロジェクト設定] → [対象となるターゲット] → [署名と機能] に移動します
+2. [+ 機能]を選択します
+3. キーチェーン共有機能を追加します
+4. キーチェーングループを追加します
+5. 認証状態を共有するすべてのアプリについて手順1～4を繰り返し、すべてのアプリに同じキーチェーングループを追加します
+
+このキーチェーンアクセスグループを使用して共有キーチェーンに移行するには、`AWSCognitoAuthPlugin`をインスタンス化するときに`accessGroup`パラメータを指定します。ユーザーが現在サインインしている場合、アクセスグループを初めて使用するときにサインアウトされます。
+
+```swift
+let accessGroup = AccessGroup(name: "\(teamID)com.example.sharedItems")
+let secureStoragePreferences = AWSCognitoSecureStoragePreferences(
+  accessGroup: accessGroup)
+try Amplify.add(
+  plugin: AWSCognitoAuthPlugin(
+    secureStoragePreferences: secureStoragePreferences))
+try Amplify.configure()
+```
+
+ユーザーセッションを移行する場合（ユーザーがサインインし続けることができます）、AccessGroupの`migrateKeychainItemsOfUserSession`ブール値をtrueに指定します。
+
+```swift
+let accessGroup = AccessGroup(
+  name: "\(teamID)com.example.sharedItems",
+  migrateKeychainItemsOfUserSession: true)
+let secureStoragePreferences = AWSCognitoSecureStoragePreferences(
+  accessGroup: accessGroup)
+try Amplify.add(
+  plugin: AWSCognitoAuthPlugin(
+    secureStoragePreferences: secureStoragePreferences))
+try Amplify.configure()
+```
+
+このアクセスグループを使用するアプリ内でユーザーにサインインします。このアクセスグループを使用する別のアプリを再度読み込んだ後、ユーザーはサインインした状態になります。同様に、あるアプリからサインアウトすると、別のアプリの再読み込み後にサインアウトされます。
+
+### 別の共有キーチェーンへの移行
+
+異なるアクセスグループに移行するには、AccessGroupのnameパラメータを新しいアクセスグループに更新します。既に使用されているアクセスグループの下で既存のユーザーセッションを移行するには、`migrateKeychainItemsOfUserSession`を`true`に設定します。
+
+### 共有キーチェーンからの移行
+
+このアプリと他のアプリ間での状態の共有を停止する場合は、アクセスグループを`AccessGroup.none`または`AccessGroup.none(migrateKeychainItemsOfUserSession: true)`に設定します。セッションを移行したい場合は後者を使用してください。
+
+### チームIDを取得する
+
+まず、Info.plistに`AppIdentifierPrefix`キーがあることを確認してください。
+
+```xml title="Info.plist"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>AppIdentifierPrefix</key>
+    <string>$(AppIdentifierPrefix)</string>
+</dict>
+</plist>
+```
+
+次に、Info.plistからチームIDを取得できます。
+
+```swift
+guard let teamID = Bundle.main.infoDictionary?["AppIdentifierPrefix"] as? String else {
+    fatalError("AppIdentifierPrefix key not found in Info.plist")
+}
+```
+<!-- /Platform -->
+<!-- Platform: javascript,react-native,angular,nextjs,react,vue -->
+## イベントの購読
+
+ユーザーがサインインまたはサインアウトするときに特定のアクションを実行するには、アプリで認証イベントを購読します。詳細については、[Hub Module開発者ガイド](/[platform]/frontend/auth/listen-to-auth-events/)を参照してください。
+
+## IDプール連携
+
+代わりに、カスタム認証情報プロバイダを作成して、Cognito連携アイデンティティから直接AWS認証情報を取得し、ユーザープール連携を使用しないようにすることができます。`Amplify.configure`メソッドの呼び出しを通じて、カスタム認証情報プロバイダをAmplifyに提供する必要があります。以下に、このようなカスタムプロバイダを構築する方法のサンプルコードを参照してください。
+
+```js
+import { Amplify } from 'aws-amplify';
+import {
+  fetchAuthSession,
+  CredentialsAndIdentityIdProvider,
+  CredentialsAndIdentityId,
+  GetCredentialsOptions,
+  AuthTokens,
+} from 'aws-amplify/auth';
+
+// 注：この例は、Cognito認証情報を取得するため、`@aws-sdk/client-cognito-identity`をインストール必要があります
+// npm add @aws-sdk/client-cognito-identity
+import { CognitoIdentity } from '@aws-sdk/client-cognito-identity';
+
+// SDKを使用してidentityIdと認証情報を取得できます
+const cognitoidentity = new CognitoIdentity({
+  region: '<region-from-config>',
+});
+
+// 注：カスタムプロバイダクラスはCredentialsAndIdentityIdProviderを実装する必要があります
+class CustomCredentialsProvider implements CredentialsAndIdentityIdProvider {
+
+  // ログイン情報を保持する例のクラスメンバー
+  federatedLogin?: {
+    domain: string,
+    token: string
+  };
+
+  // 連携ログイン情報をロードするカスタムメソッド
+  loadFederatedLogin(login?: typeof this.federatedLogin) {
+    // 必要に応じてキャッシュすることで永続化することもできます
+    this.federatedLogin = login;
+  }
+
+  async getCredentialsAndIdentityId(
+    getCredentialsOptions: GetCredentialsOptions
+  ): Promise<CredentialsAndIdentityId | undefined> {
+    try {
+
+      // トークンが利用可能かどうかをチェックするための検証を追加できます
+      // 続行する前に期限切れのトークンを更新することもできます
+
+      const getIdResult = await cognitoidentity.getId({
+        // 設定からidentityPoolIdを取得します
+        IdentityPoolId: '<identity-pool-id-from-config>',
+        Logins: { [this.federatedLogin.domain]: this.federatedLogin.token },
+      });
+
+      const cognitoCredentialsResult = await cognitoidentity.getCredentialsForIdentity({
+        IdentityId: getIdResult.IdentityId,
+        Logins: { [this.federatedLogin.domain]: this.federatedLogin.token },
+      });
+
+      const credentials: CredentialsAndIdentityId = {
+        credentials: {
+          accessKeyId: cognitoCredentialsResult.Credentials?.AccessKeyId,
+          secretAccessKey: cognitoCredentialsResult.Credentials?.SecretKey,
+          sessionToken: cognitoCredentialsResult.Credentials?.SessionToken,
+          expiration: cognitoCredentialsResult.Credentials?.Expiration,
+        },
+        identityId: getIdResult.IdentityId,
+      };
+      return credentials;
+    } catch (e) {
+      console.log('認証情報取得エラー: ', e);
+    }
+  }
+  // キャッシュされた認証情報とidentityIdをクリアするために実装します。これは連携サービスからのサインアウト時に呼び出されます。
+  clearCredentialsAndIdentityId(): void {}
+}
+
+// カスタムプロバイダのインスタンスを作成します
+const customCredentialsProvider = new CustomCredentialsProvider();
+Amplify.configure(awsconfig, {
+  Auth: {
+    // カスタム認証情報プロバイダをAmplifyに供給します
+    credentialsProvider: customCredentialsProvider
+  },
+});
+
+```
+
+カスタム認証情報プロバイダが構築され、`Amplify.configure`に供給されたので、カスタム認証情報プロバイダを使用してCognitoアイデンティティプールへの連携を完了する方法を見てみましょう。
+
+<!-- Platform: react-native -->
+### Facebookサインイン（React Native - Expo）
+
+```javascript
+import Expo from 'expo';
+import React from 'react';
+import { fetchAuthSession } from 'aws-amplify/auth';
+
+const App = () => {
+  const signIn = async () => {
+    const { type, token, expires } =
+      await Expo.Facebook.logInWithReadPermissionsAsync(
+        'YOUR_FACEBOOK_APP_ID',
+        {
+          permissions: ['public_profile']
+        }
+      );
+    if (type === 'success') {
+      // 連携アイデンティティでサインイン
+      try {
+        customCredentialsProvider.loadFederatedLogin({
+          domain: 'graph.facebook.com',
+          token: token
+        });
+        const fetchSessionResult = await fetchAuthSession(); // 認証情報を返します
+        console.log('fetchSessionResult: ', fetchSessionResult);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  };
+
+  // ...
+
+  return (
+    <View style={styles.container}>
+      <Button title="FBSignIn" onPress={signIn} />
+    </View>
+  );
+};
+```
+<!-- /Platform -->
+
+<!-- Platform: javascript, angular, nextjs, react, vue -->
+### Facebookサインイン（React）
+
+```js
+import React, { useEffect } from 'react';
+import {
+  fetchAuthSession,
+} from 'aws-amplify/auth';
+
+// Facebookからの連携サインイン
+const SignInWithFacebook = () => {
+
+  useEffect(() => {
+    if (!window.FB) createScript();
+  }, [])
+
+  const signIn = () => {
+    const fb = window.FB;
+    fb.getLoginStatus(response => {
+      if (response.status === 'connected') {
+        getAWSCredentials(response.authResponse);
+      } else {
+        fb.login(
+          response => {
+            if (!response || !response.authResponse) {
+              return;
+            }
+            customCredentialsProvider.loadFederatedLogin({
+              domain: 'graph.facebook.com',
+              token: response.authResponse.accessToken,
+            });
+            const fetchSessionResult = await fetchAuthSession(); // 認証情報を返します
+            console.log('fetchSessionResult: ', fetchSessionResult);
+          },
+          {
+            // 認可されたスコープ
+            scope: 'public_profile,email'
+          }
+        );
+      }
+    });
+  }
+
+  const createScript = () => {
+    // SDKをロード
+    window.fbAsyncInit = fbAsyncInit;
+    const script = document.createElement('script');
+    script.src = 'https://connect.facebook.net/en_US/sdk.js';
+    script.async = true;
+    script.onload = initFB;
+    document.body.appendChild(script);
+  }
+
+  const initFB = () => {
+    const fb = window.FB;
+    console.log('FB SDK initialized');
+  }
+
+  const fbAsyncInit = () => {
+    // FB SDKクライアントを初期化
+    const fb = window.FB;
+    fb.init({
+      appId   : 'your_facebook_app_id',
+      cookie  : true,
+      xfbml   : true,
+      version : 'v2.11'
+    });
+  }
+
+  return (
+    <div>
+      <button onClick={signIn}>Facebookでサインイン</button>
+    </div>
+  );
+}
+```
+
+### Googleサインイン（React）
+
+```jsx
+import React, { useEffect } from 'react';
+import jwt from 'jwt-decode';
+import {
+  fetchAuthSession,
+} from 'aws-amplify/auth';
+
+const SignInWithGoogle = () => {
+  useEffect(() => {
+  // 既存のGoogleクライアント初期化があるかを確認します
+    if (!window.google?.accounts) createScript();
+  }, []);
+
+  // Googleクライアントをロード
+  const createScript = () => {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = initGsi;
+    document.body.appendChild(script);
+  }
+
+  // Googleクライアントを初期化してGoogleボタンをレンダリング
+  const initGsi = () => {
+    if (window.google?.accounts) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        callback: (response: any) => {
+          customCredentialsProvider.loadFederatedLogin({
+            domain: 'accounts.google.com',
+            token: response.credential,
+          });
+          const fetchSessionResult = await fetchAuthSession(); // 認証情報を返します
+          console.log('fetchSessionResult: ', fetchSessionResult);
+        },
+      });
+      window.google.accounts.id.renderButton(
+        document.getElementById('googleSignInButton'),
+        { theme: 'outline', size: 'large' }
+      );
+    }
+  }
+
+  return (
+    <div>
+      <button id='googleSignInButton'/>
+    </div>
+  );
+}
+```
+
+### Auth0との連携
+
+`Auth0`をCognitoアイデンティティプールのプロバイダの1つとして使用できます。これにより、Auth0経由で認証されたユーザーがAWSリソースにアクセスできるようになります。
+
+手順1. [Auth0とCognitoアイデンティティプール統合の説明に従います](https://auth0.com/docs/customize/integrations/aws/amazon-cognito)
+
+手順2. `Auth0`でログインし、返されたIDトークンを使用して、最初に作成したカスタム認証情報プロバイダを使用して`Cognito連携アイデンティティプール`からAWS認証情報を取得します。
+
+```js
+import { fetchAuthSession } from 'aws-amplify/auth';
+
+const { idToken, domain, name, email, phoneNumber } = getFromAuth0(); // auth0からユーザー認証情報と情報を取得します
+
+async function getCognitoCredentials() {
+  try {
+    customCredentialsProvider.loadFederatedLogin({
+      domain,
+      token: idToken
+    });
+    const fetchSessionResult = await fetchAuthSession(); // 認証情報を返します
+    console.log('fetchSessionResult: ', fetchSessionResult);
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+<!-- /Platform -->
+
+## Lambda トリガー
+
+defineAuthおよび新しいFunctions実装からのdefineFunctionのtriggersプロパティを使用して、Cognito User Poolの[Lambda Triggers](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html)を定義できます。これにより、登録および認証フローにカスタム機能を追加できます。[ここでpreSignUpフック例をチェックしてください。](/[platform]/build-a-backend/functions/examples/email-domain-filtering/)
+
+### Pre AuthenticationおよびPre Sign-up Lambdaトリガー
+
+Pre Authentication Lambdaトリガーが有効な場合、`signIn`のオプションとして`clientMetadata`を渡すことができます。このメタデータを使用して、認証に関する追加の検証を実装できます。
+
+```ts
+import { signIn } from 'aws-amplify/auth';
+
+async function handleSignIn(username: string, password: string) {
+  try {
+    await signIn({
+      username,
+      password,
+      options: {
+        clientMetadata: {} // オプション。任意のキーを含めることができ、Lambda トリガーにそのまま渡されるキーと値のペアのオブジェクト。
+      }
+    });
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+### 他のLambda トリガーへのメタデータの渡し方
+
+多くのCognito Lambda Triggers は`clientMetadata`属性の形式で、サニタイズされていないキーと値のペアも受け入れます。この属性は、Cognito Lambda Trigger実行をもたらすさまざまなAuth APIに対して指定できます。
+
+これらのAPIには以下が含まれます。
+
+- `signIn`
+- `signUp`
+- `confirmSignIn`
+- `confirmSignUp`
+- `resetPassword`
+- `confirmResetPassword`
+- `resendSignUpCode`
+- `updateUserAttributes`
+- `fetchAuthSession`
+
+さらに、`ClientMetadataProvider`を設定して、内部`fetchAuthSession`呼び出しに`clientMetadata`を渡すことができます。
+
+```javascript
+// グローバルclientMetadataを設定（すべてのトークン更新に影響）
+import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
+
+const clientMetadataProvider = () => Promise.resolve({
+  'app-version': '1.0.0',
+  'device-type': 'mobile'
+});
+
+cognitoUserPoolsTokenProvider.setClientMetadataProvider(clientMetadataProvider);
+```
+
+`validationData`属性を受け入れるトリガーの一部は`clientMetadata`を`validationData`の値として使用することに注意してください。`validationData`に頼っている場合は、`clientMetadata`を使用するときに注意してください。
+
+## AWSサービスオブジェクトの操作
+
+AWS _サービスインターフェースオブジェクト_を使用して、認証状態でAWSサービスを操作できます。Amplify `fetchAuthSession`から認証情報をサービス呼び出しコンストラクタに渡すことで、任意のAWSサービスインターフェースオブジェクトのメソッドを呼び出すことができます。
+
+```javascript
+import { fetchAuthSession } from 'aws-amplify/auth';
+import Route53 from 'aws-sdk/clients/route53';
+
+async function changeResourceRecordSets() {
+  try {
+    const { credentials } = await fetchAuthSession();
+
+    const route53 = new Route53({
+      apiVersion: '2013-04-01',
+      credentials
+    });
+
+    // route53オブジェクトを使用した追加のコード
+    //route53.changeResourceRecordSets();
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+> **Warning:** 注：サービスインターフェースオブジェクトを操作するには、Amazon Cognitoユーザーの[IAMロール](https://docs.aws.amazon.com/cognito/latest/developerguide/iam-roles.html)が要求されたサービスを呼び出すための適切な権限を持つ必要があります。
+
+## カスタムトークンプロバイダ
+
+AppSync付きOIDC認証など、サービスに独自のトークンを提供したい場合は、カスタムAuth トークンプロバイダを作成します。`Amplify.configure`メソッド呼び出しを通じてAmplifyにトークンプロバイダを提供する必要があります。以下に、このようなカスタムプロバイダを構築する方法のサンプルコードを参照してください。
+
+```javascript
+import { Amplify } from 'aws-amplify';
+import { TokenProvider, decodeJWT } from 'aws-amplify/auth';
+
+// ...
+
+const myTokenProvider: TokenProvider = {
+  async getTokens({ forceRefresh } = {}) {
+    if (forceRefresh) {
+      // 可能な場合、新しいトークンの取得を試みます
+    }
+
+    const accessTokenString = '<insert JWT from provider>';
+    const idTokenString = '<insert JWT from provider>';
+    
+    return {
+      accessToken: decodeJWT(accessTokenString),
+      idToken: decodeJWT(idTokenString),
+    };
+  },
+};
+
+Amplify.configure(awsconfig, {
+  Auth: {
+    tokenProvider: myTokenProvider
+  }
+});
+
+```
+## API リファレンス
+
+認証モジュールの完全なAPIドキュメントについては、[API リファレンス](https://aws-amplify.github.io/amplify-js/api/modules/aws_amplify.auth.html)を参照してください。
+<!-- /Platform -->

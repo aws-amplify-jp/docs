@@ -1,0 +1,44 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '画像内のラベルオブジェクト',
+  description: 'Amplifyを使用して画像内のラベルを検出する方法について詳しく説明します。例えば、椅子やデスクなどのオブジェクトが画像に含まれているかどうかを検出できます。',
+  platforms: [
+    'javascript',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import labelImageJs from '/src/fragments/lib/predictions/js/label-image.mdx';
+import labelImageIOS from '/src/fragments/lib/predictions/ios/label-image.mdx';
+import labelImageAndroid from '/src/fragments/lib/predictions/android/label-image.mdx';
+
+<Fragments
+  fragments={{
+    javascript: labelImageJs,
+    angular: labelImageJs,
+    nextjs: labelImageJs,
+    react: labelImageJs,
+    vue: labelImageJs,
+    swift: labelImageIOS,
+    android: labelImageAndroid
+  }}
+/>

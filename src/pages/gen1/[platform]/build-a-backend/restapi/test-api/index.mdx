@@ -1,0 +1,178 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'REST APIをテストする',
+  description: 'ターミナル、Amplify Mock、またはAPI Gatewayコンソールから REST APIをテストする方法を学びます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+## ターミナルからAPIをテストする
+
+ゲストユーザーがREST APIにアクセスできる場合は、Curlを使用してターミナルからテストできます。
+
+[Curl](https://github.com/curl/curl)は、様々なプロトコルを使用してサーバーとの間でデータを転送できるコマンドラインツールです。
+
+> CurlはMac、Windows、Linuxを含む多くのディストリビューションで利用可能です。[ドキュメント](https://curl.haxx.se/docs/install.html)のインストール手順に従ってください。
+
+<BlockSwitcher>
+<Block name="Mac and Linux">
+
+### GETメソッドの例
+
+```bash
+curl https://a5b4c3d2e1.execute-api.eu-west-2.amazonaws.com/dev/todos
+```
+
+### POSTメソッドの例
+
+```bash
+curl -H "Content-Type: application/json" -d '{"name":"todo-1"}' https://a5b4c3d2e1.execute-api.eu-west-2.amazonaws.com/dev/todos
+```
+
+</Block>
+<Block name="Windows">
+
+### GETメソッドの例
+
+```bash
+curl https://a5b4c3d2e1.execute-api.eu-west-2.amazonaws.com/dev/todos
+```
+
+### POSTメソッドの例
+
+```bash
+curl -H "Content-Type: application/json" -d {\"name\":\"todo-1\"} https://a5b4c3d2e1.execute-api.eu-west-2.amazonaws.com/dev/todos
+```
+
+</Block>
+</BlockSwitcher>
+
+> 重要! 本番環境のエンドポイントを使用したテストメソッドは、元に戻せないリソースの変更につながる可能性があります。
+
+## Amplify MockでAPIをテストする
+
+Amplify CLIを使用すると、`amplify mock function`コマンドを使用してREST APIを迅速にテストできます。
+
+HTTPメソッド`GET`とパス`/todos?limit=10`(クエリ文字列パラメータ`limit`を含む)を使用して、以下のルートで新しいREST APIをテストしましょう。
+
+```console
+GET /todos?limit=10
+```
+
+> 重要! 本番環境のエンドポイントを使用したテストメソッドは、元に戻せないリソースの変更につながる可能性があります。
+
+続行する前に、`{project}/amplify/backend/function/todosLambda/src/event.json`ファイルを編集して、テスト目的でその内容を置き換えます。
+
+```json
+{
+  "httpMethod": "GET",
+  "path": "/todos",
+  "queryStringParameters": {
+    "limit": "10"
+  }
+}
+```
+
+変更を保存したことを確認して、以下を実行します
+
+```bash
+amplify mock function todosLambda
+```
+
+次のオプションを選択します:
+
+- `{project}/amplify/backend/function/todosLambda`に相対するイベントJSONオブジェクトのパスを指定してください __src/event.json__
+
+```console
+Starting execution...
+EVENT: {"httpMethod":"GET","path":"/todos","queryStringParameters":{"limit":"10"}}
+App started
+
+Result:
+{"statusCode":200,"body":"{\"success\":\"get call succeed!\",\"url\":\"/todos?limit=10\"}","headers":{"x-powered-by":"Express","access-control-allow-origin":"*","access-control-allow-headers":"Origin, X-Requested-With, Content-Type, Accept","content-type":"application/json; charset=utf-8","content-length":"55", "date":"Tue, 18 Aug 2020 16:50:53 GMT","connection":"close"},"isBase64Encoded":false}
+Finished execution.
+```
+
+## API Gatewayコンソールを使用してAPIをテストする
+
+HTTPメソッド`GET`とパス`/todos?limit=10`(クエリ文字列パラメータ`limit`を含む)を使用して、以下のルートで新しいREST APIをテストしましょう。
+
+```console
+GET /todos?limit=10
+```
+
+> 重要! API Gatewayコンソールでテストメソッドを使用すると、元に戻せないリソースの変更につながる可能性があります。
+
+- [https://console.aws.amazon.com/apigateway](https://console.aws.amazon.com/apigateway)でAPI Gatewayコンソールにサインインします。
+- `todosApi` REST APIを選択します。
+- リソースペインで、テストするメソッドを選択します。`/todos`の直下の`ANY`を選びます。
+
+```console
+/                        
+ |_ /todos               Main resource. Eg: /todos
+   ANY                   Includes methods: DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT
+   OPTIONS               Allow pre-flight requests in CORS by browser
+    |_ /{proxy+}         Proxy resource. Eg: /todos/, /todos/id, todos/object/{id}
+    ANY                  Includes methods: DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT
+    OPTIONS              Allow pre-flight requests in CORS by browser
+```
+
+- メソッド実行ペインのクライアントボックスで、TESTを選択します。`GET`メソッドを選択します。クエリ文字列`{todos}`フィールドに`limit=10`を追加します。
+
+- テストを選択して`GET /todos?limit=10`のテストを実行します。リクエスト、ステータス、レイテンシ、レスポンスボディ、レスポンスヘッダ、ログが表示されます。
+
+```bash
+Request: /todos?limit=10
+Status: 200
+Latency: 139 ms
+Response Body
+{
+  "success": "get call succeed!",
+  "url": "/todos?limit=10"
+}
+Response Headers
+{"access-control-allow-origin":"*","date":"Tue, 18 Aug 2020 17:36:14 GMT","content-length":"55","access-control-allow-headers":"Origin, X-Requested-With, Content-Type, Accept","x-powered-by":"Express","content-type":"application/json; charset=utf-8","connection":"close"}
+Logs
+Execution log for request 4fc3c0c7-6f9f-4ac3-84d7-205500f39b5f
+Tue Aug 18 17:36:14 UTC 2020 : Starting execution for request: 4fc3c0c7-6f9f-4ac3-84d7-205500f39b5f
+Tue Aug 18 17:36:14 UTC 2020 : HTTP Method: GET, Resource Path: /todos
+Tue Aug 18 17:36:14 UTC 2020 : Method request path: {}
+Tue Aug 18 17:36:14 UTC 2020 : Method request query string: {limit=10}
+Tue Aug 18 17:36:14 UTC 2020 : Method request headers: {}
+Tue Aug 18 17:36:14 UTC 2020 : Method request body before transformations: 
+Tue Aug 18 17:36:14 UTC 2020 : Endpoint request URI: https://lambda.eu-west-2.amazonaws.com/2015-03-31/functions/arn:aws:lambda:eu-west-2:664371068953:function:expressLambda-dev/invocations
+Tue Aug 18 17:36:14 UTC 2020 : Endpoint request headers: { X-Amz-Date=20200818T173614Z, X-Amz-Source-Arn=arn:aws:execute-api:eu-west-2:664371068953:s3zmw6fqy5/test-invoke-stage/GET/todos, Accept=application/json, User-Agent=AmazonAPIGateway_s3zmw6fqy5, X-Amz-Security-Token=IQoJb3JpZ2luX2VjEDEaCWV1LXdlc3QtMiJGMEQCIC3KIeR66WhaCBw+eJ+GPhF7y4hz9xC2nN+ARb7T3psyAiBdsoaD9yMfiw2dHWjQM5x7vM11XmToNSGu64mckUQdzSq0AwgaEAEaDDU0NDM4ODgxNjY2MyIMIzObNbCd6QtYwb0IKpEDpHXEzkM2OYq7JfL0U/WbF09KNamodfnifRYwZd/GNOwykykc/zHiU9X0XZPRd+QTnQe/9eoy8DaxBkDgRzQQjTThQWJWadtcfjryTLRKpVeo1UueL+f6DTUDf+URjb0P9CN1gPm+ntZD3LSyAXGwACKG7YMA5/HyeEk [TRUNCATED]
+Tue Aug 18 17:36:14 UTC 2020 : Endpoint request body after transformations: {"resource":"/todos","path":"/todos","httpMethod":"GET","headers":null,"multiValueHeaders":null,"queryStringParameters":{"limit":"10"},"multiValueQueryStringParameters":{"limit":["10"]},"pathParameters":null,"stageVariables":null,"requestContext":{"resourcePath":"/todos","httpMethod":"GET","requestTime":"18/Aug/2020:17:36:14 +0000","path":"/todos","accountId":"EXAMPLE_ID","protocol":"HTTP/1.1","stage":"test-invoke-stage","domainPrefix":"testPrefix","requestTimeEpoch":1597772174890,"requestId":"4fc3c0c7-6f9f-4ac3-84d7-205500f39b5f","identity":{"cognitoIdentityPoolId":null,"cognitoIdentityId":null,"apiKey":"test-invoke-api-key","principalOrgId":null,"cognitoAuthenticationType":null,"userArn":"arn:aws:iam::664371068953:root","apiKeyId":"test-invoke-api-key-id","userAgent":"aws-internal/3 aws-sdk-java/1.11.820 Linux/4.9.217-0.1.ac.205.84.332.metal1.x86_64 OpenJDK_64-Bit_Server_VM/25.252-b09 java/1.8.0_252 v [TRUNCATED]
+Tue Aug 18 17:36:14 UTC 2020 : Sending request to https://lambda.eu-west-2.amazonaws.com/2015-03-31/functions/arn:aws:lambda:eu-west-2:664371068953:function:expressLambda-dev/invocations
+Tue Aug 18 17:36:15 UTC 2020 : Received response. Status: 200, Integration latency: 137 ms
+Tue Aug 18 17:36:15 UTC 2020 : Endpoint response headers: {Date=Tue, 18 Aug 2020 17:36:15 GMT, Content-Type=application/json, Content-Length=443, Connection=keep-alive, sampled=0}
+Tue Aug 18 17:36:15 UTC 2020 : Endpoint response body before transformations: {"statusCode":200,"body":"{\"success\":\"get call succeed!\",\"url\":\"/todos?limit=10\"}","headers":{"x-powered-by":"Express","access-control-allow-origin":"*","access-control-allow-headers":"Origin, X-Requested-With, Content-Type, Accept","content-type":"application/json; charset=utf-8","content-length":"55","date":"Tue, 18 Aug 2020 17:36:14 GMT","connection":"close"},"isBase64Encoded":false}
+Tue Aug 18 17:36:15 UTC 2020 : Method response body after transformations: {"success":"get call succeed!","url":"/todos?limit=10"}
+Tue Aug 18 17:36:15 UTC 2020 : Method response headers: {x-powered-by=Express, access-control-allow-origin=*, access-control-allow-headers=Origin, X-Requested-With, Content-Type, Accept, content-type=application/json; charset=utf-8, content-length=55, date=Tue, 18 Aug 2020 17:36:14 GMT, connection=close, Sampled=0}
+Tue Aug 18 17:36:15 UTC 2020 : Successfully completed execution
+Tue Aug 18 17:36:15 UTC 2020 : Method completed with status: 200
+```

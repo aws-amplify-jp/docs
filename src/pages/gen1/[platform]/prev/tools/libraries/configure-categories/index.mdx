@@ -1,0 +1,51 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify カテゴリの設定',
+  description:
+    'クライアントの設定',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'vue',
+    'react-native'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      showBreadcrumbs: false,
+      meta
+    }
+  };
+}
+
+<Callout info>
+
+このガイドは、以前のバージョンの Amplify ライブラリを使用しているユーザー向けです。最新バージョン用の [Amplify カテゴリ設定の更新されたガイド](/gen1/[platform]/tools/libraries/configure-categories/)も参照できます。
+
+</Callout>
+
+import js0 from '/src/fragments/lib-v1/client-configuration/js/js-configuration.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>
+
+import reactnative0 from '/src/fragments/lib-v1/client-configuration/js/js-configuration.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative0 }} />

@@ -1,0 +1,365 @@
+---
+title: "セカンダリインデックスのカスタマイズ"
+section: "build-a-backend/data/data-modeling"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-02-09T14:57:32.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/data/data-modeling/secondary-index/"
+---
+
+// cspell:ignore ACCOUNTREPRESENTATIVEID
+「セカンダリインデックス」に基づいてリストクエリを最適化できます。たとえば、**Customer** モデルがある場合、デフォルトではカスタマーの **id** 識別子フィールドに基づいてクエリできますが、**accountRepresentativeId** に基づくセカンダリインデックスを追加して、特定のアカウント担当者の顧客リストを取得することができます。
+
+セカンダリインデックスは「ハッシュキー」と、オプションで「ソートキー」で構成されています。「ハッシュキー」を使用して厳密な等価性を実行し、「ソートキー」を使用して、より大きい (gt)、以上 (ge)、より小さい (lt)、以下 (le)、等しい (eq)、で始まる、および範囲内の操作を実行します。
+
+```ts title="amplify/data/resource.ts"
+export const schema = a.schema({
+  Customer: a
+    .model({
+      name: a.string(),
+      phoneNumber: a.phone(),
+      accountRepresentativeId: a.id().required(),
+    })
+      // highlight-next-line
+    .secondaryIndexes((index) => [index("accountRepresentativeId")])
+    .authorization(allow => [allow.publicApiKey()]),
+});
+```
+
+<!-- Platform: javascript, angular, react-native, react, nextjs, vue, android -->
+以下のクライアントクエリの例では、`accountRepresentativeId` に基づいて「Customer」レコードをクエリできます。
+
+```ts title="src/App.tsx"
+import { type Schema } from '../amplify/data/resource';
+import { generateClient } from 'aws-amplify/data';
+
+const client = generateClient<Schema>();
+
+const { data, errors } =
+  // highlight-start
+  await client.models.Customer.listCustomerByAccountRepresentativeId({
+    accountRepresentativeId: "YOUR_REP_ID",
+  });
+  // highlight-end
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+以下のクライアントクエリの例は、`accountRepresentativeId` に基づいて「Customer」レコードをクエリできるカスタム GraphQL リクエストを作成します。
+
+```swift
+struct PaginatedList<ModelType: Model>: Decodable {
+    let items: [ModelType]
+    let nextToken: String?
+}
+let operationName = "listCustomer8ByAccountRepresentativeId"
+let document = """
+query ListCustomer8ByAccountRepresentativeId {
+  \(operationName)(accountRepresentativeId: "\(accountRepresentativeId)") {
+    items {
+      createdAt
+      accountRepresentativeId
+      id
+      name
+      phoneNumber
+      updatedAt
+    }
+    nextToken
+  }
+}
+"""
+
+let request = GraphQLRequest<PaginatedList<Customer>>(
+    document: document,
+    responseType: PaginatedList<Customer>.self,
+    decodePath: operationName)
+
+let queriedCustomers = try await Amplify.API.query(
+    request: request).get()
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+以下のクライアントクエリの例では、`accountRepresentativeId` に基づいて「Customer」レコードをクエリできます。
+
+```dart title="lib/main.dart"
+import 'package:amplify_api/amplify_api.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'models/ModelProvider.dart';
+
+// highlight-start
+final request = ModelQueries.list(
+  Customer.classType,
+  where: Customer.ACCOUNTREPRESENTATIVEID.eq(YOUR_REP_ID),
+);
+// highlight-end
+
+```
+<!-- /Platform -->
+
+<details><summary>Amazon DynamoDB での動作方法を確認する</summary>
+
+Amplify は `a.model()` のデフォルトデータソースとして Amazon DynamoDB テーブルを使用します。キー値データベースの場合、「セカンダリインデックス」でアクセスパターンをモデル化することが重要です。`.secondaryIndexes()` 修飾子を使用してセカンダリインデックスを設定します。
+
+**Amazon DynamoDB** はキー値およびドキュメントデータベースで、任意のスケールで 1 桁ミリ秒のパフォーマンスを提供しますが、アクセスパターンで機能させるには、いくつかの先見の明が必要です。DynamoDB クエリ操作は最大 2 つの属性を使用してデータを効率的にクエリできます。クエリに渡される最初のクエリ引数 (ハッシュキー) は厳密な等価性を使用する必要があり、2 番目の属性 (ソートキー) は gt、ge、lt、le、eq、beginsWith、および between を使用できます。DynamoDB は、大部分のアプリケーションに十分強力な様々なアクセスパターンを効果的に実装できます。
+
+</details>
+
+## セカンダリインデックスにソートキーを追加する
+
+「ソートキー」を定義して、「より大きい」(gt)、「以上」(ge)、「より小さい」(lt)、「以下」(le)、「等しい」(eq)、「で始まる」(beginsWith)、「範囲内」などの柔軟なフィルターのセットをクエリに追加できます。
+
+```ts title="amplify/data/resource.ts"
+export const schema = a.schema({
+  Customer: a
+    .model({
+      name: a.string(),
+      phoneNumber: a.phone(),
+      accountRepresentativeId: a.id().required(),
+    })
+    .secondaryIndexes((index) => [
+      index("accountRepresentativeId")
+      // highlight-next-line
+        .sortKeys(["name"]),
+    ])
+    .authorization(allow => [allow.owner()]),
+});
+```
+
+<!-- Platform: javascript, angular, react-native, react, nextjs, vue, android, -->
+クライアント側では、ハッシュキーとソートキーにちなんで名付けられた新しい `listBy...` クエリが見つかります。この場合: `listByAccountRepresentativeIdAndName`。このフィルターを新しいリストクエリの一部として指定できます。
+
+```ts title="src/App.tsx"
+const { data, errors } =
+  // highlight-next-line
+  await client.models.Customer.listCustomerByAccountRepresentativeIdAndName({
+    accountRepresentativeId: "YOUR_REP_ID",
+    name: {
+      beginsWith: "Rene",
+    },
+  });
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+クライアント側では、ハッシュキーとソートキーにちなんで名付けられた新しい `listBy...` クエリに基づいてカスタム GraphQL リクエストを作成できます。このフィルターを新しいリストクエリの一部として指定できます。
+
+```swift
+struct PaginatedList<ModelType: Model>: Decodable {
+    let items: [ModelType]
+    let nextToken: String?
+}
+let operationName = "listCustomer9ByAccountRepresentativeIdAndName"
+let document = """
+query ListCustomer8ByAccountRepresentativeId {
+  \(operationName)(accountRepresentativeId: "\(accountRepresentativeId)", name: {beginsWith: "\(name)"}) {
+    items {
+      accountRepresentativeId
+      createdAt
+      id
+      name
+      phoneNumber
+      updatedAt
+    }
+    nextToken
+  }
+}
+"""
+let request = GraphQLRequest<PaginatedList<Customer>>(
+    document: document,
+    responseType: PaginatedList<Customer>.self,
+    decodePath: operationName)
+
+let queriedCustomers = try await Amplify.API.query(
+    request: request).get()
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+以下のクライアントクエリの例では、`name` AND `accountRepresentativeId` に基づいて「Customer」レコードをクエリできます。
+
+```dart title="lib/main.dart"
+import 'package:amplify_api/amplify_api.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'models/ModelProvider.dart';
+
+// highlight-start
+final request = ModelQueries.list(
+  Customer.classType,
+  where: Customer.ACCOUNTREPRESENTATIVEID.eq(YOUR_REP_ID) & Customer.NAME.beginsWith("Rene"),
+);
+// highlight-end
+
+```
+<!-- /Platform -->
+
+## セカンダリインデックスのクエリフィールドをカスタマイズする
+
+`queryField()` 修飾子を設定して、`client.models.<MODEL_NAME>.listBy...` の下の自動生成されたクエリ名もカスタマイズできます。
+
+```ts title="amplify/data/resource.ts"
+const schema = a.schema({
+  Customer: a
+    .model({
+      name: a.string(),
+      phoneNumber: a.phone(),
+      accountRepresentativeId: a.id().required(),
+    })
+    .secondaryIndexes((index) => [
+      index("accountRepresentativeId")
+        // highlight-next-line
+        .queryField("listByRep"),
+    ])
+    .authorization(allow => [allow.owner()]),
+});
+```
+
+<!-- Platform: javascript, angular, react-native, react, nextjs, vue, android -->
+クライアントアプリコードでは、Data クライアント下でクエリが更新されます。
+
+```ts title="src/App.tsx"
+const {
+  data,
+  errors
+  // highlight-next-line
+} = await client.models.Customer.listByRep({
+  accountRepresentativeId: 'YOUR_REP_ID',
+})
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+クライアントアプリコードでは、更新されたクエリ名を使用できます。
+
+```swift
+struct PaginatedList<ModelType: Model>: Decodable {
+    let items: [ModelType]
+    let nextToken: String?
+}
+let operationName = "listByRep"
+let document = """
+query ListByRep {
+  \(operationName)(accountRepresentativeId: "\(accountRepresentativeId)") {
+    items {
+      accountRepresentativeId
+      createdAt
+      id
+      name
+      phoneNumber
+      updatedAt
+    }
+    nextToken
+  }
+}
+"""
+
+let request = GraphQLRequest<PaginatedList<Customer>>(
+    document: document,
+    responseType: PaginatedList<Customer>.self,
+    decodePath: operationName)
+
+let queriedCustomers = try await Amplify.API.query(
+    request: request).get()
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+クライアントアプリコードでは、更新されたクエリ名を使用できます。
+
+```dart title="lib/main.dart"
+import 'package:amplify_api/amplify_api.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'models/ModelProvider.dart';
+
+var accountRepresentativeId = "John";
+var operationName = "listByRep";
+var document = """
+  query ListByRep {
+    $operationName(accountRepresentativeId: "$accountRepresentativeId") {
+      items {
+        accountRepresentativeId
+        createdAt
+        id
+        name
+        phoneNumber
+        updatedAt
+      }
+      nextToken
+    }
+  }
+  """;
+
+final request = GraphQLRequest(
+  document: document,
+  variables: {
+    'accountRepresentativeId': accountRepresentativeId,
+    'operationName': operationName, 
+  },
+);
+```
+<!-- /Platform -->
+
+## セカンダリインデックスの名前をカスタマイズする
+
+DynamoDB インデックスの名前をカスタマイズするには、`name()` 修飾子をオプションで指定できます。
+
+```ts title="amplify/data/resource.ts"
+const schema = a.schema({
+  Customer: a
+    .model({
+      name: a.string(),
+      phoneNumber: a.phone(),
+      accountRepresentativeId: a.id().required(),
+    })
+    .secondaryIndexes((index) => [
+      index("accountRepresentativeId")
+        // highlight-next-line
+        .name("MyCustomIndexName"),
+    ])
+    .authorization(allow => [allow.owner()]),
+});
+```
+
+## セカンダリインデックスのプロジェクション型をカスタマイズする
+
+`.projection()` 修飾子を使用してプロジェクション型を指定することで、セカンダリインデックスにプロジェクト (コピー) される属性を制御して、ストレージコストを削減し、クエリパターンを最適化できます。
+
+```ts title="amplify/data/resource.ts"
+const schema = a.schema({
+  Product: a
+    .model({
+      id: a.id().required(),
+      name: a.string().required(),
+      category: a.string().required(),
+      price: a.float().required(),
+      description: a.string(),
+      inStock: a.boolean().required(),
+    })
+    .secondaryIndexes((index) => [
+      // キーのみをプロジェクト - 最小インデックスサイズ
+      // highlight-next-line
+      index('category').projection('KEYS_ONLY'),
+      
+      // キーに加えてクエリする必要がある特定の属性をプロジェクト
+      // highlight-next-line
+      index('inStock').projection('INCLUDE', ['name', 'price']),
+      
+      // すべての属性をプロジェクト (デフォルト)
+      // highlight-next-line
+      index('name').projection('ALL'),
+    ])
+    .authorization(allow => [allow.publicApiKey()]),
+});
+```
+
+<details><summary>プロジェクション型と使用時期を確認する</summary>
+
+DynamoDB は 3 つのプロジェクション型をサポートしています。
+
+- **KEYS_ONLY** - インデックスと主キーのみをプロジェクト。最小インデックスサイズ、最小ストレージコスト。
+- **INCLUDE** - キーと指定された属性をプロジェクト。ストレージコストとクエリの柔軟性のバランス。
+- **ALL** - すべての属性をプロジェクト。最大限のクエリの柔軟性だが、最高のストレージコスト (デフォルト)。
+
+クエリパターンとストレージコスト要件に基づいて選択します。詳細は、[DynamoDB のプロジェクション](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html#GSI.Projections)を参照してください。
+
+</details>

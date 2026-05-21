@@ -1,0 +1,283 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ストレージバケットの認可ルールをカスタマイズ',
+  description:
+    'ストレージバケットの細粒度の認可ルールを定義',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'vue',
+    'swift',
+    'android',
+    'flutter',
+    'react-native'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+ゲスト、認証済みユーザー、ユーザーグループのファイルパスへのアクセスを定義することで、ストレージバケットの認可をカスタマイズします。ストレージバケットへのアクセスが必要な関数に対しても、アクセスを定義できます。
+
+以下の例を参照して、異なるユーザータイプに対して認可をさらにカスタマイズする方法を理解してください。
+
+## アクセスタイプ
+
+Amplify Storageを継続して使用するには認証が必要です。まだ設定していない場合は、必ず設定してください - [Authの設定に関するドキュメント](/[platform]/build-a-backend/auth/set-up-auth/)
+
+<Callout>
+
+**注:** アクセス定義内のパスの先頭に「/」を含めることはできません。
+
+デフォルトでは、すべてのパスはすべてのユーザータイプに対して拒否されます。ただし、下記に示すように`defineStorage`内で`access`コールバックを使用して明示的に許可した場合を除きます。
+
+</Callout>
+
+<BlockSwitcher>
+<Block name="ゲストユーザー">
+アプリケーションのすべてのゲスト（つまり、サインインしていない）ユーザーに`media/`配下のファイルへの読み取りアクセスを許可するには、以下の`access`値を使用します。
+
+```ts title="amplify/storage/resource.ts"
+export const storage = defineStorage({
+  name: 'myProjectFiles',
+  access: (allow) => ({
+    'media/*': [
+      allow.guest.to(['read']) // ユースケースに応じて「write」や「delete」などの追加アクションを指定することができます
+    ]
+  })
+});
+```
+
+</Block>
+<Block name="認証済みユーザー">
+<Callout>
+
+**注:** ユーザーがグループの一部である場合、そのユーザーにはグループロールが割り当てられます。つまり、認証済みロールに対して定義されたアクセス許可はこのユーザーに対しては適用されません。
+
+グループ内のユーザーにアクセス権を付与するには、目的のプレフィックスに対してグループのアクセス許可を明示的に定義する必要があります。
+
+</Callout>
+
+アプリケーションのすべての認証済み（つまり、サインインしている）ユーザーに`media/`配下のファイルへの読み取りアクセスを許可するには、以下の`access`設定を使用します。
+
+```ts title="amplify/storage/resource.ts"
+export const storage = defineStorage({
+  name: 'myProjectFiles',
+  access: (allow) => ({
+    'media/*': [
+      allow.authenticated.to(['read']) // ユースケースに応じて「write」や「delete」などの追加アクションを指定することができます
+    ]
+  })
+});
+```
+</Block>
+<Block name="ユーザーグループ">
+
+<Callout>
+
+**注:** ユーザーがグループの一部である場合、そのユーザーにはグループロールが割り当てられます。つまり、認証済みロールに対して定義されたアクセス許可はこのユーザーに対しては適用されません。
+
+グループ内のユーザーにアクセス権を付与するには、目的のプレフィックスに対してグループのアクセス許可を明示的に定義する必要があります。
+
+</Callout>
+
+`defineAuth`オブジェクトでauth設定時にユーザーグループを設定している場合、ストレージアクセスを特定のグループにスコープできます。この例では、`admin`グループと`auditor`グループを持つ`defineAuth`設定があると想定します。
+
+```ts title="amplify/auth/resource.ts"
+import { defineAuth } from '@aws-amplify/backend';
+
+export const auth = defineAuth({
+  loginWith: {
+    email: true
+  },
+  groups: ['admin', 'auditor']
+});
+```
+
+以下の`access`定義を使用して、監査役は`media/*`への読み取り専用アクセス権を持ち、管理者はフルアクセス権を持つようにアクセス許可を設定できます。
+
+```ts title="amplify/storage/resource.ts"
+export const storage = defineStorage({
+  name: 'myProjectFiles',
+  access: (allow) => ({
+    'media/*': [
+      allow.groups(['auditor']).to(['read']),
+      allow.groups(['admin']).to(['read', 'write', 'delete'])
+    ]
+  })
+});
+```
+
+複数のグループが同じアクション群を必要とする場合、これを単一のルールに組み込むことができます。
+
+```ts title="amplify/storage/resource.ts"
+export const storage = defineStorage({
+  name: 'myProjectFiles',
+  access: (allow) => ({
+    'media/*': [
+      allow.groups(['auditor', 'admin']).to(['read', 'write'])
+    ]
+  })
+});
+```
+
+</Block>
+<Block name="所有者">
+場合によっては、ファイルのアップロード者だけが、そのファイルに対してアクションを実行できるようにしたい場合があります。たとえば、音楽共有アプリでは、誰でも曲を聴くことはできますが、その曲をアップロードした本人だけがそれを削除できます。
+
+Amplify Storageでは、`entity_id`を使用してユーザーを表現し、ファイルを個別ユーザーにスコープすることで、これを実現できます。
+
+`entity_id`は予約されたトークンで、ファイルがアップロードされるときにユーザーの識別子に置き換えられます。パスへのアクセスを定義するときに、`allow.entity(<identification_method>).to([..])` のように識別方法を指定できます。
+
+現在、Identity Poolが唯一の利用可能な識別方法です - `allow.entity('identity').to([..])`
+
+以下のポリシーは、認証済みユーザーに、彼らのアイデンティティIDに一致する`media/`へのフルアクセスを許可します。
+
+```ts title="amplify/storage/resource.ts"
+export const storage = defineStorage({
+  name: 'myProjectFiles',
+  access: (allow) => ({
+    'media/{entity_id}/*': [
+      // {entity_id} はユーザーのアイデンティティIDに置き換えられるトークンです
+      allow.entity('identity').to(['read', 'write', 'delete'])
+    ]
+  })
+});
+```
+
+アイデンティティIDが`user123`のユーザーは、`media/user123/*`内のファイルに対して読み取り/書き込み/削除操作を実行できますが、他のパスにあるファイルに対してはアクションを実行できません。
+
+同様に、アイデンティティIDが`userABC`のユーザーは、`media/userABC/*`内のファイルに対してのみ読み取り/書き込み/削除操作を実行できます。このようにして、各ユーザーに、他のユーザーがアクセスできないストレージパスへのアクセスを許可できます。
+
+以下の例は、誰でもプロフィール写真を表示できますが、所有者だけが修正/削除できるアクセスを定義する方法を示しています。
+
+```ts title="amplify/storage/resource.ts"
+export const storage = defineStorage({
+  name: 'myProjectFiles',
+  access: (allow) => ({
+    'media/profile-pictures/{entity_id}/*': [
+      allow.entity('identity').to(['read', 'write', 'delete']),
+      allow.guest.to(['read']),
+      allow.authenticated.to(['read'])
+    ]
+  })
+});
+```
+
+ゲスト、認証済みユーザー、ユーザーグループ、またはリソースのルールが`{entity_id}`トークンを含むパスに適用される場合、トークンはワイルドカード（`*`）に置き換えられます。これは、_任意の_ユーザーがアップロードしたファイルにアクセスが適用されることを意味します。上記のポリシーでは、書き込みと削除は所有者のみに制限されていますが、読み取りは`media/profile-pictures/*/*`内の任意のファイルについてゲストユーザーと認証済みユーザーに対して許可されています。
+
+</Block>
+<Block name="関数">
+アプリケーションユーザーにストレージファイルへのアクセス権を付与するだけでなく、バックエンド関数にストレージファイルへのアクセス権を付与することもできます。これは、画像のサイズ変更や古いファイルの自動削除などのユースケースを実現するために使用できます。以下の設定は、関数アクセスを定義するために使用されます。
+
+```ts title="amplify/storage/resource.ts"
+import { defineStorage, defineFunction } from '@aws-amplify/backend';
+
+const demoFunction = defineFunction({});
+
+export const storage = defineStorage({
+  name: 'myProjectFiles',
+  access: (allow) => ({
+    'media/*': [allow.resource(demoFunction).to(['read', 'write', 'delete'])]
+  })
+});
+```
+
+これにより、関数`demoFunction`に`media/*`内のファイルを読み取り、書き込み、削除する機能が付与されます。
+
+関数にストレージへのアクセス権が付与されると、ストレージで設定されたAmazon S3バケット名を含む環境変数も受け取ります。この環境変数は、ストレージバケットにAWS SDKコールを実行するために関数で使用できます。環境変数は`<storage-name>_BUCKET_NAME`という名前です。上記の例では、`myProjectFiles_BUCKET_NAME`という名前になります。
+
+[関数リソースアクセス環境変数について詳しく学ぶ](/[platform]/build-a-backend/functions/#resource-access)
+
+</Block>
+</BlockSwitcher>
+
+### アクセス定義ルール
+
+ストレージアクセス定義で同時に指定できるパスのタイプには、いくつかのルールがあります。
+
+1. すべてのパスは`/*`で終わる必要があります。
+2. 1レベルのネスティングのみが許可されます。たとえば、`media/*`と`media/albums/*`のアクセス制御を定義できますが、`media/albums/photos/*`では定義できません。同じパス沿いに他の2つの定義があるためです。
+3. ワイルドカードは`{entity_id}`トークンと競合することはできません。たとえば、`media/*`と`media/{entity_id}/*`の両方を定義することはできません。最初のパスのワイルドカードが2番目のパスの`{entity_id}`トークンと競合するためです。
+4. パスは`{entity_id}`トークンを持つ別のパスのプレフィックスにはなれません。たとえば、`media/*`と`media/albums/{entity_id}/*`は許可されていません。
+
+あるパスが別のパスのサブパスである場合、サブパスのアクセス許可は_常に_親パスのアクセス許可をオーバーライドします。アクセス許可は親パスから「継承」されません。以下のアクセス定義の例を考えてみてください。
+
+```ts
+export const storage = defineStorage({
+  name: 'myProjectFiles',
+  access: (allow) => ({
+    'media/*': [allow.authenticated.to(['read', 'write', 'delete'])],
+    'media/profile-pictures/*': [allow.guest.to(['read'])],
+    'media/albums/*': [allow.authenticated.to(['read'])],
+    'other/*': [
+      allow.guest.to(['read']),
+      allow.authenticated.to(['read', 'write'])
+    ]
+  })
+});
+```
+
+このアクセス制御マトリックスはこの構成に対して次のようになります。
+
+| パス | media/\* | media/profile-pictures/\* | media/albums/\* | other/\* |
+| --- | --- | --- | --- | --- |
+| **認証済みユーザー** | read, write, delete | なし | read | read, write |
+| **ゲストユーザー** | なし | read | なし | read |
+
+認証済みユーザーは`media/*`配下のすべてのファイルを読み取り、書き込み、削除できます。ただし、`media/profile-pictures/*`と`media/albums/*`はこの限りではありません。これらのサブパスについては、スコープダウンされたアクセスが親の`media/*`に付与されたアクセスをオーバーライドします。
+
+### 利用可能なアクション
+
+特定のパスへのアクセスを構成するときに、アクセスを1つ以上のCRUDLアクションにスコープできます。
+
+| アクセス | 対応するライブラリAPI                        |
+| -------- | ----------------------------------------------------- |
+| `read`   | `getUrl`、`downloadData`、`list`、および`getProperties` |
+| `get`    | `getUrl`および`downloadData`                           |
+| `list`   | `list`および`getProperties`                           |
+| `write`  | `uploadData`、`copy`                                  |
+| `delete` | `remove`                                              |
+
+<Callout>
+
+**注:** `read`は`get`および`list`アクセス定義の組み合わせであり、したがって`get`または`list`が存在する場合は定義できません。
+
+</Callout>
+
+
+## Gen 1のpublic、protected、およびprivateアクセスパターン用
+{/* I don't think I'd include this, if you do I'd do it in an accordion component */}
+Amplify Gen 2で`defineStorage`を設定して、Gen 1のストレージカテゴリと同じ方法で動作するようにするには、以下の定義を使用できます。
+
+```ts title="amplify/storage/resource.ts"
+export const storage = defineStorage({
+  name: 'myProjectFiles',
+  access: (allow) => ({
+    'public/*': [
+      allow.guest.to(['read']),
+      allow.authenticated.to(['read', 'write', 'delete']),
+    ],
+    'protected/{entity_id}/*': [
+      allow.authenticated.to(['read']),
+      allow.entity('identity').to(['read', 'write', 'delete'])
+    ],
+    'private/{entity_id}/*': [
+      allow.entity('identity').to(['read', 'write', 'delete'])
+    ]
+  })
+});
+```

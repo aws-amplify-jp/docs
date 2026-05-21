@@ -1,0 +1,31 @@
+```mdx
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'デバイスを登録する',
+  description:
+    'デバイスをプッシュ通知サービスおよびAmazon Pinpointに登録します。',
+  platforms: ['swift', 'android']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import android0 from '/src/fragments/lib/push-notifications/common/register-device.mdx';
+
+<Fragments fragments={{ android: android0 }} />
+
+import ios1 from '/src/fragments/lib/push-notifications/common/register-device.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+```

@@ -1,0 +1,135 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'プラグイン',
+  description: 'プラグインを使用すると、既存の Amplify CLI に追加のコマンドと機能を追加できます。プラグイン パッケージの作成、公開、使用方法について説明します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+  
+
+プラグインは Amplify CLI プラグイン可能プラットフォームで明示的に管理されます。プラグインを使用すると、既存の Amplify CLI に追加のコマンドと機能を追加できます。このセクションでは、プラグイン パッケージの作成、公開、使用の手順、フォルダ構造、およびプラグイン パッケージの主要ファイルについて説明します。
+
+## 公式プラグイン
+
+- amplify-category-analytics
+- amplify-category-api
+- amplify-category-auth
+- amplify-category-function
+- amplify-category-hosting
+- amplify-category-interactions
+- amplify-category-notifications
+- amplify-category-predictions
+- amplify-category-storage
+- amplify-codegen
+- amplify-frontend-javascript
+- amplify-frontend-android
+- amplify-frontend-ios
+- amplify-provider-awscloudformation
+
+## サードパーティプラグイン
+
+- [amplify-category-video](https://www.npmjs.com/package/amplify-category-video) - AWS Amplify および AWS Media Services によって強化されたモバイルおよび Web アプリケーションにビデオ ストリーミングを簡単に組み込めます
+- [amplify-category-docs](https://www.npmjs.com/package/amplify-category-docs) - Amplify CLI から Amplify ドキュメントを表示する簡単な方法
+- [amplify-category-data-importer](https://www.npmjs.com/package/amplify-category-data-importer) - Amplify プロジェクトのデータのシーディング、インポート、管理プロセスを自動化します
+- [graphql-ttl-transformer](https://github.com/flogy/graphql-ttl-transformer) - DynamoDB の有効期限機能を有効にして、AWS Amplify API の古いエントリを自動削除します
+- [amplify-graphql-seed-plugin](https://www.npmjs.com/package/amplify-graphql-seed-plugin) - GraphQL API を使用して、高度にカスタマイズ可能なモック データでローカルおよびリモート データベースをシードします
+
+## プラグインのインストール
+
+次の手順に従って、サードパーティプラグインを Amplify CLI に追加できます。
+
+- プラグイン作成者が [命名規則](/gen1/[platform]/tools/cli/plugins/architecture/#plugin-types) に従ってプラグイン パッケージに名前を付けた場合。
+
+1. `npm install -g <plugin>` を実行して、プラグインをグローバル node_modules ディレクトリにインストールします。<br/>
+2. `amplify plugin scan` を実行して、Amplify CLI プラグイン プラットフォームが新しく追加されたプラグインをピックアップするようにします。
+
+- プラグイン作成者が上記の命名規則に従ってプラグイン パッケージに名前を付けていない場合。
+
+1. `npm install -g <plugin>` を実行して、プラグインをグローバル node_modules ディレクトリにインストールします。<br/>
+2. `amplify plugin add` を実行し、プラグインへのパスを指定して、プラグイン パッケージを Amplify CLI プラグイン プラットフォームに明示的に追加します。
+
+## プラグイン コマンド
+
+次は `amplify plugin` の下にあるコマンド スイートです。
+
+- amplify plugin configure
+- amplify plugin scan
+- amplify plugin add
+- amplify plugin remove
+- amplify plugin list
+- amplify plugin init
+- amplify plugin verify
+- amplify plugin help
+
+### configure
+
+`amplify plugin configure` は、`plugins.json` ファイルの次の設定を構成するために使用されます。
+
+- `plugin-directories` : プラグイン スキャン中にプラグイン パッケージが検索されるディレクトリを含みます。
+- `plugin-prefixes`: プラグイン パッケージ名プレフィックスを含みます。このプレフィックスで名前が付けられたパッケージはプラグイン候補と見なされ、プラグイン スキャン中にチェックされます。`plugin-prefixes` が空の場合、スキャンされたディレクトリ内のすべてのパッケージがチェックされます。
+- `max-scan-interval-in-seconds` : 前回のスキャン時間が `max-scan-interval-in-seconds` より長く経過している場合、Amplify CLI Core は再度スキャンします。この値を 0 に設定すると、Amplify CLI コマンドの実行開始時に毎回新しいスキャンが実行されます。デフォルト値は 1 日です。
+
+### scan
+
+`amplify plugin scan` はローカル環境でプラグインの新しいスキャンを開始します。グローバル node_modules などの `plugin-directories` に指定された設定可能なディレクトリ セットがスキャンされます。<br/>
+このコマンドの実行は `plugins.json` の `plugins` フィールドのコンテンツを完全に更新します。
+`plugins.json` の `last-scan-time` フィールドは前回のプラグイン スキャンのタイムスタンプです。
+このコマンドで手動で開始される以外に、プラグイン スキャンは通常の Amplify コマンド実行によってもトリガーできることに注意してください。たとえば、Amplify CLI Core が何か問題があることに気づいた場合、または前回のスキャン時間が `max-scan-interval-in-seconds` (デフォルトで 1 日に設定) より長く経過している場合です。
+
+### add
+
+`amplify plugin add` は、以前に削除されたプラグイン (以下を参照) を選択するか、ローカル パッケージの完全なパスを入力して、Amplify CLI にプラグインとして追加するよう求めます。Amplify CLI Core はこのコマンドの実行中にプラグイン パッケージの存在と有効性を検証します。このコマンドを使用すると、プラグイン スキャン プロセスで見つからないプラグイン (たとえば、`plugin-directories` のいずれかにない場合、またはパッケージ名が `plugin-prefixes` で指定された適切なプレフィックスを持たない場合) を追加できます。
+
+### remove
+
+`amplify plugin remove` は、現在アクティブなすべてのプラグインのリストを表示し、Amplify CLI に含めたくないプラグインを選択できるようにします。Amplify CLI Core は `plugins` フィールドからそれらのプラグインのマニフェストを削除するため、それらはアクティブなプラグインとしてカウントされなくなり、コマンド実行中にロードされなくなります。<br/>
+削除されたプラグインが `plugin-directories` に指定されたディレクトリのいずれかにあり、そのパッケージ名が `plugin-prefixes` で指定されたプレフィックスを持つ場合、`plugins.json` ファイルの `excluded` フィールドに挿入されます。これは次回のプラグイン スキャンで `plugins` フィールドに再度挿入されません。
+実際のプラグイン パッケージ自体はコンピュータから削除されず、`amplify plugin add` でアクティブなプラグインとして追加し直すことができます。
+
+### list
+
+`amplify plugin list` はすべてのアクティブなプラグインと、ローカル Amplify CLI プラグイン プラットフォームの他の情報をリストします。
+
+### init
+
+Amplify CLI はプラグイン開発用のコマンド `amplify plugin init` (別名 `amplify plugin new`) を提供します。<br/>
+このコマンドはまず要件を収集してから、開発を開始するためのプラグイン パッケージのスケルトンを作成します。
+新しく作成されたプラグイン パッケージはローカル Amplify CLI プラットフォームに追加されるため、開発中にその機能を簡単にテストできます。
+`amplify plugin remove` コマンドでプラットフォームから簡単に削除し、`amplify plugin add` コマンドで追加し直すことができます。
+
+### verify
+
+Amplify CLI は、次のことを検証するユーティリティ コマンド `amplify plugin verify` を提供します。
+
+- パッケージはプラグインに必要なインターフェース メソッドを実装しています。
+- `commands` フィールドにはプラグインのタイプに必要なすべてのコマンドが含まれています。
+`amplify plugin verify` コマンドは、実行されたフォルダをプラグイン パッケージのルート ディレクトリとして扱います。コマンドは手動で実行できます。その機能は `amplify plugin scan` と `amplify plugin add` コマンドでも呼び出されます。
+
+### help
+
+`amplify plugin` の下にあるコマンドのヘルプ情報を出力します。

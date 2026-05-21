@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"swift","meta":{"title":"IAM ポリシー","description":"Amplify CLI は、すべてのカテゴリ全体でアクションを実行するためにいくつかの IAM ポリシーを必要とします。必要に応じて「Action」セクションの項目を含めたり削除したりすることで、カテゴリのアクセス許可を付与または制限できます。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

@@ -1,0 +1,105 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'コレクション',
+  description: 'コレクション',
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+コレクションは、繰り返しアイテムのリストです。UIコンポーネントエディタの右上隅にある**コレクションを作成**ボタンを選択して、任意の個別コンポーネントからビジュアルにコレクションを作成できます。すべてのコレクションはコードとして生成され、リアルタイムサブスクリプションが自動的に設定されます。
+
+## データバインディング
+
+Amplify Studioは、データモデル内のアイテムにコレクションをバインドする視覚的な方法を提供します。コレクションアイテムは、フィルタリング、ソート、またはコンテンツ管理ビューから特定のレコードにリンクできます。
+
+### GraphQLおよびDataStore
+
+Amplify Studioは、すべてのAmplify GraphQL APIへのデータバインディングをサポートしています。**DataStoreの有無を問わず**対応しています。[DataStoreと競合解決の詳細はこちら](/gen1/[platform]/tools/console/data/data-model/#datastore-and-graphql)。
+
+DataStoreなしのAPIの場合、いくつかのコレクション機能に制限があります：
+- コレクションは[ソート](#set-sort-conditions)できません
+- コレクションは[検索](#set-search-and-pagination)が制限されています
+- コレクションは[ページネーション](#set-search-and-pagination)が制限されています
+
+さらに、データに関係がある場合、DataStoreなしのAPIではクエリの深さが4以上である必要があります。コードジェンのクエリ深さを更新するには：
+1. ターミナルでプロジェクトのルートディレクトリに移動します
+2. `amplify configure codegen`を実行します
+3. プロンプトが表示されたら、クエリの深さを4以上に設定します。その他のオプションはお好みで設定できます
+4. `amplify codegen`を実行して、新しい深さでクエリを生成します
+
+### チュートリアル
+
+1. アプリの[Amplify Studio](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)を起動します
+2. コンポーネントから[コレクション](/gen1/[platform]/tools/console/tutorial/collections/)を作成します
+3. コレクションをデータモデルにリンクします
+4. フィルタを設定して、表示するデータをカスタマイズします
+5. ソート条件を設定して、データの表示方法をカスタマイズします
+   > **注：** コンポーネントがデータモデルで裏付けられたプロパティを持たない場合、コンポーネントのプロパティを指定されたデータモデルフィールドに手動でマップする必要があります。
+
+![データバインディングを示すスクリーンショット](/images/console/ui-collections-databind.png)
+
+### フィルタを設定
+
+フィルタは、コレクションに表示されるレコードを制御します。単一のコレクションに複数のフィルタを追加できます。
+
+![フィルタの設定を示すスクリーンショット](/images/console/ui-collections-set-filters.png)
+
+### ソート条件を設定
+
+ソート条件は、コレクション内のレコードが表示される方向を制御します。
+
+<Callout warning>
+
+DataStoreなしのGraphQL APIにバインドされたコレクションはソートできません。[DataStoreと競合解決の詳細](/gen1/[platform]/tools/console/data/data-model/#datastore-and-graphql)。
+
+</Callout>
+
+![ソート条件の設定を示すスクリーンショット](/images/console/ui-collections-set-sort-conditions.png)
+
+## レイアウトの編集
+
+Amplify UIの一部の[コレクションプロパティ](https://ui.docs.amplify.aws/react/components/collection)をStudioで直接編集できます。レイアウトプロパティへの変更（リストとグリッド、方向、順序、パディングなど）はリアルタイムプレビューに反映されます。
+
+![コレクションレイアウト編集を示すスクリーンショット](/images/console/ui-collections-layout.png)
+
+## 検索とページネーションを設定
+
+### 検索
+
+コレクションは、左側のバーの**含める**リンクを選択して、検索バーを自動的に含めるように設定できます。検索バーのプレースホルダーをカスタマイズして、ブラウザでテストできます。
+
+<Callout warning>
+
+DataStoreなしのGraphQL APIにバインドされたコレクションは、検索機能が制限されています。[DataStoreと競合解決の詳細](/gen1/[platform]/tools/console/data/data-model/#datastore-and-graphql)。
+
+</Callout>
+
+![検索を示すスクリーンショット](/images/console/ui-collections-search.png)
+
+### ページネーション
+
+コレクションは、ページごとに特定数のアイテムで自動的にページネーションするように設定できます。左側のバーの**含める**を選択してページネーションを有効にしてアイテム数を設定します。
+
+![ページネーションを示すスクリーンショット](/images/console/ui-collections-pagination.png)
+
+DataStoreなしのGraphQL APIにバインドされたコレクションの場合、ページネーションは制限されたサポートがあります。ユーザーはページを進めることができます（例：ページ1からページ2）が、ページをスキップすることはできません（例：ページ1からページ3）。
+
+[DataStoreと競合解決の詳細](/gen1/[platform]/tools/console/data/data-model/#datastore-and-graphql)。

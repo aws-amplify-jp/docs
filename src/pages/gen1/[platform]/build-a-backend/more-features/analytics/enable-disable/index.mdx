@@ -1,0 +1,94 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'アナリティクスの有効化と無効化',
+  description: 'Amplifyを使用してアナリティクスを有効/無効にする方法を学びます。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'swift',
+    'android',
+    'flutter',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## アナリティクスの無効化
+
+アナリティクスはアプリで設定すると、デフォルトで有効になります。アプリでアナリティクスを無効にするには、`disable`関数を使用します：
+
+import js0 from '/src/fragments/lib/analytics/js/enable-disable/disable.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>
+
+import reactNative0 from '/src/fragments/lib/analytics/js/enable-disable/disable.mdx';
+
+<Fragments fragments={{ 'react-native': reactNative0 }} />
+
+import android0 from '/src/fragments/lib/analytics/android/enable-disable/disable.mdx';
+
+<Fragments fragments={{ android: android0 }} />
+
+import flutter0 from '/src/fragments/lib/analytics/flutter/enable-disable/disable.mdx';
+
+<Fragments fragments={{ flutter: flutter0 }} />
+
+import ios0 from '/src/fragments/lib/analytics/ios/enable-disable/disable.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+## アナリティクスの有効化
+
+アプリでアナリティクスを有効にするには、`enable`関数を使用します：
+
+import js1 from '/src/fragments/lib/analytics/js/enable-disable/enable.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js1,
+    angular: js1,
+    nextjs: js1,
+    react: js1,
+    vue: js1
+  }}
+/>
+
+import reactNative1 from '/src/fragments/lib/analytics/js/enable-disable/enable.mdx';
+
+<Fragments fragments={{ 'react-native': reactNative1 }} />
+
+import android1 from '/src/fragments/lib/analytics/android/enable-disable/enable.mdx';
+
+<Fragments fragments={{ android: android1 }} />
+
+import flutter1 from '/src/fragments/lib/analytics/flutter/enable-disable/enable.mdx';
+
+<Fragments fragments={{ flutter: flutter1 }} />
+
+import ios1 from '/src/fragments/lib/analytics/ios/enable-disable/enable.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />

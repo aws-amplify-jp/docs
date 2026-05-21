@@ -1,0 +1,166 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'フォームデータの検証',
+  description: "検証ルールをフォームに追加してユーザー入力をサニタイズします。デフォルトでは、Amplify Studio はデータモデルに基づいて一連の検証ルールを推論します。たとえば、'AWSEmail' フィールドを持つデータモデルの場合、生成されたフォーム入力は自動的にメール検証ルールを実行します。",
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+検証ルールをフォームに追加してユーザー入力をサニタイズします。デフォルトでは、Amplify Studio はデータモデルに基づいて一連の検証ルールを推論します。たとえば、`AWSEmail` フィールドを持つデータモデルの場合、生成されたフォーム入力は自動的にメール検証ルールを実行します。
+
+## 検証ルールの追加
+
+[Amplify Studio](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app) では、視覚的に検証ルールをインプットに追加できます。フォーム入力に複数の検証ルールがある場合、入力が有効であるためにはすべてのルールを満たす必要があります。
+
+1. フォーム入力を選択します
+2. **Validation rules** > **Add rule** に移動します
+3. **検証タイプ** を選択します
+4. 検証の値を入力します
+5. _オプション:_ エンドユーザーに提示されるエラーメッセージをカスタマイズします。注: Studio は検証タイプとその値に基づいてエラーメッセージを自動生成します。
+6. 検証ルールポップオーバーの外をクリックします
+
+検証ルールをテストするには、**View as end user** を選択します。
+
+<Video src="/images/console/formbuilder/validations-visual.mp4" description="動画 - 検証ルールを追加" />
+
+### Amplify Studio 内で利用可能な検証ルール
+
+デフォルトでは、以下の検証ルールを設定できます:
+
+| 入力タイプ | 設定可能な検証ルール |
+| --- | --- |
+| `String` | - 次で始まる <br/> - 次で終わる <br/> - 含む <br/> - 含まない <br/> - N 文字以下である <br/> - 最低 N 文字である <br/> |
+| `Int`, `Float` | - より大きい <br/> - より小さい <br/> - 等しい <br/> |
+| `AWSDate`, `AWSTime`, `AWSDateTime` | - より前である <br/> - より後である <br/> |
+
+### 自動的に設定される検証ルール
+
+以下のタイプについて、Amplify Studio はフォーム入力に自動的に検証ルールを適用します:
+
+- `AWSIPAddress`: 入力値は有効な IPv4 または IPv6 アドレスである必要があります。
+- `AWSURL`: 入力値はスキーマ (`http`, `mailto`) とパス部分で構成されている必要があります。パス部分には 2 つのスラッシュ (//) を含めることはできません。
+- `AWSEmail`: 入力値は `<local-part>@<domain-part>` の形式のメールアドレスである必要があります。
+- `AWSJSON`: 入力値は有効な JSON である必要があります。
+- `AWSPhone`: 入力値は、数字グループを区切るためにスペースまたはハイフンを含むことができる電話番号である必要があります。
+
+## コードで検証ルールを拡張する
+
+すべてのフォームは `onValidate` イベントハンドラーを提供し、コードを通じて追加の検証ルールを提供します。これらの検証ルールは、Studio コンソールで設定したルールの後に実行されます。
+
+検証したいフィールドの検証関数を持つオブジェクトを返します。以下の例では、`address` は数字で始まる必要があり、そうでない場合は自動生成された検証レスポンスを返します。
+
+```jsx
+<HomeCreateForm
+  onValidate={{
+    address: (value, validationResponse) => {
+      const firstWord = value.split('')[0];
+      if (!isNaN(str)) {
+        // check if the first word is a number
+        return {
+          hasError: true,
+          errorMessage: 'Address must start with a number'
+        };
+      }
+      return validationResponse;
+    }
+  }}
+/>
+```
+
+**注:** 検証関数は以下の形式の検証レスポンスを返す必要があります:
+
+```ts
+type ValidationResponse = {
+  hasError: boolean;
+  errorMessage?: string;
+};
+```
+
+### ネストされた JSON データの検証ルールを追加する
+
+Amplify Studio フォームはネストされた JSON オブジェクトも生成できます。たとえば、以下の JSON オブジェクトに基づいて新しい `ProductForm` コンポーネントを作成できます:
+
+```json
+{
+  "name": "Piano",
+  "price": {
+    "maxDiscount": 0.15,
+    "default": 999,
+    "currency": "$"
+  }
+}
+```
+
+ネストされたオブジェクトに検証ルールを追加するには、データと同じネストされた構造で検証関数を渡します:
+
+```js
+<ProductForm
+  onValidate={{
+    price: {
+      currency: (value, validationResponse) => {
+        // Pass validation function to match the nested object
+        const allowedCurrencies = ['$', '€', '￥', '₹'];
+        if (!allowedCurrencies.includes(value)) {
+          return {
+            hasError: true,
+            errorMessage: 'Currency must be either "$", "€", "￥", or "₹".'
+          };
+        }
+        return validationResponse;
+      }
+    }
+  }}
+  onSubmit={(fields) => {
+    /* handle form data submission */
+  }}
+/>
+```
+
+### フォーム検証を非同期で外部 API を呼び出す
+
+フォームデータが送信される前に、外部 API またはデータベースを使用して入力を非同期で検証する必要がある場合があります。
+
+`onValidate` プロップで Promise を返して、非同期検証ルールを実行します。以下の例では、外部 API でライセンス番号に基づいて不動産エージェントが存在するかどうかを確認しています:
+
+```jsx
+<AgentContactForm
+  onValidate={{
+    licenseNumber: (value, validationResponse) => {
+      // fetch calls an external API,
+      // which ultimately returns a Promise<ValidationResponse>
+      return fetch(`http://localhost:3000/api/agent/${value}`).then(
+        (response) => {
+          if (response.status !== 200) {
+            return {
+              // If the request failed, return a validation error
+              hasError: true,
+              errorMessage: 'No agent was not found with that license number.'
+            };
+          }
+          return validationResponse;
+        }
+      );
+    }
+  }}
+  onSubmit={(fields) => {
+    /* Handle form submission */
+  }}
+/>
+```

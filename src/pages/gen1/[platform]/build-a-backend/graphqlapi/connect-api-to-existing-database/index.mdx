@@ -1,0 +1,1030 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '既存のMySQL またはPostgreSQL データベースをAPIに接続',
+  description: 'APIを既存のMySQL またはPostgreSQL データベースに接続する方法を学びます。',
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs',
+    'angular',
+    'vue',
+    'react-native',
+    'flutter',
+    'swift',
+    'android'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<Callout warning>
+
+以下のコンテンツでは、AWS Cloud Development Kit (CDK) を使用して Amplify GraphQL API をデプロイする必要があります。まだ AWS CDK で Amplify GraphQL API をデプロイしていない場合は、[GraphQL API のセットアップ](/gen1/[platform]/build-a-backend/graphqlapi/set-up-graphql-api)を確認してください。
+
+</Callout>
+
+このセクションでは、以下の方法を学習します。
+
+- Amplify GraphQL API を既存の MySQL または PostgreSQL データベースに接続する
+- 新しい `@sql` ディレクティブを使用してカスタム GraphQL クエリとミューテーションで SQL ステートメントを実行する
+- SQL データベーススキーマに基づいて作成、読み取り、更新、削除 API 操作を生成する
+
+## 既存の MySQL または PostgreSQL データベースで API に接続
+
+<BlockSwitcher>
+<Block name="AWS CDK">
+
+前提条件:
+
+- 既存の [MySQL データベース](https://aws.amazon.com/getting-started/hands-on/create-mysql-db/)または [PostgreSQL データベース](https://aws.amazon.com/getting-started/hands-on/create-connect-postgresql-db/)がデプロイされている
+- [AWS CDK CLI がインストール](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install)されている
+- [AWS CDK アプリケーションが初期化](https://docs.aws.amazon.com/cdk/v2/guide/hello_world.html)されている
+
+<Callout warning>
+
+この機能はアジア太平洋 (香港、ap-east-1) またはヨーロッパ (ミラノ、eu-south-1) リージョンではまだ利用できません。
+
+</Callout>
+
+<BlockSwitcher>
+<Block name="Systems Manager">
+
+まず、データベース接続情報 (ホスト名、ユーザー名、パスワード、ポート、データベース名) を Systems Manager に `SecureString` として保存します。
+
+Systems Manager コンソールに移動し、Parameter Store に移動して、「Create Parameter」をクリックします。5 つの異なる SecureString を作成します。1 つはデータベース サーバーのホスト名、1 つは接続用のユーザー名とパスワード、1 つはデータベース ポート、1 つはデータベース名です。
+
+Systems Manager の設定は次のようになります。
+
+![AWS Systems Manager コンソール ページのスクリーンショット。「Parameter Store」というタイトルが付いています。ページには、"/amplify-cdk-app/username"、"/amplify-cdk-app/password"、"/amplify-cdk-app/hostname" などの名前のパラメータ一覧が表示されており、データベース接続の詳細を示しています。各パラメータは Tier「Standard」で、「SecureString」型です。最終更新日がパラメータごとに表示されています。](/images/storing-db-creds-in-ssm.png)
+
+</Block>
+<Block name="Secrets Manager">
+
+まず、データベース接続情報 (ホスト名、ユーザー名、パスワード、ポート、データベース名) を Secrets Manager に配置します。
+
+Secrets Manager コンソールに移動し、[Secrets] に移動して、「Store a new secret」をクリックします。`username` および `password` キーが定義されている限り、秘密をどのような方法でも作成できます。
+
+![Secrets Manager コンソールのページ「Secret value info」のスクリーンショット。秘密のキーと値の例をテーブルに表示しており、「username」、「password」、「engine」、「host」、「port」、「dbClusterIdentifier」が含まれています。](/images/storing-db-creds-in-secrets-manager.png)
+
+秘密を暗号化するために、Secrets Manager が作成する KMS キーを使用するか、自分のアカウントで作成したカスタム管理の KMS キーを使用するかを選択できます。
+
+ローテーション スケジュールを構成し、Lambda 関数を作成するか、アカウントの既存の Lambda 関数を選択して、データベース認証情報を自動的にローテーションすることもできます。
+
+</Block>
+</BlockSwitcher>
+
+Amplify GraphQL API コンストラクトを依存関係に追加するには、次のパッケージをインストールします。
+
+```sh
+npm install @aws-amplify/graphql-api-construct
+```
+
+CDK アプリの `lib/` フォルダ内に新しい `schema.sql.graphql` ファイルを作成し、公開する API を含めます。公開する API に一致する GraphQL オブジェクト タイプ、クエリ、ミューテーションを定義します。たとえば、データベース テーブルのオブジェクト タイプ、それらのテーブルからデータを取得するためのクエリ、およびそれらのテーブルを変更するためのミューテーションを定義します。
+
+```graphql
+type Post {
+  id: Int!
+  title: String!
+  content: String!
+  published: Boolean
+  publishedDate: AWSDate @refersTo(name: "published_date")
+}
+
+type Query {
+  searchPosts(contains: String!): [Post]
+    @sql(
+      statement: "SELECT * FROM posts WHERE title LIKE CONCAT('%', :contains, '%');"
+    )
+    @auth(rules: [{ allow: public }])
+}
+
+type Mutation {
+  createPost(title: String! content: String!): AWSJSON
+    @sql(statement: "INSERT INTO posts (title, content) VALUES (:title, :content);")
+    @auth(rules: [{ allow: public }])
+}
+```
+
+`:variable` 表記を使用して、クエリ リクエストの入力変数を参照できます。
+
+<Accordion title="認可ルール" headingLevel="3" eyebrow="詳細" >
+
+Amplify の GraphQL API はデフォルト拒否ベースで動作します。上記のスキーマ例の `{ allow: public }` 認可ルールは、API キーを使用している誰もがクエリを実行することが許可されていることを示しています。
+
+API キー、Amazon Cognito User Pool、OpenID Connect、AWS Identity and Access Management (IAM)、またはカスタム Lambda 関数に基づいてこれらのクエリとミューテーションへのアクセスを制限するには、[認可ルール](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)を参照してください。
+
+</Accordion>
+
+次に、CDK プロジェクトのメイン スタック ファイルを開きます (通常 `lib/<your-project-name>-stack.ts` にあります)。ファイルの先頭で必要なコンストラクトをインポートします。
+
+```ts
+import {
+  AmplifyGraphqlApi,
+  AmplifyGraphqlDefinition
+} from '@aws-amplify/graphql-api-construct';
+
+import path from 'path';
+```
+
+メイン スタック クラスに以下のコードを追加して、新しい GraphQL API を定義します。`stack` をスタック インスタンスの名前に置き換えます (多くの場合、`this` で参照されます)。
+
+<BlockSwitcher>
+<Block name="Systems Manager">
+
+```ts
+new AmplifyGraphqlApi(stack, 'SqlBoundApi', {
+  apiName: 'MySqlBoundApi',
+  definition: AmplifyGraphqlDefinition.fromFilesAndStrategy(
+    [path.join(__dirname, 'schema.sql.graphql')],
+    {
+      name: 'MySQLSchemaDefinition',
+      dbType: 'MYSQL',
+      vpcConfiguration: {
+        vpcId: 'vpc-123456',
+        securityGroupIds: ['sg-123', 'sg-456'],
+        subnetAvailabilityZoneConfig: [
+          { subnetId: 'sn-123456', availabilityZone: 'us-east-1a' },
+          { subnetId: 'sn-987654', availabilityZone: 'us-east-1b' }
+        ]
+      },
+      dbConnectionConfig: {
+        hostnameSsmPath:
+          '/path/to/ssm/SecureString/containing/value/of/hostname',
+        portSsmPath: '/path/to/ssm/SecureString/containing/value/of/port',
+        usernameSsmPath:
+          '/path/to/ssm/SecureString/containing/value/of/username',
+        passwordSsmPath:
+          '/path/to/ssm/SecureString/containing/value/of/password',
+        databaseNameSsmPath:
+          '/path/to/ssm/SecureString/containing/value/of/databaseName'
+      }
+    }
+  ),
+  authorizationModes: {
+    defaultAuthorizationMode: 'API_KEY',
+    apiKeyConfig: {
+      expires: cdk.Duration.days(30)
+    }
+  }
+});
+```
+
+</Block>
+<Block name="Secrets Manager">
+
+```ts
+new AmplifyGraphqlApi(this, 'SqlBoundApi', {
+  apiName: 'MySqlBoundApi',
+  definition: AmplifyGraphqlDefinition.fromFilesAndStrategy(
+    [path.join(__dirname, 'schema.sql.graphql')],
+    {
+      name: 'MySQLSchemaDefinition',
+      dbType: 'MYSQL',
+      vpcConfiguration: {
+        vpcId: 'vpc-123456',
+        securityGroupIds: ['sg-123', 'sg-456'],
+        subnetAvailabilityZoneConfig: [
+          { subnetId: 'sn-123456', availabilityZone: 'us-east-1a' },
+          { subnetId: 'sn-987654', availabilityZone: 'us-east-1b' },
+        ],
+      },
+      dbConnectionConfig: {
+        databaseName: 'database',
+        port: 3306,
+        hostname: 'database-1-instance-1.id.region.rds.amazonaws.com',
+        secretArn:
+          'arn:aws:secretsmanager:Region1:123456789012:secret:MySecret-a1b2c3',
+      },
+    }
+  ),
+  authorizationModes: {
+    defaultAuthorizationMode: 'API_KEY',
+    apiKeyConfig: {
+      expires: cdk.Duration.days(30),
+    },
+  },
+});
+```
+
+</Block>
+</BlockSwitcher>
+
+API は認可用に API キーを有効にしています。
+
+デプロイする前に、以下のことを確認してください。
+
+- `name` の値を設定します。これは AppSync DataSource 自体の名前付けと、Resolver Lambda などの関連リソースに使用されます。この名前は GraphQL API 内のすべてのスキーマ定義全体で一意である必要があります。
+
+- `dbType` をデータベース エンジンに一致するように変更します。これは、このスキーマ定義のモデル操作を処理するために使用される SQL データベースの型です。サポートされているエンジンは `"MYSQL"` または `"POSTGRES"` です。
+
+- `dbConnectionConfig` 内の SSM パラメータ パスを、AWS アカウント内に存在するものを指すように更新します。これらは、SQL Lambda がデータベースに接続するために使用するパラメータです。
+
+- データベース インスタンスが VPC 内に存在する場合は、`vpcConfiguration` プロパティ (`vpcId`、`securityGroupIds`、`subnetAvailabilityZoneConfig`) を VPC 詳細で更新します。これは SQL Lambda をインストールする VPC の設定です。
+
+<Accordion title="データベースの VPC 設定を構成する" headingLevel="3" eyebrow="詳細">
+
+データベースが VPC 内に存在する場合、RDS インスタンスは `Publicly accessible` に設定される必要があります。これはインスタンスがインターネットからアクセス可能である必要があることを意味しません。
+
+ターゲット セキュリティ グループには、次の 2 つのインバウンド ルールが設定されている必要があります。
+
+- セキュリティ グループからポート 443 でトラフィックを許可するルール。
+
+- セキュリティ グループからデータベース ポートでトラフィックを許可するインバウンド ルール。(デフォルト: MySQL の場合 3306、PostgreSQL の場合 5432)
+
+さらに、ターゲット セキュリティ グループには、次の 2 つのアウトバウンド ルールが設定されている必要があります。
+
+- セキュリティ グループへのポート 443 でのトラフィックを許可するアウトバウンド ルール。
+
+- セキュリティ グループへのデータベース ポートでのトラフィックを許可するアウトバウンド ルール。(デフォルト: MySQL の場合 3306、PostgreSQL の場合 5432)
+
+<Callout>
+  **注：** セキュリティ要件およびユースケースに従って、セキュリティ グループが許可するインバウンド トラフィックのタイプを制限してください。セキュリティ グループ ルールの詳細については、[Amazon EC2 セキュリティ グループ ルール リファレンス](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules-reference.html?icmpid=docs_ec2_console)を参照してください。
+</Callout>
+
+</Accordion>
+
+</Block>
+<Block name="Amplify CLI">
+
+<Callout warning>
+
+この機能は現在 Amplify CLI ではサポートされていません。AWS Cloud Development Kit (CDK) を使用して Amplify GraphQL API をデプロイする必要があります。まだ AWS CDK で Amplify GraphQL API をデプロイしていない場合は、[GraphQL API のセットアップ](/gen1/[platform]/build-a-backend/graphqlapi/set-up-graphql-api)を確認してください。
+
+</Callout>
+
+</Block>
+</BlockSwitcher>
+
+<Accordion title="接続性を向上させるための RDS Proxy" headingLevel="3" eyebrow="詳細">
+
+クラスターの前に RDS Proxy を追加して、データベース接続を管理することを検討してください。
+
+Amplify GraphQL API を Amazon RDS などのリレーショナル データベースと共に使用する場合、アプリケーションからの各クエリは、データベースへの個別の接続を開く必要があります。
+
+大量のクエリが同時に発生している場合、データベース上の接続制限を超える可能性があり、「Too many connections」などのエラーが発生します。これを回避するために、Amplify は GraphQL API をデータベースに接続するときに RDS Proxy を使用できます。
+
+RDS Proxy はデータベースの前に位置する仲介者として機能します。各アプリケーション クエリがデータベースへの直接接続を開く代わりに、Proxy を通じて接続します。Proxy はこれらの接続を管理およびプールして、データベースに過負荷をかけないようにします。これにより API の可用性が向上し、接続制限に達することなく、より多くのクエリが同時に実行できます。
+
+ただし、Proxy プールから利用可能な接続を待つため、クエリはわずかに長くかかる可能性があり、レイテンシが増加するというトレードオフがあります。RDS Proxy の使用に関連する追加コストもあります。詳細については、[RDS Proxy の料金ページ](https://aws.amazon.com/rds/proxy/pricing/)を参照してください。
+
+</Accordion>
+
+## カスタム クエリとミューテーションを作成
+
+SQL データベース用の Amplify GraphQL API は、`@sql` ディレクティブを導入しています。これにより、カスタム GraphQL クエリとミューテーションで SQL ステートメントを定義できます。これにより、デフォルトの自動生成された GraphQL クエリとミューテーションが不十分な場合により柔軟性が提供されます。
+
+SQL ステートメントを指定するには 2 つの方法があります。インラインまたは `.sql` ファイルを参照する方法です。
+
+### インライン SQL ステートメント
+
+始めるために、`statement` 引数を使用してスキーマに直接 SQL ステートメントを埋め込むことができます。
+
+SQL ステートメントは `:variable` 形式のパラメータを使用でき、これはカスタム GraphQL クエリまたはミューテーションを実行するときに渡される入力変数にバインドされます。
+
+下の例では、`searchTerm` 入力変数を受け入れる SQL ステートメントが定義されています。
+
+```graphql
+type Query {
+  searchPosts(searchTerm: String): [Post]
+    @sql(statement: "SELECT * FROM posts WHERE title LIKE :searchTerm;")
+    @auth(rules: [{ allow: public }])
+}
+```
+
+{/* TODO: Add a NOTE: about proxy/connection pinning here. */}
+
+### SQL ファイル参照
+
+より長く、より複雑な SQL クエリの場合、インラインではなく、個別の `.sql` ファイルでステートメントを指定できます。ファイルを参照することでスキーマをクリーンに保ち、複数のフィールド全体で SQL ステートメントを再利用できます。
+
+<BlockSwitcher>
+  <Block name="AWS CDK">
+
+まず、GraphQL スキーマ ファイルを更新して、`.sql` 拡張子を除いた SQL ファイル名を参照します。
+
+```graphql
+type Query {
+  getPublishedPosts(start: AWSDate, end: AWSDate): [Post]
+    @sql(reference: "getPublishedPostsByDateRange")
+    @auth(rules: [{ allow: public }])
+}
+```
+
+次に、新しい `lib/sql-statements` フォルダを作成し、カスタム クエリまたはミューテーションを SQL ファイルとして追加します。たとえば、異なるクエリ用に異なる `.sql` ファイルを作成することができます。
+
+```sql
+-- lib/sql-statements/getPublishedPostsByDateRange.sql
+SELECT p.id, p.title, p.content, p.published_date
+FROM posts p
+WHERE p.published = 1
+  AND p.published_date > :startDate
+  AND p.published_date < :endDate
+ORDER BY p.published_date DESC
+LIMIT 10
+```
+
+```sql
+-- lib/sql-statements/getPostById.sql
+SELECT * FROM posts WHERE id = :id;
+```
+
+その後、`SQLLambdaModelDataSourceStrategyFactory` をインポートします。これは、作成した `.sql` ファイルからデータソース戦略を定義するのに役立ちます。
+
+```js
+import { SQLLambdaModelDataSourceStrategyFactory } from '@aws-amplify/graphql-api-construct';
+import path from 'path';
+import fs from 'fs';
+```
+
+`lib/<your-project-name>-stack.ts` ファイルで、`sql-statements/` フォルダから読み込み、カスタム SQL ステートメントを Amplify GraphQL API に追加します。
+
+```js
+
+// カスタム SQL ステートメント フォルダ パスを定義
+const sqlStatementsPath = path.join(__dirname, 'sql-statements');
+
+// Factory を使用して SQL データソース戦略を定義
+const sqlStrategy = SQLLambdaModelDataSourceStrategyFactory.fromCustomSqlFiles(
+  // すべての SQL ステートメントへのファイル パス
+  fs
+    .readdirSync(sqlStatementsPath)
+    .map((file) => path.join(sqlStatementsPath, file)),
+  // 接続情報と VPC 設定をここに移動
+  {
+    dbType: 'MYSQL',
+    name: 'MySQLSchemaDefinition',
+    dbConnectionConfig: {
+      //...
+    },
+    vpcConfiguration: {
+      //...
+    }
+  }
+);
+
+
+const amplifyApi = new AmplifyGraphqlApi(this, 'SqlBoundApi', {
+  definition: AmplifyGraphqlDefinition.fromFilesAndStrategy(
+    [path.join(__dirname, 'schema.sql.graphql')],
+    sqlStrategy
+  ),
+  authorizationModes: {
+    defaultAuthorizationMode: 'API_KEY',
+    apiKeyConfig: {
+      expires: cdk.Duration.days(30)
+    }
+  }
+});
+```
+
+`.sql` ファイルで定義された SQL ステートメントは、スキーマにインラインで定義されている場合と同じように実行されます。パラメータの使用、有効な SQL 構文の確認、戻り値の型と行データの一致に関する同じルールが適用されます。
+
+</Block>
+
+<Block name="Amplify CLI">
+
+<Callout warning>
+
+この機能は現在 Amplify CLI ではサポートされていません。AWS Cloud Development Kit (CDK) を使用して Amplify GraphQL API をデプロイする必要があります。まだ AWS CDK で Amplify GraphQL API をデプロイしていない場合は、[GraphQL API のセットアップ](/gen1/[platform]/build-a-backend/graphqlapi/set-up-graphql-api)を確認してください。
+
+</Callout>
+
+</Block>
+
+</BlockSwitcher>
+
+### カスタム クエリ
+
+参照用に、`type Query` オブジェクトの下に新しいフィールドを追加して GraphQL クエリを定義します。
+
+```graphql
+type Query {
+  searchPostsByTitle(title: String): [Post]
+    @sql(
+      statement: "SELECT * FROM posts WHERE title LIKE CONCAT('%', :title, '%');"
+    )
+    @auth(rules: [{ allow: public }])
+}
+```
+
+### カスタム ミューテーション
+
+参照用に、`type Mutation` オブジェクトの下に新しいフィールドを追加して GraphQL ミューテーションを定義します。
+
+```graphql
+type Mutation {
+  publishPostById(id: ID!): AWSJSON
+    @sql(statement: "UPDATE posts SET published = :published WHERE id = :id;")
+    @auth(rules: [{ allow: public }])
+}
+```
+
+### カスタム ミューテーションから行データを返す
+
+`INSERT`、`UPDATE`、`DELETE` などの SQL ステートメントは、影響を受けた行の数を返します。
+
+SQL ステートメントの結果を返したい場合、戻り値の型として `AWSJSON` を使用できます。
+
+```graphql
+type Mutation {
+  publishPosts: AWSJSON @sql(statement: "UPDATE posts SET published = 1;")
+    @auth(rules: [{ allow: public }])
+}
+```
+
+これにより、次のような JSON レスポンスが返されます。
+
+```json
+{
+  "data": {
+    "publishPosts": "{\"fieldCount\":0,\"affectedRows\":7,\"insertId\":0,\"info\":\"Rows matched: 7  Changed: 7  Warnings: 0\",\"serverStatus\":34,\"warningStatus\":0,\"changedRows\":7}"
+  }
+}
+```
+
+ただし、実際の行データを返したい場合もあります。
+
+<BlockSwitcher>
+<Block name="MySQL">
+
+MySQL では、UPDATE ステートメントと SELECT クエリの両方を実行して単一のポストを返すストアド プロシージャを作成および呼び出すことができます。
+
+MySQL データベースで次の SQL ステートメントを実行してストアド プロシージャを作成します。
+
+```sql
+CREATE PROCEDURE publish_post (IN postId VARCHAR(255))
+
+BEGIN
+UPDATE posts SET published = 1 WHERE id = postId;
+
+SELECT * FROM posts WHERE id = postId LIMIT 1;
+END
+```
+
+カスタム ミューテーションからストアド プロシージャを呼び出します。
+
+```graphql
+type Mutation {
+  publishPostById(id: String!): [Post]
+    @sql(statement: "CALL publish_post(:id);")
+    @auth(rules: [{ allow: public }])
+}
+```
+
+</Block>
+<Block name="PostgreSQL">
+
+PostgreSQL では、`INSERT`、`UPDATE`、または `DELETE` ステートメントに `RETURNING` 句を追加して、実際に変更された行データを取得できます。
+
+例：
+
+```graphql
+type Mutation {
+  publishPostById(id: String!): [Post]
+    @sql(statement: "UPDATE posts SET price = :id RETURNING *;")
+    @auth(rules: [{ allow: public }])
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+<Callout info>
+
+行データを SQL ステートメントから返すことが期待されるカスタム クエリとミューテーションの戻り値型は、対応するモデルの配列である必要があります。これは、単一の行が予期されるカスタム `get` クエリにも該当します。
+
+**例**
+
+```graphql title="schema.graphql"
+type Query {
+  getPostBySlug(slug: String!): [Post]
+    @sql(statement: "SELECT * FROM posts WHERE slug = :slug LIMIT 1;")
+    @auth(rules: [{ allow: public }])
+}
+```
+
+</Callout>
+
+## 認可ルールを適用
+
+### モデル レベルの認可ルール
+
+`@auth` ディレクティブを使用して、認可ルールを指定することで、データと操作へのアクセスを制限できます。ユーザーの ID と属性に基づいて GraphQL API への細かいアクセス制御を可能にします。たとえば、クエリまたはミューテーションを `@auth(rules: [{ allow: private }])` ルールによってログインしたユーザーのみに制限したり、`@auth(rules: [{ allow: groups, groups: ["Admin"] }])` ルールによって「Admin」グループのユーザーのみに制限したりできます。
+
+MySQL および PostgreSQL データベースから生成された Amplify GraphQL スキーマでは、すべてのモデル レベルの認可ルールがサポートされています。
+
+以下の例では、API キーを介して認可されたパブリック ユーザーにすべてのポストへの無制限アクセスが付与されます。
+
+`schema.sql.graphql` ファイル内の `Post` モデルに次の認可ルールを追加します。
+
+```graphql
+type Post @model @refersTo(name: "posts") @auth(rules: [{ allow: public }]) {
+  id: String! @primaryKey
+  title: String!
+  content: String!
+}
+```
+
+各ルールの詳細については、[認可ルール](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)に関するドキュメントを参照してください。
+
+### フィールド レベルの認可ルール
+
+フィールド レベルの認可ルールは、MySQL および PostgreSQL データベースから生成された Amplify GraphQL スキーマでもサポートされています。
+
+以下の例では、認可されていないユーザーはポスト データを読み取ることができますが、ポストの所有者のみが `published` フィールドで操作を実行できます。
+
+```graphql
+type Post
+  @model
+  @refersTo(name: "posts")
+  @auth(rules: [
+    { allow: public, operations: [read] },
+    { allow: owner }
+    ]) {
+  id: String! @primaryKey
+  title: String!
+  content: String!
+  published: Boolean
+  // highlight-start
+    @auth(rules: [{ allow: owner }])
+  // highlight-end
+}
+```
+
+フィールド レベルの認可ルールの詳細については、[フィールド レベルの認可ルール](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/#field-level-authorization-rules)に関するドキュメントを参照してください。
+
+## API をデプロイ
+
+<BlockSwitcher>
+<Block name="AWS CDK">
+
+API をデプロイするには、`cdk deploy` コマンドを使用できます。
+
+```sh
+cdk deploy
+```
+
+</Block>
+<Block name="Amplify CLI">
+
+<Callout warning>
+
+この機能は現在 Amplify CLI ではサポートされていません。AWS Cloud Development Kit (CDK) を使用して Amplify GraphQL API をデプロイする必要があります。まだ AWS CDK で Amplify GraphQL API をデプロイしていない場合は、[GraphQL API のセットアップ](/gen1/[platform]/build-a-backend/graphqlapi/set-up-graphql-api)を確認してください。
+
+</Callout>
+
+</Block>
+</BlockSwitcher>
+
+これで API がデプロイされ、使用を開始できます。
+
+AWS AppSync コンソールからクエリを開始するか、AWS Amplify ライブラリを使用してアプリケーションに統合できます。
+
+## 既存のテーブルの CRUDL 操作を自動生成
+
+データベース スキーマに基づいてデータベース テーブルの一般的な CRUDL 操作を生成できます。これにより、一般的な CRUDL ユースケース用の GraphQL タイプ、クエリ、ミューテーション、SQL ステートメントを手動で作成する時間を節約できます。操作を生成した後、`@model` タイプに認可ルールを注釈付けできます。
+
+データベースに `Ingredients` テーブルを作成します。
+
+```sql
+CREATE TABLE Ingredients (
+  id      varchar(255)  NOT NULL PRIMARY KEY,
+  name    varchar(255)  NOT NULL,
+  unit_of_measurement varchar(255) NOT NULL,
+  price   decimal(10, 2) NOT NULL,
+  supplier_id int,
+);
+```
+
+### ステップ 1 - データベース スキーマを CSV としてエクスポート
+
+MySQL、PostgreSQL クライアント、または `psql` のような CLI ツールを使用してデータベースで次の SQL ステートメントを実行し、出力を CSV ファイルにエクスポートします。
+
+<Callout warning>
+
+データベース スキーマ出力を CSV ファイルにエクスポートするときは、列ヘッダーを含める必要があります。
+
+</Callout>
+
+`<database-name>` をデータベース/スキーマの名前に置き換えます。
+
+<BlockSwitcher>
+<Block name="MySQL">
+
+```sql
+SELECT DISTINCT
+  INFORMATION_SCHEMA.COLUMNS.TABLE_NAME,
+  INFORMATION_SCHEMA.COLUMNS.COLUMN_NAME,
+  INFORMATION_SCHEMA.COLUMNS.COLUMN_DEFAULT,
+  INFORMATION_SCHEMA.COLUMNS.ORDINAL_POSITION,
+  INFORMATION_SCHEMA.COLUMNS.DATA_TYPE,
+  INFORMATION_SCHEMA.COLUMNS.COLUMN_TYPE,
+  INFORMATION_SCHEMA.COLUMNS.IS_NULLABLE,
+  INFORMATION_SCHEMA.COLUMNS.CHARACTER_MAXIMUM_LENGTH,
+  INFORMATION_SCHEMA.STATISTICS.INDEX_NAME,
+  INFORMATION_SCHEMA.STATISTICS.NON_UNIQUE,
+  INFORMATION_SCHEMA.STATISTICS.SEQ_IN_INDEX,
+  INFORMATION_SCHEMA.STATISTICS.NULLABLE
+FROM INFORMATION_SCHEMA.COLUMNS
+LEFT JOIN INFORMATION_SCHEMA.STATISTICS ON INFORMATION_SCHEMA.COLUMNS.TABLE_NAME=INFORMATION_SCHEMA.STATISTICS.TABLE_NAME AND INFORMATION_SCHEMA.COLUMNS.COLUMN_NAME=INFORMATION_SCHEMA.STATISTICS.COLUMN_NAME
+WHERE INFORMATION_SCHEMA.COLUMNS.TABLE_SCHEMA = '<database-name>';
+--                    Replace database name here ^^^^^^^^^^^^^^^
+```
+
+エクスポートされたスキーマは次のようになります。
+
+```csv
+TABLE_NAME,COLUMN_NAME,COLUMN_DEFAULT,ORDINAL_POSITION,DATA_TYPE,COLUMN_TYPE,IS_NULLABLE,CHARACTER_MAXIMUM_LENGTH,INDEX_NAME,NON_UNIQUE,SEQ_IN_INDEX,NULLABLE
+Ingredients,id,,1,int,int,NO,,PRIMARY,0,1,""
+Ingredients,name,,2,varchar,varchar(100),NO,100,,,,
+Ingredients,unit_of_measurement,,3,varchar,varchar(50),NO,50,,,,
+Ingredients,price,,4,decimal,"decimal(10,2)",NO,,,,,
+Ingredients,supplier_id,,6,int,int,YES,,,,,
+Meals,id,,1,int,int,NO,,PRIMARY,0,1,""
+```
+
+</Block>
+<Block name="PostgreSQL">
+
+```sql
+SELECT DISTINCT
+  INFORMATION_SCHEMA.COLUMNS.table_name,
+  enum_name,enum_values,column_name,column_default,ordinal_position,data_type,udt_name,is_nullable,character_maximum_length,indexname,constraint_type,
+  REPLACE(SUBSTRING(indexdef from '\((.*)\)'), '"', '') as index_columns
+FROM INFORMATION_SCHEMA.COLUMNS
+LEFT JOIN pg_indexes
+ON
+  INFORMATION_SCHEMA.COLUMNS.table_name = pg_indexes.tablename
+  AND INFORMATION_SCHEMA.COLUMNS.column_name = ANY(STRING_TO_ARRAY(REPLACE(SUBSTRING(indexdef from '\((.*)\)'), '"', ''), ', '))
+  LEFT JOIN (
+    SELECT
+      t.typname AS enum_name,
+      ARRAY_AGG(e.enumlabel) as enum_values
+    FROM    pg_type t JOIN
+      pg_enum e ON t.oid = e.enumtypid JOIN
+      pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+    WHERE   n.nspname = 'public'
+    GROUP BY enum_name
+  ) enums
+  ON enums.enum_name = INFORMATION_SCHEMA.COLUMNS.udt_name
+  LEFT JOIN information_schema.table_constraints
+  ON INFORMATION_SCHEMA.table_constraints.constraint_name = indexname
+  AND INFORMATION_SCHEMA.COLUMNS.table_name = INFORMATION_SCHEMA.table_constraints.table_name
+WHERE INFORMATION_SCHEMA.COLUMNS.table_schema = 'public'
+  AND INFORMATION_SCHEMA.COLUMNS.TABLE_CATALOG = '<database-name>';
+--                     Replace database name here ^^^^^^^^^^^^^^^
+```
+
+エクスポートされたスキーマは次のようになります。
+
+```csv
+"table_name","enum_name","enum_values","column_name","column_default","ordinal_position","data_type","udt_name","is_nullable","character_maximum_length","indexname","constraint_type","index_columns"
+"Ingredients","","","id","","1","bigint","int8","NO","","Ingredients_pkey","PRIMARY KEY","id"
+"Ingredients","","","name","","2","text","text","NO","","","",""
+"Ingredients","","","unit_of_measurement","","3","text","text","NO","","","",""
+"Ingredients","","","price","","4","text","text","NO","","","",""
+"Ingredients","","","supplier_id","","5","bigint","int8","NO","","","",""
+```
+
+</Block>
+</BlockSwitcher>
+
+### ステップ 2 - データベース スキーマから GraphQL スキーマを生成
+
+次に、以下のコマンドを実行して Amplify GraphQL API スキーマを生成します。`--engine-type` 値をデータベース エンジン `mysql` または `postgres` に置き換え、`--sql-schema` 値を前のステップで作成した CSV ファイルへのパスに置き換えます。
+
+```bash
+npx @aws-amplify/cli api generate-schema --engine-type mysql --sql-schema schema.csv --out schema.sql.graphql
+```
+
+次に、前のステップで生成した `schema.sql.graphql` ファイルを含めるように `AmplifyGraphqlDefinition.fromFilesAndStrategy` の最初の引数を更新します。
+
+```ts
+new AmplifyGraphqlApi(stack, 'SqlBoundApi', {
+  apiName: 'MySqlBoundApi',
+  definition: AmplifyGraphqlDefinition.fromFilesAndStrategy(
+    [path.join(__dirname, 'schema.sql.graphql')], // file path
+    {
+      // ...strategy options
+    }
+  )
+});
+```
+
+### ステップ 3 - 生成された GraphQL API の認可ルールを適用
+
+**schema.sql.graphql** ファイルを開くと、次のようなものが表示されます。自動生成されたスキーマは、一般的な GraphQL 規約に適切にマッチするように大文字小文字を自動的に変更します。Amplify の GraphQL API は**デフォルト拒否の原則**で動作します。つまり、ユーザーがアクセスできるようにするには、`@auth` 認可ルールを明示的に追加する必要があります。現在、モデル レベルの認可のみがサポートされています。
+
+```graphql
+input AMPLIFY {
+ engine: String = "mysql"
+}
+
+
+type Ingredient @refersTo(name: "Ingredients") @model {
+  id: Int! @refersTo(name: "ingredient_id") @primaryKey
+  name: String!
+  unitOfMeasurement: String! @refersTo(name: "unit_of_measurement")
+  price: Float!
+  supplierId: Int @refersTo(name: "supplier_id")
+}
+```
+
+この例では、パブリック認可ルールを追加します。つまり、API キーを持つ誰もがデータベースからレコードを作成、読み取り、更新、削除できます。[認可ルールをカスタマイズ](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)を参照して、モデル レベルの認可機能の全範囲を確認してください。
+
+```diff
+input AMPLIFY {
+ engine: String = "mysql"
+}
+
+
+- type Ingredient @refersTo(name: "Ingredients") @model {
++ type Ingredient
++   @refersTo(name: "Ingredients")
++   @model
++   @auth(rules: [{ allow: public }]) {
+  id: Int! @refersTo(name: "ingredient_id") @primaryKey
+  name: String!
+  unitOfMeasurement: String! @refersTo(name: "unit_of_measurement")
+  price: Float!
+  supplierId: Int @refersTo(name: "supplier_id")
+}
+```
+
+最後に、API をクラウドにデプロイすることを忘れずに。
+
+<BlockSwitcher>
+<Block name="AWS CDK">
+
+API をデプロイするには、`cdk deploy` コマンドを使用できます。
+
+```sh
+cdk deploy
+```
+
+</Block>
+<Block name="Amplify CLI">
+
+<Callout warning>
+
+この機能は現在 Amplify CLI ではサポートされていません。AWS Cloud Development Kit (CDK) を使用して Amplify GraphQL API をデプロイする必要があります。まだ AWS CDK で Amplify GraphQL API をデプロイしていない場合は、[GraphQL API のセットアップ](/gen1/[platform]/build-a-backend/graphqlapi/set-up-graphql-api)を確認してください。
+
+</Callout>
+
+</Block>
+</BlockSwitcher>
+
+これで API がデプロイされ、使用を開始できます。
+
+### モデルの名前を変更してテーブルにマップ
+
+`@refersTo` ディレクティブを使用して、GraphQL スキーマのモデルを名前によって対応するテーブルまたはフィールドにマップできます。
+
+デフォルトでは、Amplify CLI は各モデル名を PascalCase を使用して単数形にし、snake_case または kebab_case のフィールド名は camelCase に変換されます。
+
+以下の例では、GraphQL スキーマの Post モデルが、データベース スキーマの posts テーブルにマップされます。また、`isPublished` は posts テーブルの `published` 列にマップされます。
+
+```graphql
+type Post @refersTo(name: "posts") @model {
+  id: String! @primaryKey
+  title: String!
+  content: String!
+  isPublished: Boolean @refersTo(name: "published")
+  publishedDate: AWSDate @refersTo(name: "published_date")
+}
+```
+
+### モデル間に関係を作成
+
+`@hasOne`、`@hasMany`、`@belongsTo` リレーショナル ディレクティブを使用して、モデル間に関係を作成できます。リレーショナル ディレクティブの `references` パラメータで名前が付けられたフィールドは、子モデルに存在する必要があります。
+
+<Callout warning>
+
+DynamoDB と SQL データ ソース全体をクエリする関係は現在サポートされていません。ただし、SQL データ ソース全体に関係を作成できます。
+
+</Callout>
+
+データベース スキーマに `users`、`blogs`、`posts` テーブルがあると仮定します。次の例は、異なるタイプの関係を作成する方法を示しています。独自のスキーマでモデル間に関係を作成するための参照として使用してください。
+
+#### Has One 関係
+
+`@hasOne` ディレクティブを使用して、2 つのモデル間に一方向の一対一関係を作成します。
+
+以下の例では、ユーザーは単一のブログを持っています。
+
+```graphql
+type User
+  @refersTo(name: "users")
+  @model
+  @auth(rules: [{ allow: owner }, { allow: groups, groups: ["Admin"] }]) {
+  id: String! @primaryKey
+  name: String!
+  owner: String
+  blog: Blog @hasOne(references: ["userId"])
+}
+```
+
+#### Has Many 関係
+
+`@hasMany` ディレクティブを使用して、2 つのモデル間に一方向の一対多関係を作成します。
+
+以下の例では、ブログは多くのポストを持っています。
+
+```graphql
+type Blog @model {
+  id: String! @primaryKey
+  title: String!
+  posts: [Post] @hasMany(references: ["blogId"])
+}
+
+type Post @model {
+  id: String! @primaryKey
+  title: String!
+  content: String!
+  blogId: String! @refersTo(name: "blog_id")
+}
+```
+
+#### Belongs To 関係
+
+`@belongsTo` ディレクティブを使用して、「has one」または「has many」関係を双方向にします。
+
+以下の例では、ポストはブログに属しています。
+
+```graphql
+type Post @model {
+  id: String! @primaryKey
+  title: String!
+  content: String!
+  blogId: String! @refersTo(name: "blog_id")
+  blog: Blog @belongsTo(references: ["blogId"])
+}
+```
+
+### データベース定義から反復変更を適用
+
+<BlockSwitcher>
+<Block name="AWS CDK">
+
+1. 次のような SQL ステートメントに調整を加えます。
+
+```sql
+CREATE TABLE posts (
+  id              varchar(255)           NOT NULL PRIMARY KEY,
+  title           varchar(255)           NOT NULL,
+  content         varchar(255)           NOT NULL,
+  published       tinyint(1)  DEFAULT 0  NOT NULL
+  published_date  date                       NULL
+);
+```
+
+2. [データベース スキーマから GraphQL スキーマを生成](#step-2---generate-graphql-schema-from-database-schema)の指示に従ってデータベース スキーマを CSV ファイルとして再生成します。
+
+3. 次のコマンドを実行して更新されたスキーマを生成します。`--engine-type` 値をデータベース エンジン `mysql` または `postgres` に置き換え、`--sql-schema` 値を前のステップで作成した CSV ファイルへのパスに置き換えます。
+
+```sh
+npx @aws-amplify/cli api generate-schema --engine-type mysql --sql-schema schema.csv --out schema.sql.graphql
+```
+
+4. 変更をクラウドにデプロイします。
+
+```sh
+cdk deploy
+```
+
+</Block>
+<Block name="Amplify CLI">
+
+<Callout warning>
+
+この機能は現在 Amplify CLI ではサポートされていません。AWS Cloud Development Kit (CDK) を使用して Amplify GraphQL API をデプロイする必要があります。まだ AWS CDK で Amplify GraphQL API をデプロイしていない場合は、[GraphQL API のセットアップ](/gen1/[platform]/build-a-backend/graphqlapi/set-up-graphql-api)を確認してください。
+
+</Callout>
+
+</Block>
+</BlockSwitcher>
+
+## どのように機能するのか
+
+Amplify は AWS Lambda 関数を使用して、データベースからデータをクエリするなどの機能を有効にします。正常に機能するには、これらの Lambda 関数は共通のロジックと依存関係にアクセスする必要があります。
+
+Amplify は Lambda Layers の形式で共有コードを提供します。Lambda Layers は、Lambda 関数が参照できる再利用可能なランタイム コードのパッケージと考えることができます。
+
+Amplify API をデプロイすると、2 つの Lambda 関数が作成されます。
+
+### SQL Lambda
+
+これにより、API からデータベースにデータをクエリして書き込むことができます。
+
+<Callout>
+
+**注：** データベースが VPC 内にある場合、この Lambda 関数はデータベースと同じ VPC にデプロイされます。Amazon Virtual Private Cloud (VPC) または VPC ピアリングと AWS Lambda 関数の使用は、[Amazon Elastic Compute Cloud (EC2) オンデマンド料金ページ](https://aws.amazon.com/ec2/pricing/on-demand/)で説明されているように、追加料金が発生します。
+
+</Callout>
+
+### Updater Lambda
+
+SQL Lambda を最新の状態に保つことで、Lambda Layers を自動的に管理します。
+
+すべてのコア SQL 接続ロジックを含む Lambda Layer は AWS Amplify サービス アカウント内にありますが、SQL Lambda で呼び出されるときは AWS アカウント内で実行されます。これにより、Amplify サービス チームが SQL 接続ロジックの継続的なメンテナンスとセキュリティ強化の責任を負うことができます。
+
+これにより、Amplify チームは Lambda に直接アクセスすることなく Layer を維持および強化できます。Layer への更新が必要な場合、Updater Lambda は Amplify からシグナルを受け取り、最新の Layer で SQL Lambda を自動的に更新します。
+
+### GraphQL スキーマを自動生成するときの SQL データ型の GraphQL タイプへのマッピング
+
+<Callout warning>
+
+**注：** MySQL はデート時刻またはタイムスタンプ フィールドのタイム ゾーン オフセットをサポートしていません。代わりに、これらの値をオフセットなしで `datetime` に変換します。
+
+MySQL とは異なり、PostgreSQL はデート時刻またはタイムスタンプ値とオフセットをサポートしています。
+
+</Callout>
+
+| SQL                | GraphQL      |
+|--------------------|--------------|
+| **String**         |              |
+| char               | String       |
+| varchar            | String       |
+| tinytext           | String       |
+| text               | String       |
+| mediumtext         | String       |
+| longtext           | String       |
+| **Geometry**       |              |
+| geometry           | String       |
+| point              | String       |
+| linestring         | String       |
+| geometryCollection | String       |
+| **Numeric**        |              |
+| smallint           | Int          |
+| mediumint          | Int          |
+| int                | Int          |
+| integer            | Int          |
+| bigint             | Int          |
+| tinyint            | Int          |
+| float              | Float        |
+| double             | Float        |
+| decimal            | Float        |
+| dec                | Float        |
+| numeric            | Float        |
+| **Date and Time**  |              |
+| date               | AWSDate      |
+| datetime           | AWSDateTime   |
+| timestamp          | AWSDateTime   |
+| time               | AWSTime       |
+| year               | Int          |
+| **Binary**         |              |
+| binary             | String        |
+| varbinary          | String        |
+| tinyblob           | String        |
+| blob               | String        |
+| mediumblob         | String        |
+| longblob           | String        |
+| **Others**         |              |
+| bool               | Boolean       |
+| boolean            | Boolean       |
+| bit                | Int          |
+| json               | AWSJSON       |
+| enum               | ENUM          |
+
+### 自動生成された GraphQL スキーマでサポートされている Amplify ディレクティブ
+
+| Name         | サポート | モデル レベル | フィールド レベル | 説明 |
+|--------------|:---------:|:-----------:|:-----------:|-------------|
+| `@model`     | ✅        | ✅          | ❌          | テーブルのデータソースと解決程式を作成します。            |
+| `@auth`      | ✅        | ✅          | ✅       | 認可方法と操作のセットに基づいてデータへのアクセスを許可します。 |
+| `@primaryKey`| ✅        | ❌          | ✅          | フィールドを主キーに設定します。 |
+| `@index`     | ✅        | ❌          | ✅          | テーブルのインデックスを定義します。         |
+| `@default`   | ✅        | ❌          | ✅          | 列のデフォルト値を設定します。         |
+| `@hasOne`    | ✅        | ❌          | ✅          | 親から子モデルへの一方向の 1:1 関係を定義します。 |
+| `@hasMany`   | ✅        | ❌          | ✅          | 2 つのモデル間の一方向の 1:M 関係を定義します。参照は子にあります。 |
+| `@belongsTo` | ✅        | ❌          | ✅          | 親モデルとの双方向の関係を定義します。 |
+| `@manyToMany`| ❌        | ❌          | ❌          | 2 つのモデル間の M:N 関係を定義します。       |
+| `@refersTo`  | ✅        | ✅          | ✅          | モデルをテーブルに、またはフィールドを列に、名前によってマップします。 |
+| `@mapsTo`    | ❌        | ❌          | ❌          | モデルを DynamoDB テーブルにマップします。        |
+| `@sql`       | ✅        | ❌          | ✅          | インライン SQL ステートメントまたは .sql ファイルへの参照を受け入れ、カスタム クエリまたはミューテーションを解決するために実行されます。 |
+
+## トラブルシューティング
+
+### デバッグ モード
+
+GraphQL レスポンスから汎用エラーではなく実際の SQL エラーを返すには、Amplify 生成 SQL Lambda 関数で環境変数 `DEBUG_MODE` を `true` に設定できます。この Lambda 関数は AWS Lambda コンソールで `<stack-name>-<api-name>-SQLLambdaFunction<hash>` の名前付け規則で見つけることができます。
+
+## 次のステップ
+
+推奨される次のステップには、GraphQL API を使用してアプリ クライアントのデータをミューテーションおよびクエリするか、カスタム クエリとミューテーションの認可ルールをカスタマイズする方法が含まれます。これに役立つリソースのいくつかを以下に示します。
+
+- [アプリケーション データの作成、更新、削除](/gen1/[platform]/build-a-backend/graphqlapi/mutate-data/)
+- [アプリケーション データの読み取り](/gen1/[platform]/build-a-backend/graphqlapi/query-data/)
+- [認可ルールをカスタマイズ](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)

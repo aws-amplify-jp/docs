@@ -1,0 +1,217 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'チームアクセスの管理',
+  description: 'プロジェクトへのチームアクセスを管理',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify Studioを使用すると、異なる職務を持つチームメンバーがAmplifyにデプロイされたプロジェクトの異なる側面で共同作業できます。Studio開発者は、管理者または管理のみのアクセス権を持つアカウントを作成でき、メールでチームメンバーを招待できます。
+
+以下の手順に従って、チームメンバーを追加し、プロジェクトへのアクセスを管理してください。
+
+## チームメンバーをプロジェクトアクセスに招待するには
+
+1. AWS管理コンソールにサインインしてAWS Amplifyを開きます。
+2. Amplify Studioが有効になっているAmplifyプロジェクトを選択します。
+3. ナビゲーションペインで、**Amplify Studioの設定**を選択します。
+4. **Amplify Studioの設定**ページの**アクセス制御設定**セクションで、**チームメンバーを追加**を選択します。
+5. **メール**に、招待するチームメンバーのメールアドレスを入力します。
+6. **アクセスレベル**で、チームメンバーに付与するアクセスレベルを選択します。
+  * **フルアクセス**により、チームメンバーはAWSリソースを作成および管理できます。
+  * **管理のみ**アクセスにより、チームメンバーはアプリコンテンツとユーザーを編集できます。
+7. 招待メールを送信するには、**招待を送信**を選択します。チームメンバーは、一時的な認証情報とStudioでプロジェクトにアクセスするためのリンクが記載されたメールを受け取ります。
+
+<Callout warning>
+
+  ユーザーに**フルアクセス**レベルを付与すると、**AdministratorAccess-Amplify** IAMポリシーがアタッチされます。このIAMポリシーは単一のアプリケーションにスコープされておらず、AWSアカウント内のすべてのアプリケーションへのアクセスをユーザーに付与します。詳細については、[AWS Amplifyのためのパネルポリシー](https://docs.aws.amazon.com/amplify/latest/userguide/security-iam-awsmanpol.html)を参照してください。
+
+</Callout>
+
+## チームメンバーのアクセスを編集するか、ユーザーを削除するには
+1. AWS管理コンソールにサインインしてAWS Amplifyを開きます。
+2. Amplify Studioが有効になっているAmplifyプロジェクトを選択します。
+3. ナビゲーションペインで、**Amplify Studioの設定**を選択します。
+4. **Amplify Studioの設定**ページの**アクセス制御設定**セクションで、編集または削除するチームメンバーを選択します。
+5. 以下のいずれかを実行します。
+  * **編集**を選択します。**チームメンバーの編集**ウィンドウで、チームメンバーの**アクセスレベル**を選択します。
+  * **削除**を選択します。**ユーザーを削除**ウィンドウで、削除アクションを確認します。
+
+<Callout warning>
+
+チームメンバーがAmplify Studioにログインすると、ログイントークンは明示的にログアウトされない限り、5時間30分間有効です。チームメンバーのアクセス許可を**フルアクセス**から**管理のみ**に変更した場合、またはチームメンバーのアクセスを削除した場合、チームメンバーはトークンの有効期限が切れるまで、以前に付与されたアクセス許可でAmplify Studioにアクセスし続けることができます。
+
+</Callout>
+
+## Studioがユーザーアクセスを管理する方法を理解する
+
+<Callout warning>
+
+  以下のリソースはすべてStudioで管理されます。**これらのリソースへの手動変更により、ログインエクスペリエンスが影響を受ける可能性があります**。
+
+</Callout>
+
+### ユーザープール
+Studioはアカウント内のAmazon Cognito User Poolを使用してユーザーアクセスを管理します。コスト無料でStudioに最大50,000人の月次ユーザーを招待できます。
+
+Studioはアカウント内のAmazon Cognito User Poolを使用してユーザーアクセスを管理し、名前は以下の通りです。
+- *amplify_backend_manager_APPID*。
+
+### IAMロール
+*フルアクセス*および*管理のみ*グループに必要なアクセス許可を付与するため、Studioは2つのIAMロール（以下の名前）を作成します。
+- *USERPOOLID_Full-access*
+- *USERPOOLID_Manage-only*
+
+### Cognito Identity Pool
+Amazon Cognito Identity Poolも作成され、*フルアクセス*および*管理のみ*グループに関連付けられたAWS認証情報を発行し、名前は以下の通りです。
+- *amplify_backend_manager_APPID*
+
+### Cognito Lambda トリガー
+AWS Amplify ConsoleからAmplify Studioへのパスワードレスログインエクスペリエンスを提供するため、Studioは4つのCognito Lambda トリガー(*上記のUser Poolに関連付けられた*)を作成し、名前は以下の通りです。
+- *amplify-login-create-auth-challenge-SHORT_CODE*
+- *amplify-login-custom-message-SHORT_CODE*
+- *amplify-login-define-auth-challenge-SHORT_CODE*
+- *amplify-login-verify-auth-challenge-SHORT_CODE*
+
+## トラブルシューティング
+Studioアプリケーションでログインに問題が発生した場合、またはリソースが削除された場合は、Amplify管理コンソールでAmplifyプロジェクトのStudioを無効にしてから再度有効にすることにより、リソースを再作成できます。
+
+1. AWS管理コンソールにサインインしてAWS Amplifyを開きます。
+2. Amplify Studioが有効になっているAmplifyプロジェクトを選択します。
+3. ナビゲーションペインで、**Amplify Studioの設定**を選択します。
+4. **Amplify Studioを有効化**をオフにします。
+5. **Amplify Studioを有効化**をオンにします。
+
+<Callout warning>
+   Amplify Studioを無効にして再度有効にすると、プロジェクトへのアクセスに使用されるAmplify Studio管理ユーザープールリソースが削除され、再作成されるため、ユーザーを再度招待してAmplifyプロジェクトへのアクセスを提供する必要があります。Amplify Studioを無効にして再度有効にしてもAmplifyプロジェクトのリソースは変更されません。
+</Callout>
+
+### Amplifyでアクションを実行する権限がない
+アクションを実行する権限がないというエラーが表示される場合は、ポリシーを更新してアクションを実行できるようにする必要があります。
+
+ヘルプが必要な場合は、AWSアドミニストレータに問い合わせてください。アドミニストレータは、サインイン認証情報を提供した人です。詳細については、[AWS Amplifyのためのパネルポリシー](https://docs.aws.amazon.com/amplify/latest/userguide/security-iam-awsmanpol.html)を参照してください。
+
+### Cognito Lambda トリガーのログインランタイムを更新する
+
+[Cognito Lambda トリガー](/gen1/[platform]/tools/console/adminui/access-management/#cognito-lambda-triggers)ランタイムを更新する必要がある場合は、Cognito User Pool **`amplify_backend_manager_<app-id>`** に関連付けられたLambda関数トリガーを更新することで実行できます。
+
+1. **AWS管理コンソール**にログインし、**Amplifyコンソール**を開き、Amplify Studioが有効になっているAmplifyプロジェクトを選択します。
+2. 概要ページのアプリ名の下にあるアプリIDを取得します。
+3. **Amazon Cognito コンソール**に移動し、**ユーザープール**を選択します。アプリIDを使用してユーザープールを検索します。アプリIDを使用した`amplify_backend_manager_<app-id>`の命名形式のユーザープールが表示されます。
+4. ユーザープールを選択し、**ユーザープールのプロパティ**に移動します。**Lambda トリガー**が表示されるはずです。
+![Studioによって作成されたCognito Lambda トリガー](/images/studio/lambda-triggers-studio.png)
+5. Lambda トリガーごとに、**アタッチされたLambda関数**列に指定されたリンクを選択します。注意として、Lambda トリガーが**認証チャレンジレスポンスを検証するLambda トリガー**の場合、関数には[認証チャレンジレスポンスを検証するLambda トリガーを更新](/gen1/[platform]/tools/console/adminui/access-management/#update-verify-auth-challenge-response-lambda-trigger)セクションで提供される追加のステップが必要です。
+6. **ランタイム設定を編集**を選択し、ドロップダウンオプションから**Node.js 20.x**にランタイムを変更します。
+![Lambda ランタイム](/images/studio/lambda_runtime.png)
+7. 最後に、**保存**を選択します。
+
+### 認証チャレンジレスポンスを検証するLambda トリガーを更新する
+
+この関数には、**NodeJS 20.x**のLambdaが**aws-sdk**の新しいバージョンを使用するため、コード変更が必要です。
+
+1. Lambda Code Sourceに移動し、`index.js`ファイルを選択します。
+![Cognito トリガーリソースのLambdasource codeセクション](/images/studio/trigger_source_code.png)
+2. `index.js`の内容を以下に置き換えます。
+
+```js
+const { AmplifyBackendClient, GetTokenCommand, DeleteTokenCommand } = require('@aws-sdk/client-amplifybackend');
+
+exports.handler = async (event, context) => {
+  try {
+    const amplifyBackendService = new AmplifyBackendService(event);
+    await amplifyBackendService.validateToken();
+    console.log(`verified challenge code with result: ${event.response.answerCorrect}`);
+    context.done(null, event);
+    return event;
+  } catch (e) {
+    console.error('exception occurred during verify', e);
+    event.response.answerCorrect = false;
+    context.done(e, event);
+  }
+};
+
+class AmplifyBackendService {
+  constructor(event) {
+    const { sessionId, appId } = event.request.clientMetadata;
+    const { challengeAnswer } = event.request;
+    this.appId = appId;
+    this.sessionId = sessionId;
+    this.challengeAnswer = challengeAnswer;
+    this.event = event;
+  }
+
+  async validateToken() {
+    this.amplifyBackend = this.initService();
+    // 1. Get token
+    const tokenResponse = await this.getToken();
+
+    // 2. Validate token
+    const challengeCode = tokenResponse.ChallengeCode;
+    if (challengeCode && this.challengeAnswer && this.challengeAnswer === challengeCode) {
+      this.event.response.answerCorrect = true;
+    } else {
+      this.event.response.answerCorrect = false;
+    }
+
+    // 3. Delete token
+    await this.deleteToken();
+
+    return this.event.response.answerCorrect;
+  }
+
+  initService() {
+    const amplifyBackend = process.env.ENDPOINT
+      ? new AmplifyBackendClient({
+          endpoint: process.env.ENDPOINT,
+        })
+      : new AmplifyBackendClient();
+    return amplifyBackend;
+  }
+
+  getToken() {
+    return this.amplifyBackend.send(
+      new GetTokenCommand({
+        AppId: this.appId,
+        SessionId: this.sessionId,
+      }),
+    );
+  }
+
+  deleteToken() {
+    return this.amplifyBackend.send(
+      new DeleteTokenCommand({
+        AppId: this.appId,
+        SessionId: this.sessionId,
+      }),
+    );
+  }
+}
+
+exports.AmplifyBackendService = AmplifyBackendService;
+```
+
+3. 最後に、**デプロイ**を選択して変更を保存します。

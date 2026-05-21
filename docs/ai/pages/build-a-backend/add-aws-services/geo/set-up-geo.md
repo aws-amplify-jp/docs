@@ -1,0 +1,378 @@
+---
+title: "Amplify Geo のセットアップ"
+section: "build-a-backend/add-aws-services/geo"
+platforms: ["javascript", "swift", "android", "angular", "nextjs", "react", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/add-aws-services/geo/set-up-geo/"
+---
+
+Amplify は、Web アプリケーション向けのマップおよび場所検索用の API とマップ UI コンポーネントを提供します。わずか数行のコードで、アプリにマップと場所検索機能を追加できます。以下は、[AWS Cloud Development Kit (AWS CDK)](https://docs.aws.amazon.com/cdk/latest/guide/home.html) を使用して [Amazon Location Services](https://aws.amazon.com/location/) で実装された Geo リソースを作成する例です。ただし、このサービスにはまだ公式なハンドライティング (L2) コンストラクトがないことに注意してください。
+
+```ts title="amplify/backend.ts"
+import { defineBackend } from "@aws-amplify/backend";
+import { Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { CfnMap } from "aws-cdk-lib/aws-location";
+import { Stack } from "aws-cdk-lib/core";
+import { auth } from "./auth/resource";
+import { data } from "./data/resource";
+
+const backend = defineBackend({
+  auth,
+  data,
+  // additional resources
+});
+
+const geoStack = backend.createStack("geo-stack");
+
+// create a location services map
+const map = new CfnMap(geoStack, "Map", {
+  mapName: "myMap",
+  description: "Map",
+  configuration: {
+    style: "VectorEsriNavigation",
+  },
+  pricingPlan: "RequestBasedUsage",
+  tags: [
+    {
+      key: "name",
+      value: "myMap",
+    },
+  ],
+});
+
+// create an IAM policy to allow interacting with geo resource
+const myGeoPolicy = new Policy(geoStack, "GeoPolicy", {
+  policyName: "myGeoPolicy",
+  statements: [
+    new PolicyStatement({
+      actions: [
+        "geo:GetMapTile",
+        "geo:GetMapSprites",
+        "geo:GetMapGlyphs",
+        "geo:GetMapStyleDescriptor",
+      ],
+      resources: [map.attrArn],
+    }),
+  ],
+});
+
+// apply the policy to the authenticated and unauthenticated roles
+backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(myGeoPolicy);
+backend.auth.resources.unauthenticatedUserIamRole.attachInlinePolicy(myGeoPolicy);
+
+// patch the map resource to the expected output configuration
+backend.addOutput({
+  geo: {
+    aws_region: geoStack.region,
+    maps: {
+      items: {
+        [map.mapName]: {
+          style: "VectorEsriNavigation",
+        },
+      },
+      default: map.mapName,
+    },
+  },
+});
+```
+
+<!-- Platform: javascript, angular, react, vue, react-native, nextjs -->
+## アプリケーションを設定する
+
+アプリケーションにマップを表示するには、[Amplify React MapView コンポーネント](https://ui.docs.amplify.aws/react/components/geo)または [MapLibre GL](https://github.com/maplibre/maplibre-gl-js) を `maplibre-gl-js-amplify` ライブラリと一緒に使用します。
+
+次のコマンドを実行して、必要な依存関係をインストールします。
+
+```bash title="Terminal" showLineNumbers={false}
+npm add aws-amplify @aws-amplify/geo
+```
+
+> **注:** バージョン `6.0.0` 以上がインストールされていることを確認してください。
+
+設定ファイルをインポートしてアプリケーションに読み込みます。Amplify 設定ステップをアプリケーションのルートエントリポイントに追加することをお勧めします。
+
+<!-- Platform: javascript, angular, react, vue, react-native -->
+```javascript title="src/index.js"
+import { Amplify } from 'aws-amplify';
+import outputs from '../amplify_outputs.json';
+Amplify.configure(outputs);
+```
+<!-- /Platform -->
+
+<!-- Platform: nextjs -->
+```javascript title="pages/_app.js"
+import { Amplify } from 'aws-amplify';
+import outputs from '@/amplify_outputs.json';
+Amplify.configure(outputs);
+```
+<!-- /Platform -->
+
+<Callout warning="true">
+
+`Amplify.configure` をアプリケーションのライフサイクルの早い段階で呼び出すようにしてください。`Amplify.configure` が他の Amplify JavaScript API の前に呼び出されていない場合、設定がないか `NoCredentials` エラーがスローされます。
+
+</Callout>
+<!-- /Platform -->
+
+<!-- Platform: swift, android -->
+Amplify Geo は、モバイルアプリケーション開発用の API とマップ UI コンポーネントを提供しており、わずか数行のコードでアプリにマップを追加できます。Amplify Geo API は [Amazon Location Service](https://aws.amazon.com/location/) を使用して実装されており、[MapLibre](https://maplibre.org/) のマップ UI コンポーネントは既に Geo API と統合されています。
+
+## 前提条件
+
+<!-- Platform: android -->
+* Amplify ライブラリが統合された、少なくとも Android SDK API レベル 24 をターゲットとする Android アプリケーション
+    * Android プロジェクト作成の完全な例については、[プロジェクトセットアップのウォークスルー](/[platform]/start/quickstart/)に従ってください。
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+Amplify ライブラリが統合されたアプリケーション、および以下のいずれかの最小ターゲット：
+- **iOS 13.0** (Xcode 14.1 以上を使用)
+- **macOS 10.15** (Xcode 14.1 以上を使用)
+- **tvOS 13.0** (Xcode 14.3 以上を使用)
+- **watchOS 9.0** (Xcode 14.3 以上を使用)
+- **visionOS 1.0** (Xcode 15 beta 2 以上を使用)。(プレビューサポート - 詳細は以下を参照)
+
+完全な例については、[プロジェクトセットアップのウォークスルー](/[platform]/start/quickstart/)に従ってください。
+
+<Callout>
+
+visionOS サポートは現在**プレビュー**段階であり、最新の [Amplify リリース](https://github.com/aws-amplify/amplify-swift/releases)を使用することで利用できます。
+Xcode と visionOS の新バージョンがリリースされると、必要に応じてサポートを更新する予定です。
+
+</Callout>
+<!-- /Platform -->
+
+## Amplify ライブラリをインストールする
+
+<!-- Platform: android -->
+以下の依存関係を **build.gradle.kts (Module :app)** ファイルに追加し、プロンプトが表示されたら「Sync Now」をクリックします。
+
+```kotlin title="app/build.gradle.kts"
+android {
+    compileOptions {
+        // Support for modern Java features
+        isCoreLibraryDesugaringEnabled = true
+    }
+}
+
+dependencies {
+    // Amplify API dependencies
+    // highlight-start
+    implementation("com.amplifyframework:aws-auth-cognito:ANDROID_VERSION")
+    implementation("com.amplifyframework:aws-geo-location:ANDROID_VERSION")
+    // highlight-end
+    // ... other dependencies
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:ANDROID_DESUGAR_VERSION")
+}
+```
+
+<Callout>
+
+**注:** Geo プラグインは Cognito Auth に依存しています。
+
+</Callout>
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+Geo プラグインは Cognito Auth に依存しています。
+
+1. アプリケーションに Amplify ライブラリをインストールするには、Xcode でプロジェクトを開き、**File > Add Packages...** を選択します。
+
+2. **Amplify Library for Swift** GitHub リポジトリの URL (`https://github.com/aws-amplify/amplify-swift`) を検索バーに入力し、**Add Package** をクリックします。
+
+  <Callout>
+
+  **注:** **Dependency Rule** ドロップダウンから **Up to Next Major Version** を選択する必要があります。
+
+  </Callout>
+
+3. 最後に、**AWSLocationGeoPlugin**、**AWSCognitoAuthPlugin**、および **Amplify** をターゲットに追加します。その後、**Add Package** をクリックします。
+<!-- /Platform -->
+
+## Amplify Geo を初期化する
+
+<!-- Platform: android -->
+Amplify Geo を初期化するには、`Amplify.addPlugin()` メソッドを使用して AWS Location Geo プラグインを追加します。次に、`Amplify.configure()` を呼び出して Amplify の設定を完了します。
+
+アプリケーションクラスの `onCreate()` メソッドに次のコードを追加します。
+
+> **Warning:** `Amplify.configure` 関数を呼び出す前に、コンソールから `amplify_outputs.json` ファイルをダウンロードするか、次のコマンドを使用して生成してください。
+> 
+> ```bash title="Terminal" showLineNumbers={false}
+npx ampx generate outputs --app-id <app-id> --branch main --out-dir app/src/main/res/raw
+```
+> 
+> 次に、生成またはダウンロードしたファイルが Android プロジェクトの適切なリソースディレクトリ（例えば `app/src/main/res/raw`）に配置されていることを確認してください。そうしないと、アプリケーションをコンパイルできません。
+
+#### [Java]
+
+```java
+Amplify.addPlugin(new AWSCognitoAuthPlugin());
+Amplify.addPlugin(new AWSLocationGeoPlugin());
+Amplify.configure(AmplifyOutputs.fromResource(R.raw.amplify_outputs), getApplicationContext());
+```
+
+クラスは次のようになります：
+
+```java
+public class MyAmplifyApp extends Application {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        try {
+            Amplify.addPlugin(new AWSCognitoAuthPlugin());
+            Amplify.addPlugin(new AWSLocationGeoPlugin());
+            Amplify.configure(AmplifyOutputs.fromResource(R.raw.amplify_outputs), getApplicationContext());
+            Log.i("MyAmplifyApp", "Initialized Amplify");
+        } catch (AmplifyException error) {
+            Log.e("MyAmplifyApp", "Could not initialize Amplify", error);
+        }
+    }
+}
+```
+
+#### [Kotlin]
+
+```kotlin
+Amplify.addPlugin(AWSCognitoAuthPlugin())
+Amplify.addPlugin(AWSLocationGeoPlugin())
+Amplify.configure(AmplifyOutputs.fromResource(R.raw.amplify_outputs), applicationContext)
+```
+
+クラスは次のようになります：
+
+```kotlin
+class MyAmplifyApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        try {
+            Amplify.addPlugin(AWSCognitoAuthPlugin())
+            Amplify.addPlugin(AWSLocationGeoPlugin())
+            Amplify.configure(AmplifyOutputs.fromResource(R.raw.amplify_outputs), applicationContext)
+            Log.i("MyAmplifyApp", "Initialized Amplify")
+        } catch (error: AmplifyException) {
+            Log.e("MyAmplifyApp", "Could not initialize Amplify", error)
+        }
+    }
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.addPlugin(new AWSCognitoAuthPlugin());
+RxAmplify.addPlugin(new AWSLocationGeoPlugin());
+RxAmplify.configure(AmplifyOutputs.fromResource(R.raw.amplify_outputs), getApplicationContext());
+```
+
+クラスは次のようになります：
+
+```java
+public class MyAmplifyApp extends Application {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        try {
+            RxAmplify.addPlugin(new AWSCognitoAuthPlugin());
+            RxAmplify.addPlugin(new AWSLocationGeoPlugin());
+            RxAmplify.configure(AmplifyOutputs.fromResource(R.raw.amplify_outputs), getApplicationContext());
+            Log.i("MyAmplifyApp", "Initialized Amplify");
+        } catch (AmplifyException error) {
+            Log.e("MyAmplifyApp", "Could not initialize Amplify", error);
+        }
+    }
+}
+```
+
+このアプリケーションをビルドして実行すると、コンソールウィンドウに以下が表示されます：
+
+```console
+Initialized Amplify
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+> **Warning:** 次のコマンドを実行して `amplify_outputs.json` ファイルを生成していることを確認してください：
+> 
+> ```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox
+```
+> 
+> 次に、ファイルをプロジェクトに移動します。Xcode プロジェクトにファイルをドラッグ&ドロップすることで実行できます。
+
+Amplify Geo を初期化するには、`Amplify.add(plugin:)` メソッドを使用して AWS Location Geo プラグインを追加します。次に、`Amplify.configure(with:)` を呼び出して Amplify の設定を完了します。
+
+アプリケーションのメインファイル - `AppDelegate.swift` または `<YOUR_APP_NAME>App.swift`（アプリケーションのライフサイクルに応じて）を開き、ファイルの上部に次の import ステートメントを**追加します**：
+
+```swift
+import Amplify
+import AWSCognitoAuthPlugin
+import AWSLocationGeoPlugin
+```
+
+同じファイルで、**Amplify を設定する関数を作成します**：
+```swift
+func configureAmplify() {
+    do {
+        try Amplify.add(plugin: AWSCognitoAuthPlugin())
+        try Amplify.add(plugin: AWSLocationGeoPlugin())
+        try Amplify.configure(with: .amplifyOutputs)
+        print("Initialized Amplify");
+    } catch {
+        print("Could not initialize Amplify: \(error)")
+    }
+}
+```
+
+次に、アプリケーションの起動ポイントで **`configureAmplify()` 関数を呼び出します**。
+
+#### [SwiftUI]
+
+```swift
+@main
+struct <YOUR_APP_NAME>App: App {
+    // add a default initializer and configure Amplify
+    public init() {
+        configureAmplify()
+    }
+}
+```
+
+#### [UIKit]
+
+```swift
+@UIApplicationMain
+class AppDelegate: UIResponder, UIApplicationDelegate {
+    func application(_: UIApplication,
+                     didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+        configureAmplify()
+        return true
+    }
+    // ...
+}
+```
+
+このアプリケーションをビルドして実行すると、コンソールウィンドウに以下が表示されます：
+
+```console
+Initialized Amplify
+```
+<!-- /Platform -->
+<!-- /Platform -->
+
+**注:**
+- 既存の Amazon Location Service リソースを使用したい場合は、[このガイド](/[platform]/build-a-backend/add-aws-services/geo/existing-resources/)に従ってください。
+- Geo で直接サポートされていない Amazon Location Service API を使用したい場合は、[エスケープハッチ](/[platform]/frontend/geo/amazon-location-sdk/)を使用して Amazon Location Service SDK にアクセスしてください。
+
+### 参考資料
+
+[Location Construct Library](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_location-readme.html)
+
+## マップの料金プラン
+マップの例の料金プランは `RequestBasedUsage` に設定されています。
+料金プランの詳細については、[ロケーションサービスの料金](https://aws.amazon.com/location/pricing/)と[ロケーションサービスの利用規約](https://aws.amazon.com/service-terms/)（セクション 82.5）を参照することをお勧めします。

@@ -1,0 +1,563 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '高度なパターン',
+  description: '複合キーの処理、GraphQL codegenのセットアップ、Reactコンポーネントの移行、DataStoreの機能で直接同等のものがないものについて理解します。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+このページでは4つの高度なトピックをカバーしています。命令型のDataStore呼び出しから宣言型のApolloフックへのReactコンポーネントの移行、複合キーとカスタム主キー、型安全な操作のためのGraphQL codegen、DataStore機能でApollo Clientに直接同等のものがないものの正直な説明です。
+
+<InlineFilter filters={["react", "nextjs", "react-native"]}>
+
+## Reactコンポーネントの移行
+
+このセクションでは、コアパラダイムシフト（DataStoreを使用した命令型の状態管理から宣言型のApolloフックへ）を示します。
+
+### 前：DataStoreコンポーネント
+
+```tsx
+import { useState, useEffect } from 'react';
+import { DataStore } from 'aws-amplify/datastore';
+import { Post } from './models';
+
+function PostList() {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    DataStore.query(Post).then(results => {
+      setPosts(results);
+      setLoading(false);
+    });
+  }, []);
+
+  const handleDelete = async (post: Post) => {
+    await DataStore.delete(post);
+    setPosts(prev => prev.filter(p => p.id !== post.id));
+  };
+
+  if (loading) return <p>Loading...</p>;
+  return (
+    <ul>
+      {posts.map(post => (
+        <li key={post.id}>
+          {post.title}
+          <button onClick={() => handleDelete(post)}>Delete</button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### 後：Apollo Clientコンポーネント
+
+```tsx
+import { useQuery, useMutation } from '@apollo/client';
+import { LIST_POSTS, DELETE_POST } from './graphql/operations';
+
+function PostList() {
+  const { data, loading, error } = useQuery(LIST_POSTS);
+  const [deletePost] = useMutation(DELETE_POST, {
+    refetchQueries: [{ query: LIST_POSTS }],
+  });
+
+  const handleDelete = async (post: any) => {
+    await deletePost({
+      variables: { input: { id: post.id, _version: post._version } },
+    });
+  };
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
+
+  const posts = data?.listPosts?.items?.filter((p: any) => !p._deleted) || [];
+  return (
+    <ul>
+      {posts.map((post: any) => (
+        <li key={post.id}>
+          {post.title}
+          <button onClick={() => handleDelete(post)}>Delete</button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### 主な違い
+
+| 側面 | DataStore | Apollo Client |
+|--------|-----------|---------------|
+| データ取得 | `useState` + `useEffect` + `DataStore.query()` | `useQuery()`ですべて対応 |
+| ローディング状態 | 手動で`useState(true)` / `setLoading(false)` | `useQuery`の組み込み`loading` |
+| エラーハンドリング | 公開されていない | `useQuery`の組み込み`error` |
+| ミューテーション応答 | 手動の状態更新 | `refetchQueries`が自動的な再取得をトリガー |
+| 削除入力 | モデルインスタンスを渡す | `id`と`_version`を含める必要あり |
+| ソフト削除されたレコード | 自動的にフィルタリング | `_deleted`レコードを手動でフィルタリング |
+
+### DataStore.observe()の移行
+
+DataStoreの`observe()`はすべての変更イベント用に単一のObservableを返しました。移行により、これは3つの別々のAmplifyサブスクリプションに置き換わります:
+
+```tsx
+import { useEffect } from 'react';
+import { useQuery } from '@apollo/client';
+import { generateClient } from 'aws-amplify/api';
+import { LIST_POSTS } from './graphql/operations';
+
+const amplifyClient = generateClient();
+
+function PostList() {
+  const { data, loading, error, refetch } = useQuery(LIST_POSTS);
+
+  useEffect(() => {
+    const subscriptions = [
+      amplifyClient.graphql({
+        query: `subscription OnCreatePost { onCreatePost { id } }`,
+      }).subscribe({ next: () => refetch() }),
+      amplifyClient.graphql({
+        query: `subscription OnUpdatePost { onUpdatePost { id } }`,
+      }).subscribe({ next: () => refetch() }),
+      amplifyClient.graphql({
+        query: `subscription OnDeletePost { onDeletePost { id } }`,
+      }).subscribe({ next: () => refetch() }),
+    ];
+
+    return () => subscriptions.forEach(sub => sub.unsubscribe());
+  }, [refetch]);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
+
+  const posts = data?.listPosts?.items?.filter((p: any) => !p._deleted) || [];
+  return (
+    <ul>
+      {posts.map((post: any) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### DataStore.observeQuery()の移行
+
+`observeQuery()`は初期クエリをライブアップデートと組み合わせました。Apollo同等物は`useQuery`に`fetchPolicy: 'cache-and-network'`とサブスクリプションでトリガーされた再取得を加えたものです:
+
+```tsx
+function PublishedPosts() {
+  const { data, loading, refetch } = useQuery(LIST_POSTS, {
+    variables: { filter: { status: { eq: 'PUBLISHED' } } },
+    fetchPolicy: 'cache-and-network',
+  });
+
+  useEffect(() => {
+    const subscriptions = [
+      amplifyClient.graphql({
+        query: `subscription OnCreatePost { onCreatePost { id } }`,
+      }).subscribe({ next: () => refetch() }),
+      amplifyClient.graphql({
+        query: `subscription OnUpdatePost { onUpdatePost { id } }`,
+      }).subscribe({ next: () => refetch() }),
+      amplifyClient.graphql({
+        query: `subscription OnDeletePost { onDeletePost { id } }`,
+      }).subscribe({ next: () => refetch() }),
+    ];
+
+    return () => subscriptions.forEach(sub => sub.unsubscribe());
+  }, [refetch]);
+
+  const posts = data?.listPosts?.items
+    ?.filter((p: any) => !p._deleted)
+    ?.sort((a: any, b: any) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    ) || [];
+
+  if (loading && !data) return <p>Loading...</p>;
+
+  return (
+    <div>
+      {loading && <span>Refreshing...</span>}
+      <ul>
+        {posts.map((post: any) => (
+          <li key={post.id}>{post.title}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+### オーナーベースの認証サブスクリプション
+
+<Callout warning>
+
+モデルに`@auth(rules: [{ allow: owner }])`がある場合、サブスクリプションに`owner`変数を手動で渡す**必要があります**。DataStoreはこれを自動的に注入しました。これがないと、サブスクリプションは正常に接続しますがイベントは発火しません。
+
+</Callout>
+
+```ts
+import { fetchAuthSession } from 'aws-amplify/auth';
+
+async function getCurrentOwner(): Promise<string> {
+  const session = await fetchAuthSession();
+  // デフォルトのAmplifyオーナーフィールドは'sub'クレームを使用します。
+  // Gen 1スキーマ.graphql @authルールをチェックして確認してください。
+  return session.tokens?.idToken?.payload?.sub as string;
+}
+```
+
+各サブスクリプションにオーナーを渡します:
+
+```ts
+amplifyClient.graphql({
+  query: `subscription OnCreatePost($owner: String!) {
+    onCreatePost(owner: $owner) { id }
+  }`,
+  variables: { owner },
+}).subscribe({ next: () => refetch() });
+```
+
+### Reactコンポーネント移行チェックリスト
+
+**クエリ:**
+- `useState` + `useEffect` + `DataStore.query()`を`useQuery()`に置き換える
+- すべてのリストクエリ結果から`_deleted`レコードをフィルタリング
+- `error`状態ハンドリングを追加
+- キャッシュされたデータと新しいデータの両方が必要な場所で`fetchPolicy: 'cache-and-network'`を使用
+
+**ミューテーション:**
+- `DataStore.save(new Model({...}))`を`useMutation(CREATE_MODEL)`に置き換える
+- `DataStore.save(Model.copyOf(...))`を`useMutation(UPDATE_MODEL)`に置き換える -- `_version`を含める
+- `DataStore.delete(instance)`を`useMutation(DELETE_MODEL)`に置き換える -- `_version`を含める
+- リストクエリに影響するミューテーションに`refetchQueries`を追加
+
+**リアルタイム:**
+- `DataStore.observe()`を3つのAmplifyサブスクリプションに置き換える
+- `DataStore.observeQuery()`を`useQuery` + サブスクリプションでトリガーされた`refetch()`に置き換える
+- モデルがオーナーベースの認証を使用する場合、`owner`引数を追加
+- `useEffect`の戻り関数内のすべてのサブスクリプションをクリーンアップ
+
+</InlineFilter>
+
+<InlineFilter filters={["angular", "javascript", "vue"]}>
+
+<Callout>
+
+このガイドの他のセクションに示されているReact固有のフック（`useQuery`、`useMutation`）はAngular、バニラJavaScript、またはVueでは利用できません。代わりに命令型のApollo Client API（`apolloClient.query()`、`apolloClient.mutate()`）を使用してください。これらは[CRUD操作の移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-crud-operations/)ページの「命令型」の例に示されている同じパターンです。
+
+</Callout>
+
+</InlineFilter>
+
+## 複合キーとカスタム主キー
+
+Amplifyはモデルの3つのIdentifierモードをサポートしています。各モードはレコードのクエリ、更新、削除方法を変更します -- そして各モードは異なるApollo Clientの設定が必要です。
+
+### 3つのIdentifierモード
+
+| Identifierモード | Gen 1スキーマ | GraphQL Get入力 | 作成入力 |
+|---|---|---|---|
+| デフォルト自動生成ID | `@primaryKey`ディレクティブなし | `getModel(id: ID!)` | `id`はAppSyncにより自動生成 |
+| カスタム単一フィールドPK | カスタムフィールドの`@primaryKey(sortKeyFields: [])` | `getModel(id: ID!)` | 作成入力で`id`が必須 |
+| 複合PK | `@primaryKey(sortKeyFields: ["field2"])` | `getModel(field1: ..., field2: ...)` | すべてのPKフィールドが必須 |
+
+### デフォルト（自動ID）
+
+これはモデルで`@primaryKey`を使用しない場合のデフォルトモードです。AppSyncはUUID `id`フィールドを自動生成します。特別な移行は必要ありません -- [CRUD操作の移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-crud-operations/)ページの標準CRUD パターンが直接適用されます。
+
+**Gen 1スキーマ:**
+
+```graphql
+# amplify/backend/api/<your-api>/schema.graphql
+type Post @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  title: String!
+  content: String
+  status: String
+}
+```
+
+### カスタム単一フィールドPK
+
+モデルがカスタム主キーフィールドを定義する場合、`id`は自動生成されなくなります。作成ミューテーションで明示的に提供する必要があります。
+
+**Gen 1スキーマ:**
+
+```graphql
+# amplify/backend/api/<your-api>/schema.graphql
+type Product @model @auth(rules: [{ allow: owner }]) {
+  id: ID! @primaryKey
+  sku: String!
+  name: String!
+  price: Float
+}
+```
+
+Apollo Client:
+
+```ts
+const { data } = await apolloClient.mutate({
+  mutation: CREATE_PRODUCT,
+  variables: {
+    input: {
+      id: 'PROD-001', // 必須 -- これを提供する必要があります
+      sku: 'SKU-12345',
+      name: 'Widget',
+      price: 29.99,
+    },
+  },
+});
+```
+
+### 複合PK
+
+このモードは最も移行作業が必要です。モデルが`sortKeyFields`を持つ`@primaryKey`を使用する場合、すべての主キーフィールドが必須の引数になります。
+
+**Gen 1スキーマ:**
+
+```graphql title="amplify/backend/api/<your-api>/schema.graphql"
+type StoreBranch @model @auth(rules: [{ allow: owner }]) {
+  tenantId: ID! @primaryKey(sortKeyFields: ["branchName"])
+  branchName: String!
+  address: String
+  phone: String
+}
+```
+
+**Apollo Clientクエリとミューテーション:**
+
+```ts
+// 複合キーでクエリ -- 両フィールドを別の変数として
+const { data } = await apolloClient.query({
+  query: GET_STORE_BRANCH,
+  variables: { tenantId: 'tenant-123', branchName: 'Downtown' },
+});
+
+// 更新 -- 入力内のすべてのPKフィールド + _versionが必須
+await apolloClient.mutate({
+  mutation: UPDATE_STORE_BRANCH,
+  variables: {
+    input: {
+      tenantId: 'tenant-123',
+      branchName: 'Downtown',
+      address: '456 New St',
+      _version: data.getStoreBranch._version,
+    },
+  },
+});
+```
+
+### 複合キーのキャッシュ設定（typePolicies）
+
+<Callout warning>
+
+これはスキップしやすい重要な設定ステップです。Apolloの`InMemoryCache`はデフォルトのキャッシュキーとして`__typename:id`を使用します。複合キーを持つモデルは明示的な`keyFields`設定なしで正しくキャッシュまたは正規化されません。
+
+</Callout>
+
+```ts
+import { InMemoryCache } from '@apollo/client';
+
+const cache = new InMemoryCache({
+  typePolicies: {
+    // デフォルトモデルは自動的に機能します
+    Post: { keyFields: ['id'] },
+    // 複合キーモデルは明示的なkeyFieldsが必要です
+    StoreBranch: { keyFields: ['tenantId', 'branchName'] },
+    // カスタム単一フィールドPK
+    Product: { keyFields: ['sku'] },
+  },
+});
+```
+
+**`keyFields`が見つからない警告の兆候:** クエリがミューテーション後に古いデータを返す、Apollo DevToolsが重複エントリを表示、`cache.readQuery`が存在することがわかっているレコードに対して`null`を返す。
+
+## GraphQL codegenで型安全な操作を実現
+
+前のページのCRUD例では`(post: any)`キャストを使用しています。このセクションではそれを排除する方法を示します。
+
+### ステップ1：GraphQL操作を生成
+
+```bash
+amplify codegen
+```
+
+これにより、操作を文字列定数として含む`src/graphql/`にTypeScriptファイルが生成されます。
+
+### ステップ2：gql()とTypeScript型でラップ
+
+生成された文字列をラップする型付き操作ファイルを作成します:
+
+<Accordion title="完全な型付き操作.tsの例">
+
+```ts title="src/graphql/typed-operations.ts"
+import { gql, TypedDocumentNode } from '@apollo/client';
+import { getPost as getPostString, listPosts as listPostsString } from './queries';
+import { createPost as createPostString, updatePost as updatePostString, deletePost as deletePostString } from './mutations';
+
+export interface Post {
+  id: string;
+  title: string;
+  content: string;
+  status: string;
+  rating: number;
+  createdAt: string;
+  updatedAt: string;
+  _version: number;
+  _deleted: boolean | null;
+  _lastChangedAt: number;
+}
+
+export interface GetPostData { getPost: Post | null; }
+export interface GetPostVars { id: string; }
+
+export interface ListPostsData {
+  listPosts: { items: Post[]; nextToken: string | null; };
+}
+export interface ListPostsVars {
+  filter?: Record<string, unknown>;
+  limit?: number;
+  nextToken?: string;
+}
+
+export interface CreatePostData { createPost: Post; }
+export interface CreatePostVars {
+  input: { title: string; content: string; status?: string; rating?: number; };
+}
+
+export interface UpdatePostData { updatePost: Post; }
+export interface UpdatePostVars {
+  input: { id: string; _version: number; title?: string; content?: string; };
+}
+
+export interface DeletePostData { deletePost: Post; }
+export interface DeletePostVars {
+  input: { id: string; _version: number; };
+}
+
+export const GET_POST: TypedDocumentNode<GetPostData, GetPostVars> = gql(getPostString);
+export const LIST_POSTS: TypedDocumentNode<ListPostsData, ListPostsVars> = gql(listPostsString);
+export const CREATE_POST: TypedDocumentNode<CreatePostData, CreatePostVars> = gql(createPostString);
+export const UPDATE_POST: TypedDocumentNode<UpdatePostData, UpdatePostVars> = gql(updatePostString);
+export const DELETE_POST: TypedDocumentNode<DeletePostData, DeletePostVars> = gql(deletePostString);
+```
+
+</Accordion>
+
+### ステップ3：型安全なフックを使用
+
+`TypedDocumentNode`を使用すると、Apolloフックは自動的にデータと変数の型を推論します:
+
+<InlineFilter filters={["react", "nextjs", "react-native"]}>
+
+```tsx
+import { useQuery, useMutation } from '@apollo/client';
+import { GET_POST, UPDATE_POST } from './graphql/typed-operations';
+
+function PostDetail({ postId }: { postId: string }) {
+  // dataは自動的にGetPostDataとして型付けされます
+  const { data, loading, error } = useQuery(GET_POST, {
+    variables: { id: postId },
+  });
+
+  const [updatePost] = useMutation(UPDATE_POST);
+
+  async function handleUpdate(title: string) {
+    const post = data?.getPost;
+    if (!post) return;
+    // variables.inputは型チェックされます
+    await updatePost({
+      variables: { input: { id: post.id, title, _version: post._version } },
+    });
+  }
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
+  if (!data?.getPost) return <p>Post not found</p>;
+
+  const post = data.getPost; // Postとして型付け -- (post: any)キャストなし
+  return (
+    <article>
+      <h1>{post.title}</h1>
+      <p>{post.content}</p>
+      <p>Rating: {post.rating}</p>
+    </article>
+  );
+}
+```
+
+</InlineFilter>
+
+## 失われたもの -- 直接同等のものがない機能
+
+<Callout>
+
+DataStoreは豊富なイベントフックを持つ管理されたシンク ライフサイクルを提供しました。Apollo Clientはシンクエンジンではなくクエリ/キャッシュレイヤーです。このセクションではApollo同等のものがないすべてのDataStore機能を記載し、正直な回避策評価を提供します。
+
+</Callout>
+
+### Hubイベント
+
+DataStoreはHubを介して9つの個別のイベントをディスパッチしました。9つのうち:
+
+| カテゴリ | 数 | 詳細 |
+|---|---|---|
+| 完全に置き換え | 0 | 直接のApollo同等物はありません |
+| 部分的に置き換え | 2 | `networkStatus`（ブラウザAPIを使用）、`subscriptionsEstablished`（サブスクリプションコールバックを監視） |
+| 同等物なし | 7 | `syncQueriesStarted`、`syncQueriesReady`、`modelSynced`、`outboxMutationEnqueued`、`outboxMutationProcessed`、`outboxStatus`、`storageSubscribed` |
+
+同等物がない7つはシンクエンジン動作を説明し、Apollo Clientはシンクエンジンを持ちません。
+
+### 選択的シンク（syncExpressions）
+
+DataStoreの`syncExpressions`により、サーバーからローカルストアに同期するレコードをフィルタリングできました。Apollo Clientには同等物がありません。
+
+### ライフサイクルメソッド
+
+| メソッド | Apollo同等物 | 評価 |
+|---|---|---|
+| `DataStore.start()` | なし（Apolloはオンデマンドで問い合わせ） | なし |
+| `DataStore.stop()` | 手動でアンサブスクライブ; `apolloClient.stop()`は進行中をキャンセル | なし |
+| `DataStore.clear()` | `apolloClient.clearStore()` + `persistor.purge()` | 部分的 |
+
+### 競合ハンドラー設定
+
+これはこのガイドで実装されています。競合はサーバー側で処理されます。**評価：完全** （異なる場所、同じ機能）。
+
+### 概要
+
+| カテゴリ | 完全に置き換え | 部分的に置き換え | 同等物なし |
+|---|---|---|---|
+| Hubライフサイクルイベント（合計9） | 0 | 2 | 7 |
+| 選択的シンク | 0 | 1 | 0 |
+| ライフサイクルメソッド（合計3） | 0 | 1 | 2 |
+| 競合ハンドラー | 1 | 0 | 0 |
+| **合計** | **1** | **4** | **9** |
+
+### 実践的なガイダンス
+
+アプリケーションがシンク進捗インジケータを表示したり、アウトボックスステータスバッジを表示したりするようなUI状態のためにHubイベントに大きく依存している場合、追加のカスタム実装作業を計画してください。Apollo Clientに移行するほとんどのアプリケーションでは、監視するローカルシンクがないため、これらの機能は必要ありません。損失は実際ですが影響は低いです。

@@ -1,0 +1,86 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '画像内のラベルオブジェクトを検出する',
+  description: 'Amplifyを使用して画像内のラベルを検出する方法の詳細をご紹介します。例えば、画像に椅子やデスクなどのオブジェクトが含まれているかどうかを検出できます。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue',
+  ]
+};
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps() {
+  return {
+    props: {
+      meta
+    }
+  };
+}
+
+<Callout informational>
+
+**注:** まず[はじめに](../set-up-predictions)セクションを完了してください。ここで適切なポリシーアクションを持つIAMロールを設定します。
+
+</Callout>
+
+## APIの使用
+
+画像内にデスクや椅子などのラベルを検出します。
+
+```javascript
+import { Predictions } from '@aws-amplify/predictions';
+
+Predictions.identify({
+  labels: {
+    source: {
+      file
+    },
+    type: 'LABELS'
+  }
+})
+  .then((response) => {
+    const { labels } = response;
+    labels.forEach((object) => {
+      const { name, boundingBoxes } = object;
+    });
+  })
+  .catch((err) => console.log({ err }));
+```
+
+画像内の安全でないコンテンツを検出します。
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const { unsafe } = await Predictions.identify({
+  labels: {
+    source: {
+      file
+    },
+    type: 'UNSAFE'
+  }
+})
+```
+
+ラベルと安全でないコンテンツの両方について
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const { labels, unsafe } = await Predictions.identify({
+  labels: {
+    source: {
+      file
+    },
+    type: 'ALL'
+  }
+})
+```

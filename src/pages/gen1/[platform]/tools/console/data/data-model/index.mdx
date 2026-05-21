@@ -1,0 +1,148 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'データモデリング',
+  description: 'Amplify Studioの開始',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## データモデリングの例
+
+<Callout info>
+
+**Studioは、DataStoreの有無に関わらず、すべてのStudio GraphQL APIをサポートするようになりました。[以下で詳細をご覧ください](#datastore-and-graphql)**
+
+</Callout>
+
+この例では、書籍、著者、出版社に関する情報を管理し、関係性と認可ルールを含むブックストアのデータモデルを構築します。以下のスキーマテンプレートは、ブックストアバックエンドの出発点です。
+
+<ExternalLinkButton href="https://sandbox.amplifyapp.com/schema-design/8771638b-a00a-4a1d-af23-26913967cc5f/clone">
+  <img alt="Amplify Studio" src="/images/console/adminui.svg" />
+  <div>
+    <strong>Sandboxでクローン</strong> Book、ISBN、Publisher、Authorという4つのモデルを含むブックストアデータモデルテンプレート
+  </div>
+</ExternalLinkButton>
+
+[関係性](/gen1/[platform]/tools/console/data/relationships/)に進むか、以下を読んでAmplify Studioでのデータモデリングの仕組みを学んでください。
+
+## Amplify Studioでのデータモデリング
+
+Studioのデータモデルデザイナーは、アプリのデータモデル、関係性、および認可ルールを定義する視覚的な方法を提供します。Studioは、作成したデータモデルの`schema.graphql` GraphQL Transformを生成し、これをAmplifyプロジェクトに追加します。GraphQL transformの仕組みについて詳しくは、[GraphQL Transform概要](/gen1/[platform]/tools/cli-legacy/overview/)を参照してください。
+
+![データモデリングページでデータモデルを追加するプロセスのスクリーンレコーディング](/images/console/datamodel.gif)
+
+データモデリングの操作は、sandboxとStudioで同じです。AWSアカウントを使用すると、リアルタイムデータ同期機能を利用でき、また、モデルに認可ルールを設定することもできます。詳細については、[認可](/gen1/[platform]/tools/console/authz/)を参照してください。すべてのデータモデルは、AWS AppSync GraphQL APIおよびAmazon DynamoDBテーブルとしてアカウント内でプロビジョニングされます。Studioの他のすべての機能と同様に、CLIでさらに拡張できます。
+
+## DataStoreとGraphQL
+
+データモデルを保存してデプロイすると、Amplify StudioはAWS AppSyncを使用してGraphQL APIを生成します。デフォルトでは、Studioで構築されたすべてのデータモデルは、DataStoreなしでGraphQL APIとしてプロビジョニングされますが、**StudioはすべてのAmplify GraphQL APIをサポートし、DataStoreの有無を問いません**。
+
+**[DataStore](/gen1/[platform]/build-a-backend/more-features/datastore/set-up-datastore/)**は、GraphQL APIのラッパーで、ローカルのデバイス上のストレージを使用してオフライン使用を処理します。DataStoreは、モバイルアプリまたはWebアプリとデータベース間のデータを自動的に同期し、**競合解決戦略**を使用してデータの競合に対処します。DataStoreは、競合解決方法を選択すると、APIに自動的に追加されます。
+
+### 競合解決の変更の影響
+
+Studio または CLI を介して、GraphQL API の設定をいつでも変更できます。ただし、競合解決をオフにしたり、オンにしたりすることは、**重大な**アプリの変更です。
+
+**更新構文**
+
+競合解決が有効になっている場合、データと相互作用するには、おそらく[DataStore構文](/gen1/[platform]/build-a-backend/more-features/datastore/manipulate-data/)を使用します。ただし、競合解決が無効になっている場合、すべてのデータ相互作用は、代わりに[GraphQL構文](/gen1/[platform]/build-a-backend/graphqlapi/mutate-data/)を使用するように更新する必要があります。
+
+**アクセス不可能なデータ**
+
+GraphQL APIが競合解決を有効にして作成される場合、[複数の隠しフィールド](/gen1/[platform]/build-a-backend/more-features/datastore/how-it-works/#conflict-resolution)が各データモデルに自動的に追加されます。これらのフィールドは、データをクエリおよび変更するために必要で、これらの値が`null`に設定されているレコードがある場合、それらのレコードはアクセス不可能になります。
+
+競合解決が無効になっている場合、これらのフィールドは、レコードが作成または変更されるときに入力されなくなります。[GraphQL構文](/gen1/[platform]/build-a-backend/graphqlapi/mutate-data/)を使用してデータと相互作用している限り、これはアプリに直接的な影響を及ぼしません。ただし、競合解決が後で再度有効にされた場合、**既存のすべてのレコードについて必要なフィールドが設定されるまで、API内の既存データはアクセス不可能になります**。
+
+このような状況を避けるためには、既存のデータを持たないAPIでのみ競合解決の有効化/無効化を行うことをお勧めします。
+
+### GraphQL API設定の変更
+
+Studioを使用して競合解決を有効化/無効化するか、競合解決設定を変更するには、以下の手順を実行してください。
+
+1. **[Amplify Studio](/gen1/[platform]/tools/console/adminui/start/#log-into-the-amplify-console) > Data**に移動します
+2. ページの上部で**GraphQL API settings**を選択します。![データタブのスクリーンショット。GraphQL API settingsリンクを強調](/images/console/conflict-resolution1.png)
+3. 競合解決をオフにするか、オンにするか、競合解決戦略を変更します。![GraphQL API設定のスクリーンショット。競合解決スイッチとオプションのドロップダウンを強調](/images/console/conflict-resolution2.png)
+4. データモデリング画面に戻り、**Save and Deploy**を選択します
+
+Amplify CLIを使用してAPIを設定するには、ターミナルで`amplify configure api`を実行し、プロンプトに従ってください。
+
+## 制限事項
+
+競合解決が無効になっているアプリケーションには、いくつかの軽微な制限があります。
+
+- [Data Manager](/gen1/[platform]/tools/console/data/content-management/)での列によるソートはサポートされていません
+<InlineFilter filters={['javascript', 'react', 'nextjs']}>
+- [Figmaからコードへのコレクション](/gen1/[platform]/build-ui/uibuilder/collections/)は、ページネーションをサポートせず、検索のサポートが限定的です
+- [関係性を持つフォーム](/gen1/[platform]/build-ui/formbuilder/special-inputs/)は、オートコンプリートフィールドの検索時に制限があります
+</InlineFilter>
+
+これらの機能にアクセスするには、DataStoreをオンにして、競合解決戦略を選択してください。
+
+### サポートされていないディレクティブとフィールドレベルのパラメーター
+
+データモデルにサポートされていないディレクティブまたはフィールドレベルのパラメーターが含まれている場合、データモデリングの**ビジュアルエディター**は利用できず、**Data manager**の機能が限定される可能性があります。ただし、他のAmplify Studio機能を引き続き使用して、Amplify CLIを使用してGraphQLスキーマを変更できます。
+
+Studioでサポートされていないディレクティブには、以下が含まれます。
+
+- [`@default`ディレクティブ](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#assign-default-values-for-fields)
+- [`@index`ディレクティブ](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#configure-a-secondary-index)
+- [`@function`ディレクティブ](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#lambda-function-resolver)
+- [`@http`ディレクティブ](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#http-resolver)
+- [`@predictions`ディレクティブ](/gen1/[platform]/build-a-backend/graphqlapi/connect-machine-learning-services/)
+- [`@primaryKey`ディレクティブ](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#configure-a-primary-key)
+- [`@searchable`ディレクティブ](/gen1/[platform]/build-a-backend/graphqlapi/search-and-result-aggregations/)
+- [`@mapsTo`ディレクティブ](/gen1/[platform]/build-a-backend/graphqlapi/schema-evolution/)
+- [`@auth` `groupClaim`プロパティ](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/#user-group-based-data-access)
+- [`@auth` `groupsField`プロパティ](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/#field-level-authorization-rules)
+- [`@auth`カスタム`groupClaim`](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/#configure-custom-identity-and-group-claims)
+- [`@auth`カスタム`identityClaim`](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/#configure-custom-identity-and-group-claims)
+- [`@auth`フィールドレベルルール](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/#field-level-authorization-rules)
+- [OIDCおよびFunctionプロバイダー](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/#using-oidc-authorization-provider)
+- [配列型のOwnerField](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/#multi-user-data-access)
+- [`Query`型](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#create-a-custom-query-or-mutation)
+- [`Mutation`型](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#create-a-custom-query-or-mutation)
+- [`Subscription`型](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#create-a-custom-query-or-mutation)
+
+<Callout>
+
+データモデリングは、hasMany関係の`@index`ディレクティブのみをサポートしています。
+
+</Callout>
+
+### GraphQLファイルの分割
+
+```console
+Your schema file could not be loaded
+The schema.graphql file in your project could not be loaded. This may be because the file was moved, or because you are using a split schema, which is not supported.
+```
+
+このメッセージは、Amplify Studioが`amplify/backend/api/<api-name>/schema/`ディレクトリに`.graphql`ファイルのセットとして保存するなど、GraphQLスキーマの分割をサポートしていないために発生します。例えば、`Query.graphql`、`User.graphql`、および`Post.graphql`があります。問題を解決するには、以下の手順を使用してファイルを結合する必要があります。
+
+1. [Amplifyプロジェクトをプル](/gen1/[platform]/tools/console/adminui/extend-cli/#to-configure-the-amplify-cli-for-use-without-an-aws-account)してローカルディレクトリにします
+2. `amplify/backend/api/`ディレクトリで、`schema.graphql`という名前のファイルを作成します
+3. `amplify/backend/api/<api-name>/schema/`ディレクトリファイルのすべてのコンテンツをコピーして、`schema.graphql`ファイルに貼り付けます
+4. `amplify/backend/api/<api-name>/schema/`ディレクトリを削除します。
+5. `amplify push`を実行します

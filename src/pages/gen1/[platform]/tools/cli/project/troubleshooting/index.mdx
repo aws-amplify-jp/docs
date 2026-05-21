@@ -1,0 +1,328 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'トラブルシューティング',
+  description: 'Amplify CLI プロジェクトの一般的なエラーをトラブルシューティングするための情報。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+このトラブルシューティングガイドは、Amplify CLI を使用して構築されたアプリケーションの開発、デプロイ、および移行中に発生する一般的なエラーを検出および修正するためのガイダンスを開発者に提供します。
+
+## 必読事項
+
+### すべての Amplify CLI プロジェクト向け
+
+デプロイメント の問題をデバッグするために、[Amplify によって生成されたプロジェクトのファイル構造](/gen1/[platform]/tools/cli/reference/files/)と Amplify CLI によって生成されたアーティファクトを理解することが役に立ちます。
+
+1. Amplify CloudFormation アーティファクト: Amplify CLI は [CloudFormation テンプレート](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html)と CLI ウォークスルー中にユーザーが提供する入力パラメータを使用して AWS リソースをプロビジョニングします。Amplify CLI バージョン 7 以上では、一部のカテゴリ (Storage、Auth、API) により、開発者は [Amplify CLI Overrides 機能](/gen1/[platform]/tools/cli/project/override-iam/)を使用して Amplify で生成された AWS リソース構成をオーバーライドできます。
+
+1. Amplify CLI ウォークスルー入力パラメータアーティファクト: CLI ウォークスルー中にユーザーが提供したすべての入力は、`/amplify/backend` フォルダ内の JSON ファイルに保存されます。たとえば、`cli-inputs.json` または `amplify-meta.json`。これらのファイルを使用して、開発者が提供した構成と Amplify で生成された構成の両方を検査して、潜在的な問題の根本原因を特定できます。[Amplify バックエンドファイルドキュメント](/gen1/[platform]/tools/cli/reference/files/#backend-configjson)を参照して、ファイルが手動で編集しても安全かどうかを確認してください。
+
+#### Amplify CLI が `init`、`publish`、`push` の実行時にリクエストするドメイン。
+
+プロキシを介して Amplify CLI を実行する場合は、以下のドメインをホワイトリストに追加してください。
+
+- amazonaws.com
+- amplifyapp.com
+- aws-amplify.github.io
+
+### GraphQL API を備えた Amplify CLI プロジェクト向け
+
+GraphQL API を備えたプロジェクトのデプロイメント の問題をデバッグするために、GraphQL プロジェクトで Amplify によって生成されたさまざまなアーティファクトを理解することが役に立ちます。
+
+1. GraphQL スキーマ VTL 生成: Amplify CLI GraphQL ワークフローは [AWS AppSync サービス](https://docs.aws.amazon.com/appsync/latest/devguide/system-overview-and-architecture.html)を使用して GraphQL API をプロビジョニングします。`amplify api gql-compile` コマンドは開発者が提供した GraphQL スキーマをトランスパイルし、AWS に API をデプロイするために必要なすべてのアーティファクトを生成します。
+   - GraphQL スキーマ内の [@model](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/)、[@function](/gen1/[platform]/tools/cli-legacy/function-directive/)、[@auth](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)、[@searchable](/gen1/[platform]/build-a-backend/graphqlapi/search-and-result-aggregations/) などのディレクティブは CloudFormation を生成し、AWS リソースをプロビジョニングするために使用されます。
+   - クエリ、ミューテーション、またはサブスクリプションの GraphQL リゾルバーは [VTL (Velocity Template Language)](https://docs.aws.amazon.com/appsync/latest/devguide/resolver-mapping-template-reference-programming-guide.html) ファイルに変換されます。AWS AppSync は VTL を使用して、クライアントからの GraphQL リクエストをデータソースへのリクエストに変換します。
+1. GraphQL スキーマクライアント側コード生成: Amplify CLI GraphQL ワークフローにより、開発者は `amplify codegen` コマンドを使用して Web とモバイルクライアント用のクライアント側コードを生成できます。クライアント側のコード生成の問題をデバッグする前に、[Amplify コード生成ドキュメント](/gen1/[platform]/build-a-backend/graphqlapi/client-code-generation/)を参照してください。
+
+## 「amplify push」 エラーのトラブルシューティング
+
+<Callout>
+
+**エラー:**
+
+「An error occurred during the push operation」
+
+</Callout>
+
+[`amplify push`](/gen1/[platform]/tools/cli/start/key-workflows/#amplify-push) コマンドは以下のステップを実行します:
+
+1. リソースを AWS にデプロイするための CloudFormation を生成します。
+1. アプリケーションに GraphQL API が含まれている場合、CLI は内部で `amplify api gql-compile` を実行してスキーマをコンパイルし、マッピングリゾルバーと AWS リソースを割り当てるための CloudFormation テンプレートの VTL (Velocity Templates) を生成します。
+1. デプロイメントアーティファクトをビルド、パッケージ化し、アプリケーションのデプロイメントバケットにアップロードします。
+1. AWS CloudFormation SDK を使用して CloudFormation スタックを AWS アカウントにデプロイします。
+1. リソースを AWS に正常にデプロイした場合、Amplify CLI はデプロイメントバケット内のデプロイメントパッケージの名前を `#current-cloud-backend.zip` に変更します。このファイルはデプロイメントの信頼できる情報源です。
+1. ローカルプロジェクトが削除または破損した場合は、[`amplify pull`](/gen1/[platform]/tools/cli/start/key-workflows/#amplify-pull) を使用して常に最後の正常なデプロイメントに戻すことができます。
+
+** これは Amplify デプロイメントバケット内の重要なファイルとフォルダを示しています **
+
+| 名前 | 種類 | 目的 |
+| --- | --- | --- |
+| #current-cloud-backend.zip | zip ファイル | Amplify プロジェクトの信頼できる情報源。 |
+| amplify-appsync-files/ | フォルダ | GraphQL API デプロイメントアーティファクト (VTL リゾルバー、CloudFormation) |
+| amplify-cfn-templates/ | フォルダ | Amplify によって各リソースカテゴリに対して生成された CloudFormation テンプレート |
+| amplify-meta.json | ファイル | CLI コアおよびプラグインによって使用され、内部情報をログに記録し、相互通信を行うために使用されます |
+| backend-config.json | ファイル | プロジェクトのバックエンドが AWS リソースに接続する方法に関する構成 |
+| hooks/ | フォルダ | ユーザーが提供した Amplify hooks スクリプト |
+| root-cloudformation-stack.json | ファイル | アプリケーションのネストされたスタック用の親 CloudFormation テンプレート |
+
+** 以下のセクションでは、異なるタイプの「amplify push」エラーの例と推奨される解決策を含めています **
+
+### クラウドリソースへの非管理変更によるプッシュエラー - ドリフト
+
+<Callout warning>
+
+**警告:** Amplify CLI を使用してアプリケーションをクラウドにデプロイした後、DynamoDB テーブル、Cognito ロール、IAM ポリシーなどのクラウドリソースを Amplify CLI または Amplify Studio 外で更新してはいけません。
+
+</Callout>
+
+AWS コンソールを使用する場合など、Amplify の外部から Amplify で生成されたリソースへの変更は「非管理変更」と呼ばれます。Amplify CLI は、Amplify で生成された CloudFormation スタックの外部で行われた変更を追跡できません。CloudFormation での予期された資源の構成と実際のサービス構成間のこの相違は「CloudFormation ドリフト」と呼ばれます。現在、CloudFormation ドリフトを自動的に逆転させる方法はありません。各リソースは AWS コンソール経由で CloudFormation スタック内のドリフトについて検査され、ドリフトを手動で解決する必要があります。
+
+デプロイ時、Amplify で生成された CloudFormation テンプレートは AppSync GraphQL API と複数の DynamoDB テーブルを GSI とともにプロビジョニングします。
+
+#### シナリオ 1: コンソールから DynamoDB テーブルと GSI を手動で更新した後、「amplify push」が失敗する。
+
+GraphQL スキーマがクラウドにデプロイされているアプリケーションがあると想定します。Amplify は GraphQL スキーマ内のすべての [@model](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/) 型に対して DynamoDB テーブルを作成し、すべての [@index](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/) フィールドに対して GSI を作成します。Amplify CLI を使用する代わりに DynamoDB コンソール を使用して GSI を削除する場合、「ドリフト」が導入されます。ドリフトが存在すると、GraphQL スキーマへの今後の変更はデプロイに失敗する可能性があります。たとえば、GraphQL スキーマ内の一部の `@model` 型と `@index` フィールドの名前を変更して `amplify push --allow-destructive-graphql-schema-updates` コマンドを実行する場合、Amplify は最初に元のモデル名に対応するすべての DynamoDB テーブルを削除します。ただし、これらのテーブルの GSI がすでにコンソールから手動で削除されている場合、デプロイメントは失敗します。これは、Amplify の CloudFormation スタックが存在しないリソース (GSI) の状態を更新しようとしているためです。
+
+**推奨される解決策:** DynamoDB テーブルのドリフトによるデプロイメント エラーを修正するには、ドリフトしたリソースの状態を CloudFormation の状態と一致するように手動でロールバックします。その後、`amplify push` を再試行します。
+
+1. [AWS ドリフト検出ドキュメント](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/detect-drift-stack.html)の指示に従って、DynamoDB CloudFormation スタック内のドリフトを表示できます。
+1. AWS コンソール経由で各ドリフトを手動で戻します。この特定のシナリオでは、GSI を再作成し、手動で名前変更の変更を元に戻します。
+1. `amplify push` を実行します。
+
+#### シナリオ 2: クラウド内の非データベースリソースへの非管理更新後、「amplify push」が失敗する。
+
+Amplify CLI を使用してクラウドにデプロイされた GraphQL スキーマを持つアプリケーションがあると想定します。その後、以下のタイプの変更を 1 つ以上実行しました
+
+1. AppSync コンソールを使用して GraphQL スキーマを更新した、または
+2. Cognito コンソールから Amplify によって作成されたユーザープールを削除した、または
+3. 元々 Amplify を通じてデプロイされた Lambda 関数のコードを更新しました。これらのタイプの非管理変更は、影響を受けるリソースのドリフトを導入します。したがって、Amplify を使用したこれらのリソースへの後続の更新はほぼ確実にデプロイメント失敗につながります。
+
+**推奨される解決策:** これらのタイプのドリフトはケースバイケースで対処する必要があります。Lambda コード変更などの場合によっては、コードへの軽微な変更を行って関数の再デプロイメントを強制することが機能する可能性があります。ユーザープールの削除や AppSync コンソールから GraphQL スキーマへの更新などの他の場合は、以下の手順に従います:
+
+1. 新しい CloudFormation スタックデプロイメントを強制する - `amplify push --force` を実行してアプリケーションのリソースをプッシュを強制します。
+1. CloudFormation コンソールから CloudFormation スタックのプッシュを強制する - アプリケーションのデプロイメントバケット内の「amplify-cfn-templates」フォルダから CloudFormation スタックを取得し、[(AWS CloudFormation - スタック更新ドキュメント)](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-direct.html)に記載されている CloudFormation コンソール経由でスタックをセレクティブに更新します。
+1. ドリフト変更をコードに適用する - 上記の方法が失敗した場合、もう 1 つのオプションは手動変更を検査し、CLI 入力ファイルで更新することです。たとえば、GraphQL スキーマを更新してクラウド内で手動で実行した同じ変更を反映させ、`amplify push` を実行できます。
+
+### マルチアカウントマルチ環境プロジェクトでのプッシュエラー (CI/CD エラー)
+
+<Callout>
+
+**エラー:**
+
+「There was an error initializing your environment.」 「!!! Build failed」 「!!! Non-Zero Exit Code detected」
+
+</Callout>
+
+マルチアカウントプロジェクトで CI/CD を使用する場合、アプリケーションは 1 つのアカウントで正常にデプロイされたにもかかわらず、別のアカウントではデプロイメント が失敗しています。以下は一般的な原因です:
+
+1. Amplify で生成された CloudFormation で参照されている一部のリソースが失敗したアカウントから欠落しています。
+1. 失敗したアカウントが CloudFormation で使用されている特定のリソースにアクセスするためのアクセス許可がありません。
+1. アプリケーションコードが失敗した環境で正しく作成またはコピーされていない「シークレット」に依存しています。
+
+#### シナリオ 1: 「amplify push」が 1 つのアカウント/環境で失敗する
+
+「dev」アカウントでプロジェクトを作成し、デプロイメント 環境を dev、beta、prod 環境を備えた完全な CI/CD パイプラインに拡張したと想定します。プロジェクトはおそらく [Amplify CLI チーム環境ガイド](/gen1/[platform]/tools/cli/teams/#setting-up-prod-and-dev-environments)で指定されたパターンに従います。すべてのステップが完了すると、Amplify ホスティングコンソールは「beta」などの環境の「build」ステップを失敗と表示し、他の環境を正常にデプロイされたものとして表示しています。
+
+**推奨される解決策:** Amplify CLI を使用して失敗したアカウントにアプリケーションをデプロイします。上記の場合、dev 環境は正常にデプロイされていますが、beta 環境は失敗しています。まず、dev 環境から App ID を取得します。Amplify コンソールでアプリケーションの dev 環境の「Edit backend」セクションで App ID を見つけることができます。以下のステップを実行して、dev 環境からアプリを取得し、beta 環境にデプロイします。
+
+1. `amplify pull --appId <YOUR_APP_ID> --envName dev`
+1. `amplify env checkout beta`
+1. `amplify push`
+
+`amplify push` が失敗する場合、CloudFormation イベントログで失敗したリソースを確認して、失敗した環境の問題を修正するための詳細情報を取得します。AWS CloudFormation コンソールでアプリケーションのスタック名を検索します。たとえば、アプリケーションに「lil」という名前を付けて「dev」環境にデプロイした場合、Amplify は `amplify-lil-dev-{random chars}` という名前の CloudFormation スタックを生成します。CloudFormation コンソールでアプリケーションのスタック名をクリックしてから、「Resources」タブをクリックします。「Resources」タブはスタック内のすべてのリソースのデプロイメント ステータスを表示します。デプロイメント エラー理由も表示されます。[CloudFormation トラブルシューティングドキュメント](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html#basic-ts-guide)を参照してエラーメッセージの詳細を確認してください。
+
+**注:** シークレットが環境間で正しくコピーされていないことに関連する問題をデバッグするには、[アクセスシークレット値](/gen1/[platform]/build-a-backend/functions/secrets/)ドキュメントの [マルチ環境フロー](/gen1/[platform]/build-a-backend/functions/secrets/#multi-environment-flows)セクションを参照してください。
+
+![リソースのデプロイメント エラーの CloudFormation ステータスログ](/images/ts-guide-cfn-error.png)
+
+### AWS サービスクォータを超過することによるプッシュエラー
+
+<Callout information>
+
+**エラー:**
+
+「Limit on the number of resources in a single stack operation exceeded」 「Cannot exceed quota for PoliciesPerRole」
+
+</Callout>
+
+AWS は様々な AWS サービスの [サービスクォータ](https://docs.aws.amazon.com/general/latest/gr/aws-service-information.html)を管理しています。アプリケーションに多くのリソース (多くのリゾルバーを持つ大規模な GraphQL スキーマまたは多くの REST API など) が含まれている場合、サービス制限に達する可能性があります。[AWS Service レベルのクォータ](https://docs.aws.amazon.com/general/latest/gr/aws-service-information.html)を超えることがデプロイメント エラーを引き起こしたかどうかを特定するには、CloudFormation デプロイメント/失敗ログについて AWS コンソールを確認してください。
+
+**推奨される解決策:**
+
+1. アプリケーションのリソース要件が AWS サービスクォータによって影響を受ける場合は、[AWS Service Quotas コンソール](https://console.aws.amazon.com/servicequotas)を使用してほとんどの AWS クォータの表示とリクエスト増加を実行できます。
+1. Amplify DataStore を使用している場合は、[Amplify DataStore ベストプラクティス](https://docs.aws.amazon.com/whitepapers/latest/amplify-datastore-implementation/amplify-datastore-best-practices.html)を参照して、正しい設計判定を行い、アプリケーション内のリソース割り当てを最適化するための洞察を確認してください。
+1. サービスクォータを増加できない場合は、サーバーレス環境で持続可能なスケーリングのためにアプリケーションの一部の側面を再設計する必要があります。[AWS Knowledge Center](https://aws.amazon.com/premiumsupport/knowledge-center/)を参照することで、異なる推奨設計変更の理解に役立つ可能性があります。たとえば、複雑な GraphQL スキーマを簡略化して使用中の GraphQL リソース数を減らすことができます。例:スキーマを書き直してモデルを減らす。[overrides](/gen1/[platform]/tools/cli/#extensibility) および [export](/gen1/[platform]/tools/cli/usage/export-to-cdk/) などのエスケープハッチを使用することで、CLI によって生成されたアーキテクチャを超えてアプリケーションをスケーリングするのに役立つ可能性があります。
+
+#### シナリオ 1: ポリシー数を削減するための REST API スキーマの最適化:
+
+Amplify CLI を使用して多くのルートを持つ REST API をデプロイし、すべてのルートを処理する 1 つの Lambda 関数を持つと想定します。この場合、Amplify CLI はルートごとに 1 つのポリシーを生成し、Lambda 実行ロールに適用します。したがってこの構成では、許可されるルートの最大数は [AWS IAM 制限](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_iam-limits.html)の「Max policies per role」制限によって制限されます。次のテーブルはこのような構成のルートに関連するポリシーの分布を示しています。 **注:** 「Resource」は [API Gateway resource](https://docs.aws.amazon.com/apigateway/api-reference/resource/resource/)「Route」を処理するために割り当てられた項目を表します。
+
+| Resources | Policies | Role | Handler |
+| --- | --- | --- | --- |
+| /items/rock | amplify generated policy1 |  |  |
+| /items/paper | amplify generated policy2 | Lambda Execution Role | Lambda function |
+| /items/scissors | amplify generated policy3 |  |  |
+
+ただし、アプリケーションに多くのルートがある場合、生成されるポリシー数を減らす 1 つの方法は、単一のルートリソースを作成し、追加のパスをクエリパラメータとしてサポートすることです: `/items?item=rock, /items?item=paper, /items?item=scissors` この場合、Amplify CLI は /items リソースに対して 1 つのポリシーのみを作成します。
+
+| Resources | Policies | Role | Handler |
+| --- | --- | --- | --- |
+| /items | amplify generated policy1 | Lambda Execution Role | Lambda function |
+
+### GraphQL スキーマ構文エラーによるプッシュエラー
+
+<Callout>
+
+**エラー:**
+
+「Schema validation failed」、「Unknown directive」
+
+</Callout>
+GraphQL スキーマを変更した後は、`amplify api gql-compile` を実行してスキーマが有効であり、Amplify が GraphQL スキーマから正しい CloudFormation テンプレートを生成できることを確認してください。[Amplify CLI GraphQL ドキュメント](/gen1/[platform]/build-a-backend/graphqlapi/)を参照して、最新の Amplify GraphQL ディレクティブを理解してください。
+
+#### シナリオ 1: GraphQL スキーマエラー
+
+GraphQL スキーマに「@model」ディレクティブが「@mode」と誤って綴られているエラーがあると想定します:
+
+```graphql
+type Tag @mode { /** @mode is an invalid directive **/
+  id : ID!
+  tag: String
+  topics: [Topic]
+}
+```
+
+`amplify api gql-compile` を実行するとき、変換ステップは無効なディレクティブエラーで失敗します。
+
+![Amplify GraphQL スキーマ検証エラー](/images/ts-guide-gql-schema-validation-error.png)
+
+### GraphQL スキーマ関連のその他のエラーのトラブルシューティング
+
+`amplify push` が以下のシナリオのいずれかをデプロイ中に失敗する場合は、[Amplify GraphQL トラブルシューティングガイド](/gen1/[platform]/build-a-backend/graphqlapi/troubleshooting/)を参照してください。
+
+1. [単一の `amplify push` で複数のインデックス変更をデプロイ](/gen1/[platform]/build-a-backend/graphqlapi/troubleshooting/#deploying-multiple-index-changes-at-once)
+1. [DynamoDB テーブルから OpenSearch インデックスをバックフィル](/gen1/[platform]/build-a-backend/graphqlapi/troubleshooting/#deploying-multiple-index-changes-at-once)
+1. [複数のソートキーフィールドを持つインデックス](/gen1/[platform]/build-a-backend/graphqlapi/troubleshooting/#index-with-multiple-sort-key-fields)
+
+## 「amplify pull」 エラーのトラブルシューティング
+
+### 大量の UI コンポーネントによるプルエラー
+
+<Callout information>
+
+**エラー:**
+
+「⠋ Generating UI components...🛑 Codegen job never succeeded before timeout」 「✖ Failed to sync UI components」
+
+</Callout>
+
+v12.2.0 以降、Amplify CLI は `amplify pull` 中の UI コンポーネント生成に対応可能なタイムアウトを導入しました。デフォルトではこのタイムアウトは 2 分に設定されていますが、`UI_BUILDER_CODEGENJOB_TIMEOUT` 環境変数を使用してタイムアウトを増加できます。
+
+例えば、タイムアウトを 5 分 (300000ms) に増加したい場合
+
+```bash
+export UI_BUILDER_CODEGENJOB_TIMEOUT=300000
+amplify pull
+```
+
+## 「Failed to get profile credentials」のトラブルシューティング
+
+AWS IAM Identity Center (以前の AWS SSO) を使用していて、以下のエラーが表示される場合、[`credential_process` ワークアラウンド](/gen1/[platform]/start/getting-started/installation/#manually-configure-the-amplify-cli)が不足している可能性があります
+
+```console
+🛑 Failed to get profile credentials
+Cannot read properties of undefined (reading 'accessKeyId')
+
+Learn more at: https://docs.amplify.aws/cli/project/troubleshooting/
+```
+
+### 「Unexpected token A in JSON at position 0」
+
+AWS IAM Identity Center (以前の AWS SSO) を使用していてこのエラーが表示される場合、このエラーは Amplify CLI ワークフロー内で AWS プロファイルのプロンプトが表示されたときに `sso-session` エントリを選択することによって引き起こされる可能性があります。これが発生した場合、以前のコマンドを再実行し、関連する SSO プロファイルを選択します。
+
+## デプロイメント ベストプラクティス
+
+このセクションでは、開発者が Amplify プロジェクトのデプロイメント エラーとスケーリング問題を回避するのに役立つ様々なベストプラクティスについて説明しています。
+
+### Amplify CLI デフォルト動作のオーバーライド
+
+アプリケーションへの変更は Amplify CLI と関連する構成ファイル経由、または Amplify Studio 経由でのみ実行する必要があります。明確に記載されている場合を除き、AWS コンソールまたは AWS CLI/SDK を使用してリソースを直接手動で編集してはいけません。Amplify CLI コマンド内で利用可能なカスタマイズを超えて Amplify で生成されたリソースをオーバーライドするには、[Amplify 拡張性ドキュメント](/gen1/[platform]/tools/cli/#extensibility)の指示に従う必要があります。このドキュメントは Amplify CLI で利用可能なすべての「エスケープハッチ」について詳しく説明しています。
+
+### GraphQL スキーマ内のモデル名変更の影響の理解
+
+<Callout>
+
+**エラー:**
+
+「An error occurred during the push operation: Removing a model from the GraphQL schema will also remove the underlying DynamoDB table」 「ALL EXISTING DATA IN THESE TABLES WILL BE LOST!」
+
+</Callout>
+
+Amplify は GraphQL スキーマで @model ディレクティブで注釈が付けられた GraphQL 型に対して DynamoDB データベーステーブルを自動的に作成します。したがって、GraphQL スキーマ内のモデルの名前を変更する場合、アプリケーションデータの誤削除から保護するために、Amplify CLI は後続の `amplify push` 操作をブロックし、`--allow-destructive-graphql-schema-updates` フラグを明示的に渡すように促します。このフラグは、DynamoDB テーブルの削除など、データベースへの破壊的な変更を行う Amplify CLI の機能を許可します。これは元のモデル名用のテーブルを削除し、スキーマで指定された新しいモデル名のテーブルを新規作成します。Amplify は現在、自動データ移行をサポートしていません。元のテーブルのデータが必要な場合は、DynamoDB テーブルをバックアップし、新しいテーブルの破壊的なデプロイメント後にデータを移行する必要があります。
+
+![Amplify GraphQL モデル削除警告](/images/ts-guide-model-deletion-warning.png)
+
+### GraphQL トランスフォーマー V1 から V2 への移行
+
+GraphQL トランスフォーマー V1 を使用してアプリケーションを以前にデプロイし、GraphQL トランスフォーマー V2 への移行を決定した場合は、更新する前に、[GraphQL トランスフォーマー移行ドキュメント](/gen1/[platform]/tools/cli/migration/transformer-migration/#changes-that-amplify-cli-will-auto-migrate-for-you)を参照してスキーマディレクティブと制限への移行の影響を理解してください。`amplify status` コマンドを使用してGraphQL トランスフォーマーのバージョンを確認できます。また、`${project-root}/amplify/cli.json` 内の `transformerversion` 機能フラグを検査して確認することもできます。
+
+### バージョン 11: AWS CDK V1 から V2 への移行
+
+Amplify CLI バージョン 11.0.0 より前にデプロイされたかつ、overrides またはカスタムリソースを使用する Amplify プロジェクトの場合は、[AWS CDK 移行ドキュメント](/gen1/[platform]/tools/cli/migration/aws-cdk-migration/)を参照してください。問題が解決しない場合は、[issue を作成してください](https://github.com/aws-amplify/amplify-cli/issues/new?assignees=&labels=pending-triage&template=1.bug_report.yaml)
+
+[CDK v2 への移行の詳細を確認してください](https://docs.aws.amazon.com/cdk/v2/guide/migrating-v2.html)
+
+<InlineFilter filters={["javascript", "react-native", "angular", "nextjs", "react", "vue"]}>
+
+### ローカルテスト
+
+デプロイメント 前に、スキーマ変更とビジネスロジックができるだけ多くテストしてください。`amplify mock` コマンドを使用すると、クラウド依存関係をローカルで検証できます。[Advanced workflows ドキュメント](/gen1/[platform]/tools/cli/usage/mock/)の mock テスト例に従ってさらに詳しく確認してください。
+
+</InlineFilter>
+
+## さらに詳しく知る
+
+| Amplify CLI トラブルシューティングガイド | 説明 |
+| --- | --- |
+| [Amplify CLI GraphQL トラブルシューティング](/gen1/[platform]/build-a-backend/graphqlapi/troubleshooting/) | Amplify CLI を通じて GraphQL スキーマをデプロイ するときに発生する問題のトラブルシューティングと修正 |
+| [Amplify Console カスタムドメイン トラブルシューティング](https://docs.aws.amazon.com/amplify/latest/userguide/custom-domain-troubleshoot-guide.html) | Amplify Console からアプリにカスタムドメインを追加するときに発生する問題のトラブルシューティングと修正 |
+| [IAM トラブルシューティング](https://docs.aws.amazon.com/amplify/latest/userguide/security_iam_troubleshoot.html) | Amplify と IAM で作業するときに発生する一般的な問題のトラブルシューティングと修正 |
+| [Amplify CLI 拡張性](/gen1/[platform]/tools/cli/#extensibility) | Amplify CLI によって提供されるさまざまなエスケープハッチについて、アプリケーションを拡張し、デフォルト動作をオーバーライドするために学びます |
+| [Amplify DataStore ベストプラクティス](https://docs.aws.amazon.com/whitepapers/latest/amplify-datastore-implementation/amplify-datastore-best-practices.html) | Amplify DataStore を使用して「Offline First」アプリケーションを構築するためのベストプラクティスについて学びます |
+| [AWS Knowledge Center](https://aws.amazon.com/premiumsupport/knowledge-center/) | AWS サービスの最も頻繁な質問とリクエストについて学びます |
+| [AWS CloudFormation ドリフト](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-stack-drift.html) | CloudFormation ドリフトの検出と表示 |
+
+## サポートに連絡する
+
+GitHub で同様の問題を検索するか、新しい issue を開きます
+
+- [amplify-cli issues](https://github.com/aws-amplify/amplify-cli/issues)
+- [amplify-codegen issues](https://github.com/aws-amplify/amplify-codegen/issues)
+
+[AWS Enterprise support](https://aws.amazon.com/premiumsupport/) と連絡を取ります
+
+[コミュニティ Discord チャネル](https://discord.com/invite/amplify)に参加します

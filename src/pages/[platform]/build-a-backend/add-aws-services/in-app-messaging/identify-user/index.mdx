@@ -1,0 +1,85 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ユーザーを識別する',
+  description: 'In-App Messagingキャンペーンを特定のユーザーサブセットにセグメント化してターゲット設定する方法を学習します。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ],
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+In-App Messagingの可能性を最大限に活用するには、In-App Messagingキャンペーンを特定のユーザーサブセットにセグメント化してターゲット設定する必要があります。デバイスのデモグラフィクス、場所、選択した属性など、追加情報を使用してユーザーを識別することで、適切なユーザーに対してインテリジェントでターゲット化されたアプリ内メッセージを表示できます。
+
+```js title="src/index.js"
+import { identifyUser } from 'aws-amplify/in-app-messaging';
+
+await identifyUser({
+  userId: '', // E.g. user-id
+  userProfile: {
+    email: '', // E.g. example@service.com
+    name: '', // E.g. name-of-the-user
+    plan: '' // E.g. plan-they-subscribe-to
+    customProperties: {
+      // E.g. hobbies: ['cooking', 'knitting'],
+    },
+    demographic: {
+      appVersion: '',
+      locale: '', // E.g. en_US
+      make: '', // E.g. Apple
+      model: '', // E.g. iPhone
+      modelVersion: '', // E.g. 13
+      platform: '', // E.g. iOS
+      platformVersion: '', // E.g. 15
+      timezone: '' // E.g. Americas/Los_Angeles
+    },
+    location: {
+      city: '', // E.g. Seattle
+      country: '', // E.g. US,
+      postalCode: '', // E.g. 98121
+      region: '', // E.g. WA
+      latitude: 0.0,
+      longitude: 0.0
+    },
+    metrics: {
+      // E.g. logins: 157
+    },
+  },
+});
+```
+
+## Amazon Pinpointでユーザーを識別する
+
+Amazon Pinpointで`identifyUser`を使用する場合、他のユーザー情報プロパティに加えて、`options`の下に`address`、`optOut`、および`userAttributes`プロパティを設定できます。
+
+```js title="src/index.js"
+import { identifyUser } from 'aws-amplify/in-app-messaging';
+
+await identifyUser({
+  userId: '', // E.g. user-id
+  options: {
+    address: '' // E.g. A device token or email address
+    optOut: ''  // Either ALL or NONE
+    userAttributes: {
+      // E.g. interests: ['soccer', 'shoes'],
+    }
+  },
+});
+```

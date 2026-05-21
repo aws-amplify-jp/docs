@@ -1,0 +1,61 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'メッセージの表示',
+  description: 'In-App Messagingまたは分析イベントが送信され、アクティブなIn-App Messagingキャンペーンで設定された条件と一致した場合に、アプリ内メッセージがどのように表示されるかについて学習します。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ],
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+In-App Messagingまたは分析イベントが送信され、アクティブなIn-App Messagingキャンペーンで定義された条件と一致した場合、アプリ内メッセージが表示されます。
+
+## 分析イベント
+
+メッセージがユーザーのデバイスに同期されたため、Amplify In-App Messagingを使用すると、追加の統合ステップなしでAmplify Analyticsイベントを使用してメッセージを表示できます。Analytics の `record` APIを使用して記録しているまたはすでに記録されているイベントは、自動的にIn-App Messagingによって処理されます。イベントがアプリ内メッセージで定義された属性と条件に一致する場合、そのメッセージが表示されます。
+
+```js title="src/index.js"
+import { record } from 'aws-amplify/analytics';
+
+record({
+  name: 'first_event',
+  attributes: { color: 'red' },
+  metrics: { quantity: 10 }
+});
+```
+
+イベント名、属性、およびメトリクスが、In-App Messagingキャンペーンの1つで設定されたものと一致する場合、アプリ内メッセージがアプリに表示されます。
+
+## In-App Messagingイベント
+
+Amplify Analyticsイベントに加えて、またはその代わりに、In-App Messagingイベントをディスパッチして、プログラムでアプリ内メッセージの表示をトリガーできます。
+
+```js title="src/index.js"
+import { dispatchEvent } from 'aws-amplify/in-app-messaging';
+
+dispatchEvent({
+  name: 'first_event',
+  attributes: { color: 'red' },
+  metrics: { quantity: 10 }
+});
+```
+
+イベント名、属性、およびメトリクスが、In-App Messagingキャンペーンの1つで設定されたものと一致する場合、アプリ内メッセージがアプリに表示されます。

@@ -1,0 +1,208 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'Amplify生成ロールのIAMアクセス権限の境界',
+  description: 'Amplify CLIで作成されたすべてのIAMロールにアクセス権限の境界を適用します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify CLIで作成されたIAMロールに付与できる最大アクセス権限を設定するには、プロジェクトの[アクセス権限の境界](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)を構成します。その後、Amplifyが生成したIAMロールは、ロールのポリシーとアクセス権限の境界の両方で許可されたアクションのみを実行できます。環境ごとに異なるアクセス権限の境界を構成できます。たとえば、これにより、dev環境がprod環境のリソースへのすべてのアクセスを拒否できるようになります。
+
+IAMアクセス権限の境界は、Amplifyで作成されたすべてのIAMロールに適用されます。これには、アプリにログインするユーザーが引き受ける「authロール」とゲストユーザーが引き受ける「unauthロール」が含まれます。また、Lambda実行ロール、Cognitoユーザーグループロール、および[カスタムリソーススタック](/gen1/[platform]/tools/cli/custom/cloudformation/)で構成されたロールにも適用されます。
+
+アクセス権限の境界として使用するIAMポリシーは、Amplify CLIの外部で構成する必要があります。アクセス権限の境界はIAMポリシーであり、[このガイド](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_create-console.html)に従って作成できます。これは通常、AWSOrganizationルールまたは他の企業ガバナンス要件の一部です。アクセス権限の境界として使用するIAMポリシーを作成したら、次のステップのためにIAMポリシーARNをコピーします。
+
+## 新しいプロジェクトでアクセス権限の境界を設定する
+
+アクセス権限の境界を使用してプロジェクトを初期化するには、以下を実行します。
+
+```
+amplify init --permissions-boundary <iam-policy-arn>
+```
+
+## 新しい環境でアクセス権限の境界を設定する
+
+`amplify env add`を使用して新しいAmplify環境を作成する場合、現在の環境のアクセス権限の境界が新しい環境に自動的に適用されます。
+
+新しい環境に異なるアクセス権限の境界を指定するには、以下を実行します。
+
+```
+amplify env add --permissions-boundary <iam-policy-arn>
+```
+
+新しい環境にアクセス権限の境界がないことを明示的に指定するには、以下を実行します。
+
+```
+amplify env add --permissions-boundary ''
+```
+
+Amplify CLIがアクセス権限の境界を新しい環境に自動的に適用できず、`--permissions-boundary`が指定されていない場合、IAMポリシーARNをアクセス権限の境界として入力するよう促されます。
+
+## 環境のアクセス権限の境界を更新する
+
+現在の環境のアクセス権限の境界を変更するには、以下を実行します。
+
+```
+amplify env update
+```
+
+対話型ではないシェルでは、以下を使用します。
+
+```
+amplify env update --permissions-boundary <iam-policy-arn>
+```
+
+IAMアクセス権限の境界は、次の`amplify push`で適用されます。
+
+## クロスアカウントAmplifyプロジェクトでアクセス権限の境界を設定する
+
+`amplify env add`中に`--yes`フラグが使用されている場合、Amplify CLIは既存の境界を異なるAWSアカウント内の新しい環境に自動的に適用することはできません。この場合、`amplify env add --yes --permissions-boundary <iam-policy-arn>`を使用して新しいアクセス権限の境界を指定するか、新しい環境からアクセス権限の境界を明示的に削除するには`amplify env add --yes --permissions-boundary ''`を使用する必要があります。
+
+## アクセス権限の境界の使用例
+
+たとえば、`dev`という環境が`users`という名前のDynamoDBテーブルを呼び出すことが許可されていないとします。このルールを強制するには、次のポリシーを使用して、`dev`環境のアクセス権限の境界を設定できます。
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "VisualEditor0",
+      "Effect": "Deny",
+      "Action": "dynamodb:Scan",
+      "Resource": "arn:aws:dynamodb:<region>:<account-id>:table/users"
+    }
+  ]
+}
+```
+
+### セットアップ
+
+[AWSコンソールでポリシーを作成する](https://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_managed-policies.html)
+
+新しい環境にアクセス権限の境界を追加するには、以下を実行します。
+
+```
+amplify env add --permissions-boundary <iam-policy-arn>
+```
+
+Amplify CLIで作成された`authRole`と`unauthRole`のAWSIAMコンソールを確認することで、アクセス権限の境界が適用されていることを確認できます。
+
+DynamoDBテーブルを追加するには、以下を実行します。
+
+```
+amplify add storage
+```
+
+```
+? Please select from one of the below mentioned services:
+  Content (Images, audio, video, etc.)
+> NoSQL Database
+? Please provide table name:
+> users
+```
+
+環境がアクセス権限の境界を強制しているかどうかをテストするために、DynamoDBテーブルへのリソースアクセス権限を持つLambda関数を使用できます。
+
+Lambda関数を追加するには、以下を実行します。
+
+```
+amplify add function
+```
+
+```
+? Select which capability you want to add: Lambda function (serverless function)
+? Provide an AWS Lambda function name: lambdafunction
+? Choose the runtime that you want to use: NodeJS
+? Choose the function template that you want to use: Hello World
+? Do you want to configure advanced settings? Yes
+? Do you want to access other resources in this project from your Lambda function? Yes
+? Select the categories you want this function to have access to. storage
+? Select the operations you want to permit on users read
+```
+
+Lambda関数の`index.js`ファイルに以下を追加します。
+
+<BlockSwitcher>
+
+<Block name="AWS SDK V2">
+
+```js
+const AWS = require('aws-sdk');
+const docClient = new AWS.DynamoDB.DocumentClient();
+
+const params = {
+  TableName: process.env.STORAGE_USERS_NAME
+};
+
+exports.handler = async (event, context) => {
+  try {
+    const data = await docClient.scan(params).promise();
+    return { body: JSON.stringify(data) };
+  } catch (err) {
+    return { error: err };
+  }
+};
+```
+</Block>
+
+<Block name="AWS SDK V3">
+
+```js
+import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
+const docClient = new DynamoDBClient();
+
+const params = {
+  TableName: process.env.STORAGE_USERS_NAME,
+};
+
+export const handler = async (event, context) => {
+  try {
+    const data = new ScanCommand(params);
+    const response = await docClient.send(data);
+    return { body: JSON.stringify(response) };
+  } catch (err) {
+    return { error: err };
+  }
+};
+```
+
+</Block>
+
+</BlockSwitcher>
+
+リソースをプッシュするには、以下を実行します。
+
+```
+amplify push
+```
+
+プッシュが完了したら、AWSコンソールでLambda関数を実行します。実行結果に次のエラーメッセージが表示されます。
+
+```
+User: <assumed-role-arn> is not authorized to perform: dynamodb:Scan on resource: <dynamodb-arn> with an explicit deny in a permissions boundary
+```

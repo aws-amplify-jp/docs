@@ -1,0 +1,47 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'UIをデータにバインドする',
+  description: 'FigmaからReactコードへ Amplify Studioを使用',
+  platforms: [
+    'javascript',
+    'nextjs',
+    'react'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Studioではユーザーインターフェース要素を実際のバックエンドデータにバインドすることができます。コンポーネントにプロパティを追加し、その後、子UIエレメントでそのプロパティを参照します。開始するには、まず[Amplify Studioにログイン](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)してから、**UI Library**の**Configure**ボタンを選択してUIコンポーネントに移動します。この例では、_CardB_コンポーネントを使用します。
+
+## コンポーネントプロパティを追加する
+
+プロパティを追加するには、**Add prop**を選択してプロパティの名前を設定します。この例では、`Home`型の新しいプロパティ`home`を作成します。
+
+## 子プロパティ値を設定する
+
+`$99 USD`テキスト要素などの子要素を選択し、**Set prop**を選択します。ここでは、その子要素のすべての利用可能なプロパティを設定できます。テキスト要素の`label`を設定して、値を`Price: $`に設定し、キーボードで_Command + Enter_（または_Ctrl + Enter_）を選択して、`home.price`などの別の値を連結します。
+
+![UIがデータにバインドされたスクリーンショット](/images/studio/data-binding.png)
+
+住所のテキスト要素の`label`を`home.address`にバインドし、画像の`src`を`home.image_url`にバインドします。
+
+Studioを通じて従来のHTMLプロパティも設定できます。たとえば、`display`を`none`に設定して、「4bds 3 ba 2,530 sqft - Active」を含むテキスト要素を非表示にします。
+
+## プレビューデータをシャッフルする
+
+コンポーネントが異なるデータでどのようにスケーリングするかを確認するには、**Shuffle preview data**ボタンを選択します。これによってデータベース内のランダムレコードが選択され、プロパティとして適用されてコンポーネントをプレビューします。
+
+![シャッフルプレビューのビデオ](/images/studio/shuffle-preview.gif)

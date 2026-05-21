@@ -1,0 +1,334 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'トランスファーアクセラレーションを使用する',
+  description: 'S3バケットでトランスファーアクセラレーションを有効にして使用する方法を学習する',
+  platforms: [
+    'javascript',
+    'flutter',
+    'android',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue',
+    'swift'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={['javascript', 'react-native', 'angular', 'nextjs', 'react', 'vue', 'android', 'flutter', 'swift']}>
+
+<Callout warning>
+
+トランスファーアクセラレーションを使用する場合、追加のデータ転送料金が発生する可能性があります。料金の詳細については、[Amazon S3の料金](https://aws.amazon.com/s3/pricing/)を参照してください。
+
+</Callout>
+
+[トランスファーアクセラレーション](https://docs.aws.amazon.com/AmazonS3/latest/userguide/transfer-acceleration.html)を有効にして、エンドユーザーデバイスとS3バケット間で長距離にわたるファイルの高速かつ安全な転送を行うことができます。このこのこの構成のストレージリソースをオーバーライドしてから、`useAccelerateEndpoint`パラメータを使用して、加速されたS3エンドポイントを活用できます。
+
+## ストレージリソースをオーバーライドする
+
+S3バケットでトランスファーアクセラレーションを有効にするために、ストレージリソースをオーバーライドすることから始めます。
+
+```sh
+$ amplify override storage
+✅ Successfully generated "override.ts" folder at <project>/amplify/backend/storage/accelerated-bucket
+✔ Do you want to edit override.ts file now? (Y/n) · yes
+Edit the file in your editor: <project>/amplify/backend/storage/accelerated-bucket/override.ts
+```
+
+生成された`override.ts`ファイルで、次のCDKスニペットを使用してトランスファーアクセラレーションを有効にします。
+
+```javascript
+// amplify/backend/storage/accelerated-bucket/override.ts
+import { AmplifyS3ResourceTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyS3ResourceTemplate) {
+  resources.s3Bucket.accelerateConfiguration = {
+    accelerationStatus: 'Enabled'
+  }
+}
+```
+
+次に、このストレージリソースをデプロイします。
+
+```sh
+amplify push
+```
+</InlineFilter>
+
+<InlineFilter filters={['javascript', 'react-native', 'angular', 'nextjs', 'react', 'vue']}>
+
+## 加速されたS3エンドポイントを使用してファイルをアップロードする
+
+`useAccelerateEndpoint`パラメータを`true`に設定して、加速されたS3エンドポイントに切り替えます。たとえば、`getUrl`メソッドの場合:
+
+```javascript
+const getUrlResult = await getUrl({
+  path: "album/2024/1.jpg",
+  options: {
+    useAccelerateEndpoint: true; // 加速エンドポイントを使用するかどうか。
+  },
+});
+```
+
+次のStorage APIは加速エンドポイントをサポートします
+
+- getUrl
+- getProperties
+- list
+- remove
+- downloadData
+- uploadData
+
+</InlineFilter>
+
+<InlineFilter filters={['android']}>
+
+## 加速されたS3エンドポイントを使用してファイルをアップロードする
+
+`AWSS3StorageUploadFileOptions`で`useAccelerateEndpoint`パラメータを`true`に設定して、加速されたS3エンドポイントに切り替えます。
+
+#### StoragePathを使用する
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+AWSS3StorageUploadFileOptions awsS3StorageUploadFileOptions =
+              AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build();
+ Amplify.Storage.uploadFile(
+   StoragePath.fromString("public/example"),
+   file
+   awsS3StorageUploadFileOptions,
+   result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getPath()),
+   storageFailure -> Log.e("MyAmplifyApp", "Upload failed", storageFailure)
+);
+```
+</Block>
+<Block name="Kotlin - Callbacks">
+
+```kotlin
+val awsS3StorageUploadFileOptions = AWSS3StorageUploadFileOptions.builder().
+                                                  setUseAccelerateEndpoint(true).
+                                                  build()
+ Amplify.Storage.uploadFile(
+   StoragePath.fromString("public/example"),
+   file
+   awsS3StorageUploadFileOptions,
+   { Log.i("MyAmplifyApp", "Successfully uploaded: " + it.getPath()) },
+   { Log.e("MyAmplifyApp", "Upload failed", it) }
+)
+```
+</Block>
+<Block name="Kotlin - Coroutines">
+
+```kotlin
+val awsS3StorageUploadFileOptions = AWSS3StorageUploadFileOptions.builder().
+                                                    setUseAccelerateEndpoint(true).
+                                                    build()
+val upload = Amplify.Storage.uploadFile(StoragePath.fromString("public/example"), file, awsS3StorageUploadFileOptions)
+try {
+    val result = upload.result()
+    Log.i("MyAmplifyApp", "Successfully uploaded: ${result.path}")
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "Upload failed", error)
+}
+
+```
+</Block>
+<Block name="RxJava">
+
+```java
+AWSS3StorageUploadFileOptions awsS3StorageUploadFileOptions =
+            AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build();
+RxProgressAwareSingleOperation<StorageUploadFileResult> rxUploadOperation =
+            RxAmplify.Storage.uploadFile(StoragePath.fromString("public/example"), file, awsS3StorageUploadFileOptions);
+rxUploadOperation
+            .observeResult()
+            .subscribe(
+                result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getPath()),
+                error -> Log.e("MyAmplifyApp", "Upload failed", error)
+            );
+
+```
+</Block>
+</BlockSwitcher>
+
+#### キーを使用する(非推奨)
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+AWSS3StorageUploadFileOptions awsS3StorageUploadFileOptions =
+              AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build();
+ Amplify.Storage.uploadFile(
+   "KEY",
+   file
+   awsS3StorageUploadFileOptions,
+   result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getKey()),
+   storageFailure -> Log.e("MyAmplifyApp", "Upload failed", storageFailure)
+);
+```
+</Block>
+<Block name="Kotlin - Callbacks">
+
+```kotlin
+val awsS3StorageUploadFileOptions = AWSS3StorageUploadFileOptions.builder().
+                                                  setUseAccelerateEndpoint(true).
+                                                  build()
+ Amplify.Storage.uploadFile(
+   "KEY",
+   file
+   awsS3StorageUploadFileOptions,
+   { Log.i("MyAmplifyApp", "Successfully uploaded: " + it.getKey()) },
+   { Log.e("MyAmplifyApp", "Upload failed", it) }
+)
+```
+</Block>
+<Block name="Kotlin - Coroutines">
+
+```kotlin
+val awsS3StorageUploadFileOptions = AWSS3StorageUploadFileOptions.builder().
+                                                    setUseAccelerateEndpoint(true).
+                                                    build()
+val upload = Amplify.Storage.uploadFile("KEY", file, awsS3StorageUploadFileOptions)
+try {
+    val result = upload.result()
+    Log.i("MyAmplifyApp", "Successfully uploaded: ${result.key}")
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "Upload failed", error)
+}
+
+```
+</Block>
+<Block name="RxJava">
+
+```java
+AWSS3StorageUploadFileOptions awsS3StorageUploadFileOptions =
+            AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build();
+RxProgressAwareSingleOperation<StorageUploadFileResult> rxUploadOperation =
+            RxAmplify.Storage.uploadFile("KEY", file, awsS3StorageUploadFileOptions);
+rxUploadOperation
+            .observeResult()
+            .subscribe(
+                result -> Log.i("MyAmplifyApp", "Successfully uploaded: " + result.getKey()),
+                error -> Log.e("MyAmplifyApp", "Upload failed", error)
+            );
+
+```
+</Block>
+</BlockSwitcher>
+<Callout>注: useAccelerateEndpointフラグはAWSS3StorageUploadFileOptions、AWSS3StorageUploadInputStreamOptions、AWSS3StorageDownloadFileOptions、およびAWSS3StorageGetPresignedUrlOptionsで利用可能です</Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={['flutter']}>
+
+## ストレージ操作でトランスファーアクセラレーションを使用する
+
+次のAPIを呼び出す際にトランスファーアクセラレーションを使用できます:
+
+* `getUrl`
+* `downloadData`
+* `downloadFile`
+* `uploadData`
+* `uploadFile`
+
+対応するStorage S3プラグインオプションで`useAccelerateEndpoint`を`true`に設定して、加速されたS3エンドポイントを操作に適用します。たとえば、トランスファーアクセラレーションを使用してファイルをアップロードします:
+
+```dart
+import 'package:amplify_storage_s3/amplify_storage_s3.dart';
+
+Future<void> uploadFileUsingAcceleration(String filePath, String path) async {
+  final localFile = AWSFile.fromPath(filePath);
+  try {
+    final uploadFileOperation = Amplify.Storage.uploadFile(
+      localFile: localFile,
+      path: const StoragePath.fromString(path),
+      options: const StorageUploadFileOptions(
+        pluginOptions: S3UploadFilePluginOptions(
+          useAccelerateEndpoint: true,
+        ),
+      ),
+    );
+
+    final result = await uploadFileOperation.result;
+    safePrint('Uploaded file: ${result.uploadedItem.path}');
+  } on StorageException catch (error) {
+    safePrint('Something went wrong uploading file: ${error.message}');
+  }
+}
+```
+
+</InlineFilter>
+
+<InlineFilter filters={['swift']}>
+
+## ストレージ操作でトランスファーアクセラレーションを使用する
+
+対応する`pluginOptions`で`"useAccelerateEndpoint"`を`true`に設定することで、以下のいずれかのStorage APIでトランスファーアクセラレーションを使用できます:
+- `getUrl(path:options:)`
+- `downloadData(path:options:)`
+- `downloadFile(path:local:options:)`
+- `uploadData(path:data:options:)`
+- `uploadFile(path:local:options:)`
+- `getUrl(key:options:)` (非推奨)
+- `downloadData(key:options:)` (非推奨)
+- `downloadFile(key:local:options:)` (非推奨)
+- `uploadData(key:data:options:)` (非推奨)
+- `uploadFile(key:local:options:)` (非推奨)
+
+たとえば、トランスファーアクセラレーションを使用してファイルをアップロードする場合:
+
+<BlockSwitcher>
+<Block name="StoragePathを使用する">
+```swift
+let uploadTask = Amplify.Storage.uploadFile(
+    path: .fromString("public/example/key"),
+    local: aLocalFile,
+    options: .init(
+        pluginOptions: [
+            "useAccelerateEndpoint": true
+        ]
+    )
+)
+
+let data = try await uploadTask.value
+```
+</Block>
+
+<Block name="キーを使用する(非推奨)">
+```swift
+let uploadTask = Amplify.Storage.uploadFile(
+    key: aKey,
+    local: aLocalFile,
+    options: .init(
+        pluginOptions: [
+            "useAccelerateEndpoint": true
+        ]
+    )
+)
+
+let data = try await uploadTask.value
+```
+</Block>
+
+</BlockSwitcher>
+
+
+</InlineFilter>

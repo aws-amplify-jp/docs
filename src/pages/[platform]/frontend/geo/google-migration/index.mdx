@@ -1,0 +1,381 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Google Mapsから移行',
+  description: 'Google MapsからAmplify Geoへのアプリケーション移行',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'vue'
+  ],
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Google Mapsまたは別の同様のマッププロバイダーを使用していて、Amplify Geoまたはアマゾン ロケーション サービスに切り替えたいとお考えですか？このチュートリアルでは、既存のGoogle Maps APIを使用してAmplify Geoに切り替える方法を説明します。
+
+## はじめに
+
+Amplify Geoは、位置情報ベースの機能を使用するためのAPIを提供します。内部的には、Amplifyは[アマゾン ロケーション サービス](https://aws.amazon.com/location/)を使用し、オープンソースマッピングライブラリ[MapLibre](https://maplibre.org/)と連携するように設計されています。
+
+このガイドは、Google Maps JavaScript APIと、HTML、CSS、JavaScriptを含むフロントエンドウェブ開発の概念にすでに精通していることを前提としています。
+
+このチュートリアルを完了するには、以下が必要です：
+
+- **Amplify Geo**
+- **テキストエディタ**
+
+## Amplify GeoとGoogle Mapsの主な違い
+
+### 座標の規約
+
+Amplify Geoを使用する場合とGoogle Mapsを使用する場合の主な違いは、Google Maps Platformでは座標を指定する規約が`[lat, lng]`であることです。Amplify Geoに移行する場合、順序は`[lng, lat]`に入れ替わります。これは、MapLibreでも使用される[geojson仕様](https://geojson.org/)に合わせるために行われました。
+
+### 認可
+
+Google Maps PlatformまたはMapboxなどの別のサービスを使用する場合は、最初にGoogle Cloud Consoleに移動してAPIを設定し、APIキーを作成します。その後、Google Maps JS APIをリクエストする際にAPIキーを使用します。Amplify Geoでは、代わりにAmplify Authを設定し、`MapView`コンポーネントが`amplify_outputs.json`ファイルから認証設定を読み取ります。舞台裏では、Amplify Authはアマゾン Cognitoを使用してロケーション サービスへのアクセス権を持つクライアント認証情報を設定し、Geoはロケーション関連のAPI呼び出しを行う際にそれらの認証情報を使用します。Amplify AuthとGeoの設定の詳細については、以下の`Setting Up Amplify`セクションで確認できます。
+
+## ウェブページを作成
+
+1. テキストエディタを開き、`index.html`という新しいファイルを作成します。
+1. 以下のコードをファイルに貼り付けて、マップを含むウェブページのフレームワークを設定します。
+
+```html
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Display a map on a webpage</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <!-- Import MapLibre  -->
+    <script src="https://cdn.amplify.aws/packages/maplibre-gl/1.15.2/maplibre-gl.js"
+        integrity="sha384-rwYfkmAOpciZS2bDuwZ/Xa/Gog6jXem8D/whm3wnsZSVFemDDlprcUXHnDDUcrNU" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <link href="https://cdn.amplify.aws/packages/maplibre-gl/1.15.2/maplibre-gl.css" rel="stylesheet"
+        integrity="sha384-DrPVD9GufrxGb7kWwRv0CywpXTmfvbKOZ5i5pN7urmIThew0zXKTME+gutUgtpeD" crossorigin="anonymous"
+        referrerpolicy="no-referrer">
+    </link>
+    <!-- Import Amplify  -->
+    <script src="https://cdn.amplify.aws/packages/core/5.0.5/aws-amplify-core.min.js" 
+        integrity="sha384-eM2urkpomL9SRm/kuPHZG3XPEItAiUAAyotT/AqlhSus8iAqs/EfHaYy1Jn5ih7K" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.amplify.aws/packages/auth/5.0.5/aws-amplify-auth.min.js"
+        integrity="sha384-H25CFLYd7YHa1Oib73fs3kJN36VhaHHkLjo4AhGrhJ4HuKam05pg2/0t2MR6epun" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.amplify.aws/packages/geo/2.0.5/aws-amplify-geo.min.js"
+        integrity="sha384-Esc9xx0X7ckb/yeYHuYsZGqBB4FwYr98NFHS3BRXLeRE/eB0uVrad2w+G6cGxYb5" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.amplify.aws/packages/maplibre-gl-js-amplify/1.5.0/maplibre-gl-js-amplify.umd.min.js"
+        integrity="sha384-9kJyZavd3Jk6QzHeaLpugVonfZmZZZdixek6uglOwzKtZvDS9K3W4dshw1uswmlV" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    </link>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <script type="module">
+        import outputs from "../amplify_outputs.json" assert { type: "json" };
+        const { Amplify } = aws_amplify_core;
+        const { createMap } = AmplifyMapLibre;
+        Amplify.configure(outputs);
+
+        // Add code from below steps here
+    </script>
+</body>
+
+</html>
+```
+
+このコードは、MapLibre GL JSライブラリとCSS（Amplify Geoと一緒に使用することを推奨する人気のあるオプションの1つ）をインポートします。HTMLボディでは、マップのコンテナになる「map」というIDを持つ`<div>`要素を作成します。最後に、スクリプトセクションで、Amplify Geoが作成されたAWS リソースを理解するために必要なAmplify設定を設定します。
+
+### Amplifyの設定
+
+1. [ジオマップリソース](/[platform]/build-a-backend/add-aws-services/geo/set-up-geo/)を設定する必要があります。マップを作成するための手順に従ってください。
+1. ワークフローが完了したら、`index.html`ファイルと同じディレクトリに`amplify_outputs.json`ファイルがある必要があります。
+1. `index.html`ファイルを保存します。
+
+## マップを表示
+
+このステップでは、マップを表示するためのコードを追加する方法を説明します。
+
+<BlockSwitcher>
+
+  <Block name="Amplify">
+
+Amplify GeoとMapLibreを使用して、`index.html`ファイルの`<script>`タグ内で`Amplify.configure`コマンドの後に以下のコードを追加できます：
+
+```js
+const map = await createMap({
+  container: document.getElementById('map'), // div ID
+  center: [-122.4783, 37.8199], // initial coordinates [long, lat]
+  zoom: 13 // initial zoom level, high number being more zoomed in
+});
+```
+
+HTMLファイルを保存して、ウェブブラウザで開くと、レンダリングされたマップが表示されます。
+
+  </Block>
+
+  <Block name="Google Maps">
+
+Google Maps JS APIを使用すると、次のようにマップを表示できます。
+
+```js
+const map = new google.maps.Map(document.getElementById('map'), {
+  center: { lat: 37.8199, lng: -122.4783 },
+  zoom: 13
+});
+```
+
+  </Block>
+
+</BlockSwitcher>
+
+## マーカーを表示
+
+ここでは、マーカーをマップに追加します
+
+<BlockSwitcher>
+
+  <Block name="Amplify">
+
+Amplify GeoとMapLibreを使用すると、次のことができます。
+
+```js
+const marker = new maplibregl.Marker().setLngLat([-122.4783, 37.8199]).addTo(map);
+```
+
+変更を保存してページを更新すると、マップにデフォルトの青色のマーカーアイコンが表示されます。
+
+<Callout>
+
+この例では、[MapLibreのマーカーコンポーネント](https://maplibre.org/maplibre-gl-js/docs/API/classes/Marker/)を使用してマーカーを作成しています。MapLibreのマーカーの詳細については、[ここ](https://maplibre.org/maplibre-gl-js/docs/examples/add-custom-icons-with-markers/)の例を参照してください。
+
+</Callout>
+
+  </Block>
+
+  <Block name="Google Maps">
+
+Google Maps JS APIを使用してマーカーを追加する場合は、以下のように行います。
+
+```js
+const marker = new google.maps.Marker({
+center: { lat: 37.8199, lng: -122.4783 },
+map: map
+});
+```
+
+  </Block>
+
+</BlockSwitcher>
+
+![検索ボックスに「Starbucks」が入力されており、マップマーカーで示された検索結果を表示するマップが並んでいます。](/images/map-marker.png)
+
+## ポップアップを追加
+
+ここで、ユーザーがマーカーをクリックときに情報を表示するポップアップを追加できます。
+
+<BlockSwitcher>
+
+  <Block name="Amplify">
+
+Amplify GeoとMapLibreを使用すると、次のことができます。
+
+```js
+const popup = new maplibregl.Popup().setHTML(
+  `<h3>Golden Gate Bridge</h3><p>The hex code for the bridge's color is: #c0362c</p>`
+);
+
+const marker = new maplibregl.Marker()
+  .setLngLat([-122.4783, 37.8199])
+  .setPopup(popup)
+  .addTo(map);
+```
+
+変更を保存してページを更新すると、マーカーアイコンをクリックすると画面にポップアップが表示されます。
+
+<Callout>
+
+この例では、[MapLibreのポップアップコンポーネント](https://maplibre.org/maplibre-gl-js/docs/API/classes/Popup/)を使用してマーカーポップアップを作成しています。MapLibreのポップアップの詳細については、[ここ](https://maplibre.org/maplibre-gl-js/docs/examples/attach-a-popup-to-a-marker-instance/)の例を参照してください。
+
+</Callout>
+
+  </Block>
+
+  <Block name="Google Maps">
+
+Google Maps JS APIを使用してマーカーを追加する場合は、以下のように行います。
+
+```js
+const marker = new google.maps.Marker({
+  center: { lat: 37.8199, lng: -122.4783 },
+  map: map
+});
+
+const infowindow = new google.maps.InfoWindow({
+  content: `<h3>Golden Gate Bridge</h3><p>The hex code for the bridge's color is: #c0362c</p>`
+});
+
+marker.addListener('click', () => {
+  infowindow.open(map, marker);
+});
+```
+
+  </Block>
+
+</BlockSwitcher>
+
+![ゴールデンゲートブリッジのマーカーポップアップを含むエリアのマップ](/images/map-marker-popup.png)
+
+## 検索コンポーネントを追加
+
+これで、マップに検索バーを追加してみることができます。検索バーは結果を返し、その結果に基づいてマップにマーカーを配置できます。
+
+<BlockSwitcher>
+
+  <Block name="Amplify">
+
+Amplify GeoとMapLibreを使用すると、次のことができます。
+
+```js
+const { createMap, createAmplifyGeocoder } = AmplifyMapLibre; // import from above updated to include createAmplifyGeocoder
+
+const geocoder = createAmplifyGeocoder();
+map.addControl(geocoder);
+```
+
+変更を保存してページを更新すると、マップの右上隅にmaplibre-gl-geocoderコントロールが表示されます。
+
+<Callout>
+
+この例では、[MapLibreのジオコーダーコンポーネント](https://github.com/maplibre/maplibre-gl-geocoder)を使用して検索コンポーネントを作成しています。`createAmplifyGeocoder`ユーティリティ関数の詳細オプションについては、[ここ](https://github.com/aws-amplify/maplibre-gl-js-amplify/blob/main/API.md#createAmplifyGeocoder)のドキュメントを参照してください。
+
+</Callout>
+
+  </Block>
+
+  <Block name="Google Maps">
+
+Google Places JS APIを使用して検索バーを追加する場合は、以下のように行います。
+
+```js
+// Create the search box and link it to the UI element.
+const input = document.getElementById("pac-input") as HTMLInputElement;
+const searchBox = new google.maps.places.SearchBox(input);
+
+map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+
+// Bias the SearchBox results towards current map's viewport.
+map.addListener("bounds_changed", () => {
+  searchBox.setBounds(map.getBounds() as google.maps.LatLngBounds);
+});
+
+// Listen for the event fired when the user selects a prediction and retrieve more details for that place.
+searchBox.addListener("places_changed", () => {
+  const places = searchBox.getPlaces();
+
+  if (places.length == 0) {
+    return;
+  }
+
+  // For each place, get the icon, name and location.
+  places.forEach((place) => {
+    // Create markers for each place
+    // Extend map view for each place
+  });
+  map.fitBounds(bounds);
+});
+```
+
+  </Block>
+
+</BlockSwitcher>
+
+![starbucksを入力として持つ検索ボックスと、マップ上にマーカーとして複数のamplifyロゴが表示されています](/images/geocoder-custom-images.png)
+
+## スタンドアロン検索コンポーネントを追加
+
+これで、マップに追加されていない検索バーを追加して、使用できる結果を返してみることができます。
+
+<BlockSwitcher>
+
+  <Block name="Amplify">
+
+Amplify GeoとMapLibreを使用すると、次のことができます。
+
+```js
+// Create a div to hold the search component
+const el = document.createElement("div");
+el.setAttribute("id", "search");
+document.body.appendChild(el);
+
+// Create the geocoder component and append it to the div you created earlier
+const geocoder = createAmplifyGeocoder();
+document.getElementById("search").appendChild(geocoder.onAdd());
+```
+
+変更を保存してページを更新すると、作成したdivにmaplibre-gl-geocoderコントロールが表示されます。
+
+<Callout>
+
+この例では、[MapLibreのジオコーダーコンポーネント](https://github.com/maplibre/maplibre-gl-geocoder)を使用して検索コンポーネントを作成しています。`createAmplifyGeocoder`ユーティリティ関数の詳細オプションについては、[ここ](https://github.com/aws-amplify/maplibre-gl-js-amplify/blob/main/API.md#createAmplifyGeocoder)のドキュメントを参照してください。
+
+</Callout>
+
+  </Block>
+
+  <Block name="Google Maps">
+
+Google Places JS APIを使用してスタンドアロン検索バーを追加する場合は、以下のように行います。
+
+<Callout>
+
+簡潔にするために一部の行は省略されています。完全なアプリケーションについては、Google Maps Platform Places Search Boxの例を参照してください。
+
+</Callout>
+
+```js
+// Create a input to hold the search component
+const el = document.createElement("input");
+el.setAttribute("id", "pac-input");
+document.body.appendChild(el);
+
+// Create the search box and link it to the UI element.
+const input = document.getElementById("pac-input");
+const searchBox = new google.maps.places.SearchBox(input);
+```
+
+  </Block>
+
+</BlockSwitcher>
+
+![検索ボックスに「starbucks」が入力されています](/images/geocoder-search-box.png)

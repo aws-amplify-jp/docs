@@ -1,0 +1,52 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'React コードを記述する',
+  description: 'データベースと GraphQL API を作成する',
+  platforms: [
+    'javascript',
+    'nextjs',
+    'react'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+生成された UI コンポーネントは、["Flex" コンポーネント](https://ui.docs.amplify.aws/react/components/flex)で利用可能なプロパティ、または ["Collection" コンポーネント](https://ui.docs.amplify.aws/react/components/collection)で利用可能なプロパティを受け入れます。
+
+たとえば、コンポーネントを全幅にするには、Amplify UI の "Flex" コンポーネントで利用可能なすべてのプロパティを使用できます。この場合、`NavBar` と `MarketingFooter` に `width={"100vw"}` を設定したので、ブラウザウィンドウサイズでスケールします。また、`isPaginated` プロパティと `itemsPerPage` プロパティを設定することで、`NewHomes` のページネーションを有効にすることができます。
+
+```js
+import './App.css';
+import { NewHomes, NavBar, MarketingFooter } from './ui-components'
+
+function App() {
+  return (
+    <div className="App">
+      <NavBar width={"100vw"}/>
+      <NewHomes isPaginated itemsPerPage={3}/>
+      <MarketingFooter width={"100vw"}/>
+    </div>
+  );
+}
+
+export default App;
+```
+
+これで、ウィンドウサイズを変更し、コレクション内をページネーションすることもできます。
+
+![レスポンシブアプリを示す GIF](/images/studio/responsive.gif)
+
+コード内で適用できるカスタマイズは多数あります。たとえば、子要素へのオーバーライドの適用、コレクションアイテムの onClick ハンドラーのセットアップ、またはアイコンのホバー状態の設定などです。Amplify Studio のドキュメントで [コードで拡張](/gen1/[platform]/build-ui/uibuilder/override/)を確認してください。

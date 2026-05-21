@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"flutter","meta":{"title":"既存のAWSリソースに接続する","description":"Amplifyクライアントライブラリを独自のAWSインフラストラクチャで使用します。Auth、Data、Storage、Analytics、Geo、およびNotificationsを、プログラムで、またはamplify_outputs.jsonを介して設定します — Amplifyバックエンドは不要です。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

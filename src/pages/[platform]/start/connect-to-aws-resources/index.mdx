@@ -1,0 +1,43 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'AWS リソースに接続する',
+  description: 'Amplify クライアント ライブラリを使用して AWS リソースに直接接続できます',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify クライアント ライブラリは、Amplify バックエンド ワークフロー なしで **独立して** 使用できます。CDK、Terraform、CloudFormation、または AWS コンソールでプロビジョニングされた AWS リソースがある場合、Amplify ライブラリをこれらのリソースに直接接続できます。
+
+これにより、Amplify のクライアント API の全機能（認証フロー、データ クエリ、ファイル管理など）を活用しながら、インフラストラクチャの完全な制御を維持できます。
+
+ライブラリは 2 つの方法で設定できます。
+
+- **手動 `amplify_outputs.json`** — リソースの詳細が含まれた設定ファイルを作成します
+- **プログラマティック設定** — コード内で設定を構築します（テストと環境切り替えに最適）
+
+どちらの方法も、すべての Amplify サービスをサポートします: **Auth**、**Data**、**Storage**、**Analytics**、**Geo**、および **Notifications**。
+
+各サービスのプラットフォーム固有のコード例を含む完全なガイドについては、「[既存の AWS リソースに接続する](/[platform]/frontend/connect-to-existing-resources/)」を参照してください。

@@ -1,0 +1,36 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'Lambda トリガー',
+  description: 'Storage カテゴリーで Amazon S3 と Amazon DynamoDB をプロバイダーとするトリガーを有効にする方法を学習します。CLI は S3 および DynamoDB イベントと Lambda トリガーの関連付けをサポートしています。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'flutter',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+
+Storage カテゴリーで Amazon S3 および Amazon DynamoDB をプロバイダーとするトリガーを有効にする場合、CLI は S3 および DynamoDB イベントと Lambda トリガーの関連付けをサポートしています。例えば、これは Amplify CLI で管理される DynamoDB テーブルの作成または更新操作の後に Lambda 関数を呼び出したい場合に役立ちます。
+
+このトピックについて詳しくは、Amplify CLI ドキュメントの [ファイルストレージ Lambda トリガー](/gen1/[platform]/tools/cli/usage/lambda-triggers/#s3-lambda-triggers)をお読みください。

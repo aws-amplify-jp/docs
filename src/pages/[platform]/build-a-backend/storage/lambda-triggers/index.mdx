@@ -1,0 +1,110 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ストレージイベントをリッスンする',
+  description: 'ストレージイベントのトリガーを設定する',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'vue',
+    'swift',
+    'android',
+    'flutter',
+    'react-native'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Function トリガーは、ファイルがアップロードまたは削除されるときにイベントベースのワークフローを有効にするように構成できます。Function トリガーを追加するには、`defineStorage` 設定を変更します。
+
+まず、ストレージ定義に以下を追加します。
+
+```ts title="amplify/storage/resource.ts"
+export const storage = defineStorage({
+  name: 'myProjectFiles',
+  // highlight-start
+  triggers: {
+    onUpload: defineFunction({
+      entry: './on-upload-handler.ts'
+    }),
+    onDelete: defineFunction({
+      entry: './on-delete-handler.ts'
+    })
+  }
+  // highlight-end
+});
+```
+
+次に、`amplify/storage/on-upload-handler.ts` と `amplify/storage/on-delete-handler.ts` で Function 定義を作成します。
+
+```ts title="amplify/storage/on-upload-handler.ts"
+import type { S3Handler } from 'aws-lambda';
+
+export const handler: S3Handler = async (event) => {
+  const objectKeys = event.Records.map((record) => record.s3.object.key);
+  console.log(`Upload handler invoked for objects [${objectKeys.join(', ')}]`);
+};
+```
+
+```ts title="amplify/storage/on-delete-handler.ts"
+import type { S3Handler } from 'aws-lambda';
+
+export const handler: S3Handler = async (event) => {
+  const objectKeys = event.Records.map((record) => record.s3.object.key);
+  console.log(`Delete handler invoked for objects [${objectKeys.join(', ')}]`);
+};
+```
+
+<Callout info>
+
+**注:** `S3Handler` 型は [`@types/aws-lambda`](https://www.npmjs.com/package/@types/aws-lambda) npm パッケージから提供されます。このパッケージには、異なる種類の Lambda ハンドラー、イベント、レスポンスの型が含まれています。
+
+</Callout>
+
+これで、バックエンドをデプロイすると、バケットにオブジェクトがアップロードまたは削除されるたびにこれらの Function が呼び出されます。
+
+## より高度なトリガー
+
+上記の例では、`storage` 定義で直接公開されているものを示しています。具体的には、`defineStorage` を使用するときに `triggers` オプションを使用しています。この方法は、ファイルのアップロードまたはファイル削除時に常に実行される単純なトリガー用です。この方法で定義されたトリガーには、追加の変更を加えることができません。
+
+`onUpload` と `onDelete` イベントの処理以上のことを行いたい場合は、`backend.ts` で `.addEventNotification` を使用する必要があります。このメソッドを使用する場合、`storage/resource.ts` ファイルの `triggers` セクションは削除すべきです。
+
+S3 オブジェクト PUT イベント用の Lambda トリガーを追加する方法の例は次のとおりです。このトリガーは、`storage/resource.ts` で定義されたバケットにアップロードされたファイルが、`addEventNotification` の Function 入力に記載されているプリフィックスとサフィックスに一致するときに実行されます。
+
+```ts title="amplify/backend.ts"
+import { EventType } from 'aws-cdk-lib/aws-s3';
+import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
+import { defineBackend } from '@aws-amplify/backend';
+import { storage } from './storage/resource';
+import { yourLambda } from './functions/yourLambda/resource';
+
+const backend = defineBackend({
+  storage,
+  yourLambda,
+});
+
+backend.storage.resources.bucket.addEventNotification(
+	EventType.OBJECT_CREATED_PUT,
+	new LambdaDestination(backend.yourLambda.resources.lambda),
+	{
+		prefix: 'protected/uploads/',
+		suffix: '-uploadManifest.json',
+	}
+);
+```
+
+この方法を使用する場合、Lambda Function に変更を加える必要がないことに注意することが重要です。`backend.ts` ファイルのこの変更により、プリフィックスとサフィックスの確認を処理する新しい `AWS CloudFormation handler for "Custom::S3BucketNotifications" resources (@aws-cdk/aws-s3)` が作成されます。

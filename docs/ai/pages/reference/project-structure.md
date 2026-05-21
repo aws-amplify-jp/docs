@@ -1,0 +1,131 @@
+---
+title: "プロジェクト構造"
+section: "reference"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2024-05-16T15:59:30.000Z"
+url: "https://docs.amplify.aws/react/reference/project-structure/"
+---
+
+Amplify Gen 2バックエンドはTypeScriptを使用して定義され、機能に応じてリソースを並べて配置することができます。例えば、Amazon Cognitoの[ポスト確認トリガーを作成して、UserProfileモデルを作成する](/[platform]/build-a-backend/functions/examples/create-user-profile-record/)ことができ、それをauthのリソースファイルの横に配置できます。
+
+`npm create amplify@latest`を使用して最初のAmplifyプロジェクトを作成すると、DataとAuthenticationリソースのスキャフォルディングが自動的に設定されます:
+
+```text
+├── amplify/
+│   ├── auth/
+│   │   └── resource.ts
+│   ├── data/
+│   │   └── resource.ts
+│   ├── backend.ts
+│   └── package.json
+├── node_modules/
+├── .gitignore
+├── package-lock.json
+├── package.json
+└── tsconfig.json
+```
+
+プロジェクトが成長し、バックエンドを構築していくと、プロジェクトの構造は次のようになる可能性があります:
+
+```text
+├── amplify/
+│   ├── auth/
+│   │   ├── custom-message/
+│   │   │   ├── custom-message.tsx
+│   │   │   ├── handler.ts
+│   │   │   ├── package.json
+│   │   │   └── resource.ts
+│   │   ├── post-confirmation.ts
+│   │   ├── pre-sign-up.ts
+│   │   ├── resource.ts
+│   │   └── verification-email.tsx
+│   ├── data/
+│   │   ├── resolvers/
+│   │   │   ├── list-featured-posts.ts
+│   │   │   └── list-top-10-posts.ts
+│   │   ├── resource.ts
+│   │   └── schema.ts
+│   ├── jobs/
+│   │   ├── monthly-report/
+│   │   │   ├── handler.ts
+│   │   │   └── resource.ts
+│   │   ├── process-featured-posts/
+│   │   │   ├── handler.py
+│   │   │   ├── requirements.txt
+│   │   │   └── resource.ts
+│   │   └── store-top-10-posts/
+│   │       ├── handler.ts
+│   │       └── resource.ts
+│   ├── storage/
+│   │   ├── photos/
+│   │   │   ├── resource.ts
+│   │   │   └── trigger.ts
+│   │   └── reports/
+│   │       └── resource.ts
+│   ├── backend.ts
+│   └── package.json
+├── node_modules/
+├── .gitignore
+├── package-lock.json
+├── package.json
+└── tsconfig.json
+```
+
+バックエンドリソースは`resource`ファイルで`define*`ヘルパーを使用して定義されます:
+
+```ts title="amplify/auth/resource.ts"
+import { defineAuth } from '@aws-amplify/backend';
+
+export const auth = defineAuth({
+  loginWith: {
+    email: true
+  }
+});
+```
+
+リソースが定義されたら、バックエンドで設定されます:
+
+```ts title="amplify/backend.ts"
+import { defineBackend } from '@aws-amplify/backend';
+import { auth } from './auth/resource';
+import { data } from './data/resource';
+
+defineBackend({
+  auth,
+  data
+});
+```
+
+[AWS Cloud Development Kit (AWS CDK)](https://docs.aws.amazon.com/cdk/v2/guide/home.html)を使用してバックエンドを拡張できます。AWS CDKは[`create-amplify`](https://www.npmjs.com/package/create-amplify)ワークフローの一部としてデフォルトでインストールされています。CDKを使用すると、認証されたユーザーが読み取りと書き込みアクセスを持つAmazon S3バケットなど、任意のAWSサービスを使用して構築できます。CDKを使い始めるには、バックエンドに追加してください:
+
+```ts title="amplify/backend.ts"
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import { defineBackend } from '@aws-amplify/backend';
+import { auth } from './auth/resource';
+import { data } from './data/resource';
+
+const backend = defineBackend({
+  auth,
+  data
+});
+
+// create the bucket and its stack
+const bucketStack = backend.getStack('BucketStack');
+const bucket = new s3.Bucket(bucketStack, 'Bucket', {
+  blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL
+});
+
+// allow any authenticated user to read and write to the bucket
+const authRole = backend.auth.resources.authenticatedUserIamRole;
+bucket.grantReadWrite(authRole);
+
+// allow any guest (unauthenticated) user to read from the bucket
+const unauthRole = backend.auth.resources.unauthenticatedUserIamRole;
+bucket.grantRead(unauthRole);
+```
+
+## 次のステップ
+
+- [概念を学ぶ](/[platform]/how-amplify-works/concepts)
+- [バックエンドにAWSサービスを追加する方法を学ぶ](/[platform]/build-a-backend/add-aws-services)

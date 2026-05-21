@@ -1,0 +1,151 @@
+---
+title: "Predictions の設定"
+section: "build-a-backend/add-aws-services/predictions"
+platforms: ["angular", "javascript", "nextjs", "react", "react-native", "vue"]
+gen: 2
+last-updated: "2025-02-21T20:31:01.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/add-aws-services/predictions/set-up-predictions/"
+---
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+Predictions を有効にするには、Cognito Identity Pool のロールに適切な IAM ポリシーを設定して、適切な機能を使用できるようにする必要があります。さらに、`addOutput` メソッドを使用して、カスタム Predictions リソースに期待される出力設定をパッチする必要があります。
+
+<Callout informational>
+
+**注:** 以下の例では、サポートされているすべての ML 機能を有効にするようにポリシーを設定しています。ユースケースに関連するアクションとリソースのみを含めてください。
+詳細については、[Amazon Translate](https://docs.aws.amazon.com/translate/latest/dg/what-is.html)、[Amazon Polly](https://docs.aws.amazon.com/polly/latest/dg/what-is.html)、[Amazon Transcribe](https://docs.aws.amazon.com/transcribe/latest/dg/what-is-transcribe.html)、[Amazon Rekognition](https://docs.aws.amazon.com/rekognition/latest/dg/what-is.html)、[Amazon Textract](https://docs.aws.amazon.com/textract/latest/dg/what-is.html)、および [Amazon Comprehend](https://docs.aws.amazon.com/comprehend/latest/dg/what-is.html) のドキュメントをご覧ください。
+
+</Callout>
+
+```ts title="amplify/backend.ts"
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { defineBackend } from "@aws-amplify/backend";
+import { auth } from "./auth/resource";
+
+const backend = defineBackend({
+  auth,
+});
+
+// Configure a policy for the required use case.
+// The actions included below cover all supported ML capabilities
+backend.auth.resources.unauthenticatedUserIamRole.addToPrincipalPolicy(
+  new PolicyStatement({
+    actions: [
+      "translate:TranslateText",
+      "polly:SynthesizeSpeech",
+      "transcribe:StartStreamTranscriptionWebSocket",
+      "comprehend:DetectSentiment",
+      "comprehend:DetectEntities",
+      "comprehend:DetectDominantLanguage",
+      "comprehend:DetectSyntax",
+      "comprehend:DetectKeyPhrases",
+      "rekognition:DetectFaces",
+      "rekognition:RecognizeCelebrities",
+      "rekognition:DetectLabels",
+      "rekognition:DetectModerationLabels",
+      "rekognition:DetectText",
+      "rekognition:DetectLabel",
+      "rekognition:SearchFacesByImage",      
+      "textract:AnalyzeDocument",
+      "textract:DetectDocumentText",
+      "textract:GetDocumentAnalysis",
+      "textract:StartDocumentAnalysis",
+      "textract:StartDocumentTextDetection",
+    ],
+    resources: ["*"],
+  })
+);
+
+backend.addOutput({
+  custom: {
+    Predictions: {
+      convert: {
+        translateText: {
+          defaults: {
+            sourceLanguage: "en",
+            targetLanguage: "es",
+          },
+          proxy: false,
+          region: backend.auth.stack.region,
+        },
+        speechGenerator: {
+          defaults: {
+            voiceId: "Ivy",
+          },
+          proxy: false,
+          region: backend.auth.stack.region,
+        },
+        transcription: {
+          defaults: {
+            language: "en-US",
+          },
+          proxy: false,
+          region: backend.auth.stack.region,
+        },
+      },
+      identify: {
+        identifyEntities: {
+          defaults: {
+            collectionId: "default",
+            maxEntities: 10,
+          },
+          celebrityDetectionEnabled: true,
+          proxy: false,
+          region: backend.auth.stack.region,
+        },
+        identifyLabels: {
+          defaults: {
+            type: "ALL",
+          },
+          proxy: false,
+          region: backend.auth.stack.region,
+        },
+        identifyText: {
+          defaults: {
+            format: "ALL",
+          },
+          proxy: false,
+          region: backend.auth.stack.region,
+        },
+      },
+      interpret: {
+        interpretText: {
+          defaults: {
+            type: "ALL",
+          },
+          proxy: false,
+          region: backend.auth.stack.region,
+        },
+      },
+    },
+  },
+});
+```
+
+## Amplify ライブラリのインストール
+
+Predictions 機能を使用する Amplify ライブラリをインストールするには、プロジェクトのルート フォルダで以下のコマンドを実行してください:
+
+```bash title="Terminal" showLineNumbers={false}
+npm add aws-amplify @aws-amplify/predictions
+```
+
+## フロントエンドの設定
+
+設定ファイルをインポートしてアプリに読み込みます。Amplify 設定ステップは、アプリのルート エントリ ポイント (React や Angular の場合は `main.ts` など) に追加することをお勧めします。
+
+```ts title="src/main.ts"
+import { Amplify } from "aws-amplify";
+import { parseAmplifyConfig } from "aws-amplify/utils";
+import outputs from '../amplify_outputs.json';
+
+const amplifyConfig = parseAmplifyConfig(outputs);
+
+Amplify.configure({
+  ...amplifyConfig,
+  Predictions: outputs.custom.Predictions,
+});
+```

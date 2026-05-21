@@ -1,0 +1,38 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ジオフェンスの操作',
+  description: 'Amplify Geo を使用してアプリケーション内のジオフェンスをプロビジョニング、管理します。',
+  platforms: [
+    'javascript',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import jsGeofences from '/src/fragments/lib/geo/js/geofences.mdx';
+
+<Fragments
+  fragments={{
+    javascript: jsGeofences,
+    angular: jsGeofences,
+    nextjs: jsGeofences,
+    react: jsGeofences,
+    vue: jsGeofences
+  }}
+/>

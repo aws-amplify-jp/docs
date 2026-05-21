@@ -1,0 +1,193 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Lambda 関数を使用したカスタムデータアクセス',
+  description: 'Lambda 関数を使用してカスタム認可ルールを定義します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Lambda 関数を使用して独自のカスタム認可ルールを定義できます。
+
+```ts title="amplify/data/resource.ts"
+import {
+  type ClientSchema,
+  a,
+  defineData,
+  defineFunction,
+} from '@aws-amplify/backend';
+
+const schema = a.schema({
+  Todo: a
+    .model({
+      content: a.string(),
+    })
+    // ステップ 1
+    // カスタム認可ルールを使用する必要があるモデル / フィールドを指定します
+    .authorization(allow => [allow.custom()]),
+});
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: 'lambda',
+    // ステップ 2
+    // カスタム認可ルールに使用する関数を渡します
+    lambdaAuthorizationMode: {
+      function: defineFunction({
+        entry: './custom-authorizer.ts',
+      }),
+      // (オプション) ステップ 3
+      // トークンの有効期限を設定します
+      timeToLiveInSeconds: 300,
+    },
+  },
+});
+```
+<InlineFilter filters={["javascript", "angular", "react-native", "react", "nextjs", "vue", "android", "swift"]}>
+
+アプリケーションでは、`lambda` 認可モードで `client.models.<model-name>` を使用してモデルに対して CRUD 操作を実行できます。
+
+```ts
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../amplify/data/resource'; // Path to your backend resource definition
+
+const client = generateClient<Schema>();
+
+const { errors, data: newTodo } = await client.models.Todo.create(
+  {
+    content: 'My new todo',
+  },
+  // highlight-start
+  {
+    authMode: 'lambda',
+  }
+  // highlight-end
+);
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["flutter"]}>
+アプリケーションでは、`function` 認可モードを使用してモデルに対して CRUD 操作を実行できます。
+
+```dart
+try {
+  final todo = Todo(content: 'My new todo');
+  final request = ModelMutations.create(
+    todo,  
+    authorizationMode: APIAuthorizationType.function,
+  );
+  final createdTodo = await Amplify.API.mutations(request: request).response;
+
+  if (createdTodo == null) {
+    safePrint('errors: ${response.errors}');
+    return;
+  }
+  safePrint('Mutation result: ${createdTodo.name}');
+
+} on APIException catch (e) {
+  safePrint('Failed to create todo', e);
+}
+```
+
+</InlineFilter>
+
+選択した Lambda 関数は、クライアントから認可トークンを受け取り、目的の認可ロジックを実行します。AppSync GraphQL API は、呼び出し後に Lambda からペイロードを受け取り、API 呼び出しを許可または拒否します。
+
+Lambda 関数を認可モードとして設定するには、新しいファイル `amplify/data/custom-authorizer.ts` を作成します。認可ハンドラーコードの開始点として、この Lambda 関数コードテンプレートを使用できます。
+
+```ts
+// amplify/data/custom-authorizer.ts
+
+// This is sample code. Update this to suite your needs
+import type { AppSyncAuthorizerHandler } from 'aws-lambda'; // types imported from @types/aws-lambda
+
+type ResolverContext = {
+  userid: string;
+  info: string;
+  more_info: string;
+};
+
+export const handler: AppSyncAuthorizerHandler<ResolverContext> = async (
+  event
+) => {
+  console.log(`EVENT: ${JSON.stringify(event)}`);
+  const {
+    authorizationToken,
+    requestContext: { apiId, accountId }
+  } = event;
+  const response = {
+    isAuthorized: authorizationToken === 'custom-authorized',
+    resolverContext: {
+      // eslint-disable-next-line spellcheck/spell-checker
+      userid: 'user-id',
+      info: 'contextual information A',
+      more_info: 'contextual information B'
+    },
+    deniedFields: [
+      `arn:aws:appsync:${process.env.AWS_REGION}:${accountId}:apis/${apiId}/types/Event/fields/comments`,
+      `Mutation.createEvent`
+    ],
+    ttlOverride: 300
+  };
+  console.log(`RESPONSE: ${JSON.stringify(response, null, 2)}`);
+  return response;
+};
+```
+
+上記のテンプレートをカスタム認可ルールの開始点として使用できます。認可 Lambda 関数は、次のイベントを受け取ります。
+
+```json
+{
+    "authorizationToken": "ExampleAuthToken123123123", # クライアントによって指定された認可トークン
+    "requestContext": {
+        "apiId": "aaaaaa123123123example123", # AppSync API ID
+        "accountId": "111122223333", # AWS アカウント ID
+        "requestId": "f4081827-1111-4444-5555-5cf4695f339f",
+        "queryString": "mutation CreateEvent {...}\n\nquery MyQuery {...}\n", # GraphQL クエリ
+        "operationName": "MyQuery", # GraphQL 操作名
+        "variables": {} # 操作に指定された追加の変数
+    }
+}
+```
+
+Lambda 認可関数は、次の JSON を返す必要があります。
+
+```json
+{
+  // 必須
+  "isAuthorized": true, // "false" の場合は UnauthorizedException が発生し、アクセスが拒否されます
+  "resolverContext": { "banana": "very yellow" }, // VTL リゾルバーテンプレートで $ctx.identity.resolverContext として表示される JSON オブジェクト
+
+  // オプション
+  "deniedFields": ["TypeName.FieldName"], // クライアントに返されるときにフィールドを「null」に強制します
+  "ttlOverride": 10 // レスポンスをキャッシュする秒数です。「amplify update api」で指定されたデフォルトをオーバーライドします
+}
+```
+
+Amplify ドキュメントを確認して、[Data クライアント](/[platform]/frontend/data/connect-to-API/)のカスタム認可トークンを設定してください。

@@ -1,0 +1,37 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+
+export const meta = {
+  title: 'Gen 1 ユーザー向け Gen 2',
+  description: 'Amplify Gen 1 バックエンドを Gen 2 に移行する方法を学ぶか、Gen 1 の機能が Gen 2 にどのようにマップされるかを理解します。',
+  route: '/[platform]/start/migrate-to-gen2',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+既存の Gen 1 環境を移行する場合でも、Gen 2 で何が変わったかを探索する場合でも、これらのガイドはその移行をナビゲートするのに役立ちます。
+
+<Overview childPageNodes={props.childPageNodes} />

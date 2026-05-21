@@ -1,0 +1,40 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'IAM ポリシー',
+  description: 'Amplify に必要な IAM ポリシーについて詳しく学びます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## ブランチデプロイメント
+
+ブランチデプロイメントでは、フルスタックデプロイメント中にバックエンドリソースをデプロイするために、[`AmplifyBackendDeployFullAccess`](https://docs.aws.amazon.com/amplify/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-AmplifyBackendDeployFullAccess) マネージドポリシーが必要です。コンソール経由でプロジェクトを接続する場合、このポリシーが付与されたロールが自動的に作成されます。
+
+<Video src="/images/gen2/references/iam-policy.mp4" description="Video - IAM Policy" />
+
+## クラウドサンドボックスデプロイメント
+
+サンドボックスデプロイメントは、設計上、ローカルの認証情報を使用してリソースをデプロイします。ローカルプロファイルに `AmplifyBackendDeployFullAccess` ポリシーが付与されていることを確認する必要があります。

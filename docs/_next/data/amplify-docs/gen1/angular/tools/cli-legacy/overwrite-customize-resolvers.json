@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"angular","meta":{"title":"リゾルバーの上書きとカスタマイズ","description":"GraphQL リゾルバーは、型のスキーマ内のフィールドをデータソースに接続します。リゾルバーは、リクエストが満たされるメカニズムです。Amplify でリゾルバーを上書きまたはカスタムリゾルバーを追加する方法について説明します。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

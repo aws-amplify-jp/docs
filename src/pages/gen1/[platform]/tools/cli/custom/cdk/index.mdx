@@ -1,0 +1,165 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'CDKを使用してカスタムAWSリソースを追加する',
+  description: "Amplify CLIは、AWS Cloud Development Kit (CDK)を使用してカスタムAWSリソースを追加する機能を提供します。Amplifyプロジェクトで「amplify add custom」コマンドを実行すると、CDKスタータースタックと他のAmplifyで生成されたリソースを参照するメカニズムが提供されます。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify CLIは、AWS Cloud Development Kit (CDK)を使用してカスタムAWSリソースを追加する機能を提供します。Amplifyプロジェクトで `amplify add custom` コマンドを実行すると、CDKスタータースタックと他のAmplifyで生成されたリソースを参照するメカニズムが提供されます。
+
+> [AWS Cloud Development Kit (AWS CDK)](https://docs.aws.amazon.com/cdk/latest/guide/home.html)は、TypeScriptなどの使い慣れたプログラミング言語を使用してクラウドアプリケーションリソースを定義するためのオープンソースソフトウェア開発フレームワークです。
+
+```bash
+amplify add custom
+```
+```console
+? How do you want to define this custom resource? …  (Use arrow keys or type to filter)
+❯ AWS CDK
+  AWS CloudFormation
+```
+
+スケルトンCDKスタックが `amplify/backend/custom/<resource-name>` ディレクトリに生成されます。`cdk-stack.ts` ファイルを編集して追加のAWSリソースを定義します。`package.json` を使用して追加のCDKコンストラクトを追加します。`amplify build` を実行してこのカスタムリソースのすべてのnpm依存関係をダウンロードしてCDKスタックを合成します。
+
+<Callout>
+
+AWS CDK v1からv2への移行については、[移行ドキュメント](/gen1/[platform]/tools/cli/migration/aws-cdk-migration/)を参照してください。
+
+</Callout>
+
+
+次の例は、通知メッセージがメール経由で転送されるSNSトピックを作成します。
+
+```ts
+import * as cdk from 'aws-cdk-lib';
+import * as AmplifyHelpers from '@aws-amplify/cli-extensibility-helper';
+import { Construct } from 'constructs';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
+
+export class cdkStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps, amplifyResourceProps?: AmplifyHelpers.AmplifyResourceProps) {
+    super(scope, id, props);
+    /* Do not remove - Amplify CLI automatically injects the current deployment environment in this input parameter */
+    new cdk.CfnParameter(this, 'env', {
+      type: 'String',
+      description: 'Current Amplify CLI env name',
+    });
+
+    const amplifyProjectInfo = AmplifyHelpers.getProjectInfo();
+    const snsTopicResourceName = `sns-topic-${amplifyProjectInfo.projectName}-${cdk.Fn.ref('env')}`;
+    const topic = new sns.Topic(this, 'sns-topic', {
+      topicName: snsTopicResourceName,
+    });
+
+    topic.addSubscription(new subs.EmailSubscription('<your-email-address>'));
+    new cdk.CfnOutput(this, 'snsTopicArn', {
+      value: topic.topicArn,
+      description: 'The arn of the SNS topic',
+    });
+  }
+}
+```
+
+> 注意: Amplifyのマルチ環境ワークフローで正しい動作を確保するために、常にリソース名にAmplify環境名を追加してください。
+
+<Callout warning>
+
+Amplify CLIを使用してカスタムリソースを作成する場合、CLIはAmplifyマネージドポリシー [`AdministratorAccess-Amplify`](https://console.aws.amazon.com/iam/home#policies/arn:aws:iam::aws:policy/AdministratorAccess-Amplify) の外に追加の権限が必要になる場合があります。
+Amplify CLIに必要な権限に関する追加情報については、Amplify [IAMポリシー](/gen1/[platform]/tools/cli/reference/iam/)ドキュメントを参照してください。また、Amplify CLI IAMユーザーに追加の権限を提供する方法の詳細については、[AWS IAMユーザー](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_change-permissions.html#users_change_permissions-add-directly-console)ドキュメントを参照してください。
+
+</Callout>
+
+## Amplifyプロジェクトと環境名を参照する
+
+Amplifyはプロジェクト名や現在のAmplify環境名などのAmplifyプロジェクト情報を取得するヘルパー関数を提供します。
+
+### Amplifyプロジェクト名を参照する
+
+`AmplifyHelpers.getProjectInfo()` 関数を使用してプロジェクト名を取得します。
+
+```ts
+import * as AmplifyHelpers from '@aws-amplify/cli-extensibility-helper';
+
+// ...
+
+const projectName = AmplifyHelpers.getProjectInfo().projectName;
+```
+
+### Amplify環境名を参照する
+
+環境にはさまざまなユースケース向けに2つのアクセスパターンがあります。各ユースケースに適したアクセスメカニズムを使用することは、マルチ環境ワークフローが正しく機能するために重要です。
+
+リソースの変数として環境名を使用する場合は、`cdk.Fn.ref('env')` を使用します。
+
+```ts
+const role = new iam.Role(this, 'CustomRole', {
+  assumedBy: new iam.AccountRootPrincipal(),
+  roleName: `${roleResourceNamePrefix}-${cdk.Fn.ref('env')}` // Reference to Amplify "env" name
+})
+```
+
+現在の環境名に基づいて条件付きロジックを適用する場合は、`AmplifyHelpers.projectInfo()` を使用します。
+
+```ts
+import * as AmplifyHelpers from '@aws-amplify/cli-extensibility-helper';
+
+// ...
+
+const envName = AmplifyHelpers.getProjectInfo().envName;
+
+if (envName === "prod") {
+  // ...
+} else {
+  // ...
+}
+```
+
+## Amplifyで生成されたリソースを参照する
+
+カスタムAWSリソースのCDKスタックは、Amplifyで生成されたリソースのCloudFormation出力を参照できます。別のリソースを参照するには、最初にリソースを依存関係として追加します。
+
+```ts
+import { AmplifyDependentResourcesAttributes } from "../../types/amplify-dependent-resources-ref";
+
+const dependencies: AmplifyDependentResourcesAttributes = AmplifyHelpers.addResourceDependency(this,
+  amplifyResourceProps.category,
+  amplifyResourceProps.resourceName,
+  [{
+    category: "function", // api, auth, storage, function, etc.
+    resourceName: "<resource-name>" // find the resource at "amplify/backend/<category>/<resourceName>"
+  } /* add more dependencies as needed */] 
+);
+```
+
+次に、`cdk.Fn.ref` 関数を使用して依存関係の出力の動的参照を作成します。
+
+```ts
+const myFunctionArn = cdk.Fn.ref(dependencies.function.<resource-name>.Arn)
+```
+
+`dependencies` 変数には自動生成された `AmplifyDependentResourcesAttributes` 型があり、すべてのAmplifyで生成されたリソース出力が含まれています。カテゴリー、リソース、またはパラメーターが見つからない場合は、`amplify build` を実行して `AmplifyDependentResourcesAttributes` を再生成します。

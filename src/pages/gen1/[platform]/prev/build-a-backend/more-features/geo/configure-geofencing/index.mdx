@@ -1,0 +1,259 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ジオフェンスコレクションの設定',
+  description: 'Amplify CLIを使用してジオフェンスコレクションを作成および管理する',
+  platforms: [
+    'android',
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+ジオフェンスは、現実世界の地理的エリアの仮想境界線です。ジオフェンスは、閉じた境界線を形成するポイントまたは頂点を含み、関心のある領域を定義します。ジオフェンスコレクションは、1つまたは複数のジオフェンスを保存します。Amplifyの`geo`カテゴリを使用すると、仮想地理的境界線を設定するために使用するジオフェンスコレクションを作成および管理できます。
+
+## 新しいジオフェンスコレクションをセットアップする
+
+アプリケーションに新しいジオフェンスコレクションを追加する前に、プロジェクトに少なくとも1つのCognito User Poolグループが追加されている必要があります。コレクション内のジオフェンスに対する`CRUD`操作を実行するための権限は、これらのジオフェンスを管理する責任を持つCognito User Poolグループに属するユーザーにのみ付与されます。
+
+`auth`カテゴリをまだセットアップしていない場合は、以下を実行してセットアップできます：
+
+```bash
+amplify add auth
+```
+
+`auth`カテゴリをセットアップしたら、以下を使用してCognito User Poolグループを追加できます：
+
+```bash
+amplify update auth
+```
+
+```console
+? What do you want to do?
+  Apply default configuration with Social Provider (Federation)
+  Walkthrough all the auth configurations
+❯ Create or update Cognito user pool groups
+  Create or update Admin queries API
+
+? Provide a name for your user pool group: storesInWashingtonGeofenceCollectionAdmin
+
+? Do you want to add another User Pool Group No
+
+? Sort the user pool groups in order of preference
+  storesInWashingtonGeofenceCollectionAdmin
+
+```
+
+前述のCognitoグループに追加されたユーザーに以前作成されたジオリソースへのアクセスを許可したい場合は、[以下のセクション](#granting-maps-and-search-permissions-to-a-group-of-users)で説明されている指示に従ってください。
+
+さらに、既存ユーザーをCognitoグループに追加したい場合は、[以下のセクション](#adding-users-to-a-cognito-user-pool-group)で説明されている指示に従ってください。
+
+少なくとも1つのCognito User Poolグループが追加されたら、以下を使用して新しいジオフェンスコレクションをプロビジョニングできます：
+
+```bash
+amplify add geo
+```
+
+```console
+? Select which capability you want to add:
+  Map (visualize the geospatial data)
+  Location search (search by places, addresses, coordinates)
+❯ Geofencing (visualize virtual perimeters)
+```
+
+次に、ジオフェンスコレクションの名前を設定します：
+
+```console
+? Provide a name for the Geofence Collection: storesInWashington
+```
+
+## ジオフェンスコレクションのアクセス権限
+
+次に、ジオフェンスコレクションリソースのアクセス権限を設定し、目的のCognito User Poolグループのユーザーがコレクション内のジオフェンスに対して`CRUD`操作を実行することを許可します。
+
+```console
+? Select one or more cognito groups to give access:
+✔ storesInWashingtonGeofenceCollectionAdmin
+
+? What kind of access do you want for storesInWashingtonGeofenceCollectionAdmin users? Select ALL that apply:
+ ✔ Read geofence
+ ✔ Create/Update geofence
+   Delete geofence
+ ✔ List geofences
+```
+
+上記で選択された権限は、指定されたCognito User Poolグループに属するユーザーに付与されます。これらの権限はコレクション内のすべてのジオフェンスに適用されることに注意してください。たとえば、`storesInWashingtonGeofenceCollectionAdmin` Cognitoグループに対して`Read geofence`権限を選択した場合、そのグループに追加されたすべてのユーザーは、そのジオフェンスコレクション内のすべてのジオフェンスのプロパティを読み取ることができます。
+
+## ジオフェンスコレクションの価格プラン
+
+ジオフェンスコレクションの価格プランは`RequestBasedUsage`に設定されます。価格プランの詳細については、[ロケーションサービスの価格](https://aws.amazon.com/location/pricing/)および[ロケーションサービスの利用規約](https://aws.amazon.com/service-terms/)（セクション82.5）を参照することをお勧めします。
+
+## デフォルトのジオフェンスコレクションを設定する
+
+`amplify add geo`で複数のジオフェンスコレクションを追加した場合、最後に追加されたジオフェンスコレクションがデフォルトになります。ただし、現在のジオフェンスコレクションがアプリケーションのデフォルトになるべきかどうかを選択できます：
+
+```console
+? Set this geofence collection as the default? It will be used in Amplify geofence collection API calls if no explicit reference is provided. (Y/n)
+> No
+```
+
+`No`と答えると、以前に設定されたデフォルトが保持されます。
+
+<InlineFilter filters={["javascript", "react", "angular", "nextjs", "vue"]}>
+
+完了です。これで、アプリケーション内で関心のあるポイントの周りに仮想境界線を作成できます。ライブラリドキュメントについては、[ここ](/gen1/[platform]/build-a-backend/more-features/geo/geofences/)を参照してください。
+
+</InlineFilter>
+
+## ユーザーグループにマップと検索権限を付与する
+
+Cognitoグループのユーザーにマップのレンダリングまたは場所の検索の権限を付与したい場合は、以下のように実行できます：
+
+```bash
+amplify update geo
+```
+
+```console
+? Select which capability you want to update: (Use arrow keys)
+❯ Map (visualize the geospatial data)
+  Location search (search by places, addresses, coordinates)
+  Geofencing (visualize virtual perimeters)
+
+? Select the Map you want to update:
+❯ EsriDarkCanvasMap
+
+? Restrict access by?
+  Auth/Guest Users
+  Individual Groups
+❯ Both
+  Learn more
+```
+
+#### Auth/ゲストユーザーのアクセス
+
+`Auth/Guest Users`を選択して、個々のユーザーの認証ステータスに基づいて権限をスコープします。次の質問では、認証されたユーザーのみがリソースにアクセスできるか、認証されたユーザーとゲストユーザーがアクセスできるかを選択できます：
+
+```
+? Who can access this Map?
+❯ Authorized users only
+  Authorized and Guest users
+```
+
+認証されたユーザーのみがマップをレンダリングできる場合は、`Authorized users only`を選択します。
+
+認証されたユーザーと認証されていないユーザーの両方がマップをレンダリングできる場合は、`Authorized and Guest users`を選択します。
+
+詳細については、[ロケーションサービスページのリンク](https://docs.aws.amazon.com/location/latest/developerguide/security_iam_id-based-policy-examples.html#security_iam_id-based-policy-examples-get-map-tiles)を参照してください。
+
+#### 個別グループアクセス
+
+`Individual Groups`を選択して、[Cognito User Groups](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)に基づいてアクセス権限をスコープします：
+
+```console
+? Select one or more cognito groups to give access:
+  ✔ storesInWashingtonGeofenceCollectionAdmin
+```
+
+> 注：`Auth/ゲストユーザーアクセス`と`個別グループアクセス`を組み合わせた場合、グループのメンバーであるユーザーには、認証されたユーザー権限ではなく、グループの権限のみが付与されます。
+
+## Cognito User Poolグループへのユーザー追加
+
+Amplify CLIを使用して作成された既存のCognito User Poolグループにユーザーを追加するには、以下の手順に従ってください：
+
+#### AWSコンソールを使用する
+
+Amplify CLIによってプロビジョニングされたユーザープールに対応するAWSコンソールページを開きます：
+
+```console
+amplify auth console
+
+? Which console
+❯ User Pool
+  Identity Pool
+  User Pool and Identity Pool
+```
+
+デフォルトブラウザで開いたCognitoユーザープールコンソールページから、`General settings`の`Users and groups`タブを選択します。次に、右側の`Groups`タブから対応するCognitoグループを選択します（![cognito user pool console groups tab](/images/cli/geo/geo-cognito-groups-1.png)を参照）
+
+次に、Cognitoグループに追加する予定のユーザーを`username`や`email`などで選択するウィンドウを表示する`Add users`ボタンをクリックします。_注：Cognito User Pool Groupに追加されたユーザーは、サインアウトしてもう一度サインインして再度認証する必要がある場合があります。_ ![cognito group add users button](/images/cli/geo/geo-cognito-groups-2.png)
+
+#### AWS SDK for Javascriptを使用する
+
+または、AWS SDK for Javascriptを使用してプログラムで既存のCognito User Poolグループにユーザーを追加したい場合は、[APIドキュメント](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentityServiceProvider.html#adminAddUserToGroup)を参照してください。
+
+## ジオフェンスコレクションへの独自のGeoJSONファイルのアップロード
+
+ジオフェンスコレクションを追加してリソースをプロビジョニングしたら、コレクション内のジオフェンスを定義する独自のGeoJSONファイルを以下のコマンドでアップロードできます：
+
+```bash
+amplify geo import
+```
+
+[GeoJSON.IO](https://geojson.io/)を参照することで、独自のジオフェンスを描画し、GeoJSONファイルを自動生成できます。GeoJSONファイルを取得したら、ファイルパスを提供できます：
+
+```console
+? Provide the path to GeoJSON file containing the Geofences for ${your_geofence_collection} collection:
+> ${your_input_geojson_file_path}
+```
+
+各ジオフェンスフィーチャーについて、一意の識別子が必要です。[RFC7946](https://datatracker.ietf.org/doc/html/rfc7946#section-3.2)によれば、識別子を適用するための2つのオプションがあります：
+
+### ルートレベルID
+
+このオプションは、Featureオブジェクトのルートレベルの自動生成された`id`フィールドを識別子として使用します。
+
+<Callout>
+
+**注：**このオプションはGeoJSONファイルを更新します
+
+</Callout>
+
+```console
+? Select the property to use as the Geofence feature identifier:
+> Use root-level "id" field. (Auto-assigned if missing)
+```
+
+### カスタムプロパティ
+
+このオプションを使用すると、Featureオブジェクトの`properties`内で独自のフィールドを選択できます。Amplify CLIは候補プロパティをスキャンし、ウォークスルーでオプションとして提供します。候補プロパティは、すべてのフィーチャーオブジェクトの存在に基づいて選択されます。識別子フィールドはジオフェンス間で一意の値を持つ必要があり、選択後に検証されます。
+
+```console
+? Select the property to use as the Geofence feature identifier:
+  Use root-level "id" field. (Auto-assigned if missing)
+> ${scanned_candidate_property_1}
+  ${scanned_candidate_property_2}
+```
+
+GeoJSONファイルの検証が実行されます。検証成功時、ジオフェンスのアップロードがトリガーされます。GeoJSONの規制については、[RFC7946](https://datatracker.ietf.org/doc/html/rfc7946)を参照してください。
+
+```console
+✅ Successfully validated GeoJSON file.
+✅ Successfully added/updated Geofences in your collection
+```
+
+<InlineFilter filters={["javascript", "react", "angular", "nextjs", "vue"]}>
+
+<Callout>
+
+**注：** Amplify CLIを使用してジオフェンスコレクションをプロビジョニングしたら、アプリケーションのユースケースによっては、プロビジョニングされたジオフェンスコレクションにプログラムでジオフェンスを追加することもできます。詳細については、この[APIドキュメント](/gen1/[platform]/build-a-backend/more-features/geo/geofences/#savegeofences)を参照してください。
+
+</Callout>
+
+</InlineFilter>

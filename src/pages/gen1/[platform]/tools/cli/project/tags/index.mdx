@@ -1,0 +1,130 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '生成されたリソースにタグを適用する',
+  description: 'CLI を通じてタグを付けることで、Amplify が生成した AWS リソースを整理された状態に保つ方法について学びます',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+タグはキーと値のペアで構成されるラベルで、リソースの管理、検索、フィルタリングを容易にします。一般的な用途には以下のようなものが挙げられます：
+
+- リソースの整理
+- コスト配分
+- 運用サポート
+- アクセス制御
+- セキュリティリスク管理
+
+タグの動作方法についてはこちらで[詳しく学ぶ](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html)ことができます。また、タグ付けのベストプラクティスについてはこちらを[参照してください](https://d1.awsstatic.com/whitepapers/aws-tagging-best-practices.pdf)。
+
+## 新しいプロジェクトでのタグの設定
+
+`amplify init` を実行すると、`amplify/backend/` ディレクトリに自動的に `tags.json` ファイルが生成され、事前定義されたタグが含まれます。
+
+ファイルの構造は以下の通りです：
+
+```json
+[
+  {
+    "Key": "user:Stack",
+    "Value": "{project-env}"
+  },
+  {
+    "Key": "user:Application",
+    "Value": "{project-name}"
+  }
+]
+```
+
+**注意：** CLI バージョン 4.28.0 より前に作成されたプロジェクトの場合、`amplify/backend/` ディレクトリの下に目的のタグを含む `tags.json` ファイルを作成することで、`amplify push` を実行した後、既存のリソースにタグが適用されることを保証できます。
+
+> タグ設定ファイルは、「amplify init」を実行して初期 Amplify プロジェクトリソースをデプロイするときに作成されます。「amplify init」の前に、オプションで `amplify/backend/tags.json` 設定ファイルを事前作成することもできます。これにより、初期 Amplify プロジェクトリソースを指定したタグでタグ付けできます。
+
+## 事前定義変数の使用
+
+現在のプロジェクトに関する情報をより具体的に指定できる事前定義タグがあり、自分に合った方法でタグを構造化する機会が得られます。
+
+2 つの事前定義タグは以下の通りです：
+
+- \{project-env} - プロジェクト環境を指す（例：prod、env など）
+- \{project-name} - 現在のプロジェクト名を指す（例：mytestproject）
+
+これらのタグ変数が使用できるケースは多数あります。以下は、これらをどのように組み合わせて使用でき、どのような出力になるかの例です：
+
+```json
+[
+  {
+    "Key": "myawesomekey",
+    "Value": "myvalue-{project-name}-{project-env}"
+  }
+]
+```
+
+プッシュされるとき、リソースは以下に変換されます：
+
+```json
+[
+  {
+    "Key": "myawesomekey",
+    "Value": "myvalue-myamplifyproject-dev"
+  }
+]
+```
+
+タグ値は必須ではないため、空にすることができます。
+
+```json
+[
+  {
+    "Key": "MY_TAG_KEY",
+    "Value": ""
+  }
+]
+```
+
+## タグの追加と更新
+
+`amplify/backend/` フォルダ内の `tags.json` ファイルにファイル自体を編集することで、追加のタグを更新または追加できます。ファイルは JSON 形式である必要があり、以下の構造に従う必要があります：
+
+```json
+[{
+  "Key": "MY_TAG_KEY",
+  "Value": "MY_TAG_VALUE"
+}]
+```
+
+Amplify プロジェクトから AWS リソースを更新するには、`amplify push` を実行します。
+
+## 制限事項
+
+- `amplify/backend/tags.json` ファイルには最大 50 個のタグを追加できます。
+- タグキーと値は大文字と小文字を区別します。
+- 重複したタグキーは許可されていません。
+
+<Callout>
+
+タグ付けのコンベンションの制限事項と制限の詳細については、[このリンク](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html)をご覧ください。
+
+</Callout>

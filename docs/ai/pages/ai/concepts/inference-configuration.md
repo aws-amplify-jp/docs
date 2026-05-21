@@ -1,0 +1,65 @@
+---
+title: "推論設定"
+section: "ai/concepts"
+platforms: ["javascript", "react-native", "angular", "nextjs", "react", "vue"]
+gen: 2
+last-updated: "2024-11-22T21:06:49.000Z"
+url: "https://docs.amplify.aws/react/ai/concepts/inference-configuration/"
+---
+
+LLMには、モデルの動作方法を変更するために設定できるパラメータがあります。これは推論設定または推論パラメータと呼ばれます。LLMは実際にはテキスト入力に基づいてテキストを*予測*しています。この予測は確率的であり、推論設定を調整することで、より創造的または決定的な出力を得ることができます。適切な設定はユースケースによって異なります。
+
+[Bedrockの推論設定に関するドキュメント](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html)
+
+<Accordion title='推論とは何ですか?'>
+
+推論は、入力データに基づいて出力を生成または予測するためにモデルを使用するプロセスを指します。推論はデータセットで学習された後、モデルを使用することです。
+
+</details>
+
+## 推論設定の設定
+
+Amplifyのすべての生成AIルートは、推論設定をオプションパラメータとして受け入れます。推論設定オプションを指定しない場合、Bedrockはそのモデルの[デフォルト値](#default-values)を使用します。
+
+```ts
+a.generation({
+  aiModel: a.ai.model("Claude 3.5 Haiku"),
+  systemPrompt: `You are a helpful assistant`,
+  inferenceConfiguration: {
+    temperature: 0.2,
+    topP: 0.2,
+    maxTokens: 1000,
+  }
+})
+```
+
+## 定義
+
+### Temperature
+
+予測出力の確率分布の形状に影響し、モデルが低い確率の出力を選択する可能性に影響します。Temperatureは通常* 0から1までの数値で、値が低いほどモデルはより高い確率のオプションを選択するようになります。Temperatureについて考えるもう1つの方法は、創造性について考えることです。低い数値(ゼロに近い)は、最も創造的でない最も決定的な応答を生成します。
+
+-* AI21 Labs Jambaモデルは0～2.0の温度範囲を使用します
+
+### Top P
+
+Top pは、モデルが応答の次のトークンから選択できるトークン候補のパーセンテージを指します。値が低いほど、プールのサイズが減少し、オプションがより可能性の高い出力に制限されます。値が高いほど、プールのサイズが増加し、低い確率のトークンを許可します。
+
+### Max Tokens
+
+このパラメータは、モデルが提供できる最大応答を制限するために使用されます。
+
+## デフォルト値
+
+| モデル | Temperature | Top P | Max Tokens |
+| ----- | ----------- | ----- | ---------- |
+| [AI21 Labs Jamba](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-jamba.html#model-parameters-jamba-request-response) | 1.0* | 0.5 | 4096 |
+| [Meta Llama](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-meta.html#model-parameters-meta-request-response) | 0.5 | 0.9 | 512 |
+| [Amazon Titan](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-titan-text.html) | 0.7 | 0.9 | 512 |
+| [Anthropic Claude](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-anthropic-claude-messages.html#model-parameters-anthropic-claude-messages-request-response) | 1 | 0.999 | 512 |
+| [Cohere Command R](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-cohere-command-r-plus.html#model-parameters-cohere-command-request-response) | 0.3 | 0.75 | 512 |
+| [Mistral Large](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-mistral-chat-completion.html#model-parameters-mistral-chat-completion-request-response) | 0.7 | 1 | 8192 |
+
+[Bedrockのモデルデフォルト推論設定に関するドキュメント](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html)
+
+-* AI21 Labs Jambaモデルは0～2.0の温度範囲を使用します

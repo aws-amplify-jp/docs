@@ -1,0 +1,587 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'オフラインファースト',
+  description: 'リモート同期、ライブ同期、ネットワーク検出、オフラインミューテーションによる完全なオフラインサポートを構築します。',
+  platforms: [
+    'android',
+    'flutter',
+    'swift'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify DataStore の独自のアプローチについてさらに理解するために、以下のリソースを参照してください。
+
+<InlineFilter filters={["flutter"]}>
+
+- [DataStore の仕組み](https://docs.amplify.aws/gen1/flutter/build-a-backend/more-features/datastore/how-it-works/)
+- [競合検出と解決](https://docs.aws.amazon.com/appsync/latest/devguide/conflict-detection-and-sync.html)
+- [スキーマ更新](https://docs.amplify.aws/gen1/flutter/build-a-backend/more-features/datastore/schema-updates/)
+
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+
+- [DataStore の仕組み](https://docs.amplify.aws/gen1/android/build-a-backend/more-features/datastore/how-it-works/)
+- [競合検出と解決](https://docs.aws.amazon.com/appsync/latest/devguide/conflict-detection-and-sync.html)
+- [スキーマ更新](https://docs.amplify.aws/gen1/android/build-a-backend/more-features/datastore/schema-updates/)
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+- [DataStore の仕組み](https://docs.amplify.aws/gen1/swift/build-a-backend/more-features/datastore/how-it-works/)
+- [競合検出と解決](https://docs.aws.amazon.com/appsync/latest/devguide/conflict-detection-and-sync.html)
+- [スキーマ更新](https://docs.amplify.aws/gen1/swift/build-a-backend/more-features/datastore/schema-updates/)
+
+</InlineFilter>
+
+オフラインファースト アプリケーション構築の原則をさらに探索し理解するために、[Android のオフラインファースト アプリケーション構築ガイド](https://developer.android.com/topic/architecture/data-layer/offline-first)を確認することをお勧めします。
+
+これらの機能がアプリケーションにとって重要であることを理解しており、DataStore は新機能を受け取らなくなりますが、スムーズに移行するために必要なリソースを提供したいと考えています。以下のセクションでは、代替ソリューションについての高レベルな推奨事項を示します。
+
+## リモート同期
+
+ローカル ストアを定期的に同期することで、アプリケーションのプライマリ ソースとして機能し、オフラインで実行できる読み取り操作を実現できます。オフライン書き込みを管理することを選択すると、アプリケーションに追加の複雑さが生じるため、各個別モデルに対してこれを処理するかどうかを検討することが重要です。
+
+<InlineFilter filters={["swift"]}>
+
+## カスケード削除
+
+SwiftData はリレーションシップを持つモデルのカスケード削除をサポートし、削除を処理するためのさまざまなオプションを提供します。リレーションシップは [`Relationship(_:deleteRule:minimumModelCount:maximumModelCount:originalName:inverse:hashModifier:)`](https://developer.apple.com/documentation/swiftdata/relationship(_:deleterule:minimummodelcount:maximummodelcount:originalname:inverse:hashmodifier:)) 修飾子を使用して定義できます。
+
+```swift
+@Model
+class Trip {
+    var name: String
+    var destination: String
+    var startDate: Date
+    var endDate: Date
+    var accommodation: Accommodation?
+}
+```
+
+削除ルールは [DeleteRule](https://developer.apple.com/documentation/swiftdata/schema/relationship/deleterule-swift.enum) を使用して設定できます。
+
+```swift
+@Relationship(.cascade) var accommodation: Accommodation?
+```
+
+</InlineFilter>
+
+## ライブ同期
+
+<InlineFilter filters={["flutter"]}>
+
+`onCreate`、`onUpdate`、`onDelete` を使用して `Amplify.API.subscribe` を活用することで、インターネットに接続している限り、リモート リポジトリへの変更をリアルタイムで検出できます。このメソッドは、サブスクリプションがアプリケーションがオフラインの場合はアクティブにならないため、それ自体では不十分です。
+
+```dart
+Future<void> initOnlineSync() async {
+  final onCreate = ModelSubscriptions.onCreate(RemoteModel.classType);
+  final createSubscription = Amplify.API.subscribe(onCreate);
+  createSubscription.listen((response) {
+    _syncItem(response, localRepository.create);
+  });
+
+  final onUpdate = ModelSubscriptions.onUpdate(RemoteModel.classType);
+  final updateSubscription = Amplify.API.subscribe(onUpdate);
+  updateSubscription.listen((response) {
+    _syncItem(response, localRepository.update);
+  });
+
+  final onDelete = ModelSubscriptions.onDelete(RemoteModel.classType);
+  final deleteSubscription = Amplify.API.subscribe(onDelete);
+  deleteSubscription.listen((response) {
+    _syncItem(response, localRepository.delete);
+  });
+}
+
+Future<void> _syncItem(
+  GraphQLResponse<RemoteModel> response,
+  Function(LocalModel) syncFunction,
+) async {
+  final remoteModel = response.data;
+  if (remoteModel == null) return;
+
+  final localModel = toLocalModel(remoteModel);
+  // Calls localRepository's create, update, or delete method
+  syncFunction.call(localModel);
+}
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+
+AWS AppSync サブスクリプションを活用することで、インターネットに接続している限り、リモート リポジトリへの変更（作成、更新、削除）をリアルタイムで検出できます。以下の関数は、リモートの作成、更新、削除をサブスクライブし、それらの変更を Room データベースに伝播します。これらのサブスクリプションは、アプリケーションがインターネットに再接続するたびに確立する必要があります。
+
+```kotlin
+suspend fun startSubscriptions() = supervisorScope {
+  // Subscribe to creates
+  apolloClient.subscription(OnCreateSubscription()).toFlow().onEach { response ->
+    response.data?.onCreatePost?.postDetails?.let { post ->
+      postDao.insert(post.toLocalModel())
+    }
+  }.launchIn(this)
+
+  // Subscribe to updates
+  apolloClient.subscription(OnUpdateSubscription()).toFlow().onEach { response ->
+    response.data?.onUpdatePost?.postDetails?.let { post ->
+      postDao.insert(post.toLocalModel())
+    }
+  }.launchIn(this)
+
+  // Subscribe to deletes
+  apolloClient.subscription(OnDeleteSubscription()).toFlow().onEach { response ->
+    response.data?.onDeletePost?.postDetails?.let { post ->
+      postDao.delete(post.toLocalModel())
+    }
+  }.launchIn(this)
+}
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+AWS AppSync を活用することで、インターネットに接続している限り、リモート リポジトリへの変更（作成、更新、削除）をリアルタイムで検出できます。以下のスニペットは、`Post` タイプのリモート作成、更新、削除をサブスクライブし、それらの変更をローカル SwiftData ストアに伝播します。これらのサブスクリプションは、アプリケーションがインターネットに再接続するたびに確立する必要があります。
+
+```swift
+let createSubscription = apolloClient.subscribe(
+    subscription: OnCreateSubscriptionSubscription()
+) { result in
+    guard let data = try? result.get().data else { return }
+    if let postDetails = data.onCreatePost?.fragments.postDetails {
+        let model = PostEntity(postDetails: postDetails)
+        context.insert(model)
+        try? context.save()
+    }
+}
+
+let deleteSubscription = apolloClient.subscribe(
+    subscription: OnDeleteSubscriptionSubscription()
+) { result in
+    guard let data = try? result.get().data else { return }
+    if let deletedId = data.onDeletePost?.id {
+        let fetchDescriptor = FetchDescriptor<PostEntity>(
+            predicate: #Predicate { $0.id == deletedId })
+        if let post = try? context.fetch(fetchDescriptor).first {
+            context.delete(post)
+        }
+    }
+}
+
+let updateSubscription = apolloClient.subscribe(
+    subscription: OnUpdateSubscriptionSubscription()
+) { result in
+    guard let data = try? result.get().data else { return }
+    if let postDetails = data.onUpdatePost?.fragments.postDetails {
+        let model = PostEntity(postDetails: postDetails)
+        context.insert(model)  // upsert via @Attribute(.unique) on id
+        try? context.save()
+    }
+}
+```
+
+</InlineFilter>
+
+## ローカル キャッシュの更新
+
+アプリケーションがインターネットに再接続するたびに、アプリケーション起動またはネットワーク更新を通じて、ローカル ストアの完全な更新を実行して、見落とした可能性のあるすべての更新を確実に受け取るようにしてください。
+
+<InlineFilter filters={["flutter"]}>
+
+```dart
+Future<void> _syncAll() async {
+  final response = await remoteRepository.readAll();
+  final remoteItems = response.data?.items;
+  final localData = remoteItems?.nonNulls.map(toLocalModel);
+
+  if (localData == null) return;
+
+  // Clear local and save results
+  localRepository.rebuild(localData);
+}
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+
+```kotlin
+suspend fun syncAllPosts() {
+  // Sync all pages of posts until there is no nextToken
+  var nextToken: String? = null
+  do {
+    val query = GetPostsQuery(nextToken = Optional.presentIfNotNull(nextToken))
+    val response = apolloClient.query(query).execute()
+    response.data?.listPosts?.items?.let { posts ->
+      val mapped = posts.mapNotNull { it?.postDetails?.toLocalModel() }
+      postDao.insertAll(mapped)
+    }
+    nextToken = response.data?.listPosts?.nextToken
+  } while (nextToken != null)
+}
+```
+
+大量のデータを頻繁に同期する場合、AWS AppSync Delta Sync 操作を設定することで、ローカル ストアを更新するのに必要な時間を短縮できます。Delta Sync 機能を設定および実装する方法の詳細については、[AWS AppSync Delta Sync ガイド](https://docs.aws.amazon.com/appsync/latest/devguide/tutorial-delta-sync.html)をご覧ください。
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+```swift
+func syncAllPosts(apolloClient: ApolloClient, context: ModelContext) {
+    var nextToken: String? = nil
+    repeat {
+        let query = GetPostsQuery(nextToken: nextToken.flatMap { .some($0) } ?? .none)
+        apolloClient.fetch(query: query) { result in
+            guard let data = try? result.get().data else { return }
+            if let items = data.listPosts?.items {
+                for item in items {
+                    guard let postDetails = item?.fragments.postDetails else { continue }
+                    let model = PostEntity(postDetails: postDetails)
+                    context.insert(model)
+                    try? context.save()
+                }
+            }
+            nextToken = data.listPosts?.nextToken
+        }
+    } while (nextToken != nil)
+}
+```
+
+大量のデータを頻繁に同期する場合、AWS AppSync Delta Sync 操作を設定することで、ローカル ストアを更新するのに必要な時間を短縮できます。Delta Sync 機能を設定および実装する方法の詳細については、[AWS AppSync Delta Sync ガイド](https://docs.aws.amazon.com/appsync/latest/devguide/tutorial-delta-sync.html)をご覧ください。
+
+</InlineFilter>
+
+## ネットワーク ステータスの検出
+
+<InlineFilter filters={["flutter"]}>
+
+`Amplify.API.mutate` 操作が例外をスローするか、サブスクリプション オブザーバーがエラーを送信するのを待つことで、ネットワーク ステータス更新をリアクティブに検出できます。
+
+```dart
+void _initObservers() {
+  final onCreate = ModelSubscriptions.onCreate(Todo.classType);
+  Amplify.API
+      .subscribe(onCreate)
+      .listen(_syncCreate, onError: (_) => _offlineDetected());
+
+  final onUpdate = ModelSubscriptions.onUpdate(Todo.classType);
+  Amplify.API
+      .subscribe(onUpdate)
+      .listen(_syncUpdate, onError: (_) => _offlineDetected());
+
+  final onDelete = ModelSubscriptions.onDelete(Todo.classType);
+  Amplify.API
+      .subscribe(onDelete)
+      .listen(_syncDelete, onError: (_) => _offlineDetected());
+}
+
+Future<GraphQLResponse<Todo>> create(Todo model) async {
+  try {
+    final request = ModelMutations.create(model);
+    return Amplify.API.mutate(request: request).response;
+  } catch (e, st) {
+    _offlineDetected();
+    rethrow;
+  }
+}
+```
+
+さらに、Amplify Hub を通じてネットワーク ステータス更新をプロアクティブに検出できます。これにより、アクティブなネットワーク リクエストを行っていないにもかかわらず、ローカル キャッシュを同期する必要があるシナリオを特定できます。
+
+```dart
+Amplify.Hub.listen(HubChannel.Api, _onNetworkStatusChanged);
+
+void _onNetworkStatusChanged(ApiHubEvent hubEvent) {
+  if (hubEvent is SubscriptionHubEvent) {
+    switch (hubEvent.status) {
+      case SubscriptionStatus.connected:
+        _onlineDetected();
+        break;
+      case SubscriptionStatus.connecting:
+      case SubscriptionStatus.pendingDisconnected:
+      case SubscriptionStatus.disconnected:
+      case SubscriptionStatus.failed:
+        _offlineDetected();
+      default:
+        break;
+    }
+  }
+}
+```
+
+アプリケーションがオフラインであることを検出したら、ローカル キャッシュの再同期を定期的に試行してください。これにより、アプリケーションがオンラインに戻ったときを検出し、古いデータをクリーンアップできます。[バックオフ戦略](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/)を実装するか、サードパーティ パッケージを使用して、再同期の試行を効率的に分散することをお勧めします。
+
+```dart
+Future<void> _offlineDetected() async {
+  if (_isOffline) return;
+  _isOffline = true;
+
+  final backoffStrategy = ExponentialJitterBackoff();
+  while (_isOffline) {
+    await Future.delayed(backoffStrategy.nextDelay());
+
+    _isOffline = !await _resync();
+  }
+}
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+
+Android の [ConnectivityManager](https://developer.android.com/training/monitoring-device-state/connectivity-status-type) を使用してネットワーク ステータス更新をプロアクティブに検出できます。これにより、ローカル キャッシュを同期し、サブスクリプションを再確立する必要があるシナリオを特定できます。
+
+```kotlin
+class NetworkMonitor {
+
+  enum class Status {
+    Connected,
+    Disconnected
+  }
+
+  fun monitor(context: Context) = callbackFlow {
+    val networkCallback = object : ConnectivityManager.NetworkCallback() {
+      override fun onAvailable(network: Network) {
+        super.onAvailable(network)
+        trySend(Status.Connected)
+      }
+
+      override fun onLost(network: Network) {
+        super.onLost(network)
+        trySend(Status.Disconnected)
+      }
+    }
+
+    val networkRequest = NetworkRequest.Builder()
+      .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+      .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+      .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+      .build()
+
+    val connectivityManager =
+      context.getSystemService(ConnectivityManager::class.java)
+        as ConnectivityManager
+    connectivityManager.requestNetwork(networkRequest, networkCallback)
+
+    awaitClose {
+      connectivityManager.unregisterNetworkCallback(networkCallback)
+    }
+  }
+}
+
+class SyncEngine(val networkMonitor: NetworkMonitor) {
+  suspend fun start(context: Context) {
+    networkMonitor.monitor(context).collect { networkStatus ->
+      when (networkStatus) {
+        NetworkMonitor.Status.Connected -> startSync()
+        NetworkMonitor.Status.Disconnected -> stopSync()
+      }
+    }
+  }
+}
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+`NWPathMonitor` を使用してネットワーク ステータスをプロアクティブに検出できます。これにより、ローカル キャッシュを同期し、サブスクリプションを再確立する必要があるシナリオを特定できます。
+
+```swift
+protocol NetworkMonitor: AnyObject {
+    var isOnline: Bool { get }
+    func startMonitoring(using queue: DispatchQueue)
+    func stopMonitoring()
+}
+
+extension NWPathMonitor: NetworkMonitor {
+    var isOnline: Bool {
+        currentPath.status == .satisfied
+    }
+
+    func startMonitoring(using queue: DispatchQueue) {
+        self.pathUpdateHandler = { [weak self] path in
+            let isConnected = path.status == .satisfied
+            if isConnected {
+                // start sync and reestablish subscriptions
+            } else {
+                // stop sync
+            }
+        }
+        start(queue: queue)
+    }
+
+    func stopMonitoring() {
+        cancel()
+    }
+}
+```
+
+</InlineFilter>
+
+## オフラインミューテーション
+
+ローカルで行われた変更を別のペンディング ミューテーション テーブルに格納し、後で同期することで、ユーザーがオフラインで作業できるようにします。ペンディング ミューテーション テーブルには、以下を含める必要があります。
+
+1. 自動インクリメント プライマリ キー（モデルの通常のプライマリ キーではない）
+2. ミューテーション タイプの列挙（作成、更新、または削除）
+3. アクション時のモデルの状態
+
+<InlineFilter filters={["flutter"]}>
+
+ペンディング ミューテーション テーブルを同期する際には、以下の表に従って `Amplify.API.mutate` レスポンスを処理してください。
+
+| 例外がスローされた | レスポンスにデータあり | レスポンスにエラーあり | 結果 | アクション |
+|---|---|---|---|---|
+| TRUE | N/A | N/A | 例外 | 同期を一時停止 |
+| FALSE | TRUE | FALSE | 成功 | 同期を続行 |
+| FALSE | TRUE | TRUE | 部分的な成功 | 同期を続行 |
+| FALSE | FALSE | TRUE | 検証エラー | 同期を続行 |
+| FALSE | FALSE | FALSE | 有効な結果ではない | N/A |
+
+ペンディング ミューテーション テーブル エントリを同期する前にアプリに組み込むには、ローカル ストア クエリの結果と集約する必要があります。
+
+## 同期を手動で開始および停止
+
+DataStore では、データの同期を手動で停止および開始できます。これを実装するには、同期ロジックを実行する前に同期が有効になっているかどうかを確認し、フラグを切り替える方法を提供します。同期を有効にするときは、ローカル ストアを同期することを忘れないでください。
+
+```dart
+bool _syncEnabled = true;
+void enableSync() {
+  final previous = _syncEnabled;
+  _syncEnabled = true;
+
+  if (previous != _syncEnabled) _syncAll();
+}
+
+void disableSync() {
+  _syncEnabled = false;
+}
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+
+<Callout>
+
+オフラインミューテーションは、アプリケーションに大きな複雑性をもたらす可能性があります。同期、調整、競合解決はそれぞれ、簡単ではない問題である可能性があります。オフラインミューテーションをサポートするかどうかを決定する前に、メリットとデメリットを慎重に検討する必要があります。
+
+</Callout>
+
+例として、サンプル `Post` タイプのペンディング ミューテーションは以下のようになります。
+
+```kotlin
+enum class MutationType {
+  Create,
+  Update,
+  Delete
+}
+
+@Entity(tableName = "post_mutation")
+data class PostMutationEntity(
+  val postId: String,
+  val type: MutationType,
+  val title: String?,
+  val content: String?,
+  val status: PostStatus?,
+  val rating: Int?,
+  val timestamp: String,
+  @PrimaryKey(autoGenerate = true) val id: Int = 0
+)
+```
+
+### ペンディング ミューテーションを適用
+
+これらのペンディング ミューテーションは、アプリケーションに接続がある場合、AWS AppSync に同期できます。ペンディング ミューテーション テーブル エントリを同期する前にアプリに組み込むには、`PostEntity` と `PostMutationEntity` の両方のインスタンスをフェッチし、それらを単一のディスプレイ モデルに組み合わせ、AWS AppSync によって処理される前にミューテーションを楽観的に適用できます。
+
+```kotlin
+fun PostMutationEntity.applyTo(post: PostEntity) = post.copy(
+  title = title ?: post.title,
+  content = content ?: post.content,
+  status = status ?: post.status,
+  rating = rating ?: post.rating
+)
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+<Callout>
+
+オフラインミューテーションは、アプリケーションに大きな複雑性をもたらす可能性があります。同期、調整、競合解決はそれぞれ、簡単ではない問題である可能性があります。オフラインミューテーションをサポートするかどうかを決定する前に、メリットとデメリットを慎重に検討する必要があります。
+
+</Callout>
+
+例として、サンプル `Post` タイプのペンディング ミューテーションは以下のようになります。
+
+```swift
+enum MutationType: Codable {
+    case create
+    case update
+    case delete
+}
+
+@Model
+class PostMutationEntity {
+    var postId: String
+    var type: MutationType
+    var title: String?
+    var content: String?
+    var status: PostEntityStatus?
+    var rating: Int?
+    var timestamp: String
+    
+    init(postId: String,
+         type: MutationType,
+         title: String? = nil,
+         content: String? = nil,
+         status: PostEntityStatus? = nil,
+         rating: Int? = nil,
+         timestamp: String) {
+        self.postId = postId
+        self.type = type
+        self.title = title
+        self.content = content
+        self.status = status
+        self.rating = rating
+        self.timestamp = timestamp
+    }
+}
+```
+
+### ペンディング ミューテーションを適用
+
+これらのペンディング ミューテーションは、アプリケーションに接続がある場合、AWS AppSync に同期できます。ペンディング ミューテーション テーブル エントリを同期する前にアプリに組み込むには、`PostEntity` と `PostMutationEntity` の両方のインスタンスをフェッチし、それらを単一のディスプレイ モデルに組み合わせ、AWS AppSync によって処理される前にミューテーションを楽観的に適用できます。
+
+```swift
+extension PostMutationEntity {
+    func applyTo(model: PostEntity) -> PostEntity {
+        if let title = self.title { model.title = title }
+        if let content = self.content { model.content = content }
+        if let rating = self.rating { model.rating = rating }
+        if let status = self.status { model.status = status }
+        return model
+    }
+}
+```
+
+</InlineFilter>

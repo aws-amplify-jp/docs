@@ -1,0 +1,71 @@
+# README
+
+**作業方法:** 大規模なサイト更新のための変更をコミットするために `next-release/main` を使用しています。
+- ページごとに1つのブランチ: 新しいサイトの最新アップデートを取得するために、`next-release/main` からブランチを作成してください。テクニカルレビューと編集レビューのためにPRのサイズを減らすために、ブランチをページまたは小さな章に限定してください。
+- PRレビュー: レビュー用の最終コピーの準備ができたら、`next-release/main` にPRを送信してレビューと承認を進めてください。
+
+**新しいIA:** このフォルダのメニューは、新しいドキュメントIAの構成に従います。`gen2` の下の第1レベルフォルダを変更しないでください（build-a-backend、build-ui など）。また、新しいメニューの各エントリは選択可能であるため、すべてのフォルダに index.mdx ファイルが必要になります。コンテンツがないものには、必要に応じてサブメニューへのカードインデックスが含まれます。
+
+**フォルダ構造:** ルートファイル（index.mdx）をホストするページフォルダは、最終的なURLを駆動し続けます。記述的でSEOに適したURLを生成するために、これらのフォルダに記述的な命名規則を使用してください。たとえば、src/pages/gen2/build-a-backend/auth/set-up-auth/index.mdx は https://docs.amplify.aws/gen2/build-a-backend/auth/set-up-auth/ に対応しています。ルートフォルダファイルに index.mdx の命名規則を使用してください。
+
+**プラットフォームスイッチャー:** このフォルダにはプラットフォームスイッチャーはありませんが、将来的にスイッチャーと連携するようにフォルダとファイル構造を整理しています。新しいプラットフォームスイッチャーはページフォルダの最上部とURLの開始位置に配置されます。たとえば、src/pages/[platform]/start/getting-started/setup/index.mdx。ルートフォルダファイルが index.mdx 命名規則を使用していることを確認してください。
+
+**InlineFilter:** 現在スイッチャーがないため、これらのページでは InlineFilter は不要です。このフォルダは JS 関連のプラットフォームにのみ表示されます。
+
+**フラグメント:** シングルユースのフラグメントは使用しないでください。
+
+**初期セットアップ:** ページマイグレーション用の視覚的な構造を提供するために、初期IAが設定されました。すべてのエントリがこのページに含まれているわけではなく、ルートフォルダ名の一部が変更される可能性があります。変更を加えたり、新しいフォルダとファイルを追加したりするときは、上記の注意事項を確認してください。
+
+10/19 更新
+gen2
+├── build-a-backend
+│   ├── add-aws-services
+│   │   ├── custom-resources
+│   │   │   └── index.mdx
+│   │   └── overriding-resources
+│   │       └── index.mdx
+│   ├── auth
+│   │   ├── add-social-provider
+│   │   │   └── index.mdx
+│   │   └── set-up-auth
+│   │       └── index.mdx
+│   ├── data
+│   │   ├── connect-existing-data
+│   │   │   └── index.mdx
+│   │   └── set-up-data
+│   │       └── index.mdx
+│   ├── functions
+│   │   └── index.mdx
+│   ├── index.mdx
+│   └── storage
+│       └── index.mdx
+├── build-ui
+│   └── index.mdx
+├── deploy-and-host
+│   ├── fullstack-branching
+│   │   ├── branch-deployments
+│   │   │   └── index.mdx
+│   │   └── sandbox-deployments
+│   │       └── index.mdx
+│   ├── hosting-features
+│   │   └── index.mdx
+│   ├── index.mdx
+│   └── local-development
+│       └── index.mdx
+├── how-amplify-works
+│   ├── concepts
+│   │   └── index.mdx
+│   ├── existing-projects
+│   │   └── index.mdx
+│   ├── index.mdx
+│   └── project-structure
+│       └── index.mdx
+├── README.mdx
+├── reference
+│   ├── amplifyconfiguration
+│   │   └── index.mdx
+│   ├── CLI-commands
+│   │   └── index.mdx
+│   └── index.mdx
+└── start
+    └── index.mdx

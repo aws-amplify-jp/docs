@@ -1,0 +1,381 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'モッキングとテスト',
+  description: 'すべての変更をクラウドにプッシュすることなく、Amplifyプロジェクトを迅速にテストおよびデバッグする方法を学びます。API（AWS AppSync）、Storage（Amazon DynamoDBおよびAmazon S3）、Functions（AWS Lambda）を含む特定のカテゴリのローカルモッキングおよびテストを使用します。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+ローカルモッキングを使用する前に、Amplifyセットアップの**[Getting Started](/gen1/[platform]/start/getting-started/)**セクションを完了することを強くお勧めします。
+
+すべての変更をクラウドにプッシュすることなく、迅速にテストおよびデバッグするために、Amplifyは特定のカテゴリに対して_ローカルモッキングおよびテスト_をサポートしています。これにはAPI（AWS AppSync）、Storage（Amazon DynamoDBおよびAmazon S3）、Functions（AWS Lambda）が含まれます。これには、GraphQL Transformerからのディレクティブの使用、リゾルバの編集およびデバッグ、ホットリロード、認可チェックのJWTモッキング、およびコンテンツのアップロードやダウンロードなどのS3操作の実行が含まれます。
+
+<Callout>
+  Amplifyでローカルモッキングを使用するには、開発ワークステーションにJavaが必要です。
+</Callout>
+
+> **注意：**現在、Apple Silicon Macでは、ARMプロセッサ用に構築された特定のJDKバージョンを使用している場合、Amplifyはモックの起動に失敗することがあります。
+>
+> [この問題](https://github.com/aws-amplify/amplify-cli/issues/7411)が発生した場合は、JavaウェブサイトからオフィシャルのopenJDK 16.0.1を使用してみてください：[JDKダウンロード](https://jdk.java.net/16/)
+
+[サンプルアプリを使用したブログウォークスルー](https://aws.amazon.com/blogs/mobile/amplify-framework-local-mocking/)。
+
+## APIモッキングのセットアップ
+
+`amplify init`を実行した後、クラウドにプッシュする前にGraphQL APIを追加して、すぐにモッキングを開始できます。REST APIはまだサポートされていません。例えば：
+
+```bash
+amplify init
+amplify add api # GraphQLを選択し、APIキーを使用します
+amplify mock api
+```
+
+`amplify mock api`を実行すると、codegen処理が実行され、クエリ、ミューテーション、サブスクリプションなどの必要なGraphQLアセット、およびアプリケーション用のTypeScriptまたはSwiftクラスが作成されます。Androidでは、codegen処理の完了後にGradleが必要なクラスを作成するための構築ステップが必要であり、[AndroidManifest.xml](#android-config)の追加設定も必要です。
+
+ローカルでアプリをテストしたくない場合でも、[ローカルGraphQLコンソール](#graphql-local-console)を使用したり、[VTLリゾルバを編集、デバッグ、およびテスト](#graphql-resolver-debugging)したりすることができます。
+
+スキーマを追加する際は、最初にAPI Keyを使用してすべてが機能することを確認してください。ただし、Cognito User Poolに対して認証することもでき、ローカルテストサーバーはJWTトークンを受け入れます。ローカルコンソールでJWTトークンをモックすることもできます（以下で説明）。ただし、その場合はUser Poolを作成するために最初に`amplify push`を実行する必要があります。
+
+スキーマを定義する際には、ローカルテストおよびスキーマからのローカルコード生成でGraphQL Transformerのディレクティブを使用できます。現在、ローカルテストでは次のディレクティブがサポートされています：
+
+- [@auth](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)
+- [@primaryKey、@index](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/)
+- [@hasOne、@hasMany、@belongsTo、@manyToMany](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/)
+- [@function](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#lambda-function-resolver)
+- [@searchable](/gen1/[platform]/build-a-backend/graphqlapi/search-and-result-aggregations/)
+
+### `@model`タイプでのLambdaトリガーのモッキング
+
+[ここ](/gen1/[platform]/tools/cli/usage/lambda-triggers/#as-a-part-of-the-graphql-api-types-with-model-annotation)にリストされている手順に従って、GraphQLスキーマの`@model`タイプに対してDynamoDB Lambdaトリガーがセットアップされている場合、`amplify mock`または`amplify mock api`を使用してこれらのLambdaトリガーをローカルでテストできます。
+
+接続されたLambdaトリガーは、ローカルDynamoDBエンドポイント（`http://localhost:62224`）またはローカルAppSyncコンソール（`http://localhost:20002`）を使用して`@model`タイプに対するCRUD操作を実行した場合、自動的にローカルで呼び出されます。Lambdaトリガーに送信されるイベントの構造は[ここ](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_streams_GetRecords.html)で見つけることができます。
+
+以下の[関数モック環境変数](/gen1/[platform]/tools/cli/usage/mock/#function-mock-environment-variables)にリストされている環境変数は、Lambdaトリガーの各呼び出しで利用可能です。
+
+さらに、関数ディレクトリ内（例：`<project root>/amplify/backend/function/<function name>/.env`）に`.env`ファイルを使用して、ローカルモッキング用の環境変数をオーバーライドできます。
+
+### `@searchable`を持つ`@model`タイプのモッキング
+
+GraphQLスキーマ内の`@model`タイプで`@searchable`ディレクティブを使用している場合、`amplify mock`または`amplify mock api`を使用してローカルで生成される検索GraphQLクエリをテストできます。検索クエリの詳細については、[このガイド](/gen1/[platform]/build-a-backend/graphqlapi/search-and-result-aggregations/)を参照してください。
+
+検索可能なモデルを使用してAPIをモックする場合、次のアーティファクトが作成されます：
+
+- [OpenSearch](https://opensearch.org/) version `1.3.0`がダウンロードされます。
+- Python Lambdaトリガーは`mock-api-resources/searchable/searchable-lambda-trigger`にローカルに保存されます。このLambdaトリガーは、検索可能なモデルタイプに対するCRUD操作を実行する場合、自動的にローカルで呼び出されます。対応する検索インデックス内のデータはローカルOpenSearchクラスタで更新されます。
+- OpenSearchインデックスを保存するためのデータフォルダが`mock-api-resources/searchable/searchable-data`に作成されます。
+
+<Callout>
+  この機能はLinuxおよびMacシステムでのみ利用可能です。Windowsベースのシステムでは、検索GraphQLクエリに対して空のリストが出力されます。
+</Callout>
+
+> **注意：**Mockでは、IAM認可ルールはリクエストがAccessKey `ASIAVJKIAM-AuthRole`で署名されている場合、Authロールとして扱われます。それ以外の場合、リクエストはAuthなしユーザーによって作成されたものとして扱われます。
+
+## Storageモッキングのセットアップ
+
+S3ストレージモッキングの場合、`amplify init`を実行した後、最初に`amplify add auth`を実行する必要があります（明示的に、またはストレージを最初に追加する場合は暗黙的に）。その後、`amplify push`を実行してください。これは、クライアントライブラリでストレージをモッキングするには初期セットアップ用の認証情報が必要であるためです。ただし、バケットポリシーに配置されたものなどのS3認可ルールは、現在ローカルモッキングによってチェックされていないことに注意してください。
+
+初期プッシュを実行した後は、モックサーバーを実行してローカルエンドポイントにアクセスできます：
+
+```bash
+amplify init
+amplify add storage # これでアプリを追加するよう促されます
+amplify push
+amplify mock storage
+```
+
+iOSアプリケーションでローカルS3エンドポイントを使用するには、[Info.plistファイルを変更](#ios-config)する必要があります。AndroidアプリケーションでローカルS3エンドポイントを使用するには、[AndroidManifest.xml](#android-config)の追加設定が必要です。
+
+DynamoDBストレージの場合、GraphQL APIを作成するときにセットアップが自動的に行われ、アクションは必要ありません。モックされたデータのリソース（DynamoDBローカルデータベースやローカルS3エンドポイントを使用してアップロードされたオブジェクトなど）は、プロジェクト内の`amplify/mock-data`に保存されます。
+
+## 関数モッキングのセットアップ
+
+`amplify add function`でプロジェクトに関数を追加した後、`amplify mock function`を使用してテストできます。
+
+`amplify mock function`は次の引数をサポートしています：
+
+- `<function name>` - モックする関数の名前。`amplify mock function`の直後に続く必要があります。例えば、`amplify mock function myFunctionName`
+- `--event "<path to event JSON file>"` - 指定されたJSONファイルをLambdaハンドラーに渡すイベントとして使用します
+- `--timeout <number of seconds>` - デフォルトの10秒の関数応答タイムアウトをカスタムタイムアウト値でオーバーライドします
+
+さらに、`amplify mock function`を実行すると、複数の関数を選択してテストできます。
+
+### GraphQLを使用した関数モッキング
+
+スキーマに[@function](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#lambda-function-resolver)を使用して接続されたGraphQL Lambdaリゾルバは、[`amplify mock api`](#api-mocking-setup)を使用してモックできます。例えば、**quoteOfTheDay**という名前の関数があり、次のようなスキーマがある場合：
+
+```graphql
+type Query {
+  getQuote: String @function(name: "quoteOfTheDay-${env}")
+}
+```
+
+その場合、`amplify mock api`を実行すると、ローカルGraphQLエンドポイントは次のようなGraphQLクエリを実行するときにこの関数をローカルで呼び出します：
+
+```graphql
+query {
+  getQuote
+}
+```
+
+### 関数モック環境変数
+
+`amplify mock function`は、クラウドにデプロイされたときに存在するのと同じ環境変数を設定します。Amplifyは関数のCloudFormationテンプレートを解析し、そこで指定された環境変数を解決しようとします（また、[関数モック制限](#function-mock-limitations)も確認してください）。
+
+CloudFormationパラメータは以下によって解決されます：
+
+- 関数の`parameters.json`ファイルで指定された値を解決します
+- `<env>.categories.function.<function name>`ブロック内の`team-provider-info.json`で指定された値を解決します。ここで、`<env>`は現在チェックアウトされている環境で、`<function name>`はモックされている関数です
+- `AWS::Region`、`AWS::AccountID`、`AWS::StackName`、`AWS::StackId`は、`team-provider-info.json`の現在の環境の`awscloudformation`設定を解析することによって解決されます
+- プロジェクト内の他のリソースへの依存関係から構成されたパラメータは、`amplify-meta.json`を解析することによって解決されます。さらに、モックAPIが現在実行中で、関数がAPIに依存している場合、ローカルAPI URLはクラウドURLに置き換わります
+
+モック環境は、次の方法で[Lambdaランタイム環境変数](https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-runtime)も設定します：
+
+- `AWS_ACCESS_KEY_ID`、`AWS_SECRET_ACCESS_KEY`、`AWS_SESSION_TOKEN`は、Amplifyプロジェクトが現在設定されているAWS認証情報を使用して設定されます
+- `_HANDLER`、`AWS_REGION`、`AWS_LAMBDA_FUNCTION_NAME`、`LAMBDA_TASK_ROOT`、`LAMBDA_RUNTIME_DIR`は、モックされている関数に基づいて設定されます
+- 他のすべてのランタイム環境変数については、静的なデフォルト値が指定されます。静的デフォルト値の完全なリストは[ここ](https://github.com/aws-amplify/amplify-cli/blob/main/packages/amplify-util-mock/src/utils/lambda/populate-lambda-mock-env-vars.ts#L39)で見つけることができます
+
+関数ディレクトリ内（例：`<project root>/amplify/backend/function/<function name>/.env`）の`.env`ファイルで、モック環境変数をオーバーライドすることもできます。
+
+### モック`@model`テーブルへの接続
+
+`amplify mock api`を実行するときに、モック関数を`@model`で生成されたテーブルに接続するには：
+
+1. 関数ディレクトリに次の内容で`.env`ファイルを作成します：
+
+```ini
+AWS_REGION=us-fake-1
+DDB_ENDPOINT=http://localhost:62224
+AWS_ACCESS_KEY_ID=fake
+AWS_SECRET_ACCESS_KEY=fake
+API_<api name>_<model>TABLE_NAME=<model>Table
+```
+
+`<api name>`をAPIの名前に置き換え、`<model>`をモデルの名前に置き換えます。環境変数名はすべて大文字にする必要があります。例えば、「FlightStats」という名前のAPIがあり、`type Airplane @model {...}`として定義されたモデルがある場合、`.env`ファイルの最後の行は次のようになります：
+
+```ini
+API_FLIGHTSTATS_AIRPLANETABLE_NAME=AirplaneTable
+```
+
+2. 関数のDynamoDBクライアントを次のように設定します：
+
+```js
+const ddb = new aws.DynamoDB.DocumentClient({
+  endpoint: process.env.DDB_ENDPOINT
+});
+const result = await ddb
+  .put({
+    TableName: process.env.API_FLIGHTSTATS_AIRPLANETABLE_NAME,
+    Item: {
+      id: '1234567890',
+      name: 'F-22',
+      description: 'Cool fighter jet'
+    }
+  })
+  .promise();
+```
+
+3. `amplify mock api`を実行してローカルDynamoDBエンドポイントを有効にします
+4. `amplify mock function`を実行します。これでモックDynamoDBテーブルに接続されます
+
+クラウドで実行する場合、これらの環境変数は`DDB_ENDPOINT`を除いて有効な値を持ちます。`DDB_ENDPOINT`は`undefined`になります。この場合、DynamoDBクライアントはデフォルトエンドポイントを使用します。
+
+ローカルで実行する場合、これらの環境変数はローカルデータベースに接続するために必要な偽の値を指定する`.env`ファイルを使用して設定されます。
+
+**注意：**モックデータベースに接続中に、モック関数内の他のAWSリソースへの呼び出しは機能しません。AWS認証情報環境変数が偽の認証情報で上書きされているためです。モックテーブルと他のAWSサービスの両方を呼び出すには、DynamoDBクライアント設定で偽の認証情報と実際の認証情報を切り替えるロジックを追加してください。この場合、`.env`ファイルを次のように設定できます：
+
+```ini
+IS_MOCK=true
+```
+
+そしてDynamoDBクライアントを次のように設定します：
+
+```js
+const clientConfig = process.env.IS_MOCK
+  ? {
+      region: 'us-fake-1',
+      endpoint: 'http://localhost:62224',
+      credentials: new aws.Credentials({
+        accessKeyId: 'fake',
+        secretAccessKeyId: 'fake'
+      })
+    }
+  : undefined;
+const ddb = new aws.DynamoDB.DocumentClient(clientConfig);
+```
+
+### 関数モック制限
+
+`amplify mock function`は、Lambdaランタイム環境を完全にシミュレートしようとはしません。モッキング時の関数の動作がクラウドでの実行と異なる場合があります。
+
+例えば、モックはローカルOSで実行され、クラウドで関数を実行するAmazon Linuxをエミュレートしようとはしません。`amplify mock function`でのテストは関数の正確性に対する迅速なフィードバックを得るために使用されるべきですが、クラウド開発環境でのテストの代わりとして使用されるべきではありません。
+
+## 複数のリソースのモッキング
+
+API、Storage、またはFunctionsを一緒にモックするには、次を実行します：
+
+```bash
+amplify mock
+```
+
+モックは、プロジェクトに追加されたモック可能なリソースに応じて、次のプロンプトを表示します：
+
+```console
+? Select the category …  (Use arrow keys or type to filter)
+❯● GraphQL API
+ ○ Function
+ ○ Storage
+```
+
+## 設定ファイル
+
+ローカルモックエンドポイントに対する操作を実行する場合、Amplify CLIは自動的に`aws-exports.js`および`awsconfiguration.json`をローカルエンドポイント、必要に応じて偽の値（例えば偽のAPIキー）で更新し、SSLを無効にします。明示的な値（`DangerouslyConnectToHTTPEndpointForTesting`）を使用して、この機能がローカルモッキングおよびテストのためのみであることを示します。これは`amplify mock`を実行してサーバーが実行されている場合に自動的に発生します。モックサーバーを停止すると、設定ファイルはプロジェクトの正しいクラウドエンドポイントで更新され、`DangerouslyConnectToHTTPEndpointForTesting`は設定ファイルから削除されます。
+
+### aws-exports.jsの例
+
+```js
+const awsmobile = {
+  aws_project_region: 'us-east-1',
+  aws_appsync_graphqlEndpoint: 'http://localhost:20002/graphql',
+  aws_appsync_region: 'us-east-1',
+  aws_appsync_authenticationType: 'AMAZON_COGNITO_USER_POOLS',
+  aws_appsync_apiKey: 'da2-fakeApiId123456',
+  aws_appsync_dangerously_connect_to_http_endpoint_for_testing: true,
+  aws_cognito_identity_pool_id:
+    'us-east-1:270445b2-cc92-4d46-a937-e41e49bdb892',
+  aws_cognito_region: 'us-east-1',
+  aws_user_pools_id: 'us-east-1_excPT39ZN',
+  aws_user_pools_web_client_id: '4a950rsq08d2gi68ogdt7sjqub',
+  oauth: {},
+  aws_user_files_s3_bucket:
+    'local-testing-app-2fbf0a32d1896419b88f004c2755d084c-dev',
+  aws_user_files_s3_bucket_region: 'us-east-1',
+  aws_user_files_s3_dangerously_connect_to_http_endpoint_for_testing: true
+};
+```
+
+### awsconfiguration.jsonの例
+
+```json
+"AppSync": {
+  "Default": {
+    "ApiUrl": "http://localhost:20002/graphql",
+    "Region": "us-east-1",
+    "AuthMode": "AMAZON_COGNITO_USER_POOLS",
+    "ClientDatabasePrefix": "deddd_AMAZON_COGNITO_USER_POOLS",
+    "DangerouslyConnectToHTTPEndpointForTesting": true
+  }
+},
+"S3TransferUtility": {
+  "Default": {
+    "Bucket": "local-testing-app-2fbf0a32d1896419b88f004c2755d084c-dev",
+    "Region": "us-east-1",
+    "DangerouslyConnectToHTTPEndpointForTesting": true
+  }
+}
+```
+
+## iOSの設定
+
+iOSでローカルモックS3サーバーに対して実行する場合、ローカルネットワーク上でSSLを不要にするために`Info.plist`を更新する必要があります。これを有効にするには、`NSAppTransportSecurity`の下で`NSAllowsLocalNetworking`を`YES`に設定します。これにより、セキュリティ例外をlocalhostドメインのみに限定します。詳細は[NSAllowsLocalNetworkingのApple Developer Documentation](https://developer.apple.com/documentation/bundleresources/information_property_list/nsapptransportsecurity/nsallowslocalnetworking)を参照してください。
+
+## Androidの設定
+
+Androidでローカルモックサーバーに対して実行する場合、アプリがローカルネットワーク上で実行されている場合にのみクリアテキストトラフィックを有効にするために、**追加のビルドバリアント**（DebugとReleaseなど）を使用することをお勧めします。これにより、Release Build Variantでセキュリティで保護されていないHTTPトラフィックを許可しないようにします。
+
+例えば、Android Studioプロジェクトで`/src/debug/AndroidManifest.xml`を作成し、このファイル内にネットワーク設定ファイル参照`android:networkSecurityConfig="@xml/network_security_config"`を作成します：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application android:networkSecurityConfig="@xml/network_security_config" />
+</manifest>
+```
+
+次に、ネットワーク設定ファイル`/src/debug/res/xml/network_security_config.xml`を作成し、localhostのIPレンジのみに制限します：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+  <domain-config cleartextTrafficPermitted="true">
+    <domain includeSubdomains="true">10.0.2.2</domain>
+  </domain-config>
+</network-security-config>
+```
+
+次に、[ビルドバリアント](https://developer.android.com/studio/build/build-variants)を使用し、Debugビルドを実行してローカルモックサーバーのみでこの設定をテストしてください。詳細については、[公式Androidドキュメンテーション](https://developer.android.com/studio/build/manifest-merge)を参照してください。
+
+あるいは、本番以外のアプリケーションを実行していて、複数のビルドバリアントを使用したくない場合は、以下のコードスニペットのように**AndroidManifest.xml**に`android:usesClearTextTraffic="true"`を設定できます。**これは推奨されません。モッキングが完了したら、これを削除してください。**
+
+```xml
+<application
+  android:icon="@mipmap/ic_launcher"
+  android:label="@string/app_name"
+  android:theme="@style/AppTheme"
+  android:usesClearTextTraffic="true" >
+
+  <!--other code-->
+</application>
+```
+
+## GraphQLローカルコンソール
+
+テストを開始する前に、JavaScriptアプリケーション、AndroidアプリケーションまたはiOSアプリケーションを開始する前に、次のコマンドを実行します：
+
+```bash
+amplify mock
+```
+
+または、APIカテゴリのみをモックするために`amplify mock api`を実行できます。クライアントアプリケーションを構築している場合は、プロンプトが表示されたら、クエリ、ミューテーション、サブスクリプションを自動的に生成するために**YES**を選択してください。
+
+サーバーが起動すると、URLが出力されます。ブラウザでこのURLを開きます（`http://localhost:20002`のはずです）。[OneGraph](https://github.com/OneGraph/graphiql-explorer) GraphQLコンソールがブラウザで開きます。左側のエクスプローラーを使用してクエリ/ミューテーションを構築したり、メインウィンドウに手動でステートメントを入力したりできます。Amplifyモッキングは、DynamoDB Localを使用してシステム上にレコードを永続化します。必要に応じて、[SQLite Explorer](https://github.com/AlexCovizzi/vscode-sqlite)を使用してVisual Studio codeでこれらを表示できます。そのレポのための指示に従ってローカルデータベースに接続してください。
+
+APIがCognito User Poolsを使用するように設定されている場合、ローカルコンソールは、バンドルされたJWTトークンの`Username`、`Groups`、`email`を変更する方法を提供します。これらの値はGraphQL transformers Authディレクティブで使用されます。**Auth**をクリックして変更を保存し、コンソールで操作を実行してルールをテストすることで、編集してください。
+
+## GraphQLリゾルバのデバッグ
+
+VTLテンプレートをローカルで編集して、CloudFormationにプッシュする前にエラーが含まれているかどうかを確認できます。リモートで実行されている場合、行番号は問題を引き起こしています。ローカルAPIが実行されている場合、`amplify/backend/api/APINAME/resolvers`に移動します。`APINAME`は`$amplify add api`を実行した時に使用した論理名です。Transformerが生成したリゾルバテンプレートのリストが表示されます。それらのいずれかを変更して保存すると、`Mapping template change detected. Reloading.`というメッセージですぐにローカルで実行されているAPIサービスにロードされます。エラーがある場合は、次のようなメッセージが表示されます：
+
+```console
+Reloading failed Error: Parse error on line 1:
+...son($context.result
+----------------------^
+```
+
+ローカルサーバーを停止する場合（例えば、変更をクラウドにプッシュするため）、`../APINAME/resolvers`ディレクトリ内のすべてのテンプレートは、変更したテンプレート以外は削除されます。その後、クラウドにプッシュするときに、これらのローカル変更はAppSync APIにマージされます。
+
+### スキーマを変更して再度テストします
+
+アプリを開発するときはいつでも、`amplify/backend/api/APINAME/schema.graphql`に存在するGraphQLスキーマを変更できます。ローカルサーバーが実行されている間に、サポートされているディレクティブを使用してタイプを変更して、このファイルを保存できます。変更が検出され、スキーマが有効な場合、ローカルAPIにホットリロードされます。スキーマにエラーがある場合は、エラーが次のようにターミナルに出力されます：
+
+```console
+Unknown directive "mode".
+
+GraphQL request (1:11)
+1: type Todo @mode{
+             ^
+2:   id: ID!
+
+    at GraphQLTransform.transform
+```
+
+これらのカテゴリ用に設定されたAmplifyライブラリは、ローカルモック化されたエンドポイントを使用してアプリケーションをテストできます。モックエンドポイントが実行されている場合、CLIは`aws-exports.js`または`awsconfiguration.json`をモックサーバーを使用するように更新し、停止すると`amplify push`を実行した後、クラウドエンドポイントを使用するように更新されます。

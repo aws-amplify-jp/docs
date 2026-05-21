@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"react","meta":{"title":"CRUD操作の移行","description":"DataStoreのsave、query、update、delete、predicates、pagination、sortingをApollo Client GraphQL操作に移行します。","platforms":["angular","javascript","nextjs","react","react-native","vue"]}},"__N_SSG":true}

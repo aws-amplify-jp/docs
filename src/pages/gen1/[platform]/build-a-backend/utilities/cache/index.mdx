@@ -1,0 +1,202 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'キャッシュ',
+  description: 'Amplify Cache モジュールは、優先度と有効期限の設定を使用してデータを保存するための汎用 LRU キャッシュを JavaScript 開発者に提供します。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript", "react-native", "angular", "nextjs", "react", "vue"]}>
+
+Amplify Cache モジュールは、優先度と有効期限の設定を使用してデータを保存するための汎用 [LRU](https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_Recently_Used_.28LRU.29) キャッシュを JavaScript 開発者に提供します。
+
+これはキー/バリュー構造で、有効期限の値を**グローバルに**または**キー単位で**構成できます。たとえば、API モジュールからのすべての JSON レスポンスを次の 10 分間キャッシュしたい場合もあれば、ユーザー入力値または設定を 1 ヶ月間保存したい場合もあります。
+
+## インストール
+
+`aws-amplify` をインストールします。
+
+```bash
+npm install aws-amplify
+```
+
+## API の使用
+
+まず、ライブラリをインポートします。
+
+```javascript
+import { Cache } from 'aws-amplify/utils';
+```
+
+インポート後、アプリケーション内で適切なメソッドを呼び出すことができます。
+
+### setItem()
+
+```javascript
+Cache.setItem(key, value, [options]);
+```
+
+キャッシュに_数値_、_文字列_、_ブール値_、_配列_、または_オブジェクト_の値を設定できます。呼び出しに沿ってオプション（優先度や有効期限など）を指定することもできます。
+
+```javascript
+// 標準ケース
+Cache.setItem('key', 'value');
+
+// 優先度付きでアイテムを設定します。優先度は 1 ～ 5 の間である必要があります。
+Cache.setItem('key', 'value', { priority: 3 });
+
+// 有効期限付きでアイテムを設定
+const expiration = new Date(2018, 1, 1);
+Cache.setItem('key', 'value', { expires: expiration.getTime() });
+```
+
+`priority` 設定を使用する場合、より大きい数字でキャッシュされたアイテムが最初に有効期限切れになります。Cache モジュールは、キャッシュで利用可能なメモリに基づいて有効期限を決定します。次の例では、`breakfastFoodOrder` は `mothersBirthday` の前に有効期限切れになります。
+
+```javascript
+Cache.setItem('mothersBirthday', 'July 18th', { priority: 1 });
+Cache.setItem('breakfastFoodOrder', 'Pancakes', { priority: 3 });
+```
+
+### getItem()
+
+```javascript
+Cache.getItem(key[, options]);
+```
+
+キャッシュからアイテムを取得します。アイテムが存在しないか、有効期限が切れている場合は null を返します。
+
+```javascript
+// 標準ケース
+Cache.getItem('key');
+
+// コールバック関数を使用してアイテムを取得します。
+// アイテムがキャッシュにない場合、コールバック関数が呼び出されます。
+// コールバック関数が戻ると、値がキャッシュに設定されます。
+Cache.getItem('key', { callback: callback });
+```
+
+### removeItem()
+
+キャッシュからアイテムを削除します。
+
+```javascript
+Cache.removeItem(key);
+```
+
+### clear()
+
+キャッシュ内のすべてのアイテムを削除します。
+
+```javascript
+Cache.clear();
+```
+
+### getAllKeys()
+
+キャッシュで利用可能なすべてのキーを返します。
+
+```javascript
+Cache.getAllKeys();
+```
+
+### getCacheCurSize()
+
+キャッシュの現在のサイズをバイト単位で返します。
+
+```javascript
+const size = Cache.getCacheCurSize();
+```
+
+### configure()
+
+`setItem` 機能のデフォルト設定を構成します。[設定](#configuration)セクションで利用可能なすべてのオプションを確認できます。
+
+```javascript
+const config = {
+  itemMaxSize: 3000, // 3000 bytes
+  defaultPriority: 4
+  // ...
+};
+const myCacheConfig = Cache.configure(config);
+
+// キャッシュサイズ、アイテムのデフォルト TTL などのパラメータを変更できます。
+// ただし、Cache の識別子である keyPrefix を変更しようとしないでください。
+```
+
+### createInstance()
+
+カスタム設定で Cache の新しいインスタンスを作成します。
+
+```javascript
+const config = {
+  itemMaxSize: 3000, // 3000 bytes
+  storage: window.sessionStorage // sessionStorage に切り替える
+  // ...
+};
+const newCache = Cache.createInstance(config);
+// Cache の識別子である新しい keyPrefix を指定してください。
+```
+
+デフォルト値を保持し、必要な値だけをオーバーライドすることもできます。
+
+```javascript
+// デフォルト値を取得します
+const defaultConfig = Cache.configure();
+
+// デフォルト設定を渡し、必要なオプションだけをオーバーライドします。例：keyPrefix
+const customCache = Cache.createInstance({
+    ...defaultConfig,
+    keyPrefix: "my-custom-instance-prefix-",
+});
+```
+## API リファレンス
+
+Cache モジュールの完全な API ドキュメントについては、[API リファレンス](https://aws-amplify.github.io/amplify-js/api/classes/aws_amplify.utils._Reference_Types_.StorageCache.html)をご覧ください。
+
+## 設定
+
+### 設定パラメータ
+
+Cache モジュールの設定パラメータの一覧は以下の通りです。
+
+| **パラメータ** | **型** | **説明** |
+| --- | --- | --- |
+| keyPrefix | _string_ | 新しいインスタンスを作成するときのみ設定可能な Cache の ID。 |
+| capacityInBytes | _number_ | キャッシュの最大サイズ（バイト単位）。デフォルトは 1MB で、最大は 5MB です。 |
+| itemMaxSize | _number_ | Cache に設定できる個別アイテムの最大サイズ（バイト単位）。デフォルト値は 200KB です。 |
+| defaultTTL | _number_ | キャッシュアイテムのミリ秒単位の TTL。デフォルト値は 72 時間です。 |
+| defaultPriority | _number_ | キャッシュアイテムのデフォルト優先度。デフォルト値は 5 で、最高優先度は 1 です。 |
+| warningThreshold | _number_ | Cache の現在の容量を適切なレベルに保つためのものです。デフォルトは 0.8 で、スペース使用率の 80% に対する警告を設定します。 |
+| storage | _StorageType_ | Cache に使用するストレージメディアム。サポートされている値は Web 開発用の _LocalStorage_（デフォルト）と _SessionStorage_、および React Native 用の _AsyncStorage_ です。 |
+
+### アイテムの設定パラメータ
+
+キャッシュ内のアイテムの設定パラメータの一覧は以下の通りです。
+
+| **パラメータ** | **型** | **説明** |
+| --- | --- | --- |
+| priority | _number_ | キャッシュに保持されるアイテムの優先度。優先度が高いほど有効期限が長くなります。 |
+| expires | _number_ | キャッシュアイテムの有効期限（ミリ秒単位）。 |
+| callback | _function_ | getItem() でコールバック関数を指定して、キャッシュミスシナリオを実装できます。提供された関数は、キャッシュキーに一致するものがない場合にのみ呼び出され、関数からの戻り値がキャッシュ内のキーの新しい値として割り当てられます。 |
+
+</InlineFilter>

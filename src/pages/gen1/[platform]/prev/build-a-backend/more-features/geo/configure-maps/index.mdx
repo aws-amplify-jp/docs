@@ -1,0 +1,151 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'マップを設定する',
+  description: 'Amplify CLIを使用してマップを作成および管理し、アプリで地理空間データを視覚化します。',
+  platforms: [
+                'android',
+                'angular',
+                'javascript',
+                'nextjs',
+                'react',
+                'swift',
+                'vue'
+              ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      showBreadcrumbs: false,
+      meta
+    }
+  };
+}
+          
+
+Amplifyの`geo`カテゴリを使用すると、アプリケーションで地理空間データを視覚化するために使用するマップリソースを作成および管理できます。
+
+<Callout>
+
+**注:** フィードバックや問題がある場合は、[こちら](https://github.com/aws-amplify/amplify-cli/issues)までお問い合わせください。
+
+</Callout>
+
+## 新しいマップをセットアップする
+
+プロジェクトのルートフォルダから次のコマンドを実行して、新しいマップを追加できます。
+
+```bash
+amplify add geo
+```
+```console
+? Select which capability you want to add:
+> Map (visualize the geospatial data)
+  Location search (search by places, addresses, coordinates)
+```
+まだ`auth`カテゴリをセットアップしていない場合、Amplify CLIはauthカテゴリを有効にするようにガイドします。
+`auth`カテゴリはアプリケーションで必須です。これにより、以下で説明されているように、認可されたユーザーおよび/またはゲストユーザーにマップをレンダリングするための適切なアクセス許可を付与できます。
+
+次に、マップの名前を設定します。
+
+```console
+? Provide a name for the Map:
+> StreetsMap
+```
+
+## マップアクセス権限
+
+次に、マップリソースのアクセス権限を設定し、ユーザーにマップをレンダリングする権限を付与します。
+個々のユーザーの認証ステータスに基づいて権限をスコープできます。
+
+```console
+? Who can access this Map?
+❯ Authorized users only
+  Authorized and Guest users
+```
+
+認証されたユーザーのみがマップをレンダリングできる場合は、`Authorized users only`を選択します。
+
+認証されたユーザーと認証されていないユーザーの両方がマップをレンダリングできる場合は、`Authorized and Guest users`を選択します。
+
+詳細については、[リンク（ロケーションサービスページ）](https://docs.aws.amazon.com/location/latest/developerguide/security_iam_id-based-policy-examples.html#security_iam_id-based-policy-examples-get-map-tiles)を参照してください。
+
+## マップ料金プラン
+マップの料金プランは`RequestBasedUsage`に設定されます。
+料金プランの詳細を確認するために、[ロケーションサービスの料金](https://aws.amazon.com/location/pricing/)および[ロケーションサービスの利用規約](https://aws.amazon.com/service-terms/)（セクション82.5）を確認することをお勧めします。
+
+### マップ料金プランを`RequestBasedUsage`に更新する
+プロジェクト内の`amplify/backend/amplify-meta.json`にあるプロジェクトメタデータファイルの`geo/<mapID>/pricingPlan`属性からマップの料金プランを確認できます。
+```bash
+"geo": {
+    "StreetsMap": {
+      "isDefault": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Map",
+      "mapStyle": "VectorEsriStreets",
+      "pricingPlan": "MobileAssetManagement",
+      "accessType": "AuthorizedUsers"
+    }
+}
+```
+
+Amplify CLIのバージョンは`amplify -v`で確認できます。
+
+<Callout>
+
+**注:**
+Amplify CLIバージョン`7.6.8`以前を使用しており、アプリケーションに料金プランが`MobileAssetTracking`または`MobileAssetManagement`に設定されたマップが追加されている場合は、以下の手順に従って料金プランを更新してください。
+1. `npm i -g @aws-amplify/cli`を使用して、Amplify CLIをバージョン`7.6.9`以降にアップグレードします。
+2. `amplify update geo`を実行し、アセットベースの料金プランを持つマップを選択します。既に設定しているマップと同じ構成を選択します。
+3. `amplify push`を実行してバックエンドリソースを更新します。
+
+</Callout>
+
+## 詳細設定
+必要に応じて、マップのスタイルとデータプロバイダーを設定できます。
+
+### マップスタイル＆マップデータプロバイダー
+マップリソースのスタイルを選択できます。利用可能なマップスタイルと地理空間データのデータプロバイダーが表示されます。これらの各マップスタイルの詳細については、[ロケーションサービスのドキュメント](https://docs.aws.amazon.com/location-maps/latest/APIReference/API_MapConfiguration.html)を参照してください。
+
+<Callout>
+
+**注:** アプリケーションが業務で使用する資産（配送車両または従業員など）を追跡またはルーティングしている場合、地理情報プロバイダーとして`HERE`のみを使用できます。
+詳細については、[AWSサービス利用規約](https://aws.amazon.com/service-terms/)のセクション82を参照してください。
+
+</Callout>
+
+```console
+? Specify the map style:
+❯ Streets (data provided by Esri)
+  Berlin (data provided by HERE)
+  Explore (data provided by HERE)
+  ExploreTruck (data provided by HERE)
+  RasterSatellite (data provided by HERE)
+  HybridSatellite (data provided by HERE)
+  Topographic (data provided by Esri)
+  Navigation (data provided by Esri)
+  LightGrayCanvas (data provided by Esri)
+  DarkGrayCanvas (data provided by Esri)
+  Imagery (data provided by Esri)
+  StandardLight (data provided by OpenStreetMap)
+```
+
+このプロパティを明示的に設定したくない場合、`Streets (data provided by Esri) `がマップスタイルを設定するためのデフォルトオプションになります。
+
+### デフォルトマップを設定する
+`amplify add geo`を通じて複数のマップを追加した場合、最後に追加されたマップがデフォルトになります。
+ただし、現在のマップをアプリケーションのデフォルトにするかどうかを選択できます。
+
+```console
+? Set this Map as the default? It will be used in Amplify Map API calls if no explicit reference is provided.
+> No
+```
+`No`で答えると、以前に設定されたデフォルトが保持されます。
+
+完了です。これでアプリケーションでマップをレンダリングできます。[こちら](/gen1/[platform]/prev/build-a-backend/more-features/geo/maps)に記載されているマップの操作に関するドキュメントに従ってください。

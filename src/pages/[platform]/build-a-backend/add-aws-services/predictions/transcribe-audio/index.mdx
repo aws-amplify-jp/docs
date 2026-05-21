@@ -1,0 +1,50 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'オーディオをテキストに変換',
+  description: 'Amplifyを使用してアプリケーションのオーディオをテキストに変換する（音声認識とも呼ばれます）方法の詳細を確認します',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue',
+  ]
+};
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps() {
+  return {
+    props: {
+      meta
+    }
+  };
+}
+
+<Callout informational>
+
+**注記:** [はじめに](../set-up-predictions)セクションを最初に完了していることを確認してください。このセクションでは、正しいポリシーアクションを使用してIAMロールをセットアップします。
+
+</Callout>
+
+## APIの使用
+
+PCMオーディオバイトバッファをテキストに変換できます。マイクからの録音など。
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const { transcription } = await Predictions.convert({
+  transcription: {
+    source: {
+      bytes
+    }
+  }
+})
+```
+
+サポートされているすべての言語と言語固有の機能の完全なリストを確認するには、[サポートされている言語リスト](https://docs.aws.amazon.com/transcribe/latest/dg/supported-languages.html)を参照してください。言語データ入力タイプがストリーミングをサポートする必要があります。Amplify Predictionsで機能するようにするためです。

@@ -1,0 +1,114 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'Lambda関数の設定を構成する',
+  description: 'Lambda関数のカスタム設定を構成する方法を学習します',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Lambda関数のAmplify CLIデフォルト設定をオーバーライドするか、`amplify add function`ワークフロー内で利用できない変更を構成することができます。
+
+*例*: `Node.js`関数を作成すると、CLIは自動的にランタイムバージョン、デフォルトのメモリサイズなどを構成します。オーバーライドまたは構成したい項目がいくつかあります:
+
+1. ランタイム
+2. メモリサイズ
+3. 環境変数
+
+これらのすべてを更新する方法を見てみましょう。
+
+## ランタイムの更新
+
+ランタイムバージョンをAmplifyが生成したデフォルトより新しいバージョンまたは古いバージョンに調整したいことがあります。
+
+Node.jsランタイムを使用してLambda関数をデプロイしており、ランタイムのバージョンを`14.x`に変更したいとしましょう。
+
+そのためには、__amplify/backend/function/function-name/function-name-cloudformation-template.json__を開き、`LambdaFunction`リソースの`Runtime`プロパティを以下に設定します:
+
+```json
+"Resources": {
+  "LambdaFunction": {
+      ...
+      "Properties": {
+        "Runtime": "nodejs14.x", // ランタイムが14.xに設定されました
+        "Layers": [],
+      }
+      ...
+    }
+  },
+}
+```
+
+次に、Amplify CLIを使用して更新をデプロイします:
+
+```sh
+amplify push
+```
+
+## デフォルトメモリサイズの更新
+
+Amplifyで関数をデプロイするとき、デフォルトメモリサイズは低い設定(128MB)に設定されます。多くの場合、パフォーマンスを向上させるためにデフォルトメモリサイズを増やしたいことがあります。Lambdaの一般的なメモリ設定は1024MBです。これにより関数が顕著に高速化され、通常はコストが同じか近い値に保たれます。
+
+メモリサイズを更新するには、__amplify/backend/function/function-name/function-name-cloudformation-template.json__を開き、`LambdaFunction`リソースの`MemorySize`プロパティを設定します:
+
+```json
+"Resources": {
+  "LambdaFunction": {
+      ...
+      "Properties": {
+        "Runtime": "nodejs14.x",
+        "MemorySize": 1024, // メモリサイズが1024MBに設定されました
+        "Layers": [],
+      }
+      ...
+    }
+  },
+}
+```
+
+次に、Amplify CLIを使用して更新をデプロイします:
+
+```sh
+amplify push
+```
+
+_Lambda関数のリソース割り当て最適化の詳細については、[こちら](https://dev.to/aws/deep-dive-finding-the-optimal-resources-allocation-for-your-lambda-functions-35a6)のブログ記事をご覧ください。_
+
+## 環境変数の設定
+
+Lambda関数で環境変数を設定および使用する必要があることは非常に一般的なシナリオです。
+
+一般的に、環境変数には2つのタイプがあります:
+- [シークレット値(例: アクセスキー、APIキーなど)](/gen1/[platform]/build-a-backend/functions/secrets/)
+- [非シークレット値(例: エンドポイント情報、ロケール情報など)](/gen1/[platform]/build-a-backend/functions/environment-variables/)
+
+<Callout>
+
+AWS Lambdaで利用可能なすべての設定オプションを表示するには、[こちら](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-lambda-function-environment.html)のドキュメントを確認してください。
+
+Amplify CLIをカスタムリソースで拡張する詳細については、[こちら](/gen1/[platform]/tools/cli/custom/cdk/)のドキュメントを確認してください。
+
+</Callout>

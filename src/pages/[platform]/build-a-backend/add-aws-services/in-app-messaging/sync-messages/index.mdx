@@ -1,0 +1,41 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'メッセージの同期',
+  description: "ユーザーのローカルデバイスにアプリ内メッセージを同期する方法を学びます。同期されたメッセージは、一致するイベントがトリガーされたときに表示されます。",
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ],
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+メッセージをトリガーするには、アプリ内メッセージングキャンペーンから使用者のデバイスにメッセージを同期する必要があります。これらのメッセージは、その後、分析またはアプリ内メッセージングイベントでトリガーされます。同期が実行される時間と頻度を制御できます。
+
+```js title="src/index.js"
+import { syncMessages } from 'aws-amplify/in-app-messaging';
+
+await syncMessages();
+```
+
+<Callout informational>
+
+**注:** メッセージを同期すると、ユーザーのデバイスに現在存在する既存のメッセージが常に上書きされるため、同期が実行されたときに常に最新の状態になります。
+
+</Callout>

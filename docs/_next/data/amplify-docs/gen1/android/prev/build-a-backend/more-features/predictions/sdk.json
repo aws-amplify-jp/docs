@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"android","meta":{"title":"AWS SDKの使用","description":"Amplifyが機能を提供していない高度なユースケースでは、エスケープハッチを取得してAWSRekognitionインスタンスにアクセスできます。","platforms":["swift","android"]}},"__N_SSG":true}

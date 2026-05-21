@@ -1,0 +1,43 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'フィーチャー有効化オーバーライド移行',
+  description: "Amplify CLI バージョン 7 以上へのアップグレード時に、Amplify CLI バージョン 7 より前に作成されたプロジェクトでは、新しい「オーバーライド」機能を有効にするための移行が必要になります。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify CLI バージョン 7 以上は、開発者が Amplify で生成された IAM、Cognito、および S3 設定をオーバーライドして、アプリの要件に最適に対応する機能を提供するために更新されています。新しいオーバーライド機能により、開発者は Amplify が提供するデフォルト設定でバックエンドを簡単に構成しながら、きめ細かいリソース設定をカスタマイズできます。
+
+新しいオーバーライド機能、またはリソースの今後の変更により、Amplify プロジェクトのファイル構造は内部的に変更されます。Amplify CLI バージョン 7 より前に作成されたプロジェクトでは、移行が必要になります。本番環境ではなく、テスト環境でこの移行をまずテストしてから、アプリの更新を行うことをお勧めします。
+
+1. `amplify add env test`
+2. `amplify override <api|auth|project|storage>` または `amplify update <api|auth|project|storage>`
+3. リソースを移行するかどうかを尋ねられたら「y」と答えます
+4. `amplify push`
+5. このテスト環境でアプリのシナリオをテストしてください
+
+検証後、`amplify env checkout <env-name>` を使用して元の環境に切り替えて、`amplify override <category>` または `amplify update <category>` を実行することでオーバーライド移行を適用します。

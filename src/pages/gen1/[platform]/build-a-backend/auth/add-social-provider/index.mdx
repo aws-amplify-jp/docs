@@ -1,0 +1,1049 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ソーシャルプロバイダーのサインインを追加',
+  description: 'Facebook、Google、Amazon、Sign in with Appleなどのソーシャルサインインプロバイダーをセットアップする方法を学びます。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'flutter',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript",  "react-native", "angular", "nextjs", "react", "vue"]}>
+
+アプリにソーシャルプロバイダー（Apple、Amazon、Facebook、Google など）の既存アカウントを使用したサインインと認証を有効にできます。バックエンドリソースを設定した後、そのプロバイダーのサインインアプリを設定できます。このプロセスはセキュアに認証情報を交換し、ユーザー情報を収集します。この情報は、アプリで新しいユーザーを作成するか、ソーシャルアカウントを既存ユーザーにリンクするために使用できます。ソーシャルプロバイダーのサインインを組み込むことで、ユーザーに合理化された登録、より多くのサインインオプション、および既存アカウントとアプリ間の統合エクスペリエンスを提供します。
+
+このガイドでは、まずプロバイダーで開発者アカウントをセットアップし、その後、Auth カテゴリを設定し、ソーシャルサインインをアプリに統合する方法を説明します。
+
+開始する前に、以下が必要です:
+
+- Amplify プロジェクト
+- インストールして設定された Amplify ライブラリ
+
+<Accordion title='OAuth 認証の仕組みを確認' headingLevel='3' eyebrow='詳細を学ぶ'>
+
+ソーシャルプロバイダーのサインインを組み込む推奨される方法は、OAuth リダイレクトを使用することです。これによりユーザーはソーシャルメディアアカウントを使用してサインインでき、Cognito ユーザープールに対応するユーザーが作成されます。
+
+[OAuth 2.0](https://en.wikipedia.org/wiki/OAuth) は、Web およびモバイルアプリケーションがユーザー情報（「スコープ」）に限定的にアクセスするために使用する一般的な認可フレームワークです。OAuth で一般的に聞かれるアナロジーは飛行機の搭乗またはホテルの宿泊です。身分証明書の提示は認証部分（アプリへのサインイン）であり、搭乗券/ホテルキーの使用はアクセスを許可されている部分です。
+
+Amplify での OAuth サポートは Cognito ユーザープールを使用し、ソーシャルプロバイダーでのフェデレーションをサポートしており、ユーザーがサインイン後、ユーザープールに対応するユーザーが自動的に作成されます。この設計では、アプリにソーシャルプロバイダーの SDK を含める必要はありません。これらのソーシャルプロバイダーで開発者アカウントをセットアップした後、`amplify add auth` を実行し、ソーシャルプロバイダーオプションを選択することで、`Auth` カテゴリを設定できます。その後、アプリで `signInWithRedirect()` を使用して、事前構築された「ホストされた UI」を表示するか、プロバイダー名を渡す（例：`signInWithRedirect({provider:'Facebook'})`）ことで、直接インターフェースし、独自の UI を構築できます。![Image](/images/SocialAuthZ.png)
+
+</Accordion>
+
+## ソーシャル認証プロバイダーをセットアップ
+
+Amplify Auth でソーシャルサインインを設定する前に、使用している各プロバイダーで開発者アカウントをセットアップする必要があります。
+
+<Callout>
+
+**注:** Amazon Cognito は、Facebook Login、Google Sign-In、Login with Amazon、および Sign in with Apple にファーストクラスサポートを提供し、シームレスなセットアップを実現します。ただし、SAML または OpenID Connect（OIDC）をサポートする他の ID プロバイダーを設定することができます。
+
+</Callout>
+
+<BlockSwitcher>
+<Block name="Facebook Login">
+
+1. [Facebook で開発者アカウントを作成](https://developers.facebook.com/docs/facebook-login)します。
+
+2. Facebook の認証情報で[サインイン](https://developers.facebook.com/)します。
+
+3. トップナビゲーションバーから _My Apps_ を選択し、ロードされたページで _Create App_ を選択します。![Facebook 開発者アカウントの [マイアプリ] ページの [アプリを作成] ボタン。](/images/cognitoHostedUI/facebook1.png)
+
+4. ユースケースについて、_Set up Facebook Login_ を選択します。![リストから選択された [Facebook ログインのセットアップ] オプション。](/images/cognitoHostedUI/facebook2.png)
+
+5. プラットフォームについて、_Website_ を選択し、_No, I'm not building a game_ を選択します。
+
+6. Facebook アプリに名前を付け、_Create app_ を選択します。![Facebook アプリ作成フォームのフォームフィールド。](/images/cognitoHostedUI/facebook3.png)
+
+7. 左のナビゲーションバーで、_Settings_ を選択してから _Basic_ を選択します。![ダッシュボードの基本設定タブの App ID と App Secret。](/images/cognitoHostedUI/facebook4.png)
+
+8. _App ID_ と _App Secret_ をメモしておきます。次のセクションの CLI フローで使用します。
+
+</Block>
+<Block name="Google Sign-In">
+
+1. [Google 開発者コンソール](https://console.developers.google.com)に移動します。
+
+2. _Select a project_ をクリックします。![ナビゲーションバーの [プロジェクトを選択] ボタンが円で囲まれています。](/images/cognitoHostedUI/google1.png)
+
+3. _NEW PROJECT_ をクリックします。![プロジェクト選択ポップアップで新規プロジェクトボタンが円で囲まれています。](/images/cognitoHostedUI/google2.png)
+
+4. プロジェクト名を入力して _CREATE_ をクリックします。![新規プロジェクトページで [作成] ボタンが円で囲まれています。](/images/cognitoHostedUI/google3.png)
+
+5. プロジェクトが作成されたら、左のナビゲーションメニューから _APIs & Services_ を選択し、次に _Credentials_ を選択します。![左上のメニューアイコンが選択され、次に [API とサービス] オプション、次に認証情報オプションが選択されます。](/images/cognitoHostedUI/google4.png)
+
+6. _CONFIGURE CONSENT SCREEN_ をクリックします。![OAuth 同意画面セクションの [同意画面を設定] ボタンが円で囲まれています。](/images/cognitoHostedUI/google5.png)
+
+7. _CREATE_ をクリックします。![OAuth 同意画面セクションの [作成] ボタンが円で囲まれています。](/images/cognitoHostedUI/google6.png)
+
+8. _App Information_ と _Developer contact information_ を入力します。これらは必須フィールドであり、3 回（OAuth 同意画面 -> スコープ -> テストユーザー）_SAVE AND CONTINUE_ をクリックして、同意画面のセットアップを完了します。
+
+9. _Credentials_ タブに戻り、_Create credentials_ ドロップダウンリストから _OAuth client ID_ を選択して OAuth2.0 認証情報を作成します。![認証情報セクションで [認証情報を作成] ボタンが円で囲まれ、次に oauth クライアント ID ボタンが円で囲まれています。](/images/cognitoHostedUI/google7.png)
+
+10. _Application type_ として _Web application_ を選択し、OAuth クライアントに名前を付けます。
+
+11. _Create_ をクリックします。
+
+12. _Your client ID_ と _Your Client Secret_ をメモしておきます。次のセクションの CLI フローで必要です。
+
+13. _OK_ を選択します。
+
+</Block>
+<Block name="Login with Amazon">
+
+1. [Amazon で開発者アカウントを作成](https://developer.amazon.com/login-with-amazon)します。
+
+2. Amazon の認証情報で[サインイン](https://developer.amazon.com/loginwithamazon/console/site/lwa/overview.html)します。
+
+3. Amazon クライアント ID とクライアントシークレットを受け取るために、Amazon セキュリティプロファイルを作成する必要があります。_Create a Security Profile_ を選択します。![ログイン with Amazon コンソールに、新しいセキュリティプロファイルボタンを作成します。](/images/cognitoHostedUI/amazon1.png)
+
+4. _Security Profile Name_、_Security Profile Description_、および _Consent Privacy Notice URL_ を入力します。![新しいセキュリティプロファイルのフォームに入力するステップを示すセキュリティプロファイル管理ページ。](/images/cognitoHostedUI/amazon2.png)
+
+5. _Save_ を選択します。
+
+6. _Show Client ID_ と _Client Secret_ を選択してクライアント ID とシークレットを表示します。次のセクションの CLI フローで必要です。![クライアント ID とクライアントシークレットを選択します。](/images/cognitoHostedUI/amazon3.png)
+
+</Block>
+
+<Block name="Sign in with Apple">
+
+1. Apple 開発者認証情報で[サインイン](https://developer.apple.com/account/)します。
+
+2. メイン開発者ポータルページで、_Certificates, IDs, & Profiles_ を選択します。
+
+3. 左のナビゲーションバーで、_Identifier_ を選択します。
+
+4. _Identifiers_ ページで、_plus icon (+)_ を選択します。
+
+5. _Register a New Identifier_ ページで、_App IDs_ を選択します。
+
+6. _Register an App ID_ ページで、_App ID Prefix_ の下の _Team ID_ 値をメモしておきます。
+
+7. _Description_ テキストボックスに説明を入力し、iOS アプリの `bundleID` を入力します。![証明書、識別子およびプロファイルセクションで App ID を登録します。](/images/cognitoHostedUI/apple1.png)
+
+8. _Capabilities_ の下で、_Sign in with Apple_ を選択します。
+
+9. _Continue_ を選択し、設定を確認してから _Register_ を選択します。
+
+10. _Identifiers_ ページで、右側で _App IDs_ を選択してから _Services ID_ を選択します。
+
+11. _plus icon (+)_ を選択し、_Register a New Identifier_ ページで _Services IDs_ を選択します。
+
+12. _Description_ テキストボックスに説明を入力し、Service ID の識別子を入力します。![証明書、識別子およびプロファイルセクションでサービス ID を登録します。](/images/cognitoHostedUI/apple2.png)
+
+13. _Continue_ を選択して Service ID を登録します。
+
+</Block>
+</BlockSwitcher>
+
+ソーシャルプロバイダーでの開発者アカウントのセットアップが完了し、Amplify プロジェクトに戻って次のステップに進むことができます。
+
+## Auth カテゴリを設定
+
+ソーシャルプロバイダーを設定したら、Amplify CLI を通じて Auth 設定を更新できます。
+
+<Callout warning>
+
+Amplify CLI を通じてソーシャルサインインを設定する場合、属性を「必須」として指定する際は慎重に行うことが重要です。各ソーシャル ID プロバイダーは、Cognito に返すさまざまな情報を持っています。最初は「必須」として設定されたユーザープール属性は後で変更できません。要件を変更する必要がある場合は、ユーザーをマイグレートするか、新しいユーザープールを作成する必要があります。
+
+</Callout>
+
+CLI を開始するには、プロジェクトのルートフォルダで以下を実行します:
+
+```bash
+amplify add auth     ## すでに設定されている場合は「amplify update auth」
+```
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+次のオプションを選択します:
+
+```console
+? Do you want to use the default authentication and security configuration?
+    `Default configuration with Social Provider (Federation)`
+? How do you want users to be able to sign in?
+    `Username`
+? Do you want to configure advanced settings?
+    `No, I am done.`
+? What domain name prefix you want us to create for you?
+    `(default)`
+? Enter your redirect signin URI:
+    `http://localhost:3000/`
+? Do you want to add another redirect signin URI
+    `No`
+? Enter your redirect signout URI:
+    `http://localhost:3000/`
+? Do you want to add another redirect signout URI
+    `No`
+? Select the social providers you want to configure for your user pool:
+    `<適切なトークンを入力するようにプロバイダーを選択して、プロンプトに従います>`
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+次のオプションを選択します:
+
+```console
+? Do you want to use the default authentication and security configuration?
+    `Default configuration with Social Provider (Federation)`
+? How do you want users to be able to sign in?
+    `Username`
+? Do you want to configure advanced settings?
+    `No, I am done.`
+? What domain name prefix you want us to create for you?
+    `(default)`
+? Enter your redirect signin URI:
+    `myapp://`
+? Do you want to add another redirect signin URI
+    `No`
+? Enter your redirect signout URI:
+    `myapp://`
+? Do you want to add another redirect signout URI
+    `No`
+? Select the social providers you want to configure for your user pool:
+    `<適切なトークンを入力するようにプロバイダーを選択して、プロンプトに従います>`
+```
+
+</InlineFilter>
+
+<Callout>
+
+**注:** 複数のリダイレクト URL を使用するようにアプリケーションを設定できます。詳細については、以下の[リダイレクト URL](#リダイレクト-url) セクションを参照してください。
+
+</Callout>
+
+次に、`amplify push` を実行して変更を公開します。完了すると、Web UI の自動生成 URL が表示されます。CLI で `amplify status` を実行することにより、いつでもユーザープールドメイン URL を取得できます。
+
+ここで、このURL をソーシャルプロバイダーに知らせる必要があります:
+
+<BlockSwitcher>
+<Block name="Facebook Login">
+
+1. Facebook の認証情報で [Facebook 開発者アカウントに サインイン](https://developers.facebook.com/)します。
+
+2. トップナビゲーションバーから _My Apps_ を選択し、_Apps_ ページで、前に作成したアプリを選択します。
+
+3. 左のナビゲーションバーで、_Products_ を選択します。_Facebook Login_ が追加されていない場合は追加します。
+
+4. すでに追加されている場合は、_Configure_ ドロップダウンの下の _Settings_ を選択します。![構成ドロップダウンから Settings オプションが円で囲まれています。](/images/cognitoHostedUI/facebook5.png)
+
+5. _Valid OAuth Redirect URIs_ の下に、`/oauth2/idpresponse` エンドポイント付きのユーザープールドメインを入力します。
+
+   `https://<your-user-pool-domain>/oauth2/idpresponse`
+
+![ ユーザープールドメインがテキストフィールドに貼り付けられ、/oauth2/ エンドポイントが付いています。](/images/cognitoHostedUI/facebook6.png)
+
+6. 変更を保存します。
+
+</Block>
+<Block name="Google Sign-In">
+
+1. [Google 開発者コンソール](https://console.developers.google.com)に移動します。
+
+2. 左のナビゲーションバーで、_Pinned_ の下の _APIs and Services_、またはピン留めされていない場合は _More Products_ の下を探します。
+
+3. _APIs and Services_ サブメニュー内で、_Credentials_ を選択します。
+
+4. 最初のステップで作成したクライアントを選択し、_Edit_ ボタンをクリックします。
+
+5. _Authorized Javascript origins_ フォームにユーザープールドメインを入力します。
+
+6. _Authorized Redirect URIs_ に、`/oauth2/idpresponse` エンドポイント付きのユーザープールドメインを入力します。
+
+   ![許可された Javascript オリジンと許可されたリダイレクト URL の URL 1 フォームフィールドが円で囲まれています。](/images/cognitoHostedUI/google8.png)
+
+   注: エンドポイントを追加するときにエラーメッセージ `Invalid Redirect: domain must be added to the authorized domains list before submitting.` が表示された場合は、_Authorized Domains List_ に移動してドメインを追加してください。
+
+7. _Save_ をクリックします。
+
+</Block>
+<Block name="Login with Amazon">
+
+1. Amazon の認証情報で[サインイン](https://developer.amazon.com/loginwithamazon/console/site/lwa/overview.html)します。
+
+2. ギアアイコンの上にカーソルを移動し、前のステップで作成したセキュリティプロファイルに関連付けられた _Web Settings_ を選択してから、_Edit_ を選択します。![ギアアイコンのドロップダウンメニューから [Web 設定] オプションが選択されています。](/images/cognitoHostedUI/amazon4.png)
+
+3. ユーザープールドメインを _Allowed Origins_ に入力し、`/oauth2/idpresponse` エンドポイント付きのユーザープールドメインを _Allowed Return URLs_ に入力します。![ユーザープールドメインが許可された生成フィールドに入力され、/oauth2/ がエンドポイントとして許可されたリターン URL フィールドに入力されます。](/images/cognitoHostedUI/amazon5.png)
+
+4. _Save_ を選択します。
+
+</Block>
+<Block name="Sign in with Apple">
+
+1. Apple 開発者認証情報で[サインイン](https://developer.apple.com/account/)します。
+
+2. メイン開発者ポータルページで、_Certificates, IDs, & Profiles_ を選択します。
+
+3. 左のナビゲーションバーで、_Identifiers_ を選択してから、右側のドロップダウンリストから _Service IDs_ を選択します。
+
+4. 上記のセクションでセットアップしたときに作成した Service ID を選択します。
+
+5. _Sign In with Apple_ を有効にし、_Configure_ を選択します。
+
+6. _Primary App ID_ の下で、前に作成した App ID を選択します。
+
+7. _Domains and Subdomains_ にユーザープールドメインを入力します。
+
+8. _Return URLs_ に、`/oauth2/idpresponse` エンドポイント付きのユーザープールドメインを入力します。![Return URLs テキストフィールドが選択されています。](/images/cognitoHostedUI/apple3.png)
+
+9. _Next_ をクリックし、情報を確認してから _Done_ を選択します。
+
+10. _Edit your Services ID Configuration_ で _Continue_ をクリックし、情報を確認してから _Save_ を選択します。
+
+11. メイン _Certificates, Identifiers & Profiles_ で、_Keys_ を選択します。
+
+12. _Keys_ ページで、_plus icon (+)_ を選択します。
+
+13. _Key Name_ の下にキーの名前を入力します。
+
+14. _Sign in with Apple_ を有効にし、_Configure_ を選択します。![Sign in with Apple オプションが有効になり、キー名テキストフィールドが入力されています。](/images/cognitoHostedUI/apple4.png)
+
+15. _Primary App ID_ の下で、前に作成した App ID を選択します。
+
+16. _Save_ をクリックします。
+
+17. _Register a New Key_ で _Continue_ をクリックし、情報を確認してから _Register_ を選択します。
+
+18. 新しいページにリダイレクトされます。_Key ID_ をメモしておき、秘密鍵を含む .p8 ファイルをダウンロードします。![秘密鍵を含む .p8 ファイルをダウンロードするオプション付きのダウンロードキーページが表示されています。](/images/cognitoHostedUI/apple5.png)
+
+</Block>
+</BlockSwitcher>
+
+<Callout warning>
+
+**注:** フェデレーションサインインは、ユーザープール内の[カスタム認証チャレンジ Lambda トリガー](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-challenge.html)、[ユーザーマイグレーション Lambda トリガー](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html)、[カスタムメッセージ Lambda トリガー](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-custom-message.html)、または[カスタム送信者 Lambda トリガー](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-custom-sender-triggers.html)を呼び出しません。サポートされている Lambda トリガーについては、[AWS ドキュメント](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html#lambda-triggers-for-federated-users)を参照してください。
+
+</Callout>
+
+Auth カテゴリを設定し、ソーシャルプロバイダーで URL を更新しました。これでアプリのフロントエンドをセットアップできます。
+
+<InlineFilter filters={['react-native']}>
+
+## ネイティブモジュールをインストール
+
+`signInWithRedirect` はプラットフォーム固有の webview 内にサインイン UI を表示します。iOS デバイスでは [ASWebAuthenticationSession](https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession) が起動され、Android では [Custom Tab](https://developer.chrome.com/docs/android/custom-tabs/) が起動されます。サインインプロセスが完了した後、サインイン UI はアプリにリダイレクトバックされます。
+
+この機能を有効にするには、追加の依存関係をインストールする必要があります。
+
+```sh
+npm install @aws-amplify/rtn-web-browser
+```
+
+## プラットフォームセットアップ
+
+<Callout>iOS では、追加のセットアップステップは不要です。</Callout>
+
+### Android
+
+サインインが成功した後、サインイン UI はアプリケーションにリダイレクトバックを試みます。上で設定したリダイレクト URI スキームをデバイスに登録するには、React Native アプリの `android/app/src/main` ディレクトリにあるはずのアプリケーションの `AndroidManifest.xml` ファイルに `intent-filter` を追加する必要があります。
+
+必要に応じて、`intent-filter` をアプリケーションのメインアクティビティに追加し、`myapp` をリダイレクト URI スキームに置き換えます。
+
+```xml
+<application ...>
+    <activity android:name=".MainActivity" ...>
+        ...
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="myapp" />
+        </intent-filter>
+        ...
+    </activity>
+</application>
+```
+
+</InlineFilter>
+
+## フロントエンドをセットアップ
+
+OAuth エンドポイント（Cognito ホストされた UI）を設定した後、`signInWithRedirect` 関数を呼び出すことでアプリを統合できます。これによりユーザーは Cognito ホストされた UI にリダイレクトされ、ユーザー名とパスワードでのサインイン、および設定したソーシャルプロバイダーのいずれでもサインインするオプションが表示されます。また、`provider` 引数に `Amazon`、`Apple`、`Facebook`、または `Google` を渡す（例：`signInWithRedirect({ provider: 'Amazon' })`）と、ホストされた UI をバイパスし、以下の例に示すようにソーシャルプロバイダーと直接フェデレーションできます。
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+<Callout>
+
+**注:** [Authenticator UI コンポーネント](https://ui.docs.amplify.aws/react/components/authenticator)を使用してソーシャルサインインフローをアプリケーションに追加することもできます。詳細については、[ソーシャルプロバイダー](https://ui.docs.amplify.aws/react/components/authenticator/configuration#social-providers)セクションをご覧ください。
+
+</Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+<Callout>
+
+**注:** [Authenticator UI コンポーネント](https://ui.docs.amplify.aws/react-native/connected-components/authenticator)を使用してソーシャルサインインフローをアプリケーションに追加することもできます。Authenticator は設定済み Amplify `socialProviders` から直接読み込みます。詳細については、[ソーシャルプロバイダー](https://ui.docs.amplify.aws/react-native/connected-components/authenticator/configuration#social-providers)セクションをご覧ください。
+
+</Callout>
+
+</InlineFilter>
+
+### カスタム状態を追加
+
+カスタム状態は必須ではありませんが、追加したい場合は、文字列値を渡す（例：`signInWithRedirect({ customState: 'xyz' })`）ことで、[Hub](/gen1/[platform]/build-a-backend/utilities/hub/) を介してカスタム状態をリッスンできます。また、Hub イベント処理システムを使用して、`signInWithRedirect()` を使用エラーをキャッチし、`signInWithRedirect_failure` イベントをリッスンできます。
+
+<InlineFilter filters={["javascript", "angular", "vue"]}>
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Hub } from "aws-amplify/utils";
+import { signInWithRedirect, getCurrentUser, AuthUser } from "aws-amplify/auth";
+
+Hub.listen("auth", ({ payload }) => {
+  switch (payload.event) {
+    case "signInWithRedirect":
+      const user = await getCurrentUser();
+      console.log(user.username);
+      break;
+    case "signInWithRedirect_failure":
+      // handle sign in failure
+      break;
+    case "customOAuthState":
+      const state = payload.data; // this will be customState provided on signInWithRedirect function
+      console.log(state);
+      break;
+  }
+});
+
+function handleSignInClick(customState: string) {
+  signInWithRedirect({
+    provider: "Google",
+    customState
+  });
+}
+```
+</Block>
+<Block name="JavaScript">
+
+```javascript
+import { Hub } from "aws-amplify/utils";
+import { signInWithRedirect, getCurrentUser } from "aws-amplify/auth";
+
+Hub.listen("auth", ({ payload }) => {
+  switch (payload.event) {
+    case "signInWithRedirect":
+      const user = await getCurrentUser();
+      console.log(user.username);
+      break;
+    case "signInWithRedirect_failure":
+      // handle sign in failure
+      break;
+    case "customOAuthState":
+      const state = payload.data; // this will be customState provided on signInWithRedirect function
+      console.log(state);
+      break;
+  }
+});
+
+function handleSignInClick(customState) {
+  signInWithRedirect({
+    provider: "Google",
+    customState
+  });
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+</InlineFilter>
+
+<InlineFilter filters={["react", "nextjs"]}>
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import React, { useEffect, useState } from "react";
+import { Hub } from "aws-amplify/utils";
+import { signInWithRedirect, signOut, getCurrentUser, AuthUser } from "aws-amplify/auth";
+
+function App() {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [customState, setCustomState] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = Hub.listen("auth", ({ payload }) => {
+      switch (payload.event) {
+        case "signInWithRedirect":
+          getUser();
+          break;
+        case "signInWithRedirect_failure":
+          setError("An error has occurred during the OAuth flow.");
+          break;
+        case "customOAuthState":
+          setCustomState(payload.data); // this is the customState provided on signInWithRedirect function
+          break;
+      }
+    });
+
+    getUser();
+
+    return unsubscribe;
+  }, []);
+
+  const getUser = async (): Promise<void> => {
+    try {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    } catch (error) {
+      console.error(error);
+      console.log("Not signed in");
+    }
+  };
+
+  return (
+    <div className="App">
+      <button onClick={() => signInWithRedirect({ customState: "shopping-cart"})}>Open Hosted UI</button>
+      <button onClick={() => signInWithRedirect({ provider: "Facebook", customState: "shopping-cart" })}>
+        Open Facebook
+      </button>
+      <button onClick={() => signInWithRedirect({ provider: "Google", customState: "shopping-cart" })}>
+        Open Google
+      </button>
+      <button onClick={() => signInWithRedirect({ provider: "Amazon", customState: "shopping-cart" })}>
+        Open Amazon
+      </button>
+      <button onClick={() => signInWithRedirect({ provider: "Apple", customState: "shopping-cart" })}>
+        Open Apple
+      </button>
+      <button onClick={() => signOut()}>Sign Out</button>
+      <div>{user?.username}</div>
+      <div>{customState}</div>
+    </div>
+  );
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```javascript
+import React, { useEffect, useState } from "react";
+import { Hub } from "aws-amplify/utils";
+import { signInWithRedirect, signOut, getCurrentUser } from "aws-amplify/auth";
+
+function App() {
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
+  const [customState, setCustomState] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = Hub.listen("auth", ({ payload }) => {
+      switch (payload.event) {
+        case "signInWithRedirect":
+          getUser();
+          break;
+        case "signInWithRedirect_failure":
+          setError("An error has occurred during the OAuth flow.");
+          break;
+        case "customOAuthState":
+          setCustomState(payload.data); // this is the customState provided on signInWithRedirect function
+          break;
+      }
+    });
+
+    getUser();
+
+    return unsubscribe;
+  }, []);
+
+  const getUser = async () => {
+    try {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    } catch (error) {
+      console.error(error);
+      console.log("Not signed in");
+    }
+  };
+
+  return (
+    <div className="App">
+      <button onClick={() => signInWithRedirect({ customState: "shopping-cart"})}>Open Hosted UI</button>
+      <button onClick={() => signInWithRedirect({ provider: "Facebook", customState: "shopping-cart" })}>
+        Open Facebook
+      </button>
+      <button onClick={() => signInWithRedirect({ provider: "Google", customState: "shopping-cart" })}>
+        Open Google
+      </button>
+      <button onClick={() => signInWithRedirect({ provider: "Amazon", customState: "shopping-cart" })}>
+        Open Amazon
+      </button>
+      <button onClick={() => signInWithRedirect({ provider: "Apple", customState: "shopping-cart" })}>
+        Open Apple
+      </button>
+      <button onClick={() => signOut()}>Sign Out</button>
+      <div>{user?.username}</div>
+      <div>{customState}</div>
+    </div>
+  );
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import React, { useEffect, useState } from "react";
+import {
+  Button,
+  SafeAreaView,
+  Text,
+} from "react-native";
+
+import { AuthUser, getCurrentUser, signInWithRedirect, signOut } from "aws-amplify/auth";
+import { Hub } from "@aws-amplify/core";
+
+
+function App(): JSX.Element {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [customState, setCustomState] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = Hub.listen("auth", ({ payload }) => {
+      switch (payload.event) {
+        case "signInWithRedirect":
+          getUser();
+          break;
+        case "signInWithRedirect_failure":
+          setError("An error has occurred during the OAuth flow.");
+          break;
+        case "customOAuthState":
+          setCustomState(payload.data); // this is the customState provided on signInWithRedirect function
+          break;
+      }
+    });
+
+    getUser();
+
+    return unsubscribe;
+  }, []);
+  
+  const getUser = async (): Promise<void> => {
+    try {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    } catch (error) {
+      console.error(error);
+      console.log("Not signed in");
+    }
+  };
+
+  return (
+    <SafeAreaView>
+      <Button title="Sign In" onPress={() => signInWithRedirect({ customState: "shopping-cart"})}></Button>
+      <Text>{user?.username}</Text>
+      <Text>{customState}</Text>
+      <Button title="Sign Out" onPress={() => signOut()}></Button>
+    </SafeAreaView>
+  );
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```javascript
+import React, { useEffect, useState } from "react";
+import {
+  Button,
+  SafeAreaView,
+  Text,
+} from "react-native";
+
+import { getCurrentUser, signInWithRedirect, signOut } from "aws-amplify/auth";
+import { Hub } from "@aws-amplify/core";
+
+function App() {
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
+  const [customState, setCustomState] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = Hub.listen("auth", ({ payload }) => {
+      switch (payload.event) {
+        case "signInWithRedirect":
+          getUser();
+          break;
+        case "signInWithRedirect_failure":
+          setError("An error has occurred during the OAuth flow.");
+          break;
+        case "customOAuthState":
+          setCustomState(payload.data);
+          break;
+      }
+    });
+
+    getUser();
+
+    return unsubscribe;
+  }, []);
+  
+  const getUser = async () => {
+    try {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    } catch (error) {
+      console.error(error);
+      console.log("Not signed in");
+    }
+  };
+
+  return (
+    <SafeAreaView>
+      <Button title="Sign In" onPress={() => signInWithRedirect({ customState: "shopping-cart"})}></Button>
+      <Text>{user?.username}</Text>
+      <Text>{customState}</Text>
+      <Button title="Sign Out" onPress={() => signOut()}></Button>
+    </SafeAreaView>
+  );
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+### リダイレクト URL
+
+_サインイン_ & _サインアウト_ リダイレクト URL は、サインインまたはサインアウト操作の実行後にエンドユーザーをリダイレクトするために使用されます。開発/本番環境用に異なる URL を指定したり、ユーザーをアプリに戻す前に中間 URL にリダイレクトしたりするなど、複数の URL を指定する場合があります。
+
+#### サインアウト時にリダイレクト URL を指定する
+複数のサインアウトリダイレクト URL が設定されている場合、リダイレクト URL を選択するデフォルト動作をオーバーライドし、`signOut` を呼び出すときに選択したものを指定できます。提供されたリダイレクト URL は、設定されたリダイレクト URL の少なくとも 1 つと一致する必要があります。`signOut` にリダイレクト URL が指定されていない場合、HTTP または HTTPS プレフィックスを含まない設定済みリダイレクト URL リストの最初の項目が選択されます。
+
+```ts
+import { Amplify } from 'aws-amplify';
+import { signOut } from 'aws-amplify/auth';
+
+// Amplify 設定ファイルを通じて手動で提供される、または以下の URL が提供されていると仮定します
+// redirectSignOut: 'myDevApp://,https://authProvider/logout/?logout_uri=myDevApp://'
+
+signOut({
+  global: false,
+  oauth: {
+    redirectUrl: 'https://authProvider/logout/?logout_uri=myDevApp://'
+  }
+});
+
+
+```
+<Callout> `signOut` に `redirectUrl` が提供されるかどうかにかかわらず、http または https を含まない URL は設定されたリダイレクト URL リストに存在することが予想されます。これは iOS が Web セッションを作成する際に appScheme を必要とするためです。 </Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+### リダイレクト URL
+
+_サインイン_ & _サインアウト_ リダイレクト URL は、サインインまたはサインアウト操作の実行後にエンドユーザーをリダイレクトするために使用されます。開発（`http://localhost:3000/`）本番環境（`https://www.example.com/`）用に異なる URL を指定したり、ユーザーをアプリに戻す前に中間 URL にリダイレクトしたりするなど、複数の URL を指定する場合があります。
+
+<Accordion title='複数のリダイレクト URL を使用した完全な例' headingLevel='4' eyebrow='例'>
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import React, { useEffect, useState } from "react";
+import { Amplify } from "aws-amplify";
+import { Hub } from "aws-amplify/utils";
+import { signInWithRedirect, signOut, getCurrentUser } from "aws-amplify/auth";
+import { AuthUser } from "aws-amplify/auth";
+
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      loginWith: {
+        oauth: {
+          redirectSignIn: [
+            "http://localhost:3000/",
+            "https://www.example.com/",
+          ],
+          redirectSignOut: [
+            "http://localhost:3000/",
+            "https://www.example.com/",
+          ],
+          ...oauthConfig
+        },
+      },
+     ...userPoolConfig
+    },
+  },
+});
+
+function App() {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [customState, setCustomState] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = Hub.listen("auth", ({ payload }) => {
+      switch (payload.event) {
+        case "signInWithRedirect":
+          getUser();
+          break;
+        case "signInWithRedirect_failure":
+          setError("An error has occurred during the Oauth flow.");
+          break;
+        case "customOAuthState":
+          setCustomState(payload.data);
+          break;
+      }
+    });
+
+    getUser();
+
+    return unsubscribe;
+  }, []);
+
+  const getUser = async (): Promise<void> => {
+    try {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    } catch (error) {
+      console.error(error);
+      console.log("Not signed in");
+    }
+  };
+
+  return (
+    <div className="App">
+      <button onClick={() => signInWithRedirect()}>Open Hosted UI</button>
+      <button onClick={() => signOut()}>Sign Out</button>
+      <div>{user?.username}</div>
+    </div>
+  );
+}
+
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import React, { useEffect, useState } from 'react';
+import { Amplify } from 'aws-amplify';
+import { Hub } from 'aws-amplify/utils';
+import { signInWithRedirect, signOut, getCurrentUser } from 'aws-amplify/auth';
+
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      loginWith: {
+        oauth: {
+          redirectSignIn: [
+            'http://localhost:3000/',
+            'https://www.example.com/'
+          ],
+          redirectSignOut: [
+            'http://localhost:3000/',
+            'https://www.example.com/'
+          ],
+          ...oauthConfig
+        }
+      },
+      ...userPoolConfig
+    }
+  }
+});
+
+function App() {
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
+  const [customState, setCustomState] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = Hub.listen('auth', ({ payload }) => {
+      switch (payload.event) {
+        case 'signInWithRedirect':
+          getUser();
+          break;
+        case 'signInWithRedirect_failure':
+          setError('An error has occurred during the Oauth flow.');
+          break;
+        case 'customOAuthState':
+          setCustomState(payload.data);
+          break;
+      }
+    });
+
+    getUser();
+
+    return unsubscribe;
+  }, []);
+
+  const getUser = async () => {
+    try {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    } catch (error) {
+      console.error(error);
+      console.log('Not signed in');
+    }
+  };
+
+  return (
+    <div className="App">
+      <button onClick={() => signInWithRedirect()}>Open Hosted UI</button>
+      <button onClick={() => signInWithRedirect({ provider: 'Facebook' })}>
+        Open Facebook
+      </button>
+      <button onClick={() => signInWithRedirect({ provider: 'Google' })}>
+        Open Google
+      </button>
+      <button onClick={() => signInWithRedirect({ provider: 'Amazon' })}>
+        Open Amazon
+      </button>
+      <button onClick={() => signInWithRedirect({ provider: 'Apple' })}>
+        Open Apple
+      </button>
+      <button onClick={() => signOut()}>Sign Out</button>
+      <div>{user?.username}</div>
+    </div>
+  );
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+</Accordion>
+
+#### サインアウト時にリダイレクト URL を指定する
+複数のリダイレクト URL が設定されている場合、リダイレクト URL を選択するデフォルト動作をオーバーライドし、`signOut` を呼び出すときに選択したものを指定できます。提供されたリダイレクト URL は、設定されたリダイレクト URL の少なくとも 1 つと一致する必要があります。`signOut` にリダイレクト URL が指定されていない場合、現在のアプリドメインに基づいて選択されます。
+
+```ts
+import { Amplify } from 'aws-amplify';
+import { signOut } from 'aws-amplify/auth';
+
+// Amplify 設定ファイルを通じて手動で提供される、または以下の URL が提供されていると仮定します
+// redirectSignOut: 'http://localhost:3000/,https://www.example.com/'
+
+signOut({
+  global: false,
+  oauth: {
+    redirectUrl: 'https://www.example.com/'
+  }
+});
+
+```
+
+### (マルチページアプリケーションに必須) リダイレクト後のソーシャルサインインを完了
+
+マルチページアプリケーションを開発していて、リダイレクトされたページがサインインを開始したページと異なる場合、リダイレクトされたページに以下のコードを追加して、サインインが完了することを確認する必要があります:
+
+```ts
+import 'aws-amplify/auth/enable-oauth-listener';
+```
+
+<Callout>
+
+**注:** リスナーはクライアント側で SSR 対応プロジェクトのコンテキストで機能するだけなので、リスナーはクライアント側のみでインポートしてください。たとえば、Next.js プロジェクトでは、`'use client'` によってクライアント側のみでレンダリングするコンポーネントに上記のインポートステートメントを追加する必要があります。
+
+</Callout>
+
+<Accordion eyebrow="仕組みの詳細" headingLevel="4" title="マルチページアプリケーションでソーシャルサインインを明示的に処理する必要がある理由">
+	
+`signInWithRedirect` 関数をインポートして使用すると、ユーザーがアプリにリダイレクトバックされたときにソーシャルサインインを完了するリスナーが副作用として追加されます。これは単一ページアプリケーションではうまく機能しますが、マルチページアプリケーションでは、元々副作用として追加されたリスナーを含まないページにリダイレクトされる可能性があります。したがって、ログイン成功ページに特定の OAuth リスナーを含める必要があります。
+	
+</Accordion>
+
+</InlineFilter>
+
+### カスタムプロバイダー
+
+Cognito でデフォルトで提供されていないカスタムプロバイダーを使用する場合、カスタムプロバイダーの名前を含むオブジェクトを `provider` パラメータに渡すことができます。
+
+```javascript
+import { signInWithRedirect } from 'aws-amplify/auth';
+
+const provider = {
+  custom: 'MyCustomOIDCProvider'
+}
+
+function handleSignInClick() {
+    signInWithRedirect({ provider })
+}
+```
+
+### ソーシャルサインインのための認証パラメータを使用して、バックエンドリソースをデプロイ
+
+認証設定を作成または更新すると、Amplify はローカルで設定をセットアップしますが、バックエンド環境への変更を自動的にはデプロイしません。`amplify push` を実行してバックエンド環境に変更をデプロイする必要があります。
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+フロントエンドとバックエンドの継続的なデプロイを使用して、アプリを Amplify コンソールにデプロイできます。詳細については、[これらの手順](https://docs.aws.amazon.com/amplify/latest/userguide/environment-variables.html#creating-a-new-backend-environment-with-authentication-parameters)をご覧ください。
+
+</InlineFilter>
+
+## まとめ
+
+**ソーシャルプロバイダーのサインインを追加** ガイドが完了しました。このガイドでは、ソーシャル認証プロバイダーをセットアップし、ソーシャルサインイン用に Amplify Auth カテゴリを設定し、フロントエンドをセットアップする方法を学びました。これでユーザーはソーシャルプロバイダーアカウントを使用してアプリにサインインできます。
+
+## 次のステップ
+
+ソーシャルプロバイダーのサインインが完了したので、これらのワークフローをカスタマイズする方法について詳しく知ることができます。以下をお勧めします:
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+- [パスワード管理](/gen1/[platform]/build-a-backend/auth/manage-passwords/)
+- [ID プール フェデレーション](/gen1/[platform]/build-a-backend/auth/advanced-workflows/#identity-pool-federation)
+- [Hub での作業](/gen1/[platform]/build-a-backend/utilities/hub/)
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+- [パスワード管理](/gen1/[platform]/build-a-backend/auth/manage-passwords/)
+- [ID プール フェデレーション](/gen1/[platform]/build-a-backend/auth/advanced-workflows/#identity-pool-federation)
+- [Hub での作業](/gen1/[platform]/build-a-backend/utilities/hub/)
+
+</InlineFilter>
+
+</InlineFilter>
+
+import ios1 from '/src/fragments/lib/auth/native_common/social_signin_web_ui/common.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import android2 from '/src/fragments/lib/auth/native_common/social_signin_web_ui/common.mdx';
+
+<Fragments fragments={{ android: android2 }} />
+
+import flutter3 from '/src/fragments/lib/auth/native_common/social_signin_web_ui/common.mdx';
+
+<Fragments fragments={{ flutter: flutter3 }} />

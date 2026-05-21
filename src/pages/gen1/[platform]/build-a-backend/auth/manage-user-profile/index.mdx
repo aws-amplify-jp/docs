@@ -1,0 +1,451 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ユーザープロファイルの管理',
+  description: '顧客がプロファイルをパーソナライズし、属性を使用して連絡先情報を確認できるようにする方法の詳細をご覧ください。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript",  "react-native", "angular", "nextjs", "react", "vue"]}>
+
+ユーザープロファイル管理は、アプリケーションを安全に保つと同時に、アプリケーションエクスペリエンスをパーソナライズするのに役立ちます。このガイドでは、ユーザーがプロファイルをパーソナライズし、連絡先情報を確認できるようにする方法について説明します。これには、ユーザー属性の設定、確認、および必要に応じてそれらを削除できるようにする方法の概要が含まれます。
+
+開始する前に、以下が必要です。
+
+- Auth カテゴリが設定されている Amplify プロジェクト
+- インストールおよび設定されている Amplify ライブラリ
+
+## ユーザー属性の設定
+
+メールアドレスや電話番号などのユーザー属性は、個別のユーザーを識別するのに役立ちます。ユーザープロファイルに含めるユーザー属性を定義すると、ユーザーデータを大規模に簡単に管理できます。この情報は、ユーザージャーニーをパーソナライズし、コンテンツをカスタマイズし、直感的なアカウント制御を提供するなどに役立ちます。サインアップ時に情報を先制的にキャプチャするか、サインアップ後にプロファイルを更新できるようにするかを選択できます。このセクションでは、ユーザー属性の使用方法と、それらの設定と管理方法について詳しく説明します。
+
+### 標準属性を有効にする
+
+Amazon Cognito には、デフォルトの標準属性セットがあります。Amplify CLI を使用してアプリで標準ユーザー属性を設定および有効にするには、Amplify の `amplify add auth` コマンドを実行し、`Walkthrough all the auth configurations` を選択します。以前に認証リソースを作成した場合は、代わりにターミナルで `amplify update auth` コマンドを実行できます。`Specify read attributes` と `Specify write attributes` の入力を求められたら、アプリで有効にする属性を選択します。
+
+<Accordion title='標準属性オプションを確認する' headingLevel='4' eyebrow='詳細情報'>
+
+Cognito でデフォルトで使用できる多くのユーザー属性があります。その定義は [OpenID Connect 仕様](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims) に基づいています。
+
+- `address`
+- `birthdate`
+- `email`
+- `family_name`
+- `gender`
+- `given_name`
+- `locale`
+- `middle_name`
+- `name`
+- `nickname`
+- `phone_number`
+- `picture`
+- `preferred_username`
+- `profile`
+- `zoneinfo`
+- `updated_at`
+- `website`
+
+[すべての標準属性のリストはこちら](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes)で確認できます。
+
+</Accordion>
+
+### サインアップ時にユーザー属性を渡す
+
+ユーザー属性は、サインアップ時または認証されたユーザーの作成時に作成できます。サインアップの一部として行うには、`signUp` API の `userAttributes` オブジェクトに渡すことができます。
+
+```ts
+import { signUp } from 'aws-amplify/auth';
+
+async function handleSignUp() {
+  try {
+    await signUp({
+      username: 'jdoe',
+      password: 'mysecurerandompassword#123',
+      options: {
+        userAttributes: {
+          email: 'me@domain.com',
+          phone_number: '+12128601234', // E.164 number convention
+          given_name: 'Jane',
+          family_name: 'Doe',
+          nickname: 'Jane'
+        }
+      }
+    });
+  } catch (e) {
+    console.log(e);
+  }
+}
+```
+
+### カスタムユーザー属性を設定する
+
+カスタム属性は、`signUp` API の `userAttributes` オプションで渡すことができます。
+
+```javascript
+signUp({
+  username: 'jdoe',
+  password: 'mysecurerandompassword#123',
+  options: {
+    userAttributes: {
+      'custom:attribute_name_1': 'attribute_value_1',
+      'custom:attribute_name_2': 'attribute_value_2',
+      'custom:attribute_name_3': 'attribute_value_3'
+    }
+  }
+});
+```
+
+### ユーザー属性を取得する
+
+その後、ユーザーのユーザー属性を取得してプロファイルで読み取ることができます。これは、フロントエンドエクスペリエンスをパーソナライズし、表示内容を制御するのに役立ちます。
+
+`fetchUserAttributes` API を使用して、ユーザーの最新の属性を取得できます。
+
+```javascript
+import { fetchUserAttributes } from 'aws-amplify/auth';
+
+async function handleFetchUserAttributes() {
+  try {
+    const userAttributes = await fetchUserAttributes();
+    console.log(userAttributes);
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+## ユーザーが特定の属性を更新、確認、削除できるようにする
+
+情報が時間とともに変わるため、ユーザーが特定のユーザー属性を更新、確認、削除できるようにすることができます。これらの属性は、`Auth` 設定で `Specify write attributes` を更新すると、書き込み可能として有効になります。
+
+### ユーザー属性を更新する
+
+`updateUserAttribute` API を呼び出して、既存のユーザー属性を作成または更新します。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```typescript
+import {
+  updateUserAttribute,
+  type UpdateUserAttributeOutput
+} from 'aws-amplify/auth';
+
+async function handleUpdateUserAttribute(attributeKey: string, value: string) {
+  try {
+    const output = await updateUserAttribute({
+      userAttribute: {
+        attributeKey,
+        value
+      }
+    });
+    handleUpdateUserAttributeNextSteps(output);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+function handleUpdateUserAttributeNextSteps(output: UpdateUserAttributeOutput) {
+  const { nextStep } = output;
+
+  switch (nextStep.updateAttributeStep) {
+    case 'CONFIRM_ATTRIBUTE_WITH_CODE':
+      const codeDeliveryDetails = nextStep.codeDeliveryDetails;
+      console.log(
+        `Confirmation code was sent to ${codeDeliveryDetails?.deliveryMedium}.`
+      );
+      // Collect the confirmation code from the user and pass to confirmUserAttribute.
+      break;
+    case 'DONE':
+      console.log(`attribute was successfully updated.`);
+      break;
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```javascript
+import { updateUserAttribute } from 'aws-amplify/auth';
+
+async function handleUpdateUserAttribute(attributeKey, value) {
+  try {
+    const output = await updateUserAttribute({
+      userAttribute: {
+        attributeKey,
+        value
+      }
+    });
+    handleUpdateUserAttributeNextSteps(output);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+function handleUpdateUserAttributeNextSteps(output) {
+  const { nextStep } = output;
+
+  switch (nextStep.updateAttributeStep) {
+    case 'CONFIRM_ATTRIBUTE_WITH_CODE':
+      const codeDeliveryDetails = nextStep.codeDeliveryDetails;
+      console.log(
+        `Confirmation code was sent to ${codeDeliveryDetails?.deliveryMedium}.`
+      );
+      // Collect the confirmation code from the user and pass to confirmUserAttribute.
+      break;
+    case 'DONE':
+      console.log(`attribute was successfully updated.`);
+      break;
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+<Callout>
+  注意: 確認が必要な属性 (メールまたは phone_number など) を変更する場合、ユーザーはメールまたは携帯電話のいずれかで確認コードを受け取ります。このコードは confirmUserAttribute API で使用して変更を確認できます。
+</Callout>
+
+### ユーザー属性を更新する
+
+`updateUserAttributes` API を呼び出して、複数の既存ユーザー属性を作成または更新します。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```typescript
+import {
+  updateUserAttributes,
+  type UpdateUserAttributesOutput
+} from 'aws-amplify/auth';
+
+async function handleUpdateEmailAndNameAttributes(
+  updatedEmail: string,
+  updatedName: string
+) {
+  try {
+    const attributes = await updateUserAttributes({
+      userAttributes: {
+        email: updatedEmail,
+        name: updatedName
+      }
+    });
+    // handle next steps
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```javascript
+import { updateUserAttributes, type UpdateUserAttributesOutput } from 'aws-amplify/auth';
+
+async function handleUpdateEmailAndNameAttributes(
+  updatedEmail,
+  updatedName
+) {
+  try {
+    const attributes = await updateUserAttributes({
+      userAttributes: {
+        email: updatedEmail,
+        name: updatedName,
+      },
+    });
+   // handle next steps
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+### ユーザー属性を確認する
+
+属性更新を完了するには、一部の属性の確認が必要です。属性の確認が必要な場合、`updateUserAttribute` または `updateUserAttributes` API の結果の一部は `CONFIRM_ATTRIBUTE_WITH_CODE` になります。確認コードは、配信詳細に記載されている配信媒体に送信されます。ユーザーが確認コードを受け取ったら、ユーザーにコードを入力するための UI を提示し、ユーザーの入力で `confirmUserAttribute` API を呼び出すことができます。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```typescript
+import {
+  confirmUserAttribute,
+  type ConfirmUserAttributeInput
+} from 'aws-amplify/auth';
+
+async function handleConfirmUserAttribute({
+  userAttributeKey,
+  confirmationCode
+}: ConfirmUserAttributeInput) {
+  try {
+    await confirmUserAttribute({ userAttributeKey, confirmationCode });
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```javascript
+import { confirmUserAttribute } from 'aws-amplify/auth';
+
+async function handleConfirmUserAttribute({
+  userAttributeKey,
+  confirmationCode
+}) {
+  try {
+    await confirmUserAttribute({ userAttributeKey, confirmationCode });
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+### ユーザー属性検証コードを送信する
+
+ユーザーが認証されている間に属性を検証する必要がある場合は、以下のように `sendUserAttributeVerificationCode` API を呼び出します。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import {
+  sendUserAttributeVerificationCode,
+  type VerifiableUserAttributeKey
+} from 'aws-amplify/auth';
+
+async function handleSendUserAttributeVerificationCode(
+  key: VerifiableUserAttributeKey
+) {
+  try {
+    await sendUserAttributeVerificationCode({
+      userAttributeKey: key
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { sendUserAttributeVerificationCode } from 'aws-amplify/auth';
+
+async function handleSendUserAttributeVerificationCode(key) {
+  try {
+    await sendUserAttributeVerificationCode({
+      userAttributeKey: key
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+### ユーザー属性を削除する
+
+`deleteUserAttributes` API を使用すると、1 つ以上のユーザー属性を削除できます。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import {
+  deleteUserAttributes,
+  type DeleteUserAttributesInput
+} from 'aws-amplify/auth';
+
+async function handleDeleteUserAttributes(
+  keys: DeleteUserAttributesInput['userAttributeKeys']
+) {
+  try {
+    await deleteUserAttributes({
+      userAttributeKeys: ['custom:my_custom_attribute', ...keys]
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { deleteUserAttributes } from 'aws-amplify/auth';
+
+async function handleDeleteUserAttributes(keys) {
+  try {
+    await deleteUserAttributes({
+      userAttributeKeys: ['custom:my_custom_attribute', ...keys]
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+上記の手順に従うことで、ユーザーは情報が時間とともに変わるため、特定のユーザー属性を更新、確認、削除できるようになります。
+
+## まとめ
+
+おめでとうございます! **ユーザープロファイルの管理** ガイドを完了し、ユーザーがプロファイル情報を確認およびカスタマイズできるようになりました。
+
+## 次のステップ
+
+ユーザープロファイル管理の設定を完了したので、追加機能を追加することもできます。以下をお勧めします。
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+- [パスワード変更とリカバリーを設定する](/gen1/[platform]/build-a-backend/auth/manage-passwords/)
+- [カスタム属性](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-custom-attributes)
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+- [パスワード変更とリカバリーを設定する](/gen1/[platform]/build-a-backend/auth/manage-passwords/)
+- [カスタム属性](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-custom-attributes)
+
+</InlineFilter>
+
+</InlineFilter>

@@ -1,0 +1,339 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'リアルタイムイベントの購読',
+  description: 'Amplifyのサブスクリプションを使用してデータ変更を監視する方法について詳しく学びます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript",  "react-native", "angular", "nextjs", "react", "vue"]}>
+
+このガイドでは、リアルタイムデータ統合を有効にすることの利点と、これらのサブスクリプションをセットアップしてフィルタリングする方法について説明します。また、サブスクリプションから登録解除する方法についても説明します。
+
+開始する前に、以下が必要です:
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+- [APIに接続されたアプリケーション](/gen1/[platform]/build-a-backend/graphqlapi/connect-to-api/)
+- 変更するデータがすでに作成されている
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+- [APIに接続されたアプリケーション](/gen1/[platform]/build-a-backend/graphqlapi/connect-to-api/)
+- 表示するデータがすでに作成されている
+
+</InlineFilter>
+
+{/* This component contains approved messaging and cannot be removed or modified without prior approval */}
+
+import { ProtectedRedactionGen1Message } from "@/protected/ProtectedRedactionMessage"
+
+<ProtectedRedactionGen1Message />
+
+## リアルタイムサブスクリプションのセットアップ
+
+サブスクリプションはGraphQLの機能で、特定のイベントが発生したときにサーバーがクライアントにデータを送信することができます。例えば、APIを通じて新しいレコードが作成、更新、または削除されたときのイベントにサブスクライブできます。サブスクリプションを使用して、アプリケーションでリアルタイムデータ統合を有効にできます。
+
+```ts
+import { generateClient } from 'aws-amplify/api';
+import * as subscriptions from './graphql/subscriptions';
+
+const client = generateClient();
+
+// Subscribe to creation of Todo
+const createSub = client
+  .graphql({ query: subscriptions.onCreateTodo })
+  .subscribe({
+    next: ({ data }) => console.log(data),
+    error: (error) => console.warn(error)
+  });
+
+// Subscribe to update of Todo
+const updateSub = client
+  .graphql({ query: subscriptions.onUpdateTodo })
+  .subscribe({
+    next: ({ data }) => console.log(data),
+    error: (error) => console.warn(error)
+  });
+
+// Subscribe to deletion of Todo
+const deleteSub = client
+  .graphql({ query: subscriptions.onDeleteTodo })
+  .subscribe({
+    next: ({ data }) => console.log(data),
+    error: (error) => console.warn(error)
+  });
+
+// Stop receiving data updates from the subscription
+createSub.unsubscribe();
+updateSub.unsubscribe();
+deleteSub.unsubscribe();
+```
+
+## サーバーサイドサブスクリプションフィルターのセットアップ
+
+サブスクリプションは、サービスサイドサブスクリプションフィルターを定義するためのオプショナルな `filter` 引数を受け入れます:
+
+```ts
+import { generateClient } from 'aws-amplify/api';
+
+const client = generateClient();
+
+const variables = {
+  filter: {
+    // Only receive Todo messages where the "type" field is "Personal"
+    type: { eq: 'Personal' }
+  }
+};
+
+const sub = client
+  .graphql({
+    query: subscriptions.onCreateTodo,
+    variables
+  })
+  .subscribe({
+    next: ({ data }) => console.log(data),
+    error: (error) => console.warn(error)
+  });
+```
+
+すべてのサブスクリプションイベントを取得する場合は、`filter` パラメーターを指定しないでください。
+
+<Callout>
+
+**制限事項:**
+
+- フィルターとして空のオブジェクト `{}` を指定することは**推奨されていません**。`{}` をフィルターとして使用すると、データモデルの認可ルールに基づいて一貫性のない動作が発生する可能性があります。
+- 動的グループ認可を使用していて、レコードごとに単一のグループに基づいて認可する場合、サブスクリプションはユーザーが5つ以下のユーザーグループに属している場合にのみサポートされます。
+- さらに、グループの配列を使用して認可する場合 (`groups: [String]`)、
+  - サブスクリプションはユーザーが20個以下のグループに属している場合にのみサポートされます
+  - レコードごとに20個以下のユーザーグループのみを認可できます
+
+</Callout>
+
+### サブスクリプション接続状態の更新
+
+アプリケーションがセットアップされてサブスクリプションを使用するようになったので、サブスクリプションが最終的に確立されたときを知りたい、またはサブスクリプションが正常でないときをユーザーに反映させたいかもしれません。`Hub` ローカルイベントシステムを通じて接続状態の変更を監視できます。
+
+```ts
+import { CONNECTION_STATE_CHANGE, ConnectionState } from 'aws-amplify/api';
+import { Hub } from 'aws-amplify/utils';
+
+Hub.listen('api', (data: any) => {
+  const { payload } = data;
+  if (payload.event === CONNECTION_STATE_CHANGE) {
+    const connectionState = payload.data.connectionState as ConnectionState;
+    console.log(connectionState);
+  }
+});
+```
+
+#### サブスクリプション接続状態
+
+- **`Connected`** - 接続されており、問題なく動作しています。
+- **`ConnectedPendingDisconnect`** - 接続にはアクティブなサブスクリプションがなく、切断しています。
+- **`ConnectedPendingKeepAlive`** - 接続は開いていますが、予想されるキープアライブメッセージを受け取れていません。
+- **`ConnectedPendingNetwork`** - 接続は開いていますが、ネットワーク接続が中断されています。ネットワークが回復すると、接続はトラフィックの提供を続けます。
+- **`Connecting`** - 接続を試みています。
+- **`ConnectionDisrupted`** - 接続は中断されており、ネットワークは利用可能です。
+- **`ConnectionDisruptedPendingNetwork`** - 接続は中断されており、ネットワーク接続は利用不可です。
+- **`Disconnected`** - 接続にはアクティブなサブスクリプションがなく、切断しています。
+
+<Accordion title='接続の問題のトラブルシューティングと自動再接続' headingLevel='4' eyebrow='トラブルシューティング'>
+
+アプリケーションとバックエンドサブスクリプション間の接続は、ネットワーク障害やデバイスがスリープモードに入るなど、さまざまな理由で中断される可能性があります。サブスクリプションは接続が可能になると自動的に再接続されます。
+
+オフライン中、アプリケーションはメッセージを受け取れず、再接続時に自動的に追いつくことはできません。ユースケースに応じて、アプリケーションがオンラインに戻ったときに追いつくためにアクションを取りたい場合があります。
+
+```js
+import { generateClient, CONNECTION_STATE_CHANGE, ConnectionState } from 'aws-amplify/api'
+import { Hub } from 'aws-amplify/utils'
+
+const client = generateClient()
+
+const fetchRecentData = () => {
+  // Retrieve some/all data from AppSync
+  const allTodos = await client.graphql({ query: queries.listTodos });
+}
+
+let priorConnectionState: ConnectionState;
+
+Hub.listen("api", (data: any) => {
+  const { payload } = data;
+  if (
+    payload.event === CONNECTION_STATE_CHANGE
+  ) {
+
+    if (priorConnectionState === ConnectionState.Connecting && payload.data.connectionState === ConnectionState.Connected) {
+      fetchRecentData();
+    }
+    priorConnectionState = payload.data.connectionState;
+  }
+});
+
+const createSub = client.graphql(
+  { query: subscriptions.onCreateTodo }
+).subscribe({
+  next: payload => // Process incoming messages
+});
+
+const updateSub = client.graphql(
+  { query: subscriptions.onUpdateTodo }
+).subscribe({
+  next: payload => // Process incoming messages
+});
+
+const deleteSub = client.graphql(
+  { query: subscriptions.onDeleteTodo }
+).subscribe({
+  next: payload => // Process incoming messages
+});
+
+const cleanupSubscriptions = () => {
+  createSub.unsubscribe();
+  updateSub.unsubscribe();
+  deleteSub.unsubscribe();
+}
+```
+
+</Accordion>
+
+## IDでカスタムGraphQLサブスクリプションを作成
+
+このサマリーウォークスルーは、引数として特定のIDを含むミューテーションによってのみ接続およびトリガーされるカスタムGraphQLサブスクリプションを作成するための追加のステップバイステップガイドを提供します。例えば、次のGraphQLスキーマを考えます:
+
+```graphql
+type Post @model @auth(rules: [{ allow: public }]) {
+  id: ID!
+  title: String!
+  content: String
+  comments: [Comment] @hasMany
+}
+
+type Comment @model @auth(rules: [{ allow: public }]) {
+  id: ID!
+  content: String
+}
+```
+
+デフォルトでは、以下のミューテーションに対してサブスクリプションが作成されます:
+
+```graphql
+# Post type
+onCreatePost
+onUpdatePost
+onDeletePost
+
+# Comment type
+onCreateComment
+onUpdateComment
+onDeleteComment
+```
+
+カバーされていない1つの操作は、単一の特定の投稿に対してのみコメントをサブスクライブする方法です。
+
+スキーマはpost と comment 間のワンツーメニー関係を有効にしているため、自動生成されたフィールド `postCommentsId` を使用することができ、これは新しいサブスクリプション内に関係を定義します。
+
+これを実装するには、スキーマを以下で更新します:
+
+```graphql
+type Post @model @auth(rules: [{ allow: public }]) {
+  id: ID!
+  title: String!
+  content: String
+  comments: [Comment] @hasMany
+}
+
+type Comment @model @auth(rules: [{ allow: public }]) {
+  id: ID!
+  content: String
+  postCommentsId: ID!
+}
+
+type Subscription {
+  onCommentByPostId(postCommentsId: ID!): Comment
+    @aws_subscribe(mutations: ["createComment"])
+}
+```
+
+これで、特定の投稿IDを使用したコメント作成のカスタムサブスクリプションを作成できます:
+
+```js
+import { generateClient } from 'aws-amplify/api';
+import { onCommentByPostId } from './graphql/subscriptions';
+
+const client = generateClient();
+
+client
+  .graphql({
+    query: onCommentByPostId,
+    variables: {
+      postCommentsId: '12345'
+    }
+  })
+  .subscribe({
+    next: (data) => {
+      console.log('data: ', data);
+    }
+  });
+```
+
+## サブスクリプションから登録解除
+
+以下を実装することで、サブスクリプションからイベントに登録解除することもできます:
+
+```ts
+// Stop receiving data updates from the subscription
+sub.unsubscribe();
+```
+
+## まとめ
+
+おめでとうございます! **リアルタイムイベントの購読**ガイドを完了しました。このガイドでは、リアルタイムイベントのサブスクリプションをセットアップし、必要に応じてこれらのサブスクリプションをフィルタリングしてキャンセルする方法を学びました。
+
+## 次のステップ
+
+推奨される次のステップには、データの情報アーキテクチャを構築・カスタマイズし続けることが含まれます。このワークに役立つリソースには以下が含まれます:
+
+- [認可ルール](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)
+- [データモデリング](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/)
+- [カスタムビジネスロジック](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/)
+
+</InlineFilter>
+
+import ios0 from '/src/fragments/lib/graphqlapi/ios/subscribe-data.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import android1 from '/src/fragments/lib/graphqlapi/android/subscribe-data.mdx';
+
+<Fragments fragments={{ android: android1 }} />
+
+import flutter3 from '/src/fragments/lib/graphqlapi/flutter/subscribe-data.mdx';
+
+<Fragments fragments={{ flutter: flutter3 }} />

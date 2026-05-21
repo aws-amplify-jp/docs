@@ -1,0 +1,131 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'アナリティクスの有効化と無効化',
+  description: 'Amplifyを使用してアナリティクスを有効/無効にする方法を学びます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ],
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## アナリティクスを無効にする
+
+アナリティクスはアプリで構成するとデフォルトで有効になります。アプリでアナリティクスを無効にするには、`disable` 関数を使用します。
+
+<InlineFilter filters={['javascript', 'react-native', "angular", "nextjs", "react", "vue"]}>
+```javascript title="src/index.js"
+import { disable } from 'aws-amplify/analytics';
+
+disable();
+```
+</InlineFilter>
+
+<InlineFilter filters={['android']}>
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+Amplify.Analytics.disable();
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+Amplify.Analytics.disable()
+```
+
+</Block>
+<Block name="RxJava">
+
+```java
+RxAmplify.Analytics.disable();
+```
+
+</Block>
+</BlockSwitcher>
+</InlineFilter>
+
+<InlineFilter filters={['flutter']}>
+```dart
+await Amplify.Analytics.disable();
+```
+</InlineFilter>
+
+<InlineFilter filters={['swift']}>
+```swift
+Amplify.Analytics.disable()
+```
+</InlineFilter>
+
+## アナリティクスを有効にする
+
+アプリでアナリティクスを有効にするには、`enable` 関数を使用できます。
+
+<InlineFilter filters={['javascript', 'react-native', "angular", "nextjs", "react", "vue"]}>
+```javascript title="src/index.js"
+import { enable } from 'aws-amplify/analytics';
+
+enable();
+```
+</InlineFilter>
+
+<InlineFilter filters={['android']}>
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+Amplify.Analytics.enable();
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+Amplify.Analytics.enable()
+```
+
+</Block>
+<Block name="RxJava">
+
+```java
+RxAmplify.Analytics.enable();
+```
+
+</Block>
+</BlockSwitcher>
+</InlineFilter>
+
+<InlineFilter filters={['flutter']}>
+```dart
+Amplify.Analytics.enable();
+```
+</InlineFilter>
+
+<InlineFilter filters={['swift']}>
+```swift
+Amplify.Analytics.enable()
+```
+</InlineFilter>

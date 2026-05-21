@@ -1,0 +1,347 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Microsoft Entra ID (SAML)',
+  description: 'SAMLを使用してMicrosoft EntraIDプロバイダーを接続する方法を学習',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps() {
+  return {
+    props: {
+      meta,
+    }
+  };
+}
+
+Microsoft Entra IDは、Amazon Cognitoで使用するためのSAMLプロバイダーとして構成できます。Entra IDを統合することで、既存のエンタープライズユーザーでサインインし、Amplifyアプリ内で使用するためのAmplify Authリソースに一意のプロファイルを保持できます。詳細については、[Microsoft Entra IDを使用したSAML認証に関するAzureドキュメント](https://learn.microsoft.com/en-us/entra/architecture/auth-saml)をご覧ください。
+
+<Callout info>
+
+**注:** 以下のガイダンスは、[パーソナルクラウドサンドボックス](/[platform]/deploy-and-host/sandbox-environments/setup/)での構成を紹介しています。サンドボックスに対する機能を確認した後、ブランチデプロイメントの構成手順を繰り返す必要があります。
+
+</Callout>
+
+## パーソナルクラウドサンドボックスを開始する
+
+開始するには、適切なリダイレクトURIを使用して認証リソースを定義します:
+
+```ts title="amplify/auth/resource.ts"
+import { defineAuth } from "@aws-amplify/backend"
+
+/**
+ * Define and configure your auth resource
+ * @see https://docs.amplify.aws/gen2/build-a-backend/auth
+ */
+export const auth = defineAuth({
+  loginWith: {
+    email: true,
+    externalProviders: {
+      logoutUrls: ["http://localhost:3000/come-back-soon"],
+      callbackUrls: ["http://localhost:3000/profile"],
+    },
+  },
+})
+```
+
+`npx ampx sandbox`でパーソナルクラウドサンドボックスにデプロイします。これにより、新しいEntra IDアプリを構成するために使用できるドメインが生成されます。変更を正常にデプロイした後、`amplify_outputs.json`から生成された`domain`値をコピーします
+
+```json title="amplify_outputs.json"
+{
+  "auth": {
+    "aws_region": "us-east-1",
+    "user_pool_id": "<your-cognito-user-pool-id>",
+    "user_pool_client_id": "<your-cognito-user-pool-client-id>",
+    "identity_pool_id": "<your-cognito-identity-pool-id>",
+    "mfa_methods": [],
+    "standard_required_attributes": [
+      "email"
+    ],
+    "username_attributes": [
+      "email"
+    ],
+    "user_verification_types": [
+      "email"
+    ],
+    "mfa_configuration": "OFF",
+    "password_policy": {
+      "min_length": 8,
+      "require_numbers": true,
+      "require_lowercase": true,
+      "require_uppercase": true,
+      "require_symbols": true
+    },
+    "oauth": {
+      "identity_providers": [],
+      "redirect_sign_in_uri": [
+        "http://localhost:3000/profile"
+      ],
+      "redirect_sign_out_uri": [
+        "http://localhost:3000/come-back-soon"
+      ],
+      "response_type": "code",
+      "scopes": [
+        "phone",
+        "email",
+        "openid",
+        "profile",
+        "aws.cognito.signin.user.admin"
+      ],
+      // highlight-next-line
+      "domain": "<some-hash>.auth.us-east-1.amazoncognito.com"
+    },
+  },
+  "version": "1"
+}
+```
+
+## Microsoft Entra IDのセットアップ
+
+次に、[portal.azure.com](https://portal.azure.com/)に移動して、**Entra ID**を選択します。デフォルトディレクトリまたは企業の既存ディレクトリで、**管理**の下の**エンタープライズアプリケーション**を選択します
+
+![Entra IDデフォルトディレクトリページでエンタープライズアプリケーションをハイライト](/images/auth/examples/microsoft-entra-id-saml/entra-id-select-enterprise-applications.png)
+
+その後、**新しいアプリケーション**を選択し、**独自のアプリケーションを作成**を選択します。アプリケーションの名前を指定し、**ギャラリーに見つからない他のアプリケーション統合(ギャラリー以外)**を選択します
+
+![Azure Portalでの新しいエンタープライズアプリケーション作成](/images/auth/examples/microsoft-entra-id-saml/entra-id-new-enterprise-application.png)
+
+新しいエンタープライズアプリケーションを作成したので、SAMLでシングルサインオンを構成できます。**シングルサインオン**を選択します
+
+![Entra IDエンタープライズアプリケーションで「シングルサインオン」をハイライト](/images/auth/examples/microsoft-entra-id-saml/entra-id-select-single-sign-on.png)
+
+次に**SAML**を選択します
+
+![Entra IDエンタープライズアプリケーションのシングルサインオン設定で「SAML」をハイライト](/images/auth/examples/microsoft-entra-id-saml/entra-id-select-saml.png)
+
+SAMLでシングルサインオンを設定するページが表示され、Amplify Authリソースからのいくつかの情報が必要になります。
+
+![Entra IDシングルサインオンセットアップページでエンティティIDとReply URLが必要](/images/auth/examples/microsoft-entra-id-saml/entra-id-set-up-saml.png)
+
+**基本的なSAML構成**ステップで**編集**を選択し、適切な値を入力します。
+
+| ラベル | 値 |
+|-------|-------|
+| Identifier (Entity ID) | `urn:amazon:cognito:sp:<your-cognito-user-pool-id>` |
+| Reply URL (Assertion Consumer Service URL) | `https://<your-cognito-domain>/saml2/idpresponse` |
+| Logout Url (Optional) | `https://<your-cognito-domain>/saml2/logout` |
+
+<Callout info>
+
+**注:** Amazon CognitoのSAMLプロバイダーのリダイレクトURIは、以下の規約に従います:
+
+```text showLineNumbers={false}
+https://<some-hash>.auth.<aws-region>.amazoncognito.com/saml2/<action>
+```
+
+カスタムドメインを使用している場合、ルートは同じままです: `/saml2/<action>`。[Amazon CognitoをSAML IDプロバイダーで構成する方法について詳しく学ぶ](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-saml-idp.html)
+
+</Callout>
+
+<Callout warning>
+
+**警告:** アップストリームサインアウト機能がEntra IDからのサインアウトに成功しても、ユーザーアプリへのリダイレクトに失敗するという既知の制限があります。この動作は、Amplify AuthのSAML統合ではデフォルトで無効化されています。
+
+</Callout>
+
+構成を保存し、ステップ3の**SAML証明書**セクションに進みます。**アプリフェデレーションメタデータURL**をコピーします
+
+![Entra IDシングルサインオンセットアップページでアプリフェデレーションメタデータURLをハイライト](/images/auth/examples/microsoft-entra-id-saml/entra-id-copy-federation-url.png)
+
+## Entra IDでバックエンドを構成する
+
+SAMLプロバイダーをMicrosoft Entra IDで構成し、**アプリフェデレーションメタデータURL**をコピーしたので、認証リソースを新しいSAMLプロバイダーで構成し、URLの値を`metadataContent`プロパティに貼り付けます:
+
+```ts title="amplify/auth/resource.ts"
+import { defineAuth } from "@aws-amplify/backend"
+
+/**
+ * Define and configure your auth resource
+ * @see https://docs.amplify.aws/gen2/build-a-backend/auth
+ */
+export const auth = defineAuth({
+  loginWith: {
+    email: true,
+    externalProviders: {
+      saml: {
+        name: "MicrosoftEntraIDSAML",
+        metadata: {
+          metadataType: "URL",
+          metadataContent: "<your-metadata-content-url>",
+        },
+        attributeMapping: {
+          email: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+        },
+      },
+      logoutUrls: ["http://localhost:3000/come-back-soon"],
+      callbackUrls: ["http://localhost:3000/profile"],
+    },
+  },
+})
+```
+
+ユーザー属性は、ステップ2の**属性とクレーム**セクションにあり、デフォルトではネームスペースが付与されます。上の例は、SAMLユーザーのメールアドレスのデフォルトクレームをマッピングしていますが、追加の属性をマッピングできます。
+
+## オプション: Cognitoサイニング証明書をアップロードする
+
+AWSコンソールで、Cognito User Poolに移動します。Amplify AuthをEntra ID SAMLプロバイダーで構成した後に作成されたIDプロバイダー**MicrosoftEntraIDSAML**を選択します。**署名証明書を表示**を選択し、**.crt**としてダウンロードします
+
+![Amazon Cognitoコンソールでサイニング証明書を表示](/images/auth/examples/microsoft-entra-id-saml/cognito-view-signing-certificate.png)
+
+ファイルの拡張子を`.cer`に変更してAzureにアップロードします。**シングルサインオン**ページで、**ステップ3**(**SAML証明書**)にスクロールダウンし、**検証証明書(オプション)**の下で**編集**を選択します。
+
+![Entra IDシングルサインオンページで検証証明書の「編集」をハイライト](/images/auth/examples/microsoft-entra-id-saml/entra-id-edit-verification-certificate.png)
+
+**検証証明書が必要**を選択し、証明書をアップロードします。
+
+![Entra ID検証証明書アップロードペイン](/images/auth/examples/microsoft-entra-id-saml/entra-id-upload-verification-certificate.png)
+
+変更を保存すると、Cognito User PoolからEntra IDへのリクエストが検証されるようになります。
+
+## フロントエンドを接続する
+
+これで、ユーザーはMicrosoft Entra IDでサインインする準備が整いました。このカスタムプロバイダーでサインインするには、認証リソース定義で指定された名前(`MicrosoftEntraIDSAML`)としてプロバイダー名を指定します
+
+<InlineFilter filters={["angular", "javascript", "nextjs", "react", "react-native", "vue"]}>
+
+```ts title="main.ts"
+import { signInWithRedirect } from "aws-amplify/auth"
+
+signInWithRedirect({
+  provider: { custom: "MicrosoftEntraIDSAML" }
+})
+```
+
+</InlineFilter>
+<InlineFilter filters={["android"]}>
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+Amplify.Auth.signInWithSocialWebUI(
+    AuthProvider.custom("MicrosoftEntraIDSAML")
+    this,
+    result -> Log.i("AuthQuickStart", result.toString()),
+    error -> Log.e("AuthQuickStart", error.toString())
+);
+```
+
+</Block>
+<Block name="Kotlin - Callbacks">
+
+```kotlin
+Amplify.Auth.signInWithSocialWebUI(
+    AuthProvider.custom("MicrosoftEntraIDSAML"),
+    this,
+    { Log.i("AuthQuickstart", "Sign in OK: $it") },
+    { Log.e("AuthQuickstart", "Sign in failed", it) }
+)
+```
+
+</Block>
+<Block name="Kotlin - Coroutines">
+
+```kotlin
+try {
+    val result = Amplify.Auth.signInWithSocialWebUI(AuthProvider.custom("MicrosoftEntraIDSAML"), this)
+    Log.i("AuthQuickstart", "Sign in OK: $result")
+} catch (error: AuthException) {
+    Log.e("AuthQuickstart", "Sign in failed", error)
+}
+```
+
+</Block>
+<Block name="RxJava">
+
+```java
+RxAmplify.Auth.signInWithSocialWebUI(AuthProvider.custom("MicrosoftEntraIDSAML"), this)
+    .subscribe(
+        result -> Log.i("AuthQuickstart", result.toString()),
+        error -> Log.e("AuthQuickstart", error.toString())
+    );
+```
+
+</Block>
+</BlockSwitcher>
+
+</InlineFilter>
+<InlineFilter filters={["flutter"]}>
+
+```dart
+Future<void> signInWithMicrosoftEntraID() async {
+  try {
+    final result = await Amplify.Auth.signInWithWebUI(
+      provider: AuthProvider.custom("MicrosoftEntraIDSAML"),
+    );
+    safePrint('Sign in result: $result');
+  } on AuthException catch (e) {
+    safePrint('Error signing in: ${e.message}');
+  }
+}
+```
+
+</InlineFilter>
+<InlineFilter filters={["swift"]}>
+
+<BlockSwitcher>
+<Block name="Async/Await">
+
+```swift
+func signInWithMicrosoftEntraID() async {
+    do {
+        let signInResult = try await Amplify.Auth.signInWithWebUI(
+            for: AuthProvider.custom("MicrosoftEntraIDSAML"),
+            presentationAnchor: self.view.window!
+        )
+        if signInResult.isSignedIn {
+            print("Sign in succeeded")
+        }
+    } catch let error as AuthError {
+        print("Sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+</Block>
+<Block name="Combine">
+
+```swift
+func signInWithMicrosoftEntraID() -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.signInWithWebUI(
+            for: AuthProvider.custom("MicrosoftEntraIDSAML"),
+            presentationAnchor: self.view.window!
+        )
+    }
+    .sink { completion in
+        if case let .failure(authError) = completion {
+            print("Sign in failed \(authError)")
+        }
+    } receiveValue: { signInResult in
+        if signInResult.isSignedIn {
+            print("Sign in succeeded")
+        }
+    }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+</InlineFilter>

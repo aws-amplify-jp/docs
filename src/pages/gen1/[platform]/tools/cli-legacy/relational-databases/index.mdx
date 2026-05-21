@@ -1,0 +1,146 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'リレーショナルデータベース',
+  description: 'Amplify CLIは現在、サーバーレスAmazon Aurora MySQL 5.6データベースのインポートをサポートしています。Amazon Aurora Serverlessデータベースを作成し、このデータベースをGraphQLデータソースとしてインポートしテストする方法を学びます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert
+  isLegacy
+  url={'/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/'}
+/>
+
+Amplify CLIは現在、サーバーレスAmazon Aurora MySQL 5.6データベースのインポートをサポートしています。以下の手順は、Amazon Aurora Serverlessデータベースを作成し、このデータベースをGraphQLデータソースとしてインポートしテストする方法を示しています。
+
+**まず、GraphQL APIを持つAmplifyプロジェクトがない場合は、次の簡単なコマンドを使用して作成してください。**
+
+```bash
+amplify init
+amplify add api
+```
+
+**AWS RDSコンソールにアクセスして「データベースの作成」をクリックします。**
+
+**データベース作成方法として「標準作成」を選択します**
+
+![Database Creation](/images/database-creation.png)
+
+**エンジンオプションについては、次のオプションを保持します**
+
+![Engine Option](/images/database-engine-option.png)
+
+**データベース機能で「サーバーレス」を選択します**
+
+![Database Features](/images/database-features.png)
+
+**設定で以下の情報を入力します**
+
+![Database Settings](/images/database-setting.png)
+
+**キャパシティ設定を以下のように選択します**
+
+![Database Capacity](/images/database-capacity.png)
+
+**「追加の接続設定」を展開して「Data API」を有効にし、VPCセキュリティグループが設定されていない場合は「新規作成」を選択します**
+
+![Database Connectivity](/images/database-connectivity.png)
+
+**「追加設定」を展開して「初期データベース名」をMarketPlaceとして入力します**
+
+![Database Additional Configuration](/images/database-additional-configuration.png)
+
+**「データベースの作成」をクリックします。作成されたら、サイドメニューの「クエリエディタ」をクリックして接続プロンプトを開きます。接続するには、クラスターを選択し、以前設定した認証情報を入力します。**
+
+![Database Connect ](/images/connect-to-database.png)
+
+**接続後、データベースといくつかのテーブルを作成します。**
+
+![Database details](/images/query-editor.png)
+
+```sql
+USE MarketPlace;
+CREATE TABLE Customers (
+  id int(11) NOT NULL PRIMARY KEY,
+  name varchar(50) NOT NULL,
+  phone varchar(50) NOT NULL,
+  email varchar(50) NOT NULL
+);
+CREATE TABLE Orders (
+  id int(11) NOT NULL PRIMARY KEY,
+  customerId int(11) NOT NULL,
+  orderDate datetime DEFAULT CURRENT_TIMESTAMP,
+  KEY `customerId` (`customerId`),
+  CONSTRAINT `customer_orders_ibfk_1` FOREIGN KEY (`customerId`) REFERENCES `Customers` (`id`)
+);
+```
+
+**コマンドラインに戻って、Amplifyプロジェクトのルートから `amplify api add-graphql-datasource` を実行します。**
+
+![Add GraphQL Data Source](/images/add-graphql-datasource.png)
+
+**`amplify push` でプロジェクトをAWSにプッシュします。**
+
+`amplify push` を実行してプロジェクトをAWSにプッシュします。その後、`amplify api console` でAppSyncコンソールを開いて、GraphQL APIを通じてRDSデータベースとやり取りを試すことができます。
+
+**SQLデータベースをGraphQLから操作する**
+
+APIはサーバーレスAmazon Aurora MySQLデータベースで機能するように設定されています。[AppSyncコンソール](https://console.aws.amazon.com/appsync/home)からミューテーションを実行して顧客を作成し、[RDSコンソール](https://console.aws.amazon.com/rds/home)から照会して確認を取ってみてください。
+
+顧客を作成します:
+
+```graphql
+mutation CreateCustomer {
+  createCustomers(
+    createCustomersInput: {
+      id: 1
+      name: "Hello"
+      phone: "111-222-3333"
+      email: "customer1@mydomain.com"
+    }
+  ) {
+    id
+    name
+    phone
+    email
+  }
+}
+```
+
+![GraphQL Results](/images/graphql-results.png)
+
+次にRDSコンソールを開いて、簡単なselect文を実行して新しい顧客を確認します:
+
+```sql
+USE MarketPlace;
+SELECT * FROM Customers;
+```
+
+![SQL Results](/images/sql-results.png)
+
+## これはどのように機能しますか?
+
+`add-graphql-datasource` コマンドは、既存のデータソースを操作するための基本的な機能セットを提供するカスタムスタックをプロジェクトに追加します。新しいスタックは `stacks/` ディレクトリ内に、新しいリゾルバーセットは `resolvers/` ディレクトリ内に検出され、`schema.graphql` にいくつかの追加が見つかります。カスタムスタックおよび/またはリゾルバーファイルの詳細は自由に編集できます。データベース内の変更でプロジェクトを更新するために `add-graphql-datasource` を再度実行できますが、これらは `stacks/` または `resolvers/` ディレクトリ内の既存のテンプレートを上書きするため注意してください。Amplify CLIで複数の環境を使用する場合、環境ごとに1回データソースを構成するよう求められます。

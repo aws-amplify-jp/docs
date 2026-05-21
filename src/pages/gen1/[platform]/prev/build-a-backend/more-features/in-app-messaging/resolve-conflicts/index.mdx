@@ -1,0 +1,43 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '競合を解決する',
+  description: 'イベントが送信され、複数のアプリ内メッセージによって設定された条件を満たす場合の競合を解決する方法を学びます。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import reactnative0 from '/src/fragments/lib-v1/in-app-messaging/resolve-conflicts/resolve-conflicts.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative0 }} />
+
+import js0 from '/src/fragments/lib-v1/in-app-messaging/resolve-conflicts/resolve-conflicts.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>

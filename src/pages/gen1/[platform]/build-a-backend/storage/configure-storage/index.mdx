@@ -1,0 +1,186 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ストレージの設定',
+  description: 'Amplify CLIを使用して、アプリのクラウド接続ファイルおよびデータストレージを作成および管理します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify CLIの`storage`カテゴリを使用すると、クラウド接続ファイルおよびデータストレージを作成および管理できます。次の場合に`storage`カテゴリを使用してください：
+
+1. アプリコンテンツ（画像、オーディオ、ビデオなど）をパブリック、保護、またはプライベートストレージバケットに保存する場合、または
+2. アプリデータをNoSQLデータベースに保存し、REST API + Lambdaでアクセスする場合
+
+## 新しいストレージリソースの設定
+
+次のコマンドを実行して、新しいストレージリソースを設定できます：
+
+```bash
+amplify add storage
+```
+
+Amplifyを使用すると、Amazon S3を使用したアプリコンテンツストレージ（画像、オーディオ、ビデオなど）またはAmazon DynamoDBを使用したNoSQLデータベースを設定できます。
+
+### S3ストレージの追加
+
+```console
+? Please select from one of the below mentioned services:
+> Content (Images, audio, video, etc.)
+  NoSQL Database
+? Please provide a friendly name for your resource that will be used to label this category in the project:
+> mystorage
+? Please provide bucket name:
+> mybucket
+```
+
+プロンプトに従って、コンテンツストレージのリソース名を入力します。
+
+<Callout>
+
+Amplify CLIで作成されたストレージリソースは保持機能が有効になっており、データの偶発的な削除または損失を防ぎます。したがって、`amplify remove storage`を実行してもストレージリソースは削除されず、AWSコンソールで手動で削除する必要があります。
+
+</Callout>
+
+### S3アクセス権限
+
+次に、Amazon S3バケットのアクセス権限を設定します。`auth`カテゴリをまだセットアップしていない場合は、Amplify CLIがauthカテゴリを有効にするためのワークフローをガイドします。
+
+```console
+? Restrict access by?
+> Auth/Guest Users
+  Individual Groups
+  Both
+  Learn more
+```
+
+<Callout>
+
+**注意：** `amplify update storage`を実行すると、Amazon S3バケットのアクセス権限を変更できます
+
+</Callout>
+
+#### Auth/ゲストユーザーアクセス
+
+`Auth/Guest Users`を選択して、個別ユーザーの認証ステータスに基づいて権限をスコープします。次の質問で、認証ユーザーのみがリソースにアクセスできるか、認証ユーザーとゲストユーザーがアクセスできるかを選択できます：
+
+```
+? Who should have access:
+❯ Auth users only
+  Auth and guest users
+```
+
+次に、認証ユーザー（および前に選択した場合は未認証ユーザー）のアクセススコープを設定するよう求められます。
+
+```console
+? What kind of access do you want for Authenticated users?
+> ◉ create/update
+  ◯ read
+  ◯ delete
+? What kind of access do you want for Guest users?
+  ◯ create/update
+> ◉ read
+  ◯ delete
+```
+
+認証ユーザーへのアクセス許可を付与すると、`/public/`、`/protected/{cognito:sub}/`、`/private/{cognito:sub}/`プレフィックスで始まるバケット内のオブジェクトに対して指定されたCRUD操作が許可されます。`{cognito:sub}`は、認証ユーザーのCognito IDの下位です。
+
+ゲストユーザーへのアクセス許可を付与すると、`/public/`プレフィックスで始まるバケット内のオブジェクトに対して指定されたCRUD操作が許可されます。
+
+#### 個別グループアクセス
+
+`Individual Groups`を選択して、[Cognito User Groups](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)に基づいてアクセス権限をスコープします
+
+```console
+? Select groups:
+  ◉ EMPLOYEE
+> ◉ MANAGER
+```
+
+次に、選択した各Cognito User Groupに許可するCRUD操作を選択します
+
+```console
+? What kind of access do you want for EMPLOYEE users?
+  ◯ create/update
+> ◉ read
+  ◯ delete
+? What kind of access do you want for MANAGER users?
+  ◉ create/update
+  ◯ read
+> ◉ delete
+```
+
+> 注意：ここで選択されたCRUD操作は、特定のプレフィックスの下のオブジェクトだけでなく、バケット内のすべてのオブジェクトに適用されます。
+
+> 注意：`Auth/Guest user access`と`Individual Group access`を組み合わせる場合、グループのメンバーであるユーザーには、認証ユーザー権限ではなく、グループの権限のみが付与されます。
+
+### S3 Lambdaトリガー
+
+最後に、S3イベントに応答して実行できるLambda関数を設定するオプションがあります。
+
+```console
+? Do you want to add a Lambda Trigger for your S3 Bucket? (y/N)
+```
+
+このワークフローの詳細については、[こちら](/gen1/[platform]/tools/cli/usage/lambda-triggers/#s3-lambda-triggers)をご覧ください。
+
+完了です。コンテンツストレージが設定されました。[ライブラリのストレージドキュメント](/gen1/[platform]/build-a-backend/storage/set-up-storage/)にアクセスして、新しく作成されたS3バケットをアプリに統合してください。
+
+### NoSQLデータベースの追加
+
+```console
+? Please select from one of the below mentioned services:
+> Content (Images, audio, video, etc.)
+  NoSQL Database
+? Please provide a friendly name for your resource that will be used to label this category in the project:
+> dynamo2e1dc4eb
+? Please provide table name:
+> dynamo2e1dc4eb
+```
+
+プロンプトに従って、NoSQLデータベースのリソース名を入力します。次に、テーブル作成ウィザードを実行します。最初に、テーブルの列を作成します：
+
+```console
+You can now add columns to the table.
+
+? What would you like to name this column: id
+? Please choose the data type: string
+? Would you like to add another column? Yes
+```
+
+次に、インデックスを指定する必要があります。「インデックス」、「パーティションキー」、「ソートキー」、「グローバルセカンダリインデックス」の概念については、[こちら](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html#HowItWorks.CoreComponents.PrimaryKey)で詳しく説明されています。
+
+```console
+? Please choose partition key for the table: id
+? Do you want to add a sort key to your table? (y/N)
+```
+
+```console
+? Do you want to add a Lambda Trigger for your Table? (y/N)
+```
+
+テーブルのLambdaトリガーを設定したい場合は、オプションがあります。このワークフローの詳細については、[こちら](/gen1/[platform]/tools/cli/usage/lambda-triggers/#dynamodb-lambda-triggers)をご覧ください。
+
+完了です。NoSQLデータベースが設定されました。

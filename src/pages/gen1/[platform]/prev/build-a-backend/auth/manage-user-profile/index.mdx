@@ -1,0 +1,479 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ユーザープロフィールの管理',
+  description: '属性を使用して顧客がプロフィールをパーソナライズし、連絡先情報を検証できるようにする方法について詳しく説明します。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript",  "react-native", "angular", "nextjs", "react", "vue"]}>
+
+ユーザープロフィール管理は、アプリケーションのセキュリティを保ちながらアプリエクスペリエンスをパーソナライズするのに役立ちます。このガイドでは、ユーザーがプロフィールをパーソナライズし、連絡先情報を検証できるようにする方法を説明します。これには、ユーザー属性を設定し、検証し、必要に応じてユーザーが削除できるようにする方法が含まれます。
+
+始める前に、以下が必要です：
+
+- Auth カテゴリが設定されたAmplifyプロジェクト
+- インストールと設定がされたAmplifyライブラリ
+
+## ユーザー属性の設定
+
+メールアドレス、電話番号などのユーザー属性は、個々のユーザーを識別するのに役立ちます。ユーザープロフィールに含めるユーザー属性を定義すると、ユーザーデータを規模に応じて簡単に管理できます。この情報は、ユーザージャーニーをパーソナライズし、コンテンツをカスタマイズし、直感的なアカウント制御を提供するなどの際に役立ちます。サインアップ時に情報を事前に取得することも、サインアップ後にプロフィールを更新できるようにすることもできます。このセクションでは、ユーザー属性の操作方法と、その設定および管理方法について詳しく説明します。
+
+### 標準属性の有効化
+
+Amazon Cognito には、デフォルトで利用可能な標準属性のセットがあります。Amplify CLIを使用してアプリでユーザー属性を設定および有効化するには、Amplify `amplify add auth` コマンドを実行し、`Walkthrough all the auth configurations` を選択できます。以前に認証リソースを作成している場合は、ターミナルで `amplify update auth` コマンドを実行できます。`Specify read attributes` と `Specify write attributes` を求めるプロンプトが表示されたら、アプリで有効にする属性を選択します。
+
+<Accordion title='標準属性オプションを確認する' headingLevel='4' eyebrow='詳細'>
+
+Cognitoでデフォルトで使用できる多くのユーザー属性があります。それらの定義は、[OpenID Connect仕様](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims)に基づいています：
+
+- `address`
+- `birthdate`
+- `email`
+- `family_name`
+- `gender`
+- `given_name`
+- `locale`
+- `middle_name`
+- `name`
+- `nickname`
+- `phone_number`
+- `picture`
+- `preferred_username`
+- `profile`
+- `zoneinfo`
+- `updated_at`
+- `website`
+
+[すべての標準属性のリストはここで確認できます](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes)。
+
+</Accordion>
+
+### サインアップ時にユーザー属性を渡す
+
+ユーザー属性はサインアップ時またはその後に作成できます。サインアップの一部として行うには、`Auth.signUp` 関数パラメーターの `attributes` オブジェクトで属性を渡します：
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Auth } from 'aws-amplify';
+
+async function handleSignUp() {
+  try {
+    await Auth.signUp({
+      username: 'jdoe',
+      password: 'mysecurerandompassword#123',
+      attributes: {
+        email: 'me@domain.com',
+        phone_number: '+12128601234', // E.164 number convention
+        given_name: 'Jane',
+        family_name: 'Doe',
+        nickname: 'Jane'
+      }
+    });
+  } catch (e) {
+    console.log(e);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { Auth } from 'aws-amplify';
+
+async function handleSignUp() {
+  try {
+    await Auth.signUp({
+      username: 'jdoe',
+      password: 'mysecurerandompassword#123',
+      attributes: {
+        email: 'me@domain.com',
+        phone_number: '+12128601234', // E.164 number convention
+        given_name: 'Jane',
+        family_name: 'Doe',
+        nickname: 'Jane'
+      }
+    });
+  } catch (e) {
+    console.log(e);
+  }
+}
+```
+
+</Block>
+
+</BlockSwitcher>
+
+### ユーザー属性の取得
+
+その後、ユーザーが自分のプロフィールで読み取るためのユーザー属性を取得できます。これはフロントエンドエクスペリエンスをパーソナライズし、ユーザーが何を見るかを制御するのに役立ちます。表示される属性は、Auth カテゴリで設定された `Specify read attributes` の間に有効にしたものに限定されます。その後、`currentAuthenticatedUser` メソッドを使用してユーザー属性を取得できます。
+
+```ts
+const user = await Auth.currentAuthenticatedUser();
+
+const { attributes } = user;
+```
+
+属性が変更された後に最新のユーザー属性を取得する必要がある場合は、ローカルキャッシュをバイパスする必要があることに注意してください：
+
+```ts
+const user = await Auth.currentAuthenticatedUser({
+  bypassCache: true
+});
+```
+
+`bypassCache` パラメーターのデフォルト値は false です。または、ユーザーがサインアウトして再度サインインして、最新の属性を取得および表示できます。
+
+## ユーザーが特定の属性を更新、検証、削除できるようにする
+
+ユーザーが情報の変更に応じて特定のユーザー属性を更新、検証、削除できるようにすることができます。これらの属性は、`Auth` 設定で `Specify write attributes` を更新するときに書き込み可能として有効化されます。
+
+### ユーザー属性の更新
+
+`updateUserAttributes` メソッドを使用して、サインアップ後にユーザーが更新できるようにできます：
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Auth } from 'aws-amplify';
+
+async function updateUserAttributes() {
+  try {
+    const user = await Auth.currentAuthenticatedUser();
+    const result = await Auth.updateUserAttributes(user, {
+      email: 'me@anotherdomain.com',
+      family_name: 'Lastname'
+    });
+    console.log(result); // SUCCESS
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { Auth } from 'aws-amplify';
+
+async function updateUserAttributes() {
+  try {
+    const user = await Auth.currentAuthenticatedUser();
+    const result = await Auth.updateUserAttributes(user, {
+      email: 'me@anotherdomain.com',
+      family_name: 'Lastname'
+    });
+    console.log(result); // SUCCESS
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+### ユーザー属性の検証
+
+ユーザーが確認が必要な属性（メールアドレスや電話番号など）を変更すると、その属性の確認コードが届きます。
+
+`Auth.updateUserAttributes()` 関数は、確認が必要な属性を識別するのに役立つhubイベントをディスパッチします。`auth` チャネルで `updateUserAttributes` イベントをリッスンできます：
+
+```javascript
+import { Hub } from 'aws-amplify';
+
+Hub.listen('auth', ({ payload }) => {
+  if (payload.event === 'updateUserAttributes') {
+    const resultObject = payload.data;
+  }
+});
+```
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+Hubイベントのリッスン方法について詳しく知るには、[ここを参照してください](/gen1/[platform]/build-a-backend/utilities/hub/)。
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+Hubイベントのリッスン方法について詳しく知るには、[ここを参照してください](/gen1/[platform]/build-a-backend/utilities/hub/)。
+
+</InlineFilter>
+
+例えば、以下では、ディスパッチされた `resultObject` を確認できます。これは `email` 属性が検証が必要なため更新されなかったが、`family_name` 属性は更新されたことを示しています：
+
+```javascript
+{
+  'email': {
+    isUpdated: false // indicates that attribute requires verification
+    codeDeliveryDetails: {
+      AttributeName: 'email',
+      DeliveryMedium: 'EMAIL',
+      Destination: 'm***@a...'
+    }
+  },
+  'family_name': {
+    isUpdated: true
+  }
+}
+```
+
+<Callout>
+
+**注意：** ユーザーが複数の属性を更新するために送信し、そのうちの1つ以上が `read_only` であるか存在しない場合、APIはエラーをスロー し、`updateUserAttributes_failure` Hubイベントをディスパッチします。リクエスト内の属性は更新されません。
+
+</Callout>
+
+`Auth.updateUserAttributes` を使用してメールアドレスを更新するには、新しいメールアドレスの検証が必要です。ユーザーは更新されたメールアドレスに検証コードを受け取り、アプリケーションは検証コードを受け取って `Auth.verifyCurrentUserAttributeSubmit` に送信してから、Cognitoでメールアドレスが更新されます。
+
+アプリで新しいメールアドレスを確認できます：
+
+```javascript
+const result = await Auth.verifyCurrentUserAttributeSubmit(
+  'email', // The attribute name
+  '<verification_code>'
+);
+```
+
+<Accordion title='メール更新と確認の完全な例' headingLevel='4' eyebrow='例'>
+
+以下のReactアプリケーションは、「メールを更新」ボタンをクリックしたときに現在のユーザーのメールアドレスを更新するフロー、その後ユーザーのメールに送信された検証コードをキャプチャするフォームを提供します。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+// App.js
+import { Authenticator } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
+import { Auth } from 'aws-amplify';
+import { useState } from 'react';
+
+async function updateUserEmail() {
+  try {
+    const user = await Auth.currentAuthenticatedUser();
+    await Auth.updateUserAttributes(user, {
+      email: 'updatedEmail@mydomain.com'
+    });
+
+    console.log('a verification code is sent');
+  } catch(err) {
+    console.log('failed with error', err);
+  }
+}
+
+async function verifyEmailValidationCode(code: string) {
+  try {
+    await Auth.verifyCurrentUserAttributeSubmit('email', code);
+    console.log('email verified');
+  } catch(err) {
+    console.log('failed with error', err);
+  }
+}
+
+function ValidationCodeForm() {
+  const [validationCode, setValidationCode] = useState<string | null>(null);
+  return (
+    <div>
+      <label>
+        Verification Code (sent to the new email):
+        <input
+          onChange={(e) => {
+            setValidationCode(e.target.value);
+          }}
+          type="text"
+          name="vc"
+        />
+      </label>
+      <button onClick={() => validationCode && verifyEmailValidationCode(validationCode)}>
+        Send Code
+      </button>
+    </div>
+  );
+}
+
+export default function App() {
+  const [showValidationCodeUI, setShowValidationCodeUI] = useState(false);
+
+  return (
+    <Authenticator>
+      {({ signOut, user }) => (
+        <div className="App">
+          <div>
+            <pre>{JSON.stringify(user?.attributes, null, 2)}</pre>
+          </div>
+          {showValidationCodeUI === false && (
+            <button
+              onClick={async () => {
+                await updateUserEmail();
+                setShowValidationCodeUI(true);
+              } }
+            >
+              Update Email
+            </button>
+          )}
+          {showValidationCodeUI === true && <ValidationCodeForm />}
+          <button onClick={signOut}>Sign out</button>
+        </div>
+      )}
+    </Authenticator>
+  );
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```javascript
+// App.js
+import { Authenticator } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
+import { Auth } from 'aws-amplify';
+import { useState } from 'react';
+
+async function updateUserEmail() {
+  try {
+    const user = await Auth.currentAuthenticatedUser();
+    await Auth.updateUserAttributes(user, {
+      email: 'updatedEmail@mydomain.com'
+    });
+
+    console.log('a verification code is sent');
+  } catch (err) {
+    console.log('failed with error', err);
+  }
+}
+
+async function verifyEmailValidationCode(code) {
+  try {
+    await Auth.verifyCurrentUserAttributeSubmit('email', code);
+    console.log('email verified');
+  } catch (err) {
+    console.log('failed with error', err);
+  }
+}
+
+function ValidationCodeForm() {
+  const [validationCode, setValidationCode] = useState(null);
+  return (
+    <div>
+      <label>
+        Verification Code (sent to the new email):
+        <input
+          onChange={(e) => {
+            setValidationCode(e.target.value);
+          }}
+          type="text"
+          name="vc"
+        />
+      </label>
+      <button onClick={() => verifyEmailValidationCode(validationCode)}>
+        Send Code
+      </button>
+    </div>
+  );
+}
+
+export default function App() {
+  const [showValidationCodeUI, setShowValidationCodeUI] = useState(false);
+
+  return (
+    <Authenticator>
+      {({ signOut, user }) => (
+        <div className="App">
+          <div>
+            <pre>{JSON.stringify(user.attributes, null, 2)}</pre>
+          </div>
+          {showValidationCodeUI === false && (
+            <button
+              onClick={async () => {
+                await updateUserEmail();
+                setShowValidationCodeUI(true);
+              }}
+            >
+              Update Email
+            </button>
+          )}
+          {showValidationCodeUI === true && <ValidationCodeForm />}
+          <button onClick={signOut}>Sign out</button>
+        </div>
+      )}
+    </Authenticator>
+  );
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+</Accordion>
+
+### ユーザー属性の削除
+
+最後に、ユーザーが1つ以上のユーザー属性を削除する必要がある場合、`Auth.deleteUserAttributes` メソッドを呼び出すことができます：
+
+```ts
+import { Auth } from 'aws-amplify';
+
+async function deleteUserAttributes() {
+  try {
+    const user = await Auth.currentAuthenticatedUser();
+    const result = await Auth.deleteUserAttributes(user, ['family_name']);
+    console.log(result); // SUCCESS
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+上記の手順に従うことで、ユーザーは情報の変更に応じて特定のユーザー属性を更新、検証、削除できるようになります。
+
+## まとめ
+
+おめでとうございます！**ユーザープロフィール管理**ガイドを完了しました。これでユーザーは自分のプロフィール情報を確認およびカスタマイズできるようになりました。
+
+## 次のステップ
+
+ユーザープロフィール管理のセットアップが完了したので、追加の機能を追加することもできます。以下をお勧めします：
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+- [パスワードの変更とリカバリーのセットアップ](/gen1/[platform]/prev/build-a-backend/auth/manage-passwords/)
+- [カスタム属性](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-custom-attributes)
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+- [パスワードの変更とリカバリーのセットアップ](/gen1/[platform]/prev/build-a-backend/auth/manage-passwords/)
+- [カスタム属性](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#user-pool-settings-custom-attributes)
+
+</InlineFilter>
+
+</InlineFilter>

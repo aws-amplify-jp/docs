@@ -1,0 +1,41 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '既存の Amazon Cognito リソースを使用する',
+  description:
+    'Amplify ライブラリを設定して、既存の Amazon Cognito リソースをご自身の設定で参照することで使用できます。',
+  platforms: ['flutter', 'swift', 'android']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import android_maintenance from '/src/fragments/lib-v1/android-maintenance.mdx';
+
+<Fragments fragments={{ android: android_maintenance }} />
+
+import android0 from '/src/fragments/lib-v1/auth/existing-resources.mdx';
+
+<Fragments fragments={{ android: android0 }} />
+
+import ios_maintenance from '/src/fragments/lib-v1/ios-maintenance.mdx';
+
+<Fragments fragments={{ swift: ios_maintenance }} />
+
+import ios1 from '/src/fragments/lib-v1/auth/existing-resources.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import flutter2 from '/src/fragments/lib-v1/auth/existing-resources.mdx';
+
+<Fragments fragments={{ flutter: flutter2 }} />

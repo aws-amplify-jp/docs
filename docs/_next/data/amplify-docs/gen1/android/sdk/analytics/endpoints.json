@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"android","meta":{"title":"エンドポイント","description":"ユーザーがセッションを開始する場合（例えば、モバイルアプリを起動する場合）、モバイルアプリケーションまたはウェブアプリケーションはAmazon Pinpointにエンドポイントを自動的に登録（または更新）できます。エンドポイントはユーザーがセッションを開始するデバイスを表します。","platforms":["swift","android"]}},"__N_SSG":true}

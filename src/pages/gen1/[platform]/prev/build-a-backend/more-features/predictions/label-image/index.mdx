@@ -1,0 +1,58 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '画像内のラベルオブジェクト',
+  description: 'Amplifyを使用して画像内のラベルを検出する方法について詳しく学びます。例えば、画像にchair（椅子）やdesk（机）などのオブジェクトが含まれているかどうかを検出できます。',
+  platforms: [
+    'swift',
+    'android',
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios_maintenance from '/src/fragments/lib-v1/ios-maintenance.mdx';
+
+<Fragments fragments={{ swift: ios_maintenance }} />
+
+import ios1 from '/src/fragments/lib-v1/predictions/ios/label-image.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import android_maintenance from '/src/fragments/lib-v1/android-maintenance.mdx';
+
+<Fragments fragments={{ android: android_maintenance }} />
+
+import android2 from '/src/fragments/lib-v1/predictions/android/label-image.mdx';
+
+<Fragments fragments={{ android: android2 }} />
+
+import labelImageJs from '/src/fragments/lib-v1/predictions/js/label-image.mdx';
+
+<Fragments
+  fragments={{
+    javascript: labelImageJs,
+    'react-native': labelImageJs,
+    angular: labelImageJs,
+    nextjs: labelImageJs,
+    react: labelImageJs,
+    vue: labelImageJs
+  }}
+/>

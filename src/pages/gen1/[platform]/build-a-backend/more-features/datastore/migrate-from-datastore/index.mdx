@@ -1,0 +1,398 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+
+export const meta = {
+  title: 'DataStoreからの移行',
+  description: 'Amplify DataStoreからApollo ClientまたはAmplify APIカテゴリへの移行方法を学びます。',
+  route: '/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      platform: context.params.platform,
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+## DataStoreについて
+
+AWS Amplify DataStoreは、アプリとクラウド間のデータを自動的に同期するローカルファースト（ローカル優先）のデータレイヤーを提供していました。DataStoreを使用していた場合、同期ロジックを自分で記述することなく、いくつかの強力な機能を得ることができました。セッション間でデータを永続化するローカルデータベース、AppSyncバックエンドとの自動双方向同期、バージョン追跡を使用した組み込みの競合解決、ミューテーション キューとリプレイを備えた完全なオフラインサポート、`observe()`および`observeQuery()`による リアルタイム更新です。
+
+DataStoreはGraphQL操作、ネットワーク状態管理、データの一貫性の複雑さを抽象化していました。ローカルモデルの単純な`save`、`query`、`delete`メソッドで作業でき、残りはすべてDataStoreが裏で処理していました。
+
+<InlineFilter filters={["angular", "javascript", "nextjs", "react", "react-native", "vue"]}>
+
+このガイドでは、クエリ、ミューテーション、キャッシング用に[Apollo Client](https://www.apollographql.com/docs/react)を使用し、リアルタイム更新用にAmplifyライブラリの組み込みサブスクリプション機能と組み合わせる方法を示します。DataStoreの機能セットのうち、アプリが実際に使用している量によっては、移行が予想より簡単な場合があります。
+
+</InlineFilter>
+
+<InlineFilter filters={["flutter"]}>
+
+このガイドでは、DataStoreからAmplify APIカテゴリへの移行方法を示します。これはクエリ、ミューテーション、サブスクリプションに使用されます。DataStoreの機能セットのうち、アプリが実際に使用している量によっては、移行が予想より簡単な場合があります。
+
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+
+このガイドでは、DataStoreから[Apollo Kotlin](https://www.apollographql.com/docs/kotlin)および[AWS AppSync Apollo Extensions library](https://docs.amplify.aws/android/build-a-backend/data/aws-appsync-apollo-extensions/)への移行方法を示します。これらは、クエリ、ミューテーション、サブスクリプションに使用されます。DataStoreの機能セットのうち、アプリが実際に使用している量によっては、移行が予想より簡単な場合があります。
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+このガイドでは、DataStoreから[Apollo iOS](https://www.apollographql.com/docs/ios)および[AWS AppSync Apollo Extensions library](https://docs.amplify.aws/swift/build-a-backend/data/aws-appsync-apollo-extensions/)への移行方法を示します。これらは、クエリ、ミューテーション、サブスクリプションに使用されます。DataStoreの機能セットのうち、アプリが実際に使用している量によっては、移行が予想より簡単な場合があります。
+
+</InlineFilter>
+
+フロントエンドクライアントがDataStoreから移行された後、バックエンドで[競合解決を無効化](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/disable-conflict-resolution/)して、同期インフラストラクチャを削除し、ミューテーションを簡素化（`_version`追跡なし）し、ソフト削除からハード削除に切り替えます。
+
+## このガイドについて
+
+<InlineFilter filters={["angular", "javascript", "nextjs", "react", "react-native", "vue"]}>
+
+このガイドでは、DataStoreからApollo Clientへの移行パスについて説明します。Apollo ClientをAppSyncエンドポイントでセットアップし、すべてのCRUD操作と関係を移行し、オプションで永続的なキャッシングと楽観的更新を追加します。
+
+## クイック比較：前後
+
+一般的なDataStore操作がApollo Clientにどのように変換されるかについての概要を以下に示します。
+
+| DataStore操作 | Apollo Client相当 |
+|---------------------|--------------------------|
+| `DataStore.save(new Post({...}))` | `apolloClient.mutate({ mutation: CREATE_POST, variables: { input: {...} } })` |
+| `DataStore.query(Post)` | `apolloClient.query({ query: LIST_POSTS })` |
+| `DataStore.query(Post, id)` | `apolloClient.query({ query: GET_POST, variables: { id } })` |
+| `DataStore.delete(post)` | `apolloClient.mutate({ mutation: DELETE_POST, variables: { input: { id, _version } } })` |
+| `DataStore.observe(Post)` | `amplifyClient.graphql({ query: onCreatePost }).subscribe(...)` |
+| `DataStore.observeQuery(Post)` | `useQuery(LIST_POSTS)`とサブスクリプション起動`refetch()` |
+
+<Callout>
+
+サブスクリプションはApolloではなくAmplifyライブラリの`client.graphql()`を使用します。AppSyncはAmplifyが本来サポートしているカスタムWebSocketプロトコルを使用しているためです。Apollo Clientはすべてのクエリ、ミューテーション、キャッシングを処理します。
+
+</Callout>
+
+## このガイドを使用すべき人
+
+このガイドは、DataStoreを使用する既存のAmplify Gen 1アプリケーションを持ち、DataStoreをApollo Clientで置き換えたいと考えているデベロッパー向けです。フロントエンド移行（DataStoreをApollo Clientで置き換える）とすべてのクライアントがDataStoreから移行した後に競合解決を無効化するバックエンドステップをカバーしています。これらのステップが完了した後、バックエンドをAmplify Gen 2に移行できます。
+
+<Callout warning>
+
+**Gen 1フィールド名のケーシング：** Gen 1バックエンドは外部キーに大文字のID接尾辞を使用します（例：`postID`、`tagID`）。一方、Gen 2は小文字を使用します（`postId`、`tagId`）。このガイドのコード例はGen 2規約を使用しています。バックエンドが引き続きGen 1を使用している場合は、GraphQL操作、同期クエリ、フィルタ内のすべてのフィールド名をスキーマに合わせて調整してください。ケーシングが一致しないと、`null`がサイレントに返されます。`schema.graphql`またはAppSyncコンソールでフィールド名を確認してください。
+
+</Callout>
+
+次のことについて精通していることを前提としています。
+
+- ReactとReacthooks
+- GraphQLの基本概念（クエリ、ミューテーション、サブスクリプション）
+- Amplify設定と`amplifyconfiguration.json`（または`aws-exports.js`）ファイル
+- アプリのデータモデルとDataStoreの使用方法
+
+Apollo Clientの事前経験は必要ありません。このガイドではApollo Clientのセットアップを最初から説明します。
+
+## このガイドを使用する方法
+
+ページを順番に従ってください。各ステップは前のステップに基づいています。
+
+1. **[Apollo Clientのセットアップ](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/set-up-apollo/)。** 依存関係をインストールし、GraphQL操作を定義し、AppSyncエンドポイントとCognito認証を使用してApollo Clientを設定し、Amplifyを使用してリアルタイムサブスクリプションをセットアップします。
+
+2. **[CRUD操作の移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-crud-operations/)。** `DataStore.save()`、`DataStore.query()`、`DataStore.delete()`をApollo Clientクエリとミューテーションで置き換えます。述語、ページネーション、ソートを移行します。
+
+3. **[関係を移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-relationships/)。** DataStoreのレイジーロードモデルから、Apollo ClientのGraphQL選択セットへの`hasMany`、`belongsTo`、`hasOne`、`manyToMany`関係を移行します。
+
+4. **[オプション：ローカルキャッシングを追加](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/add-local-caching/)。** 永続的なキャッシング（データはページ更新後も存続）、楽観的更新（インスタントUI フィードバック）、インテリジェントな取得ポリシーでセットアップを強化します。このステップはオプションです。アプリがページ更新後のデータ永続性やインスタント楽観的UIを必要としない場合はスキップしてください。
+
+5. **[高度なパターン](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/advanced-patterns/)。** 複合キーを処理し、GraphQL codegenをセットアップしてタイプ安全性を確保し、ReactコンポーネントをMigrate し、Apollo相当物がないDataStore機能を確認します。
+
+6. **[競合解決を無効化](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/disable-conflict-resolution/)。** すべてのフロントエンドクライアントがDataStoreから移行されたら、同期インフラストラクチャを削除し、ミューテーションを簡素化し、ソフト削除からハード削除に切り替えます。
+
+7. **バックエンドをGen 2に移行（オプション）。** フロントエンド移行を完了し、競合解決を無効化した後、バックエンドをGen 1からAmplify Gen 2に移行できます。
+
+<Callout>
+
+**モデルカバレッジ：** コード例ではPostおよびCommentモデルを使用しています。追加のモデル（PostTagなどのジョインテーブルを含む）については、同じパターンを拡張してください。
+
+</Callout>
+
+## 移行チェックリスト
+
+これらのチェックリストを使用して、DataStoreからApollo Clientへの移行を計画・追跡してください。完了したらアイテムにチェックを入れてください。
+
+### 移行前チェックリスト
+
+移行コードを記述する前に以下のステップを完了してください。
+
+- バックエンドがデプロイされ、`amplifyconfiguration.json`（または`aws-exports.js`）が生成されていることを確認してください（`amplify push`）
+- `Amplify.configure(config)`がアプリ起動時にAPIコール前に実行され、Amplifyが設定されていることを確認してください
+- コードベースのすべてのDataStore使用を一覧化してください：`DataStore.save()`、`DataStore.query()`、`DataStore.delete()`、`DataStore.observe()`、`DataStore.observeQuery()`
+- すべてのモデルと関係（`hasMany`、`belongsTo`、`hasOne`、`manyToMany`）を特定し、カスタム/複合主キーを持つモデルをメモしてください
+- すべてのフラグメントに`_version`、`_deleted`、`_lastChangedAt`を含む各モデルのGraphQL操作を記述してください
+- Apollo Clientをインストールしてください：`npm install @apollo/client@^3.14.0 graphql`
+- Apollo Clientをセットアップしてください。AppSyncエンドポイントに対してシンプルなリストクエリを実行して接続が機能することを確認してください
+- `generateClient()`を使用してAmplifyサブスクリプションクライアントをセットアップしてください
+
+### 移行中のチェックリスト
+
+機能を移行する際に、これらのステップに従ってください。各モデルを一度に1つずつ処理して、変更を管理可能でテスト可能に保ってください。
+
+**各DataStoreモデルについて：**
+
+- ビジネスフィールドプラス`_version`、`_deleted`、`_lastChangedAt`を含むGraphQLフラグメントを定義してください
+- フラグメントを使用してすべてのGraphQL操作（リスト、取得、作成、更新、削除）を定義してください
+- ソフト削除されたレコード（`_deleted: true`）をフィルタリングしてリストクエリを移行してください
+- シングルアイテムクエリを移行してください
+- 作成を移行してください（作成には`_version`は必要ありません）
+- 更新を移行してください（最新クエリ結果から`_version`をミューテーション入力に含めてください）
+- 削除を移行してください（ミューテーション入力に`id`と`_version`を含めてください）
+- Amplifyサブスクリプション+リフェッチパターンを使用して`observe`を移行してください
+- `useQuery`をサブスクリプション起動`refetch()`と組み合わせて`observeQuery`を移行してください
+- Apollo のエラーリンクとコンポーネントレベルのエラー状態のエラーハンドリングを更新してください
+- 次のモデルに進む前に、移行された各操作をテストしてください
+
+**述語とフィルタについて：**
+
+- DataStore述語をGraphQLフィルタオブジェクトに変換してください
+- クライアント側の`.sort()`またはサーバー側の`@index`クエリへのソート移行を実行してください
+- ページベースからカーソルベース（`nextToken`と`limit`）へのページネーション移行を実行してください
+
+### 移行後のチェックリスト
+
+**検証：**
+
+- すべての移行されたモデルのすべてのCRUD操作が機能することを確認してください
+- すべてのモデルのすべての3つのイベントタイプ（作成、更新、削除）でリアルタイム更新が発火することを確認してください
+- サインイン、認証済み操作、サインアウトを含む認証フローを検証してください
+- サインアウトクリーンアップによってApolloキャッシュが消去されることを確認してください
+- `_version`処理が`ConditionalCheckFailedException`エラーなしで成功することを確認してください
+- 削除されたレコードがリストビューに表示されなくなるようにソフト削除フィルタリングを確認してください
+
+**クリーンアップ：**
+
+- コードベースからすべてのDataStoreインポートを削除してください
+- 生成されたDataStoreモデルファイルを削除してください
+- DataStore設定呼び出し（`DataStore.configure()`、`DataStore.start()`、`DataStore.stop()`）を削除してください
+- 依存関係から`@aws-amplify/datastore`を削除してください
+- 完全なユーザーワークフローでアプリをエンドツーエンドで実行してください
+- デプロイ後のエラーを監視してください
+
+<Accordion title="ローカルキャッシングを追加した場合">
+
+オプションの[ローカルキャッシングを追加](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/add-local-caching/)ステップを実行した場合、これらのアイテムを移行計画に追加してください。
+
+- 永続キャッシュストレージ用に`apollo3-cache-persist`をセットアップしてください
+- 各クエリのための`fetchPolicy`を設定してください（例：リスト用は`cache-and-network`、詳細ビュー用は`cache-first`）
+- Apolloの`optimisticResponse`オプションを使用してミューテーションの楽観的更新を実装してください
+- サインアウトフローを更新して、メモリ内キャッシュをクリアするだけでなく、永続キャッシュもパージしてください
+
+</Accordion>
+
+</InlineFilter>
+
+<InlineFilter filters={["flutter"]}>
+
+このガイドでは、DataStoreからAmplify APIカテゴリへの移行パスについて説明します。DataStore操作をAPI相当物で置き換え、オプションでローカルキャッシングとオフラインファーストサポートをサードパーティFlutterパッケージを使用して追加します。
+
+## クイック比較：前後
+
+一般的なDataStore操作がAmplify APIカテゴリにどのように変換されるかについての概要を以下に示します。
+
+| DataStore操作 | Amplify API相当 |
+|---------------------|------------------------|
+| `Amplify.DataStore.save()`（作成） | `Amplify.API.mutate(request: ModelMutations.create(...))` |
+| `Amplify.DataStore.save()`（更新） | `Amplify.API.mutate(request: ModelMutations.update(...))` |
+| `Amplify.DataStore.delete()` | `Amplify.API.mutate(request: ModelMutations.delete(...))` |
+| `Amplify.DataStore.query()`（シングル） | `Amplify.API.query(request: ModelQueries.get(...))` |
+| `Amplify.DataStore.query()`（リスト） | `Amplify.API.query(request: ModelQueries.list(...))` |
+| `Amplify.DataStore.observe()` | `Amplify.API.subscribe(ModelSubscriptions.onCreate/onUpdate/onDelete(...))` |
+| `Amplify.DataStore.observeQuery()` | 最初の`ModelQueries.list()`＋3つのサブスクリプション（直接相当物なし） |
+| `Amplify.DataStore.clear()` | 不要になりました（クリアすべきローカルDataStoreなし） |
+| `Amplify.DataStore.start()` / `stop()` | 不要になりました |
+
+## ユースケース
+
+すべての顧客がDataStoreの機能セット全体を必要とするわけではありません。特定のユースケースに応じて、移行は簡潔な場合があります。
+
+1. **APIの使いやすさ：** DataStoreを使用する主な理由がGraphQLクエリまたはAPIの管理を簡素化することであり、アプリケーションがオフラインまたはローカルキャッシング機能を必要としない場合、Amplify APIカテゴリへの移行を検討してください。これにより、既存のAmplifyリソースを使用しながら、簡潔なデータ管理インターフェイスで作業を続けることができます。
+2. **ローカルキャッシング：** DataStoreを主にローカルキャッシングレイヤーとして使用し、デバイスにデータを一時的に保存しているが、オフラインファースト機能には大きく依存していない場合、サードパーティFlutterパッケージを使用して、より簡潔なローカルキャッシング ソリューションへの移行を検討してください。
+3. **オフラインファースト：** ビジネス要件が完全なオフラインファースト機能をサポートすることに依存している場合、[オフラインファースト](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/offline-first/)ガイドが新しいオフラインファースト ソリューションへの移行のためのハイレベルアプローチを提供します。
+
+## このガイドを使用する方法
+
+ページを順番に従ってください。各ステップは前のステップに基づいています。
+
+1. **[DataStoreを削除](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/remove-datastore/)。** プロジェクトからDataStore依存関係を削除し、モデルを使用するようにAPIプラグインを設定してください。
+
+2. **[Amplify APIに移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-to-api/)。** すべてのDataStore操作をAPI相当物で置き換えてください。`save`、`query`、`delete`、`observe`、`observeQuery`を移行してください。
+
+3. **[オプション：ローカルキャッシング](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/local-caching/)。** サードパーティFlutterパッケージを使用してオフラインデータアクセス用のローカルキャッシュをセットアップしてください。
+
+4. **[オフラインファースト](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/offline-first/)。** リモート同期、ライブ同期、ネットワーク検出、オフラインミューテーションで完全なオフラインサポートを構築してください。
+
+5. **[認可とデータ処理](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/authorization-and-data/)。** 認証ルールを管理し、移行中に既存の顧客データを処理してください。
+
+6. **[競合解決を無効化](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/disable-conflict-resolution/)。** すべてのフロントエンドクライアントがDataStoreから移行されたら、同期インフラストラクチャを削除し、ミューテーションを簡素化し、ソフト削除からハード削除に切り替えてください。
+
+7. **[役立つリソース](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/helpful-resources/)。** 追加のドキュメンテーション、サードパーティパッケージ、参考資料です。
+
+## 移行チェックリスト
+
+移行を計画・追跡するにはこのチェックリストを使用してください：
+
+1. **`pubspec.yaml`を更新** — `amplify_datastore`依存関係を削除してください（[DataStoreを削除](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/remove-datastore/)を参照）
+2. **Amplify設定を更新** — DataStoreプラグインを削除し、APIプラグインに`ModelProvider`を渡してください
+3. **CRUD操作を移行** — `DataStore.save()`、`DataStore.query()`、`DataStore.delete()`をAPI相当物で置き換えてください（[Amplify APIに移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-to-api/)を参照）
+4. **リアルタイムリスナーを移行** — `DataStore.observe()`および`DataStore.observeQuery()`をAPIサブスクリプションで置き換えてください
+5. **API応答の違いを処理** — `GraphQLResponse`型とトークンベースのページネーションに適応してください
+6. **テスト** — すべてのCRUD操作、リアルタイムサブスクリプション、エラーハンドリングを検証してください
+7. **競合解決を無効化** — すべてのクライアントが移行されたら（[競合解決を無効化](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/disable-conflict-resolution/)を参照）
+
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+
+このガイドでは、DataStoreからApollo Kotlinへの移行パスについて説明します。AppSyncエンドポイントでApollo Kotlinをセットアップし、すべてのCRUD操作を移行し、オプションでローカルキャッシングとオフラインファーストサポートを追加します。
+
+## クイック比較：前後
+
+一般的なDataStore操作がApollo Kotlinにどのように変換されるかについての概要を以下に示します。
+
+| DataStore操作 | Apollo Kotlin相当 |
+|---------------------|--------------------------|
+| `Amplify.DataStore.save()` | Apolloミューテーション（`CreatePostMutation`、`UpdatePostMutation`） |
+| `Amplify.DataStore.delete()` | Apolloミューテーション（`DeletePostMutation`） |
+| `Amplify.DataStore.query()` | Apolloクエリ（`GetPostQuery`、`GetPostsQuery`） |
+| `Amplify.DataStore.observe()` | Apolloサブスクリプション（`OnCreateSubscription`など）を`toFlow()`で |
+| `Amplify.DataStore.observeQuery()` | Apollo正規化キャッシュ＋`watch()` |
+| `Amplify.DataStore.clear()` | 不要になりました（クリアすべきローカルDataStoreなし） |
+| `Amplify.DataStore.start()` / `stop()` | 不要になりました |
+
+## ユースケース
+
+すべての顧客がDataStoreの機能セット全体を必要とするわけではありません。特定のユースケースに応じて、移行は簡潔な場合があります。
+
+1. **ローカルキャッシング：** DataStoreを主にローカルキャッシングレイヤーとして使用し、デバイスにデータを一時的に保存しているが、その完全なオフラインファースト機能には大きく依存していない場合、Apollo Kotlinはアプリケーションが主に接続されていて、オフラインアクセスのみが時々必要な場合、完全なオフライン同期管理の複雑さなしに軽量なデータキャッシングを提供できるため、良い選択肢となります。
+2. **オフラインファースト：** ビジネス要件が完全なオフラインファースト機能をサポートすることに依存している場合、[オフラインファースト](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/offline-first/)ガイドが新しいオフラインファースト ソリューションへの移行のためのハイレベルアプローチを提供します。
+
+## このガイドを使用する方法
+
+ページを順番に従ってください。各ステップは前のステップに基づいています。
+
+1. **[DataStoreを削除](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/remove-datastore/)。** プロジェクトからDataStore依存関係とプラグインを削除してください。
+
+2. **[スキーマとGraphQL操作](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/schema-and-operations/)。** AppSyncスキーマを取得し、Apolloコード生成用のGraphQL操作を定義してください。
+
+3. **[Apollo Kotlinをセットアップ](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/set-up-apollo-kotlin/)。** 依存関係を追加し、Gradleプラグインを設定し、AppSyncエンドポイントと認証を使用してApolloクライアントをセットアップしてください。
+
+4. **[DataStoreからApolloに移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-datastore-to-apollo/)。** すべてのDataStore操作をApollo相当物で置き換えてください。`save`、`query`、`delete`、`observe`、`observeQuery`を移行してください。
+
+5. **[オプション：ローカルキャッシング](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/local-caching/)。** Apolloの正規化キャッシュまたはRoomを使用したカスタムキャッシングレイヤーを使用してローカルキャッシュをセットアップしてください。
+
+6. **[オフラインファースト](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/offline-first/)。** リモート同期、ライブ同期、ネットワーク検出、オフラインミューテーションで完全なオフラインサポートを構築してください。
+
+7. **[競合解決を無効化](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/disable-conflict-resolution/)。** すべてのフロントエンドクライアントがDataStoreから移行されたら、同期インフラストラクチャを削除し、ミューテーションを簡素化し、ソフト削除からハード削除に切り替えてください。
+
+8. **[役立つリソース](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/helpful-resources/)。** 追加のドキュメンテーション、サードパーティパッケージ、参考資料です。
+
+## 移行チェックリスト
+
+移行を計画・追跡するにはこのチェックリストを使用してください：
+
+1. **DataStore依存関係を削除** — `build.gradle.kts`から`com.amplifyframework:aws-datastore`を削除してください（[DataStoreを削除](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/remove-datastore/)を参照）
+2. **DataStoreプラグインを削除** — `Amplify.addPlugin()`呼び出しから`AWSDataStorePlugin()`を削除してください
+3. **生成されたモデルファイルを削除** — DataStore生成モデルクラスを削除してください
+4. **スキーマと操作をセットアップ** — AppSyncスキーマを取得し、GraphQL操作を定義してください（[スキーマとGraphQL操作](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/schema-and-operations/)を参照）
+5. **Apollo Kotlinをセットアップ** — 依存関係を追加し、Apolloクライアントを設定してください（[Apollo Kotlinをセットアップ](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/set-up-apollo-kotlin/)を参照）
+6. **CRUD操作を移行** — `DataStore.save()`、`DataStore.query()`、`DataStore.delete()`をApollo相当物で置き換えてください（[DataStoreからApolloに移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-datastore-to-apollo/)を参照）
+7. **リアルタイムリスナーを移行** — `DataStore.observe()`および`DataStore.observeQuery()`をApolloサブスクリプションとキャッシュウォッチャーで置き換えてください
+8. **テスト** — すべてのCRUD操作、リアルタイムサブスクリプション、エラーハンドリングを検証してください
+9. **競合解決を無効化** — すべてのクライアントが移行されたら（[競合解決を無効化](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/disable-conflict-resolution/)を参照）
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+このガイドでは、DataStoreからApollo iOSへの移行パスについて説明します。AppSyncエンドポイントでApollo iOSをセットアップし、すべてのCRUD操作を移行し、オプションでローカルキャッシングとオフラインファーストサポートを追加します。
+
+## クイック比較：前後
+
+一般的なDataStore操作がApollo iOSにどのように変換されるかについての概要を以下に示します。
+
+| DataStore操作 | Apollo iOS相当 |
+|---------------------|--------------------------|
+| `Amplify.DataStore.save()` | Apolloミューテーション（`CreatePostMutation`、`UpdatePostMutation`） |
+| `Amplify.DataStore.delete()` | Apolloミューテーション（`DeletePostMutation`） |
+| `Amplify.DataStore.query()` | Apolloクエリ（`GetPostQuery`、`GetPostsQuery`） |
+| `Amplify.DataStore.observe()` | Apolloサブスクリプション（`OnCreateSubscriptionSubscription`など） |
+| `Amplify.DataStore.observeQuery()` | Apollo正規化キャッシュ＋`watch()` |
+| `Amplify.DataStore.clear()` | `apolloClient.store.clearCache()` |
+| `Amplify.DataStore.start()` / `stop()` | 不要になりました |
+
+## ユースケース
+
+すべての顧客がDataStoreの機能セット全体を必要とするわけではありません。特定のユースケースに応じて、移行は簡潔な場合があります。
+
+1. **ローカルキャッシング：** DataStoreを主にローカルキャッシングレイヤーとして使用し、デバイスにデータを一時的に保存しているが、その完全なオフラインファースト機能には大きく依存していない場合、Apollo iOSはアプリケーションが主に接続されていて、オフラインアクセスのみが時々必要な場合、完全なオフライン同期管理の複雑さなしに軽量なデータキャッシングを提供できるため、良い選択肢となります。
+2. **オフラインファースト：** ビジネス要件が完全なオフラインファースト機能をサポートすることに依存している場合、[オフラインファースト](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/offline-first/)ガイドが新しいオフラインファースト ソリューションへの移行のためのハイレベルアプローチを提供します。
+
+<Callout warning>
+
+**バージョン互換性：** [AWS AppSync Apollo Extensions library](https://github.com/aws-amplify/aws-appsync-apollo-extensions-swift)は現在**Apollo iOS 1.x**（2.xではなく）が必要です。`aws-appsync-apollo-extensions-swift`のすべてのバージョン（1.0.0～1.0.5）はApollo iOS `1.0.0..<2.0.0`に依存しています。このガイド全体でApollo iOS 1.xを使用してください。Apollo iOS 2.xをextensionsライブラリの隣にインストールすると、Swift Package Managerが依存関係の解決に失敗します。
+
+</Callout>
+
+## このガイドを使用する方法
+
+ページを順番に従ってください。各ステップは前のステップに基づいています。
+
+1. **[DataStoreを削除](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/remove-datastore/)。** プロジェクトからDataStoreフレームワークとプラグインを削除してください。
+
+2. **[スキーマとGraphQL操作](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/schema-and-operations/)。** AppSyncスキーマを取得し、Apolloコード生成用のGraphQL操作を定義してください。
+
+3. **[Apollo iOSをセットアップ](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/set-up-apollo-ios/)。** 依存関係を追加し、CLIをインストールし、コード生成を実行し、AppSyncエンドポイントと認証を使用してApolloクライアントを設定してください。
+
+4. **[DataStoreからApolloに移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-datastore-to-apollo/)。** すべてのDataStore操作をApollo相当物で置き換えてください。`save`、`query`、`delete`、`observe`、`observeQuery`を移行してください。
+
+5. **[オプション：ローカルキャッシング](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/local-caching/)。** Apolloの正規化キャッシュまたはSwiftDataを使用したカスタムキャッシングレイヤーを使用してローカルキャッシュをセットアップしてください。
+
+6. **[オフラインファースト](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/offline-first/)。** リモート同期、ライブ同期、ネットワーク検出、オフラインミューテーションで完全なオフラインサポートを構築してください。
+
+7. **[競合解決を無効化](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/disable-conflict-resolution/)。** すべてのフロントエンドクライアントがDataStoreから移行されたら、同期インフラストラクチャを削除し、ミューテーションを簡素化し、ソフト削除からハード削除に切り替えてください。
+
+8. **[役立つリソース](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/helpful-resources/)。** 追加のドキュメンテーションと参考資料です。
+
+## 移行チェックリスト
+
+移行を計画・追跡するにはこのチェックリストを使用してください：
+
+1. **DataStoreフレームワークを削除** — ターゲットから`AWSDataStorePlugin`および`AWSAPIPlugin`を削除してください（[DataStoreを削除](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/remove-datastore/)を参照）
+2. **DataStoreプラグインを削除** — `Amplify.add(plugin:)`呼び出しから`AWSDataStorePlugin`を削除してください
+3. **生成されたモデルファイルを削除** — DataStore生成モデルクラス（`Post.swift`、`Post+Schema.swift`、`AmplifyModels.swift`）を削除してください
+4. **スキーマと操作をセットアップ** — AppSyncスキーマを取得し、GraphQL操作を定義してください（[スキーマとGraphQL操作](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/schema-and-operations/)を参照）
+5. **Apollo iOSをセットアップ** — 依存関係を追加し、CLIをインストールし、コード生成を実行し、Apolloクライアントを設定してください（[Apollo iOSをセットアップ](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/set-up-apollo-ios/)を参照）
+6. **CRUD操作を移行** — `Amplify.DataStore.save()`、`Amplify.DataStore.query()`、`Amplify.DataStore.delete()`をApollo相当物で置き換えてください（[DataStoreからApolloに移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-datastore-to-apollo/)を参照）
+7. **リアルタイムリスナーを移行** — `Amplify.DataStore.observe()`および`Amplify.DataStore.observeQuery()`をApolloサブスクリプションとキャッシュウォッチャーで置き換えてください
+8. **テスト** — すべてのCRUD操作、リアルタイムサブスクリプション、エラーハンドリングを検証してください
+9. **競合解決を無効化** — すべてのクライアントが移行されたら（[競合解決を無効化](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/disable-conflict-resolution/)を参照）
+
+</InlineFilter>
+
+<Overview childPageNodes={props.childPageNodes} />

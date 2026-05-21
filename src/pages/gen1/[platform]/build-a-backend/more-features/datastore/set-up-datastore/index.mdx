@@ -1,0 +1,58 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify DataStore をセットアップ',
+  description: 'Amplify DataStore は、オフラインおよびオンラインシナリオのための追加コードを記述することなく、共有および分散データを活用するためのプログラミングモデルを提供します。これにより、分散されたクロスユーザーデータの操作がローカルのみのデータの操作と同じくらい簡単になります。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'flutter',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios0 from '/src/fragments/lib/datastore/native_common/getting-started.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import android1 from '/src/fragments/lib/datastore/native_common/getting-started.mdx';
+
+<Fragments fragments={{ android: android1 }} />
+
+import flutter2 from '/src/fragments/lib/datastore/native_common/getting-started.mdx';
+
+<Fragments fragments={{ flutter: flutter2 }} />
+
+import js3 from '/src/fragments/lib/datastore/native_common/getting-started.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js3,
+    angular: js3,
+    nextjs: js3,
+    react: js3,
+    vue: js3
+  }}
+/>
+
+import reactnative0 from '/src/fragments/lib/datastore/native_common/getting-started.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative0 }} />

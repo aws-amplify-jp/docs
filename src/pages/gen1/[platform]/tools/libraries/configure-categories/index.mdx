@@ -1,0 +1,290 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplifyカテゴリの設定',
+  description: 'クライアントの設定。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'vue',
+    'react'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify CLIを使用する場合、**amplifyconfiguration.json**ファイルは、追加および設定したリソースに基づいて自動的に作成および更新されます。
+
+Amplify CLIを使用していない場合や、これらの設定をオーバーライドする必要がある場合、このドキュメントには各カテゴリの利用可能な設定プロパティが示されています。
+
+<Callout info>
+
+古いプロジェクトで作業している場合、選択したフレームワークまたは言語の[前のバージョン](/gen1/[platform]/prev/tools/libraries/configure-categories/)の設定プロパティも確認できます。
+
+</Callout>
+
+## 一般的な設定
+
+`Amplify.configure()`設定は、通常、プロジェクトの**エントリーポイント**ファイル（例：**/src/main.js**）に含めることができます。これは2つのパラメータを取ります - `ResourcesConfig`と`LibraryOptions`です。
+
+```ts
+Amplify.configure({ ...resourcesConfig }, { ...libraryOptions });
+```
+
+## 認証（Amazon Cognito）
+
+```js
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      userPoolClientId: 'abcdefghij1234567890',
+      userPoolId: 'us-east-1_abcd1234',
+      loginWith: { // Optional
+        oauth: {
+          domain: 'abcdefghij1234567890-29051e27.auth.us-east-1.amazoncognito.com',
+          scopes: ['openid','email','phone','profile','aws.cognito.signin.user.admin'],
+          redirectSignIn: ['http://localhost:3000/','https://example.com/'],
+          redirectSignOut: ['http://localhost:3000/','https://example.com/'],
+          responseType: 'code',
+        }
+        username: 'true',
+        email: 'false', // Optional
+        phone: 'false', // Optional
+      }
+    }
+  }
+});
+```
+
+## API GraphQL（AWS AppSync）
+
+```js
+Amplify.configure({
+  API: {
+    GraphQL: {
+      endpoint:
+        'https://abcdefghij1234567890.appsync-api.us-east-1.amazonaws.com/graphql',
+      defaultAuthMode: 'apiKey',
+      apiKey: 'da-abcdefghij1234567890', // Optional
+      region: 'us-east-1', // Optional
+      customEndpoint: 'https://example.com/graphql', // Optional
+      customEndpointRegion: 'us-east-1' // Optional
+    }
+  }
+});
+```
+
+## API Rest（Amazon API Gateway）
+
+```js
+Amplify.configure({
+  API: {
+    REST: {
+      YourAPIName: {
+        endpoint:
+          'https://abcdefghij1234567890.execute-api.us-east-1.amazonaws.com/stageName',
+        region: 'us-east-1' // Optional
+      }
+    }
+  }
+});
+```
+
+## ストレージ（Amazon S3）
+
+```js
+Amplify.configure({
+  Storage: {
+    S3: {
+      bucket: 'your-bucket-name', // Optional
+      region: 'us-east-1' // Optional
+    }
+  }
+});
+```
+
+## 分析（Amazon Pinpoint）
+
+```js
+Amplify.configure({
+  Analytics: {
+    Personalize: {
+      trackingId: 'abcd1234',
+      region: 'us-east-1',
+      flushInterval: 0, // Optional
+      flushSize: 0 // Optional
+    },
+    Pinpoint: {
+      appId: 'abcdefghij1234567890',
+      region: 'us-east-1',
+      flushInterval: 0, // Optional
+      flushSize: 0, // Optional
+      bufferSize: 0 // Optional
+    },
+    Kinesis: {
+      region: 'us-east-1',
+      flushInterval: 0, // Optional
+      flushSize: 0, // Optional
+      bufferSize: 0 // Optional
+    },
+    KinesisFirehose: {
+      region: 'us-east-1',
+      flushInterval: 0, // Optional
+      flushSize: 0, // Optional
+      bufferSize: 0 // Optional
+    }
+  }
+});
+```
+
+## 予測
+
+```js
+Amplify.configure({
+  Predictions: {
+    convert: {
+      translateText: {
+        region: 'us-east-1',
+        proxy: false,
+        defaults: {
+          sourceLanguage: 'en',
+          targetLanguage: 'zh'
+        }
+      },
+      speechGenerator: {
+        region: 'us-east-1',
+        proxy: false,
+        defaults: {
+          VoiceId: 'Ivy',
+          LanguageCode: 'en-US'
+        }
+      },
+      transcription: {
+        region: 'us-east-1',
+        proxy: false,
+        defaults: {
+          language: 'en-US'
+        }
+      }
+    },
+    identify: {
+      identifyText: {
+        proxy: false,
+        region: 'us-east-1',
+        defaults: {
+          format: 'PLAIN'
+        }
+      },
+      identifyEntities: {
+        proxy: false,
+        region: 'us-east-1',
+        celebrityDetectionEnabled: true,
+        defaults: {
+          collectionId: 'identifyEntities8b89c648',
+          maxEntities: 50
+        }
+      },
+      identifyLabels: {
+        proxy: false,
+        region: 'us-east-1',
+        defaults: {
+          type: 'LABELS'
+        }
+      }
+    },
+    interpret: {
+      interpretText: {
+        region: 'us-east-1',
+        proxy: false,
+        defaults: {
+          type: 'ALL'
+        }
+      }
+    }
+  }
+});
+```
+
+## インタラクション
+
+```js
+Amplify.configure({
+  Interactions: {
+    LexV1: {
+      MyV1Bot: {
+        alias: 'BotAlias',
+        region: 'us-east-1'
+      }
+    },
+    LexV2: {
+      MyV2Bot: {
+        botId: 'ABCDE12345',
+        aliasId: 'BotAlias',
+        localeId: 'localId',
+        region: 'us-east-1'
+      }
+    }
+  }
+});
+```
+
+## 通知
+
+```js
+Amplify.configure({
+  Notifications: {
+    InAppMessaging: {
+      Pinpoint: {
+        appId: 'abcdefgh12345678',
+        region: 'us-east-1'
+      }
+    },
+    PushNotification: {
+      Pinpoint: {
+        appId: 'abcdefgh12345678',
+        region: 'us-east-1'
+      }
+    }
+  }
+});
+```
+
+## Geo
+
+```js
+Amplify.configure({
+  Geo: {
+    LocationService: {
+      region: 'us-east-1',
+      maps: {
+        // Optional
+        items: {},
+        default: ''
+      },
+      searchIndices: {
+        // Optional
+        items: [''],
+        default: ''
+      },
+      geofenceCollections: {
+        // Optional
+        items: [''],
+        default: ''
+      }
+    }
+  }
+});
+```

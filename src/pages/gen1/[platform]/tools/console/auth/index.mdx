@@ -1,0 +1,67 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '認証',
+  description: 'アプリの認証を始める',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+認証は、ユーザーの身元を確認するプロセスです。アプリケーションのログインフローのコードを作成するのは、難しく時間がかかる場合があります。Amplify Studio では、完全な [Amazon Cognito](https://aws.amazon.com/cognito/) 認証ソリューションをアプリに簡単に追加できます。メールとパスワード、Amazon、Google、Facebook、または Sign in with Apple など、ログイン方法を指定するだけで、認証フロー全体の認証 UI コンポーネントが提供されます。
+
+ソーシャルサインインのログインメカニズムのいずれかを追加することを選択した場合は、アプリ ID、アプリシークレット、およびリダイレクト URI も指定する必要があります。ソーシャルサインインの動作方法の詳細については、[ソーシャルサインイン (OAuth)](/gen1/[platform]/build-a-backend/auth/add-social-provider/) を参照してください。
+
+多要素認証 (MFA) は、認証方法を追加し、ユーザー名とパスワードのみに依存しないことで、アプリのセキュリティを向上させます。AWS Amplify は Amazon Cognito を使用して MFA を提供します。詳細については、[多要素認証](/gen1/[platform]/build-a-backend/auth/manage-mfa/) を参照してください。
+
+[ユーザーとグループを作成](/gen1/[platform]/tools/console/auth/user-management/) したり、データモデルに [認可ルール](/gen1/[platform]/tools/console/authz/) を適用したりする前に、アプリケーションの認証を構成してデプロイする必要があることに注意してください。
+
+## ユーザーがアプリにログインする方法を構成するには
+
+1. アプリの [Studio を起動](/gen1/[platform]/tools/console/adminui/start/#log-into-the-amplify-console) します
+2. **Set up** メニューで、**Authentication** を選択します。
+3. **Configure log in** セクションで、**Add login mechanism** リストからログインメカニズムを選択して追加します。有効なオプションは、_Username_、_Phone number_、_Facebook_、_Google_、_Amazon_、および _Sign in with Apple_ です。ソーシャルサインインメカニズムの 1 つ (_Facebook_、_Google_、_Amazon_、または _Sign in with Apple_) を選択する場合は、_App ID_、_App Secret_、およびリダイレクト URL も入力する必要があります。
+4. (オプション) 多要素認証 (MFA) を追加します。MFA はデフォルトで **Off** に設定されています。MFA をオンにするには、**Multi-factor authentication** セクションで以下を実行します:
+
+- すべてのユーザーに対して MFA を要求するには **Enforced** を選択するか、個々のユーザーが MFA を有効にできるようにするには **Optional** を選択します。
+- (オプション) **SMS** を選択し、SMS メッセージを入力します。
+- (オプション) サインアップとサインインを含む認証フローでアプリを読み込む場合は、**Authenticator Application** を選択します。
+
+5. **Configure sign up** セクションで、**Password protection settings** を展開し、適用するパスワードポリシー設定をカスタマイズします。
+6. **Save and Deploy** を選択します。これにより CloudFormation デプロイが開始され、進行状況がページの右上隅に表示されます。
+
+ログインメカニズムの設定とサインアップの設定は、認証をデプロイした後は変更できません。これらの設定を変更するには、最初にデプロイされた認証を削除してから、新しい設定を作成してデプロイする必要があります。ただし、新しいログインメカニズムを追加したり、多要素認証を追加したり、パスワード保護の設定を更新したりすることはできます。
+
+[\\]: * 'Is the last sentence above true?'
+
+## 認証構成設定をリセットするには
+
+1. アプリの [Studio を起動](/gen1/[platform]/tools/console/adminui/start/#log-into-the-amplify-console) します
+2. **Set up** メニューで、**Authentication** を選択します。
+3. **Authentication** ページの最後で、**Reset all authentication settings and users** を選択します。
+4. **Delete authentication** 確認ウィンドウで、**Delete all authentication rules** を選択します。
+5. デプロイの進行状況がページの右上隅に表示されます。
+6. 認証削除デプロイが完了した後、前述の手順に従って [ユーザーがアプリにログインする方法を構成](/gen1/[platform]/tools/console/auth/#to-configure-how-users-log-in-to-an-app) して新しい認証ルールをデプロイします。
+
+[\\]: * 'What is the consequence of doing the above? What should we warn about?'

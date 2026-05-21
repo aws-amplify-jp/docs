@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"android","meta":{"title":"DataStore を Apollo に移行","description":"すべての Amplify DataStore 操作を同等の Apollo Kotlin または Apollo iOS に置き換えます。","platforms":["android","swift"]}},"__N_SSG":true}

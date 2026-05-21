@@ -1,0 +1,469 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { JS_PLATFORMS } from '@/data/platforms';
+
+export const meta = {
+  title: 'Amplify GraphQL API を設定する',
+  description: "Amplify の API カテゴリーの使い方について詳しく学習する",
+  platforms: [
+    'javascript',
+    'react-native',
+    'swift',
+    'android',
+    'flutter',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios0 from '/src/fragments/lib/graphqlapi/native_common/getting-started/common.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import android1 from '/src/fragments/lib/graphqlapi/native_common/getting-started/common.mdx';
+
+<Fragments fragments={{ android: android1 }} />
+
+import flutter3 from '/src/fragments/lib/graphqlapi/native_common/getting-started/common.mdx';
+
+<Fragments fragments={{ flutter: flutter3 }} />
+
+<InlineFilter filters={JS_PLATFORMS}>
+
+Amplify の GraphQL API カテゴリーを使用すると、セキュアでリアルタイムの GraphQL API を数分でデータベースをバックに構築できます。GraphQL スキーマでデータモデルを定義すると、Amplify は AWS AppSync で稼働する GraphQL API をデプロイし、Amazon DynamoDB で稼働するデータベースに接続します。認可ルールで API をセキュアにし、AWS Lambda でカスタムユースケースにスケールできます。
+
+## 最初の API とデータベーステーブルを作成する
+
+Amplify の GraphQL API カテゴリーは、[Amplify CLI](/gen1/[platform]/tools/cli) または [AWS Cloud Development Kit (CDK)](https://aws.amazon.com/cdk/) を使用してデプロイできます。Amplify Command Line Interface (CLI) は、フロントエンドアプリケーション用の AWS クラウドサービスを作成、統合、管理するための統合ツールチェーンです。AWS CDK は、オープンソースの Infrastructure-as-Code フレームワークで、なじみのあるプログラミング言語を使用して AWS クラウドアプリケーションリソースをモデル化およびプロビジョニングするために使用されます。
+
+<BlockSwitcher>
+
+<Block name="Amplify CLI">
+
+前提条件:
+
+- [Amplify CLI がインストールおよび設定されている](/gen1/[platform]/tools/cli/start/set-up-cli/)
+- [Amplify プロジェクトが既に初期化されている](/gen1/[platform]/tools/cli/start/key-workflows/#initialize-new-project)
+
+まず、次のコマンドを実行して GraphQL API を設定します:
+
+```bash
+amplify add api
+```
+
+```console
+? Select from one of the below mentioned services:
+> GraphQL
+? Here is the GraphQL API that we will create. Select a setting to edit or continue
+> Continue
+? Choose a schema template:
+> Single object with fields (e.g., "Todo" with ID, name, description)
+...
+Edit your schema at <...>/schema.graphql or place .graphql files in a directory at <...>/schema
+✔ Do you want to edit the schema now? (Y/n)
+> yes
+Edit the file in your editor: <...>/schema.graphql
+✅ Successfully added resource new locally
+```
+
+デフォルト値を受け入れると、コードエディターに次のコードを含む Todo アプリの GraphQL スキーマが表示されます:
+
+```graphql
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/react/build-a-backend/graphqlapi/customize-authorization-rules/
+input AMPLIFY {
+  globalAuthRule: AuthRule = { allow: public }
+} # FOR TESTING ONLY!
+type Todo @model {
+  id: ID!
+  name: String!
+  description: String
+}
+```
+
+<Callout warning>
+
+`input AMPLIFY { globalAuthRule: AuthRule = { allow: public } }` を使用すると、認可ルールについて心配することなく素早く開始できます。[認可ルール](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)セクションを確認して、GraphQL API に適切なアクセス制御を設定してください。
+
+</Callout>
+
+</Block>
+<Block name="AWS CDK">
+
+<Callout>
+
+Amplify GraphQL API CDK コンストラクトは現在 TypeScript でのみ利用可能ですが、追加の言語のサポートをまもなくリリースする予定です。[@AWSAmplify on X/Twitter](https://x.com/awsamplify) をフォローして、最初に通知を受けてください。
+
+</Callout>
+
+前提条件:
+
+- [AWS CDK CLI がインストールされている](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install)
+- [AWS CDK アプリケーションが初期化されている](https://docs.aws.amazon.com/cdk/v2/guide/hello_world.html)
+
+CDK アプリのプロジェクトルートディレクトリで、GraphQL API コンストラクトの依存関係をインストールします:
+
+```bash
+npm install @aws-amplify/graphql-api-construct
+```
+
+次に、スタックに移動し、Amplify GraphQL CDK コンストラクトをインポートして、新しい Amplify GraphQL API を作成します:
+
+```ts
+import {
+  AmplifyGraphqlApi,
+  AmplifyGraphqlDefinition
+} from '@aws-amplify/graphql-api-construct';
+
+export class BackendStack extends cdk.Stack {
+  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    const amplifyApi = new AmplifyGraphqlApi(this, 'AmplifyCdkGraphQlApi', {
+      definition: AmplifyGraphqlDefinition.fromFiles(
+        path.join(__dirname, 'schema.graphql')
+      ),
+      authorizationModes: {
+        defaultAuthorizationMode: 'API_KEY',
+        apiKeyConfig: {
+          expires: cdk.Duration.days(30)
+        }
+      }
+    });
+  }
+}
+```
+
+次に、データモデルを説明する GraphQL スキーマを作成します。スタックのフォルダに `schema.graphql` という新しいファイルを作成し、次のコードを入力します:
+
+```graphql
+type Todo @model @auth(rules: [{ allow: public }]) {
+  id: ID!
+  name: String!
+  description: String
+}
+```
+
+`@auth(rules: [{ allow: public }])` は、API キーで認証されたすべてのユーザーが "Todo" レコードを作成、読み取り、更新、および削除できることを指定しています。
+
+</Block>
+</BlockSwitcher>
+
+`@model` ディレクティブを持つすべての GraphQL `type` は、自動的に新しい DynamoDB データベーステーブルでバックアップされ、GraphQL クエリとミューテーションを作成、読み取り、更新、削除するために生成されます。
+
+では、変更をクラウドにデプロイしましょう:
+
+<BlockSwitcher>
+
+<Block name="Amplify CLI">
+
+ターミナルで次のコマンドを実行します:
+
+```bash
+amplify push -y
+```
+
+</Block>
+
+<Block name="AWS CDK">
+
+ターミナルで次のコマンドを実行します:
+
+```bash
+cdk deploy
+```
+
+</Block>
+</BlockSwitcher>
+
+完了です! API とデータベーステーブルがセットアップされました。
+
+## アプリコードを設定する
+
+アプリケーションを API に接続するには、Amplify ライブラリと自動生成された GraphQL クライアントヘルパーコードを使用することをお勧めします。これにより、ユースケースが進化するにつれてさらに最適化するために調整できる理にかなったデフォルトですぐに始めることができます。
+
+### Amplify ライブラリをインストールする
+
+Amplify ライブラリを使用して、アプリを GraphQL エンドポイントに接続します。
+
+`npm` を使用してアプリに Amplify ライブラリを追加します:
+
+```bash
+npm install aws-amplify
+```
+
+### アプリコードで Amplify ライブラリを設定する
+
+<BlockSwitcher>
+<Block name="Amplify CLI">
+
+`amplify push` デプロイメントワークフローの一部として、新しい `amplifyconfiguration.json` ファイルが生成されます。`amplifyconfiguration.json` は Amplify ライブラリのクライアント設定ファイルで、API エンドポイント URL、認証情報、およびリージョンが含まれています。
+
+アプリのエントリーポイント (React の App.js など) で、設定ファイルをインポートしてロードします:
+
+```js
+import { Amplify } from 'aws-amplify';
+import { generateClient } from 'aws-amplify/api';
+import config from './amplifyconfiguration.json';
+Amplify.configure(config);
+
+const client = generateClient();
+```
+
+</Block>
+<Block name="AWS CDK">
+
+`cdk deploy` デプロイメントワークフローの一部として、CLI がターミナルに API エンドポイント、認証情報、およびリージョンを出力します。次のようになります:
+
+```console
+✨  Deployment time: 62.86s
+
+Outputs:
+BackendStack.amplifyApiModelSchemaS3Uri = s3://.../model-schema.graphql
+BackendStack.awsAppsyncApiEndpoint = https://wy5mtp7jzfctxc5w5pzkcoktbi.appsync-api.us-east-1.amazonaws.com/graphql
+BackendStack.awsAppsyncApiId = YOUR_API_ID_VALUE_HERE
+BackendStack.awsAppsyncApiKey = da2-XXXX
+BackendStack.awsAppsyncAuthenticationType = API_KEY
+BackendStack.awsAppsyncRegion = us-east-1
+```
+
+この情報を使用して、アプリケーションコードで Amplify ライブラリを設定します。アプリのエントリーポイント (React の App.js など) で、出力された値を使用して Amplify ライブラリをインポートして設定します:
+
+```js
+import { Amplify } from 'aws-amplify';
+
+Amplify.configure({
+  API: {
+    GraphQL: {
+      endpoint: 'https://abcxyz.appsync-api.us-east-1.amazonaws.com/graphql',
+      region: 'us-east-1',
+      defaultAuthMode: 'apiKey',
+      apiKey: 'da2-xxxxxxxxxxxxxxxxxxxxxxxxxx'
+    }
+  }
+});
+```
+
+</Block>
+</BlockSwitcher>
+
+### GraphQL クライアントヘルパーコードを生成する
+
+<BlockSwitcher>
+<Block name="Amplify CLI">
+
+`amplify push` デプロイメントワークフローの一部として、GraphQL クエリ、ミューテーション、およびサブスクリプション用のクライアントヘルパーコードを含む新しい `src/graphql/` フォルダが生成されます。
+
+これらのファイルを次のステップで使用して、数行のコードだけで作成、読み取り (リスト、取得)、更新、および削除 API リクエストを実行できます。
+
+</Block>
+<Block name="AWS CDK">
+
+API をデプロイした後、オプションで GraphQL クライアントヘルパーコードを生成できます。このコードを次のステップで使用して、数行のコードだけで作成、読み取り (リスト、取得)、更新、および削除 API リクエストを実行できます。
+
+このパートでは、まずアプリコードのリポジトリに以下の `npx` コマンドをアプリコードのルートディレクトリからターミナルで実行してコード生成を追加する必要があります:
+
+```bash
+npx @aws-amplify/cli codegen add --apiId <YOUR_API_ID> --region <YOUR_API_REGION>
+```
+
+その後、API スキーマが変わるたびに次のコマンドを使用して GraphQL クライアントコードを生成できます:
+
+```bash
+npx @aws-amplify/cli codegen
+```
+
+この時点で、GraphQL クエリ、ミューテーション、およびサブスクリプション用のクライアントヘルパーコードを含む新しい `src/graphql/` フォルダが表示されます。
+
+<Callout>
+
+Flutter、Android、Swift クライアントコード生成については、[JavaScript、Android、Swift、および Flutter クライアントコード生成](/gen1/[platform]/build-a-backend/graphqlapi/client-code-generation/)を参照してください。
+
+</Callout>
+
+</Block>
+</BlockSwitcher>
+
+## 最初のレコードを追加する
+
+次に、GraphQL API からクエリを試します。以下の手順に従って、React アプリからクエリを実行します:
+
+```js
+import { generateClient } from 'aws-amplify/api';
+import { createTodo, updateTodo, deleteTodo } from './graphql/mutations';
+import { listTodos } from './graphql/queries';
+```
+
+その後、GraphQL API コールを使用して最初の todo アイテムを作成します:
+
+```js
+const client = generateClient();
+
+const result = await client.graphql({
+  query: createTodo,
+  variables: {
+    input: {
+      name: 'My first todo!'
+    }
+  }
+});
+```
+
+## テーブルからレコードをクエリする
+
+GraphQL クエリステートメントを使用して、アプリ内のすべての todo をリストアップします:
+
+```js
+const result = await client.graphql({ query: listTodos });
+console.log(result);
+```
+
+上で作成したレコード `My first todo!` が表示されます。
+
+## レコードを更新する
+
+レコードを更新するには、GraphQL 更新ミューテーションを使用します:
+
+```js
+const result = await client.graphql({
+  query: updateTodo,
+  variables: {
+    input: {
+      id: '<...>',
+      name: 'My first updated todo!'
+    }
+  }
+});
+console.log(result);
+```
+
+結果には更新された値が含まれます: `My first updated todo!`。
+
+## レコードを削除する
+
+データベースをクリーンアップしましょう! 削除ミューテーションを使用して todo を削除します:
+
+```js
+const result = await client.graphql({
+  query: deleteTodo,
+  variables: {
+    input: {
+      id: '<...>'
+    }
+  }
+});
+console.log(result);
+```
+
+結果の出力は、レコードが正常に削除されたことを示しています。
+
+## GraphQL スキーマを使用してデータモデルを反復する
+
+<BlockSwitcher>
+<Block name="Amplify CLI">
+
+API を更新したい場合は、プロジェクトの `amplify/backend/api/<api-name>/schema.graphql` ファイルを開き (`amplify/backend/api/<api-name>/build` フォルダのものではなく)、お気に入りのコードエディターで編集します。`amplify/backend/api/<api-name>/schema.graphql` ファイルをコンパイルするには、次を実行します:
+
+```bash
+amplify api gql-compile
+```
+
+コンパイルされたスキーマ出力を `backend/api/~apiname~/build/schema.graphql` で表示できます。
+
+その後、次を使用して更新された変更をプッシュできます:
+
+```bash
+amplify push
+```
+
+</Block>
+<Block name="AWS CDK">
+
+API を更新したい場合は、CDK プロジェクトで `schema.graphql` ファイルを開き、お気に入りのコードエディターで編集します。その後、次を使用して更新された変更をプッシュできます:
+
+```bash
+cdk deploy
+```
+
+デプロイメント後、認証設定がまだ正しいことを確認し、ターミナルで次のコマンドを再実行して GraphQL クライアントヘルパーコードを再生成します:
+
+```bash
+npx @aws-amplify/cli codegen
+```
+
+</Block>
+</BlockSwitcher>
+
+次のスキーマ更新は、基になる DynamoDB テーブルの置換が必要です:
+
+1. モデルの削除または名前変更
+2. モデルの[プライマリキー](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#configure-a-primary-key)の変更
+3. モデルのローカルセカンダリインデックスの変更 ([secondaryKeyAsGSI](/gen1/[platform]/tools/cli/reference/feature-flags/#secondaryKeyAsGSI) が無効になっているプロジェクトのみ適用)
+
+これらの更新の 1 つ以上を含むスキーマ変更をプッシュしようとすると、置換が必要なテーブルのすべてのデータが失われることを説明するエラーメッセージが表示されます。デプロイメントを続行することを確認するには、次を実行します:
+
+```bash
+amplify push --allow-destructive-graphql-schema-updates
+```
+
+<Callout>
+一般的に、このコマンドは開発中にのみ使用してください。
+
+本番 API に破壊的な変更を加えている場合は、`amplify push --allow-destructive-graphql-schema-updates` を実行する前に[バックアップを作成](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/CreateBackupAWS.html)できます。
+
+</Callout>
+
+## GraphQL API を再構築する
+
+<Callout>リビルドは本番環境では絶対に使用しないでください!</Callout>
+
+開発中は、テストデータが不正な状態になったり、スキーマに多くの変更を一度に加えたい場合があります。このような場合、スキーマをバックアップするテーブルをすべて「再構築」することができます。これを行うには、ターミナルで以下を実行します:
+
+<BlockSwitcher>
+<Block name="Amplify CLI">
+
+```bash
+amplify rebuild api
+```
+
+</Block>
+<Block name="AWS CDK">
+
+```bash
+cdk destroy
+cdk deploy
+```
+
+</Block>
+</BlockSwitcher>
+これにより、スキーマ内のモデルをバックアップするテーブルがすべて再作成されます。すべてのテーブルのすべてのデータが削除されます。
+
+## 次のステップ
+
+成功です! GraphQL API をデータベーステーブルでバックアップして作成し、アプリからクエリとミューテーションを実行する方法を学習しました。
+
+Amplify の GraphQL API 機能でさらに多くのことを学習できます。詳細については以下をご覧ください:
+
+- [データベーステーブルとそのアクセスパターンをモデル化する方法](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/)
+- [きめ細かい認可ルールで API をセキュアにする](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)
+- [異なるデータベースモデル間の関係を作成する](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#setup-relationships-between-models)
+- [GraphQL API にカスタムビジネスロジックを追加する](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/)
+- [検索と結果集約クエリを実行する](/gen1/[platform]/build-a-backend/graphqlapi/search-and-result-aggregations/)
+- [機械学習サービスに接続する](/gen1/[platform]/build-a-backend/graphqlapi/connect-machine-learning-services/)
+- [ベストプラクティスと例](/gen1/[platform]/build-a-backend/graphqlapi/best-practice/)
+
+</InlineFilter>

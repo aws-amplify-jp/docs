@@ -1,0 +1,172 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'テキストの識別',
+  description: 'AWS Amplifyを使用して、アプリケーション内の画像やドキュメントからテキストを識別する方法を学びます。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue',
+  ]
+};
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps() {
+  return {
+    props: {
+      meta
+    }
+  };
+}
+
+<Callout informational>
+
+**注:** 必ず最初に[入門](/[platform]/build-a-backend/add-aws-services/predictions/set-up-predictions/)セクションを完了してください。ここでは、適切なポリシーアクションを持つIAMロールを設定します。
+
+</Callout>
+
+## APIの操作
+
+入力画像内のテキストを検出します。入力はブラウザから直接送信することも、プロジェクトバケットからAmazon S3キーとして送信することもできます。
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const response = await Predictions.identify({
+  text: {
+    source: {
+      file
+    }
+  }
+});
+```
+
+## Amazon S3に保存された画像を識別
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const response = await Predictions.identify({
+  text: {
+    source: {
+      key: pathToPhoto,
+    }
+  }
+})
+```
+
+> 以下のオプションは、指定された`source`に関係なく独立しています。デモンストレーションの目的で`file`を参照しますが、S3キーにすることもできます。`Predictions.identify({text : {...}})`は、構造化されていないテキスト`PLAIN`、テーブルからの構造化テキスト`TABLE`、またはフォームからのテキスト`FORM`を検出できます。
+
+## プレーンテキストを識別
+
+プレーンテキストを検出する場合、検出されたテキスト全体、検出された行、各テキスト行の位置、および各単語を確認できます。
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const response = await Predictions.identify({
+  text: {
+    source: {
+      file
+    },
+    format: 'PLAIN'
+  }
+});
+
+const {
+  text: {
+    fullText, // String
+    lines, // Array of String ordered from top to bottom
+    linesDetailed /* Array of objects that contains
+        text, // String
+        boundingBox: {
+          width, // ratio of overall image width
+          height, // ratio of overall image height
+          left, // left coordinate as a ratio of overall image width
+          top // top coordinate as a ratio of overall image height
+        },
+        polygon // Array of { x, y } coordinates as a ratio of overall image width and height
+        */,
+    words // Array of objects that contains { text, boundingBox, polygon}
+  }
+} = response;
+```
+
+## 構造化されたフォームを識別
+
+画像から構造化されたフォーム（ドキュメント、テーブルなど）を検出する場合、`keyValues`は画像内で見つかったエンティティの文字列を返します。また、チェックボックスの選択状態や`boundingBox`を使用した画像内の相対位置などのメタデータも返します。
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const response = await Predictions.identify({
+  text: {
+    source: {
+      file
+    },
+    format: 'FORM'
+  }
+});
+
+const {
+  text: {
+    // same as PLAIN +
+    keyValues // Array of { key: string, value: { text: string, selected: boolean}, polygon, boundingBox }
+  }
+} = response;
+```
+
+例えば、以下の画像は、キーとして「Test」または「Checked」を持つ`keyValues`を返し、選択されているため`true`の値を返します。これらの要素の位置は`boundingBox`値に返されます。
+
+![キーと値を含むテーブルの画像。「Test」または「Checked」がキーとして含まれ、選択状態を示す値がtrueです。これらの要素の位置はboundingBoxパラメータ内に提供されます](/images/IdentifyTable.png)
+
+## 構造化されたテーブルを識別
+
+画像から構造化されたテーブルを検出する場合
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const response = await Predictions.identify({
+  text: {
+    source: {
+      file
+    },
+    format: 'TABLE'
+  }
+});
+
+const {
+  text: {
+    // same as PLAIN +
+    tables: [
+      {
+        size: { rows, columns },
+        table // Matrix Array[ Array ] of size rows
+        // each element of the array contains { text, boundingBox, polygon, selected, rowSpan, columnSpan}
+      }
+    ]
+  }
+} = response;
+```
+
+画像上のテーブルとフォームを検出するには、フォーマット「ALL」を選択してください。
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const { text } = await Predictions.identify({
+  text: {
+    source: {
+      file
+    },
+    format: 'ALL'
+  }
+});
+```

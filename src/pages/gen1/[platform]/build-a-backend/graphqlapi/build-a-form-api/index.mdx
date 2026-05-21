@@ -1,0 +1,135 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'GraphQLを使用したForm APIの構築',
+  description: 'GraphQLでペジネーションを実装する方法',
+  platforms: [
+    'javascript',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      showBreadcrumbs: false,
+      meta
+    }
+  };
+}
+
+このガイドでは、Amplifyを使用してForm APIを構築し、操作する方法を学びます。
+
+作成するAPIは基本的なコンタクトフォーム用です。このフォームを使用すると、ユーザーは名前と電話番号を入力でき、コンタクトのリストをクエリできます。
+
+### はじめに
+
+はじめに、新しいAmplifyプロジェクトを作成します：
+
+```sh
+amplify init
+
+# Choose your environment name and default text editor
+# You can answer the defaults for the rest of the questions and then choose the AWS profile you'd like to use for this project.
+```
+
+次に、GraphQL APIを作成します：
+
+```sh
+amplify add api
+
+? Please select from one of the below mentioned services:
+  > GraphQL
+? Here is the GraphQL API that we will create. Select a setting to edit or continue:
+  > Name
+? Provide API name:
+  > contactapi
+? Here is the GraphQL API that we will create. Select a setting to edit or continue:
+  > Authorization modes: API key (default, expiration time: 7 days from now)
+? Choose the default authorization type for the API:
+  > API key
+? Enter a description for the API key:
+  > public
+? After how many days from now the API key should expire (1-365):
+  > 365
+? Configure additional auth types?
+  > No
+? Here is the GraphQL API that we will create. Select a setting to edit or continue:
+  > Continue
+? Choose a schema template:
+  > Single object with fields (e.g., "Todo" with ID, name, description)
+? Do you want to edit the schema now?
+  > Yes
+```
+
+CLIは **amplify/backend/api/contactapi/schema.graphql** にあるGraphQLスキーマをテキストエディタで開きます。次の内容でスキーマを更新し、ファイルを保存します：
+
+```graphql
+type Contact @model(mutations: { create: "createContact" }) {
+  id: ID!
+  name: String!
+  phone: String!
+}
+```
+
+<Callout>
+
+上記のスキーマでは、デフォルトのミューテーションをオーバーライドし、`createContact`ミューテーションのみが作成可能であると指定しています。これにより、APIはユーザーがコンタクトを更新または削除することを許可しません。より細かいきめ細かい認可ルールについては、[@auth directive](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)を確認してください。
+
+</Callout>
+
+次に、APIをデプロイします：
+
+```sh
+amplify push --y
+```
+
+### APIの操作
+
+新しいコンタクトを作成するには、`createContact`ミューテーションを使用できます：
+
+```graphql
+mutation createContact {
+  createContact(input: { name: "Chris", phone: "+1-555-555-5555" }) {
+    id
+    name
+    phone
+  }
+}
+```
+
+コンタクトのリストをクエリするには、`listContacts`クエリを使用できます：
+
+```graphql
+query listContacts {
+  listContacts {
+    items {
+      id
+      name
+      phone
+    }
+  }
+}
+```
+
+import js0 from '/src/fragments/guides/api-graphql/js/building-a-form-api.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>

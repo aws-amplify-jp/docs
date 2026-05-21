@@ -1,0 +1,241 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'JavaScript、Android、Swift、Flutter クライアントコード生成',
+  description: "Amplify のコード生成機能は iOS および Android 用のネイティブコード、Flow と TypeScript 用の型を生成します。コード生成は GraphQL ステートメント (クエリ、ミューテーション、サブスクリプション) も生成できます。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert url={'/gen1/[platform]/tools/cli-legacy/client-codegen'} />
+
+「Codegen」は、GraphQL API のデータモデルを表す Swift (iOS)、Java (Android)、JavaScript 用のネイティブコードを生成します。また、GraphQL ステートメント (クエリ、ミューテーション、サブスクリプション) を生成することで、手作業でコーディングする必要がなくなります。
+
+コード生成機能の設計は、API を作成または更新する場合、またはアプリケーションのデータフェッチ要件を更新したいけれど API はそのままにしておきたい場合など、アプリ開発ライフサイクルのさまざまなポイントで実行できるメカニズムを提供します。さらに、スキーマが別の人によって更新または管理されるチームで作業することができます。最後に、コード生成をビルドプロセスに含めることもでき、自動的に実行されます (Xcode からなど)。
+
+## Amplify GraphQL CDK コンストラクトでデプロイされた GraphQL API の GraphQL クライアントヘルパーコードを生成する
+
+必要な GraphQL クライアントヘルパーコードはプラットフォームごとに異なります。JavaScript GraphQL クライアントコードの場合、アプリケーションをデプロイした後に受け取る API ID を参照する必要があります。Android、iOS、Flutter の場合、ローカル GraphQL スキーマを参照して API クライアント用のモデルを生成できます。
+
+### JavaScript / TypeScript GraphQL API クライアントヘルパーコード
+
+フロントエンドアプリのルートディレクトリに移動し、ターミナルで次のコマンドを実行します:
+
+```bash
+npx @aws-amplify/cli codegen add --apiId <...> --region <...>
+```
+
+これにより API のスキーマがダウンロードされ、デフォルトではクライアントヘルパーコードが `src/graphql` フォルダに生成されます。API のデプロイのたびに、次のコマンドを再実行して、更新された GraphQL ステートメントと型を生成できます:
+
+```
+npx @aws-amplify/cli codegen
+```
+
+### Android、Swift、Flutter、JavaScript DataStore 用の「モデル」を生成する
+
+Android、Swift、Flutter、JavaScript の DataStore は、クライアントライブラリと相互作用するために「modelgen」パターンを使用します。モデルを生成するには、フロントエンドアプリケーションのルートディレクトリから次のコマンドを実行します:
+
+```bash
+npx @aws-amplify/cli codegen models \
+  --model-schema <path-to-schema.graphql> \
+  --target [android|ios|flutter|javascript|typescript] \
+  --output-dir ./
+```
+
+## Amplify CLI でデプロイされた GraphQL API を使用して GraphQL クライアントコードを生成する
+
+### API を作成してから自動的にコードを生成する
+
+```bash
+amplify init
+amplify add api (select GraphQL)
+amplify push
+```
+
+以前と同じ質問が表示されますが、今では GraphQL ステートメントを生成してコード生成を実行するかどうかも自動的に尋ねられます。また、Android プロジェクトの `./app/src/main` ディレクトリも尊重されます。AppSync のデプロイが完了した後、Swift ファイルが自動的に生成されます (Android の場合は [Gradle ビルドステップ](#androiduse) を実行する必要があります)。すぐにアプリで使用を開始できます。
+
+GraphQL API をクラウドにデプロイすると、コード生成を構成するよう求められます。プロジェクトがコード生成用に構成されている場合、すべての構成が `.graphqlconfig.yml` ファイルにプロジェクトのルートフォルダに保存されます。設定を変更するには、`amplify configure codegen` を使用します。
+
+### GraphQL スキーマを変更してプッシュし、自動的にコードを生成する
+
+開発中は、反復的な開発/テストサイクルの一部として GraphQL スキーマと生成されたコードを更新したい場合があります。`amplify/backend/api/<apiname>/schema.graphql` でスキーマを変更して保存し、次のコマンドを実行します:
+
+```bash
+amplify push
+```
+
+毎回、API のコードを更新するよう求められ、コード生成を再度実行するかどうかも尋ねられます。これには、新しいスキーマからの GraphQL ステートメントの再生成も含まれます。
+
+### API 変更なし、GraphQL ステートメントとコードを更新するのみ
+
+GraphQL の利点の 1 つは、クライアントが API に関係なくデータフェッチ要件を定義できることです。Amplify コード生成は、GraphQL ステートメントの選択セット (例: 中括弧内のフィールドを追加/削除) を変更して、型生成を再度実行できることでこれをサポートしています。これにより、アプリケーションが実行しているネットワークリクエストをきめ細かく制御できます。GraphQL ステートメント (変更しない限りデフォルトは `./graphql` フォルダ) を変更してファイルを保存し、次を実行します:
+
+```bash
+amplify codegen types
+```
+
+新しく更新された Swift ファイルが作成されます (または Android で同じように Gradle ビルドを実行します)。その後、アプリケーションコードで更新を使用できます。
+
+## 共有スキーマ、他の場所で変更されました (例: コンソールまたはチームワークフロー)
+
+チームで作業していて、AWS AppSync コンソールまたは別のシステムからスキーマが更新される場合を想定します。古いスキーマから生成された GraphQL ステートメントのため、型は古くなっています。これを解決する最も簡単な方法は、GraphQL ステートメントを再生成し、必要に応じて更新してから、型を再度生成することです。コンソールまたは別のシステムでスキーマを変更してから、次を実行します:
+
+```bash
+amplify codegen statements
+amplify codegen types
+```
+
+新しく生成された GraphQL ステートメントと Swift コードがスキーマの更新に一致するはずです。2 番目のコマンドを実行した場合、型も更新されます。または、`amplify codegen` を単独で実行すれば、これら両方のアクションが実行されます。
+
+## 初期化されたプロジェクト外のイントロスペクションスキーマ
+
+Amplify プロジェクトを初期化せずにステートメントと型を生成したい場合、`schema.json` という名前のイントロスペクションスキーマをプロジェクトディレクトリに配置し、同じディレクトリからコード生成を追加することで実行できます。AppSync API からイントロスペクションスキーマをダウンロードするには、AppSync コンソールでスキーマエディターに移動し、「スキーマをエクスポート」で `schema.json` を選択します。
+
+```bash
+amplify add codegen
+```
+
+コード生成が追加されたら、イントロスペクションスキーマを更新してから、プロジェクト情報を再度入力せずにステートメントと型を再度生成できます。
+
+```bash
+amplify codegen
+```
+
+必要に応じて、プロジェクトとコード生成の設定を更新できます。
+
+```bash
+amplify configure codegen
+amplify codegen
+```
+
+型を生成するとき、コード生成は GraphQL ステートメントを入力として使用します。GraphQL ステートメントで使用されている型のみが生成されます。
+
+## Codegen コマンド
+
+### amplify add codegen
+
+```bash
+amplify add codegen
+```
+
+`amplify add codegen` を使用すると、AWS コンソールで作成した AppSync API を追加できます。API が現在の領域とは異なる領域にある場合、このコマンドは領域を選択するよう求めます。初期化された Amplify プロジェクトの外部からコード生成を追加する場合、`schema.json` という名前のイントロスペクションスキーマを、コード生成追加呼び出しと同じディレクトリに指定してください。**注**: --apiId フラグを使用して、AWS コンソールで作成したものなど、外部で作成した AppSync API を追加する場合、スキーマ更新を実行する際に amplify api update などの Amplify CLI コマンドでこの API を管理することはできません。初期化されたプロジェクトの外部では外部の AppSync API を追加することはできません。
+
+### amplify configure codegen
+
+```bash
+amplify configure codegen
+```
+
+`amplify configure codegen` コマンドを使用すると、プロジェクトに追加された後、コード生成設定を更新できます。初期化されたプロジェクトの外部では、これを使用してプロジェクト設定とコード生成設定の両方を更新できます。
+
+### amplify codegen statements
+
+```bash
+amplify codegen statements [--nodownload] [--maxDepth <int>]
+```
+
+`amplify codegen statements` コマンドは GraphQL スキーマに基づいて GraphQL ステートメント (クエリ、ミューテーション、サブスクリプション) を生成します。このコマンドは実行するたびにイントロスペクションスキーマをダウンロードしますが、`--nodownload` フラグを渡すことで、以前ダウンロードしたイントロスペクションスキーマを使用するように強制できます。
+
+### amplify codegen types
+
+```bash
+amplify codegen types
+```
+
+`amplify codegen types [--nodownload]` コマンドは Flow と TypeScript、および iOS プロジェクト内の Swift クラスの GraphQL `types` を生成します。このコマンドは実行するたびにイントロスペクションスキーマをダウンロードしますが、`--nodownload` フラグを渡すことで、以前ダウンロードしたイントロスペクションスキーマを使用するように強制できます。
+
+### amplify codegen
+
+```bash
+amplify codegen [--maxDepth <int>]
+```
+
+`amplify codegen [--nodownload]` は GraphQL `statements` と `types` を生成します。このコマンドは実行するたびにイントロスペクションスキーマをダウンロードしますが、`--nodownload` フラグを渡すことで、以前ダウンロードしたイントロスペクションスキーマを使用するように強制できます。初期化された Amplify プロジェクトの外部からコード生成を実行している場合、`schema.json` という名前のイントロスペクションスキーマは amplify codegen を実行するのと同じディレクトリになければなりません。このコマンドは Amplify プロジェクト外で実行する場合、イントロスペクションスキーマはダウンロードされません。提供されたイントロスペクションスキーマのみが使用されます。
+
+## ステートメント深度
+
+以下のスキーマには、`Comment` -> `Post` -> `Blog` -> `Post` -> `Comments` の間の接続があります。ステートメントを生成する場合、コード生成には深度トラバーサルのデフォルト制限は 2 です。ただし、2 レベルより深くする必要がある場合は、コード生成をセットアップするときに `maxDepth` パラメータを変更するか、`codegen` に `--maxDepth` パラメータを渡すことができます。
+
+```graphql
+type Blog @model {
+  id: ID!
+  name: String!
+  posts: [Post] @hasMany
+}
+type Post @model {
+  id: ID!
+  title: String!
+  blog: Blog @belongsTo
+  comments: [Comment] @hasMany
+}
+type Comment @model {
+  id: ID!
+  content: String
+  post: Post @belongsTo
+}
+```
+
+```graphql
+query GetComment($id: ID!) {
+  getComment(id: $id) {
+    # depth level 1
+    id
+    content
+    post {
+      # depth level 2
+      id
+      title
+      blog {
+        # depth level 3
+        id
+        name
+        posts {
+          # depth level 4
+          items {
+            # depth level 5
+            id
+            title
+          }
+          nextToken
+        }
+      }
+      comments {
+        # depth level 3
+        items {
+          # depth level 4
+          id
+          content
+          post {
+            # depth level 5
+            id
+            title
+          }
+        }
+        nextToken
+      }
+    }
+  }
+}
+```

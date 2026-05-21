@@ -1,0 +1,49 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'センチメント分析',
+  description: 'Amplifyを使用してテキストから主要フレーズ、センチメント、言語、構文、エンティティを抽出する方法を学習します。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue',
+  ]
+};
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps() {
+  return {
+    props: {
+      meta
+    }
+  };
+}
+
+<Callout informational>
+
+**注:** 最初に[入門](../set-up-predictions)セクションを完了してください。このセクションでは、適切なポリシーアクションを使用してIAMロールを設定します。
+
+</Callout>
+
+## APIの使用
+
+テキストを分析して、主要フレーズ、センチメント（肯定的、否定的、中立的）、または構文（代名詞、動詞など）を検出できます。また、テキスト内の名前や場所などのエンティティを検出したり、言語検出を実行したりすることもできます。
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const result = await Predictions.interpret({
+  text: {
+    source: {
+      text: textToInterpret,
+    },
+    type: 'ALL'
+  }
+})
+```

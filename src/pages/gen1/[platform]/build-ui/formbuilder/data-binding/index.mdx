@@ -1,0 +1,107 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'データバインディング',
+  description: 'クラウド接続フォームはリレーションシップを持つデータモデルにバインドでき、送信時に複数のデータモデルを更新できます。',
+  platforms: [
+    'javascript',
+    'react', 
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## 接続されたフォーム
+
+接続されたフォームは、アプリの[データスキーマ](/gen1/[platform]/tools/console/data/data-model/)のモデルにバインドされます。接続されたフォームが送信されるたびに、バインドされたデータモデルにレコードが自動的に作成または更新され、フォームの入力フィールドの一部またはすべてがデータモデルのフィールドにマッピングされます。
+
+接続されたフォームは、[DataStore の有無を問わず](/gen1/[platform]/tools/console/data/data-model/#datastore-and-graphql)、任意の Amplify GraphQL API で自動的に機能し、`onSubmit` ハンドリングは必要ありません。
+
+## 接続されていないフォーム
+
+接続されていないフォームは、AWS アカウントがなくても、任意の React または Nextjs プロジェクトで使用できるスタンドアロン React コンポーネントです。送信時に、フォームの入力値は[`onSubmit` フックを介して処理するためにアクセス可能](/gen1/[platform]/build-ui/formbuilder/lifecycle/#handle-form-data-submissions---onsubmit)です。
+
+[Amplify Sandbox](https://sandbox.amplifyapp.com/ui-library) を使用して、AWS にログインせずに接続されていないフォームを構築できます。
+
+## フォームの種類
+
+すべての接続されたフォームと接続されていないフォームは、**作成**フォームまたは**更新**フォームのいずれかです。
+
+### 作成フォーム
+
+作成フォームは空の入力でフォームをレンダリングします。作成フォームがデータモデルに接続されている場合、送信時に常に新しいレコードが生成されます。
+
+### 更新フォーム
+
+更新フォームは、フォームを事前に入力するための入力値が必要です。
+
+データモデルに接続されている更新フォームの場合、`id` プロップまたはモデルプロップを使用できます。
+
+- `id` プロップ：更新したいレコードの ID 文字列。例：
+
+```jsx
+<AuthorUpdateForm id="ac74af5c-3aab-4274-8f41-23e1e6576af5" />
+```
+
+- モデルプロップ：フォームが `Author` という名前のデータモデルにバインドされている場合、フォームには `author` という名前のプロップもあり、レコードを受け取ることができます。例：
+
+```jsx
+
+<AuthorUpdateForm author={authorRecord}>
+
+```
+
+一般的には、`id` プロップの代わりにモデルプロップを使用することをお勧めします。
+
+接続されていない更新フォームの場合、`initialData` プロップにオブジェクトを渡してフォームを事前に入力できます。ただし、すべての接続されていないフォームと同様に、フォーム送信をコードで処理する必要があります。
+
+## データバインディングのカスタマイズ
+
+### 接続されていないフォームをデータモデルにバインドする
+
+接続されていないフォームを接続されたフォームに変換する場合は、フォーム設定メニュー内から行えます。フォームのデータモデルマッピングを設定するには：
+
+1. [Amplify Studio にログイン](/gen1/[platform]/tools/console/adminui/start/)し、左側のナビゲーションバーから **UI Library** を選択します
+1. 接続されていないフォームを選択し、右上隅の **Configure** を選択します
+1. 右上隅で、**Data model mapping** ドロップダウンメニューを使用してフォームを更新します
+
+![接続されていないフォームのオプションを表示するデータモデルマッピングドロップダウン](/images/console/formbuilder/data-model-mapping.png)
+
+このドロップダウンメニューから、いくつかのオプションがあります：
+
+**新しいデータモデルを作成する**：Studio はフォームを使用して、[スキーマで新しいデータモデルを生成](/gen1/[platform]/tools/console/data/data-model/)します
+
+**既存のモデルから選択する**：
+
+- フォームがデータモデルと一致する場合、Studio はそれらをバインドし、接続されていないフォームを接続されたフォームに変換します
+- フォームがデータモデルと一致しない場合、Studio はフォーム（またはスキーマ）にフィールドを追加して、一致を確保します
+
+**コードでデータをマッピングする**：このオプションを使用してデータマッピングを無視し、このフォームを接続されていないままにしておきます
+
+### 接続されたフォームを拡張する
+
+フォームが既にデータモデルに接続されている場合、Studio はフォームを拡張する際に接続を管理するのに役立ちます。接続されたフォームを拡張するには：
+
+1. [Amplify Studio にログイン](/gen1/[platform]/tools/console/adminui/start/)し、左側のナビゲーションバーから **UI Library** を選択します
+1. 接続されたフォームを選択し、右上隅の **Configure** を選択します
+1. 任意の種類の新しいフィールドを追加します
+
+Studio は、データモデルにマップされていないすべてのフィールドを右側にリストします。
+
+![マップされていないフィールドがユーザーが処理するために右側のバーに表示されます](/images/console/formbuilder/data-model-field-mapping.png)
+
+**Update data model** を選択すると、Studio はデータモデルスキーマにフィールドを自動的に追加します。
+
+**I'll handle in code** を選択すると、Studio はこのフィールドのデータマッピングを無視し、`onSubmit` フックを使用してこのフィールドを処理できます。

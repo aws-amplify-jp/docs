@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"android","meta":{"title":"TransferUtility の使用","description":"Amazon S3 からのオブジェクトのアップロードとダウンロードを簡単にするために、AWS Mobile SDK はバックグラウンド転送、進捗追跡、MultiPart アップロードの組み込みサポートを備えた TransferUtility コンポーネントを提供します。","platforms":["swift","android"]}},"__N_SSG":true}

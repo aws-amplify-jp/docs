@@ -1,0 +1,734 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'CRUD操作の移行',
+  description: 'DataStoreのsave、query、update、delete、predicates、pagination、sortingをApollo Client GraphQL操作に移行します。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+このページでは、すべてのDataStore CRUD操作とpredicate/filterパターンをApollo Clientに移行する方法について説明します。DataStoreはcreateとupdateを単一の`save()`メソッドに統合し、`_version`を内部的に処理します。Apollo Clientでは、各操作に対して個別のmutationを使用し、`_version`を明示的に管理します。
+
+**このページで使用するGraphQL操作**（`CREATE_POST`、`UPDATE_POST`、`DELETE_POST`、`GET_POST`、`LIST_POSTS`、および`POST_DETAILS_FRAGMENT`フラグメント）は、[Apollo Clientのセットアップ](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/set-up-apollo/)ページで定義されています。必要に応じてインポートします：
+
+```ts
+import { apolloClient } from './apolloClient';
+import {
+  CREATE_POST, UPDATE_POST, DELETE_POST,
+  GET_POST, LIST_POSTS,
+} from './graphql/operations';
+```
+
+## Create（新しいレコードを保存）
+
+DataStoreは`new Model()`と`DataStore.save()`を使用してレコードを作成します。Apollo Clientは`CREATE_POST` mutationを使用します。
+
+**DataStore（移行前）：**
+
+```ts
+const newPost = await DataStore.save(
+  new Post({
+    title: 'My First Post',
+    content: 'Hello world',
+    status: 'PUBLISHED',
+    rating: 5,
+  })
+);
+```
+
+**Apollo Client（移行後）-- 命令型：**
+
+```ts
+const { data } = await apolloClient.mutate({
+  mutation: CREATE_POST,
+  variables: {
+    input: {
+      title: 'My First Post',
+      content: 'Hello world',
+      status: 'PUBLISHED',
+      rating: 5,
+    },
+  },
+});
+const newPost = data.createPost;
+// newPost._version is 1 (set by AppSync automatically)
+```
+
+<InlineFilter filters={["react", "nextjs", "react-native"]}>
+
+**Apollo Client（移行後）-- Reactフック：**
+
+```tsx
+import { useMutation } from '@apollo/client';
+
+function CreatePostForm() {
+  const [createPost, { loading, error }] = useMutation(CREATE_POST, {
+    refetchQueries: [{ query: LIST_POSTS }],
+  });
+
+  async function handleSubmit(title: string, content: string) {
+    const { data } = await createPost({
+      variables: {
+        input: { title, content, status: 'PUBLISHED', rating: 5 },
+      },
+    });
+    console.log('Created:', data.createPost.id);
+  }
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); handleSubmit('Title', 'Content'); }}>
+      {error && <p>Error: {error.message}</p>}
+      <button type="submit" disabled={loading}>
+        {loading ? 'Creating...' : 'Create Post'}
+      </button>
+    </form>
+  );
+}
+```
+
+</InlineFilter>
+
+**主な違い：**
+
+- **createでは`_version`は不要。** AppSyncは新しいレコードで`_version`を自動的に1に設定します。
+- **`refetchQueries`**はcreate後にリストビューを更新します。DataStoreはローカルストアを通じてこれを自動的に処理しました。Apollo Clientでは明示的なキャッシュ管理が必要です。
+
+## Update（既存レコードを変更）
+
+DataStoreは`Model.copyOf()`をimmerベースのドラフトで不変更新に使用します。Apollo Clientは`UPDATE_POST` mutationをプレーンオブジェクトで使用します。変更されたフィールドのみをinputに含める必要があります。
+
+<Callout warning>
+
+**updateでは`_version`が必須です。** 現在の`_version`を取得するため、最初にレコードをクエリする必要があります。`ConditionalCheckFailedException`が表示される場合は、`_version`が不足しているか、古い値を渡しています。
+
+</Callout>
+
+**DataStore（移行前）：**
+
+```ts
+const original = await DataStore.query(Post, '123');
+const updated = await DataStore.save(
+  Post.copyOf(original, (draft) => {
+    draft.title = 'Updated Title';
+    draft.rating = 4;
+  })
+);
+```
+
+**Apollo Client（移行後）-- 命令型：**
+
+```ts
+// Step 1: Query the current record to get _version
+const { data: queryData } = await apolloClient.query({
+  query: GET_POST,
+  variables: { id: '123' },
+});
+const post = queryData.getPost;
+
+// Step 2: Mutate with _version from query result
+const { data } = await apolloClient.mutate({
+  mutation: UPDATE_POST,
+  variables: {
+    input: {
+      id: '123',
+      title: 'Updated Title',
+      rating: 4,
+      _version: post._version, // REQUIRED
+    },
+  },
+});
+```
+
+<InlineFilter filters={["react", "nextjs", "react-native"]}>
+
+**Apollo Client（移行後）-- Reactフック：**
+
+```tsx
+import { useQuery, useMutation } from '@apollo/client';
+
+function EditPostForm({ postId }: { postId: string }) {
+  const { data, loading: queryLoading } = useQuery(GET_POST, {
+    variables: { id: postId },
+  });
+  const [updatePost, { loading: updating, error }] = useMutation(UPDATE_POST);
+
+  async function handleSave(title: string) {
+    const post = data.getPost;
+    await updatePost({
+      variables: {
+        input: {
+          id: post.id,
+          title,
+          _version: post._version,
+        },
+      },
+    });
+  }
+
+  if (queryLoading) return <p>Loading...</p>;
+
+  return (
+    <div>
+      {error && <p>Error: {error.message}</p>}
+      <button onClick={() => handleSave('New Title')} disabled={updating}>
+        {updating ? 'Saving...' : 'Save'}
+      </button>
+    </div>
+  );
+}
+```
+
+</InlineFilter>
+
+**主な違い：**
+
+- **`copyOf()`またはimmerパターンはありません。** Apolloはプレーンオブジェクトを使用します -- 変更したいフィールドのみを渡します。
+- **変更されたフィールド、id、_versionのみが必要です。** レコード全体を送信する必要はありません。
+- **2段階のプロセス：** 最初にクエリ（`_version`を取得）してからmutateします。DataStoreはこれを内部的に処理しました。
+
+## Delete（単一レコード）
+
+**deleteでは`_version`が必須です。** IDをすでに持っていても、現在の`_version`を取得するため、最初にレコードをクエリする必要があります。
+
+**DataStore（移行前）：**
+
+```ts
+const post = await DataStore.query(Post, '123');
+await DataStore.delete(post);
+```
+
+**Apollo Client（移行後）-- 命令型：**
+
+```ts
+// Step 1: Query to get current _version
+const { data: queryData } = await apolloClient.query({
+  query: GET_POST,
+  variables: { id: '123' },
+});
+
+// Step 2: Delete with _version
+await apolloClient.mutate({
+  mutation: DELETE_POST,
+  variables: {
+    input: {
+      id: '123',
+      _version: queryData.getPost._version,
+    },
+  },
+  refetchQueries: [{ query: LIST_POSTS }],
+});
+```
+
+<InlineFilter filters={["react", "nextjs", "react-native"]}>
+
+**Apollo Client（移行後）-- Reactフック：**
+
+```tsx
+import { useMutation } from '@apollo/client';
+
+function DeletePostButton({ post }: { post: { id: string; _version: number } }) {
+  const [deletePost, { loading }] = useMutation(DELETE_POST, {
+    refetchQueries: [{ query: LIST_POSTS }],
+  });
+
+  async function handleDelete() {
+    await deletePost({
+      variables: {
+        input: { id: post.id, _version: post._version },
+      },
+    });
+  }
+
+  return (
+    <button onClick={handleDelete} disabled={loading}>
+      {loading ? 'Deleting...' : 'Delete'}
+    </button>
+  );
+}
+```
+
+</InlineFilter>
+
+**主な違い：**
+
+- **ID削除のショートハンドはありません。** Apolloはmutation入力オブジェクトで常に`id`と`_version`の両方を必要とします。
+- **deleteはソフトデリート**です（競合解決が有効になっている場合）。レコードの`_deleted`フィールドはDynamoDBで`true`に設定されますが、レコードは物理的には削除されません。
+
+## IDでクエリ
+
+**DataStore（移行前）：**
+
+```ts
+const post = await DataStore.query(Post, '123');
+if (post) {
+  console.log(post.title);
+}
+```
+
+**Apollo Client（移行後）：**
+
+```ts
+const { data } = await apolloClient.query({
+  query: GET_POST,
+  variables: { id: '123' },
+});
+const post = data.getPost;
+// Returns null instead of undefined when not found
+if (post) {
+  console.log(post.title);
+}
+```
+
+## すべてのレコードをリスト
+
+<Callout warning>
+
+**ソフトデリートされたレコードをフィルタリングする必要があります。** DataStoreはこれを自動的に処理しました。Apollo Clientは`_deleted: true`を含むすべてのレコードを返します。これを忘れることが最も一般的な移行バグです。
+
+</Callout>
+
+**DataStore（移行前）：**
+
+```ts
+const posts = await DataStore.query(Post);
+```
+
+**Apollo Client（移行後）：**
+
+```ts
+const { data } = await apolloClient.query({ query: LIST_POSTS });
+const posts = data.listPosts.items.filter((post) => !post._deleted);
+```
+
+## バッチ削除（predicateベース）
+
+DataStoreはpredicateで複数のレコードを削除することをサポートしていました。Apollo Clientに相当するものはありません -- 最初に一致するレコードをクエリしてから、各レコードを個別に削除する必要があります。
+
+**DataStore（移行前）：**
+
+```ts
+await DataStore.delete(Post, (p) => p.status.eq('DRAFT'));
+```
+
+**Apollo Client（移行後）：**
+
+```ts
+// Step 1: Query posts matching the filter
+const { data } = await apolloClient.query({
+  query: LIST_POSTS,
+  variables: { filter: { status: { eq: 'DRAFT' } } },
+});
+const drafts = data.listPosts.items.filter((post) => !post._deleted);
+
+// Step 2: Delete each record individually
+const results = await Promise.allSettled(
+  drafts.map((post) =>
+    apolloClient.mutate({
+      mutation: DELETE_POST,
+      variables: {
+        input: { id: post.id, _version: post._version },
+      },
+    })
+  )
+);
+
+// Step 3: Check for partial failures
+const failures = results.filter((r) => r.status === 'rejected');
+if (failures.length > 0) {
+  console.error(`${failures.length} of ${drafts.length} deletes failed`);
+}
+
+// Refresh the list
+await apolloClient.refetchQueries({ include: [LIST_POSTS] });
+```
+
+<Callout>
+
+`Promise.allSettled`を使用します（`Promise.all`ではなく）。これにより、1つの失敗が残りの削除を中止しません。大規模なデータセット（100+レコード）の場合、10～25レコードのバッチで処理し、AppSync throttlingを回避するためにバッチ間で短い遅延を入れます。
+
+</Callout>
+
+## CRUD クイックリファレンス
+
+| DataStoreメソッド | Apollo Client相当 | 主な違い |
+|---|---|---|
+| `DataStore.save(new Model({...}))` | `apolloClient.mutate({ mutation: CREATE, variables: { input: {...} } })` | createでは`_version`は不要 |
+| `Model.copyOf(original, draft => {...})` + `DataStore.save()` | `apolloClient.mutate({ mutation: UPDATE, variables: { input: { id, _version, ...changes } } })` | `_version`を渡す必要があります。immerドラフトの代わりにプレーンオブジェクト |
+| `DataStore.delete(instance)` | `apolloClient.mutate({ mutation: DELETE, variables: { input: { id, _version } } })` | `_version`を取得するため最初にクエリが必要 |
+| `DataStore.query(Model, id)` | `apolloClient.query({ query: GET, variables: { id } })` | 見つからない場合、`undefined`の代わりに`null`を返す |
+| `DataStore.query(Model)` | `apolloClient.query({ query: LIST })` | 結果から`_deleted`レコードをフィルタリングする必要があります |
+| `DataStore.delete(Model, predicate)` | フィルタでクエリ + 個別に削除 | atomicity がありません。`Promise.allSettled`を使用 |
+
+## フィルタ演算子マッピング
+
+DataStoreはコールバックベースのpredicateを使用します。Apollo ClientとAppSyncはクエリ変数として渡されたJSONフィルタオブジェクトを使用します。
+
+| 演算子 | DataStore構文 | GraphQL構文 | メモ |
+|---|---|---|---|
+| `eq` | `p.field.eq(value)` | `{ field: { eq: value } }` | 完全一致 |
+| `ne` | `p.field.ne(value)` | `{ field: { ne: value } }` | 不一致 |
+| `gt` | `p.field.gt(value)` | `{ field: { gt: value } }` | より大きい |
+| `ge` | `p.field.ge(value)` | `{ field: { ge: value } }` | 以上 |
+| `lt` | `p.field.lt(value)` | `{ field: { lt: value } }` | より小さい |
+| `le` | `p.field.le(value)` | `{ field: { le: value } }` | 以下 |
+| `contains` | `p.field.contains(value)` | `{ field: { contains: value } }` | 部分文字列一致 |
+| `notContains` | `p.field.notContains(value)` | `{ field: { notContains: value } }` | 部分文字列が不存在 |
+| `beginsWith` | `p.field.beginsWith(value)` | `{ field: { beginsWith: value } }` | 文字列プレフィックス一致 |
+| `between` | `p.field.between(lo, hi)` | `{ field: { between: [lo, hi] } }` | 範囲（両端含む） |
+| `in` | `p.field.in([v1, v2])` | **利用不可** | `or` + `eq`を使用 |
+| `notIn` | `p.field.notIn([v1, v2])` | **利用不可** | `and` + `ne`を使用 |
+
+### フィルタ例
+
+**eq -- 完全一致：**
+
+```ts
+// DataStore
+const published = await DataStore.query(Post, (p) => p.status.eq('PUBLISHED'));
+
+// Apollo Client
+const { data } = await apolloClient.query({
+  query: LIST_POSTS,
+  variables: { filter: { status: { eq: 'PUBLISHED' } } },
+});
+const published = data.listPosts.items.filter((p) => !p._deleted);
+```
+
+**contains -- 部分文字列一致：**
+
+```ts
+// DataStore
+const reactPosts = await DataStore.query(Post, (p) => p.title.contains('React'));
+
+// Apollo Client
+const { data } = await apolloClient.query({
+  query: LIST_POSTS,
+  variables: { filter: { title: { contains: 'React' } } },
+});
+const reactPosts = data.listPosts.items.filter((p) => !p._deleted);
+```
+
+**between -- 範囲（両端含む）：**
+
+```ts
+// DataStore
+const midRated = await DataStore.query(Post, (p) => p.rating.between(2, 4));
+
+// Apollo Client
+const { data } = await apolloClient.query({
+  query: LIST_POSTS,
+  variables: { filter: { rating: { between: [2, 4] } } },
+});
+const midRated = data.listPosts.items.filter((p) => !p._deleted);
+```
+
+<Callout>
+
+**その他の演算子**（`ne`、`gt`、`ge`、`lt`、`le`、`notContains`、`beginsWith`）は上記の`eq`と同じパターンに従います -- 演算子名と値を置き換えます。完全な構文リファレンスはフィルタ演算子マッピングテーブルを参照してください。
+
+</Callout>
+
+**`and`で条件を組み合わせる：**
+
+```ts
+// DataStore
+const posts = await DataStore.query(Post, (p) =>
+  p.and((p) => [p.rating.gt(4), p.status.eq('PUBLISHED')])
+);
+
+// Apollo Client
+const { data } = await apolloClient.query({
+  query: LIST_POSTS,
+  variables: {
+    filter: {
+      and: [{ rating: { gt: 4 } }, { status: { eq: 'PUBLISHED' } }],
+    },
+  },
+});
+```
+
+<Callout>
+
+AppSyncのトップレベルフィルタフィールドは**暗黙的にAND-ed**です。これは`{ status: { eq: 'PUBLISHED' }, rating: { gt: 4 } }`が明示的な`and`を使用するのと同じであることを意味します。`or`内にネストする場合は明示的な`and`を使用します。
+
+</Callout>
+
+**`or`で条件を組み合わせる：**
+
+```ts
+const { data } = await apolloClient.query({
+  query: LIST_POSTS,
+  variables: {
+    filter: {
+      or: [
+        { title: { contains: 'React' } },
+        { title: { contains: 'Apollo' } },
+      ],
+    },
+  },
+});
+```
+
+**`not`で否定する：**
+
+```ts
+const { data } = await apolloClient.query({
+  query: LIST_POSTS,
+  variables: {
+    filter: { not: { status: { eq: 'DRAFT' } } },
+  },
+});
+```
+
+### `in`と`notIn`の回避策
+
+<Callout warning>
+
+`in`と`notIn`演算子はAppSyncの`ModelFilterInput`型に**存在しません**。`{ field: { in: [...] } }`を使用しようとすると、AppSyncは検証エラーでクエリを拒否します。
+
+</Callout>
+
+**`in`を`or` + `eq`で置き換える：**
+
+```ts
+// DataStore: p.status.in(['PUBLISHED', 'DRAFT'])
+// Apollo: combine multiple eq conditions with or
+const { data } = await apolloClient.query({
+  query: LIST_POSTS,
+  variables: {
+    filter: {
+      or: [{ status: { eq: 'PUBLISHED' } }, { status: { eq: 'DRAFT' } }],
+    },
+  },
+});
+```
+
+<Accordion title="inとnotInのヘルパー関数">
+
+```ts
+function buildInFilter(field: string, values: string[]) {
+  return {
+    or: values.map((value) => ({ [field]: { eq: value } })),
+  };
+}
+
+function buildNotInFilter(field: string, values: string[]) {
+  return {
+    and: values.map((value) => ({ [field]: { ne: value } })),
+  };
+}
+
+// Usage:
+const { data } = await apolloClient.query({
+  query: LIST_POSTS,
+  variables: { filter: buildInFilter('status', ['PUBLISHED', 'DRAFT']) },
+});
+```
+
+</Accordion>
+
+## ページネーション移行
+
+DataStoreは**ページベース**のページネーション（ゼロインデックス`page`番号 + `limit`）を使用します。AppSyncは**カーソルベース**のページネーション（`nextToken` + `limit`）を使用します。これは名前変更ではなく -- 根本的なセマンティック変更です。
+
+| 側面 | DataStore（ページベース） | Apollo/AppSync（カーソルベース） |
+|--------|----------------------|-------------------------------|
+| ナビゲーション | ランダムアクセス -- 任意のページにジャンプ | 順序のみ -- ページを順番に走査する必要があります |
+| パラメータ | `{ page: 0, limit: 10 }` | `{ limit: 10, nextToken: '...' }` |
+| 最初のページ | `page: 0` | `nextToken`を省略（または`null`を渡す） |
+| 次のページ | `page: page + 1` | 前の応答から`nextToken`を使用 |
+| 終了検出 | `items.length < limit` | `nextToken === null` |
+
+**Apollo Clientカーソルベースページネーション：**
+
+```ts
+// Page 1 (first 10 items) -- no nextToken needed
+const { data: page1Data } = await apolloClient.query({
+  query: LIST_POSTS,
+  variables: { limit: 10 },
+});
+const page1Items = page1Data.listPosts.items.filter((p) => !p._deleted);
+const nextToken = page1Data.listPosts.nextToken;
+
+// Page 2 -- use nextToken from previous response
+if (nextToken) {
+  const { data: page2Data } = await apolloClient.query({
+    query: LIST_POSTS,
+    variables: { limit: 10, nextToken },
+  });
+}
+```
+
+<InlineFilter filters={["react", "nextjs", "react-native"]}>
+
+### Load Moreパターン（React）
+
+カーソルベースページネーションで最も一般的なページネーションパターンは「Load More」（無限スクロール）です：
+
+```tsx
+import { useQuery } from '@apollo/client';
+
+function PostList() {
+  const { data, loading, error, fetchMore } = useQuery(LIST_POSTS, {
+    variables: { limit: 10 },
+  });
+
+  if (loading && !data) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
+
+  const posts = (data?.listPosts?.items ?? []).filter((p) => !p._deleted);
+  const nextToken = data?.listPosts?.nextToken;
+
+  const handleLoadMore = () => {
+    fetchMore({
+      variables: { limit: 10, nextToken },
+      updateQuery: (prev, { fetchMoreResult }) => {
+        if (!fetchMoreResult) return prev;
+        return {
+          listPosts: {
+            ...fetchMoreResult.listPosts,
+            items: [
+              ...prev.listPosts.items,
+              ...fetchMoreResult.listPosts.items,
+            ],
+          },
+        };
+      },
+    });
+  };
+
+  return (
+    <div>
+      <ul>
+        {posts.map((post) => (
+          <li key={post.id}>{post.title}</li>
+        ))}
+      </ul>
+      <button onClick={handleLoadMore} disabled={!nextToken || loading}>
+        {nextToken ? 'Load More' : 'No More Posts'}
+      </button>
+    </div>
+  );
+}
+```
+
+</InlineFilter>
+
+<Callout warning>
+
+フィルタで`nextToken`を使用する場合、AppSyncは`limit`より**少ないアイテムを返す**可能性があります。結果の終了を確認するために常に`nextToken === null`をチェックしてください -- 結果終了のインジケータとして`items.length < limit`を使用**しないでください**。
+
+</Callout>
+
+## ソート移行
+
+DataStoreは`SortDirection.ASCENDING`と`SortDirection.DESCENDING`をサポートしています。AppSyncの基本的な`listModels`クエリにはデフォルトでは**`sortDirection`引数がありません**。
+
+### クライアント側のソート（推奨）
+
+ほとんどの場合、結果をフェッチしてJavaScriptでソートします：
+
+```ts
+// DataStore
+const posts = await DataStore.query(Post, Predicates.ALL, {
+  sort: (s) => s.createdAt(SortDirection.DESCENDING),
+});
+
+// Apollo Client
+const { data } = await apolloClient.query({ query: LIST_POSTS });
+const posts = [...data.listPosts.items]
+  .filter((p) => !p._deleted)
+  .sort((a, b) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+```
+
+<Accordion title="サーバー側のソート（@indexディレクティブが必須）">
+
+モデルに`@index`ディレクティブで定義されたグローバルセカンダリインデックス（GSI）がある場合、AppSyncは`sortDirection`サポートを備えたクエリを生成します：
+
+```graphql
+type Post @model {
+  id: ID!
+  title: String!
+  status: String! @index(name: "byStatus", sortKeyFields: ["createdAt"])
+  createdAt: AWSDateTime!
+}
+```
+
+これは`sortDirection`を受け入れる`postsByStatus`クエリを生成します：
+
+```ts
+const LIST_POSTS_BY_STATUS = gql`
+  query PostsByStatus(
+    $status: String!
+    $sortDirection: ModelSortDirection
+    $limit: Int
+    $nextToken: String
+  ) {
+    postsByStatus(
+      status: $status
+      sortDirection: $sortDirection
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items { ...PostDetails }
+      nextToken
+    }
+  }
+`;
+
+const { data } = await apolloClient.query({
+  query: LIST_POSTS_BY_STATUS,
+  variables: { status: 'PUBLISHED', sortDirection: 'DESC', limit: 10 },
+});
+```
+
+サーバー側のソートはバックエンドスキーマの変更が必要で、インデックスのパーティションキーでクエリする場合のみ機能します。汎用のソートにはクライアント側のソートを使用します。
+
+</Accordion>
+
+## 一般的なミス
+
+<Accordion title="一般的なCRUD移行ミス">
+
+### 1. updateまたはdelete mutationで_versionを忘れる
+
+最も頻繁な移行エラー。DataStoreは`_version`を内部的に処理しました。Apolloでは自分で含める必要があります。
+
+### 2. updateにCREATE mutationを使用する
+
+DataStoreの`save()`はcreateとupdateの両方を処理しました。Apolloでは、正しいmutationを呼び出す必要があります。
+
+### 3. リスト結果から_deletedレコードをフィルタリングしない
+
+DataStoreはソフトデリートされたレコードを自動的に非表示にしました。Apolloはソフトデリートされたレコードを含むすべてのレコードを返します。常にリストクエリ結果に対して`.filter(item => !item._deleted)`を使用します。
+
+### 4. mutation後に refetchQueriesを使用しない
+
+DataStoreのローカルストアはmutation後にクエリを自動的に更新しました。Apolloのキャッシュはリストクエリを自動的に更新しないことがあります。リストビューに影響するmutationに`refetchQueries: [{ query: LIST_POSTS }]`を追加します。
+
+### 5. 古い_versionの値を使用する
+
+レコードの`_version`をキャッシュして別のユーザーまたはプロセスがレコードを更新した場合、mutationは失敗します。新鮮さが重要な場合は、mutate前に`fetchPolicy: 'network-only'`で再クエリします。
+
+</Accordion>

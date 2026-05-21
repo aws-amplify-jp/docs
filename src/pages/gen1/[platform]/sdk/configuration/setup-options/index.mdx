@@ -1,0 +1,29 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'SDK セットアップオプション',
+  description:
+    'AWS SDK には、アプリにすばやく一般的な機能を追加するための高レベルのクライアントインターフェースが含まれています。カスタムまたは高度な要件がある場合は、直接操作するために生成された AWS サービスインターフェースを手動で追加することもできます。',
+  platforms: ['swift', 'android']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios0 from '/src/fragments/sdk/configuration/ios/setup-options.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import android1 from '/src/fragments/sdk/configuration/android/setup-options.mdx';
+
+<Fragments fragments={{ android: android1 }} />

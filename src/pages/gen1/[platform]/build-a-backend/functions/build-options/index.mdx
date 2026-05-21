@@ -1,0 +1,141 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'ビルドオプション',
+  description: "Amplifyの関数カテゴリーのビルドオプションを使用して、関数がデプロイされる前にスクリプトを実行します。例えば、TypeScriptやES6をBabelまたはAWS Lambdaのnodeランタイムでサポートされている形式に変換するために使用できます。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+<BlockSwitcher>
+
+<Block name="NodeJS">
+
+関数がデプロイされる前にスクリプトを実行する必要がある場合があります。例えば、TypeScriptやES6をBabelまたは`tsc`を使用してAWS Lambdaのnodeランタイムでサポートされている形式に変換するためです。`amplify push`は、プロジェクトルートの`package.json`で`amplify:<resource_name>`という名前のスクリプト定義を探し、関数リソースの`src`ディレクトリで`npm install`が実行された直後にそれを実行します。
+
+**例: TSCでTypeScriptコードをトランスパイルする**
+
+`npm install -g typescript`を実行してグローバルに、または`npm install --save-dev typescript`を実行してローカルに`tsc`コマンドをインストールしていることを確認してください。
+
+`amplify function add`で関数リソースが作成されており、`generateReport`という名前だとしましょう。この関数のES6ソースコードは`amplify/backend/function/generateReport/lib`に配置されており、リソースの`src`ディレクトリにはこの関数の自動生成された`package.json`のみが含まれています。TypeScriptをコンパイルするには、プロジェクトルートの`package.json`に以下のスクリプト定義を追加する必要があります:
+
+```json
+{
+  "scripts": {
+    "amplify:generateReport": "cd amplify/backend/function/generateReport && tsc -p ./tsconfig.json && cd -"
+  },
+}
+```
+
+`amplify/backend/function/generateReport`に移動して`tsconfig.json`を作成し、以下を追加します:
+
+```json
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "lib": ["dom", "esnext"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "./src",
+    "baseUrl": "./",
+    "rootDir": "./lib",
+    "paths": {
+      "src": ["./lib"]
+    }
+  }
+}
+```
+
+**注:**TypeScriptファイルで`aws-sdk`を使用している場合、以下の方法でインポートしようとするとタイムアウトが発生することに注意することが重要です:
+
+```js
+import AWS from 'aws-sdk';
+```
+
+これに変更してください:
+
+```js
+import * as AWS from 'aws-sdk';
+```
+
+`amplify push`を実行すると、`amplify:generateReport`スクリプトが実行されます。プロジェクトルートディレクトリに`yarn.lock`ファイルが存在するかどうかに応じて、`yarn`または`npm`によって実行されます。
+
+**例: BabelでES6コードをトランスパイルする**
+
+`amplify function add`で関数リソースが作成されており、`generateReport`という名前だとしましょう。この関数のES6ソースコードは`amplify/backend/function/generateReport/lib`に配置されており、リソースの`src`ディレクトリにはこの関数の自動生成された`package.json`のみが含まれています。Babelを実行するには、プロジェクトルートの`package.json`に以下のスクリプト定義と開発依存関係を追加する必要があります:
+
+```json
+{
+  "scripts": {
+    "amplify:generateReport": "cd amplify/backend/function/generateReport && babel lib -d src && cd -"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+  }
+}
+```
+
+トランスパイルされたコードがAWS Lambdaで実行できるようにBabelを適切に設定する必要があります。これはリソースフォルダー(`amplify/backend/function/generateReport/.babelrc`この場合)に`.babelrc`ファイルを追加することで行えます:
+
+```json
+{
+  "presets": [
+    [
+      "env",
+      {
+        "exclude": ["transform-regenerator"],
+        "targets": {
+          "node": "10.18"
+        }
+      }
+    ]
+  ],
+  "plugins": [
+    "transform-async-to-generator",
+    "transform-exponentiation-operator",
+    "transform-object-rest-spread"
+  ]
+}
+```
+
+`amplify push`を実行すると、`amplify:generateReport`スクリプトが実行されます。プロジェクトルートディレクトリに`yarn.lock`ファイルが存在するかどうかに応じて、`yarn`または`npm`によって実行されます。
+
+</Block>
+
+<Block name="Python">
+
+Python関数には既存のビルドオプションはありません。Python関数のビルドとパッケージングのプロセスは、仮想環境に依存するLambdaデプロイメントパッケージを手動で作成するためのAmazonの[既存のドキュメント](https://docs.aws.amazon.com/lambda/latest/dg/python-package.html#python-package-venv)と一致しています。
+
+Amplifyはビルド中に関数のソースディレクトリで`pipenv install`を実行します。Pipenvのデフォルト仮想環境を使用するか、アクティブな仮想環境を使用します。その後、パッケージングステージでは、その仮想環境の`site-packages`ディレクトリの内容が、関数固有のファイルと一緒にzip化されます。
+
+Pythonビルドの内容には、関数を実行するために必要なもののほかに、ローカル開発依存関係(テスト用など)を含めることができます。「編集可能」としてインストールされたパッケージ(`-e`フラグを使用)は、依存関係のローカルで編集可能なコードを指す`.egg-link`ファイルとして表されるため、パッケージ化されません。
+
+</Block>
+
+</BlockSwitcher>

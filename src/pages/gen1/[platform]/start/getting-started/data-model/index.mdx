@@ -1,0 +1,1533 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'APIとデータベースをアプリに接続する',
+  description:
+    'Amplifyの始め方 - Amplifyを使用してデータをモデル化する方法',
+  platforms: ['angular', 'javascript', 'nextjs', 'react', 'react-native', 'vue']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={['javascript','react','angular','react-native','vue', 'nextjs']}>
+
+アプリケーションを作成および設定し、新しいAmplifyプロジェクトを初期化したので、機能を追加できます。最初に追加する機能はAPIです。
+
+Amplify CLIはAPIカテゴリーの2つのタイプ、RESTとGraphQLの作成と相互作用をサポートしています。
+
+このステップで作成するAPIは、AWS AppSync（マネージドGraphQLサービス）を使用するGraphQL APIであり、データベースはAmazon DynamoDB（NoSQLデータベース）になります。
+
+## GraphQL APIとデータベースを作成する
+
+以下のコマンドを実行して、[GraphQL API](https://docs.aws.amazon.com/appsync/latest/devguide/designing-a-graphql-api.html)をアプリに追加し、データベースを自動的にプロビジョニングします。アプリケーションディレクトリのルートから実行します：
+
+```bash
+amplify add api
+```
+
+以下で強調されている**デフォルト値**を受け入れます：
+
+```console
+? Select from one of the below mentioned services: GraphQL
+? Here is the GraphQL API that we will create. Select a setting to edit or continue Continue
+? Choose a schema template: Single object with fields (e.g., "Todo" with ID, name, description)
+```
+
+CLIはこのGraphQLスキーマをテキストエディタで開くよう促します。
+
+**amplify/backend/api/your-api-name/schema.graphql**
+
+```graphql
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/react/build-a-backend/graphqlapi/customize-authorization-rules/
+
+input AMPLIFY {
+  globalAuthRule: AuthRule = { allow: public }
+} # FOR TESTING ONLY!
+type Todo @model {
+  id: ID!
+  name: String!
+  description: String
+}
+```
+
+生成されたスキーマはTodoアプリ用です。`Todo`タイプの`@model`ディレクティブに気付くでしょう。このディレクティブは[Amplify GraphQL APIカテゴリー](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/)の一部です。
+
+Amplify GraphQL APIは、カスタムGraphQLディレクティブを提供し、データモデルを定義、認可ルールを設定、サーバーレス関数をリゾルバーとして構成するなど、さらに多くのことができます。
+
+`@model`ディレクティブで装飾されたGraphQLタイプは、タイプ（Todoテーブル）のデータベーステーブル、CRUD（作成、読み取り、更新、削除）およびリスト操作のスキーマ、そしてすべてを一緒に機能させるために必要なGraphQLリゾルバーをスキャフォールディングします。
+
+コマンドラインから**Enterキー**を押してスキーマを受け入れ、次のステップに進みます。
+
+### APIをデプロイする
+
+このバックエンドをデプロイするには、`push`コマンドを実行します：
+
+```bash
+amplify push
+```
+
+各プロンプトに対して以下の値を選択します：
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```console
+✔ Are you sure you want to continue? (Y/n) · yes
+...
+? Do you want to generate code for your newly created GraphQL API: Yes
+? Choose the code generation language target: typescript
+? Enter the file name pattern of graphql queries, mutations and subscriptions: src/graphql/**/*.ts
+? Do you want to generate/update all possible GraphQL operations - queries, mutations and subscriptions: Yes
+? Enter maximum statement depth [increase from default if your schema is deeply nested]: 2
+? Enter the file name for the generated code: src/API.ts
+```
+
+</Block>
+<Block name="JavaScript">
+
+```console
+✔ Are you sure you want to continue? (Y/n) · yes
+...
+? Do you want to generate code for your newly created GraphQL API Yes
+? Choose the code generation language target javascript
+? Enter the file name pattern of graphql queries, mutations and subscriptions src/graphql/**/*.js
+? Do you want to generate/update all possible GraphQL operations - queries, mutations and subscriptions Yes
+? Enter maximum statement depth [increase from default if your schema is deeply nested] 2
+? Enter the file name for the generated code src/API.js
+```
+
+</Block>
+</BlockSwitcher>
+
+APIはライブになり、相互作用を開始できます。デプロイしたAPIには、投稿を作成、読み取り、更新、削除、および一覧表示するための操作が含まれています。
+
+<Accordion title="デプロイメントステータスを確認する" headingLevel="3">
+
+次に、以下のコマンドを実行してAmplifyのステータスを確認します：
+
+```bash
+amplify status
+```
+
+これはAmplifyプロジェクトの現在のステータスを表示します。現在の環境、作成されたカテゴリー、およびそれらのカテゴリーの状態が含まれます。以下のようになります：
+
+```console
+
+    Current Environment: dev
+
+┌──────────┬───────────────────────┬───────────┬───────────────────┐
+│ Category │ Resource name         │ Operation │ Provider plugin   │
+├──────────┼───────────────────────┼───────────┼───────────────────┤
+│ Api      │ your-api-name         │ No Change │ awscloudformation │
+└──────────┴───────────────────────┴───────────┴───────────────────┘
+```
+
+</Accordion>
+<Accordion title="AWSコンソールでデプロイされたAPIを確認する">
+
+AppSyncコンソールでGraphQL APIを任意の時点で表示するには、以下のコマンドを実行します：
+
+```bash
+amplify console api
+```
+
+Amplifyコンソールでアプリ全体を任意の時点で表示するには、以下のコマンドを実行します：
+
+```bash
+amplify console
+```
+
+</Accordion>
+
+<Accordion title="ローカルモッキングでAPIをテストする">
+
+これをローカルでテストするには、`mock`コマンドを実行できます。注：[モッキングをセットアップするための指示](/gen1/[platform]/tools/cli/usage/mock/)を参照してください。
+
+> フロントエンドを接続して先に進みたい場合は、[次のステップにスキップ](#connect-frontend-to-api)できます。
+
+```bash
+amplify mock api
+```
+
+_注：_ `amplify mock api`にはJavaが必要です。
+
+```console
+# If you have not already deployed your API, you will be walked through the following steps for GraphQL code generation
+? Choose the code generation language target: javascript (or preferred target)
+? Enter the file name pattern of graphql queries, mutations and subscriptions: src/graphql/**/*.js
+? Do you want to generate/update all possible GraphQL operations - queries, mutations and subscriptions: Yes
+? Enter maximum statement depth [increase from default if your schema is deeply nested] 2
+```
+
+これにより、ローカルポートでGraphiQLエクスプローラーが開きます。テスト環境から、クエリやミューテーションなど、さまざまな操作をローカルで試すことができます。
+
+GraphiQLツールバーで、**Use: User Pool**を選択し、Todoを作成してみてください：
+
+```graphql
+mutation CreateTodo {
+  createTodo(input: { name: "Test Todo", description: "Todo description" }) {
+    id
+    owner
+    name
+    updatedAt
+    createdAt
+    description
+  }
+}
+```
+
+次に、認証を**Use: API Key**に更新し、Todoのリストをクエリしてみてください：
+
+```graphql
+query ListTodos {
+  listTodos {
+    items {
+      description
+      createdAt
+      id
+      owner
+      name
+    }
+  }
+}
+```
+
+</Accordion>
+
+<InlineFilter filters={["javascript", "angular", "vue", "react", "react-native"]}>
+
+## フロントエンドをAPIに接続する
+
+<InlineFilter filters={['javascript']}>
+
+`main.js`ファイルを更新して、`client.graphql()`を使用してミューテーションでデータベースにデータを追加するようにアプリをセットアップします：
+
+```javascript
+import './style.css';
+import { Amplify } from 'aws-amplify';
+import amplifyconfig from './src/amplifyconfiguration.json';
+
+import { generateClient } from 'aws-amplify/api';
+import { createTodo } from './src/graphql/mutations';
+import { listTodos } from './src/graphql/queries';
+import { onCreateTodo } from './src/graphql/subscriptions';
+
+Amplify.configure(amplifyconfig);
+
+const client = generateClient();
+
+const MutationButton = document.getElementById('MutationEventButton');
+const MutationResult = document.getElementById('MutationResult');
+const QueryResult = document.getElementById('QueryResult');
+const SubscriptionResult = document.getElementById('SubscriptionResult');
+
+async function addTodo() {
+  const todo = {
+    name: 'Use AppSync',
+    description: `Realtime and Offline (${new Date().toLocaleString()})`
+  };
+
+  return await client.graphql({
+    query: createTodo,
+    variables: {
+      input: todo
+    }
+  });
+}
+
+async function fetchTodos() {
+  try {
+    const response = await client.graphql({
+      query: listTodos
+    });
+
+    response.data.listTodos.items.map((todo, i) => {
+      QueryResult.innerHTML += `<p>${todo.name} - ${todo.description}</p>`;
+    });
+  } catch (e) {
+    console.log('Something went wrong', e);
+  }
+}
+
+MutationButton.addEventListener('click', (evt) => {
+  addTodo().then((evt) => {
+    MutationResult.innerHTML += `<p>${evt.data.createTodo.name} - ${evt.data.createTodo.description}</p>`;
+  });
+});
+
+function subscribeToNewTodos() {
+  client.graphql({ query: onCreateTodo }).subscribe({
+    next: (evt) => {
+      const todo = evt.data.onCreateTodo;
+      SubscriptionResult.innerHTML += `<p>${todo.name} - ${todo.description}</p>`;
+    }
+  });
+}
+
+subscribeToNewTodos();
+fetchTodos();
+```
+
+いくつかの関数を説明しましょう：
+
+**fetchTodos** - `generateClient()`で作成されたAmplify API `client`を使用してAppSync GraphQL APIを`listTodos`クエリで呼び出します。データが返されたら、itemsアレイが`setTodos`関数に渡されてローカル状態を更新します。
+
+**addTodo** - `generateClient()`で作成されたAmplify API `client`を使用してAppSync GraphQL APIを`createTodo`ミューテーションで呼び出します。`listTodos`クエリと`createTodo`ミューテーションの違いは、`createTodo`がミューテーションに必要な変数を含む引数を受け入れることです。
+
+**subscribeToNewTodos** - `generateClient()`で作成されたAmplify API `client`を使用して新しく作成されたTodoをサブスクライブし、ユーザーに表示します。
+
+</InlineFilter>
+
+<InlineFilter filters={['react']}>
+
+このセクションでは、React アプリケーションからTodoを一覧表示および作成する方法を作成します。これを行うには、Todoを作成するボタン付きのフォームを作成し、Todoのリストをフェッチしてレンダリングする方法も作成します。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+**src/App.tsx**を開き、次のコードで置き換えます：
+
+```typescript
+import { useEffect, useState } from 'react';
+
+import { generateClient } from 'aws-amplify/api';
+
+import { createTodo } from './graphql/mutations';
+import { listTodos } from './graphql/queries';
+import { type CreateTodoInput, type Todo } from './API';
+
+const initialState: CreateTodoInput = { name: '', description: '' };
+const client = generateClient();
+
+const App = () => {
+  const [formState, setFormState] = useState<CreateTodoInput>(initialState);
+  const [todos, setTodos] = useState<Todo[] | CreateTodoInput[]>([]);
+
+  useEffect(() => {
+    fetchTodos();
+  }, []);
+
+  async function fetchTodos() {
+    try {
+      const todoData = await client.graphql({
+        query: listTodos,
+      });
+      const todos = todoData.data.listTodos.items;
+      setTodos(todos);
+    } catch (err) {
+      console.log('error fetching todos');
+    }
+  }
+
+  async function addTodo() {
+    try {
+      if (!formState.name || !formState.description) return;
+      const todo = { ...formState };
+      setTodos([...todos, todo]);
+      setFormState(initialState);
+      await client.graphql({
+        query: createTodo,
+        variables: {
+          input: todo,
+        },
+      });
+    } catch (err) {
+      console.log('error creating todo:', err);
+    }
+  }
+
+  return (
+    <div style={styles.container}>
+      <h2>Amplify Todos</h2>
+      <input
+        onChange={(event) =>
+          setFormState({ ...formState, name: event.target.value })
+        }
+        style={styles.input}
+        value={formState.name}
+        placeholder="Name"
+      />
+      <input
+        onChange={(event) =>
+          setFormState({ ...formState, description: event.target.value })
+        }
+        style={styles.input}
+        value={formState.description as string}
+        placeholder="Description"
+      />
+      <button style={styles.button} onClick={addTodo}>
+        Create Todo
+      </button>
+      {todos.map((todo, index) => (
+        <div key={todo.id ? todo.id : index} style={styles.todo}>
+          <p style={styles.todoName}>{todo.name}</p>
+          <p style={styles.todoDescription}>{todo.description}</p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const styles = {
+  container: {
+    width: 400,
+    margin: "0 auto",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    padding: 20,
+  },
+  todo: { marginBottom: 15 },
+  input: {
+    border: "none",
+    backgroundColor: "#ddd",
+    marginBottom: 10,
+    padding: 8,
+    fontSize: 18,
+  },
+  todoName: { fontSize: 20, fontWeight: "bold" },
+  todoDescription: { marginBottom: 0 },
+  button: {
+    backgroundColor: "black",
+    color: "white",
+    outline: "none",
+    fontSize: 18,
+    padding: "12px 0px",
+  },
+} as const;
+
+export default App;
+
+```
+
+</Block>
+<Block name="JavaScript">
+
+**src/App.jsx**を開き、次のコードで置き換えます：
+
+```javascript
+import { useEffect, useState } from 'react';
+
+import { generateClient } from 'aws-amplify/api';
+
+import { createTodo } from './graphql/mutations';
+import { listTodos } from './graphql/queries';
+
+const initialState = { name: '', description: '' };
+const client = generateClient();
+
+const App = () => {
+  const [formState, setFormState] = useState(initialState);
+  const [todos, setTodos] = useState([]);
+
+  useEffect(() => {
+    fetchTodos();
+  }, []);
+
+  function setInput(key, value) {
+    setFormState({ ...formState, [key]: value });
+  }
+
+  async function fetchTodos() {
+    try {
+      const todoData = await client.graphql({
+        query: listTodos
+      });
+      const todos = todoData.data.listTodos.items;
+      setTodos(todos);
+    } catch (err) {
+      console.log('error fetching todos');
+    }
+  }
+
+  async function addTodo() {
+    try {
+      if (!formState.name || !formState.description) return;
+      const todo = { ...formState };
+      setTodos([...todos, todo]);
+      setFormState(initialState);
+      await client.graphql({
+        query: createTodo,
+        variables: {
+          input: todo
+        }
+      });
+    } catch (err) {
+      console.log('error creating todo:', err);
+    }
+  }
+
+  return (
+    <div style={styles.container}>
+      <h2>Amplify Todos</h2>
+      <input
+        onChange={(event) => setInput('name', event.target.value)}
+        style={styles.input}
+        value={formState.name}
+        placeholder="Name"
+      />
+      <input
+        onChange={(event) => setInput('description', event.target.value)}
+        style={styles.input}
+        value={formState.description}
+        placeholder="Description"
+      />
+      <button style={styles.button} onClick={addTodo}>
+        Create Todo
+      </button>
+      {todos.map((todo, index) => (
+        <div key={todo.id ? todo.id : index} style={styles.todo}>
+          <p style={styles.todoName}>{todo.name}</p>
+          <p style={styles.todoDescription}>{todo.description}</p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const styles = {
+  container: {
+    width: 400,
+    margin: '0 auto',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    padding: 20
+  },
+  todo: { marginBottom: 15 },
+  input: {
+    border: 'none',
+    backgroundColor: '#ddd',
+    marginBottom: 10,
+    padding: 8,
+    fontSize: 18
+  },
+  todoName: { fontSize: 20, fontWeight: 'bold' },
+  todoDescription: { marginBottom: 0 },
+  button: {
+    backgroundColor: 'black',
+    color: 'white',
+    outline: 'none',
+    fontSize: 18,
+    padding: '12px 0px'
+  }
+};
+
+export default App;
+```
+
+</Block>
+</BlockSwitcher>
+
+**useEffect** - コンポーネントがレンダリングされた後、`useEffect`フックが呼び出され、`fetchTodos`関数が起動されます。
+
+**fetchTodos** - `generateClient()`で作成されたAmplify API `client`を使用してAppSync GraphQL APIを`listTodos`クエリで呼び出します。データが返されたら、itemsアレイが`setTodos`関数に渡されてローカル状態を更新します。
+
+**addTodo** - `generateClient()`で作成されたAmplify API `client`を使用してAppSync GraphQL APIを`createTodo`ミューテーションで呼び出します。`listTodos`クエリと`createTodo`ミューテーションの違いは、`createTodo`がミューテーションに必要な変数を含む引数を受け入れることです。
+
+</InlineFilter>
+
+<InlineFilter filters={['angular']}>
+
+まず、`todos` Angular コンポーネントを作成します：
+
+```bash
+npx ng generate component --standalone todos
+```
+
+`src/app/app.component.ts`で、`TodosComponent`をインポートして Component imports に追加するように更新します：
+
+```ts
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterOutlet } from '@angular/router';
+import { TodosComponent } from './todos/todos.component';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [CommonModule, RouterOutlet, TodosComponent],
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  title = 'amplify-app';
+}
+```
+
+`src/app/app.component.html`を開き、デフォルトのコンテンツを作成した Angular コンポーネントで置き換えます：
+
+```html
+<app-todos></app-todos>
+```
+
+`src/app/todos/todos.component.ts`ファイルで、`amplify add api`を実行したときに生成された`API.ts`ファイルを使用してミューテーションでデータベースにデータを追加します。さらに、必要なフォームヘルパーをインポートし、`ReactiveFormsModule`を Component imports に追加してください：
+
+```typescript
+import { Component } from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
+import { generateClient, type Client } from 'aws-amplify/api';
+import { Todo, ListTodosQuery } from '../../API';
+import * as mutations from '../../graphql/mutations';
+
+@Component({
+  standalone: true,
+  imports: [ReactiveFormsModule],
+  selector: 'app-todos',
+  templateUrl: './todos.component.html',
+  styleUrls: ['./todos.component.css']
+})
+export class TodosComponent {
+  public createForm: FormGroup;
+  public client: Client;
+
+  constructor(private fb: FormBuilder) {
+    this.createForm = this.fb.group({
+      name: ['', Validators.required],
+      description: ['', Validators.required]
+    });
+
+    this.client = generateClient();
+  }
+
+  public async onCreate(todo: Todo) {
+    try {
+      const response = await this.client.graphql({
+        query: mutations.createTodo,
+        variables: {
+          input: todo
+        }
+      });
+      console.log('item created!', response);
+      this.createForm.reset();
+    } catch (e) {
+      console.log('error creating todo...', e);
+    }
+  }
+}
+```
+
+次に、Todoを作成するために使用するフォームを追加します。`src/app/todos/todos.component.html`に以下を追加します：
+
+```html
+<div class="form-body">
+  <form
+    autocomplete="off"
+    [formGroup]="createForm"
+    (ngSubmit)="onCreate(createForm.value)"
+  >
+    <div>
+      <label>Name: </label>
+      <input type="text" formControlName="name" autocomplete="off" />
+    </div>
+    <div>
+      <label>Description: </label>
+      <input type="text" formControlName="description" autocomplete="off" />
+    </div>
+    <button type="submit">Submit</button>
+  </form>
+</div>
+```
+
+次に、`TodosComponent`クラスを更新して、アプリが起動したときにデータベース内のすべてのTodoを一覧表示します。これを行うには、[OnInit](https://angular.io/api/core/OnInit)を実装し、`src/app/todos/todos.component.ts`に`ListTodos`クエリを追加します。クエリ結果をアレイに保存します。
+
+```typescript
+import { Component, OnInit } from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
+
+import { generateClient, type Client } from 'aws-amplify/api';
+import { ListTodosQuery, Todo } from '../../API';
+import * as mutations from '../../graphql/mutations';
+import * as queries from '../../graphql/queries';
+
+@Component({
+  standalone: true,
+  selector: 'app-todos',
+  imports: [ReactiveFormsModule],
+  templateUrl: './todos.component.html',
+  styleUrls: ['./todos.component.css']
+})
+export class TodosComponent implements OnInit {
+  public createForm: FormGroup;
+  public client: Client;
+
+  /* declare todos variable */
+  public todos: ListTodosQuery['listTodos'];
+
+  constructor(private fb: FormBuilder) {
+    this.createForm = this.fb.group({
+      name: ['', Validators.required],
+      description: ['', Validators.required]
+    });
+
+    this.client = generateClient();
+  }
+
+  async ngOnInit() {
+    /* fetch todos when app loads */
+    try {
+      const response = await this.client.graphql({
+        query: queries.listTodos
+      });
+      this.todos = response.data.listTodos;
+    } catch (e) {
+      console.log('error fetching todos', e);
+    }
+  }
+
+  public async onCreate(todo: Todo) {
+    try {
+      const response = await this.client.graphql({
+        query: mutations.createTodo,
+        variables: {
+          input: todo
+        }
+      });
+      console.log('item created!', response);
+      this.createForm.reset();
+    } catch (e) {
+      console.log('error creating todo...', e);
+    }
+  }
+}
+```
+
+`src/app/todos/todos.component.html`に以下を追加して、追加したTodoを表示します：
+
+```html
+<div>
+  @for (todo of todos?.items; track todo?.id) {
+  <div>{{ todo?.name }}</div>
+  <div>{{ todo?.description }}</div>
+  } @empty {
+  <div>There are no items.</div>
+  }
+</div>
+```
+
+リアルタイムデータをサブスクライブするには、サブスクリプションクラス変数を宣言し、`src/app/todos.component.ts`で`ngOnInit`を更新します。アプリが起動すると、このコードはサブスクリプションをセットアップします。サブスクリプションは新しいイベント（新しいTodoが作成されたとき）を受け取ったときに`todos`アレイを更新します：
+
+```typescript
+...
+
+import * as subscriptions from '../../graphql/subscriptions'
+
+export class TodosComponent implements OnInit {
+
+  private subscription: any = null;
+
+  ...
+
+  async ngOnInit() {
+
+    ...
+
+    try {
+      const res = await this.client.graphql({
+        query: queries.listTodos
+      })
+      console.log(res)
+
+      this.todos = res.data.listTodos.items;
+    } catch(e) {
+      console.log(e)
+    };
+
+    /* subscribe to new todos being created */
+    this.subscription = this.client.graphql({
+      query: subscriptions.onCreateTodo
+    }).subscribe({
+      next: (event: any) => {
+        const newTodo = event.data.onCreateTodo;
+        if(this.todos) {
+          this.todos.items = [newTodo, ...this.todos.items];
+        }
+      }
+    });
+  }
+}
+```
+
+最後に、コンポーネントが破棄されるときサブスクリプションを解除します。`src/app/todos.component.ts`で`OnDestroy`をインポートして追加します：
+
+```typescript
+import { Component, OnDestroy, OnInit } from '@angular/core';
+
+...
+
+export class TodosComponent implements OnInit, OnDestroy {
+
+  ...
+
+  ngOnDestroy() {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+    this.subscription = null;
+  }
+}
+```
+
+最終的な`todos.component.ts`ファイルは以下のようになります：
+
+```typescript
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
+
+import { generateClient, type Client } from 'aws-amplify/api';
+import { Todo, ListTodosQuery } from '../../API';
+import * as mutations from '../../graphql/mutations';
+import * as queries from '../../graphql/queries';
+import * as subscriptions from '../../graphql/subscriptions';
+
+@Component({
+  standalone: true,
+  selector: 'app-todos',
+  imports: [ReactiveFormsModule],
+  templateUrl: './todos.component.html',
+  styleUrls: ['./todos.component.css']
+})
+export class TodosComponent implements OnInit, OnDestroy {
+  public todos: ListTodosQuery['listTodos'];
+  public createForm: FormGroup;
+  public client: Client;
+
+  private subscription: any = null;
+
+  constructor(private fb: FormBuilder) {
+    this.createForm = this.fb.group({
+      name: ['', Validators.required],
+      description: ['', Validators.required]
+    });
+
+    this.client = generateClient();
+  }
+
+  async ngOnInit() {
+    /* fetch todos when app loads */
+    try {
+      const response = await this.client.graphql({
+        query: queries.listTodos
+      });
+      this.todos = response.data.listTodos;
+    } catch (e) {
+      console.log('error fetching todos', e);
+    }
+
+    this.subscription = this.client
+      .graphql({
+        query: subscriptions.onCreateTodo
+      })
+      .subscribe({
+        next: (event: any) => {
+          const newTodo: Todo = event.data.onCreateTodo;
+          if (this.todos) {
+            this.todos.items = [newTodo, ...this.todos.items];
+          }
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+    this.subscription = null;
+  }
+
+  public async onCreate(todo: Todo) {
+    try {
+      const response = await this.client.graphql({
+        query: mutations.createTodo,
+        variables: {
+          input: todo
+        }
+      });
+      console.log('item created!', response);
+      this.createForm.reset();
+    } catch (e) {
+      console.log('error creating todo...', e);
+    }
+  }
+}
+```
+
+</InlineFilter>
+
+<InlineFilter filters={['react-native']}>
+
+このセクションでは、React アプリケーションからTodoを一覧表示および作成する方法を作成します。これを行うには、Todoを作成するボタン付きのフォームを作成し、Todoのリストをフェッチしてレンダリングする方法も作成します。
+
+<BlockSwitcher>
+<Block name="Expo CLI">
+
+**App.js**を開き、次のコードで置き換えます：
+
+```javascript
+import React, { useEffect, useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  Pressable,
+  SafeAreaView
+} from 'react-native';
+import { generateClient } from 'aws-amplify/api';
+import { createTodo } from './src/graphql/mutations';
+import { listTodos } from './src/graphql/queries';
+
+import { Amplify } from 'aws-amplify';
+import amplifyconfig from './src/amplifyconfiguration.json';
+Amplify.configure(amplifyconfig);
+
+const initialState = { name: '', description: '' };
+const client = generateClient();
+
+const App = () => {
+  const [formState, setFormState] = useState(initialState);
+  const [todos, setTodos] = useState([]);
+
+  useEffect(() => {
+    fetchTodos();
+  }, []);
+
+  function setInput(key, value) {
+    setFormState({ ...formState, [key]: value });
+  }
+
+  async function fetchTodos() {
+    try {
+      const todoData = await client.graphql({
+        query: listTodos
+      });
+      const todos = todoData.data.listTodos.items;
+      setTodos(todos);
+    } catch (err) {
+      console.log('error fetching todos');
+    }
+  }
+
+  async function addTodo() {
+    try {
+      if (!formState.name || !formState.description) return;
+      const todo = { ...formState };
+      setTodos([...todos, todo]);
+      setFormState(initialState);
+      await client.graphql({
+        query: createTodo,
+        variables: {
+          input: todo
+        }
+      });
+    } catch (err) {
+      console.log('error creating todo:', err);
+    }
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
+        <TextInput
+          onChangeText={(value) => setInput('name', value)}
+          style={styles.input}
+          value={formState.name}
+          placeholder="Name"
+        />
+        <TextInput
+          onChangeText={(value) => setInput('description', value)}
+          style={styles.input}
+          value={formState.description}
+          placeholder="Description"
+        />
+        <Pressable onPress={addTodo} style={styles.buttonContainer}>
+          <Text style={styles.buttonText}>Create todo</Text>
+        </Pressable>
+        {todos.map((todo, index) => (
+          <View key={todo.id ? todo.id : index} style={styles.todo}>
+            <Text style={styles.todoName}>{todo.name}</Text>
+            <Text style={styles.todoDescription}>{todo.description}</Text>
+          </View>
+        ))}
+      </View>
+    </SafeAreaView>
+  );
+};
+
+export default App;
+
+const styles = StyleSheet.create({
+  container: { width: 400, flex: 1, padding: 20, alignSelf: 'center' },
+  todo: { marginBottom: 15 },
+  input: {
+    backgroundColor: '#ddd',
+    marginBottom: 10,
+    padding: 8,
+    fontSize: 18
+  },
+  todoName: { fontSize: 20, fontWeight: 'bold' },
+  buttonContainer: {
+    alignSelf: 'center',
+    backgroundColor: 'black',
+    paddingHorizontal: 8
+  },
+  buttonText: { color: 'white', padding: 16, fontSize: 18 }
+});
+```
+
+</Block>
+<Block name="React Native CLI">
+
+**App.tsx**を開き、次のコードで置き換えます：
+
+```javascript
+import React, { useEffect, useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  Pressable,
+  SafeAreaView
+} from 'react-native';
+import { generateClient } from 'aws-amplify/api';
+import { createTodo } from './src/graphql/mutations';
+import { listTodos } from './src/graphql/queries';
+
+const initialState = { name: '', description: '' };
+const client = generateClient();
+
+const App = () => {
+  const [formState, setFormState] = useState(initialState);
+  const [todos, setTodos] = useState([]);
+
+  useEffect(() => {
+    fetchTodos();
+  }, []);
+
+  function setInput(key, value) {
+    setFormState({ ...formState, [key]: value });
+  }
+
+  async function fetchTodos() {
+    try {
+      const todoData = await client.graphql({
+        query: listTodos
+      });
+      const todos = todoData.data.listTodos.items;
+      setTodos(todos);
+    } catch (err) {
+      console.log('error fetching todos');
+    }
+  }
+
+  async function addTodo() {
+    try {
+      if (!formState.name || !formState.description) return;
+      const todo = { ...formState };
+      setTodos([...todos, todo]);
+      setFormState(initialState);
+      await client.graphql({
+        query: createTodo,
+        variables: {
+          input: todo
+        }
+      });
+    } catch (err) {
+      console.log('error creating todo:', err);
+    }
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
+        <TextInput
+          onChangeText={(value) => setInput('name', value)}
+          style={styles.input}
+          value={formState.name}
+          placeholder="Name"
+        />
+        <TextInput
+          onChangeText={(value) => setInput('description', value)}
+          style={styles.input}
+          value={formState.description}
+          placeholder="Description"
+        />
+        <Pressable onPress={addTodo} style={styles.buttonContainer}>
+          <Text style={styles.buttonText}>Create todo</Text>
+        </Pressable>
+        {todos.map((todo, index) => (
+          <View key={todo.id ? todo.id : index} style={styles.todo}>
+            <Text style={styles.todoName}>{todo.name}</Text>
+            <Text style={styles.todoDescription}>{todo.description}</Text>
+          </View>
+        ))}
+      </View>
+    </SafeAreaView>
+  );
+};
+
+export default App;
+
+const styles = StyleSheet.create({
+  container: { width: 400, flex: 1, padding: 20, alignSelf: 'center' },
+  todo: { marginBottom: 15 },
+  input: {
+    backgroundColor: '#ddd',
+    marginBottom: 10,
+    padding: 8,
+    fontSize: 18
+  },
+  todoName: { fontSize: 20, fontWeight: 'bold' },
+  buttonContainer: {
+    alignSelf: 'center',
+    backgroundColor: 'black',
+    paddingHorizontal: 8
+  },
+  buttonText: { color: 'white', padding: 16, fontSize: 18 }
+});
+```
+
+</Block>
+</BlockSwitcher>
+
+いくつかの関数を説明しましょう：
+
+**useEffect** - コンポーネントがレンダリングされた後、`useEffect`フックが呼び出され、`fetchTodos`関数が起動されます。
+
+**fetchTodos** - `generateClient()`で作成されたAmplify API `client`を使用してAppSync GraphQL APIを`listTodos`クエリで呼び出します。データが返されたら、itemsアレイが`setTodos`関数に渡されてローカル状態を更新します。
+
+**addTodo** - `generateClient()`で作成されたAmplify API `client`を使用してAppSync GraphQL APIを`createTodo`ミューテーションで呼び出します。`listTodos`クエリと`createTodo`ミューテーションの違いは、`createTodo`がミューテーションに必要な変数を含む引数を受け入れることです。
+
+</InlineFilter>
+
+<InlineFilter filters={['vue']}>
+
+次に、**App.vue**を開きます。
+
+### GraphQL ミューテーションでデータを書き込む
+
+データベースに新しいTodoを作成するには、`generateClient()`操作を使用して`client`を作成し、`client.graphql()`に`createTodo`ミューテーションと書き込みたいデータを渡します。
+
+```html
+<script setup>
+  import * as mutations from './graphql/mutations';
+  import { generateClient } from 'aws-amplify/api';
+  import { onMounted, ref } from 'vue';
+
+  const name = ref('');
+  const description = ref('');
+
+  const client = generateClient();
+
+  async function addTodo() {
+    if (!name.value || !description.value) return;
+    const todo = { name: name.value, description: description.value };
+    await client.graphql({
+      query: mutations.createTodo,
+      variables: { input: todo }
+    });
+    name.value = '';
+    description.value = '';
+  }
+</script>
+<template>
+  <div id="app">
+    <h1>Todo App</h1>
+    <input type="text" v-model="name" placeholder="Todo name" />
+    <input type="text" v-model="description" placeholder="Todo description" />
+    <button v-on:click="addTodo">Create Todo</button>
+  </div>
+</template>
+```
+
+### GraphQL クエリでデータを読み取る
+
+データを表示するには、`App.vue`を更新して`queries`をインポートし、`onMounted()` Vue ライフサイクルフックを使用して、ページロード時にクエリが実行されたときにページを更新します：
+
+```html
+<script setup>
+  import * as mutations from './graphql/mutations';
+  import * as queries from './graphql/queries';
+  import { generateClient } from 'aws-amplify/api';
+  import { onMounted, ref } from 'vue';
+
+  const name = ref('');
+  const description = ref('');
+  const todos = ref([]);
+
+  const client = generateClient();
+
+  async function addTodo() {
+    if (!name.value || !description.value) return;
+    const todo = { name: name.value, description: description.value };
+    await client.graphql({
+      query: mutations.createTodo,
+      variables: { input: todo }
+    });
+    name.value = '';
+    description.value = '';
+  }
+
+  async function fetchTodos() {
+    const fetchedTodos = await client.graphql({
+      query: queries.listTodos
+    });
+
+    todos.value = fetchedTodos.data.listTodos.items;
+  }
+
+  onMounted(() => {
+    fetchTodos();
+  });
+</script>
+<template>
+  <div id="app">
+    <h1>Todo App</h1>
+    <input type="text" v-model="name" placeholder="Todo name" />
+    <input type="text" v-model="description" placeholder="Todo description" />
+    <button v-on:click="addTodo">Create Todo</button>
+
+    <div v-for="item in todos" :key="item.id">
+      <h3>{{ item.name }}</h3>
+      <p>{{ item.description }}</p>
+    </div>
+  </div>
+</template>
+```
+
+### GraphQL サブスクリプションでリアルタイムデータを取得する
+
+データをサブスクライブしたい場合は、`onCreateTodo`サブスクリプションをインポートし、`client.graphql()`に`onCreateTodo`サブスクリプションを渡して新しいサブスクリプションを作成します：
+
+```html
+<script setup>
+  import * as mutations from './graphql/mutations';
+  import * as queries from './graphql/queries';
+  import * as subscriptions from './graphql/subscriptions';
+  import { generateClient } from 'aws-amplify/api';
+  import { onMounted, ref } from 'vue';
+
+  const name = ref('');
+  const description = ref('');
+  const todos = ref([]);
+
+  const client = generateClient();
+
+  async function addTodo() {
+    if (!name.value || !description.value) return;
+    const todo = { name: name.value, description: description.value };
+    await client.graphql({
+      query: mutations.createTodo,
+      variables: { input: todo }
+    });
+    name.value = '';
+    description.value = '';
+  }
+
+  async function fetchTodos() {
+    const fetchedTodos = await client.graphql({
+      query: queries.listTodos
+    });
+
+    todos.value = fetchedTodos.data.listTodos.items;
+  }
+
+  function subscribeToNewTodos() {
+    client
+      .graphql({
+        query: subscriptions.onCreateTodo
+      })
+      .subscribe({
+        next: ({ data }) => {
+          todos.value = [...todos.value, data.onCreateTodo];
+        }
+      });
+  }
+
+  onMounted(() => {
+    fetchTodos();
+    subscribeToNewTodos();
+  });
+</script>
+<template>
+  <div id="app">
+    <h1>Todo App</h1>
+    <input type="text" v-model="name" placeholder="Todo name" />
+    <input type="text" v-model="description" placeholder="Todo description" />
+    <button v-on:click="addTodo">Create Todo</button>
+
+    <div v-for="item in todos" :key="item.id">
+      <h3>{{ item.name }}</h3>
+      <p>{{ item.description }}</p>
+    </div>
+  </div>
+</template>
+```
+
+</InlineFilter>
+
+</InlineFilter>
+
+<InlineFilter filters={["nextjs"]}>
+## サーバーサイドレンダリング（SSR）付きAPI
+
+このセクションでは、Next.js アプリケーションからTodoを一覧表示および作成する方法を作成します。これを行うには、サーバーから最新のTodoをフェッチしてレンダリングし、新しいTodoを作成します。
+
+### Amplify GraphQL API クライアントを生成する
+
+サーバーサイドでGraphQL API リクエストを行うには、まず`@aws-amplify/adapter-nextjs/api`から`generateServerClientUsingCookies`をインポートし、プロジェクトの**amplifyconfiguration.json**を`config`として、`next/headers`から`cookies`を使用してcookiesClientを生成する必要があります。
+
+<Callout info>
+
+AmplifyはNext.js サーバーサイドランタイム用に2つのAPIクライアントを提供します。App RouterのReact Server ComponentsやServer Actionsなど、`next/headers`から`cookies`が利用可能なユースケースでは、`generateServerClientUsingCookies`を主に使用します。Pages RouterやMiddlewareなど、`NextRequest`/`NextResponse`が利用可能なユースケースでは、`generateServerClientUsingReqRes`を使用します。[サーバーサイドランタイムからデータに接続](/gen1/[platform]/build-a-backend/graphqlapi/connect-from-server-runtime/)を確認して、どのAPIクライアントをどのユースケースで使用するかを詳しく確認してください。
+
+</Callout>
+
+**src/app/page.tsx**を開き、次のコードで置き換えます：
+
+```tsx
+import { generateServerClientUsingCookies } from '@aws-amplify/adapter-nextjs/api';
+import { cookies } from 'next/headers';
+
+import config from '@/amplifyconfiguration.json';
+
+const cookiesClient = generateServerClientUsingCookies({
+  config,
+  cookies
+});
+
+export default async function Home() {
+  return (
+    <div
+      style={{
+        maxWidth: '500px',
+        margin: '0 auto',
+        textAlign: 'center',
+        marginTop: '100px'
+      }}
+    >
+      <form>
+        <input name="name" placeholder="Add a todo" />
+        <button type="submit">Add</button>
+      </form>
+    </div>
+  );
+}
+```
+
+### Todoを送信するためのフォームを作成する
+
+Next.jsでは、[Server Action](https://nextjs.org/docs/app/api-reference/functions/server-actions)を使用して、フォーム送信をサーバーサイドで処理できます。Server Actionを追加しましょう。これはデータを`createTodo`関数に送信します。呼び出されると、`createTodo`は`cookiesClient.graphql(...)`経由でGraphQL APIにGraphQL ミューテーションを送信し、次に`next/cache`から`revalidatePath`を呼び出して、ページキャッシュを無効化し、最新のTodoをフェッチします。
+
+**src/app/page.tsx**を次のコードで更新します：
+
+```tsx
+import { generateServerClientUsingCookies } from '@aws-amplify/adapter-nextjs/api';
+import { cookies } from 'next/headers';
+// 1. 次の2つのインポートを追加します
+import { revalidatePath } from 'next/cache';
+import * as mutations from '@/graphql/mutations';
+
+import config from '@/amplifyconfiguration.json';
+
+const cookiesClient = generateServerClientUsingCookies({
+  config,
+  cookies
+});
+
+// 2. 新しいServer Actionを作成します
+async function createTodo(formData: FormData) {
+  'use server';
+  const { data } = await cookiesClient.graphql({
+    query: mutations.createTodo,
+    variables: {
+      input: {
+        name: formData.get('name')?.toString() ?? ''
+      }
+    }
+  });
+
+  console.log('Created Todo: ', data?.createTodo);
+
+  revalidatePath('/');
+}
+
+export default async function Home() {
+  return (
+    <div
+      style={{
+        maxWidth: '500px',
+        margin: '0 auto',
+        textAlign: 'center',
+        marginTop: '100px'
+      }}
+    >
+      {/* 3. フォームのactionを新しい
+          create Todo Server Actionを使用するように更新します*/}
+      <form action={createTodo}>
+        <input name="name" placeholder="Add a todo" />
+        <button type="submit">Add</button>
+      </form>
+    </div>
+  );
+}
+```
+
+### Todoを一覧表示する
+
+`cookiesClient.graphql(...)`を使用してGraphQL クエリも実行します。`listTodos`クエリを渡し、返されたアイテムを`todos`に割り当ててから、それらを反復処理して`<ul>`タグに表示します。Todoがない場合は、「No todos, please add one」というメッセージを表示します。
+
+**src/app/page.tsx**を次のコードで更新します：
+
+```tsx
+import { generateServerClientUsingCookies } from '@aws-amplify/adapter-nextjs/api';
+import { cookies } from 'next/headers';
+import { revalidatePath } from 'next/cache';
+import * as mutations from '@/graphql/mutations';
+// 1. クエリをインポートとして追加します
+import * as queries from '@/graphql/queries';
+
+import config from '@/amplifyconfiguration.json';
+
+const cookiesClient = generateServerClientUsingCookies({
+  config,
+  cookies
+});
+
+async function createTodo(formData: FormData) {
+  'use server';
+  const { data } = await cookiesClient.graphql({
+    query: mutations.createTodo,
+    variables: {
+      input: {
+        name: formData.get('name')?.toString() ?? ''
+      }
+    }
+  });
+
+  console.log('Created Todo: ', data?.createTodo);
+
+  revalidatePath('/');
+}
+
+export default async function Home() {
+  // 2. 追加のTodoをフェッチします
+  const { data, errors } = await cookiesClient.graphql({
+    query: queries.listTodos
+  });
+
+  const todos = data.listTodos.items;
+
+  return (
+    <div
+      style={{
+        maxWidth: '500px',
+        margin: '0 auto',
+        textAlign: 'center',
+        marginTop: '100px'
+      }}
+    >
+      <form action={createTodo}>
+        <input name="name" placeholder="Add a todo" />
+        <button type="submit">Add</button>
+      </form>
+
+      {/* 3. エッジケース＆ゼロ状態＆エラー状態を処理します*/}
+      {(!todos || todos.length === 0 || errors) && (
+        <div>
+          <p>No todos, please add one.</p>
+        </div>
+      )}
+
+      {/* 4. Todoを表示します*/}
+      <ul>
+        {todos.map((todo) => {
+          return <li style={{ listStyle: 'none' }}>{todo.name}</li>;
+        })}
+      </ul>
+    </div>
+  );
+}
+```
+
+</InlineFilter>
+
+## ローカルで実行する
+
+次に、アプリを実行して、Todoを作成および表示する機能を備えた更新されたUIが表示されることを確認します：
+
+<InlineFilter filters={['react', 'javascript', 'vue', 'nextjs']}>
+
+```bash
+npm run dev
+```
+
+</InlineFilter>
+<InlineFilter filters={['angular']}>
+
+```bash
+npm start
+```
+
+</InlineFilter>
+<InlineFilter filters={['react-native']}>
+
+以下のコマンドでアプリを起動します：
+
+<BlockSwitcher>
+<Block name="Expo CLI">
+
+Android の場合：
+
+```sh
+npx expo run:android
+```
+
+iOS の場合：
+
+```sh
+npx expo run:ios
+```
+
+</Block>
+<Block name="React Native CLI">
+
+```bash
+npm start
+```
+
+</Block>
+</BlockSwitcher>
+</InlineFilter>
+
+</InlineFilter>
+
+APIを正常にデプロイし、アプリに接続しました。

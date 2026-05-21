@@ -1,0 +1,60 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: '認可',
+  description: 'Amplify Studioを使用するアプリの認可の開始',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+認可とは、ユーザーがアクセスできる内容を検証するプロセスです。Amplify Studioでは、データの作成、読み取り、更新、または削除操作に対する個別のユーザーまたはグループアクセスを制限する認可ルールを指定できます。Amplify Studioはモデルレベルで、所有者ベース、パブリック、プライベート、およびグループベースの認可をサポートしています。認可ディレクティブがタイプに追加されると、そのタイプのすべてのフィールドがデフォルトでそのモードで利用可能になります。
+
+## 認可モードを設定するには
+
+アプリのデータモデルを作成する際に、**データモデリング**ページの右側にある**インスペクターパネル**を使用して認可ルールを設定できます。
+
+1. [Studioを起動](/gen1/[platform]/tools/console/adminui/start/#log-into-the-amplify-console)します
+2. **セットアップ**メニューで**データ**を選択します。
+3. **データモデリング**ページで、右上隅にある**認可モード**メニューを見つけます。
+4. **API Key**、**Cognito user pool**、または**IAM**のいずれかを選択します。
+
+書店アプリの[認可ルールを設定](/gen1/[platform]/tools/console/authz/permissions/)するか、下記のさまざまな認可モードについて詳しく学んでください。
+
+## 認可モード
+
+設定できる認可ルールのタイプは、指定する認可モードによって異なります。API_KEY、Cognito User pools、およびIAMの3つの認可モードが利用可能です。
+
+### API Key
+
+API Keyはデータモデルを初めてデプロイする際のデフォルト認可モードです。API Keyは開発目的、または特定の認証要件（ゲストユーザーなど）なしにAPIへのパブリックアクセスを提供することが安全なユースケースに推奨されます。API開発を開始し、迅速に反復処理を行い、より複雑な認可方法について心配したくない場合は、API keyを使用することをお勧めします。長期に存続し広く配布されることが予想されるアプリケーションは、アプリケーションのすべてまたは一部が常にゲストアクセスをサポートするユースケースがない限り、API keyを使用しないでください。API keyはローテーションが必要になるまで30日間有効です。
+
+### Cognito user pool
+
+Amplify認証はAmazon Cognito User Poolsによって強化され、完全に管理されたユーザーディレクトリです。これはAmplifyの推奨される認可モードであり、モデルへのアクセスをより細かく制御できます。任意のサインインユーザー、グループ、および所有者へのアクセスをスコープします。Cognitoは、User PoolsからのJWTトークンを一時的なAWS認証情報と交換し、他のAWSサービスと対話することができるセキュアな方法を提供します。
+
+### IAM
+
+IAM認可モードでは、AWS署名バージョン4署名プロセスを使用してリクエストに署名します。IAMパブリック認可モードは、主にアプリケーションがデータへのゲスト（パブリック）アクセスを提供する必要がある場合に使用されます。ゲストアクセスはAmazon Cognito Identity Poolの認証されていない識別情報を使用してIAMで実現されます。IAMプライベート認可モードは、AWSの認証情報で安全に構成できるバックエンドシステム（Amazon EC2インスタンスやAWS Lambdaなど）と併用する場合に最適です。

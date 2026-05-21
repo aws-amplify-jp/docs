@@ -1,0 +1,100 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ユーザーの識別',
+  description: 'Amplify analytics プラグインを使用して、Pinpoint にユーザーに関する情報を送信します。',
+  platforms: [
+    'swift',
+    'android',
+    'flutter',
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import android_identify_user from '/src/fragments/lib/analytics/android/identifyuser.mdx';
+import flutter_identify_user from '/src/fragments/lib/analytics/flutter/identifyuser.mdx';
+import ios_identify_user from '/src/fragments/lib/analytics/ios/identifyuser.mdx';
+
+<Fragments
+  fragments={{
+    android: android_identify_user,
+    flutter: flutter_identify_user,
+    swift: ios_identify_user
+  }}
+/>
+
+<InlineFilter filters={['javascript',  'react-native', "angular", "nextjs", "react", "vue"]}>
+
+この API は、現在のユーザーに関する情報を Amazon Pinpoint に送信します。
+
+ユーザー名、メール、位置情報、デバイスなどの追加情報は、`UserProfile` を指定することで含めることができます。カスタム属性は `UserProfile.customProperties` を設定することで含めることもできます。
+
+ユーザーが [signIn](/gen1/[platform]/prev/build-a-backend/auth/enable-sign-up/) を通じてサインインした場合、以下に示すように現在のユーザーの ID を取得できます：
+
+```js
+import { identifyUser } from 'aws-amplify/analytics';
+import { getCurrentUser } from 'aws-amplify/auth';
+
+const location = {
+  latitude: 47.606209,
+  longitude: -122.332069,
+  postalCode: '98122',
+  city: 'Seattle',
+  region: 'WA',
+  country: 'USA'
+};
+
+const customProperties = {
+  plan: ['plan'],
+  phoneNumber: ['+11234567890'],
+  age: ['25']
+};
+
+const userProfile = {
+  location,
+  name: 'username',
+  email: 'name@example.com',
+  customProperties
+};
+
+async function sendUserData() {
+  const user = await getCurrentUser();
+
+  identifyUser({
+    userId: user.userId,
+    userProfile
+  });
+}
+```
+
+import js0 from '/src/fragments/lib/analytics/native_common/identify-use-cases.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>
+
+</InlineFilter>

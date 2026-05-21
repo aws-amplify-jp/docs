@@ -1,0 +1,59 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'IDごとのGraphQL サブスクリプションを作成する方法',
+  description:
+    'IDでリッスンするカスタムGraphQL サブスクリプションを作成する方法',
+  platforms: [
+    'swift',
+    'android',
+    'javascript',
+    'flutter',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      showBreadcrumbs: false,
+      meta
+    }
+  };
+}
+
+このガイドでは、特定のIDを引数として含むミューテーションによってのみ接続され、トリガーされるカスタムGraphQL サブスクリプションを作成する方法を学習します。
+
+Amplify GraphQL transformライブラリを使用する場合、`@model`ディレクティブによって作成されたGraphQLスキーマと操作を拡張する必要があることがよくあります。一般的な使用例は、GraphQL サブスクリプションに対してきめ細かい制御が必要な場合です。
+
+import ios0 from '/src/fragments/guides/api-graphql/ios/subscriptions-by-id.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import js1 from '/src/fragments/guides/api-graphql/js/subscriptions-by-id.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js1,
+    angular: js1,
+    nextjs: js1,
+    react: js1,
+    vue: js1
+  }}
+/>
+
+import android2 from '/src/fragments/guides/api-graphql/android/subscriptions-by-id.mdx';
+
+<Fragments fragments={{ android: android2 }} />
+
+import flutter3 from '/src/fragments/guides/api-graphql/flutter/subscriptions-by-id.mdx';
+
+<Fragments fragments={{ flutter: flutter3 }} />

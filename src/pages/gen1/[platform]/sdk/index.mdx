@@ -1,0 +1,31 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'AWS Mobile SDK - 概要',
+  description:
+    'AWS Mobile SDKは、Amazon Cognito、Amazon S3、AWS AppSyncなどのAWSサービスの簡略化されたAPIを提供することで、モバイルアプリを構築できます。',
+  disableTOC: 'true',
+  platforms: ['swift', 'android'],
+  hideChildrenOnBase: 'true'
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios0 from '/src/fragments/lib/ios-sdk.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import android1 from '/src/fragments/lib/android-sdk.mdx';
+
+<Fragments fragments={{ android: android1 }} />

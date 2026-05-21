@@ -1,0 +1,29 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'アプリのアンインストール',
+  description:
+    'ユーザーがアプリをアンインストールする際にデバイス上の永続的なデータを処理する方法について理解します。',
+  platforms: ['swift', 'android']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import android0 from '/src/fragments/lib/info/native_common/app-uninstall/common.mdx';
+
+<Fragments fragments={{ android: android0 }} />
+
+import ios0 from '/src/fragments/lib/info/native_common/app-uninstall/common.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />

@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"nextjs","meta":{"title":"アクションボタン (送信、キャンセル、クリア、リセット) をカスタマイズ","description":"Amplify Studio で生成されたフォームには、**送信**、**キャンセル**、**クリア** または **リセット** の 3 つのアクションボタンが付属しています。どのボタンが表示されるかは、フォームがレコードを作成するか更新するかによって異なります。","platforms":["javascript","react","nextjs"]}},"__N_SSG":true}

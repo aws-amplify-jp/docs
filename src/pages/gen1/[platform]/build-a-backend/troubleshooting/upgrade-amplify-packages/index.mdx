@@ -1,0 +1,98 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify パッケージのアップグレード',
+  description: 'Amplify パッケージのアップグレード',
+  platforms: [
+    'javascript',
+    'react-native',
+    'flutter',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import flutter_upgrading from '/src/fragments/lib/troubleshooting/flutter/upgrading.mdx';
+
+<Fragments fragments={{ flutter: flutter_upgrading }} />
+
+<InlineFilter filters={['javascript',  'react-native', "angular", "nextjs", "react", "vue"]}>
+
+Amplify パッケージをアップグレードする際、アップグレードの結果として `node_modules` フォルダツリーに Amplify パッケージの重複バージョンがないことを確認することが重要です。複数バージョンのパッケージがあると、コードでインポートされたモジュールが `Amplify.configure` を呼び出すときに Amplify で構成されていないバージョンを指す可能性があり、予期しない動作が発生する可能性があります。
+
+パッケージの重複バージョンを示唆する可能性のあるシナリオとしては、以下のようなコンソールメッセージが表示されることが考えられます：
+
+- `Amplify has not been configured correctly`
+- `Please make sure the Auth module is configured with a valid Cognito User Pool ID`
+- `User pool is not configured`
+
+この状況を防ぐために、[重複バージョンの確認](#check-for-duplicate-versions)を行い、重複バージョンが存在する場合は、[Amplify パッケージのアップグレード](#upgrade-amplify-packages)を行うことができます。
+
+## 重複バージョンの確認
+
+以下のコマンドは、`node_modules` フォルダに複数回現れる Amplify パッケージを表示します。出力が空の場合、Amplify パッケージの重複バージョンがないことを意味します。
+
+<BlockSwitcher>
+
+<Block name="Mac and Linux">
+
+```sh
+# Using YARN
+yarn list --pattern amplify | \
+  grep -o -e '@\?aws-amplify[^ ]*' | \
+  sort | uniq | \
+  sed -E 's/^(@?[^@]+).*$/\1/g' | \
+  uniq -d | sort
+```
+
+```sh
+# Using npm
+npm ls -all 2>/dev/null | \
+  grep -o -e '@\?aws-amplify[^ ]*' | \
+  sort | uniq | \
+  sed -E 's/^(@?[^@]+).*$/\1/g' | \
+  uniq -d | sort
+```
+
+</Block>
+
+<Block name="Windows (PowerShell)">
+
+```powershell
+# Using YARN
+yarn list --pattern amplify |
+  Select-String -Pattern  '(@?aws\-amplify[^@]*).*(?<!deduped)$' |
+  %{$_.Matches.Groups[1].value} | Group-Object |
+  Where-Object { $_.Count -gt 1 } | Select-Object -ExpandProperty Name |
+  Sort-Object
+```
+
+```powershell
+# Using npm
+npm ls -all 2>$null |
+  Select-String -Pattern  '(@?aws\-amplify[^@]*).*(?<!deduped)$' |
+  %{$_.Matches.Groups[1].value} | Group-Object |
+  Where-Object { $_.Count -gt 1 } | Select-Object -ExpandProperty Name |
+  Sort-Object
+```
+
+</Block>
+
+</BlockSwitcher>
+
+</InlineFilter>

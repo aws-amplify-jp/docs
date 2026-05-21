@@ -1,0 +1,302 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ファイルのアップロード',
+  description: "Amplifyのストレージカテゴリを使用してファイルをアップロードする方法について詳しく学びます",
+  platforms: [
+    'javascript',
+    'flutter',
+    'swift',
+    'android',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["android", "swift"]}>
+
+<Callout info>
+Amplify Storageの最新バージョンは、S3オブジェクトをパスとして指定することをサポートしています。  
+S3オブジェクトを指定するには、`key`の代わりに`path`を使用することをお勧めします。
+
+注：`key`パラメータは非推奨であり、次のメジャーバージョンで削除される可能性があります。
+</Callout>
+
+</InlineFilter>
+
+import android_upload from '/src/fragments/lib/storage/android/upload.mdx';
+import flutter_upload from '/src/fragments/lib/storage/flutter/upload.mdx';
+import ios_upload from '/src/fragments/lib/storage/ios/upload.mdx';
+
+<Fragments
+  fragments={{
+    android: android_upload,
+    flutter: flutter_upload,
+    swift: ios_upload
+  }}
+/>
+
+<InlineFilter filters={['javascript', 'react-native', 'angular', 'nextjs', 'react', 'vue']}>
+
+## uploadData
+
+`uploadData`メソッドはファイルをAmazon S3にアップロードします。
+
+<BlockSwitcher>
+<Block name="パスを使用する（v6.2.0以上）">
+```javascript
+import { uploadData } from 'aws-amplify/storage';
+
+try {
+  const result = await uploadData({
+    path: 'public/album/2024/1.jpg', 
+    // また別の方法として: path: ({identityId}) => `protected/${identityId}/album/2024/1.jpg`
+    data: file,
+    options: {
+      onProgress // オプション：進捗コールバック。
+    }
+  }).result;
+  console.log('成功しました: ', result);
+} catch (error) {
+  console.log('エラー: ', error);
+}
+```
+</Block>
+<Block name="キーを使用する（非推奨）">
+
+```javascript
+import { uploadData } from 'aws-amplify/storage';
+
+try {
+  const result = await uploadData({
+    key: 'album/2024/1.jpg',
+    data: file,
+    options: {
+      accessLevel: 'guest', // デフォルトは`guest`ですが、'private' | 'protected' | 'guest'に設定できます
+      onProgress // オプション：進捗コールバック。
+    }
+  }).result;
+  console.log('成功しました: ', result);
+} catch (error) {
+  console.log('エラー: ', error);
+}
+```
+</Block>
+</BlockSwitcher>
+
+### アップロードの進捗を監視する
+
+アップロードの進捗を追跡するには、`onProgress`オプションを使用できます：
+
+<BlockSwitcher>
+<Block name="パスを使用する（v6.2.0以上）">
+```javascript
+import { uploadData } from 'aws-amplify/storage';
+
+try {
+  const result = uploadData({
+    path: 'public/album/2024/1.jpg', 
+    // また別の方法として: path: ({identityId}) => `protected/${identityId}/album/2024/1.jpg`
+    data: file,
+    options: {
+      onProgress: ({ transferredBytes, totalBytes }) => {
+        if (totalBytes) {
+          console.log(
+            `アップロード進捗 ${
+              Math.round((transferredBytes / totalBytes) * 100)
+            } %`
+          );
+        }
+      }
+    }
+  }).result;
+  console.log('レスポンスからのパス: ', result.path);
+} catch (error) {
+  console.log('エラー: ', error);
+}
+```
+</Block>
+
+<Block name="キーを使用する（非推奨）">
+```javascript
+import { uploadData } from 'aws-amplify/storage';
+
+try {
+  const result = uploadData({
+    key: 'album/2024/1.jpg',
+    data: file,
+    options: {
+      onProgress: ({ transferredBytes, totalBytes }) => {
+        if (totalBytes) {
+          console.log(
+            `アップロード進捗 ${
+              Math.round((transferredBytes / totalBytes) * 100)
+            } %`
+          );
+        }
+      }
+    }
+  }).result;
+  console.log('レスポンスからのキー: ', result.key);
+} catch (error) {
+  console.log('エラー: ', error);
+}
+```
+</Block>
+</BlockSwitcher>
+
+## アップロードの一時停止と再開
+
+`uploadData`リクエストの再開、一時停止、キャンセルをサポートするコールバック関数があります。
+
+<BlockSwitcher>
+<Block name="パスを使用する（v6.2.0以上）">
+```javascript
+import { uploadData } from 'aws-amplify/storage';
+
+// タスクの一時停止と再開
+const uploadTask = uploadData({ path, data: file });
+//...
+uploadTask.pause();
+//...
+uploadTask.resume();
+//...
+await uploadTask.result;
+```
+
+</Block>
+<Block name="キーを使用する（非推奨）">
+```javascript
+import { uploadData } from 'aws-amplify/storage';
+
+// タスクの一時停止と再開
+const uploadTask = uploadData({ key, data: file });
+//...
+uploadTask.pause();
+//...
+uploadTask.resume();
+//...
+await uploadTask.result;
+```
+
+</Block>
+</BlockSwitcher>
+
+## アップロードをキャンセルする
+
+<BlockSwitcher>
+<Block name="パスを使用する（v6.2.0以上）">
+```javascript
+import { uploadData, isCancelError } from 'aws-amplify/storage';
+
+const uploadTask = uploadData({ path, data: file });
+//...
+uploadTask.cancel();
+try {
+  await uploadTask.result;
+} catch (error) {
+  if (isCancelError(error)) {
+    // タスクキャンセルによって発生したエラーを処理する
+  }
+}
+```
+</Block>
+
+<Block name="キーを使用する（非推奨）">
+```javascript
+import { uploadData, isCancelError } from 'aws-amplify/storage';
+
+const uploadTask = uploadData({ key, data: file });
+//...
+uploadTask.cancel();
+try {
+  await uploadTask.result;
+} catch (error) {
+  if (isCancelError(error)) {
+    // タスクキャンセルによって発生したエラーを処理する
+  }
+}
+```
+</Block>
+</BlockSwitcher>
+
+その他の使用可能なオプションは次のとおりです：
+
+```javascript
+import { uploadData } from 'aws-amplify/storage';
+
+uploadData({
+  path: 'public/album/2024/1.jpg', 
+  // また別の方法として: path: ({identityId}) => `protected/${identityId}/album/2024/1.jpg`
+  data: file,
+  options:  {
+    contentType?: 'text/html', // (String) ファイルをダウンロードするときのデフォルトcontent-typeヘッダー値。
+    contentEncoding?: 'compress' // (String) ファイルをダウンロードするときのデフォルトcontent-encodingヘッダー値。
+    contentDisposition?: 'attachment', // (String) オブジェクトの表示情報を指定します
+    metadata?: {key: 'value'}, // (map<String>) S3のオブジェクトとともに保存するメタデータのマップ。
+    useAccelerateEndpoint?: boolean; // アクセラレートエンドポイントを使用するかどうか。
+  }
+});
+
+```
+
+ページリフレッシュがアップロード中に発生した場合、同じファイルでアップロードを再初期化すると、前の中断ポイントから続行されます。
+
+<Callout>
+
+1時間以上前に開始されたアップロードは自動的にキャンセルされます。不完全なファイルがS3アカウントに残る場合があります（デバイスがオフラインになった場合やユーザーがログアウトした場合など）。不完全なアップロードリクエストを自動的にクリーンアップするために、[S3ライフサイクルルールを設定する](https://aws.amazon.com/blogs/aws-cloud-financial-management/discovering-and-deleting-incomplete-multipart-uploads-to-lower-amazon-s3-costs/)ことをお勧めします。
+
+</Callout>
+
+## ブラウザでのアップロード
+
+ブラウザでファイルをアップロードします：
+<BlockSwitcher>
+<Block name="パスを使用する（v6.2.0以上）">
+```javascript
+import { uploadData } from 'aws-amplify/storage';
+
+const uploadDataInBrowser = async (event) => {
+  if (event?.target?.files) {
+    const file = event.target.files[0];
+    uploadData({
+      path: file.name,
+      data: file
+    });
+  }
+};
+```
+</Block>
+<Block name="キーを使用する（非推奨）">
+```javascript
+import { uploadData } from 'aws-amplify/storage';
+
+const uploadDataInBrowser = async (event) => {
+  if (event?.target?.files) {
+    const file = event.target.files[0];
+    uploadData({
+      key: file.name,
+      data: file
+    });
+  }
+};
+```
+</Block>
+</BlockSwitcher>
+</InlineFilter>

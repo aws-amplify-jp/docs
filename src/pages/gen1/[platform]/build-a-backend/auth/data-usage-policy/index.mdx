@@ -1,0 +1,30 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'データ使用ポリシー情報',
+  description: "Amplify ライブラリによって収集されるデータ型を確認してください。Apple では、アプリを App Store に提出する際に、アプリのデータ使用ポリシーで開示することが必要です。",
+  platforms: [
+    'swift'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios0 from '/src/fragments/lib/info/native_common/data-information/common.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import ios1 from '/src/fragments/lib/info/native_common/app-uninstall/common.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />

@@ -1,0 +1,531 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'オプション: ローカルキャッシングを追加',
+  description: 'Apollo Clientの移行を永続的なキャッシュ、楽観的更新、インテリジェントなフェッチポリシーで強化します。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+[Apollo Clientのセットアップ](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/set-up-apollo/)ページでは、認証、エラーハンドリング、再試行ロジック、および`new InMemoryCache()`を備えた機能的なApollo Clientが提供されました。このキャッシュはメモリ内にのみ存在します。ユーザーがページを更新するか、アプリを再度開くたびに、すべてのクエリはネットワークリクエストとロードスピナーから始まります。
+
+このページは、その基礎の上に永続的なキャッシングと楽観的更新を追加します。Apolloのキャッシュを設定してIndexedDBに永続化することで、ページ更新を生き残らせます。キャッシュの復元でアプリスタートアップをゲートし、各クエリに対して正しいフェッチポリシーを選択し、ミューテーションに対してインスタント UI更新を実装し、削除および サインアウト時のパージでキャッシュサイズを管理します。
+
+## 永続化ライブラリのインストール
+
+```bash
+npm install apollo3-cache-persist localforage
+```
+
+- **apollo3-cache-persist** (v0.15.0) -- ApolloのInMemoryCacheをストレージバックエンドに永続化します
+- **localforage** (v1.10.0) -- 自動フォールバック付きのIndexedDBストレージバックエンドを提供します
+
+## IndexedDBでCachePersistorをセットアップ
+
+### localforageを設定
+
+```ts
+import localforage from 'localforage';
+
+localforage.config({
+  driver: localforage.INDEXEDDB,
+  name: 'myapp-apollo-cache',
+  storeName: 'apollo_cache',
+});
+```
+
+### CachePersistorを作成
+
+```ts
+import { CachePersistor, LocalForageWrapper } from 'apollo3-cache-persist';
+
+export const persistor = new CachePersistor({
+  cache,
+  storage: new LocalForageWrapper(localforage),
+  maxSize: 1048576 * 2, // 2MB -- アプリが大きなデータセットをキャッシュする場合は増やしてください
+  debug: process.env.NODE_ENV === 'development',
+  trigger: 'write',
+  key: 'apollo-cache-v1', // GraphQLスキーマが変更されたときにバージョンを上げます
+});
+```
+
+<Callout>
+
+**`persistCache`の代わりに`CachePersistor`を使用してください。** 便利な関数`persistCache`はpersistor インスタンスを返さないため、`purge()`（サインアウトに必要）、`pause()`/`resume()`、または`getSize()`を呼び出すことはできません。本番アプリの場合、`CachePersistor`が正しい選択肢です。
+
+</Callout>
+
+### 設定オプション
+
+| オプション | デフォルト | 目的 |
+|--------|---------|---------|
+| `cache` | (必須) | 永続化するInMemoryCacheインスタンス |
+| `storage` | (必須) | ストレージラッパー -- IndexedDBにはLocalForageWrapperを使用 |
+| `maxSize` | `1048576` (1MB) | バイト単位での最大永続化サイズ。制限を無効にするには`false`を設定 |
+| `trigger` | `'write'` | 永続化するタイミング: `'write'`（すべてのキャッシュ書き込み時）、`'background'`（タブ可視性変更時） |
+| `debounce` | `1000` | 永続化書き込み間の待機ミリ秒 |
+| `key` | `'apollo-cache-persist'` | ストレージキー識別子。古いキャッシュを無効化するにはこれをバージョン管理します |
+| `debug` | `false` | コンソールに永続化アクティビティをログ出力 |
+
+<Accordion title="キャッシュ永続化を備えた拡張Apollo Clientセットアップ">
+
+以下は、前のページのセットアップに基づいて構築する完全な拡張`src/apolloClient.ts`です。リンクチェーン（再試行、エラー、認証、HTTP）は変更されていません。キャッシュ設定、persistor、およびデフォルトフェッチポリシーのみが新しいものです。
+
+```ts title="src/apolloClient.ts"
+import {
+  ApolloClient,
+  InMemoryCache,
+  createHttpLink,
+  from,
+} from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
+import { onError } from '@apollo/client/link/error';
+import { RetryLink } from '@apollo/client/link/retry';
+import { CachePersistor, LocalForageWrapper } from 'apollo3-cache-persist';
+import localforage from 'localforage';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import config from '../amplifyconfiguration.json';
+
+// --- localforage経由でIndexedDBを設定 ---
+localforage.config({
+  driver: localforage.INDEXEDDB,
+  name: 'myapp-apollo-cache',
+  storeName: 'apollo_cache',
+});
+
+// --- InMemoryCache ---
+const cache = new InMemoryCache({
+  typePolicies: {
+    // 以下のtypePoliciesセクションで完全な設定を参照
+  },
+});
+
+// --- キャッシュ Persistor ---
+export const persistor = new CachePersistor({
+  cache,
+  storage: new LocalForageWrapper(localforage),
+  maxSize: 1048576 * 2,
+  debug: process.env.NODE_ENV === 'development',
+  trigger: 'write',
+  key: 'apollo-cache-v1',
+});
+
+// --- リンク（Apollo Clientページのセットアップから変更なし） ---
+const httpLink = createHttpLink({ uri: config.aws_appsync_graphqlEndpoint });
+
+const authLink = setContext(async (_, { headers }) => {
+  try {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken?.toString();
+    return { headers: { ...headers, authorization: token || '' } };
+  } catch (error) {
+    console.error('Auth session error:', error);
+    return { headers };
+  }
+});
+
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+  if (graphQLErrors) {
+    for (const { message, locations, path } of graphQLErrors) {
+      console.error(`[GraphQL error]: ${message}, ${locations}, ${path}`);
+    }
+  }
+  if (networkError) {
+    console.error(`[Network error]: ${networkError}`);
+  }
+});
+
+const retryLink = new RetryLink({
+  delay: { initial: 300, max: 5000, jitter: true },
+  attempts: { max: 3, retryIf: (error) => !!error },
+});
+
+// --- Apollo Client ---
+export const apolloClient = new ApolloClient({
+  link: from([retryLink, errorLink, authLink, httpLink]),
+  cache,
+  defaultOptions: {
+    watchQuery: { fetchPolicy: 'cache-and-network' },
+    query: { fetchPolicy: 'cache-and-network' },
+  },
+});
+```
+
+</Accordion>
+
+## アプリ起動時のキャッシュ復元
+
+<Callout warning>
+
+`persistor.restore()`が完了する前に起動するクエリは、空のInMemoryCacheを見ます。レンダリングをキャッシュ復元でゲートしないことが、最も一般的な永続化の誤りです。症状は、IndexedDBにキャッシュデータがあるにもかかわらず、すべてのアプリ起動でロードスピナーが表示されることです。
+
+</Callout>
+
+Apolloクエリを使用する任意のコンポーネントをレンダリングする前に`await persistor.restore()`を呼び出します。
+
+<InlineFilter filters={["react", "nextjs", "react-native"]}>
+
+```tsx title="src/App.tsx"
+import { useState, useEffect } from 'react';
+import { ApolloProvider } from '@apollo/client';
+import { apolloClient, persistor } from './apolloClient';
+
+function App() {
+  const [cacheReady, setCacheReady] = useState(false);
+
+  useEffect(() => {
+    persistor.restore().then(() => setCacheReady(true));
+  }, []);
+
+  if (!cacheReady) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <ApolloProvider client={apolloClient}>
+      {/* アプリコンポーネント */}
+    </ApolloProvider>
+  );
+}
+```
+
+</InlineFilter>
+
+`cacheReady`が`true`に切り替わると、`ApolloProvider`内のすべての`useQuery`フックは復元されたキャッシュデータを見つけて、すぐにレンダリングされます。前のセッションでキャッシュされたデータに対するネットワークリクエストは不要です。
+
+## フェッチポリシーパターン
+
+フェッチポリシーは、キャッシュ、ネットワーク、またはその両方から Apollo が データを読み取る場所を制御し、クエリベースで制御します。
+
+| ポリシー | キャッシュ読み取り | ネットワークフェッチ | 最適な用途 |
+|--------|-----------|---------------|----------|
+| `cache-first` | はい（データが存在する場合） | キャッシュミス時のみ | 変更の少ないデータ |
+| `cache-and-network` | はい（即座） | 常に（その後キャッシュを更新） | **推奨デフォルト。** キャッシュされたデータを即座に表示してから、サーバーから更新します。 |
+| `network-only` | いいえ | 常に | 競合エラーの後は強制的に新しいデータを取得 |
+| `cache-only` | はい | なし | 真のオフライン読み取り |
+| `no-cache` | いいえ | 常に | 1回限りの機密読み取り |
+| `standby` | はい | 手動`refetch()`時のみ | 非アクティブなクエリ |
+
+### DataStore移行マッピング
+
+| DataStoreパターン | 推奨fetchPolicy | 理由 |
+|-------------------|------------------------|-----|
+| `DataStore.query(Model)`（オンライン） | `cache-and-network` | キャッシュされたデータをすぐに返してから、サーバーから更新 |
+| `DataStore.query(Model)`（オフライン） | `cache-only` | ネットワーク試行なしで永続キャッシュから読み取り |
+| `DataStore.observeQuery()` | `cache-and-network` with `useQuery` | キャッシュを最初に表示して、サーバー応答で更新 |
+| 競合エラー後 | `network-only` | サーバーから新しいデータを強制取得して古い状態を解決 |
+
+### cache-and-networkが推奨されるデフォルトである理由
+
+DataStoreは常にローカルにキャッシュされたデータを即座に表示してから、バックグラウンドでサーバーと同期しました。`cache-and-network`は最も近いApolloの同等物です。
+
+1. クエリは最初にキャッシュから読み取ります（即座なレンダリング、ロードスピナーなし）
+2. Apolloはバックグラウンドでネットワークリクエストを実行します
+3. レスポンスが到達すると、キャッシュが更新され、コンポーネントは新しいデータで再レンダリングされます
+
+## キャッシュパージを伴う拡張サインアウト
+
+<Callout warning>
+
+**サインアウトの順序は重要です: 一時停止、clearStore、パージ、signOut。** パージステップをスキップすると、次にサインインするユーザーは、ディスクから復元された前のユーザーのキャッシュされたデータを見ます。
+
+</Callout>
+
+```ts title="src/auth.ts"
+import { signOut } from 'aws-amplify/auth';
+import { apolloClient, persistor } from './apolloClient';
+
+export async function handleSignOut() {
+  // 1. clearStoreが書き込みをトリガーしないように永続化を一時停止
+  persistor.pause();
+
+  // 2. メモリ内キャッシュをクリアしてアクティブなクエリをキャンセル
+  await apolloClient.clearStore();
+
+  // 3. IndexedDBから永続化されたキャッシュをパージ
+  await persistor.purge();
+
+  // 4. Amplifyからサインアウト（Cognito トークンをクリア）
+  await signOut();
+}
+```
+
+**この順序が重要な理由：**
+
+1. **最初に一時停止** -- `clearStore()`がキャッシュを変更し、persistorがIndexedDBに空のキャッシュを書き込むようにトリガーします。一時停止することでその不要な書き込みを防ぎます。
+2. **メモリ内キャッシュをクリア** -- メモリからすべてのキャッシュデータを削除し、アクティブなクエリをキャンセルします。
+3. **IndexedDBをパージ** -- ディスクから永続化されたキャッシュを削除して、次のユーザーが新しく開始できるようにします。
+4. **最後にサインアウト** -- Cognito トークンをクリアします。最初にサインアウトすると、`clearStore()`は認証トークンが既に無効化されているため失敗する可能性のあるリフェッチをトリガーするかもしれません。
+
+## 楽観的更新
+
+[CRUD操作の移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-crud-operations/)ページでは、`refetchQueries`でApollo ミューテーションを使用して、レコードを作成、更新、削除する方法を示しました。その方法は、UIが更新される前にサーバーレスポンスを待ちます。楽観的更新は`refetchQueries`を、サーバーが確認する前に変更を表示するインスタント UI更新に置き換えます。
+
+DataStoreは`save()`で同期的にローカルストアを更新しました。Apolloの楽観的レイヤーは同じインスタント UI動作を実現しますが、明示的に記述します。
+
+### 楽観的更新の仕組み
+
+ミューテーションに`optimisticResponse`を提供すると、Apolloは：
+
+1. 楽観的オブジェクトを個別のレイヤーにキャッシュします（正規キャッシュデータを上書きしません）
+2. アクティブなクエリは楽観的データで即座に再レンダリングされます
+3. サーバーが応答すると、楽観的レイヤーは破棄され、正規キャッシュが更新されます
+4. エラー時、楽観的レイヤーは破棄され、UIは自動的に元に戻ります。**ロールバック コードはゼロ**
+
+### 楽観的作成
+
+```ts
+const [createPost] = useMutation(CREATE_POST, {
+  optimisticResponse: ({ input }) => ({
+    createPost: {
+      __typename: 'Post',
+      id: `temp-${Date.now()}`,
+      title: input.title,
+      content: input.content,
+      status: input.status,
+      rating: input.rating ?? null,
+      _version: 1,
+      _deleted: false,
+      _lastChangedAt: Date.now(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  }),
+  update(cache, { data }) {
+    if (!data?.createPost) return;
+    cache.updateQuery({ query: LIST_POSTS }, (existing) => {
+      if (!existing?.listPosts) return existing;
+      return {
+        listPosts: {
+          ...existing.listPosts,
+          items: [data.createPost, ...existing.listPosts.items],
+        },
+      };
+    });
+  },
+});
+```
+
+`update`関数は作成に必要です。Apolloの正規キャッシュは、まったく新しいオブジェクトが既存のリストクエリに表示されるべきであることを知ることができないためです。
+
+### 楽観的更新
+
+```ts
+const [updatePost] = useMutation(UPDATE_POST, {
+  optimisticResponse: {
+    updatePost: {
+      __typename: 'Post',
+      id: post.id,
+      title: 'Updated Title',
+      content: post.content,
+      status: post.status,
+      rating: 4,
+      _version: post._version + 1,
+      _deleted: false,
+      _lastChangedAt: Date.now(),
+      createdAt: post.createdAt,
+      updatedAt: new Date().toISOString(),
+    },
+  },
+  // 更新関数は不要 -- Apolloが__typename + idで自動マージ
+});
+```
+
+### 楽観的削除
+
+```ts
+const [deletePost] = useMutation(DELETE_POST, {
+  optimisticResponse: {
+    deletePost: {
+      __typename: 'Post',
+      id: post.id,
+      _version: post._version + 1,
+      _deleted: true,
+      _lastChangedAt: Date.now(),
+    },
+  },
+  update(cache, { data }) {
+    if (!data?.deletePost) return;
+    cache.evict({ id: cache.identify(data.deletePost) });
+    cache.gc();
+  },
+});
+```
+
+### 楽観的レスポンス内の_version
+
+| 操作 | 楽観的`_version` | 理由 |
+|-----------|----------------------|-----|
+| 作成 | `1` | 新しいレコードはバージョン1で開始 |
+| 更新 | `post._version + 1` | サーバーのバージョン増分を予測 |
+| 削除 | `post._version + 1` | 削除ミューテーションがバージョンをインクリメント |
+
+楽観的`_version`は正確である必要はありません。サーバーレスポンスは常に正規キャッシュの楽観的データを置き換えます。
+
+## ページネーションとソフト削除フィルタリングのtypePolicies
+
+### ページネーション マージ
+
+`typePolicies`がない場合、Apolloは各`(limit, nextToken)`の組み合わせを個別のキャッシュエントリとして扱います。「さらに読み込み」ボタンはページ1をページ2で置き換えるのではなく、追加します。
+
+```ts
+import { InMemoryCache } from '@apollo/client';
+
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        listPosts: {
+          keyArgs: ['filter'],
+          merge(existing, incoming) {
+            if (!existing) return incoming;
+            return {
+              ...incoming,
+              items: [...(existing.items || []), ...(incoming.items || [])],
+            };
+          },
+          read(existing, { readField }) {
+            if (!existing) return existing;
+            return {
+              ...existing,
+              items: existing.items.filter(
+                (ref) => !readField('_deleted', ref)
+              ),
+            };
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+`keyArgs: ['filter']`はApolloに対し、同じフィルタを持つクエリがキャッシュエントリを共有すること（ページのマージ）を告げます。一方、異なるフィルタは個別のエントリです。
+
+### なぜreadFieldを直接プロパティアクセスの代わりに使用するか
+
+Apolloの正規キャッシュでは、リスト項目は**参照**として保存されます（例えば、`{ __ref: "Post:123" }`）。完全なオブジェクトではありません。`ref._deleted`に直接アクセスすることはできません。`readField`ヘルパーは参照を解決し、正規キャッシュエントリからフィールドを読み取ります。
+
+```ts
+// 間違い -- refはキャッシュ参照であり、実際のオブジェクトではありません
+items.filter((ref) => !ref._deleted)
+
+// 正しい -- readFieldが参照を解決します
+items.filter((ref) => !readField('_deleted', ref))
+```
+
+<Accordion title="完全なtypePolicies設定">
+
+```ts
+const cache = new InMemoryCache({
+  typePolicies: {
+    Post: { keyFields: ['id'] },
+    Comment: { keyFields: ['id'] },
+    Query: {
+      fields: {
+        listPosts: {
+          keyArgs: ['filter'],
+          merge(existing, incoming) {
+            if (!existing) return incoming;
+            return {
+              ...incoming,
+              items: [...(existing.items || []), ...(incoming.items || [])],
+            };
+          },
+          read(existing, { readField }) {
+            if (!existing) return existing;
+            return {
+              ...existing,
+              items: existing.items.filter(
+                (ref) => !readField('_deleted', ref)
+              ),
+            };
+          },
+        },
+        listComments: {
+          keyArgs: ['filter'],
+          merge(existing, incoming) {
+            if (!existing) return incoming;
+            return {
+              ...incoming,
+              items: [...(existing.items || []), ...(incoming.items || [])],
+            };
+          },
+          read(existing, { readField }) {
+            if (!existing) return existing;
+            return {
+              ...existing,
+              items: existing.items.filter(
+                (ref) => !readField('_deleted', ref)
+              ),
+            };
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+パターンはすべてのリストクエリで同じです: フィルター分離の`keyArgs`、ページネーション用`merge`、ソフト削除フィルタリング用`read`。スキーマの各リストクエリにフィールドポリシーを追加します。
+
+</Accordion>
+
+## キャッシュサイズ管理
+
+### キャッシュサイズをモニタリング
+
+```ts
+async function logCacheSize() {
+  const sizeInBytes = await persistor.getSize();
+  if (sizeInBytes !== null) {
+    console.log(`Cache size: ${(sizeInBytes / 1024).toFixed(1)} KB`);
+  }
+}
+```
+
+### maxSize動作
+
+シリアル化されたキャッシュが`maxSize`を超える場合、persistorはIndexedBDへの書き込みをサイレントに停止します。メモリ内キャッシュは通常どおり機能し続けます。開発中に`debug: true`を有効にしてコンソール警告を確認します。
+
+### スキーマバージョン戦略
+
+GraphQLスキーマが変更される場合、`CachePersistor`の`key`オプションをバージョン管理します（例えば、`'apollo-cache-v1'`から`'apollo-cache-v2'`に）。これは空のキャッシュで始まります。キャッシュ移行コードゼロと引き換えに1つのコールドスタート。
+
+<Accordion title="ローカルキャッシングのトラブルシューティング">
+
+**キャッシュが、クエリ実行前に復元されない：**
+すべてのページロードは短くロードスピナーを表示します。`persistor.restore()`の完了でアプリレンダリングをゲートしてください。
+
+**キャッシュが黙ってmaxSizeを超過：**
+最近のデータはリフレッシュ間で永続化されていません。`maxSize`を2～5MBに増やして、`debug: true`を有効にしてください。
+
+**スキーマ変更後の古いキャッシュ：**
+アプリはキャッシュされたデータを読み取るときのTypeErrorでクラッシュします。`key`オプションのバージョンをバンプしてください。
+
+**作成後のアイテムの重複：**
+Apolloは楽観的ミューテーションの`update`関数を2回呼び出します（楽観的用、サーバーレスポンス用）。楽観的レイヤーライフサイクルに依存するか、`update`関数に存在確認を追加してください。
+
+**削除された_deletedレコードが表示されている：**
+`read`関数で`readField('_deleted', ref)`を使用してください。直接プロパティアクセスではなく。
+
+</Accordion>

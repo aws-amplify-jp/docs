@@ -1,0 +1,48 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'プロジェクトを別のAWSアカウントに移行する',
+  description: 'Amplify CLIを使用して、異なるAWSアカウント内のリソースを簡単に再作成できます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify CLIを使用して、異なるAWSアカウント内のリソースを簡単に再作成できます。
+
+既存のプロジェクトを別のAWSアカウントに移行するには、以下の手順を実行してください。
+
+1. リポジトリのクローンを作成する
+2. `amplify init`を実行する
+3. 新しいアカウントに接続するAWSプロファイルを選択します（既存の環境は使用しないでください）
+
+Amplify CLIは `amplify/team-provider-info.json` ファイルを新しい環境名で更新します。`amplify env list` を実行して、新しいプロファイルのアカウントに接続された追加の環境を確認してください。
+
+<Callout warning>
+
+プロジェクトにカスタムリソースが含まれている場合、プロジェクトを新しい環境にクローンすると正しく機能しない場合があります。
+カスタムリソース名をパラメータ化して、アカウント、リージョン、およびAmplify環境間でクローンする場合に一意性を保証してください。
+
+</Callout>

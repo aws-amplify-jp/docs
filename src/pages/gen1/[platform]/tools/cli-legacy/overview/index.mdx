@@ -1,0 +1,285 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '概要',
+  description: "Amplify CLI と GraphQL Transform を使用すると、GraphQL Schema Definition Language (SDL) を使用してアプリケーションのデータモデルを定義でき、このライブラリは SDL スキーマを、データモデルを実装する完全に記述された AWS CloudFormation テンプレートのセットに変換します。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert isLegacy url={'/gen1/[platform]/build-a-backend/graphqlapi/'} />
+
+GraphQL Transform は、AWS 上で Web およびモバイルアプリケーション向けのバックエンドを迅速に作成するのに役立つ、シンプルで使いやすい抽象化を提供します。GraphQL Transform を使用すると、GraphQL Schema Definition Language (SDL) を使用してアプリケーションのデータモデルを定義でき、このライブラリは SDL 定義を、データモデルを実装する完全に記述された AWS CloudFormation テンプレートのセットに変換します。
+
+たとえば、次のようにブログのバックエンドを作成できます。
+
+```graphql
+type Blog @model {
+  id: ID!
+  name: String!
+  posts: [Post] @connection(name: "BlogPosts")
+}
+type Post @model {
+  id: ID!
+  title: String!
+  blog: Blog @connection(name: "BlogPosts")
+  comments: [Comment] @connection(name: "PostComments")
+}
+type Comment @model {
+  id: ID!
+  content: String
+  post: Post @connection(name: "PostComments")
+}
+```
+
+GraphQL Transform は、GraphQL API の開発、デプロイ、メンテナンスのプロセスを簡素化します。このライブラリを使用すると、[GraphQL Schema Definition Language (SDL)](https://graphql.org/learn/schema/) を使用して API を定義でき、その後オートメーションを使用して、仕様を実装する完全に記述された CloudFormation テンプレートに変換できます。トランスフォームはまた、カスタムワークフロー用に `@directives` として独自のトランスフォーマーを定義できるフレームワークも提供します。
+
+## GraphQL API を作成する
+
+JavaScript、iOS、または Android プロジェクトのルートに移動し、以下を実行します。
+
+```bash
+amplify init
+```
+
+ウィザードに従って新しいアプリを作成します。ウィザードの完了後、以下を実行します。
+
+```bash
+amplify add api
+```
+
+以下のオプションを選択します。
+
+- GraphQL を選択する
+- スキーマがあるかどうか尋ねられたら、いいえと答える
+- デフォルトサンプルの 1 つを選択します。これは後で変更できます。
+- スキーマを編集することを選択すると、新しい `schema.graphql` がエディタで開きます
+
+サンプルのままにするか、このスキーマを試してみてください。
+
+```graphql
+type Blog @model {
+  id: ID!
+  name: String!
+  posts: [Post] @connection(name: "BlogPosts")
+}
+type Post @model {
+  id: ID!
+  title: String!
+  blog: Blog @connection(name: "BlogPosts")
+  comments: [Comment] @connection(name: "PostComments")
+}
+type Comment @model {
+  id: ID!
+  content: String
+  post: Post @connection(name: "PostComments")
+}
+```
+
+スキーマに満足したら、ファイルを保存し、ターミナルウィンドウで Enter キーを押します。エラーメッセージが表示されない場合は、変換が成功し、新しい API をデプロイできることを意味します。
+
+```bash
+amplify push
+```
+
+## API をテストする
+
+API のデプロイが完了したら、AWS AppSync コンソールに移動するか、`amplify mock api` を実行して、新しい API のクエリページでこれらのクエリの一部を試してください。
+
+```graphql
+# ブログを作成します。返された ID を覚えておいてください。
+# 返された ID を "blogId" 変数として指定します。
+mutation CreateBlog {
+  createBlog(input: {
+    name: "My New Blog!"
+  }) {
+    id
+    name
+  }
+}
+
+# ポストを作成し、"postBlogId" 入力フィールドを使用してブログに関連付けます。
+# 返された ID を "postId" 変数として指定します。
+mutation CreatePost($blogId:ID!) {
+  createPost(input:{title:"My Post!", postBlogId: $blogId}) {
+    id
+    title
+    blog {
+      id
+      name
+    }
+  }
+}
+
+# CreateBlog ミューテーションから返された ID をクエリエディタの "variables" ペイン
+# (左下のペイン) の "blogId" 変数として指定します:
+{
+  "blogId": "returned-id-goes-here"
+}
+
+# コメントを作成し、"commentPostId" 入力フィールドを使用してポストに関連付けます。
+mutation CreateComment($postId:ID!) {
+  createComment(input:{content:"A comment!", commentPostId:$postId}) {
+    id
+    content
+    post {
+      id
+      title
+      blog {
+        id
+        name
+      }
+    }
+  }
+}
+
+# CreatePost ミューテーションから返された ID をクエリエディタの "variables" ペイン
+# (左下のペイン) の "postId" 変数として指定します:
+{
+  "postId": "returned-id-goes-here"
+}
+
+# ブログ、そのポスト、そのポストのコメントを取得します。
+query GetBlog($blogId:ID!) {
+  getBlog(id:$blogId) {
+    id
+    name
+    posts(filter: {
+      title: {
+        eq: "My Post!"
+      }
+    }) {
+      items {
+        id
+        title
+        comments {
+          items {
+            id
+            content
+          }
+        }
+      }
+    }
+  }
+}
+
+# すべてのブログ、そのポスト、そのポストのコメントをリストします。
+query ListBlogs {
+  listBlogs { # 試してみてください: listBlog(filter: { name: { eq: "My New Blog!" } })
+    items {
+      id
+      name
+      posts { # または試してみてください: posts(filter: { title: { eq: "My Post!" } })
+        items {
+          id
+          title
+          comments { # 以降も同様 ...
+            items {
+              id
+              content
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## スキーマを更新する
+
+API を更新したい場合は、プロジェクトの `backend/api/~apiname~/schema.graphql` ファイル (`backend/api/~apiname~/build` フォルダにあるファイルではなく) を開き、お気に入りのコードエディタで編集してください。`backend/api/~apiname~/schema.graphql` をコンパイルするには、以下を実行します。
+
+```bash
+amplify api gql-compile
+```
+
+コンパイルされたスキーマ出力は `backend/api/~apiname~/build/schema.graphql` で確認できます。
+
+その後、以下で更新された変更をプッシュできます。
+
+```bash
+amplify push
+```
+
+以下のスキーマ更新では、基になる DynamoDB テーブルの置換が必要です。
+
+1. モデルの削除または名前変更
+2. モデルの[プライマリキー](/gen1/[platform]/tools/cli-legacy/key-directive/)の変更
+3. モデルのローカルセカンダリインデックスの変更 ([secondaryKeyAsGSI](/gen1/[platform]/tools/cli/reference/feature-flags/#secondaryKeyAsGSI) がオフになっているプロジェクトのみに該当)
+
+これらの更新の 1 つ以上を含むスキーマ変更をプッシュしようとすると、置換が必要なテーブル内のすべてのデータが失われることを説明するエラーメッセージが表示されます。デプロイを続行することを確認するには、以下を実行します。
+
+```bash
+amplify push --allow-destructive-graphql-schema-updates
+```
+
+<Callout>
+一般的には、このコマンドは開発中にのみ使用すべきです。
+
+本番環境の API に破壊的な変更を加える場合でも、影響を受けるテーブルのデータを保持したい場合は、`amplify push --allow-destructive-graphql-schema-updates` を実行する前に[バックアップを作成](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/CreateBackupAWS.html)できます。
+
+</Callout>
+
+## GraphQL API を再構築する
+
+<Callout>本番環境では再構築を使用しないでください!</Callout>
+
+開発中に、テストデータが悪い状態になったり、スキーマに多くの変更を一度に加えたい場合があります。このような場合は、スキーマをバックアップするすべてのテーブルを「再構築」することができます。これを行うには、以下を実行します。
+
+```bash
+amplify rebuild api
+```
+
+これにより、スキーマ内のモデルをバックアップするすべてのテーブルが再作成されます。すべてのテーブル内のすべてのデータが削除されます。
+
+## API カテゴリプロジェクト構造
+
+高いレベルでは、トランスフォームライブラリは GraphQL Schema Definition Language (SDL) で定義されたスキーマを取得し、`amplify push` の一部としてデプロイされる AWS CloudFormation テンプレートおよび他のアセットのセットに変換します。アップロードされたアセット全体は _amplify/backend/api/YOUR-API-NAME/build_ にあります。
+
+API を作成するときは、_amplify/backend/api/YOUR-API-NAME/_ ディレクトリ内の他のファイルとディレクトリに変更を加えますが、_build_ ディレクトリ内は手動で変更しないでください。ビルドディレクトリは、次回 `amplify push` または `amplify api gql-compile` を実行するときに上書きされます。以下は API ディレクトリの概要です。
+
+```console
+-build/
+- resolvers/
+| # ここに VTL で記述されたリゾルバーテンプレートを保存します。例:
+|-- Query.ping.req.vtl
+|-- Query.ping.res.vtl
+|
+- stacks/
+| # `amplify push` の一部としてデプロイされる CloudFormation スタックを使用して、カスタムリソースを作成します。
+|-- CustomResources.json
+|
+- parameters.json
+| # カスタム CloudFormation パラメータを使用して、特定の動作を調整します。
+|
+- schema.graphql
+| # GraphQL スキーマを SDL で記述します。
+- schema/
+| # オプションで、スキーマを多くのファイルに分割します。これを使用するには schema.graphql を削除する必要があります。
+|-- Query.graphql
+|-- Post.graphql
+- transform.conf.json
+```

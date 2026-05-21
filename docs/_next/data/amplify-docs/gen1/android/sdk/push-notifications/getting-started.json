@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"android","meta":{"title":"始める","description":"Apple（APNs）および Google（FCM/GCM）プラットフォームから送信されるモバイルプッシュメッセージをユーザーが受け取るようにします。Amplify CLI は Amazon Pinpoint を使用してプッシュ通知バックエンドをデプロイします。ユーザー行動をプッシュまたは他の形式のメッセージングに結び付ける Amazon Pinpoint キャンペーンを作成することもできます。","platforms":["swift","android"]}},"__N_SSG":true}

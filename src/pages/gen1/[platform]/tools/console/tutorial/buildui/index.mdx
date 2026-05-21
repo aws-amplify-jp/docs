@@ -1,0 +1,95 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'UIの構築',
+  description: 'FigmaからReactコードへ、Amplify Studioで',
+  platforms: [
+    'javascript',
+    'nextjs',
+    'react'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Studioの新しい**UIライブラリ**を使用すると、FigmaのコンポーネントをインポートしてReactコードにしてしまうことができます。Amplifyは、より迅速に開始するための便利なFigmaファイルも提供しています。Amplify FigmaファイルにはUIプリミティブとコンポーネントテンプレートの両方が含まれています。Figmaで独自のコンポーネントを作成することもできます！このチュートリアルでは、Amplify Studioを使用してホームリスティングアプリを作成します。
+
+## FigmaでUIコンポーネントを作成する
+
+1. **[Amplify UI Figmaファイル](https://www.figma.com/community/file/1047600760128127424)をクローンする**
+![Figmaとの同期方法を示すスクリーンショット](/images/studio/sync-with-figma.png)
+Amplify UI Figmaファイルは、アプリの出発点を提供します。一般的なUIプリミティブと事前に構築されたUIコンポーネントが含まれています。
+
+2. **UIプリミティブとテンプレートを探索する**
+
+![プリミティブを表示しているFigmaファイルのスクリーンショット](/images/studio/primitives.png)
+
+プリミティブは、ボタン、テキストフィールド、バッジなど、ブランドに合わせた完全なアプリケーションを構築できる一般的なUIコンポーネントです。
+
+![テンプレートを表示しているFigmaファイルのスクリーンショット](/images/studio/templates.png)
+
+テンプレートはプリミティブを活用するFigmaコンポーネントで、ヒーローカード、プロフィールカード、プロダクト詳細カードなど、UIをさらに強化します。
+
+3. **Figmaでカスタムコンポーネントを作成する**
+
+![Figmaでコンポーネントを作成する方法を示すビデオ](/images/studio/create-component.gif)
+
+## Figmaとコンポーネントを同期する
+
+[Amplify Studio](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)で、「Figmaから同期」ボタンをクリックして、Figmaファイルのすべてのコンポーネントを確認します。
+
+FigmaファイルのURLを貼り付けて、同期を開始します。Figmaから初めて同期する場合は、Amplify StudioにFigmaアカウントへのアクセスを許可する必要があります。
+
+![Figma URLの取得場所を示すスクリーンショット](/images/studio/figma-link.png)
+
+**すべて受け入れる**を選択するか、**却下**および**受け入れ**ボタンでコンポーネントを個別に確認します。
+
+![Figmaとの同期時にコンポーネントをレビューする画面のスクリーンショット](/images/studio/sync-review.png)
+
+## コードでコンポーネントを使用する
+
+コンポーネントが同期されたら、コンポーネントを選択して**設定**を選択します。Reactコードを取得するには、**コンポーネントコードを取得**を選択します。
+
+モーダルの指示に従ってください。アプリでUIコンポーネントをセットアップするのが初めての場合は、必ず最初に**初期プロジェクト設定**を完了して、すべての依存関係をインストールしてください。
+
+![コンポーネントコードを取得する方法を示すスクリーンショット](/images/studio/get-code.png)
+
+次に、`amplify pull`を実行してすべてのコンポーネントをローカルコードベースに同期します。すべてのUIコンポーネントを含む新しい`ui-components`フォルダが作成されます。
+
+`./ui-components`から使用するUIコンポーネントをインポートして、Reactアプリでレンダリングします。例えば：
+
+```js
+import { CardB } from './ui-components';
+
+return (
+  <div>
+    <CardB />
+  </div>
+);
+```
+
+## 複数のUIコンポーネントを削除する
+
+1. UIライブラリで、`編集`ボタンをクリックします。
+
+![編集ボタン](/images/studio/buildui/edit-ui-library.png)
+
+2. 削除するUIコンポーネントを選択します。
+
+![選択](/images/studio/buildui/multiple-components-selection.png)
+
+3. 次に、`選択したコンポーネントを削除`をクリックして、選択したUIコンポーネントを削除します。
+
+![削除](/images/studio/buildui/delete-components.png)

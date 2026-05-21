@@ -1,0 +1,175 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'モノレポプロジェクト構造',
+  description: 'Amplify CLIでモノレポワークフローをセットアップする方法を学ぶ',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+モノレポセットアップの場合、Amplify CLIに新しいバックエンドをフロントエンドプロジェクトのいずれかのルートで初期化することが推奨されます。別のフロントエンドディレクトリでは、`amplify pull`を実行してフロントエンドを関連付けたいAmplifyプロジェクトを選択できます。
+
+## 例
+
+このガイドでは、モノレポに推奨されるAmplifyプロジェクトセットアップについて学習します。
+
+### ステップ1: モノレポプロジェクトをセットアップする
+
+まず、複数のフロントエンドを含むモノレポセットアップを用意します。この例では、ReactとAngularアプリを含むモノレポセットアップを使用します。
+
+このプロジェクトは、AngularとReact Todoアプリのフロントエンドコードを含みます。リポジトリの構造は以下の通りです:
+
+```console
+> monorepo-amplify
+  > react
+  > angular
+```
+
+### ステップ2: Amplifyバックエンドをセットアップする
+
+AWSでバックエンドをセットアップするには、Amplify CLIを使用します。Amplify CLIはAWSサービスのプロビジョニングを簡素化するコマンドラインツールチェーンです。
+
+import all0 from '/src/fragments/cli-install-block.mdx';
+
+<Fragments fragments={{ all: all0 }} />
+
+最初に、[CLIをマシンで設定](/gen1/[platform]/tools/cli/start/set-up-cli/#configure-the-amplify-cli)します。設定後、フロントエンドプロジェクトのいずれかのルートで新しいバックエンドプロジェクトを初期化します。プロジェクトをルートレベルで初期化することもできますが、Amplifyはプロジェクトの1つにアタッチされて使用するのが最良です。これにより、フロントエンドとバックエンドのデプロイメントパイプラインを一緒にセットアップできます。
+
+```console
+> cd monorepo-amplify/react
+amplify init
+? Enter a name for the project todoreact
+? Enter a name for the environment dev
+? Choose your default editor: Visual Studio Code
+? Choose the type of app that you're building javascript
+Please tell us about your project
+? What javascript framework are you using react
+? Source Directory Path:  src
+? Distribution Directory Path: build
+? Build Command:  npm run-script build
+? Start Command: npm run-script start
+Using default provider  awscloudformation
+
+For more information on AWS Profiles, see:
+https://docs.aws.amazon.com/cli/latest/userguide/cli-multiple-profiles.html
+
+? Do you want to use an AWS profile? Yes
+? Please choose the profile you want to use #enter the profile you created
+```
+
+APIとデータベースを追加
+
+```console
+> amplify add api
+? Please select from one of the below mentioned services:
+  > GraphQL
+? Here is the GraphQL API that we will create. Select a setting to edit or continue:
+  > Continue
+? Choose a schema template:
+  > Single object with fields (e.g., "Todo" with ID, name, description)
+? Do you want to edit the schema now?
+  > Yes
+```
+
+クラウドにデプロイ
+
+```console
+amplify push
+✔ Successfully pulled backend environment dev from the cloud.
+
+Current Environment: dev
+
+| Category | Resource name | Operation | Provider plugin   |
+| -------- | ------------- | --------- | ----------------- |
+| Api      | todo          | Create    | awscloudformation |
+? Are you sure you want to continue? Yes
+
+The following types do not have '@auth' enabled. Consider using @auth with @model
+  - Todo
+Learn more about @auth here: [https://docs.amplify.aws/react/build-a-backend/graphqlapi/customize-authorization-rules/](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)
+
+GraphQL schema compiled successfully.
+
+Edit your schema at /Users/nsswamin/workspace/Experiments/monorepo-amplify/react/amplify/backend/api/todo/schema.graphql or place .graphql files in a directory at /Users/nsswamin/workspace/Experiments/monorepo-amplify/react/amplify/backend/api/todo/schema
+? Do you want to generate code for your newly created GraphQL API
+  > Yes
+? Choose the code generation language target
+  > javascript
+? Enter the file name pattern of graphql queries, mutations and subscriptions
+  > src/graphql/**/*.js
+? Do you want to generate/update all possible GraphQL operations - queries, mutations and subscriptions
+  > Yes
+? Enter maximum statement depth [increase from default if your schema is deeply nested]
+  > 2
+```
+
+### ステップ3a: バックエンドをReactアプリと統合する
+
+Reactアプリをローカルでテストします。新しいTodoを作成します。
+
+```bash
+npm start
+```
+
+Todosが作成されたことを確認するには、`amplify console`を実行します。これにより、Amplify Consoleでバックエンド環境が開きます。**API**タブを選択し、データソースの下の**Todotable**で**View**をクリックします。作成したTodoレコードが表示されます。
+
+### ステップ3b: バックエンドをAngularアプリと統合する
+
+次にAngularアプリに切り替えます。
+
+```bash
+cd ../angular
+```
+
+Angularアプリで同じバックエンドを参照しましょう。そのためには、以下のコマンドを実行してください
+
+```console
+amplify pull
+? Do you want to use an AWS profile? Yes
+? Please choose the profile you want to use work-lhr
+? Which app are you working on?
+❯ todo
+  app2
+  app3
+
+(hit enter on all other options till the last question)
+
+? Do you plan on modifying this backend? No
+```
+
+別のフロントエンド用にクライアント側のコードを生成
+
+```console
+cp ../react/src/graphql/schema.json .
+amplify add codegen --apiId XXXXXXXXX
+? Choose the type of app that you're building javascript
+? What javascript framework are you using angular
+? Choose the code generation language target angular
+? Enter the file name pattern of graphql queries, mutations and subscriptions src/graphql/**/*.graphql
+? Do you want to generate/update all possible GraphQL operations - queries, mutations and subscriptions Yes
+? Enter maximum statement depth [increase from default if your schema is deeply nested] 2
+? Enter the file name for the generated code src/app/API.service.ts
+? Do you want to generate code for your newly created GraphQL API Yes
+```

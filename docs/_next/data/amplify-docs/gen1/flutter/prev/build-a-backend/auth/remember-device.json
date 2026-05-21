@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"flutter","meta":{"title":"デバイスを記憶する","description":"Amazon Cognito ユーザープールのデバイス関連機能を使用できます。デバイス機能を有効にするには、Cognito ユーザープールに移動し、左側のナビゲーションメニューで [デバイス] を選択してから、[ユーザーオプトイン] または [常に] を選択します。","platforms":["flutter","swift","android","javascript","react-native","angular","nextjs","react","vue"]}},"__N_SSG":true}

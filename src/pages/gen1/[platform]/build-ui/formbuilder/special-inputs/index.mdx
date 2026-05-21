@@ -1,0 +1,160 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '特別な入力の設定',
+  description: 'Amplify Studio フォームビルダーの特別な入力フィールドを使用すると、ユーザーは Amplify の独自の機能と対話できます',
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## リレーションシップを持つオートコンプリートフィールド
+
+[リレーションシップ](/gen1/[platform]/tools/console/data/relationships/)を持つデータモデルに連動した[接続フォーム](/gen1/[platform]/build-ui/formbuilder/data-binding/#connected-forms)がある場合、フォームビルダーは送信を処理するための特別なフィールドを使用します。**オートコンプリート**フィールドを使用すると、フォーム送信者は関連するデータモデルから 1 つ以上のレコードを選択できます。これらの接続されたオートコンプリートフィールドには、いくつかの特別な設定があります。
+
+フォームビルダーは現在、**競合解決のない GraphQL API** へのデータ連動をサポートしています。[GraphQL と競合解決の詳細はこちらをご覧ください](/gen1/[platform]/tools/console/data/data-model/#datastore-and-graphql)。
+
+### フォーム内のリレーションシップフィールドを有効化する
+
+データモデルにリレーションシップがあるが、接続フォームに関連フィールドがない場合は、リレーションシップフィールドが有効になっていない可能性があります。リレーションシップサポートを有効にするには...
+
+1. [Studio アプリケーションにログインします](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)
+1. 左側のバーで**UI ライブラリ**を選択します
+1. 右上隅で**UI ライブラリ設定**を選択します
+1. **リレーションシップフィールド**を選択して有効化します
+
+### レコードラベルをカスタマイズする
+
+フォーム送信者がフォーム内のオートコンプリートフィールドを選択すると、関連するレコードのリストが入力されます。デフォルトでは、これらのレコードはデータモデルの最初のフィールド、ハイフン、およびレコードの ID でラベル付けされます。
+
+![リレーションシップのデフォルトラベル付けを示す入力設定バー](/images/console/formbuilder/autocomplete1.png)
+
+この例では、フォームは新しい著者を作成し、ユーザーが関連する本を検索できるようにします。`Book` モデルの最初のフィールドは `ISBN` なので、ラベルは次のように表示されます:
+
+![ISBN と本の ID が表示されるラベルのスクリーンショット。ユーザーが読みにくい](/images/console/formbuilder/autocomplete2.png)
+
+これをフォーム送信者にとってより有用にするために、モデル内の任意のフィールドと文字列連結でラベルをカスタマイズできます。この例では、本の `name` フィールド、カンマ、`year` フィールドの方が理にかなっています。
+
+![本のタイトルと年が表示されるラベルのスクリーンショット。ユーザーが読みやすい](/images/console/formbuilder/autocomplete3.png)
+
+### コード内でリレーションシップを持つフォームを使用する
+
+フォーム設定とスタイルに満足したら、[フォームをローカルプロジェクトで生成できます](/gen1/[platform]/build-ui/formbuilder/#render-react-form-in-your-app)。
+
+**GraphQL API が DataStore を使用していない場合、リレーションシップを持つフォームはクエリコードジェン深度 4 が必要**であり、そうでなければ期待通りに機能しません。クエリ深度を更新するには:
+
+1. ターミナルを開き、Amplify プロジェクトのルートディレクトリに移動します
+1. `amplify configure codegen` を実行します
+1. Query Depth の入力を求められたら、4 に変更します。その他のオプションはお好みで設定できます
+1. すべての設定を確認した後、`amplify codegen` を実行してプロジェクトのクエリ生成を更新します
+
+## ファイルアップローダー
+
+[**ファイルアップローダー**](https://ui.docs.amplify.aws/react/connected-components/storage/fileuploader)フィールドを使用すると、フォームがファイルアップロードを受け入れることができます。ファイルは Amplify アプリに接続された Amazon S3 バケットに保存されます。アップロード後、ファイルの S3 キーはデータモデルに保存され、[Amplify JS ライブラリ](/gen1/[platform]/build-a-backend/storage/download/)を使用したシステムティックな取得が可能になります。
+
+<Video src="/images/console/formbuilder/fileuploader.mp4" description="Video - File Uploader" />
+
+### 前提条件
+
+ファイルアップローダーフィールドを使用するには、Amplify アプリが次の前提条件を満たす必要があります:
+
+- [Studio が有効化された Amplify アプリ](/gen1/[platform]/tools/console/adminui/start/)が必要です
+- Amplify 認証が必要です。[Studio 経由](/gen1/[platform]/tools/console/auth/)または [CLI 経由](/gen1/[platform]/tools/cli/commands/#auth/)で設定できます
+- Amplify Storage をアプリに追加する必要があります。[Studio 経由](/gen1/[platform]/tools/console/storage/file-storage/)または [CLI 経由](/gen1/[platform]/build-a-backend/storage/configure-storage/)で設定できます
+
+### 動作方法
+
+フォームビルダーのファイルアップローダー入力により、フォーム送信者はローカルデバイスからファイルを選択し、S3 バケットにアップロードできます。ファイルアップローダーは Amplify Storage の一部として追加された S3 バケットに自動的に接続し、同じ[ファイルレベルアクセスの概念](#file-level-access)を使用して、デフォルトで `private` に設定されます。
+
+ファイルは選択時に即座にアップロードされ、S3 キーが生成されます。デフォルトでは、ファイルアップローダーはアップロードされたファイルに基づいて[一意の S3 キー](#unique-s3-keys)を生成します。フォーム送信時に、ファイルアップローダーは文字列としてアップロードされたファイルの S3 キーを返します。
+
+ファイルアップローダーフィールドがデータモデル内のフィールドに接続されている場合、S3 キーは GraphQL API 経由でデータベースに書き込まれます。フィールドがデータモデルに接続されていない場合、[`onSubmit` フック](/gen1/[platform]/build-ui/formbuilder/lifecycle/#handle-form-data-submissions---onsubmit)を使用して S3 キーを手動で処理できます。
+
+### 接続フォームを持つファイルアップローダー
+
+ファイルアップローダーフィールドが[接続フォーム](/gen1/[platform]/build-ui/formbuilder/data-binding/#connected-forms)の一部としてデータモデルに連動している場合、フォーム送信時にバインドされたデータモデルにレコードが作成または更新されます。
+
+接続フォームにファイルアップローダー入力フィールドが追加されると、アップロードされたファイルの S3 キーが接続されたデータモデルの `String` フィールドに書き込まれます。
+
+_前提条件:_
+
+- GraphQL API が必要です。[Studio 経由](/gen1/[platform]/tools/console/data/data-model/)または [CLI 経由](/gen1/[platform]/build-a-backend/graphqlapi/)でデプロイできます
+- データモデルに `String` 型の少なくとも 1 つのフィールドが必要です
+- 接続フォームが必要です。これは[デフォルトフォーム](/gen1/[platform]/build-ui/formbuilder/#getting-started)または[カスタム接続フォーム](/gen1/[platform]/build-ui/formbuilder/data-binding/#connected-forms)です
+
+_接続フォームにファイルアップローダーを追加..._
+
+1. [Studio アプリにログイン](/gen1/[platform]/tools/console/adminui/start/)して、UI ライブラリを選択します
+2. 接続フォームを選択し、右上隅の**設定**を選択します
+3. ファイルアップローダーフィールドに変換する `string` フィールドを選択します
+4. **入力設定**サイドバーの**表示**セクションで、**タイプ**ドロップダウンを選択して `StorageField` を選択します
+
+![テキストフィールドがファイルアップローダーフィールドに変換されているスクリーンショット](/images/console/formbuilder/storage1.png)
+
+<Callout info>
+
+`String` 型フィールドのみを `StorageField` 型に変換できます。**タイプ**ドロップダウンに `StorageField` がない場合は、[データモデルを確認](/gen1/[platform]/tools/console/data/data-model/)してください
+
+</Callout>
+
+### 接続されていないフォームを持つファイルアップローダー
+
+_接続されていないフォームにファイルアップローダーフィールドを追加..._
+
+1. [Studio アプリにログイン](/gen1/[platform]/tools/console/adminui/start/)して、UI ライブラリを選択します
+2. 接続されていないフォームに移動するか、[新しい空白フォームを作成](/gen1/[platform]/build-ui/formbuilder/#getting-started)します
+3. 青いプラス記号をクリックしてフォームに新しいフィールドを追加します
+4. `StorageField` 入力要素を選択します
+
+![接続されていないフォームにストレージフィールドが追加されているスクリーンショット](/images/console/formbuilder/storage3.png)
+
+接続されていないすべてのフォームでは、フォーム送信を手動で設定する必要があります。`onSubmit` フックと `fields` オブジェクトを使用して、[送信をコード内で処理](/gen1/[platform]/build-ui/formbuilder/lifecycle/#handle-form-data-submissions---onsubmit)します。
+
+### ファイルアップローダーの設定
+
+ファイルアップローダーには、右側のツールバーで適用できる複数の固有の設定があります。
+
+- **ファイルレベルアクセス**: アップロードされたファイルにアクセスできるユーザーを決定します。ファイルアップローダーはデフォルトで「プライベート」に設定されます。
+  - _プライベート_: アップロード者のみがアクセス可能
+  - _保護_: 認証されたすべてのユーザーがアクセス可能
+  - _パブリック_: 誰でもアクセス可能
+- **受け入れるファイルタイプ**: アップロードできるファイルタイプを制限します
+- **詳細設定**
+  - **最大ファイル数**: 送信前にフォームに追加できる最大ファイル数。バインドされたデータモデルフィールドが配列でない場合、常に 1 になります
+  - **最大ファイルサイズ**: アップロードされた各ファイルの最大サイズ
+  - **一時停止可能**: ユーザーがアップロードを一時停止および再開できます
+  - **画像プレビュー**: アップロードされたファイルが画像の場合、画像のプレビューがフォームにレンダリングされます
+
+### ファイルレベルアクセス
+
+ファイルアップローダーは Storage カテゴリと同じ[ファイルレベルアクセスの概念](/gen1/[platform]/build-a-backend/storage/configure-access/)を使用し、デフォルトで `private` に設定されます。`private` または `protected` ファイルレベルアクセスを選択すると、アップロードされたすべてのファイルのファイルパスに `{user_identity_id}` が含まれます。これにより、読み取りと書き込みアクセスが制限され、異なるユーザーがアップロードした同じファイルが一意のパスを持つことが保証されます。
+
+### 一意な S3 キー
+
+同じ S3 キーを持つファイルが同じパスにアップロードされると、S3 はこれらのファイルを上書きします。ファイルの誤った上書きを防ぐために、ファイルアップローダーは_ファイルコンテンツ_をハッシュ化して一意の S3 キーを生成します。同じ名前の異なるファイルをアップロードしても、元のファイルは上書きされません。
+
+ただし、フォーム送信者が同じパスに 2 つの同一ファイルをアップロードする場合 - ファイル名が異なっていても - ファイルアップローダーは S3 バケット内のファイルの重複を防ぎます。
+
+<Callout warning>
+
+ファイルの上書きは同じパス内の_同じ S3 キー_に対してのみ発生します。ファイルアップローダーの**ファイルレベルアクセス**が `private` または `protected` に設定されている場合、別々のユーザーがアップロードした同一ファイルは個別に保存されます。
+
+<br />
+**ファイルレベルアクセス**が `public` に設定されている場合、同一ファイルは相互に上書きされます。
+
+</Callout>

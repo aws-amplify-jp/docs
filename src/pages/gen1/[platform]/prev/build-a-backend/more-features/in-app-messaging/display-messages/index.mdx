@@ -1,0 +1,43 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'メッセージの表示',
+  description: 'In-App Messagingイベントまたはアナリティクスイベントが送信され、アクティブなIn-App Messagingキャンペーンで設定された条件に一致する場合に、アプリ内メッセージがどのように表示されるかについて説明します。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import reactnative0 from '/src/fragments/lib-v1/in-app-messaging/display-message/display-message.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative0 }} />
+
+import js0 from '/src/fragments/lib-v1/in-app-messaging/display-message/display-message.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>

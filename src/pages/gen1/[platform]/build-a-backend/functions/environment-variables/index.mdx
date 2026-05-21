@@ -1,0 +1,86 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: '環境変数',
+  description: 'AWS Lambda 関数の環境変数を設定する',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify CLI を使用すると、Lambda 関数の環境変数を設定できます。各 Amplify 環境は異なる環境変数値を持つことができます。これにより、環境に応じて開発環境と本番環境の URL を切り替えるなどのユースケースが可能になります。
+
+> 環境変数は、データベースパスワード、API キー、アクセストークンなどの機密設定値を保存するために使用しないでください。代わりに[関数シークレット設定](/gen1/[platform]/build-a-backend/functions/secrets/)を使用してください。
+
+## 環境変数の設定
+環境変数を使用して新しい関数を設定するには、`amplify add function` を実行し、詳細設定プロンプトで `yes` を選択して、環境変数設定プロンプトで `yes` を選択します。そこから、環境変数のキーと値を指定できます。
+
+```console
+$ amplify add function
+...
+? Do you want to configure advanced settings? Yes
+...
+? Do you want to configure environment variables for this function? Yes
+? Enter the environment variable name: API_URL
+? Enter the environment variable value: https://example.com/test
+? Select what you want to do with environment variables: (Use arrow keys)
+  Add new environment variable
+  Update existing environment variables
+  Remove existing environment variables
+> I'm done
+```
+
+既存の関数の環境変数を設定するには、`amplify update function` を実行して `Environment variables configuration` を選択します。その後、環境変数を追加、更新、または削除できます。
+
+```console
+$ amplify update function
+...
+? Which setting do you want to update?
+  Resource access permissions
+  Scheduled recurring invocation
+  Lambda layers configuration
+> Environment variables configuration
+  Secret values configuration
+? Select what you want to do with environment variables:
+> Add new environment variable
+  Update existing environment variables
+  Remove existing environment variables
+  I'm done
+```
+
+## マルチ環境ワークフロー
+`amplify env add` を使用して新しい Amplify 環境を作成する場合、Amplify CLI は、すべての環境変数値を新しい環境に適用するか、それらを変更するかを尋ねます。既存の値を適用することを選択した場合、`amplify update function` を実行していつでも編集できます。
+
+`amplify env add --yes` を使用して新しい Amplify 環境を作成する場合、Amplify CLI は現在の環境からすべての環境変数値を新しい環境に適用します。
+
+マルチ環境ワークフローでは、1 つの Amplify 環境に新しい環境変数を追加してから、別の Amplify 環境をチェックアウトした場合があります。この場合、次の `amplify push` では、Amplify CLI は、現在の環境で指定された値がない新しい環境変数があることを検出して、プロンプトに応答します。
+この場合、`amplify push --yes` を実行すると、欠落している環境変数値を説明するメッセージで失敗します。
+
+[**git ベース**のマルチ環境ワークフロー](/gen1/[platform]/tools/cli/teams/)では、デプロイ中にエラーが発生する可能性があります。たとえば、これは `envA` で環境変数を追加して (git ブランチ `branchA` に対応)、その後 `amplify checkout envB` と `git checkout branchB` を実行して `git merge` branchA を branchB にマージした場合に発生します。`envB` をプッシュすると、Amplify CLI は新しい環境変数が追加されたことを検出しますが、その値を推測できません。この問題を解決するには、ターミナルで次のコマンドを実行します。
+
+1. `amplify env checkout <failing env name>`
+2. `amplify push` - プロンプトが表示されたら、環境変数の新しい値を入力します
+3. `git commit`
+4. `git push`

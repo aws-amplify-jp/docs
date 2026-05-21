@@ -1,0 +1,256 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify CLIのセットアップ',
+  description: 'Amplifyの始め方 - 前提条件',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'swift',
+    'react',
+    'react-native',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+開始する前に、以下のものがインストールされていることを確認してください:
+
+- [Node.js](https://nodejs.org/) v14.x以降
+- [npm](https://www.npmjs.com/) v6.14.4以降
+- [git](https://git-scm.com/) v2.14.1以降
+
+<InlineFilter filters={['angular']}>
+
+<Callout>
+
+**注意:** AWS Amplifyはnode v14.x以降のみが必要ですが、このチュートリアルはAngular v17で利用可能な機能を使用しており、最小node v18.13が必要です。
+
+</Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={['flutter']}>
+
+- [Flutter](https://flutter.dev/docs/get-started/install)
+
+</InlineFilter>
+
+<InlineFilter filters={['react','nextjs']}>
+
+<Callout>
+
+このチュートリアルでは、JavaScriptまたはES6とReactに精通していることを前提としています。Reactについて復習が必要な場合は、[公式チュートリアル](https://react.dev/learn)を参照することをお勧めします。
+
+</Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={['react-native']}>
+- 新しいReact Nativeアプリケーションを初期化します。これを行うには2つの方法があります:
+
+1. Expo CLI - React Native開発者向けのより簡単な方法
+2. React Native CLI - すでにモバイル開発に慣れている場合、プロジェクトにネイティブコードをビルドできます。
+
+このチュートリアルでは両方をカバーしているので、あなたに最適なものを使用してください。
+
+</InlineFilter>
+
+## AWSアカウントのサインアップ
+
+まだAWSアカウントを持っていない場合は、このチュートリアルで説明されている手順を実行するために、アカウントを作成する必要があります。
+
+[AWSアカウントの作成](https://portal.aws.amazon.com/billing/signup?redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start)
+
+> AWSアカウントの作成に初期費用や期間の約束はなく、サインアップするとAWS無料利用枠に直ちにアクセスできます。
+
+## Amplify CLIをインストール
+
+Amplify Command Line Interface (CLI)は、アプリ用のAWSクラウドサービスを作成するための統一されたツールチェーンです。Amplify CLIをインストールしましょう。
+
+<BlockSwitcher>
+
+  <Block name="npm">
+
+```bash
+npm install -g @aws-amplify/cli
+```
+
+  </Block>
+
+  <Block name="cURL (Mac and Linux)">
+
+```bash
+curl -sL https://aws-amplify.github.io/amplify-cli/install | bash && $SHELL
+```
+
+  </Block>
+
+  <Block name="cURL (Windows)">
+
+```bash
+curl -sL https://aws-amplify.github.io/amplify-cli/install-win -o install.cmd && install.cmd
+```
+
+  </Block>
+
+</BlockSwitcher>
+
+<Callout warning>
+
+npmでパッケージをグローバルにインストールする際の[`EACCES`権限問題を解決](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally)
+
+</Callout>
+
+## Amplify CLIを構成
+
+ローカルマシンでAmplify CLIをセットアップするには、AWSアカウントに接続するように構成する必要があります。
+
+<Callout info>
+
+**注意**: マシンにAWS認証情報を持つAWSプロフィールがすでにある場合は、このステップをスキップできます。
+
+</Callout>
+
+以下のコマンドを実行してAmplifyを構成します:
+
+```bash
+amplify configure
+```
+
+<Callout info>
+
+`configure`コマンドは永続的な認証情報を使用するAWSプロフィールの作成のみをサポートしています。IAMロールまたはIAM Identity Center (以前のAWS SSO)を使用している場合は、[Amplify CLIを手動で構成する方法](#amplify-cliを手動で構成)を学習してください。
+
+</Callout>
+
+`amplify configure`はAWSコンソールへのサインインを求めます。
+
+サインイン後、Amplify CLIは[AWS Identity and Access Management (IAM)](https://aws.amazon.com/iam/)を使用してIAMユーザーを作成するよう求めます。
+
+```console
+Specify the AWS Region
+? region:  # Your preferred region
+Follow the instructions at
+https://docs.amplify.aws/cli/start/install/#configure-the-amplify-cli
+
+to complete the user creation in the AWS console
+https://console.aws.amazon.com/iamv2/home#/users/create
+```
+
+[IAMユーザー作成ページ](https://console.aws.amazon.com/iamv2/home#/users/create)に移動します(まだ開いていない場合)。
+
+ユーザー名を入力して**次へ**を選択します。ユーザーには任意の名前を付けることができますが、ここでは「amplify-dev」と名前を付けます。
+
+![IAMユーザー作成の最初のステップ。ユーザーの詳細を指定。](/images/cli/user-creation/user-name.png)
+
+**ポリシーを直接アタッチ**を選択し、権限ポリシーとして**AdministratorAccess-Amplify**を選択します。**次へ**を選択します。
+
+![IAMユーザー作成の2番目のステップ。権限を設定。](/images/cli/user-creation/user-permissions.png)
+
+レビューページで、すべてが適切に見えることを確認して**ユーザーを作成**を選択します。
+
+![IAMユーザー作成の3番目で最終のステップ。レビューと作成。](/images/cli/user-creation/user-review.png)
+
+これはユーザーリストページにリダイレクトします。先ほど作成したユーザーを選択します。
+
+![ユーザーテーブルに表示されている新しいユーザー。](/images/cli/user-creation/user-list.png)
+
+ユーザー詳細ページで、**セキュリティ認証情報**タブに移動し、**アクセスキー**までスクロールダウンして**アクセスキーを作成**を選択します。
+
+![新しく作成されたユーザーのセキュリティ認証情報タブ。](/images/cli/user-creation/create-access-keys.png)
+
+次のページで、**コマンドラインインターフェース**を選択し、警告を承認して、**次へ**を選択します。
+
+![オプションリストで[コマンドラインインターフェース]オプションが選択されています。](/images/cli/user-creation/ack-page.png)
+
+次のページで**アクセスキーを作成**を選択します。その後、ユーザーのアクセスキーが表示されたページが表示されます。コピーアイコンを使用してこれらの値をクリップボードにコピーしてから、Amplify CLIに戻ります。
+
+![アクセスキーと秘密アクセスキーのコピーボタンが丸で囲まれたアクセスキー取得ページ。](/images/cli/user-creation/access-keys-done.png)
+
+コピーした値を対応するCLIプロンプトに入力します。
+
+```console
+Enter the access key of the newly created user:
+? accessKeyId:  # YOUR_ACCESS_KEY_ID
+? secretAccessKey:  # YOUR_SECRET_ACCESS_KEY
+This would update/create the AWS Profile in your local machine
+? Profile Name:  # (default)
+
+Successfully set up the new user.
+```
+
+次のページで、アプリをセットアップしてAmplifyを初期化します。
+
+## Amplify CLIを手動で構成
+
+IAMロールまたはIAM Identity Center (以前のAWS SSO)を使用している場合は、`amplify configure`ウィザードではなく、[AWSプロフィールエントリ](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-format-profile)を手動で作成することで、Amplify CLI用にローカルマシンを構成できます。
+
+IAM Identity Centerを使用してローカルにAWSプロフィールを作成するには、AWS CLIウィザード[`aws configure sso`](https://docs.aws.amazon.com/cli/latest/userguide/sso-configure-profile-token.html#sso-configure-profile-token-auto-sso)を使用するか、`~/.aws/config`に直接書き込むことができます:
+
+<Callout info>
+
+[AWS CLIをインストールする方法を学習](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+
+</Callout>
+
+```toml title="~/.aws/config"
+[profile my-sso-profile]
+sso_session = my-sso
+sso_account_id = 123456789011
+sso_role_name = AdministratorAccess-Amplify
+region = us-west-2
+output = json
+
+[sso-session my-sso]
+sso_region = us-east-1
+sso_start_url = https://my-sso-portal.awsapps.com/start
+sso_registration_scopes = sso:account:access
+```
+
+現在、Amplify CLIはIAM Identity Centerとの使用に[認証情報の解決方法に関する問題](https://github.com/aws-amplify/amplify-cli/issues/4488)のため、回避策が必要です。
+
+```diff title="~/.aws/config"
+[profile my-sso-profile]
+sso_session = my-sso
+sso_account_id = 123456789011
+sso_role_name = AdministratorAccess-Amplify
+region = us-west-2
+output = json
++ credential_process = aws configure export-credentials --profile my-sso-profile
+
+[sso-session my-sso]
+sso_region = us-east-1
+sso_start_url = https://my-sso-portal.awsapps.com/start
+sso_registration_scopes = sso:account:access
+```
+
+上記の例を使用する場合、新しいアプリを作成するか既存のアプリをプルするときに、Amplifyアプリで使用するAWSプロフィールとして`my-sso-profile`を指定します。
+
+[IAMロールを使用してローカルにAWSプロフィールを作成](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html)するには、ロールに`AdministratorAccess-Amplify`権限セットを割り当て、`~/.aws/config`ファイルでロールを設定します:
+
+```toml title="~/.aws/config"
+[profile amplify-admin]
+role_arn = arn:aws:iam::123456789012:role/amplify-admin
+source_profile = amplify-user
+
+[profile amplify-user]
+region=us-east-1
+```
+
+上記の例を使用する場合、新しいアプリを作成するか既存のアプリをプルするときに、Amplifyアプリで使用するAWSプロフィールとして`amplify-admin`を指定します。

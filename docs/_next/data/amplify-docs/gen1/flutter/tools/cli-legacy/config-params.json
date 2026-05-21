@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"flutter","meta":{"title":"設定可能なパラメータ","description":"GraphQL Transformの追加の設定可能なパラメータは、CloudFormationテンプレート自体に渡すことができます。これにより、SDL定義に実装の詳細を多くリークさせることなく、エスケープハッチを提供します","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

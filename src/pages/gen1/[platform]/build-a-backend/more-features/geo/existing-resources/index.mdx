@@ -1,0 +1,42 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '既存の Amazon Location リソースを使用する',
+  description: 'Amplify Geo を設定して、既存の Amazon Location Service リソースをお使いの設定で参照することで使用します。',
+  platforms: [
+    'javascript',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import commonExistingResources from '/src/fragments/lib/geo/existing-resources.mdx';
+
+<Fragments
+  fragments={{
+    android: commonExistingResources,
+    swift: commonExistingResources,
+    javascript: commonExistingResources,
+    angular: commonExistingResources,
+    nextjs: commonExistingResources,
+    react: commonExistingResources,
+    vue: commonExistingResources
+  }}
+/>

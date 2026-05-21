@@ -1,0 +1,84 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+
+export const meta = {
+  title: 'CLI',
+  description: 'Amplify コマンドラインインターフェイス (CLI) は、アプリの AWS クラウドサービスを作成、統合、管理するための統一されたツールチェーンです。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ],
+  route: '/gen1/[platform]/tools/cli'
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      platform: context.params.platform,
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+Amplify コマンドラインインターフェイス (CLI) は、アプリの AWS クラウドサービスを作成、統合、管理するための統一されたツールチェーンです。ガイドの手順に従って **[Amplify CLI をインストール](/gen1/[platform]/tools/cli/start/set-up-cli/)** してください。
+
+![Amplify CLI 機能カルーセル](/assets/cli-b-roll.gif)
+
+## 主な機能
+
+### GraphQL によるデータモデリング
+
+ほとんどのアプリケーションの中核にあるのは、データです。アプリのデータを簡単にモデル化してアクセスできることで、バックエンドのアーキテクチャ設計と再設計に費やす時間を減らし、コア機能とビジネス価値の提供に集中できます。
+
+GraphQL Transform ライブラリを使用すると、GraphQL スキーマ指令を使用して、NoSQL データベース、認証、OpenSearch エンジン、Lambda 関数リゾルバー、リレーションシップ、認可など、多くの機能を備えた AWS AppSync GraphQL API をデプロイできます。[詳細](/gen1/[platform]/build-a-backend/graphqlapi/)
+
+### 複数環境
+
+Amplify CLI は複数環境 (dev、qa、prod など) をサポートしています。CLI でプロジェクトを初期化すると、Amplify バックエンド環境が作成されます。すべての Amplify バックエンド環境は、プロジェクトに追加されたカテゴリ用のコンテナです。Amplify コンソールですべてのバックエンド環境とプロジェクトに追加されたカテゴリを表示できます。[詳細](/gen1/[platform]/tools/cli/teams/)
+
+### 拡張性
+
+AWS Amplify が提供する拡張性機能により、開発者は AWS バックエンドとデプロイ機能をカスタマイズする柔軟性を得られます。Amplify が生成したバックエンドリソースを再構成して特定のユースケースに最適化するか、Amplify のデプロイ操作を変更してエンタープライズ DevOps ガイドラインに準拠するか、ニーズの進化に応じて選択できます。
+
+1. [生成されたリソースのオーバーライド](/gen1/[platform]/build-a-backend/auth/override-cognito/) - CDK を使用して細かい粒度のバックエンドリソース設定を変更してオーバーライドします。Amplify が重い処理を行います。たとえば、Amplify を使用して、デフォルト設定で新しい Cognito リソースをバックエンドに追加します。「amplify override auth」を使用して必要な設定のみをオーバーライドします。[プロジェクトレベル (IAM ロール)](/gen1/[platform]/tools/cli/project/override-iam/)、[認証 (Cognito)](/gen1/[platform]/build-a-backend/auth/override-cognito/)、[ストレージ (S3 および DynamoDB)](/gen1/[platform]/build-a-backend/storage/modify-amplify-generated-resources/) リソースをオーバーライドします。
+
+2. [カスタム AWS リソースを追加](/gen1/[platform]/tools/cli/custom/cdk/) - Amplify CLI は [CDK](/gen1/[platform]/tools/cli/custom/cdk/) または [CloudFormation](/gen1/[platform]/tools/cli/custom/cloudformation/) を使用してカスタム AWS リソースを追加する機能を提供します。Amplify プロジェクトで「amplify add custom」コマンドを実行すると、CDK または CloudFormation スターターファイルと、他の Amplify が生成したリソースを参照するメカニズムが提供されます。
+
+3. [既存の AWS リソースをインポート](/gen1/[platform]/build-a-backend/auth/import-existing-resources) - [Amazon Cognito ユーザープールおよびフェデレーションアイデンティティ (アイデンティティプール)](/gen1/[platform]/build-a-backend/auth/import-existing-resources/) や [DynamoDB + S3 などのストレージリソース](/gen1/[platform]/build-a-backend/storage/import/) など、既存のリソースを Amplify プロジェクトに統合します。たとえば、既存の Cognito リソースを GraphQL API、Storage (S3) などの認証メカニズムとして使用します。
+
+4. [コマンドフック](/gen1/[platform]/tools/cli/project/command-hooks/) - コマンドフックを使用して、Amplify CLI コマンド (「amplify push」、「amplify api gql-compile」など) の前、実行中、後にカスタムスクリプトを実行します。デプロイ中に検証チェック、認証情報スキャンの実行、またはビルドアーティファクトのクリーンアップをトリガーします。Amplify のベストプラクティスのデフォルト設定を拡張して、セキュリティガイドラインと運用要件を満たします。
+
+5. Amplify プロジェクトを CDK にエクスポート - 既存の DevOps ツールで Amplify を使用するか、既存のデプロイシステムに統合します。Amplify のエクスポート機能を使用すると、Amplify プロジェクトを優先するツール (CDK) にエクスポートできます。CloudFormation テンプレート、GraphQL API リゾルバーコード、Lambda 関数アセット、クライアント側のコード生成を含む Amplify CLI ビルドアーティファクトをエクスポートします。
+
+<InlineFilter filters={["javascript", "react-native", "angular", "nextjs", "react", "vue"]}>
+
+### ローカルモッキング
+
+Amplify は、API (AWS AppSync)、Storage (Amazon DynamoDB および Amazon S3)、Functions (AWS Lambda)、Hosting など、特定のカテゴリを含む、クラウドにプッシュする前にアプリケーションをモック、テストするためのローカルサーバーの実行をサポートしています。`amplify init` を実行した後、以下を実行してモックサーバーを開始できます。[詳細](/gen1/[platform]/tools/cli/usage/mock/)
+
+```bash
+amplify mock
+```
+
+</InlineFilter>
+
+### サーバーレスコンテナ
+
+Amplify は、アプリケーション構築のための AWS Lambda と AWS Fargate コンピュートオプションをサポートしており、インフラストラクチャ内での完全な制御と統合を実現します。Lambda 関数は GraphQL および REST API で使用でき、S3 および DynamoDB などのイベントソースからのトリガーも可能です。同様に、[Dockerfile](https://docs.docker.com/engine/reference/builder/) または [Docker Compose ファイル](https://docs.docker.com/compose/compose-file/) を導入して、サーバーレスコンテナを Amazon Elastic Container Service に自動的にビルドしてデプロイできます。[詳細](/gen1/[platform]/tools/cli/usage/containers/)
+
+## 詳細情報
+
+<Overview childPageNodes={props.childPageNodes} />

@@ -1,0 +1,49 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'オーディオをテキストに変換',
+  description: 'Amplifyを使用してアプリケーションのオーディオをテキストに変換する方法（音声をテキストに変換）について詳しく学びます',
+  platforms: [
+    'javascript',
+    'react-native',
+    'swift',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios_maintenance from '/src/fragments/lib-v1/ios-maintenance.mdx';
+
+<Fragments fragments={{ swift: ios_maintenance }} />
+
+import ios1 from '/src/fragments/lib-v1/predictions/ios/transcribe.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import transcribeJs from '/src/fragments/lib-v1/predictions/js/transcribe.mdx';
+
+<Fragments
+  fragments={{
+    javascript: transcribeJs,
+    'react-native': transcribeJs,
+    angular: transcribeJs,
+    nextjs: transcribeJs,
+    react: transcribeJs,
+    vue: transcribeJs
+  }}
+/>

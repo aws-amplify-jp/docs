@@ -1,0 +1,62 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplifyの前提条件を設定する',
+  description: 'Amplifyを使用したプロジェクトセットアップ - 前提条件',
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs',
+    'angular',
+    'vue',
+    'swift',
+    'android',
+    'react-native',
+    'flutter'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<Callout info>
+
+最新バージョンの使用と、新規プロジェクト設定時にこのガイドに従うことを強くお勧めします。ただし、必要に応じて[前のバージョン](/gen1/[platform]/prev/start/project-setup/)のプロジェクトセットアップガイドも利用できます。
+
+</Callout>
+
+import common_header from '/src/fragments/lib/project-setup/native_common/prereq/common_header.mdx';
+
+<Fragments fragments={{ all: common_header }} />
+
+import ios_prereq from '/src/fragments/lib/project-setup/ios/prereq/prereq.mdx';
+import android_prereq from '/src/fragments/lib/project-setup/android/prereq/prereq.mdx';
+import flutter_prereq from '/src/fragments/lib/project-setup/flutter/prereq/prereq.mdx';
+
+<InlineFilter filters={['react-native']}>
+
+- [React Native](https://reactnative.dev/docs/next/environment-setup) v0.70.0 以降
+
+</InlineFilter>
+
+<Fragments
+  fragments={{
+    swift: ios_prereq,
+    android: android_prereq,
+    flutter: flutter_prereq
+  }}
+/>
+
+import common_body from '/src/fragments/lib/project-setup/native_common/prereq/common_body.mdx';
+
+<Fragments fragments={{ all: common_body }} />

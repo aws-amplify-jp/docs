@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"android","meta":{"title":"既存のS3バケットまたはDynamoDBテーブルをインポートする","description":"Amplify CLIを使用して、既存のS3バケットまたはDynamoDBテーブルリソースをストレージリソースとして他のAmplifyカテゴリ（API、Function、その他）にインポートする方法を学びます。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

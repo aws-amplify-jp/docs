@@ -1,0 +1,106 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'カスタム識別情報およびグループクレームの設定',
+  description: "Amplify Dataでは、デフォルトのCognitoクレームを使用する代わりに、カスタム識別情報およびグループクレームを設定できます。これは、データベースやサードパーティの認証プロバイダーなどの外部ソースからクレームを入力したい場合に便利です。この例は、カスタムの事前トークン生成Lambdaトリガーから取得できる`user_id`識別情報クレームと`user_groups`グループクレームをチェックする方法を示しています。これらのカスタムクレームを定義することで、承認ルールでより柔軟性が提供されます。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify Dataは、デフォルトで提供されるAmazon Cognito の `cognito:groups` またはダブルコロン区切りのクレーム `sub::username` をJWTトークンから使用したくない場合に、カスタム識別情報およびグループクレームの使用をサポートしています。これは、サードパーティのOIDCシステムからのトークンを使用している場合、または[事前トークン生成Lambdaトリガー](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html)を使用している場合など、データベースから読み込むグループのリストで外部システムからクレームを入力したい場合に便利です。
+
+カスタムクレームを使用するには、必要に応じて `identityClaim` または `groupClaim` を指定します。以下の例では、`identityClaim` が指定され、レコードオーナーは この `user_id` クレームに対してチェックされます。同様に、`user_groups` クレームに「Moderator」文字列が含まれている場合、アクセスが許可されます。
+
+```ts title="amplify/data/resource.ts"
+import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
+
+const schema = a.schema({
+  Post: a
+    .model({
+      id: a.id(),
+      owner: a.string(),
+      postname: a.string(),
+      content: a.string(),
+    })
+    .authorization(allow => [
+      allow.owner().identityClaim('user_id'),
+      allow.groups(['Moderator']).withClaimIn('user_groups'),
+    ]),
+});
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({ schema });
+
+```
+
+<InlineFilter filters={["javascript", "angular", "react-native", "react", "nextjs", "vue", "android", "swift"]}>
+
+アプリケーション内では、`userPool`認証モードで`client.models.<model-name>`を使用してモデルに対するCRUD操作を実行できます。
+
+```ts
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../amplify/data/resource'; // Path to your backend resource definition
+
+const client = generateClient<Schema>();
+
+const { errors, data: newTodo } = await client.models.Todo.create(
+  {
+    postname: 'My New Post'
+    content: 'My post content',
+  },
+  // highlight-start
+  {
+    authMode: 'userPool',
+  }
+  // highlight-end
+);
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["flutter"]}>
+アプリケーション内では、`userPools`認証モードでモデルに対するCRUD操作を実行できます。
+  
+```dart
+try {
+  final todo = Todo(content: 'My new todo');
+  final request = ModelMutations.create(
+    todo,  
+    authorizationMode: APIAuthorizationType.userPools,
+  );
+  final createdTodo = await Amplify.API.mutations(request: request).response;
+
+  if (createdTodo == null) {
+    safePrint('errors: ${response.errors}');
+    return;
+  }
+  safePrint('Mutation result: ${createdTodo.name}');
+
+} on APIException catch (e) {
+  safePrint('Failed to create todo', e);
+}
+```
+</InlineFilter>

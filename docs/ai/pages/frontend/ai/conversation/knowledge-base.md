@@ -1,0 +1,121 @@
+---
+title: "ナレッジベース"
+section: "frontend/ai/conversation"
+platforms: ["javascript", "react-native", "angular", "nextjs", "react", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/ai/conversation/knowledge-base/"
+---
+
+[Amazon Bedrockナレッジベース](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base.html)は、検索拡張生成（RAG）の実装に最適な方法です。RAGは、Postgresとpg_vectorまたはOpenSearchなどのベクトルデータベースにドキュメントなどの大量のコンテンツを保存することを含む、生成AI アプリケーションの構築における一般的なパターンです。
+
+> **Warning:** Amazon Bedrockナレッジベースのデフォルト設定はOpenSearch Serverlessで、使用しているかどうかに関わらずデフォルトコストがかかります。注意しないと、AWSの請求額が大きくなる可能性があります。これをテストしているだけの場合は、完了したらOpenSearch Serverlessインスタンスをオフにしてください。
+
+## ナレッジベースの作成
+
+Bedrockナレッジベースをconversation routeと統合するには、まずコンソール、CLI、またはCDKで[Amazon Bedrockナレッジベースを作成](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-create.html)します。
+
+## カスタムクエリとツールの作成
+
+```ts title="amplify/data/resource.ts"
+import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+
+const schema = a.schema({
+  // highlight-start
+  knowledgeBase: a
+    .query()
+    .arguments({ input: a.string() })
+    .handler(
+      a.handler.custom({
+        dataSource: "KnowledgeBaseDataSource",
+        entry: "./resolvers/kbResolver.js",
+      }),
+    )
+    .returns(a.string())
+    .authorization((allow) => allow.authenticated()),
+  // highlight-end
+
+  chat: a.conversation({
+    aiModel: a.ai.model("Claude 3.5 Haiku"),
+    systemPrompt: `You are a helpful assistant.`,
+    // highlight-start
+    tools: [
+      a.ai.dataTool({
+        name: 'searchDocumentation',
+        description: 'Performs a similarity search over the documentation for ...',
+        query: a.ref('knowledgeBase'),
+      }),
+    ]
+    // highlight-end
+  })
+})
+```
+
+## AWS AppSyncレゾルバーの作成
+
+次に、クエリをナレッジベースに接続するJavaScript AWS AppSyncレゾルバーを作成する必要があります。使用するナレッジベースのIDを知っておく必要があります。これはAmazon Bedrockコンソールまたは AWS CLIで確認できます。
+
+```javascript title="amplify/data/resolvers/kbResolver.js"
+export function request(ctx) {
+  const { input } = ctx.args;
+  return {
+    resourcePath: "/knowledgebases/[KNOWLEDGE_BASE_ID]/retrieve",
+    method: "POST",
+    params: {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        retrievalQuery: {
+          text: input,
+        },
+      }),
+    },
+  };
+}
+
+export function response(ctx) {
+  return JSON.stringify(ctx.result.body);
+}
+
+```
+
+## データソースの定義
+
+次に、amplifyバックエンドファイルで、ナレッジベースクエリのデータソースを作成し、ナレッジベースを呼び出すための権限を付与する必要があります。
+
+```ts title="amplify/backend.ts"
+import { defineBackend } from '@aws-amplify/backend';
+import { auth } from './auth/resource';
+import { data } from './data/resource';
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import * as cdk from 'aws-cdk-lib';
+
+const backend = defineBackend({
+  auth,
+  data,
+});
+
+const KnowledgeBaseDataSource =
+  backend.data.resources.graphqlApi.addHttpDataSource(
+    "KnowledgeBaseDataSource",
+    `https://bedrock-agent-runtime.${cdk.Stack.of(backend.data).region}.amazonaws.com`,
+    {
+      authorizationConfig: {
+        signingRegion: cdk.Stack.of(backend.data).region,
+        signingServiceName: "bedrock",
+      },
+    },
+  );
+
+KnowledgeBaseDataSource.grantPrincipal.addToPrincipalPolicy(
+  new PolicyStatement({
+    resources: [
+      `arn:aws:bedrock:${cdk.Stack.of(backend.data).region}:[account ID]:knowledge-base/[knowledge base ID]`
+    ],
+    actions: ["bedrock:Retrieve"],
+  }),
+);
+```
+
+完了です！

@@ -1,0 +1,71 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify コンソールでファイルを管理する',
+  description:
+    'Amplify コンソールでアプリケーションのストレージファイルを管理する',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify コンソールの**ファイルストレージ**ページは、アプリケーションのバックエンド ファイルストレージを管理するためのユーザーフレンドリーなインターフェイスを提供します。ファイルの効率的なテストと管理が可能です。
+
+まだ**ストレージ**リソースを作成していない場合は、[ストレージセットアップガイド](/[platform]/build-a-backend/storage/set-up-storage/)を参照してください。
+
+## ファイルストレージへのアクセス
+
+ストレージリソースをデプロイした後、Amplify コンソールでマネージャーにアクセスできます。
+
+1. [Amplify コンソール](https://console.aws.amazon.com/amplify/home)にログインしてアプリを選択します。
+2. アクセスするブランチを選択します。
+3. 左側のナビゲーションバーから**ストレージ**を選択します。
+
+<Video src="/images/gen2/manage/storage-manager.mp4" description="Video - Access storage manager on Amplify console"/>
+
+### ファイルをアップロードするには
+
+1. **ストレージ**ページで、**アップロード**ボタンを選択します。
+2. アップロードするファイルを選択してから、**完了**を選択します。
+
+または、ストレージページにファイルを**ドラッグアンドドロップ**することもできます。
+
+### ファイルを削除するには
+
+1. **ストレージ**ページで、削除するファイルを選択します。
+2. **アクション**ドロップダウンを選択してから、**削除**を選択します。
+
+### ファイルをコピーするには
+
+1. **ストレージ**ページで、コピーするファイルを選択します。
+2. **アクション**ドロップダウンを選択してから、**コピー先**を選択します。
+3. ファイルのコピーを保存するフォルダを選択または作成します。
+4. **コピー**を選択して、ファイルを選択したフォルダにコピーします。
+
+### ファイルを移動するには
+
+1. **ストレージ**ページで、移動するファイルを選択します。
+3. **アクション**ドロップダウンを選択してから、**移動先**を選択します。
+4. ファイルを移動するフォルダを選択または作成します。
+5. **移動**を選択して、ファイルを選択したフォルダに移動します。

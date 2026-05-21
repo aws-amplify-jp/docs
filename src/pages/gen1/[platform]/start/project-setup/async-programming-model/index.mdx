@@ -1,0 +1,26 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: '非同期プログラミングモデル',
+  description: 'Amplify Androidは非同期プログラミングモデルを使用します。',
+  platforms: ['android']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+
+import android0 from '/src/fragments/lib/project-setup/android/async/async.mdx';
+
+<Fragments fragments={{ android: android0 }} />

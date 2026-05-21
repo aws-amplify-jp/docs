@@ -1,0 +1,184 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'Amplify生成的Cognito リソースをオーバーライドする',
+  description: "'amplify override auth' コマンドは、開発者が設定可能な 'overrides' TypeScript ファイルを生成し、Amplify生成のCognito リソースをCDK構築物として提供します。例えば、開発者は、Amplify CLIワークフローで直接利用できない認証設定（一時パスワードの有効日数など）を設定できます。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+```bash
+amplify override auth
+```
+
+上記のコマンドを実行して、Amazon Cognito ユーザープール、アイデンティティプール、ユーザープールグループなど、Amplify生成の認証リソースをオーバーライドします。
+
+このコマンドは、`amplify/backend/auth/<resource-name>/` の下に新しい `overrides.ts` ファイルを作成し、Amplify生成のリソースを [CDK構築物](https://docs.aws.amazon.com/cdk/latest/guide/home.html) として提供します。
+
+## Amplify生成のCognito認証リソースをカスタマイズする
+
+`override(...)` 関数内ですべてのオーバーライドを適用します。例えば、Cognito ユーザープールの一時パスワード有効日数を更新する場合:
+
+```ts
+import { AmplifyAuthCognitoStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyAuthCognitoStackTemplate) {
+  resources.userPool.policies = { // Set the user pool policies
+    passwordPolicy: {
+      ...resources.userPool.policies["passwordPolicy"], // Carry over existing settings
+      temporaryPasswordValidityDays: 3 // Add new setting not provided Amplify's default
+    }
+  }
+}
+```
+
+または、Cognito ユーザープールにカスタム属性を追加します:
+
+<Callout warning>
+
+Cognito ユーザープールスキーマから属性を削除または追加（デフォルト属性 (`email` など) を含む）すると、CloudFormationがこれをスキーマ変更と解釈し、`Invalid AttributeDataType input, consider using the provided AttributeDataType enum` などのエラーが発生します。
+
+</Callout>
+
+<Callout warning>
+
+カスタム属性は、作成後に名前を変更または削除することはできません。
+
+</Callout>
+
+```ts
+import { AmplifyAuthCognitoStackTemplate } from '@aws-amplify/cli-extensibility-helper'
+
+export function override(resources: AmplifyAuthCognitoStackTemplate) {
+  const myCustomAttribute = {
+    attributeDataType: 'String',
+    developerOnlyAttribute: false,
+    mutable: true,
+    name: 'my_custom_attribute',
+    required: false,
+  }
+  resources.userPool.schema = [
+    ...(resources.userPool.schema as any[]), // Carry over existing attributes (example: email)
+    myCustomAttribute,
+  ]
+}
+```
+
+Amplifyが生成する以下の認証リソースをオーバーライドできます:
+
+|Amplify生成リソース|説明|
+|-|-|
+|[customMessageConfirmationBucket](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket.html)|カスタムメッセージトリガー用に使用されるS3バケット|
+|[snsRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html)|認証関連メッセージを送信するためのSNSロール|
+|[userPool](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpool.html)|ユーザーのサインアップとサインインを有効にするCognito ユーザープール|
+|[userPoolClientWeb](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpoolclient.html)|Webアプリ用のCognito ユーザープールクライアント|
+|[userPoolClient](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpoolclient.html)|モバイルアプリ用のCognito ユーザープールクライアント|
+|[identityPool](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypool.html)|アイデンティティをフェデレートするためのCognito アイデンティティプール|
+|[identityPoolRoleMap](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-identitypoolroleattachment.html)|認証ユーザーと非認証ユーザーロールのロールマッピング|
+|[lambdaConfigPermissions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-permission.html)|Lambda関数がCognito ユーザープールとアイデンティティプールにアクセスするための権限|
+|[lambdaTriggerPermissions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html)|Cognito Lambda トリガーに添付されるIAMポリシー|
+|[userPoolClientLambda](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html)|ユーザープールクライアントからアプリクライアントシークレットを取得するLambda関数|
+|[userPoolClientRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html)|ユーザープールクライアントからアプリクライアントシークレットを取得するLambda関数用のIAMロール|
+|[userPoolClientLambdaPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html)|ユーザープールクライアントからアプリクライアントシークレットを取得するLambda関数用のIAMポリシー|
+|[userPoolClientLogPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html)|ユーザープールクライアントからアプリクライアントシークレットを取得するLambda関数のCloudWatchログ記録を有効にするためのIAMポリシー|
+|[userPoolClientInputs](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudformation.CustomResource.html)|ユーザープールクライアントからアプリクライアントシークレットを取得するためのカスタムCloudFormationリソース|
+|[hostedUICustomResource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html)|Cognito ユーザープールホストされたUIログインを有効にするLambda関数|
+|[hostedUICustomResourcePolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html)|Cognito ユーザープールホストされたUIログインを有効にするLambda関数用のIAMポリシー|
+|[hostedUICustomResourceLogPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html)|Cognito ユーザープールホストされたUIログインを有効にするLambda関数のCloudWatchログ記録を有効にするためのIAMポリシー|
+|[hostedUICustomResourceInputs](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudformation.CustomResource.html)|Cognito ユーザープールホストされたUIログインを有効にするためのカスタムCloudFormationリソース|
+|[hostedUIProvidersCustomResource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html)|ホストされたUIを第三者のアイデンティティプロバイダーで設定するLambda関数|
+|[hostedUIProvidersCustomResourcePolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html)|ホストされたUIを第三者のアイデンティティプロバイダーで設定するLambda関数用のIAMポリシー|
+|[hostedUIProvidersCustomResourceLogPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html)|ホストされたUIを第三者のアイデンティティプロバイダーで設定するLambda関数のCloudWatchログ記録を有効にするためのIAMポリシー|
+|[hostedUIProvidersCustomResourceInputs](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudformation.CustomResource.html)|ホストされたUIを第三者のアイデンティティプロバイダーで設定するためのカスタムCloudFormationリソース|
+|[oAuthCustomResource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html)|OAuthを有効にするLambda関数|
+|[oAuthCustomResourcePolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html)|OAuth カスタムCloudFormationリソース用のIAMポリシー|
+|[oAuthCustomResourceLogPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html)|OAuth Lambda関数のCloudWatchログ記録を有効にするためのIAMポリシー|
+|[oAuthCustomResourceInputs](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudformation.CustomResource.html)|OAuthを有効にするためのカスタムCloudFormationリソース|
+|[mfaLambda](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html)|多要素認証機能を有効にするLambda関数|
+|[mfaLogPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html)|多要素認証Lambda関数のCloudWatchログ記録を有効にするためのIAMポリシー|
+|[mfaLambdaPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html)|多要素認証Lambda関数用のIAMポリシー|
+|[mfaLambdaInputs](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudformation.CustomResource.html)|多要素認証を有効にするためのカスタムCloudFormationリソース|
+|[mfaLambdaRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html)|多要素認証Lambda関数用のIAM実行ロール|
+|[openIdLambda](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html)|OpenID Connectを有効にするLambda関数|
+|[openIdLogPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html)|OpenID Connect Lambda関数のCloudWatchログ記録を有効にするためのIAMポリシー|
+|[openIdLambdaIAMPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html)|OpenID Connect Lambda関数を有効にするためのIAMポリシー|
+|[openIdLambdaInputs](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudformation.CustomResource.html)|OpenID Connectを有効にするためのカスタムCloudFormationリソース|
+|[openIdLambdaRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html)|OpenID Connect Lambda関数用のLambda実行ロール|
+
+## Amplify生成のCognitoユーザーグループリソースをカスタマイズする
+
+`override(...)` 関数内ですべてのオーバーライドを適用します。例えば、ユーザープールグループのロールマッピングを促進するLambda実行ロールにパスを追加する場合:
+```ts
+import { AmplifyUserPoolGroupStackTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyUserPoolGroupStackTemplate) {
+  resources.lambdaExecutionRole.path = "/<my-path>/" // Note: CFN does not allow you to modify the path after creation
+}
+```
+
+Amplifyが生成する以下のユーザープールグループリソースをオーバーライドできます:
+
+|Amplify生成リソース|説明|
+|-|-|
+|[userPoolGroup](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpoolgroup.html)|ユーザープールグループのマップ|
+|[userPoolGroupRole](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html)|ユーザープールグループロールのマップ|
+|[roleMapCustomResource](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-cloudformation.CustomResource.html)|ユーザープールグループをロールにマップするためのカスタムCloudFormationリソース|
+|[lambdaExecutionRole](https://docs.aws.amazon.com/lambda/latest/dg/lambda-intro-execution-role.html)|「ユーザープールグループ」から「ロール」へのマッピング関数のLambda実行ロール|
+|[roleMapLambdaFunction](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html)|ユーザープールグループのロールマッピングを促進するLambda関数|
+
+
+## ソーシャルプロバイダーを使用するAmplify生成のCognito認証リソースをカスタマイズする
+
+`override(...)` 関数内ですべてのオーバーライドを適用します。例えば、Cognito ユーザープールにソーシャルプロバイダーを追加する場合:
+
+```ts
+import { AmplifyAuthCognitoStackTemplate } from "@aws-amplify/cli-extensibility-helper";
+
+export function override(resources: AmplifyAuthCognitoStackTemplate) {
+  resources.addCfnResource(
+    {
+      type: "AWS::Cognito::UserPoolIdentityProvider",
+      properties: {
+        AttributeMapping: {
+          preferred_username: "email",
+          email: "email"
+        },
+        ProviderDetails: {
+          client_id: "test",
+          client_secret: "test",
+          authorize_scopes: "test",
+        },
+        ProviderName: "LoginWithAmazon",
+        ProviderType: "LoginWithAmazon",
+        UserPoolId: {
+          Ref: "UserPool",
+        },
+      },
+    },
+    "amazon-social-provider"
+  );
+}
+```

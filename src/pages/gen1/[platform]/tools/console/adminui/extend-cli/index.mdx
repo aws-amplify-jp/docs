@@ -1,0 +1,142 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify CLIで拡張する',
+  description: 'Amplify CLIをインストールして、AWSアカウントなしでCLIを使用する',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify Studioでは、AWS Identity and Access Management (IAM)で設定する必要なく、Amplify CLIのすべての機能を使用できます。Amplify Studioで行った変更は、`amplify pull`コマンドを実行することでCLIで利用可能にできます。同様に、データモデルまたは認証に対するCLIの変更はAmplify Studioに表示されます。その他のすべてのカテゴリについては、Studioは関連するAWSサービスコンソールへのリンクを提供します。
+
+![Amplify Studioを使用したAmplify CLIからの自動ログインプロセスのスクリーンレコーディング](/images/console/cli-autologin.gif)
+
+## Amplify CLIをインストールするには
+
+1. ターミナルウィンドウを開き、CLIをインストールします。
+
+import all0 from '/src/fragments/cli-install-block.mdx';
+
+<Fragments fragments={{ all: all0 }} />
+
+Amplify CLIのインストールが完了したら、AWSアカウントなしで使用できるようにCLIを設定できます。
+
+## AWSアカウントなしで使用するようにAmplify CLIを設定するには
+
+import all1 from '/src/fragments/pull-cli-studio.mdx';
+
+<Fragments fragments={{ all: all1 }} />
+
+## Amplify CLIでフィーチャーを追加する
+
+Studio**セットアップ**メニューには、CLIを使用してアプリケーションに追加できる関数、ストレージ、APIなどのクラウドバックエンドフィーチャーが表示されます。各バックエンドリソースについて、Studioはターミナルウィンドウで実行するCLIコマンドを表示します。
+
+1. Studioで、**セットアップ**メニューから**ストレージ**または**関数**を選択します。
+2. **ストレージ**ページの**Amplifyプロジェクトをプル**の下から、次のコマンドをコピーしてターミナルウィンドウで実行します。
+3. バックエンド環境がクラウドから正常にプルされた後、**ストレージ機能を追加**の下から次のコマンドをコピーしてターミナルウィンドウに貼り付けます:
+
+```bash
+amplify add storage
+```
+
+4. ターミナルウィンドウのプロンプトに従って、目的の設定でストレージを設定します。
+5. ターミナルウィンドウで次のコマンドを実行して、ローカルバックエンドリソースをビルドしてクラウドにプロビジョニングします:
+
+```bash
+amplify push
+```
+
+6. Studio**ストレージ**ページに戻ります。**デプロイされたストレージリソース**セクションで新しいストレージリソースへのリンクが利用可能であることを確認します。
+
+## Infrastructure-as-Code
+
+Amplify StudioおよびAmplify CLIで作成されたすべてのバックエンドは、AWS CloudFormationを使用してデプロイされます。AWS CloudFormationでは、バックエンド設定をコードとしてリポジトリに格納できます。これには3つの主な利点があります:
+
+1. Amplifyでは利用できない個別のサービス(例えば、CognitoやDynamoDB)で提供される機能を使用してプロジェクトを拡張する機能。
+2. AWSアカウントとリージョン全体でバックエンド環境を簡単にレプリケートする機能。
+3. Amplifyコンソールで提供されるパイプラインなどのCI/CDパイプラインと簡単に統合する機能。
+
+すべてのバックエンドインフラストラクチャ-as-コード定義は、Amplifyコマンドラインインターフェイス(CLI)を使用してプロジェクトに追加できます。
+
+## 制限
+
+Amplify Studioは、Amplify CLIで追加された特定のリソースのビルドをサポートしていません:
+
+1. [Lambda関数](/gen1/[platform]/build-a-backend/functions/set-up-function/)
+2. [リソースオーバーライド](/gen1/[platform]/tools/cli/commands/#override)
+
+## トラブルシューティング
+
+### Amplify CLIを使用してAmplify Studioにログインしてもトークンまたはプロンプトが表示されない
+
+この動作は、ターミナルでAmplify CLI`amplify pull --appId <appID> --envName <envName>`コマンドを実行するときに観察され、ブラウザの新しいタブが開いてAmplify Studioログイン画面が表示されます。ログイン後、リダイレクトされず、CLIが読み込み状態で停止しているように見える場合があります。
+
+この問題を解決するには、
+
+1. Amplify CLIプロンプトから終了します
+2. 存在する場合は、失敗したプル試行から現在のディレクトリに作成された残存アーティファクト(例:`amplify`または`amplify-backup`)を削除します
+3. Amplify CLI`amplify pull --appId <appID> --envName <envName>`コマンドを再実行します
+
+### 認証トークン
+
+Amplify CLIを使用する場合、次のエラーメッセージが発生することがあります:
+
+```console
+Failed to receive expected authentication tokens. Error: [Error: 'jsonString' argument missing or empty]
+```
+
+このメッセージは、ターミナルでAmplify CLI`amplify pull --appId <appID> --envName <envName>`コマンドを実行し、CLIへのアクセス許可を付与するときに発生します。
+
+この問題を解決するには、
+
+1. `~/.amplify/admin/`ロケーションにある`config.json`ファイルを削除します
+2. 存在する場合は、失敗したプル試行から現在のディレクトリに作成された残存アーティファクト(例:`amplify`または`amplify-backup`)を削除します
+3. Amplify CLI`amplify pull --appId <appID> --envName <envName>`コマンドを再実行します
+
+<Callout>
+
+注意として、`~/.amplify/admin/config.json`のコンテンツはJWTを格納して一時的なAWSクレデンシャルを提供するために使用され、**共有しないでください。
+
+</Callout>
+
+### オーバーライドとカスタムリソース
+
+```console
+A flag to disable overrides has been detected, please deploy from a different environment. at buildOverrideDir
+```
+
+```console
+A flag to disable custom resources has been detected, please deploy from a different environment. at buildResource
+```
+
+上記で述べたエラーは、Amplifyプロジェクトに`override.ts`ファイルが含まれている場合や、[カスタムリソース](/gen1/[platform]/tools/cli/custom/cdk/)がデプロイされている場合のデプロイ中に発生します。Amplify Studioは、オーバーライドファイルまたはカスタムリソースを含むプロジェクトのデプロイをサポートしていません。
+
+このエラーを解決するには、プロジェクトから`override.ts`ファイルとカスタムリソースを削除してから、`amplify push`を実行します。また、Amplify CLIを使用してリソースをビルドおよびプッシュすることもできます。ただし、Amplify Studioでのデプロイはできません。
+
+<Callout>
+
+UIライブラリ、データマネージャー、ユーザー管理、ファイルブラウザなどのリソースは、この動作の影響を受けません。
+
+</Callout>

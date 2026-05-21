@@ -1,0 +1,44 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'センチメント分析',
+  description: 'Amplifyを使用してテキストから主要フレーズ、センチメント、言語、構文、エンティティを判定する方法を学習します。',
+  platforms: [
+    'javascript',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import interpretJs from '/src/fragments/lib/predictions/js/interpret.mdx';
+import interpretIOS from '/src/fragments/lib/predictions/ios/interpret.mdx';
+import interpretAndroid from '/src/fragments/lib/predictions/android/interpret.mdx';
+
+<Fragments
+  fragments={{
+    javascript: interpretJs,
+    angular: interpretJs,
+    nextjs: interpretJs,
+    react: interpretJs,
+    vue: interpretJs,
+    swift: interpretIOS,
+    android: interpretAndroid
+  }}
+/>

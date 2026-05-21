@@ -1,0 +1,276 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ファイルとフォルダ',
+  description: 'Amplifyがプロジェクトの状態を維持するために使用するファイルとフォルダについて詳しく学習します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## フォルダ
+
+CLIは`amplify init`の実行中にプロジェクトのルートディレクトリに次のフォルダ構造を配置します：
+
+```text
+amplify
+  .config
+  #current-cloud-backend
+  backend
+```
+
+### amplify/.config
+
+> 手動編集OK：いいえ
+
+> バージョン管理に追加：はい
+
+クラウド設定と`settings/preferences`を保存するファイルが含まれています。`amplify configure`を実行してプロジェクト設定を変更します。
+
+### amplify/#current-cloud-backend
+
+> 手動編集OK：いいえ
+
+> バージョン管理に追加：いいえ
+
+チェックアウトされた环境のリソースの現在のクラウド状態が含まれます。このフォルダの内容は手動で更新しないでください。`amplify push`、`amplify pull`、`amplify env checkout`などの操作で上書きされます。
+
+### amplify/backend
+
+> 手動編集OK：はい
+
+> バージョン管理に追加：はい
+
+チェックアウトされた環境のリソースの最新ローカル開発状態が含まれます。このフォルダの内容は変更でき、`amplify push`を実行するとこのディレクトリの変更をクラウドにプッシュします。各プラグインはこのフォルダ内の独自のサブフォルダに内容を保存します。
+
+### amplify/mock-data
+
+> 手動編集OK：いいえ
+
+> バージョン管理に追加：いいえ
+
+`amplify mock api`の実行後にのみ作成されます。モックするときにローカルAPIをバックアップするために使用されるSQLiteデータベースが含まれます。内容は変更しないでください。ただし、ローカルAPI状態をリセットしたい場合はフォルダを削除できます。
+
+## Amplifyコアファイル
+
+これらのファイルは、プロジェクトに設定されているリソース、リソース間の依存関係、最後のプッシュがいつであったかなど、Amplifyプロジェクト全体の状態を維持するために連携します。
+
+### backend-config.json
+
+> 手動編集OK：はい
+
+> バージョン管理に追加：はい
+
+`backend`ディレクトリの`backend-config.json`には、AWSリソース（認証用のCognitoやAPIバックエンド用のAppSyncなど）への接続方法など、プロジェクトのバックエンド構成が含まれています。通常、このファイルは`amplify add auth`や`amplify add api`などのCLIコマンドで更新されます。また、Amplify CLIの機能を超えてバックエンドを設定するために[手動で拡張](/gen1/[platform]/tools/cli/custom/cloudformation/)することもできます。`amplify/backend`と`amplify/#current-cloud-backend`の両方のディレクトリに`backend-config.json`ファイルが含まれます。
+
+<Callout warning>
+
+**警告：** このファイルはAmplifyバックエンドのリソース構造を含みます。このファイルを編集すると、予期しない結果が生じ、バックエンドの整合性に悪影響を及ぼす可能性があります。
+
+</Callout>
+
+### amplify-meta.json
+
+> 手動編集OK：いいえ
+
+> バージョン管理に追加：いいえ
+
+`amplify/backend`と`amplify/#current-cloud-backend`の両方のディレクトリに`amplify-meta.json`ファイルが含まれます。`backend`ディレクトリの`amplify-meta.json`は、CLIコアとプラグインが内部情報をログに記録し、相互に通信するためのホワイトボードとして機能します。
+
+CLIコアはプラグインにファイルの読み取りおよび書き込みアクセスを提供します。コアは初期化後に選択したプロバイダーの出力を収集し、「providers」オブジェクトの下にログに記録します。例えば、awscloudformationプロバイダーはルートスタック、デプロイメントS3バケット、許可/未許可IAMロールの情報を出力し、providers.awscloudformationオブジェクトの下にログに記録されます。各カテゴリプラグインは独自の名前の下に情報をログに記録します。
+
+1つのカテゴリが1つのプロジェクト内に複数のサービスを作成する可能性があるため（例えば、相互作用カテゴリは複数のボットを作成できます）、カテゴリメタデータは通常、次のような2レベルの構造に従います：
+
+```json
+{
+  "<category>": {
+    "<service1>": {
+      //service1 metadata
+    },
+    "<service2>": {
+      //service2 metadata
+    }
+  }
+}
+```
+
+各サービスのメタデータは、`amplify <category> add`コマンドの実行後にメタファイルに最初にログに記録され、1つのサービスのカテゴリがローカルに追加されたことを示すいくつかの一般的な情報を含みます。その後、`amplify push`コマンドが正常に実行されると、`output`オブジェクトがサービスのメタデータに追加/更新され、作成または更新されたクラウドリソースについて説明する情報が含まれます。
+
+### amplifyconfiguration.json
+
+> 手動編集OK：いいえ
+
+> バージョン管理に追加：いいえ
+
+このファイルはJavaScript、Swift、Androidプロジェクト向けにAmplify CLIで生成されます。すべてのカテゴリから統合された出力が含まれており、`amplify push`後に更新されます。[Amplify JS](https://github.com/aws-amplify/amplify-js)、[Amplify Swift](https://github.com/aws-amplify/amplify-swift/)、[Amplify Android](https://github.com/aws-amplify/amplify-android)ライブラリで設定のために使用されます。
+
+注：JavaScriptまたはTypescriptプロジェクト用のAmplify CLIで生成された`aws-exports.js`ファイルも見つかることがあります。このファイルは後方互換性のために生成されます。`amplifyconfiguration.json`を使用することをお勧めします。`amplifyconfiguration.json`ファイルと同じように、このファイルは手動で編集したり、バージョン管理に追加したりしないでください。
+
+### .gitignore
+
+> 手動編集OK：はい
+
+> バージョン管理に追加：はい
+
+Amplify CLIから新しいプロジェクトが初期化されると、Amplifyはルートディレクトリの.gitignoreファイルに以下を追加します。.gitignoreファイルが存在しない場合は作成されます。
+
+```text
+#amplify-do-not-edit-begin
+amplify/\#current-cloud-backend
+amplify/.config/local-*
+amplify/logs
+amplify/mock-data
+amplify/backend/amplify-meta.json
+amplify/backend/awscloudformation
+amplify/backend/.temp
+build/
+dist/
+node_modules/
+aws-exports.js
+awsconfiguration.json
+amplifyconfiguration.json
+amplifyconfiguration.dart
+amplify-build-config.json
+amplify-gradle-config.json
+amplifytools.xcconfig
+.secret-*
+#amplify-do-not-edit-end
+```
+
+### team-provider-info.json
+
+> 手動編集OK：いいえ
+
+> バージョン管理に追加：はい
+
+チーム内でプロジェクト情報を共有するために使用されます。詳細については[環境を共有する](/gen1/[platform]/tools/cli/teams/shared/#sharing-projects-within-the-team)を参照してください。
+
+### cli.json
+
+> 手動編集OK：はい
+
+> バージョン管理に追加：はい
+
+プロジェクトの機能フラグ設定が含まれます。このファイルが存在しない場合、`amplify init`中にAmplify CLIで作成されます。環境固有の機能フラグオーバーライドも`cli.<environment name>.json`で定義できます。現在チェックアウトされている環境に対して環境固有のファイルが存在する場合、`amplify env add`コマンド中に同じファイルが新しく作成された環境にもコピーされます。詳細については[機能フラグ](/gen1/[platform]/tools/cli/reference/feature-flags/)を参照してください。
+
+## 一般カテゴリファイル
+
+各カテゴリプラグインには独自の一意のファイルがありますが、すべてのカテゴリに保存される一般的なファイルもあります。
+
+### cli-inputs.json
+
+> 手動編集OK：はい
+
+> バージョン管理に追加：はい
+
+関連するリソースのCloudFormationスタックを生成するために必要な入力パラメーターを保存します。
+
+### override.ts
+
+> 手動編集OK：はい
+
+> バージョン管理に追加：はい
+
+サポートされているカテゴリの関連するCloudFormationスタックをオーバーライドできるTypeScriptファイル。このファイルを作成するには、`amplify override <category>`を実行します。
+
+### &lt;category&gt;-parameters.json
+
+> 手動編集OK：いいえ
+
+> バージョン管理に追加：はい
+
+`amplify add <category>`中に選択されたパラメーターを保存して、`amplify update <category>`中に回答を入力するために使用できます。このファイルは基本的なカテゴリ設定を変更しません。これは回答ウォークスルーを入力するためにのみ使用されます。
+
+### parameters.json
+
+> 手動編集OK：はい
+
+> バージョン管理に追加：はい
+
+CloudFormationパラメーター名を、カテゴリのCloudFormationテンプレートに渡される値にマップするJSONオブジェクトが含まれます。例えば、CloudFormationテンプレートに次のパラメーターがある場合：
+
+```json
+{
+  "Parameters": {
+    "RoleArn": {
+      "Type": "String",
+      "Default": "<default role ARN>"
+    }
+  }
+}
+```
+
+そして`parameters.json`に以下が含まれています
+
+```json
+{
+  "RoleArn": "<role ARN override>"
+}
+```
+
+テンプレートがプッシュされるときの「RoleArn」の値は「&lt;role ARN override&gt;」になります。
+
+## 関数カテゴリファイル
+
+### amplify.state
+
+> 手動編集OK：いいえ
+
+> バージョン管理に追加：はい
+
+CLIが関数をビルドして呼び出す方法についての内部メタデータが含まれます。
+
+## AppSync APIカテゴリファイル
+
+### transform.conf.json
+
+> 手動編集OK：いいえ
+
+> バージョン管理に追加：はい
+
+GraphQLスキーマを解釈してAppSyncリゾルバーに変換する方法に関する設定が含まれます。`amplify api update`を実行してAPIカテゴリ設定を変更します。
+
+## 共有状態ファイル
+
+これらのファイルはAmplifyプロジェクトディレクトリの外に保存され、マシン上のAmplifyのすべてのインストール環境で使用されます。
+
+### ~/.amplify/amplify-configuration.json
+
+[使用データ](/gen1/[platform]/tools/cli/reference/usage-data)にオプトインした場合、このファイルにはマシンからのデータを相関させるために使用されるインストールUUIDが含まれます。
+
+### ~/.amplify/plugins.json
+
+ここはAmplifyがインストールされているすべてのAmplifyプラグインを追跡する場所です。ファイルには各プラグインの場所と各プラグインによって処理されるコマンドに関する情報が含まれています。
+
+### ~/.amplify/lib
+
+このディレクトリには、実行時に一部のプラグインが必要とするファイルが含まれます。例えば、`amplify mock`で使用されるDynamoDBシミュレーター。
+
+### ~/.amplify/bin/amplify (Windowsではamplify.exe)
+
+Amplify CLIの実行可能ファイル。
+
+### ~/.aws/amplify/deployment-secrets.json
+
+`amplify add auth`または`amplify update auth`と`amplify push`の実行時にOAuth設定値を保存します。設定がプッシュされると、このファイルから削除されます。

@@ -1,0 +1,142 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ファイルアクセスレベル',
+  description: 'Amplify Storageでさまざまなアクセスレベルを構成する方法を学びます。オブジェクトはpublic、protected、またはprivateにできます。',
+  platforms: [
+    'javascript',
+    'swift',
+    'android',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import common_configureaccess from '/src/fragments/lib/storage/native_common/configureaccess/common.mdx';
+
+<Fragments
+  fragments={{
+    android: common_configureaccess,
+    swift: common_configureaccess
+  }}
+/>
+
+<InlineFilter filters={['javascript',  'react-native', 'angular', 'nextjs', 'react', 'vue']}>
+
+<Callout warning>
+ファイルアクセス権限を定義する場合、より柔軟なアプローチを提供する新しい [Amplify Gen2](https://docs.amplify.aws/gen2/build-a-backend/storage/) エクスペリエンスの使用をお勧めします。
+
+注: `accessLevel` パラメータは非推奨であり、次のメジャーバージョンで削除される可能性があります。
+</Callout>
+
+Storageモジュールは、`guest`、`protected`、`private` の3つの異なるアクセスレベルでファイルを管理できます。Amplify CLIは、ストレージバケット上に3つの異なるアクセスレベル（guest、protected、private）を構成します。`amplify add storage` を実行すると、CLIはCognito IDプールロールを使用して、バケット上に適切なIAMポリシーを構成します。CRUDベースの権限（Create/Update、Read、Delete）を追加するオプションも用意されているため、認証済みユーザーとゲストユーザーには、これらのレベル内で制限された権限が付与されます。
+
+プロジェクトで `amplify add auth` を実行してユーザーサインインを以前に有効にしていた場合、ポリシーはIDプール の `Authenticated Role` に接続されます。これは、各ユーザーIDのバケット内のオブジェクトにスコープされた権限を持っています。ユーザーサインインを構成していない場合、各ユニークなユーザー/デバイスの組み合わせに `Unauthenticated Role` が割り当てられますが、これでもそのオブジェクトのみにスコープされた権限を持っています。
+
+- Guest: アプリのすべてのユーザーがアクセスできます。ファイルはS3バケット内の `public/` パスに保存されます。
+- Protected: すべてのユーザーが読み取り可能ですが、作成したユーザーのみが書き込み可能です。ファイルは `protected/{user_identity_id}/` に保存され、`user_identity_id` はそのユーザーの一意のAmazon Cognito Identity IDに対応します。
+- Private: 個々のユーザーのみがアクセスできます。ファイルは `private/{user_identity_id}/` に保存され、`user_identity_id` はそのユーザーの一意のAmazon Cognito Identity IDに対応します。
+
+AuthモジュールとStorageモジュールを一緒に使用する場合、`/{user_identity_id}/` を手動で構築する必要はありません。ライブラリは、ユーザー/デバイス用に構成されたCognito Identity IDとアクション用に構成されたアクセスレベルを使用します。これには、Storage操作の前に `fetchAuthSession` を呼び出すUnAuthenticated アクセスが含まれます。詳細については、[認証](/gen1/[platform]/build-a-backend/auth/under-the-hood/) を参照してください。
+
+アクセスレベルは、Storageオブジェクト上でグローバルに構成できます。または、個別の関数呼び出しでアクセスレベルを設定できます。
+
+> Storageモジュールのデフォルトアクセスレベルは `guest` です。Storageを別途構成しない限り、アップロードされたすべてのファイルはすべてのユーザーに公開されます。
+
+Storageオブジェクト上のアクセスレベル構成:
+
+```javascript
+import { getUrl } from 'aws-amplify/storage';
+
+await getUrl({ key: 'welcome.png', options: { level: 'guest' } }); // Gets welcome.png in public space
+```
+
+デフォルトのアクセスレベルは `guest` です:
+
+```javascript
+import { getUrl } from 'aws-amplify/storage';
+
+await getUrl({ key: 'welcome.png' }); // Get welcome.png in public space
+```
+
+## カスタマイズ（非推奨）
+
+### オブジェクトキーパスのカスタマイズ（非推奨）
+
+プレフィックスリゾルバーを定義することで、キーパスをカスタマイズできます:
+
+```javascript
+import amplifyconfig from './amplifyconfiguration.json';
+
+Amplify.configure(amplifyconfig, {
+  Storage: {
+    S3: {
+      prefixResolver: async ({ accessLevel, targetIdentityId }) => {
+        if (accessLevel === 'guest') {
+          return 'myPublicPrefix/';
+        } else if (accessLevel === 'protected') {
+          return `myProtectedPrefix/${targetIdentityId}/`;
+        } else {
+          return `myPrivatePrefix/${targetIdentityId}/`;
+        }
+      }
+    }
+  }
+});
+```
+
+たとえば、パス _myPublicPrefix/_ の下のすべてのオブジェクトに対して、読み取り、書き込み、削除の操作を有効にする場合は、IAMポリシーで宣言します:
+
+```json
+"Statement": [
+  {
+    "Effect": "Allow",
+    "Action": [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject"
+    ],
+    "Resource": [
+      "arn:aws:s3:::your-s3-bucket/myPublicPrefix/*",
+    ]
+  }
+]
+```
+
+_myPrivatePrefix/_ のようなカスタム _private_ パスプレフィックスを使用する場合は、IAMポリシーに追加する必要があります:
+
+```xml
+"Statement": [
+  {
+    "Effect": "Allow",
+    "Action": [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject"
+    ],
+    "Resource": [
+      "arn:aws:s3:::your-s3-bucket/myPrivatePrefix/${cognito-identity.amazonaws.com:sub}/*"
+    ]
+  }
+]
+```
+
+これにより、認証済みユーザーのみがパスの下のオブジェクトにアクセスできることが保証されます。
+
+</InlineFilter>

@@ -1,0 +1,93 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'AWS SDK の使用',
+  description: 'Amplify が機能を提供していない高度なユースケースでは、エスケープ ハッチを取得して AWSPinpoint インスタンスにアクセスできます。',
+  platforms: [
+    'swift',
+    'android'
+  ],
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={['swift']}>
+Amplify が機能を提供していない高度なユースケースでは、エスケープ ハッチを取得して基盤となる Amazon Pinpoint クライアントにアクセスできます。
+
+次のインポートを追加します:
+
+```swift
+import AWSPinpointAnalyticsPlugin
+```
+
+その後、このコードでエスケープ ハッチを取得します:
+
+```swift
+do {
+    // Retrieve the reference to AWSPinpointAnalyticsPlugin
+    let plugin = try Amplify.Analytics.getPlugin(for: "awsPinpointAnalyticsPlugin")
+    guard let analyticsPlugin = plugin as? AWSPinpointAnalyticsPlugin else {
+        return
+    }
+
+    // Retrieve the reference to PinpointClientProtocol
+    let pinpointClient = analyticsPlugin.getEscapeHatch()
+
+    // Make requests using pinpointClient...
+    // ...
+} catch {
+    print("Get escape hatch failed with error - \(error)")
+}
+```
+</InlineFilter>
+
+<InlineFilter filters={['android']}>
+Amplify が機能を提供していない高度なユースケースでは、エスケープ ハッチを取得して基盤となる Amazon Pinpoint クライアントにアクセスできます。
+
+<BlockSwitcher>
+
+<Block name="Java">
+
+<Callout>
+
+[ここ](https://github.com/awslabs/smithy-kotlin/blob/main/docs/design/kotlin-smithy-sdk.md#java-interop)で、ブロッキング インターフェース、またはフューチャーに基づいた同等の非同期インターフェースを使用して Java から Kotlin クライアントを使用する方法の詳細をご覧ください。
+
+</Callout>
+
+```java
+AWSPinpointAnalyticsPlugin plugin = (AWSPinpointAnalyticsPlugin)
+    Amplify.Analytics.getPlugin("awsPinpointAnalyticsPlugin");
+PinpointClient pinpointClient = plugin.getEscapeHatch();
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+val plugin = Amplify.Analytics.getPlugin("awsPinpointAnalyticsPlugin")
+val pinpointClient = (plugin as AWSPinpointAnalyticsPlugin).escapeHatch
+```
+
+</Block>
+<Block name="RxJava">
+
+```java
+AWSPinpointAnalyticsPlugin plugin = (AWSPinpointAnalyticsPlugin)
+    RxAmplify.Analytics.getPlugin("awsPinpointAnalyticsPlugin");
+PinpointClient pinpointClient = plugin.getEscapeHatch();
+```
+
+</Block>
+</BlockSwitcher>
+</InlineFilter>

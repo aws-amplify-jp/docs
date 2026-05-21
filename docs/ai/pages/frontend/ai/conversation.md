@@ -1,0 +1,55 @@
+---
+title: "会話"
+section: "frontend/ai"
+platforms: ["javascript", "react-native", "angular", "nextjs", "react", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/ai/conversation/"
+---
+
+会話ルートは、アプリケーション内のAI駆動会話インターフェースの作成を簡素化します。Amazon Bedrockファウンデーションモデルとのストリーミング複数ターン対話を処理するために必要なAppSync APIコンポーネントとLambda関数を自動的にセットアップします。
+
+<Callout type="info">
+サポートされているAIモデルのリストについては、[サポートされているプロバイダーとモデル](/[platform]/ai/concepts/models/#supported-providers-and-models)を参照してください。
+</Callout>
+
+## 主要なコンポーネント
+
+1. **AppSync API**: 会話ルートへのゲートウェイ。
+    - 新しい会話ルートインスタンスを作成します。
+    - メッセージを会話ルートインスタンスに送信します。
+    - アシスタント応答のリアルタイム更新にサブスクライブします。
+
+2. **Lambda関数**: AppSyncとAmazon Bedrockの間のブリッジ。
+    - 会話インスタンスの履歴を取得します。
+    - Bedrockの/converseエンドポイントを呼び出します。
+    - AppSyncクエリを呼び出すことでツール使用応答を処理します。
+
+3. **DynamoDB**: 会話およびメッセージデータを保存します
+    - 会話は特定のアプリケーションユーザーにスコープされます。
+
+## 認証フロー
+
+1. ユーザーのOIDCアクセストークンがクライアントからAppSyncに渡されます
+2. AppSyncはこのトークンをLambda関数に転送します
+3. Lambda関数はトークンを使用してAppSyncへのリクエストを認証します
+
+## 使用シナリオ
+
+以下の各シナリオには、ユーザーに代わってツールを呼び出すことに関連するリスクを軽減するためのセーフガードが設けられています：
+
+- Amazon CloudWatchロググループがLambda関数からのログについてOIDCアクセストークンをマスキングします。
+- Lambda関数が他のリソースにアクセスする能力を制限するIAMポリシー。
+
+## データフロー
+
+1. ユーザーがAppSync変更を介してメッセージを送信します
+2. AppSyncはLambda関数（デフォルトまたはカスタム）をトリガーします
+3. Lambdaはメッセージを処理してBedrockの/converseエンドポイントを呼び出します
+  a. レスポンスがツール使用の場合、Lambda関数は適用可能なAppSyncクエリを呼び出します。
+4. Lambdaはアシスタント応答をAppSyncに送信します
+5. AppSyncはレスポンスをサブスクライブ済みクライアントに送信します
+
+この設計により、Lambda関数のデータアクセスがアプリケーションユーザーと一致することを確保しながら、リアルタイムでスケーラブルな会話が可能になります。
+
+## 次のステップ

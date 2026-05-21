@@ -1,0 +1,241 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ファイルをコピーする',
+  description: "Amplifyのストレージカテゴリーを使用してファイルをコピーする方法について詳しく説明します。",
+  platforms: [
+    'javascript',
+    'flutter',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import flutter0 from '/src/fragments/lib/storage/flutter/copy.mdx';
+
+<Fragments fragments={{ flutter: flutter0 }} />
+
+<InlineFilter filters={['javascript', 'react-native', 'angular', 'nextjs', 'react', 'vue']}>
+
+`copy` APIは既存のファイルを指定されたパスに複製し、完了時に `{path: 'destPath'}` というオブジェクトを返します。
+
+<Callout>
+
+`copy` は単一の操作で最大 5 GB のオブジェクトをコピーできます。
+
+</Callout>
+
+ファイルをコピーするには、`source` に既存のパスを、`destination` に宛先パスを指定する必要があります。
+
+<BlockSwitcher>
+<Block name="With Path (Above v6.2.0)">
+```javascript
+import { copy } from 'aws-amplify/storage';
+
+const copyFile = async () => {
+  try {
+    const response = await copy({
+      source: {
+        path: 'public/album/2024/1.jpg',
+        // Alternatively, path: ({identityId}) => `protected/${identityId}/album/1.jpg`
+      },
+      destination: {
+        path: 'public/shared/2024/1.jpg',
+        // Alternatively, path: ({identityId}) => `protected/${identityId}/shared/1.jpg`
+      },
+    });
+  } catch (error) {
+    console.error('Error', err);
+  }
+};
+```
+</Block>
+<Block name="With Key (Deprecated)">
+```javascript
+import { copy } from 'aws-amplify/storage';
+
+const copyFile = async () => {
+  try {
+    const response = await copy({
+      source: {
+        key: 'srcKey',
+        accessLevel: 'protected' // optional 'guest', 'private', or 'protected'. Defaults to 'guest'.
+        targetIdentityId: 'targetIdentityId' // optional, set it to other user's identity ID if copy from other user
+      },
+      destination: {
+        key: 'destKey',
+        accessLevel: 'protected' // optional 'guest', 'private', or 'protected'. Defaults to 'guest'.
+      },
+    });
+  } catch (error) {
+    console.error('Error', err);
+  }
+};
+```
+</Block>
+</BlockSwitcher>
+
+## 同じアクセスレベル内でファイルをコピーする
+
+指定されたパスから同じ [ファイルアクセスレベル](/gen1/[platform]/build-a-backend/storage/configure-access/) 内の別のパスにファイルをコピーできます。
+
+<BlockSwitcher>
+<Block name="With Path (Above v6.2.0)">
+```javascript
+import { copy, list } from 'aws-amplify/storage';
+
+// Copies 'existing/srcPath' to 'copied/destPath' within 'public/'
+const copied = await copy({
+  source: { path: 'public/existing/srcPath' },
+  destination: { path: 'public/copied/destPath' }
+});
+
+// There should now be a new file 'copied/destPath' in 'public/'
+console.log((await list({ path: 'public/copied/' })).items); // [ { ..., path: 'public/copied/destPath' } ]
+console.log(copied); // { path: 'public/copied/destPath' }
+```
+</Block>
+<Block name="With Key (Deprecated)">
+```javascript
+import { copy, list } from 'aws-amplify/storage';
+
+// Copies 'existing/srcKey' to 'copied/destKey' within 'public/'
+const copied = await copy({
+  source: { key: 'existing/srcKey' },
+  destination: { key: 'copied/destKey' }
+});
+
+// There should now be a new file with key 'copied/destKey'
+console.log((await list({ prefix: 'copied/' })).items); // [ { ..., key: 'copied/destKey' } ]
+console.log(copied); // { key: 'copied/destKey' }
+```
+</Block>
+</BlockSwitcher>
+
+## アクセスレベル間でファイルをコピーする
+
+ファイルをアクセスレベルにコピーするか、またはアクセスレベルからコピーするには、`path` パラメータでアクセスレベルを明示的に提供する必要があります。
+
+<BlockSwitcher>
+<Block name="With Path (Above v6.2.0)">
+```javascript
+import { copy, list } from 'aws-amplify/storage';
+
+// Copies 'existing/srcPath' to 'copied/destPath' from 'guest' to 'private'
+const copied = await copy({
+  source: {
+    path: 'public/existing/srcPath'
+  },
+  destination: {
+    path: ({identityId}) => `private/${identityId}/copied/destPath`
+  }
+});
+
+// There should now be a new file 'copied/destPath' in 'private/'
+console.log(
+  (await list({ path: 'private/copied/'})).items
+); // [ { ..., path: 'private/XXXXX/copied/destPath' } ]
+console.log(copied); // { path: 'private/XXXXX/copied/destPath' }
+```
+</Block>
+<Block name="With Key (Deprecated)">
+```javascript
+import { copy, list } from 'aws-amplify/storage';
+
+// Copies 'existing/srcKey' to 'copied/destKey' from 'guest' to 'private'
+const copied = await copy({
+  source: {
+    key: 'existing/srcKey'
+  },
+  destination: {
+    key: 'copied/destKey',
+    accessLevel: 'private'
+  }
+});
+
+// There should now be a new file with key 'copied/destKey' in the 'private' level
+console.log(
+  (await list({ prefix: 'copied/', options: { accessLevel: 'private' } })).items
+); // [ { ..., key: 'copied/destKey' } ]
+console.log(copied); // { key: 'copied/destKey' }
+```
+</Block>
+</BlockSwitcher>
+
+## 別のユーザーの保護されたファイルをコピーする
+
+別のユーザーの ID を提供することで、別のユーザーの保護されたファイルをコピーすることもできます。
+
+<BlockSwitcher>
+<Block name="With Path (Above v6.2.0)">
+
+```javascript
+import { copy, list } from 'aws-amplify/storage';
+
+// Copies 'existing/srcPath' to 'copied/destPath' from 'protected' of another user to 'protected' of the current authenticated user
+
+const copied = await copy({
+  source: {
+    path: `protected/${targetUserId}/existing/srcPath`,
+  },
+  destination: {
+    path: ({identityId}) => `protected/${identityId}/copied/destPath`,
+  }
+});
+
+// There should now be a new file 'copied/destPath'
+console.log(
+  (await list({ path: ({identityId}) => `protected/${identityId}/copied/`})).items
+); // [..., path: 'protected/XXXXX/copied/destPath']
+console.log(copied); // { path: 'protected/XXXXX/copied/destPath' }
+```
+</Block>
+<Block name="With Key (Deprecated)">
+
+```javascript
+import { copy, list } from 'aws-amplify/storage';
+
+// Copies 'existing/srcKey' to 'copied/destKey' from 'protected' of another user to 'private' of the current authenticated user
+
+const copied = await copy({
+  source: {
+    key: 'existing/srcKey',
+    accessLevel: 'protected',
+    targetIdentityId: 'identityId'
+  },
+  destination: {
+    key: 'copied/destKey',
+    accessLevel: 'private'
+  }
+});
+
+// There should now be a new file with key 'copied/destKey'
+console.log(
+  (await list({ prefix: 'copied/', options: { accessLevel: 'private' } })).items
+); // [..., key: 'copied/destKey']
+console.log(copied); // { key: 'copied/destKey' }
+```
+</Block>
+</BlockSwitcher>
+
+<Callout>
+クロスアイデンティティ ID コピーは、ソースオブジェクトのアクセスレベルが「protected」に設定されている場合にのみ許可されます。
+</Callout>
+
+</InlineFilter>

@@ -1,0 +1,120 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '関数の設定',
+  description:
+    '関数を設定する方法を学びます',
+    route: '/gen2/build-a-backend/functions/configure-functions',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps() {
+  return {
+    props: {
+      meta
+    }
+  };
+}
+
+`defineFunction`は、合理的でありながら最小限のデフォルト設定を備えて提供されます。以下のオプションを使用して、関数の設定を調整できます。
+
+<Callout info>
+
+**注:** 以下のオプションは、`resourceGroupName`を除いて、[カスタム関数](/[platform]/build-a-backend/functions/custom-functions/)ではサポートされていません。
+
+</Callout>
+
+## `name`
+
+デフォルトでは、関数は`defineFunction`呼び出しが配置されているディレクトリに基づいて名前が付けられます。上記の例では、`amplify/functions/my-demo-function/resource.ts`で関数を定義すると、デフォルトで関数に`my-demo-function`という名前が付けられます。
+
+entryが指定されている場合、名前はentryパスのベース名にデフォルト設定されます。たとえば、`./signup-trigger-handler.ts`の`entry`は、関数名がデフォルトで`signup-trigger-handler`になります。
+
+このオプションプロパティを使用して、関数の名前を明示的に設定できます。
+
+```ts title="amplify/functions/my-demo-function/resource.ts"
+export const myDemoFunction = defineFunction({
+  entry: './demo-function-handler.ts',
+  name: 'overrideName' // デフォルトの命名動作をオーバーライドするために名前を明示的に設定
+});
+```
+
+## `timeoutSeconds`
+
+デフォルトでは、関数は3秒後にタイムアウトします。これは、最大15分までの任意の秒数に設定できます。
+
+```ts title="amplify/functions/my-demo-function/resource.ts"
+export const myDemoFunction = defineFunction({
+  // highlight-next-line
+  timeoutSeconds: 60 // 1分のタイムアウト
+});
+```
+
+## `memoryMB`
+
+デフォルトでは、関数には512 MBのメモリが割り当てられています。これは128 MBから10240 MBまで設定できます。これは関数呼び出しのコストを増加させる可能性があることに注意してください。詳細な料金情報については、[こちら](https://aws.amazon.com/lambda/pricing/)を参照してください。
+
+```ts title="amplify/functions/my-demo-function/resource.ts"
+export const myDemoFunction = defineFunction({
+  // highlight-next-line
+  memoryMB: 256 // 関数に256 MBのメモリを割り当てます。
+});
+```
+
+## `ephemeralStorageSizeMB`
+
+デフォルトでは、関数には512MBのエフェメラルストレージが割り当てられています。これは512 MBから10240 MBまで設定できます。これは関数呼び出しのコストを増加させる可能性があることに注意してください。詳細な料金情報については、[Lambda料金ドキュメント](https://aws.amazon.com/lambda/pricing/)を参照してください。
+
+```ts title="amplify/functions/my-demo-function/resource.ts"
+export const myDemoFunction = defineFunction({
+  // highlight-next-line
+  ephemeralStorageSizeMB: 1024 // 関数に1024 MBのエフェメラルストレージを割り当てます。
+});
+```
+
+## `runtime`
+
+現在、`defineFunction`ではNodeランタイムのみがサポートされています。ただし、関数が使用するNodeのバージョンを変更できます。デフォルトは、AWS Lambdaでサポートされている最も古いNode LTSバージョンです（現在はNode 18）。
+
+古いバージョンのNodeを使用したい場合は、[Lambda Nodeバージョン廃止予定スケジュール](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html)に注意してください。Lambdaが古いNodeバージョンのサポートを終了する場合、サポートされている新しいバージョンに更新する必要があります。
+
+```ts title="amplify/functions/my-demo-function/resource.ts"
+export const myDemoFunction = defineFunction({
+  runtime: 20 // Node 20を使用
+});
+```
+
+## `entry`
+
+デフォルトでは、Amplifyは`defineFunction`が呼び出されているファイルと同じディレクトリにある`handler.ts`という名前のファイルで関数ハンドラーを探します。別のハンドラーの場所を指定するには、`entry`値を指定してください。
+
+```ts title="amplify/functions/my-demo-function/resource.ts"
+export const myDemoFunction = defineFunction({
+  entry: './path/to/handler.ts' // このパスは絶対パスであるか、現在のファイルからの相対パスである必要があります。
+});
+```
+
+## `resourceGroupName`
+
+デフォルトでは、関数は`function`という名前のリソースグループにグループ化されます。これをオーバーライドして、関連する関数を`auth`、`data`、`storage`などの他のAmplifyリソースでグループ化したり、独自のカスタムグループに分離したりできます。
+これは、相互に依存するリソースがあり、それらをグループ化したい場合に通常役立ちます。
+
+```ts title="amplify/functions/my-demo-function/resource.ts"
+export const myDemoFunction = defineFunction({
+  resourceGroupName: 'data'
+});
+```

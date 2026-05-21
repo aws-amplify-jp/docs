@@ -1,0 +1,78 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify ライブラリ',
+  description:
+    'Amplify のオープンソース クライアント ライブラリは、クラウドを活用したさまざまなカテゴリの操作にわたって、ユースケース中心で、意見のある、宣言的で使いやすいインターフェースを提供し、モバイルおよび Web 開発者がバックエンドと簡単にやり取りできるようにします。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'vue',
+    'swift',
+    'android',
+    'flutter',
+    'react-native'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      showBreadcrumbs: false,
+      meta
+    }
+  };
+}
+
+import ios_maintenance from '/src/fragments/lib-v1/ios-maintenance.mdx';
+
+<Fragments fragments={{ swift: ios_maintenance }} />
+
+import android_maintenance from '/src/fragments/lib-v1/android-maintenance.mdx';
+
+<Fragments fragments={{ android: android_maintenance }} />
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+
+Amplify のオープンソース クライアント ライブラリは、クラウドを活用したさまざまなカテゴリの操作にわたって、ユースケース中心で使いやすいインターフェースを提供し、モバイルおよび Web 開発者がバックエンドと簡単にやり取りできるようにします。これらのライブラリは AWS Cloud によって支えられています。ライブラリは、Amplify CLI を使用して作成された新しいバックエンドと既存のバックエンド リソースの両方で使用できます。
+
+import ios0 from '/src/fragments/lib-v1/ios.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import android1 from '/src/fragments/lib-v1/android.mdx';
+
+<Fragments fragments={{ android: android1 }} />
+
+import flutter2 from '/src/fragments/lib-v1/flutter.mdx';
+
+<Fragments fragments={{ flutter: flutter2 }} />
+
+<InlineFilter filters={["javascript", "react-native", "angular", "nextjs", "react", "vue"]}>
+
+<Callout info>
+
+新しいプロジェクトを開始する場合は、選択したフレームワークまたは言語の [最新バージョンの Amplify ライブラリ](/gen1/[platform]/tools/libraries/) を使用することをお勧めします。
+
+</Callout>
+
+## Amplify JavaScript
+
+Amplify JavaScript ライブラリは、React、React Native、Angular、Vue など、さまざまな Web およびモバイル フレームワークでサポートされています。
+
+次に何をするか？アプリに追加できるいくつかのものを以下に示します。
+
+- [認証](/gen1/[platform]/prev/build-a-backend/auth/set-up-auth/)
+- [ファイル ストレージ](/gen1/[platform]/prev/build-a-backend/storage/set-up-storage/)
+- [分析](/gen1/[platform]/prev/build-a-backend/more-features/analytics/set-up-analytics/)
+
+</InlineFilter>

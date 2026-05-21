@@ -1,0 +1,44 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'テキストの識別',
+  description: 'AWS Amplifyを使用してアプリケーション内の画像とドキュメントからテキストを識別する方法を学習します。',
+  platforms: [
+    'javascript',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import identifyTextJs from '/src/fragments/lib/predictions/js/identify-text.mdx';
+import identifyTextIOS from '/src/fragments/lib/predictions/ios/identify-text.mdx';
+import identifyTextAndroid from '/src/fragments/lib/predictions/android/identify-text.mdx';
+
+<Fragments
+  fragments={{
+    javascript: identifyTextJs,
+    angular: identifyTextJs,
+    nextjs: identifyTextJs,
+    react: identifyTextJs,
+    vue: identifyTextJs,
+    swift: identifyTextIOS,
+    android: identifyTextAndroid
+  }}
+/>

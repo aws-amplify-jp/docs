@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"vue","meta":{"title":"コンフリクト解決の無効化","description":"AppSync コンフリクト解決を無効化し、DataStore から標準 GraphQL クライアントへの移行をダウンタイムなしで準備します。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

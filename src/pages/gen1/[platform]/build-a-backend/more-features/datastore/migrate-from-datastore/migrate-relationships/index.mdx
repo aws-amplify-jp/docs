@@ -1,0 +1,507 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'リレーションシップのマイグレーション',
+  description: 'DataStore の hasMany、belongsTo、hasOne、manyToMany リレーションシップを Apollo Client と GraphQL selection sets にマイグレーションします。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+リレーションシップの処理は、DataStore と Apollo Client が最も根本的に異なる部分です。DataStore は **遅延ロード** リレーションシップを使用します。フィールドにアクセスするとオンデマンドでフェッチし、Promise（`belongsTo`/`hasOne` の場合）または AsyncCollection（`hasMany` の場合）を返します。Apollo Client は GraphQL selection set に含めたものに基づいて **先読み** リレーションシップをロードします。これにより、データフェッチの粒度を明示的に制御できますが、事前に必要なデータについて考える必要があります。
+
+## スキーマリファレンス
+
+このページのすべての例は、Gen 1 バックエンドからの以下の図解的なスキーマ定義を使用しています。
+
+```graphql title="amplify/backend/api/<your-api>/schema.graphql"
+type Post @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  title: String!
+  content: String
+  status: String
+  rating: Int
+  comments: [Comment] @hasMany(indexName: "byPost", fields: ["id"])
+  tags: [PostTag] @hasMany(indexName: "byPostTag", fields: ["id"])
+  metadata: PostMetadata @hasOne(fields: ["id"])
+}
+
+type Comment @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  content: String!
+  postID: ID! @index(name: "byPost")
+  post: Post @belongsTo(fields: ["postID"])
+}
+
+type Tag @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  name: String!
+  posts: [PostTag] @hasMany(indexName: "byTag", fields: ["id"])
+}
+
+type PostTag @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  postID: ID! @index(name: "byPostTag")
+  tagID: ID! @index(name: "byTag")
+  post: Post @belongsTo(fields: ["postID"])
+  tag: Tag @belongsTo(fields: ["tagID"])
+}
+
+type PostMetadata @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  postID: ID! @index(name: "byPost")
+  views: Int
+  likes: Int
+  post: Post @belongsTo(fields: ["postID"])
+}
+```
+
+<Callout>
+
+すべてのリレーションシップ例は、競合解決が有効なバックエンドの selection に `_version`、`_deleted`、`_lastChangedAt` フィールドを含めています。詳細については、[Set up Apollo Client](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/set-up-apollo/) ページを参照してください。
+
+</Callout>
+
+<Callout warning>
+
+**Gen 1 フィールド大文字小文字のリマインダー：** Gen 1 バックエンドは大文字 ID サフィックス（`postID`、`tagID`）を使用します。詳細については、[Set up Apollo Client](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/set-up-apollo/) を参照してください。実際のスキーマフィールド名と完全に一致させてください。一致しない場合は `null` が黙って返されます。
+
+</Callout>
+
+## hasMany: Post から Comments へ
+
+`hasMany` リレーションシップは、親レコードがゼロ個以上の子レコードを持つことを意味します。主な変更点は、DataStore の `.toArray()` を使用した `AsyncCollection` が、`items` ラッパーオブジェクトを持つネストされた GraphQL selection になることです。
+
+### DataStore（変更前）
+
+```ts
+const post = await DataStore.query(Post, '123');
+const comments = await post.comments.toArray();
+// comments は Comment[] です -- あなたが .toArray() を呼び出したときにオンデマンドでフェッチされました
+```
+
+### Apollo Client（変更後）-- 先読みロード（ネストされた selection）
+
+comments を selection set に含める GraphQL クエリを定義します。
+
+```ts
+const GET_POST_WITH_COMMENTS = gql`
+  ${POST_DETAILS_FRAGMENT}
+  query GetPostWithComments($id: ID!) {
+    getPost(id: $id) {
+      ...PostDetails
+      comments {
+        items {
+          id
+          content
+          createdAt
+          _version
+          _deleted
+          _lastChangedAt
+        }
+        nextToken
+      }
+    }
+  }
+`;
+
+const { data } = await apolloClient.query({
+  query: GET_POST_WITH_COMMENTS,
+  variables: { id: '123' },
+});
+
+const post = data.getPost;
+const comments = data.getPost.comments.items.filter(c => !c._deleted);
+```
+
+comments は post と同じレスポンスで返されます -- 2 番目のリクエストは必要ありません。
+
+<Callout warning>
+
+常にネストされた `items` 配列から `_deleted` レコードをフィルタリングしてください。ソフト削除された子レコードは依然として AppSync によって返されます。
+
+</Callout>
+
+### Apollo Client（変更後）-- 遅延ロード（別のクエリ）
+
+常に comments が必要とは限らない場合は、最初のクエリから除外し、必要に応じて後で個別にフェッチします。
+
+```ts
+const LIST_COMMENTS_BY_POST = gql`
+  query ListCommentsByPost($filter: ModelCommentFilterInput) {
+    listComments(filter: $filter) {
+      items {
+        id
+        content
+        createdAt
+        _version
+        _deleted
+        _lastChangedAt
+      }
+      nextToken
+    }
+  }
+`;
+
+// 特定の post の comments をオンデマンドでフェッチします
+const { data } = await apolloClient.query({
+  query: LIST_COMMENTS_BY_POST,
+  variables: { filter: { postID: { eq: '123' } } },
+});
+const comments = data.listComments.items.filter(c => !c._deleted);
+```
+
+<Callout>
+
+**オーバーフェッチの警告：** 常に一緒に表示するデータには、ネストされた selection（先読み）パターンを使用します。オプションまたはユーザーアクションでロードされるデータ（たとえば、comments セクションの展開）には、別のクエリ（遅延）パターンを使用します。
+
+</Callout>
+
+<InlineFilter filters={["react", "nextjs", "react-native"]}>
+
+### React フックの例
+
+```tsx
+import { useQuery } from '@apollo/client';
+
+function PostWithComments({ postId }: { postId: string }) {
+  const { data, loading, error } = useQuery(GET_POST_WITH_COMMENTS, {
+    variables: { id: postId },
+  });
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error loading post.</p>;
+
+  const post = data.getPost;
+  const comments = post.comments.items.filter(c => !c._deleted);
+
+  return (
+    <div>
+      <h1>{post.title}</h1>
+      <p>{post.content}</p>
+      <h2>Comments ({comments.length})</h2>
+      {comments.map(comment => (
+        <div key={comment.id}>
+          <p>{comment.content}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+</InlineFilter>
+
+## belongsTo: Comment から Post へ
+
+`belongsTo` リレーションシップは、子レコードがその親を参照することを意味します。主な変更点は、DataStore が Promise を通じて親を自動的に解決することです。Apollo はネストされた selection を使用してレスポンスに親を含めます。
+
+### DataStore（変更前）
+
+```ts
+const comment = await DataStore.query(Comment, 'abc');
+const post = await comment.post; // Promise は親 Post に解決されます
+```
+
+### Apollo Client（変更後）
+
+```ts
+const GET_COMMENT_WITH_POST = gql`
+  query GetCommentWithPost($id: ID!) {
+    getComment(id: $id) {
+      id
+      content
+      post {
+        id
+        title
+        status
+        _version
+        _deleted
+        _lastChangedAt
+      }
+      _version
+      _deleted
+      _lastChangedAt
+    }
+  }
+`;
+
+const { data } = await apolloClient.query({
+  query: GET_COMMENT_WITH_POST,
+  variables: { id: 'abc' },
+});
+
+const comment = data.getComment;
+const post = comment.post; // 親 Post は既にロードされています -- 追加のリクエストはありません
+```
+
+親オブジェクトはネストされたフィールドとして直接利用可能です。Promise はなく、`.then()` も不要です -- レスポンスで既に解決されています。
+
+<Callout>
+
+外部キーフィールド（`postID`）も Comment で利用可能です。親の完全なレコードをフェッチせずに、親の ID のみが必要な場合に使用します。
+
+</Callout>
+
+## hasOne: Post から PostMetadata へ
+
+`hasOne` リレーションシップは 1:1 の所有関係を表します。`belongsTo` と同様です -- DataStore は Promise を返し、Apollo はネストされた selection を使用します。関連レコードが存在しない場合、結果は `null` です。
+
+### DataStore（変更前）
+
+```ts
+const post = await DataStore.query(Post, '123');
+const metadata = await post.metadata; // Promise は PostMetadata または undefined に解決されます
+```
+
+### Apollo Client（変更後）
+
+```ts
+const GET_POST_WITH_METADATA = gql`
+  ${POST_DETAILS_FRAGMENT}
+  query GetPostWithMetadata($id: ID!) {
+    getPost(id: $id) {
+      ...PostDetails
+      metadata {
+        id
+        views
+        likes
+        _version
+        _deleted
+        _lastChangedAt
+      }
+    }
+  }
+`;
+
+const { data } = await apolloClient.query({
+  query: GET_POST_WITH_METADATA,
+  variables: { id: '123' },
+});
+
+const post = data.getPost;
+const metadata = post.metadata; // PostMetadata オブジェクトまたは null
+```
+
+## manyToMany: Post と Tag
+
+多対多リレーションシップは明示的な結合テーブルモデルを使用します。Post と Tag は `PostTag` 結合モデルを通じて接続されます。主な変更点は、tags を直接取得する代わりに、`PostTag` 結合レコードをクエリし、各レコードから `tag` を抽出することです。
+
+### DataStore（変更前）
+
+```ts
+const post = await DataStore.query(Post, '123');
+const postTags = await post.tags.toArray();
+const tags = await Promise.all(postTags.map(pt => pt.tag));
+```
+
+### Apollo Client（変更後）-- post の tags をクエリする
+
+```ts
+const GET_POST_WITH_TAGS = gql`
+  ${POST_DETAILS_FRAGMENT}
+  query GetPostWithTags($id: ID!) {
+    getPost(id: $id) {
+      ...PostDetails
+      tags {
+        items {
+          id
+          tag {
+            id
+            name
+            _version
+            _deleted
+            _lastChangedAt
+          }
+          _version
+          _deleted
+        }
+      }
+    }
+  }
+`;
+
+const { data } = await apolloClient.query({
+  query: GET_POST_WITH_TAGS,
+  variables: { id: '123' },
+});
+
+// 結合レコードから tags を抽出し、削除された結合エントリをフィルタリングします
+const tags = data.getPost.tags.items
+  .filter(pt => !pt._deleted)
+  .map(pt => pt.tag);
+```
+
+<Callout warning>
+
+tag 自体ではなく、**結合レコード**（`PostTag`）で `_deleted` をフィルタリングします。削除された結合レコードは、Tag がまだ存在していても、アソシエーションが削除されたことを意味します。
+
+</Callout>
+
+### 多対多アソシエーションを作成する
+
+Post を Tag と関連付けるには、`PostTag` 結合レコードを作成します。
+
+```ts
+const CREATE_POST_TAG = gql`
+  mutation CreatePostTag($input: CreatePostTagInput!) {
+    createPostTag(input: $input) {
+      id
+      postID
+      tagID
+      _version
+      _deleted
+      _lastChangedAt
+    }
+  }
+`;
+
+await apolloClient.mutate({
+  mutation: CREATE_POST_TAG,
+  variables: { input: { postID: '123', tagID: '456' } },
+});
+```
+
+### 多対多アソシエーションを削除する
+
+アソシエーションを削除するには、`PostTag` 結合レコードを削除します（その `id` と `_version` が必要です）。
+
+```ts
+const DELETE_POST_TAG = gql`
+  mutation DeletePostTag($input: DeletePostTagInput!) {
+    deletePostTag(input: $input) {
+      id
+      _version
+    }
+  }
+`;
+
+await apolloClient.mutate({
+  mutation: DELETE_POST_TAG,
+  variables: {
+    input: {
+      id: postTagRecord.id,
+      _version: postTagRecord._version,
+    },
+  },
+});
+```
+
+`PostTag` 結合レコードを削除すると、Post と Tag 間のアソシエーションが削除されます。Post または Tag 自体は削除されません。
+
+## 関連レコードを作成する
+
+親に属する子レコードを作成する場合、主な違いはリレーションシップを指定する方法です。
+
+**DataStore（変更前）:** DataStore はリレーションシップ用のモデルインスタンスを受け入れました。
+
+```ts
+const existingPost = await DataStore.query(Post, '123');
+await DataStore.save(
+  new Comment({
+    content: 'Great post!',
+    post: existingPost, // モデルインスタンスを渡します
+  })
+);
+```
+
+**Apollo Client（変更後）:** Apollo はモデルインスタンスではなく外部キー ID が必要です。
+
+```ts
+const CREATE_COMMENT = gql`
+  mutation CreateComment($input: CreateCommentInput!) {
+    createComment(input: $input) {
+      id
+      content
+      postID
+      _version
+      _deleted
+      _lastChangedAt
+    }
+  }
+`;
+
+await apolloClient.mutate({
+  mutation: CREATE_COMMENT,
+  variables: {
+    input: {
+      content: 'Great post!',
+      postID: '123', // 外部キー ID を直接渡します
+    },
+  },
+});
+```
+
+## クイックリファレンステーブル
+
+| リレーションシップ | DataStore アクセスパターン | Apollo Client アクセスパターン | 主な変更点 |
+|---|---|---|---|
+| **hasMany**（Post から Comments へ） | `await post.comments.toArray()` | ネストされた `comments { items { ... } }` selection | AsyncCollection は `items` ラッパーになります。単一リクエストで先読みロードされます |
+| **belongsTo**（Comment から Post へ） | `await comment.post` | ネストされた `post { ... }` selection | Promise はネストされたオブジェクトになります。await は不要です |
+| **hasOne**（Post から Metadata へ） | `await post.metadata` | ネストされた `metadata { ... }` selection | Promise はネストされたオブジェクトまたは `null` になります |
+| **manyToMany**（Post から Tag へ） | `await post.tags.toArray()` その後 `await pt.tag` | ネストされた `tags { items { tag { ... } } }` selection | 結合テーブルを通じてクエリします。結合レコードで `_deleted` をフィルタリングします |
+| **子を作成する** | `new Comment({ post: existingPost })` | `{ input: { postID: '123' } }` | モデルインスタンスは外部キー ID になります |
+
+## パフォーマンスに関する考慮事項
+
+### 先読みと遅延ロード
+
+DataStore は常にリレーションシップを遅延ロードしました。Apollo では、選択できます。
+
+- **先読みロード**（ネストされた selection）: 関連データを同じ GraphQL リクエストでフェッチします。常に一緒に表示するデータにはこれを使用します。
+- **遅延ロード**（別のクエリ）: 必要な場合にのみ関連データをフェッチします。オプションまたはユーザーアクションでロードされるデータにはこれを使用します。
+
+### N+1 クエリ問題
+
+DataStore はすべてのデータがローカルであったため、N+1 問題を隠していました -- IndexedDB からの遅延ロードは事実上無料でした。Apollo では、各別のクエリはネットワークリクエストです。
+
+```ts
+// 悪い例: N+1 -- 各 post の comments に対する別のクエリ
+const { data } = await apolloClient.query({ query: LIST_POSTS });
+for (const post of data.listPosts.items) {
+  await apolloClient.query({
+    query: LIST_COMMENTS_BY_POST,
+    variables: { filter: { postID: { eq: post.id } } },
+  });
+}
+
+// 良い例: list クエリに comments を含めます
+const LIST_POSTS_WITH_COMMENTS = gql`
+  query ListPostsWithComments($filter: ModelPostFilterInput, $limit: Int) {
+    listPosts(filter: $filter, limit: $limit) {
+      items {
+        ...PostDetails
+        comments {
+          items { id content _version _deleted }
+        }
+      }
+      nextToken
+    }
+  }
+`;
+```
+
+### 推奨事項
+
+1. **ネストされた selection を使用します。** 常に一緒に必要なデータの場合、1 つのリクエストは常に複数より高速です。
+2. **別のクエリを使用します。** オプションまたはオンデマンドデータの場合。
+3. **深さに注意してください。** ネスト深度を 2～3 レベルに制限し、大きなレスポンスサイズを避けます。
+4. **Apollo のキャッシュが役に立ちます。** 関連レコードが一度フェッチされると、Apollo は `__typename` と `id` でそれをキャッシュします。同じレコードの後続クエリはキャッシュから解決される可能性があります。

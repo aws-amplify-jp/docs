@@ -1,0 +1,82 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'ユーザーとグループの認証を管理',
+  description: 'ユーザーとグループの認証を管理',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify Studio では、ユーザーとグループを作成および管理し、ユーザー属性を編集し、ユーザーを停止することができます。
+
+これらのユーザーとグループがアプリデータに対して作成、読み取り、更新、または削除操作を実行できるようにする認可ルールを設定するには、[Authorization](/gen1/[platform]/tools/console/authz/)を参照してください。
+
+![Amplify Studio のユーザー管理ページの表示](/images/studio/auth/user-management.png)
+
+## ユーザーを作成するには
+
+![ユーザー管理ページで新しい Amazon Cognito ユーザーを作成するためのユーザー作成フォームのスクリーンショット](/images/studio/auth/create-user.png)
+
+1. **Manage** メニューで、**User management** を選択します。
+2. **User management** ページで、**Users** タブを選択し、**Create user** を選択します。
+3. **Create user** ウィンドウで、**Unique identifier** にユーザー名、メールアドレス、または電話番号を入力します。**Temporary password** にパスワードを入力します。
+4. **Create user** を選択します。
+
+<Callout>
+
+ユーザーは [プリビルト UI コンポーネント](/gen1/[platform]/build-a-backend/auth/set-up-auth/#enable-sign-up-sign-in-and-sign-out)、[Amplify ライブラリ](https://aws-amplify.github.io/amplify-js/api/modules/aws_amplify.auth.html)を使用して確認できます。
+
+</Callout>
+
+## ユーザーのアクセス権を変更するには
+
+1. **User management** ページで、**Users** タブを選択します。
+2. 管理するユーザーの名前を選択します。
+3. **Actions** メニューで、ユーザーに対して実行するアクションを選択します。オプションは **Reset password**、**Delete**、**Suspend**、または **Reactivate** です。
+4. 各メニューオプションについて、確認ウィンドウが表示されます。確認ウィンドウの指示に従って、ユーザーに対するアクションを完了します。
+
+## グループを作成するには
+
+![](/images/studio/auth/user-groups.png)
+
+1. **User management** ページで、**Groups** タブを選択し、**Create group** を選択します。
+2. **Create group** ウィンドウで、**Title** にグループの名前を入力します。
+3. **Create group** を選択します。
+
+## グループにユーザーを追加するには
+
+1. **User management** ページで、**Groups** タブを選択します。
+2. ユーザーを追加するグループの名前を選択します。
+3. **Add user(s)** を選択します。
+4. **Add users to group** ウィンドウで、**Search** メニューからユーザーを検索する方法を選択します。_Email_、_Phone number_、または _Username_ を選択できます。
+5. グループに追加するユーザーを 1 つまたは複数選択し、**Add users** を選択します。
+
+## グループを削除するには
+
+1. **User management** ページで、**Groups** タブを選択します。
+2. **Groups** セクションで、削除するグループの名前を選択します。
+3. **Delete** を選択します。
+4. 確認ウィンドウが表示されます。_Delete_ を入力し、**Confirm deletion** を選択します。

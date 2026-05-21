@@ -1,0 +1,232 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'パスワード変更とリカバリーの設定',
+  description: 'アプリケーションのユーザーパスワード変更とリカバリーを設定します。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'flutter',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript",  "react-native", "angular", "nextjs", "react", "vue"]}>
+
+Amplify Auth は、ユーザーがパスワードを変更したり、忘れたパスワードを復旧したりするための安全な方法を提供します。これはユーザーの摩擦を安全に減らし、アプリケーションへのアクセス体験を向上させます。
+
+開始する前に、以下が必要です：
+
+- Auth カテゴリが設定されている Amplify プロジェクト
+- インストールして設定された Amplify ライブラリ
+
+## パスワードをリセット
+
+ユーザーのパスワードをリセットするには、`resetPassword` API を使用します。これはユーザーの設定に基づいて、宛先（メールや SMS など）にリセットコードを送信します。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```typescript
+import { resetPassword, type ResetPasswordOutput } from 'aws-amplify/auth';
+
+async function handleResetPassword(username: string) {
+  try {
+    const output = await resetPassword({ username });
+    handleResetPasswordNextSteps(output);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+function handleResetPasswordNextSteps(output: ResetPasswordOutput) {
+  const { nextStep } = output;
+  switch (nextStep.resetPasswordStep) {
+    case 'CONFIRM_RESET_PASSWORD_WITH_CODE':
+      const codeDeliveryDetails = nextStep.codeDeliveryDetails;
+      console.log(
+        `Confirmation code was sent to ${codeDeliveryDetails.deliveryMedium}`
+      );
+      // Collect the confirmation code from the user and pass to confirmResetPassword.
+      break;
+    case 'DONE':
+      console.log('Successfully reset password.');
+      break;
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```javascript
+import { resetPassword } from 'aws-amplify/auth';
+
+async function handleResetPassword(username) {
+  try {
+    const output = await resetPassword({ username });
+    handleResetPasswordNextSteps(output);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+function handleResetPasswordNextSteps(output) {
+  const { nextStep } = output;
+  switch (nextStep.resetPasswordStep) {
+    case 'CONFIRM_RESET_PASSWORD_WITH_CODE':
+      const codeDeliveryDetails = nextStep.codeDeliveryDetails;
+      console.log(
+        `Confirmation code was sent to ${codeDeliveryDetails.deliveryMedium}`
+      );
+      // Collect the confirmation code from the user and pass to confirmResetPassword.
+      break;
+    case 'DONE':
+      console.log('Successfully reset password.');
+      break;
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+パスワード リセット プロセスを完了するには、ユーザーが受け取ったコードと設定したい新しいパスワードを使用して `confirmResetPassword` API を呼び出します。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```typescript
+import {
+  confirmResetPassword,
+  type ConfirmResetPasswordInput
+} from 'aws-amplify/auth';
+
+async function handleConfirmResetPassword({
+  username,
+  confirmationCode,
+  newPassword
+}: ConfirmResetPasswordInput) {
+  try {
+    await confirmResetPassword({ username, confirmationCode, newPassword });
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```javascript
+import { confirmResetPassword } from 'aws-amplify/auth';
+
+async function handleConfirmResetPassword({
+  username,
+  confirmationCode,
+  newPassword
+}) {
+  try {
+    await confirmResetPassword({ username, confirmationCode, newPassword });
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+## パスワードの更新
+
+`updatePassword` API を使用して、サインイン中のユーザーのパスワードを更新できます。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```typescript
+import { updatePassword, type UpdatePasswordInput } from 'aws-amplify/auth';
+
+async function handleUpdatePassword({
+  oldPassword,
+  newPassword
+}: UpdatePasswordInput) {
+  try {
+    await updatePassword({ oldPassword, newPassword });
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```javascript
+import { updatePassword } from 'aws-amplify/auth';
+
+async function handleUpdatePassword(oldPassword, newPassword) {
+  try {
+    await updatePassword({ oldPassword, newPassword });
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+## まとめ
+
+おめでとうございます！**ユーザーパスワード変更とリカバリーの設定**ガイドを完了しました。このガイドでは、ユーザーがパスワードを変更できるようにし、登録済みのメールまたは電話番号を使用してアカウントを復旧してパスワードを置き換えるのをサポートする方法を学びました。
+
+## 次のステップ
+
+パスワード管理を有効にしたので、追加の機能を追加することもできます。以下について詳しく学習することをお勧めします：
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+- [Social sign-in (OAuth)](/gen1/[platform]/build-a-backend/auth/add-social-provider/)
+- [多要素認証](/gen1/[platform]/build-a-backend/auth/manage-mfa/)
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+- [Social sign-in (OAuth)](/gen1/[platform]/build-a-backend/auth/add-social-provider/)
+- [多要素認証](/gen1/[platform]/build-a-backend/auth/manage-mfa/)
+
+</InlineFilter>
+
+</InlineFilter>
+
+import ios0 from '/src/fragments/lib/auth/native_common/password_management/common.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import android1 from '/src/fragments/lib/auth/native_common/password_management/common.mdx';
+
+<Fragments fragments={{ android: android1 }} />
+
+import flutter2 from '/src/fragments/lib/auth/native_common/password_management/common.mdx';
+
+<Fragments fragments={{ flutter: flutter2 }} />

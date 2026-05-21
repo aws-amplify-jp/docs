@@ -1,0 +1,117 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ユーザーグループ管理の設定',
+  description: 'Cognito User Poolsで論理グループを作成し、Amplify CLIを使用してAmplifyカテゴリのリソースへのアクセス権限を割り当てます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+CLIを使用して、Cognito User Poolsで論理グループを作成し、Amplifyカテゴリのリソースへのアクセス権限を割り当てることができます。また、グループ間の相対的な優先度を定義することもできます。これは、「Admins」と「Editors」のどちらのユーザーを含めるかを定義する場合や、グループ内のユーザーがリソース（AppSync、API Gateway、S3バケットなど）に対して書き込みのみ、または読み書きの両方を実行できるようにする場合に便利です。[GraphQL Transformerで`@auth`静的グループと一緒に使用することもできます](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules#user-group-based-data-access)。優先度は、ユーザーが複数のグループに属している場合の権限の曖昧さを解消するのに役立ちます。
+
+## ユーザーグループを作成する
+
+```bash
+amplify add auth
+```
+
+```console
+❯ Manual configuration
+
+Do you want to add User Pool Groups? (Use arrow keys)
+❯ Yes
+
+? Provide a name for your user pool group: Admins
+? Do you want to add another User Pool Group Yes
+? Provide a name for your user pool group: Editors
+? Do you want to add another User Pool Group No
+? Sort the user pool groups in order of preference …  (Use <shift>+<right/left> to change the order)
+  Admins
+  Editors
+```
+
+上記の例のように聞かれたら、キーボードの`Shift`を**LEFT**および**RIGHT**矢印キーと一緒に押して、グループを優先度の上下に移動できます。完了したら、`amplify/backend/auth/userPoolGroups/user-pool-group-precedence.json`を開いて、優先度を手動で設定できます。
+
+## グループアクセス制御
+
+特定のAmplifyカテゴリでは、CRUD（作成、読み取り、更新、削除）権限によるアクセス制限ができます。認証されたユーザーとゲスト（たとえば、認証されたユーザーはS3バケットの読み書きができますがゲストは読み取りのみ）に対して異なるアクセス制御を設定できます。さらに、これを制限して、ログインしているユーザーが特定のUser Pool Groupに属しているかどうかに応じて異なる権限を条件付きで適用できます。
+
+```bash
+amplify add storage  # Select content
+```
+
+```console
+? Restrict access by? (Use arrow keys)
+  Auth/Guest Users
+  Individual Groups
+❯ Both
+  Learn more
+
+Who should have access?
+❯ Auth and guest users
+
+What kind of access do you want for Authenticated users?
+❯ create/update, read
+
+What kind of access do you want for Guest users?
+❯ read
+
+Select groups:
+❯ Admins
+
+What kind of access do you want for Admins users?
+❯ create/update, read, delete
+```
+
+上記の例では、「Admins」グループ内のユーザーがフルアクセス権を持ち、「Guest」ユーザーは読み取りのみが可能で、グループに属さない認証されたユーザーが作成、更新、読み取りアクセス権を持つという権限の組み合わせを使用しています。Amplifyはあなたの代わりに対応するIAMポリシーを構成します。高度なユーザーは、`amplify/backend/auth/userPoolGroups/user-pool-group-precedence.json`に`customPolicies`キーを追加することで、グループのカスタムIAMポリシーを指定して権限をさらに設定できます。これはデプロイ中にこのグループに関連付けられたIAMロールにインラインポリシーをアタッチします。**注**これは高度な機能であり、AWSリソースを理解している場合にのみ適切です。たとえば、「Admins」グループ内のユーザーにS3バケットを作成する機能を持たせたい場合があります。
+
+```json
+[
+  {
+    "groupName": "Admins",
+    "precedence": 1,
+    "customPolicies": [
+      {
+        "PolicyName": "admin-group-policy",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "statement1",
+              "Effect": "Allow",
+              "Action": ["s3:CreateBucket"],
+              "Resource": ["arn:aws:s3:::*"]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "groupName": "Editors",
+    "precedence": 2
+  }
+]
+```

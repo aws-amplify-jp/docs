@@ -1,0 +1,257 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ファイルのリスト',
+  description: "Amplify のストレージカテゴリを使用してアップロードされたすべてのオブジェクトをリストする方法について詳しく説明します。",
+  platforms: [
+    'javascript',
+    'flutter',
+    'swift',
+    'android',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["android", "swift"]}>
+
+<Callout info>
+Amplify Storage の最新バージョンは、S3 オブジェクトをパスとして指定することをサポートしています。  
+S3 オブジェクトを指定する際は、`key` の代わりに `path` を使用することをお勧めします。
+
+注: `key` パラメータは非推奨であり、次のメジャーバージョンで削除される可能性があります。
+</Callout>
+
+</InlineFilter>
+
+import android_list from '/src/fragments/lib/storage/android/list.mdx';
+import flutter_list from '/src/fragments/lib/storage/flutter/list.mdx';
+import ios_list from '/src/fragments/lib/storage/ios/list.mdx';
+
+<Fragments
+  fragments={{ android: android_list, flutter: flutter_list, swift: ios_list }}
+/>
+
+<InlineFilter filters={['javascript', 'react-native', 'angular', 'nextjs', 'react', 'vue']}>
+
+指定されたパスの下にアップロードされたすべてのオブジェクトをリストするか、ページネーション処理されたオブジェクトのリストを受け取るかを選択できます。
+
+## list
+<BlockSwitcher>
+<Block name="パス付き（v6.2.0 以上）">
+```javascript
+import { list } from 'aws-amplify/storage';
+
+try {
+  const result = await list({
+    path: 'public/photos/',
+    // または、path: ({identityId}) => `protected/${identityId}/photos/`
+  });
+} catch (error) {
+  console.log(error);
+}
+```
+</Block>
+<Block name="キー付き（非推奨）">
+```javascript
+import { list } from 'aws-amplify/storage';
+
+try {
+  const result = await list({
+    prefix: 'photos/',
+    options:  {
+      accessLevel: 'protected', // デフォルトは `guest` ですが、'private' | 'protected' | 'guest' が指定できます
+      targetIdentityId: 'xxxxxxx' // そのユーザーの identityId
+      // targetIdentityId は accessLevel が protected の場合のみ必要です
+    }
+  });
+} catch (error) {
+  console.log(error);
+}
+```
+</Block>
+</BlockSwitcher>
+
+末尾のスラッシュ `/` に注意してください。`list({ path :  'public/photos' })` と指定した場合、`public/photos/123.jpg` と同様に `public/photos123.jpg` のようなファイルにもマッチします。
+
+レスポンスの形式は以下の例のようになります
+
+```js
+{
+  items: [
+    {
+      path: 'public/photos/123.jpg',
+      eTag: '30074401292215403a42b0739f3b5262',
+      lastModified: 'Thu Oct 08 2020 23:59:31 GMT+0800 (Singapore Standard Time)',
+      size: 138256
+    },
+    // ...
+  ],
+}
+```
+
+手動で作成されたフォルダは `size` が 0 のファイルとして表示されますが、`file.key.match(/\.[0-9a-z]+$/i)` のようなキーに対して正規表現でマッチングを行い、ファイルとフォルダを区別することもできます。S3 ではフォルダは仮想的な概念であるため、任意のファイルは名前に `/` を含めることで任意の深さのフォルダを宣言できます。すべてのフォルダをリストする必要がある場合は、ファイルとフォルダの認可されたリストを取得するために、それに応じて解析する必要があります：
+
+```js
+function processStorageList(response) {
+  let files = [];
+  let folders = new Set();
+  response.items.forEach((res) => {
+    if (res.size) {
+      files.push(res);
+      // ときどきファイルが / でフォルダを宣言することがあります
+      let possibleFolder = res.path.split('/').slice(0, -1).join('/');
+      if (possibleFolder) folders.add(possibleFolder);
+    } else {
+      folders.add(res.path);
+    }
+  });
+  return { files, folders };
+}
+```
+
+ファイルとフォルダをネストされたオブジェクトの形式で取得する必要がある場合（例えば、エクスプローラー UI を構築する場合）は、再帰的に解析することができます：
+
+```js
+function processStorageList(response) {
+  const filesystem = {};
+  // https://stackoverflow.com/questions/44759750/how-can-i-create-a-nested-object-representation-of-a-folder-structure
+  const add = (source, target, item) => {
+    const elements = source.split('/');
+    const element = elements.shift();
+    if (!element) return; // blank
+    target[element] = target[element] || { __data: item }; // element;
+    if (elements.length) {
+      target[element] =
+        typeof target[element] === 'object' ? target[element] : {};
+      add(elements.join('/'), target[element], item);
+    }
+  };
+  response.items.forEach((item) => add(item.path, filesystem, item));
+  return filesystem;
+}
+```
+
+これにより、各アイテムのデータが特別な `__data` キーの中に配置されます。
+
+## すべてのファイルにアクセス
+
+S3 バケット内の特定のプレフィックスの下にあるすべてのファイルのリストを取得するには、`listAll` を `true` に設定できます。
+
+<BlockSwitcher>
+<Block name="パス付き（v6.2.0 以上）">
+```javascript
+import { list } from 'aws-amplify/storage';
+
+try {
+  const response = await list({
+    path: 'public/photos/',
+    // または、path: ({identityId}) => `protected/${identityId}/photos/`
+    options: {
+      listAll: true
+    }
+  });
+  // response.items からリストアイテムをレンダリング
+} catch (error) {
+  console.log('Error ', error);
+}
+```
+</Block>
+<Block name="キー付き（非推奨）">
+```javascript
+import { list } from 'aws-amplify/storage';
+
+try {
+  const response = await list({
+    prefix: 'photos/',
+    options: {
+      listAll: true
+    }
+  });
+  // response.items からリストアイテムをレンダリング
+} catch (error) {
+  console.log('Error ', error);
+}
+```
+</Block>
+</BlockSwitcher>
+
+## ページネーション処理されたファイルアクセス
+
+pageSize が合計ファイルサイズより低く設定されている場合、1 回の `list` 呼び出しではすべてのファイルのサブセットのみが返されます。複数の呼び出しですべてのファイルをリストするには、ユーザーは `nextToken` フラグを使用できます：
+
+<BlockSwitcher>
+<Block name="パス付き（v6.2.0 以上）">
+```javascript
+import { list } from 'aws-amplify/storage';
+
+const PAGE_SIZE = 20;
+let nextToken = undefined;
+//...
+const loadNextPage = async () => {
+  let response = await list({
+    path: 'public/photos/',
+    // または、path: ({identityId}) => `protected/${identityId}/photos/`
+    pageSize: PAGE_SIZE,
+    nextToken: nextToken
+    }
+  });
+  if (response.nextToken) {
+    nextToken = response.nextToken;
+  } else {
+    nextToken = undefined;
+  }
+  // response.items からリストアイテムをレンダリング
+};
+```
+</Block>
+<Block name="キー付き（非推奨）">
+```javascript
+import { list } from 'aws-amplify/storage';
+
+const PAGE_SIZE = 20;
+let nextToken = undefined;
+//...
+const loadNextPage = async () => {
+  let response = await list({
+    key: 'photos/'
+    options: {
+      pageSize: PAGE_SIZE,
+      nextToken: nextToken
+    }
+  });
+  if (response.nextToken) {
+    nextToken = response.nextToken;
+  } else {
+    nextToken = undefined;
+  }
+  // response.items からリストアイテムをレンダリング
+};
+```
+</Block>
+</BlockSwitcher>
+
+
+<Callout>注: pageSize の範囲は 0 ～ 1000 です。</Callout>
+
+## プレフィックスなしのリスト（非推奨）
+
+指定されたプレフィックスのない `await list()` または空の文字列をプレフィックスとして指定した `await list({ prefix: "" })` を使用する `list` API の使用法は非推奨であり、次のメジャーバージョンで削除される可能性があります。
+
+</InlineFilter>

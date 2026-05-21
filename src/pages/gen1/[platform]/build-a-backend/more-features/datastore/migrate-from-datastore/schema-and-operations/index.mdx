@@ -1,0 +1,222 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'スキーマと GraphQL 操作',
+  description: 'AppSync スキーマを取得し、Apollo Kotlin コード生成用の GraphQL 操作を定義します。',
+  platforms: [
+    'android',
+    'swift'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["android"]}>
+
+Apollo のコード生成プラグインは、スキーマと GraphQL 操作ファイルを読み込んで、型安全な Kotlin コードを生成します。このページでは、AppSync スキーマを取得し、必要な GraphQL 操作を定義する方法について説明します。
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+スキーマは Apollo のコード生成ツールで使用され、GraphQL 操作を実行するのに役立つ型安全な Swift コードを生成します。このページでは、AppSync スキーマを取得し、必要な GraphQL 操作を定義する方法について説明します。
+
+</InlineFilter>
+
+## AWS AppSync GraphQL スキーマを取得する
+
+### AWS AppSync Web コンソールを使用する
+
+1. [AWS AppSync コンソール](https://console.aws.amazon.com/appsync/home)で API に移動します
+2. 左側で **Schema** を選択します
+3. **Export Schema** ドロップダウンを選択して `schema.json` ファイルをダウンロードします
+<InlineFilter filters={["android"]}>
+
+4. このファイルをプロジェクト内の `app/src/main/graphql/schema.json` に配置します (または Apollo Gradle プラグインで設定された場所 — [Apollo documentation](https://www.apollographql.com/docs/kotlin/advanced/plugin-recipes#specifying-the-schema-location) を参照)
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+4. このファイルをプロジェクトディレクトリ (例えば、`.xcodeproj` と同じフォルダ) に配置します。
+
+</InlineFilter>
+
+### AWS CLI を使用する
+
+1. [AWS CLI](https://aws.amazon.com/cli/) で以下のコマンドを実行してスキーマをダウンロードします:
+
+```bash
+aws appsync get-introspection-schema \
+  --api-id <api-id> \
+  --format JSON \
+  --region <region> \
+  schema.json
+```
+
+API ID は [AWS AppSync コンソール](https://console.aws.amazon.com/appsync/home)で確認するか、以下のコマンドで実行して確認できます:
+
+```bash
+aws appsync list-graphql-apis --region <region>
+```
+
+<InlineFilter filters={["android"]}>
+
+2. ダウンロードした `schema.json` をプロジェクト内の `app/src/main/graphql/schema.json` に配置します。
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+2. ダウンロードした `schema.json` をプロジェクトディレクトリに配置します。
+
+</InlineFilter>
+
+## GraphQL 操作 (クエリ、ミューテーション、サブスクリプション) を準備する
+
+### Amplify CLI からのインポート
+
+Amplify CLI は、Amplify API / AppSync プロジェクト用のクエリ (`queries.graphql`)、ミューテーション (`mutations.graphql`)、サブスクリプション (`subscriptions.graphql`) を自動生成できます。[クライアントコード生成ガイド](https://docs.amplify.aws/gen1/android/tools/cli-legacy/client-codegen/)に従ってこれらのファイルを生成します。生成されたら、[Apollo documentation](https://www.apollographql.com/docs/kotlin/advanced/plugin-recipes#specifying-the-schema-location)で指示されたようにプロジェクトに追加します。
+
+<Callout>
+
+Amplify 生成ファイルを使用することは始めるための良い方法ですが、独自のクエリを作成してクエリされるデータをユースケースに限定し、GraphQL フラグメントをアプリケーション全体でモデルを再利用することをお勧めします。
+
+</Callout>
+
+### 独自に作成する
+
+GraphQL 操作を `app/src/main/graphql/` に配置します。これは Apollo Gradle プラグインがこれらのファイルを探すデフォルトの場所です。独自の操作を作成する場合、[AWS AppSync Query Editor](https://docs.aws.amazon.com/appsync/latest/devguide/console-tour.html#queries-editor)はテストに役立ちます。
+
+#### フラグメント
+
+すべての操作で再利用する[フラグメント](https://www.apollographql.com/docs/kotlin/essentials/fragments)を作成します:
+
+```graphql
+# fragments.graphql
+
+fragment PostDetails on Post {
+  id
+  updatedAt
+  createdAt
+  title
+  content
+  status
+  rating
+  _version
+  _deleted
+  _lastChangedAt
+}
+```
+
+<Callout warning>
+
+**アプリが使用するすべてのフィールドを含めます。** フラグメントには、ミューテーションで必要なすべてのフィールドを含める必要があります。たとえば、`content` がスキーマで必須フィールド (`String!`) の場合、フラグメントとミューテーション入力に含める必要があります。そうしないと、ミューテーションは検証エラーで失敗します。
+
+</Callout>
+
+<Callout>
+
+**DataStore コンフリクト解決フィールド:** AppSync API が DataStore コンフリクト解決を使用する場合、スキーマには `_version`、`_deleted`、および `_lastChangedAt` フィールドが含まれます。更新および削除ミューテーションでフラグメントに `_version` を含めて渡す**必要があります**。そうしないと、ミューテーションは `ConflictUnhandled` エラーで失敗します。
+
+</Callout>
+
+#### ミューテーション
+
+投稿を変更または作成する[ミューテーション](https://www.apollographql.com/docs/kotlin/essentials/mutations)を作成します。`PostDetails` フラグメントを使用すると、各ミューテーションで同じデータ型が返されます:
+
+```graphql
+# mutations.graphql
+
+# Create
+mutation CreatePost($input: CreatePostInput!) {
+  createPost(input: $input) {
+    ... PostDetails
+  }
+}
+
+# Update
+mutation UpdatePost($input: UpdatePostInput!) {
+  updatePost(input: $input) {
+    ... PostDetails
+  }
+}
+
+# Delete
+mutation DeletePost($input: DeletePostInput!) {
+  deletePost(input: $input) {
+    id
+  }
+}
+```
+
+#### クエリ
+
+AWS AppSync から `PostDetails` を取得する[クエリ](https://www.apollographql.com/docs/kotlin/essentials/queries)を作成します:
+
+```graphql
+# queries.graphql
+
+# Single Item
+query GetPost($id: ID!) {
+  getPost(id: $id) {
+    ... PostDetails
+  }
+}
+
+# List Items
+query GetPosts($nextToken: String) {
+  listPosts(nextToken: $nextToken) {
+    items {
+      ... PostDetails
+    }
+    nextToken
+  }
+}
+```
+
+#### サブスクリプション
+
+投稿が作成、更新、または削除されたときにアプリに通知する[サブスクリプション](https://www.apollographql.com/docs/kotlin/essentials/subscriptions)を作成します:
+
+```graphql
+# subscriptions.graphql
+
+# Create
+subscription onCreateSubscription {
+  onCreatePost {
+    ... PostDetails
+  }
+}
+
+# Update
+subscription onUpdateSubscription {
+  onUpdatePost {
+    ... PostDetails
+  }
+}
+
+# Delete
+subscription onDeleteSubscription {
+  onDeletePost {
+    id
+  }
+}
+```
+
+<Callout>
+
+**生成されたクラス名:** Apollo Kotlin は `.graphql` ファイルの操作名を使用して、各操作のクラスを生成します。たとえば、`subscription onCreateSubscription` は `OnCreateSubscription` という名前のクラスを生成します。`subscription OnCreatePost` と名付けた場合、生成されるクラスは `OnCreatePostSubscription` になります (操作名にまだ含まれていない場合、Apollo は `Subscription` / `Query` / `Mutation` を追加します)。`build/generated/source/apollo/` で生成されたコードを確認してクラス名を確認します。
+
+</Callout>

@@ -1,0 +1,33 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amazon Kinesis の使用',
+  description:
+    'Amplify を使用して Amazon Kinesis Data Streams と Amazon Kinesis Data Firehose を使用してリアルタイム処理のためにアナリティクスデータをストリーミングする方法を学習します。',
+  platforms: ['swift', 'android']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import all0 from '/src/fragments/sdk/library-callout.mdx';
+
+<Fragments fragments={{ all: all0 }} />
+
+import ios1 from '/src/fragments/sdk/analytics/ios/kinesis.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import android2 from '/src/fragments/sdk/analytics/android/kinesis.mdx';
+
+<Fragments fragments={{ android: android2 }} />

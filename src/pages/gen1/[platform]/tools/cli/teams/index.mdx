@@ -1,0 +1,101 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'チームの環境',
+  description: 'すべてのAmplifyバックエンド環境は、プロジェクトに追加されたカテゴリーのコンテナです。複数の環境では、Amplifyは標準的なGitワークフローに合わせて、よく知られたコマンドを使用して異なるブランチを切り替えられます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+プロジェクトを初期化するときに、Amplifyバックエンド環境を作成します。すべてのAmplifyバックエンド環境は、プロジェクトに追加されたカテゴリーのコンテナです。環境に更新をデプロイするには、`amplify push`を実行します。同じバックエンドで複数のメンバーが作業しているチームでは、新しいバックエンド機能の作業を開始する前に`amplify pull`を実行して、上流から変更をフェッチすることがベストプラクティスです。クラウドプロジェクトのバックエンド環境のリストを確認するには、[Amplify Console](https://console.aws.amazon.com/amplify)にアクセスしてください。
+
+複数の環境の場合、Amplifyは標準的なGitワークフローに合わせて、`env checkout`コマンドを使用して異なるブランチを切り替えられます。`git checkout BRANCHNAME`を実行するのと同様に、`amplify env checkout ENVIRONMENT_NAME`を実行して環境を切り替えます。以下の図は、新しいgitブランチを作成するときに新しい環境を初期化するワークフローを示しています。
+
+![Image](/images/AmplifyEnvSwitching.jpg)
+
+各環境に機能を独立して追加できるため、別のステージに移動する前に開発とテストを行うことができます。上記の例と同じように**Dev**がベースであり**Test**と**Prod**がそこから派生している場合、セットアップに満足したら機能を追加（または削除）し、それに応じてマージしてデプロイできます。
+
+![Image](/images/AmplifyEnvAddDeploy.jpg)
+
+デプロイメントパイプラインを通じて作業する際に、この操作を反復的に実行できます。
+
+![Image](/images/AmplifyEnvAddDeploySwitching.jpg)
+
+チーム内の複数の開発者は、アカウント内の認証情報を使用して環境を共有および操作することもできます。たとえば、**Test**または**Prod**のデプロイメントに影響を与えずにAPIへの変更をテストしたい場合です。これにより、設定されたリソースをテストでき、適切なCloudFormationのアクセス許可が付与されている場合は、`amplify push`を使用してリソースをバックエンドにプッシュできます。
+
+![Image](/images/AmplifyEnvMultDevelopers.jpg)
+
+別のAWSアカウントで、これらの環境の独立した複製を開発者に設定させることもできます。これを行うには、単に以下のステップを実行します。
+
+1. 既存のプロジェクトをクローンします
+2. `amplify env add`を実行し、その開発者のアカウントとAWSプロファイルを使用して新しい環境（例：「mydev」）を設定します
+3. `amplify push`でデプロイします
+
+このワークフローは、プロジェクトをGitリポジトリにコミットすることで、組織外の人々とAmplifyプロジェクト全体を共有するためにも使用できます。これを行っている場合、`amplify`ディレクトリにある**team-provider-info.json**を削除（または`.gitignore`ファイルに追加）します。このファイルについては、[こちら](/gen1/[platform]/tools/cli/teams/shared/#sharing-projects-outside-the-team)で詳しく学べます。
+
+## 継続的なデプロイメントとホスティング
+
+Amplify CLIは、Amazon S3とCloudFrontを使用した基本的なウェブアプリケーションホスティングをサポートしています。マルチ環境機能をAmplify Consoleと一緒に使用して、完全に管理されたウェブアプリケーションホスティングと継続的なデプロイメントソリューションを実現できます。詳細については、[公式ドキュメント](https://docs.aws.amazon.com/amplify/latest/userguide/multi-environments.html)を参照してください。
+
+## 本番環境と開発環境のセットアップ
+
+プロジェクトのGitリポジトリを作成してください（まだない場合）。異なる環境に対して別々のGitブランチを管理することが推奨されています（混乱を避けるため、ブランチ名を環境名と同じにしておくようにしましょう）。
+プロジェクトのルートから、以下のコマンドを実行します。
+
+```console
+$ amplify init
+? Enter a name for the environment: prod
+// Provide AWS Profile info
+// Add amplify categories using `amplify add <category>`
+$ git init
+$ git add <all project related files>
+$ git commit -m "Creation of a prod amplify environment"
+$ git remote add origin git@github.com:<repo-name>
+$ git push -u origin prod
+```
+
+**注：** Amplify CLIを使用してプロジェクトを初期化すると、プロジェクトのルートにgitignoreファイルが存在する場合はそこに追加され、存在しない場合は作成され、Amplify CLIが生成した推奨ファイルのリストを含め、Gitリポジトリにチェックインするためのリストが追加されます。Amplify CLIは、`#amplify-do-not-edit-begin`と`#amplify-do-not-edit-end`プラグマの間の.gitignoreセクションを引き続き管理します。
+
+Gitで「prod」ブランチをセットアップしたら、Amplifyプロジェクトで「dev」環境をセットアップしてください（「prod」環境に基づいてセットアップされます）。その後、以下の手順を実行して、対応するgitブランチを作成します。
+
+```console
+$ amplify env add
+? Do you want to use an existing environment? No
+? Enter a name for the environment dev
+// Provide AWS Profile info
+```
+
+これでプロジェクトのクラウド内に別の環境がセットアップされます。バックエンドの設定とリソースは「prod」環境からクローンされました。`amplify push`を実行して、新しい環境（dev）のすべてのAWSリソースをプロビジョニングします。
+
+「prod」ブランチに変更をプッシュします（`git status`コマンドを実行すると、team-provider-info.jsonファイルへの変更のみが表示されます。このファイルは、チーム内で同じバックエンドを共有したい場合に役立つすべてのプロジェクト環境のスタック情報が累積されています）。その後、新しく作成した環境に対応する新しいgitブランチ「dev」を作成しましょう。
+
+```console
+$ git add .
+$ git commit -m "Creation of a dev amplify environment"
+$ git push -u origin prod
+$ git checkout -b dev
+$ git push -u origin dev
+```

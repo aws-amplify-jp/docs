@@ -1,0 +1,158 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'デバイスを記憶する',
+  description: 'Amazon Cognito ユーザープールのデバイス関連機能を使用できます。デバイス機能を有効にするには、Cognito ユーザープールに移動し、左側のナビゲーションメニューで [デバイス] を選択してから、[ユーザーオプトイン] または [常に] を選択します。',
+  platforms: [
+    'flutter',
+    'swift',
+    'android',
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios_maintenance from '/src/fragments/lib-v1/ios-maintenance.mdx';
+
+<Fragments fragments={{ swift: ios_maintenance }} />
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+
+import ios1 from '/src/fragments/lib-v1/auth/common/device_features/common.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import android_maintenance from '/src/fragments/lib-v1/android-maintenance.mdx';
+
+<Fragments fragments={{ android: android_maintenance }} />
+
+import android2 from '/src/fragments/lib-v1/auth/common/device_features/common.mdx';
+
+<Fragments fragments={{ android: android2 }} />
+
+import flutter3 from '/src/fragments/lib-v1/auth/common/device_features/common.mdx';
+
+<Fragments fragments={{ flutter: flutter3 }} />
+
+<InlineFilter filters={["javascript" ,  "react-native", "angular", "nextjs", "react", "vue"]}>
+<Callout>
+
+[デバイスの追跡と記憶](https://aws.amazon.com/blogs/mobile/tracking-and-remembering-devices-using-amazon-cognito-your-user-pools/)機能は、現在、Cognito ユーザープールまたはホステッド UI でのフェデレーション OAuth フローを使用する場合、ライブラリ内で利用できません。
+
+</Callout>
+
+デバイスの記憶は、多要素認証 (MFA) と組み合わせて使用する場合に便利です。Amazon Cognito ユーザープールで MFA が有効になっている場合、エンドユーザーはサインインするたびに、メールまたは SMS で受け取ったセキュリティコードを入力する必要があります。これはセキュリティを向上させますが、ユーザー体験の代償となります。
+
+デバイスの記憶により、ユーザーがそのデバイスにサインインする際に、第2要素の要件が自動的に満たされるため、ユーザー体験の摩擦が軽減されます。
+
+## Auth カテゴリーを構成する
+
+デバイスの記憶機能を有効にするには、Cognito ユーザープールコンソールを開きます。**プロジェクトディレクトリに移動して**次の**コマンドを実行してください**:
+
+```bash
+amplify auth console
+```
+
+**以下のオプションを選択して** Cognito ユーザープールコンソールを開きます:
+
+```bash
+? Which Console
+    User Pool
+```
+
+コンソールが開いたら、**デバイストラッキング**セクションまでスクロールダウンして、`編集`ボタンを選択します。これにより、ユーザーのデバイスの記憶の設定を構成できるページがレンダリングされます。
+
+![デバイストラッキングオプションリストの編集が表示されており、記憶しないがハイライトされています。](/images/auth/webconsole_remember1.png)
+
+**常に記憶またはユーザーオプトイン**のいずれかを選択します。これは、ユーザーのデバイスをデフォルトで記憶するか、ユーザーが選択できるようにするかによります。
+
+Cognito ユーザープールで MFA が有効になっている場合は、多要素認証中に第2要素を抑制するオプションがあります。信頼できるデバイスを第2要素メカニズムとして使用する場合は**はい**を選択するか、それ以外の場合は**いいえ**を選択します。
+
+![信頼できるデバイスの MFA をバイパスすることをユーザーに許可するオプション。](/images/auth/webconsole_remember2.png)
+
+選択を完了したら、[変更を保存] をクリックします。これで、記憶されたデバイスを管理するコードの更新を開始する準備ができました。
+
+## API
+
+### デバイスを記憶する
+
+デバイスを記憶済みとしてマークできます:
+
+import js2 from '/src/fragments/lib-v1/auth/js/device_features/10_rememberDevice.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js2,
+    'react-native': js2,
+    angular: js2,
+    nextjs: js2,
+    react: js2,
+    vue: js2
+  }}
+/>
+
+### デバイスを忘れる
+
+次の API を使用してデバイスを忘れることができます。忘れたデバイスは記憶されず、追跡されません。記憶、忘れ、追跡の違いについては、以下を参照してください。
+
+import js6 from '/src/fragments/lib-v1/auth/js/device_features/20_forgetDevice.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js6,
+    'react-native': js6,
+    angular: js6,
+    nextjs: js6,
+    react: js6,
+    vue: js6
+  }}
+/>
+
+### デバイスを取得する
+
+次のコマンドを使用して、記憶されたデバイスのリストを取得できます:
+
+import js10 from '/src/fragments/lib-v1/auth/js/device_features/30_fetchDevice.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js10,
+    'react-native': js10,
+    angular: js10,
+    nextjs: js10,
+    react: js10,
+    vue: js10
+  }}
+/>
+
+## 用語
+
+- **追跡済み**
+  - ユーザーが新しいデバイスでサインインするたびに、クライアントはサクセスフルな認証イベントの終了時にデバイスキーを取得します。このデバイスキーを使用してソルトとパスワードベリファイアを生成し、ConfirmDevice API を呼び出します。この時点で、デバイスは**追跡済み**と見なされます。デバイスが追跡済み状態になると、Amazon Cognito コンソールを使用して、追跡を開始した時刻、最後の認証時刻、およびそのデバイスに関するその他の情報を確認できます。
+- **記憶済み**
+  - 記憶されたデバイスも追跡されます。ユーザー認証中に、記憶されたデバイスに割り当てられたデバイスキーとシークレットペアを使用してデバイスを認証し、ユーザーが以前サインインに使用したのと同じデバイスであることを確認します。
+- **記憶されていない**
+  - 記憶されていないデバイスは、追跡されたデバイスであり、Cognito がユーザーにデバイスを記憶することにオプトインするよう求めるように構成されていますが、ユーザーがデバイスを記憶することにオプトインしていない場合です。このユースケースは、自分が所有していないデバイスからアプリケーションにサインインするユーザー向けです。
+- **忘れた**
+  - デバイスを記憶または追跡したくない場合は、`Auth.forgetDevice()` API を使用してこのデバイスを記憶および追跡から削除できます。
+
+</InlineFilter>

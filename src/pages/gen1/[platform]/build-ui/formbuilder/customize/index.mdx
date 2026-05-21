@@ -1,0 +1,126 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'フォーム入力のカスタマイズ',
+  description: 'Amplify Studioでフォームビルダーを使用してReactフォームコンポーネントをカスタマイズします。新しいフォーム入力を追加し、フィールドにバインドし、ラベルをカスタマイズし、検証ルールを追加できます。',
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify Studioでフォームビルダーを使用してReactフォームコンポーネントをカスタマイズします。新しいフォーム入力を追加し、フィールドにバインドし、ラベルをカスタマイズし、検証ルールを追加できます。
+
+![Amplify Studio Form Builder interface breakdown](/images/console/formbuilder/customize-overview.png)
+
+**フォームビルダー**にアクセスするには、[Amplify Studio](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)にログインします。
+
+フォームビルダーインターフェースは以下の項目で構成されています。
+
+1. **フォーム入力**: フォーム入力を選択して、**表示**、**データ**、**検証ルール**設定を表示します。
+2. **表示オプション**: 入力の**タイプ**、**ラベル**、**プレースホルダー**、**説明**を設定します。
+3. **データ**: 入力を送信ペイロード内のフィールドに接続します。
+4. **検証ルール**: 検証ルールを視覚的に追加します。[検証ルールの追加方法](/gen1/[platform]/build-ui/formbuilder/validations/)をご覧ください。
+5. **アクションメニュー**: フォーム入力を削除するアクションメニュー。
+6. **フォーム間隔エディター**: フォームのパディングと、入力間の水平および垂直ギャップを設定します。
+7. **エンドユーザーとして表示**: Reactアプリにフォームを統合することなく、インラインでフォームをテストします。
+
+## フォーム入力を追加する
+
+フォームをカスタマイズしてユースケースに合わせるためにフォーム入力を追加します。フォーム要素を追加するには:
+
+1. マウスをフォームキャンバスの中央に移動します。
+2. フォーム入力の間、前後にホバーし、(+)記号付きの青いバーが表示されるまで待ちます。
+3. (+)記号付きの青いバーをクリックします。
+4. 追加するフォーム入力を選択します。
+
+<Video src="/images/console/formbuilder/customize-add.mp4" description="Video - Add form input" />
+
+フォーム内のすべての入力要素をカスタマイズできます。フォーム内のフィールドを選択して設定メニューを開き、表示ラベルやプレースホルダーなどの入力部分をカスタマイズできます。
+
+**ファイルアップローダー**など、一部のフォーム入力には固有の設定があります。[ドキュメントで特殊フィールドの設定について詳細を確認](/gen1/[platform]/build-ui/formbuilder/special-inputs/)してください。
+
+## ドラッグアンドドロップでフォーム入力を並び替える
+
+フォーム入力を縦または横に並び替えます。
+
+1. フォーム入力をクリックしてドラッグします
+2. フォーム入力を別のフォーム入力の上、下、左、または右に移動します
+3. 青いバーが表示されたときにドロップし、フォーム入力の新しい配置を示します
+
+<Video src="/images/console/formbuilder/customize-drag-and-drop.mp4" description="Video - Rearrange form inputs" />
+
+## エンドユーザーとしてフォームを表示する
+
+フォームのカスタマイズをすばやくテストする場合は、**エンドユーザーとして表示**を選択してStudio内で完全に機能するカスタマイズされたフォームを表示します。
+
+**注**: フォームがデータモデルに接続されている場合、**送信**をクリックするとフォームデータがクラウドに保存されます。このアプリが本番環境で使用されている場合、保存するデータが顧客に見える可能性があります。
+
+<Video src="/images/console/formbuilder/customize-view-as-end-user.mp4" description="Video - View form as end user" />
+
+## フォーム間隔(パディングとギャップ)を設定する
+
+フォームと入力間にスペースを追加します。スペーシングエディターを使用して、次のスペーシング値を設定できます(左から右へ):
+
+- **水平ギャップ**: 水平に配置された入力間のスペース。
+- **垂直ギャップ**: 垂直に配置された入力間のスペース。
+- **パディング**: フォーム入力とフォームの境界線周辺のスペース。
+
+スペーシング値には、CSSの長さ値(`px`、`rem`、`em`、`%`)またはテーマオブジェクトのスペーシング値への参照(`xss`、`medium`、`large`)を指定できます。
+
+<Video src="/images/console/formbuilder/customize-spacing.mp4" description="Video - Configure form spacings" />
+
+## Select、Radio Group、またはAutocompleteフィールドのオプションを設定する
+
+[Selectフィールド](https://ui.docs.amplify.aws/react/components/selectfield)、[Radio Groupフィールド](https://ui.docs.amplify.aws/react/components/radiogroupfield)、[Autocompleteフィールド](https://ui.docs.amplify.aws/react/components/autocomplete)は、ユーザーが選択できるオプションのセットが必要です。たとえば、「ステータス」入力は「未開始」、「進行中」、「完了」のオプションのみを持つことができます。
+
+1. **Selectフィールド**、**Radio Groupフィールド**、または**Autocompleteフィールド**入力を選択します
+2. **データ > オプション**に移動します
+3. 利用可能なオプションを1行ずつ入力するか、`["Not started", "In progress", "Done"]`などのJSONアレイを貼り付けます
+
+<Video src="/images/console/formbuilder/customize-options.mp4" description="Video - Configure options" />
+
+## リスト入力を有効にする
+
+`TextInput`は「複数の値を受け入れる」を切り替えることで複数の値を受け入れることができ、ユーザーがアイテムを追加、更新、削除できるようになります。この機能は、データモデルにリンクされていない入力に対してのみ有効です。入力が既存モデルにリンクされている場合、この機能は対応するフィールドの「配列である」プロパティを切り替えることで、モデル上で直接制御されます。
+
+1. データモデルに接続されていないフォーム入力を選択します
+2. **データ**に移動します
+3. **複数の値を受け入れる**を選択します
+
+![Screenshot of "Accept multiple values" checkbox](/images/console/formbuilder/customize-accept-multiple-values.png)
+
+エンドユーザーにとってリスト入力がどのように見えるかを示します:
+
+<Video src="/images/console/formbuilder/customize-list-control.mp4" description="Video - Customize list control" />
+
+## セクション要素を追加する
+
+セクション要素を使用してフォームを複数の部分に分割します。これは、ネストされたデータと個々のセクション内の指定されたフォーム入力を表現するのに役立ちます。
+
+1. マウスをフォームキャンバスの中央に移動します。
+2. フォーム入力の間、前後にホバーし、(+)記号付きの青いバーが表示されるまで待ちます。
+3. (+)記号付きの青いバーをクリックします。
+4. 要素検索リストの下部までスクロールします
+5. **見出し**、**区切り線**、または**テキスト**を選択します
+
+<Video src="/images/console/formbuilder/customize-sectional.mp4" description="Video - Add sectional elements" />
+
+## フォーム入力を削除する
+
+1. フォーム入力を選択します。
+2. **アクション** > **削除**を選択します。

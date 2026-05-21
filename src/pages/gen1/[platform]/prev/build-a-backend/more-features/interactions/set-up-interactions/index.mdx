@@ -1,0 +1,40 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify Interactions のセットアップ',
+  description: 'AWS Amplify Interactions カテゴリにより、Web またはモバイルアプリで AI を活用したチャットボットを実現できます。Interactions を使用して、バックエンドチャットボットプロバイダーを構成し、わずか 1 行のコードでアプリにチャットボット UI を統合できます。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import gettingStartedJs from '/src/fragments/lib-v1/interactions/js/getting-started.mdx';
+
+<Fragments
+  fragments={{
+    javascript: gettingStartedJs,
+    angular: gettingStartedJs,
+    nextjs: gettingStartedJs,
+    react: gettingStartedJs,
+    vue: gettingStartedJs,
+    'react-native': gettingStartedJs
+  }}
+/>

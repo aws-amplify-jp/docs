@@ -1,0 +1,214 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'データを検索可能にする',
+  description: '@searchable ディレクティブは、@model オブジェクト型のデータを Amazon OpenSearch Service にストリーミングし、そのデータを検索する検索リゾルバーを設定します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert
+  isLegacy
+  url={'/gen1/[platform]/build-a-backend/graphqlapi/search-and-result-aggregations/'}
+/>
+
+## @searchable
+
+`@searchable` ディレクティブは、`@model` オブジェクト型のデータを Amazon OpenSearch Service にストリーミングし、そのデータを検索する検索リゾルバーを設定します。
+
+> **マイグレーション警告**: CLI バージョン 4.14.1 より古いバージョンで GraphQL スキーマをデプロイし、その後 4.14.1～4.16.1 の CLI バージョンでスキーマを更新してデプロイした場合、検索操作でレコードの重複が発生する可能性があります。この Python [スクリプト](https://github.com/aws-amplify/amplify-category-api/blob/release-api-plugin-stable/packages/graphql-elasticsearch-transformer/scripts/ddb_to_es.py) を使用して、OpenSearch クラスターから重複レコードを削除してください。[このスクリプト](https://github.com/aws-amplify/amplify-category-api/blob/release-api-plugin-stable/packages/graphql-elasticsearch-transformer/scripts/ddb_to_es.py) は DynamoDB テーブルからデータをインデックスして OpenSearch クラスターにインデックスします。[スクリプトの呼び出し方法の例を参照してください](#backfill-your-opensearch-index-from-your-dynamodb-table)。
+
+> **課金警告**: `@searchable` はインスタンスサイズに応じて追加の費用が発生します。詳細については、[Amazon OpenSearch サービスの価格](https://aws.amazon.com/elasticsearch-service/pricing/) を参照してください。
+
+### 定義
+
+```graphql
+# Streams data from DynamoDB to OpenSearch and exposes search capabilities.
+directive @searchable(queries: SearchableQueryMap) on OBJECT
+input SearchableQueryMap {
+  search: String
+}
+```
+
+### 使用方法
+
+次のスキーマが与えられた場合、Post のインデックスが作成されます。`@searchable` を持つ複数の型がある場合、ディレクティブはそれぞれのインデックスを作成し、Amazon DynamoDB 内のそれらのポストは AWS Lambda を介して Amazon OpenSearch の post インデックスに自動的にストリーミングされ、searchQueryField リゾルバーが接続されます。
+
+```graphql
+type Post @model @searchable {
+  id: ID!
+  title: String!
+  createdAt: String!
+  updatedAt: String!
+  upvotes: Int
+}
+```
+
+その後、通常の `createPost` ミューテーションを使用して、DynamoDB にストリーミングされるオブジェクトを作成できます。
+
+```graphql
+mutation CreatePost {
+  createPost(input: { title: "Stream me to OpenSearch!" }) {
+    id
+    title
+    createdAt
+    updatedAt
+    upvotes
+  }
+}
+```
+
+その後、`match` クエリを使用してポストを検索できます。
+
+```graphql
+query SearchPosts {
+  searchPosts(filter: { title: { match: "Stream" } }) {
+    items {
+      id
+      title
+    }
+  }
+}
+```
+
+Post 型で指定したフィールドのデータ型に基づいて、複数の `SearchableTypes` がスキーマで生成されます。
+
+検索クエリの `filter` パラメーターには、Post 型に記載されているフィールドに対応する検索可能な型フィールドがあります。例えば、`filter` オブジェクトの `title` フィールドは次のプロパティを持っています（`string` 型に適用可能な演算子が含まれています）：
+
+- `eq` - OpenSearch のキーワード型を使用して正確な用語にマッチします。
+- `ne` - これは `eq` の逆操作です。
+- `matchPhrase` - OpenSearch の [Match Phrase Query](https://docs.opensearch.org/latest/query-dsl/full-text/match-phrase/) を使用して検索クエリ内のドキュメントをフィルター処理します。
+- `matchPhrasePrefix` - OpenSearch の [Match Phrase Prefix Query](https://docs.opensearch.org/latest/query-dsl/full-text/match-phrase-prefix/) を使用して検索クエリ内のドキュメントをフィルター処理します。
+- `multiMatch` - OpenSearch の [Multi Match Query](https://docs.opensearch.org/latest/query-dsl/full-text/multi-match/) に対応します。
+- `exists` - OpenSearch の [Exists Query](https://docs.opensearch.org/latest/query-dsl/term/exists/) に対応します。
+- `wildcard` - OpenSearch の [Wildcard Query](https://docs.opensearch.org/latest/query-dsl/term/wildcard/) に対応します。
+- `regexp` - OpenSearch の [Regexp Query](https://docs.opensearch.org/latest/query-dsl/term/regexp/) に対応します。
+
+`sort` パラメーターを使用して検索結果の順序を指定できます。昇順（`asc`）または降順（`desc`）にすることができます。指定されていない場合は、昇順が使用されます。
+
+`limit` パラメーターは、返される検索結果の数を制御します。指定されていない場合、デフォルト値は 100 です。
+
+例えば、ワイルドカード表現を使用して次の `wildcard` クエリでポストを検索できます。
+
+```graphql
+query SearchPosts {
+  searchPost(filter: { title: { wildcard: "S*OpenSearch!" } }) {
+    items {
+      id
+      title
+    }
+  }
+}
+```
+
+上記のクエリは、`title` が `S` で始まり `OpenSearch!` で終わるすべてのドキュメントを返します。
+
+さらに、`filter` パラメーターを使用して、ネストされた `and`/`or`/`not` 条件を渡すことができます。デフォルトでは、フィルター プロパティ内のすべての操作は _AND_ されます。検索クエリの `filter` パラメーターの `or` または `not` プロパティを使用して、この動作をオーバーライドできます。これらの各演算子（フィルター オブジェクトの `and`、`or`、`not` プロパティ）は、検索可能な型の配列を受け入れ、それらは対応する演算子で結合されます。例えば、次の検索クエリを考えます。
+
+```graphql
+query SearchPosts {
+  searchPost(
+    filter: {
+      title: { wildcard: "S*" }
+      or: [
+        { createdAt: { eq: "08/20/2018" } }
+        { updatedAt: { eq: "08/20/2018" } }
+      ]
+    }
+  ) {
+    items {
+      id
+      title
+    }
+  }
+}
+```
+
+`createPost` ミューテーションを使用して `title`、`createdAt`、`updatedAt` 値を持つ新しいポストを作成したと仮定すると、上記の検索クエリは、`title` が `S` で始まる _かつ_ `createdAt` _または_ `updatedAt` 値が `08/20/2018` であるすべての `Posts` のリストを返します。
+
+サポートされているGraphQL型ごとの検索可能な操作の完全なリストは次のとおりです。
+
+| GraphQL 型 | 検索可能な操作 |
+| --: | :-- |
+| String | `ne`, `eq`, `match`, `matchPhrase`, `matchPhrasePrefix`, `multiMatch`, `exists`, `wildcard`, `regexp` |
+| Int | `ne`, `gt`, `lt`, `gte`, `lte`, `eq`, `range` |
+| Float | `ne`, `gt`, `lt`, `gte`, `lte`, `eq`, `range` |
+| Boolean | `eq`, `ne` |
+
+### 既知の制限
+
+- `@searchable` は DataStore と互換性がありませんが、API カテゴリで使用できます。
+- `@searchable` は Amazon ElasticSearch t2.micro インスタンスと互換性がありません。ElasticSearch バージョン 1.5 と 2.3 でのみ機能し、Amplify CLI はバージョン 6.x 以上の ElasticSearch インスタンスのみをサポートします。
+- `@searchable` は @connection ディレクティブと互換性がありません
+- `@searchable` ディレクティブを追加するためのサポートは、既存のデータを OpenSearch に自動的にインデックスする機能をまだ提供していません。機能リクエストは [こちら](https://github.com/aws-amplify/amplify-cli/issues/98) を参照してください。
+- `t2.small` OpenSearch インスタンスタイプは本番環境での使用は推奨されていません。
+
+### 環境 OpenSearch インスタンスタイプの設定
+
+デフォルトでは、Amplify CLI は `t2.small` インスタンスタイプを設定します。これは開始とプロトタイピングに最適ですが、OpenSearch の [ベストプラクティス](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/bp.html) に従うと本番環境での使用は推奨されていません。環境ごとに OpenSearch インスタンスタイプを設定できます。
+
+1. `amplify env add` を実行して新しい環境を作成します（例：「prod」）
+2. `amplify/team-provider-info.json` ファイルを編集し、`ElasticSearchInstanceType` をアプリケーションに適したインスタンスタイプに設定します
+
+```json
+{
+  "dev": {
+    "categories": {
+      "api": {
+        "<your-api-name>": {
+          "ElasticSearchInstanceType": "t2.small.elasticsearch"
+        }
+      }
+    }
+  },
+  "prod": {
+    "categories": {
+      "api": {
+        "<your-api-name>": {
+          "ElasticSearchInstanceType": "t2.medium.elasticsearch"
+        }
+      }
+    }
+  }
+}
+```
+
+3. `amplify push` で変更をデプロイします
+
+Amazon OpenSearch Service インスタンスタイプの詳細については、[こちら](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/supported-instance-types.html) を参照してください。
+
+### DynamoDB テーブルから OpenSearch インデックスをバックフィルする
+
+次の Python [スクリプト](https://github.com/aws-amplify/amplify-category-api/blob/release-api-plugin-stable/packages/graphql-elasticsearch-transformer/scripts/ddb_to_es.py) は、DynamoDB レコードのイベント ストリームを作成し、それを OpenSearch インデックスに送信します。これにより、後で @model 型に `@searchable` を追加する際にデータをバックフィルするのに役立ちます。
+
+**スクリプトの呼び出し例**：
+
+```bash
+python3 ddb_to_es.py \
+  --rn 'us-west-2' \ # Use the region in which your table and OpenSearch domain reside
+  --tn 'Post-XXXX-dev' \ # Table name
+  --lf 'arn:aws:lambda:us-west-2:123456789xxx:function:DdbToEsFn-<api__id>-dev' \ # Lambda function ARN, find the DdbToEsFn in your Lambda functions list, copy entire ARN
+  --esarn 'arn:aws:dynamodb:us-west-2:123456789xxx:table/Post-<api__id>-dev/stream/2019-20-03T00:00:00.350' # Event source ARN, copy the full DynamoDB table ARN
+```

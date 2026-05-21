@@ -1,0 +1,335 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'コマンドフック',
+  description: 'Amplify CLIコマンド実行の前、最中、後にカスタムスクリプトを実行します("amplify push"、"amplify api gql-compile"など)。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+コマンドフックを使用して、Amplify CLIコマンドの前、最中、後にカスタムスクリプトを実行します("amplify push"、"amplify api gql-compile"など)。これにより、Amplifyのベストプラクティスのデフォルト設定を組織の特定のセキュリティガイドラインと運用要件に合わせて拡張できます。
+
+## コマンドフックの追加
+<Callout>
+
+フックをソース管理にチェックインして、マシン全体で利用可能にする必要があります。`amplify pull`はこれらの変更がリポジトリにコミットされる必要があるため、フックフォルダを自動的に再作成しません。
+
+</Callout>
+
+カスタムスクリプトを`amplify/hooks`ディレクトリに配置し、スクリプトファイル名を目的のコマンドにpre或いはpost指定を付けて設定します。例えば`post-add-function.js`は`amplify add function`の後にスクリプトを実行します。スクリプト命名規則の詳細については、[コマンドフックスクリプトの命名方法](#how-to-name-command-hook-scripts)を参照してください。
+
+この例では、デプロイメント前(`amplify push`)に最小限のAmplify CLIバージョンが使用されていることを確認するフックを作成します。
+
+`amplify/hooks`ディレクトリに以下の内容で`pre-push.js`を追加します。*注: Amplify CLIバージョン5.5.0より前にAmplifyプロジェクトを作成した場合は、`amplify/hooks`フォルダを作成する必要があります*
+
+```js
+const fs = require('fs');
+const parameters = JSON.parse(fs.readFileSync(0, { encoding: 'utf8' }));
+
+// Get the running Amplify CLI major version number
+const currentCLIMajorVersion = parameters.data.amplify.version.split('.')[0]
+console.log('Amplify CLI major version: ', currentCLIMajorVersion)
+
+const MINIMUM_MAJOR_AMPLIFY_CLI_VERSION = 5
+console.log('Minimum required Amplify CLI major version: ', MINIMUM_MAJOR_AMPLIFY_CLI_VERSION)
+
+if (currentCLIMajorVersion < MINIMUM_MAJOR_AMPLIFY_CLI_VERSION) {
+  // Non-zero exit code will stop the Amplify CLI command's execution
+  console.log('Minimum CLI version requirement not met.')
+  process.exit(1)
+} else {
+  console.log('Minimum CLI version requirement met.')
+  process.exit(0)
+}
+```
+
+次に、`amplify push`を実行します:
+```bash
+amplify push
+```
+```console
+----- 🪝 pre-push execution start -----
+Amplify CLI major version: 5
+Minimum required Amplify CLI major version: 5
+Minimum CLI version requirement met.
+----- 🪝 pre-push execution end -----
+```
+
+## コマンドフックスクリプトの命名方法
+コマンドにフックインするには、`amplify/hooks`ディレクトリのスクリプトファイルを以下の命名規則に従って命名する必要があります:
+
+`pre|post-<command>[-<sub-command>].extension`
+
+- `command`(必須) - Amplifyコマンド。
+- `extension`(必須) - デフォルトでは`.js`および`.sh`がNode.jsおよびBashにマップされます。より多くの拡張機能またはスクリプティングランタイムをサポートするには、[カスタムスクリプティングランタイムの追加](#adding-a-custom-scripting-runtime)を参照してください。
+- `sub-command`(オプション) - Amplifyサブコマンド。フックの特異性を高めるために使用できます。例: `pre-add-auth`および`pre-mock-api`。
+
+以下は、Amplify CLIでサポートされているすべてのコマンドおよびそのサブコマンドの完全なリストです:
+
+コマンド                | サブコマンド **(オプション)**
+------------------------|------------------------
+`add`                     |すべてのカテゴリ(`api`、`auth`など)<br/>`codegen`<br/>`env`<br/>
+`update`                  |すべてのカテゴリ(`api`、`auth`など)<br/>`env`<br/>
+`remove`                  |すべてのカテゴリ(`api`、`auth`など)<br/>`env`<br/>
+`push`                    |`analytics`、`api`、`auth`、`function`、`hosting`、`interactions`、`storage`、`xr`
+`pull`                    |`env`<br/>
+`publish`                 |-
+`delete`                  |-
+`checkout`                |`env`
+`list`                    |`env`
+`get`                     |`env`
+`mock`                    |`api`、`storage`、`function`<br/>
+`build`                   |`function`<br/>
+`status`                  |`notifications`<br/>
+`import`                  |`auth`、`storage`、`env`<br/>
+`gqlcompile`              |`api`<br/>
+`addgraphqldatasource`    |`api`<br/>
+`statements`              |`codegen`<br/>
+`types`                  |`codegen`<br/>
+
+
+
+*注: 同じファイル名を持つ複数のフックスクリプトは許可されません*
+
+## フックスクリプトでパラメータにアクセスする
+
+コマンドフックは2つのパラメータ`data`および`error`を受け取ります。Amplify CLIはパラメータをJSON文字列として標準入力を通じてフックスクリプトに渡します。
+
+### **data**パラメータ構造
+```json
+{
+  "amplify": {
+    "version": String,
+    "environment": {
+      "envName": String,
+      "projectPath": String,
+      "defaultEditor": String
+    },
+    "command": String,
+    "subCommand": String,
+    "argv": [ String ]
+  }
+}
+```
+
+- amplify
+    - version - 現在のAmplify CLIバージョン
+    - environment - 現在のAmplify環境
+        - envName - 現在のAmplify環境名
+        - projectPath - 現在のAmplifyプロジェクトへのパス
+        - defaultEditor - 初期化ステップで選択されたエディタ。例: `vscode`
+    - command - フックされたAmplify CLIコマンド。例: `push`
+    - subCommand - フックされたAmplify CLIサブコマンドまたはプラグイン。例: `auth`、`env`
+    - argv - コマンドラインを通じてAmplify CLIに渡された引数を含むリスト
+
+### **error**パラメータ構造
+
+Amplify CLIがエラーを生成しない場合、**error**は`undefined`です。それ以外の場合、以下の構造を持ちます:
+```json
+{
+  "message": String,
+  "stack": String
+}
+```
+- message - Amplify CLIにより生成されたエラーメッセージ
+- stack - Amplify CLIにより生成されたエラースタック
+
+### Node.jsでコマンドフックパラメータにアクセスする方法
+```javascript
+const fs = require('fs');
+const parameters = JSON.parse(fs.readFileSync(0, { encoding: 'utf8' }));
+console.log(parameters.data, parameters.error)
+```
+
+### Bashでコマンドフックパラメータにアクセスする方法
+
+まず、[`jq`](https://stedolan.github.io/jq/download/)などのJSONパーサーをインストールします。
+
+その後、パラメータを解析します:
+```bash
+parameters=`cat`
+data=$(jq -r '.data' <<< "$parameters")
+error=$(jq -r '.error // empty' <<< "$parameters")
+echo $data
+echo $error
+```
+
+## Amplify CLIコマンド実行を条件付きで停止する方法
+Amplify CLIの実行を停止するために、フックスクリプトはゼロ以外の終了コードで終了できます。
+
+<BlockSwitcher>
+
+<Block name="Node.js">
+
+```js
+process.exit(1)
+```
+
+</Block>
+
+<Block name="Bash">
+
+```bash
+exit 1
+```
+
+</Block>
+
+</BlockSwitcher>
+
+
+## 高度なコマンドフック設定
+`amplify/hooks`に`hooks-config.json`を追加して、カスタムスクリプティングランタイムを設定したり、外部依存関係を管理したりできます。
+
+### カスタムスクリプティングランタイムの追加
+デフォルトでは、Node.jsおよびBashがサポートされています。追加のランタイムをサポートするには、`amplify/hooks`フォルダの`hooks-config.json`ファイルに`extensions`を追加します。
+
+Pythonランタイムサポートとオペレーティングシステムに基づいた異なるランタイム設定を示す例:
+```json
+{
+  "extensions": {
+    "py": {
+      "runtime": "python3"
+    },
+    "js": {
+      "runtime": "~/.nvm/versions/node/v14.17.1/bin/node",
+      "runtime_windows": "node",
+      "runtime_options": ["--require", "./payload.js"],
+    }
+  }
+}
+```
+- `extensions`内のキー(js、py)は、フックスクリプトに名前を付けるときに使用される[命名規則](#how-to-name-command-hook-scripts)の`extension`として使用される値です。
+- `runtime`(必須) - シンボリックリンク(`node`、`python`、`bash`)または実行可能ファイルへのパス(`~/.nvm/versions/node/v14.17.1/bin/node`)。
+- `runtime_windows`(オプション) - Windowsスペシフィックなシンボリックリンクまたは実行可能ファイルへのパス。
+- `runtime_options`(オプション) - ランタイムに固有のコマンドフックに渡すCLIオプションの配列。
+
+### 第三者依存関係の管理
+
+`npm`などの外部パッケージマネージャーのパッケージをコマンドフックスクリプトで使用できます。この例では、`axios`をNode.jsフックの依存関係としてインストールします。
+
+まず、フックフォルダに移動して`axios`依存関係をインストールします。
+```bash
+cd amplify/hooks
+npm init
+npm install axios
+```
+
+*注*: Amplify Hosting CI/CDパイプラインでコマンドフックを使用する場合は、フック依存関係をインストールするために`preBuild`ステップも設定する必要があります:
+
+```yaml
+backend:
+  phases:
+    preBuild:
+    commands:
+      - cd amplify/hooks
+      - npm install
+frontend:
+...
+```
+
+依存関係ディレクトリとファイル(例: `node_modules`)は`hooks-config.json`の`ignore`に追加する必要があります。
+
+```json
+{
+  "ignore": ["node_modules", "build"]
+}
+```
+
+*注*: `ignore`内のすべてのエントリは[.gitignore仕様](http://git-scm.com/docs/gitignore)に従う必要があります。
+
+これで、`amplify/hooks`ディレクトリに配置されたフックスクリプトで`axios`を使用できます。
+
+### 環境に基づいて異なるロジックを実行する
+
+マルチ環境セットアップを使用する場合、`data.amplify.environment.envName`パラメータに基づいてコマンドフックロジックをカスタマイズできます。
+
+```javascript
+/**
+ * @param data { { amplify: { environment: { envName: string, projectPath: string, defaultEditor: string }, command: string, subCommand: string, argv: string[] } } }
+ * @param error { { message: string, stack: string } }
+ */
+const hookHandler = async (data, error) => {
+  if (data.amplify.environment.envName === 'prod') {
+    console.log('Executing pre-add-auth hook for prod environment');
+  } else if (data.amplify.environment.envName === 'dev') {
+    console.log('Executing pre-add-auth hook for dev environment');
+  }
+};
+
+const getParameters = async () => {
+  const fs = require("fs");
+  return JSON.parse(fs.readFileSync(0, { encoding: "utf8" }));
+};
+
+getParameters()
+  .then((event) => hookHandler(event.data, event.error))
+  .catch((err) => {
+    console.error(err);
+    process.exitCode = 1;
+  });
+```
+
+## AmplifyのCI/CDパイプラインでコマンドフックを使用する
+コマンドフックは[Amplify Hostingで CI/CDビルドがトリガーされる](https://docs.aws.amazon.com/amplify/latest/userguide/multi-environments.html)ときに実行されます。Amplify Hostingでフックスクリプトを実行するには、フックスクリプトを`amplify/hooks`ディレクトリに追加してソース管理にコミットします。
+
+デフォルトでは、Amplify Hostingのビルドでは`pre-push`および`post-push`フックのみが実行されます。
+
+Node.jsおよびBash以外のスクリプティングランタイムを使用するには、[カスタムスクリプティングランタイムの追加](#adding-a-custom-scripting-runtime)を参照して、Amplify HostingBuild Settingsを更新してランタイム実行可能ファイルを含めます。
+
+この例では、Amplify HostingのCI/CDパイプラインで実行されるPythonフックスクリプトを追加します:
+
+1. Pythonフックスクリプトを`hooks-config.json`とともにフックディレクトリに追加します。
+    ```bash
+    touch amplify/hooks/hooks-config.json
+    ```
+
+2. Amplify Hostingのアプリに移動して、**App settings** > **Build settings**を選択して、Pythonをインストールするために`preBuild`フェーズを更新します。
+    ```yaml
+    ...
+    backend:
+    phases:
+        preBuild:
+        commands:
+            - yum install -y python3
+    frontend:
+    ...
+    ```
+
+3. `python3`を`hooks-config.json`に追加してソース管理に変更をプッシュして、Amplify Hostingビルドをトリガーします。
+    ```json
+    {
+        "extensions": {
+            "py": { "runtime": "python3" }
+        }
+    }
+    ```
+
+4. これで完了です! Python コマンドフックは新しいCI/CDビルドで実行されます。
+
+## Amplify StudioのコマンドフックによるLimitations
+
+Amplify Studioを介してバックエンドを更新する場合、コマンドフックは実行されません。

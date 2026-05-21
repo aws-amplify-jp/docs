@@ -1,0 +1,2663 @@
+---
+title: "マルチステップサインイン"
+section: "frontend/auth"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/auth/multi-step-sign-in/"
+---
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+ユーザーがサインアップを完了した後、サインインに進むことができます。Amplify Auth のサインインフローはマルチステップのプロセスになる場合があります。必要なステップは、認証リソースを定義する際に提供した設定によって決まります。詳細については、[多要素認証](/[platform]/build-a-backend/auth/concepts/multi-factor-authentication/)のページをご覧ください。
+
+設定によっては、ユーザーのサインインを完了するためにさまざまな API を呼び出す必要がある場合があります。サインインフローの次のステップを特定するには、サインイン結果の `nextStep` パラメータを確認してください。
+
+```typescript
+import {
+	confirmSignIn,
+	confirmSignUp,
+	resetPassword,
+	signIn,
+} from 'aws-amplify/auth';
+
+const { nextStep } = await signIn({
+	username: 'hello@mycompany.com',
+	password: 'hunter2',
+});
+
+if (
+	nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_SMS_CODE' ||
+	nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_EMAIL_CODE' ||
+	nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_TOTP_CODE'
+) {
+	// collect OTP from user
+	await confirmSignIn({
+		challengeResponse: '123456',
+	});
+}
+
+if (nextStep.signInStep === 'CONTINUE_SIGN_IN_WITH_MFA_SELECTION') {
+	// present nextStep.allowedMFATypes to user
+	// collect user selection
+	await confirmSignIn({
+		challengeResponse: 'EMAIL', // 'EMAIL', 'SMS', or 'TOTP'
+	});
+}
+
+if (nextStep.signInStep === 'CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION') {
+	// present nextStep.allowedMFATypes to user
+	// collect user selection
+	await confirmSignIn({
+		challengeResponse: 'EMAIL', // 'EMAIL' or 'TOTP'
+	});
+}
+
+if (nextStep.signInStep === 'CONTINUE_SIGN_IN_WITH_EMAIL_SETUP') {
+	// collect email address from user
+	await confirmSignIn({
+		challengeResponse: 'hello@mycompany.com',
+	});
+}
+
+if (nextStep.signInStep === 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP') {
+	// present nextStep.totpSetupDetails.getSetupUri() to user
+	// collect OTP from user
+	await confirmSignIn({
+		challengeResponse: '123456',
+	});
+}
+
+if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_PASSWORD') {
+    // collect password from user
+    await confirmSignIn({
+        challengeResponse: 'hunter2',
+    });
+}
+
+if (nextStep.signInStep === 'CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION') {
+    // present nextStep.availableChallenges to user
+    // collect user selection
+    await confirmSignIn({
+        challengeResponse: 'SMS_OTP', // or 'EMAIL_OTP', 'WEB_AUTHN', 'PASSWORD', 'PASSWORD_SRP'
+    });
+}
+
+if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE') {
+	// collect custom challenge answer from user
+	await confirmSignIn({
+		challengeResponse: 'custom-challenge-answer',
+	});
+}
+
+if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
+	// collect new password from user
+	await confirmSignIn({
+		challengeResponse: 'new-password',
+	});
+}
+
+if (nextStep.signInStep === 'RESET_PASSWORD') {
+	// initiate reset password flow
+	await resetPassword({
+		username: 'username',
+	});
+}
+
+if (nextStep.signInStep === 'CONFIRM_SIGN_UP') {
+	// user was not confirmed during sign up process
+	// if user has confirmation code, invoke `confirmSignUp` api
+	// otherwise, invoke `resendSignUpCode` to resend the code
+	await confirmSignUp({
+		username: 'username',
+		confirmationCode: '123456',
+	});
+}
+
+if (nextStep.signInStep === 'DONE') {
+	// signin complete
+}
+```
+
+## SMS MFA でサインインを確認する
+
+次のステップが `CONFIRM_SIGN_IN_WITH_SMS_CODE` の場合、Amplify Auth はユーザーに SMS でランダムなコードを送信し、そのコードを確認するのを待っています。このステップを処理するには、アプリの UI でユーザーにコードの入力を促す必要があります。ユーザーがコードを入力したら、その値を `confirmSignIn` API に渡してください。
+
+<Callout>
+
+結果には `AuthCodeDeliveryDetails` メンバーが含まれます。コードの配信に関する追加情報（SMS 受信者の部分的な電話番号など）が含まれており、ユーザーにコードの確認場所を案内するために使用できます。
+
+</Callout>
+
+```ts
+import { type SignInOutput, confirmSignIn } from '@aws-amplify/auth';
+
+async function handleSignInResult(result: SignInOutput) {
+	switch (result.nextStep.signInStep) {
+		case 'CONFIRM_SIGN_IN_WITH_SMS_CODE': {
+			const { codeDeliveryDetails } = result.nextStep;
+			// OTP has been delivered to user via SMS
+			// Inspect codeDeliveryDetails for additional delivery information
+			console.log(
+				`A confirmation code has been sent to ${codeDeliveryDetails?.destination}`,
+			);
+			console.log(
+				`Please check your ${codeDeliveryDetails?.deliveryMedium} for the code.`,
+			);
+			break;
+		}
+	}
+}
+
+async function confirmMfaCode(mfaCode: string) {
+	const result = await confirmSignIn({ challengeResponse: mfaCode });
+
+	return handleSignInResult(result);
+}
+
+```
+
+## TOTP MFA でサインインを確認する
+
+次のステップが `CONFIRM_SIGN_IN_WITH_TOTP_CODE` の場合、セットアップ時に関連付けられた認証アプリから TOTP コードを入力するようユーザーに促してください。コードは 30 秒ごとに変わる 6 桁の数字です。ユーザーは 30 秒のウィンドウが切れる前にコードを入力する必要があります。
+
+ユーザーがコードを入力したら、実装は Amplify Auth の `confirmSignIn` API にその値を渡す必要があります。
+
+```ts
+import { type SignInOutput, confirmSignIn } from '@aws-amplify/auth';
+
+async function handleSignInResult(result: SignInOutput) {
+	switch (result.nextStep.signInStep) {
+		case 'CONFIRM_SIGN_IN_WITH_TOTP_CODE': {
+			// Prompt user to open their authenticator app to retrieve the code
+			console.log(
+				`Enter a one-time code from your registered authenticator app`,
+			);
+			break;
+		}
+	}
+}
+// Then, pass the TOTP code to `confirmSignIn`
+async function confirmTotpCode(totpCode: string) {
+	const result = await confirmSignIn({ challengeResponse: totpCode });
+
+	return handleSignInResult(result);
+}
+
+```
+
+## メール MFA でサインインを確認する
+
+次のステップが `CONFIRM_SIGN_IN_WITH_EMAIL_CODE` の場合、Amplify Auth はユーザーのメールアドレスにランダムなコードを送信し、そのコードを確認するのを待っています。このステップを処理するには、アプリの UI でユーザーにコードの入力を促す必要があります。ユーザーがコードを入力したら、その値を `confirmSignIn` API に渡してください。
+
+<Callout>
+
+結果には `AuthCodeDeliveryDetails` メンバーが含まれます。コードの配信に関する追加情報（受信者の部分的なメールアドレスなど）が含まれており、ユーザーにコードの確認場所を案内するために使用できます。
+
+</Callout>
+
+```ts
+import { type SignInOutput, confirmSignIn } from '@aws-amplify/auth';
+
+async function handleSignInResult(result: SignInOutput) {
+	switch (result.nextStep.signInStep) {
+		case 'CONFIRM_SIGN_IN_WITH_EMAIL_CODE': {
+			const { codeDeliveryDetails } = result.nextStep;
+			// OTP has been delivered to user via Email
+			// Inspect codeDeliveryDetails for additional delivery information
+			console.log(
+				`A confirmation code has been sent to ${codeDeliveryDetails?.destination}`,
+			);
+			console.log(
+				`Please check your ${codeDeliveryDetails?.deliveryMedium} for the code.`,
+			);
+			break;
+		}
+	}
+}
+
+async function confirmMfaCode(mfaCode: string) {
+	const result = await confirmSignIn({ challengeResponse: mfaCode });
+
+	return handleSignInResult(result);
+}
+
+```
+
+## MFA の選択でサインインを続行する
+
+次のステップが `CONTINUE_SIGN_IN_WITH_MFA_SELECTION` の場合、ユーザーは使用する MFA メソッドを選択する必要があります。Amplify Auth は現在、SMS、TOTP、EMAIL を MFA メソッドとしてサポートしています。ユーザーが MFA メソッドを選択したら、実装は `confirmSignIn` API を使用して選択した MFA メソッドを Amplify Auth に渡す必要があります。
+
+Amplify Auth で現在サポートされている MFA タイプは以下の通りです：
+
+- `SMS`
+- `TOTP`
+- `EMAIL`
+
+Amplify がユーザーの選択を受け取ると、選択した MFA タイプに対応するフォローアップの `nextStep` を処理することが期待されます：
+- `SMS` が選択された場合、次のステップは `CONFIRM_SIGN_IN_WITH_SMS_CODE` になります。
+- `TOTP` が選択された場合、次のステップは `CONFIRM_SIGN_IN_WITH_TOTP_CODE` になります。
+- `EMAIL` が選択された場合、次のステップは `CONFIRM_SIGN_IN_WITH_EMAIL_CODE` になります。
+
+```ts
+import { type SignInOutput, confirmSignIn } from '@aws-amplify/auth';
+
+async function handleSignInResult(result: SignInOutput) {
+	switch (result.nextStep.signInStep) {
+		case 'CONTINUE_SIGN_IN_WITH_MFA_SELECTION': {
+			const { allowedMFATypes } = result.nextStep;
+			// Present available MFA options to user
+			// Prompt for selection
+			console.log(`There are multiple MFA options available for sign in.`);
+			console.log(`Select an MFA type from the allowedMfaTypes list.`);
+			break;
+		}
+	}
+}
+
+type MfaType = 'SMS' | 'TOTP' | 'EMAIL';
+
+async function handleMfaSelection(mfaType: MfaType) {
+	const result = await confirmSignIn({ challengeResponse: mfaType });
+
+	return handleSignInResult(result);
+}
+
+```
+
+## メールセットアップでサインインを続行する
+
+次のステップが `CONTINUE_SIGN_IN_WITH_EMAIL_SETUP` の場合、ユーザーはサインインプロセスを完了するためにメールアドレスを提供する必要があります。この値をユーザーから収集したら、`confirmSignIn` API を呼び出して続行してください。
+
+```ts
+import { type SignInOutput, confirmSignIn } from '@aws-amplify/auth';
+
+async function handleSignInResult(result: SignInOutput) {
+	switch (result.nextStep.signInStep) {
+		case 'CONTINUE_SIGN_IN_WITH_EMAIL_SETUP': {
+			// Prompt the user to enter an email address they would like to use for MFA
+			break;
+		}
+	}
+}
+
+// Then, pass the email address to `confirmSignIn`
+async function confirmEmail(email: string) {
+	const result = await confirmSignIn({ challengeResponse: email });
+
+	return handleSignInResult(result);
+}
+
+```
+
+## TOTP セットアップでサインインを続行する
+
+`CONTINUE_SIGN_IN_WITH_TOTP_SETUP` ステップは、ユーザーがサインインする前に TOTP をセットアップする必要があることを示します。このステップは `TOTPSetupDetails` 型の関連値を返し、Microsoft Authenticator や Google Authenticator などの認証アプリを設定するために使用する必要があります。`TOTPSetupDetails` は `getSetupURI` というヘルパーメソッドを提供しており、ユーザーがインストールした認証アプリを開くためにボタンなどで使用できる URI を生成できます。より高度なユースケースでは、`TOTPSetupDetails` に含まれる `sharedSecret` を使って QR コードを生成したり、認証アプリに手動で入力したりすることもできます。
+
+認証アプリがセットアップされると、ユーザーは TOTP コードを生成してライブラリに提供し、サインインプロセスを完了できます。
+
+```ts
+import { type SignInOutput, confirmSignIn } from '@aws-amplify/auth';
+
+async function handleSignInResult(result: SignInOutput) {
+	switch (result.nextStep.signInStep) {
+		case 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP': {
+			const { totpSetupDetails } = result.nextStep;
+			const appName = 'my_app_name';
+			const setupUri = totpSetupDetails.getSetupUri(appName);
+			// Open setupUri with an authenticator app
+			// Prompt user to enter OTP code to complete setup
+			break;
+		}
+	}
+}
+
+// Then, pass the collected OTP code to `confirmSignIn`
+async function confirmTotpCode(totpCode: string) {
+	const result = await confirmSignIn({ challengeResponse: totpCode });
+
+	return handleSignInResult(result);
+}
+
+```
+
+## MFA セットアップ選択でサインインを続行する
+
+次のステップが `CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION` の場合、ユーザーはセットアップしたい利用可能な MFA メソッドを選択する必要があります。ユーザーがセットアップする MFA メソッドを選択したら、実装は `confirmSignIn` API に選択した MFA メソッドを渡す必要があります。
+
+Amplify Auth でセットアップのために現在サポートされている MFA タイプは以下の通りです：
+
+- `TOTP`
+- `EMAIL`
+
+Amplify がユーザーの選択を受け取ると、選択した MFA タイプのセットアップに対応するフォローアップの `nextStep` を処理することが期待されます：
+- `EMAIL` が選択された場合、次のステップは `CONTINUE_SIGN_IN_WITH_EMAIL_SETUP` になります。
+- `TOTP` が選択された場合、次のステップは `CONTINUE_SIGN_IN_WITH_TOTP_SETUP` になります。
+
+```ts
+import { type SignInOutput, confirmSignIn } from '@aws-amplify/auth';
+
+async function handleSignInResult(result: SignInOutput) {
+	switch (result.nextStep.signInStep) {
+		case 'CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION': {
+			const { allowedMFATypes } = result.nextStep;
+			// Present available MFA options to user
+			// Prompt for selection
+			console.log(`There are multiple MFA options available for setup.`);
+			console.log(`Select an MFA type from the allowedMFATypes list.`);
+			break;
+		}
+	}
+}
+
+type MfaType = 'SMS' | 'TOTP' | 'EMAIL';
+
+async function handleMfaSelection(mfaType: MfaType) {
+	const result = await confirmSignIn({ challengeResponse: mfaType });
+
+	return handleSignInResult(result);
+}
+
+```
+
+## パスワードでサインインを確認する
+
+次のステップが `CONFIRM_SIGN_IN_WITH_PASSWORD` の場合、ユーザーは第一要素認証メソッドとしてパスワードを提供する必要があります。このステップを処理するには、実装でユーザーにパスワードの入力を促す必要があります。ユーザーがパスワードを入力したら、その値を `confirmSignIn` API に渡してください。
+
+```ts
+import { type SignInOutput, confirmSignIn } from '@aws-amplify/auth';
+
+async function handleSignInResult(result: SignInOutput) {
+    switch (result.nextStep.signInStep) {
+        case 'CONFIRM_SIGN_IN_WITH_PASSWORD': {
+            // Prompt user to enter their password
+            console.log(`Please enter your password.`);
+            break;
+        }
+    }
+}
+
+async function confirmWithPassword(password: string) {
+    const result = await confirmSignIn({ challengeResponse: password });
+
+    return handleSignInResult(result);
+}
+```
+
+## 第一要素の選択でサインインを続行する
+
+次のステップが `CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION` の場合、ユーザーは認証のための第一要素メソッドを選択する必要があります。ユーザーがオプションを選択したら、実装は選択したメソッドを `confirmSignIn` API に渡す必要があります。
+
+Amplify Auth で現在サポートされている第一要素タイプは以下の通りです：
+- `SMS_OTP`
+- `EMAIL_OTP`
+- `WEB_AUTHN`
+- `PASSWORD`
+- `PASSWORD_SRP`
+
+設定やユーザーが以前にセットアップした要素によっては、すべてのオプションが利用可能ではない場合があります。利用可能なオプションのみが `availableChallenges` に表示されます。
+
+`confirmSignIn` API を通じて Amplify がユーザーの選択を受け取ると、選択した第一要素タイプに対応するフォローアップの `nextStep` を処理することが期待されます：
+- `SMS_OTP` が選択された場合、次のステップは `CONFIRM_SIGN_IN_WITH_SMS_CODE` になります。
+- `EMAIL_OTP` が選択された場合、次のステップは `CONFIRM_SIGN_IN_WITH_EMAIL_CODE` になります。
+- `PASSWORD` または `PASSWORD_SRP` が選択された場合、次のステップは `CONFIRM_SIGN_IN_WITH_PASSWORD` になります。
+- `WEB_AUTHN` が選択された場合、Amplify Auth はユーザーのデバイスで認証セレモニーを開始します。成功した場合、次のステップは `DONE` になります。
+
+```ts
+import { type SignInOutput, confirmSignIn } from '@aws-amplify/auth';
+
+async function handleSignInResult(result: SignInOutput) {
+	switch (result.nextStep.signInStep) {
+		case 'CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION': {
+			const { availableChallenges } = result.nextStep;
+			// Present available first factor options to user
+			// Prompt for selection
+			console.log(
+				`There are multiple first factor options available for sign in.`,
+			);
+			console.log(
+				`Select a first factor type from the availableChallenges list.`,
+			);
+			break;
+		}
+	}
+}
+
+async function handleFirstFactorSelection(firstFactorType: string) {
+	const result = await confirmSignIn({ challengeResponse: firstFactorType });
+
+	return handleSignInResult(result);
+}
+
+```
+
+## カスタムチャレンジでサインインを確認する
+
+次のステップが `CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE` の場合、Amplify Auth はカスタム認証チャレンジの完了を待っています。チャレンジは、カスタムサインインフローの一部として設定した AWS Lambda トリガーに基づいています。
+
+例えば、カスタムチャレンジ Lambda がフロントエンドにプロンプトを渡し、ユーザーにシークレットコードの入力を要求する場合があります。
+
+```ts
+import { type SignInOutput, confirmSignIn } from '@aws-amplify/auth';
+
+async function handleSignInResult(result: SignInOutput) {
+	switch (result.nextStep.signInStep) {
+		case 'CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE': {
+			const params = result.nextStep.additionalInfo;
+			const hint = params.hint!;
+			// Prompt user to enter custom challenge response
+			console.log(hint); // `Enter the secret code`
+			break;
+		}
+	}
+}
+
+```
+
+このステップを完了するには、ユーザーにカスタムチャレンジの答えを入力するよう促し、その答えを `confirmSignIn` API に渡す必要があります。
+
+```ts
+async function confirmCustomChallenge(answer: string) {
+	const result = await confirmSignIn({ challengeResponse: answer });
+
+	return handleSignInResult(result);
+}
+```
+
+> **Warning:** **`confirmSignIn` の特別な処理**
+> 
+> Lambda が `failAuthentication=true` を返した場合、Cognito はリクエストのセッションを無効化します。これは `NotAuthorizedException` として表され、`signIn` を再度呼び出してサインインフローを再開する必要があります。
+
+## 新しいパスワードでサインインを確認する
+
+次のステップが `CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED` の場合、Amplify Auth はサインインを進める前にユーザーが新しいパスワードを選択する必要があります。 
+
+ユーザーに新しいパスワードを求め、`confirmSignIn` API に渡してください。
+
+詳細については、[サインイン](/[platform]/frontend/auth/sign-in/)および[パスワード管理](/[platform]/build-a-backend/auth/manage-users/manage-passwords/)のドキュメントをご覧ください。
+
+```ts
+import { type SignInOutput, confirmSignIn } from '@aws-amplify/auth';
+
+async function handleSignInResult(result: SignInOutput) {
+	switch (result.nextStep.signInStep) {
+		case 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED': {
+			// Prompt user to enter a new password
+			console.log(`Please enter a new password.`);
+			break;
+		}
+	}
+}
+
+async function confirmNewPassword(newPassword: string) {
+	const result = await confirmSignIn({ challengeResponse: newPassword });
+
+	return handleSignInResult(result);
+}
+
+```
+
+## パスワードのリセット
+
+次のステップが `RESET_PASSWORD` の場合、Amplify Auth は続行する前にユーザーがパスワードをリセットする必要があります。
+`resetPassword` API を使用してユーザーをパスワードリセットのフローに案内し、完了したら `signIn` を呼び出してサインインフローを再開してください。
+
+詳細については、[パスワードのリセット](/[platform]/build-a-backend/auth/manage-users/manage-passwords/)のドキュメントをご覧ください。
+
+```ts
+import {
+	type ResetPasswordOutput,
+	type SignInOutput,
+	resetPassword,
+} from '@aws-amplify/auth';
+
+async function handleSignInResult(result: SignInOutput) {
+	switch (result.nextStep.signInStep) {
+		case 'RESET_PASSWORD': {
+			const resetPasswordResult = await resetPassword({ username });
+			// initiate reset password flow
+			await handleResetPasswordResult(resetPasswordResult);
+			break;
+		}
+	}
+}
+
+async function handleResetPasswordResult(
+	resetPasswordResult: ResetPasswordOutput,
+) {
+	switch (resetPasswordResult.nextStep.resetPasswordStep) {
+		case 'CONFIRM_RESET_PASSWORD_WITH_CODE': {
+			const { codeDeliveryDetails } = resetPasswordResult.nextStep;
+			console.log(
+				`A confirmation code has been sent to ${codeDeliveryDetails.destination}.`,
+			);
+			console.log(
+				`Please check your ${codeDeliveryDetails.destination} for the code.`,
+			);
+			break;
+		}
+		case 'DONE': {
+			console.log(`Successfully reset password.`);
+			break;
+		}
+	}
+}
+
+```
+
+## サインアップの確認
+
+次のステップが `CONFIRM_SIGN_UP` の場合、Amplify Auth は続行する前にユーザーがメールまたは電話番号を確認する必要があります。
+`resendSignUpCode` API を使用して登録済みのメールまたは電話番号に新しいサインアップコードを送信し、その後 `confirmSignUp` を呼び出してサインアップを完了してください。
+
+詳細については、[サインアップ](/[platform]/frontend/auth/sign-up/)のドキュメントをご覧ください。
+
+<Callout>
+
+結果には `AuthCodeDeliveryDetails` メンバーが含まれます。コードの配信に関する追加情報（SMS 受信者の部分的な電話番号など）が含まれており、ユーザーにコードの確認場所を案内するために使用できます。
+
+</Callout>
+
+```ts
+import {
+	type SignInOutput,
+	confirmSignUp,
+	resendSignUpCode,
+} from '@aws-amplify/auth';
+
+async function handleSignInResult(result: SignInOutput) {
+	switch (result.nextStep.signInStep) {
+		case 'CONFIRM_SIGN_UP': {
+			// Resend sign up code to the registered user
+			const { destination, deliveryMedium } = await resendSignUpCode({
+				username,
+			});
+			console.log(`A confirmation code has been sent to ${destination}.`);
+			console.log(`Please check your ${deliveryMedium} for the code.`);
+			break;
+		}
+	}
+}
+
+async function handleConfirmSignUp(username: string, confirmationCode: string) {
+	await confirmSignUp({
+		username,
+		confirmationCode,
+	});
+}
+
+```
+
+サインアップが確認されたら、`signIn` を再度呼び出してサインインフローを再開してください。
+
+## 完了
+
+次のステップが `DONE` の場合、サインインフローは完了し、ユーザーは正常に認証されています。 
+便宜上、`SignInResult` には `isSignedIn` プロパティも提供されており、次のステップが `DONE` の場合は true になります。
+
+```ts
+import { type SignInOutput } from '@aws-amplify/auth';
+
+async function handleSignInResult(result: SignInOutput) {
+	switch (result.nextStep.signInStep) {
+		case 'DONE': {
+			// `result.isSignedIn` is `true`
+			console.log(`Sign in is complete.`);
+			break;
+		}
+	}
+}
+
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+ユーザーがサインアップを完了した後、サインインに進むことができます。Amplify Auth のサインインフローはマルチステップのプロセスになる場合があります。必要なステップは、[MFA 設定の管理](/[platform]/build-a-backend/auth/concepts/multi-factor-authentication/)ページで説明されているように認証リソースを定義する際に提供した設定によって決まります。
+
+設定によっては、ユーザーのサインインを完了するためにさまざまな API を呼び出す必要がある場合があります。サインインフローの次のステップを特定するには、サインイン結果の `nextStep` パラメータを確認してください。
+
+> **Warning:** *新しい列挙値*
+> 
+> Amplify が新しい列挙値（例：Kotlin の新しい enum クラスエントリやシールドクラスのサブタイプ、Swift/Dart/Kotlin の新しい enum 値）を追加する場合、Amplify ライブラリの新しいマイナーバージョンが公開されます。列挙値を切り替えるプラグインには、新しい列挙値による影響を受けないようにするためのデフォルトハンドラー（Kotlin の else ブランチや Swift/Dart/Kotlin の default 文）を含める必要があります。
+
+`Amplify.Auth.signIn` API は `SignInResult` オブジェクトを返し、サインインフローが完了しているか、ユーザーがサインインするために追加のステップが必要かどうかを示します。
+
+追加のサインインステップが必要かどうかを確認するには、サインイン結果の `nextStep.signInStep` プロパティを確認してください。
+- サインインステップが `done` の場合、フローは完了し、ユーザーはサインインしています。
+- サインインステップが `done` でない場合、1 つ以上の追加ステップが必要です。これらについては以下で詳しく説明します。
+
+<Callout>
+
+`signInStep` プロパティは `AuthSignInStep` 型の enum です。その値に応じて、コードはこのページで説明されているいずれかのアクションを実行する必要があります。
+
+</Callout>
+
+```dart
+Future<SignInResult> signInWithCognito(
+  String username,
+  String password,
+) async {
+  final SignInResult result = await Amplify.Auth.signIn(
+    username: username, 
+    password: password,
+  );
+  return _handleSignInResult(result);
+}
+
+Future<void> _handleSignInResult(SignInResult result) async {
+  switch (result.nextStep.signInStep) {
+    case AuthSignInStep.continueSignInWithMfaSelection:
+      // Handle select from MFA methods case
+    case AuthSignInStep.continueSignInWithMfaSetupSelection:
+      // Handle select from MFA methods available to setup
+    case AuthSignInStep.continueSignInWithEmailMfaSetup:
+      // Handle email setup case
+    case AuthSignInStep.confirmSignInWithOtpCode:
+      // Handle email MFA case
+    case AuthSignInStep.continueSignInWithTotpSetup:
+      // Handle TOTP setup case
+    case AuthSignInStep.confirmSignInWithTotpMfaCode:
+      // Handle TOTP MFA case
+    case AuthSignInStep.confirmSignInWithSmsMfaCode:
+      // Handle SMS MFA case
+    case AuthSignInStep.confirmSignInWithNewPassword:
+      // Handle new password case
+    case AuthSignInStep.confirmSignInWithCustomChallenge:
+      // Handle custom challenge case
+    case AuthSignInStep.resetPassword:
+      // Handle reset password case
+    case AuthSignInStep.confirmSignUp:
+      // Handle confirm sign up case
+    case AuthSignInStep.done:
+      safePrint('Sign in is complete');
+  }
+}
+```
+## SMS MFA でサインインを確認する
+
+次のステップが `confirmSignInWithSmsMfaCode` の場合、Amplify Auth はユーザーに SMS でランダムなコードを送信し、そのコードを確認するのを待っています。このステップを処理するには、アプリの UI でユーザーにコードの入力を促す必要があります。ユーザーがコードを入力したら、その値を `confirmSignIn` API に渡してください。
+
+<Callout>
+
+結果には `AuthCodeDeliveryDetails` メンバーが含まれます。コードの配信に関する追加情報（SMS 受信者の部分的な電話番号など）が含まれており、ユーザーにコードの確認場所を案内するために使用できます。
+
+</Callout>
+
+```dart
+Future<void> _handleSignInResult(SignInResult result) async {
+  switch (result.nextStep.signInStep) {
+    case AuthSignInStep.confirmSignInWithSmsMfaCode:
+      final codeDeliveryDetails = result.nextStep.codeDeliveryDetails!;
+      _handleCodeDelivery(codeDeliveryDetails);
+    // ...
+  }
+}
+
+void _handleCodeDelivery(AuthCodeDeliveryDetails codeDeliveryDetails) {
+  safePrint(
+    'A confirmation code has been sent to ${codeDeliveryDetails.destination}. '
+    'Please check your ${codeDeliveryDetails.deliveryMedium.name} for the code.',
+  );
+}
+```
+
+```dart
+Future<void> confirmMfaUser(String mfaCode) async {
+  try {
+    final result = await Amplify.Auth.confirmSignIn(
+      confirmationValue: mfaCode,
+    );
+    return _handleSignInResult(result);
+  } on AuthException catch (e) {
+    safePrint('Error confirming MFA code: ${e.message}');
+  }
+}
+```
+
+## TOTP MFA でサインインを確認する
+
+次のステップが `confirmSignInWithTOTPCode` の場合、セットアップ時に関連付けられた認証アプリから TOTP コードを入力するようユーザーに促してください。コードは 30 秒ごとに変わる 6 桁の数字です。ユーザーは 30 秒のウィンドウが切れる前にコードを入力する必要があります。
+
+ユーザーがコードを入力したら、実装は Amplify Auth の `confirmSignIn` API にその値を渡す必要があります。
+
+```dart
+Future<void> _handleSignInResult(SignInResult result) async {
+  switch (result.nextStep.signInStep) {
+    // ···
+    case AuthSignInStep.confirmSignInWithTotpMfaCode:
+      safePrint('Enter a one-time code from your registered authenticator app');
+    // ···
+  }
+}
+
+// Then, pass the TOTP code to `confirmSignIn`
+
+Future<void> confirmTotpUser(String totpCode) async {
+  try {
+    final result = await Amplify.Auth.confirmSignIn(
+      confirmationValue: totpCode,
+    );
+    return _handleSignInResult(result);
+  } on AuthException catch (e) {
+    safePrint('Error confirming TOTP code: ${e.message}');
+  }
+}
+```
+
+## メール MFA でサインインを確認する
+
+次のステップが `confirmSignInWithOtpCode` の場合、Amplify Auth はユーザーのメールアドレスにランダムなコードを送信し、そのコードを確認するのを待っています。このステップを処理するには、アプリの UI でユーザーにコードの入力を促す必要があります。ユーザーがコードを入力したら、その値を `confirmSignIn` API に渡してください。
+
+<Callout>
+
+結果には `AuthCodeDeliveryDetails` メンバーが含まれます。コードの配信に関する追加情報（受信者の部分的なメールアドレスなど）が含まれており、ユーザーにコードの確認場所を案内するために使用できます。
+
+</Callout>
+
+```dart
+Future<void> _handleSignInResult(SignInResult result) async {
+  switch (result.nextStep.signInStep) {
+    case AuthSignInStep.confirmSignInWithOtpCode:
+      final codeDeliveryDetails = result.nextStep.codeDeliveryDetails!;
+      _handleCodeDelivery(codeDeliveryDetails);
+    // ...
+  }
+}
+
+void _handleCodeDelivery(AuthCodeDeliveryDetails codeDeliveryDetails) {
+  safePrint(
+    'A confirmation code has been sent to ${codeDeliveryDetails.destination}. '
+    'Please check your ${codeDeliveryDetails.deliveryMedium.name} for the code.',
+  );
+}
+```
+
+```dart
+Future<void> confirmMfaUser(String mfaCode) async {
+  try {
+    final result = await Amplify.Auth.confirmSignIn(
+      confirmationValue: mfaCode,
+    );
+    return _handleSignInResult(result);
+  } on AuthException catch (e) {
+    safePrint('Error confirming MFA code: ${e.message}');
+  }
+}
+```
+
+## MFA の選択でサインインを続行する
+
+次のステップが `continueSignInWithMFASelection` の場合、ユーザーは使用する MFA メソッドを選択する必要があります。Amplify Auth は現在、SMS、TOTP、メールを MFA メソッドとしてサポートしています。ユーザーが MFA メソッドを選択したら、実装は `confirmSignIn` API を使用して選択した MFA メソッドを Amplify Auth に渡す必要があります。
+
+Amplify Auth で現在サポートされている MFA タイプは以下の通りです：
+
+- `MfaType.sms`
+- `MfaType.totp`
+- `MfaType.email`
+
+```dart
+Future<void> _handleSignInResult(SignInResult result) async {
+  switch (result.nextStep.signInStep) {
+    // ···
+    case AuthSignInStep.continueSignInWithMfaSelection:
+      final allowedMfaTypes = result.nextStep.allowedMfaTypes!;
+      final selection = await _promptUserPreference(allowedMfaTypes);
+      return _handleMfaSelection(selection);
+    // ···
+  }
+}
+
+Future<MfaType> _promptUserPreference(Set<MfaType> allowedTypes) async {
+  // ···
+}
+
+Future<void> _handleMfaSelection(MfaType selection) async {
+  try {
+    final result = await Amplify.Auth.confirmSignIn(
+      confirmationValue: selection.confirmationValue,
+    );
+    return _handleSignInResult(result);
+  } on AuthException catch (e) {
+    safePrint('Error resending code: ${e.message}');
+  }
+}
+```
+
+## メールセットアップでサインインを続行する
+
+次のステップが `continueSignInWithEmailMfaSetup` の場合、ユーザーはサインインプロセスを完了するためにメールアドレスを提供する必要があります。この値をユーザーから収集したら、`confirmSignIn` API を呼び出して続行してください。
+
+```dart
+Future<void> _handleSignInResult(SignInResult result) async {
+  switch (result.nextStep.signInStep) {
+    // ···
+    case AuthSignInStep.continueSignInWithEmailMfaSetup:
+    // Prompt user to enter an email address they would like to use for MFA
+    // ···
+  }
+}
+
+// Then, pass the email address to `confirmSignIn`
+
+Future<void> confirmEmailUser(String emailAddress) async {
+  try {
+    final result = await Amplify.Auth.confirmSignIn(
+      confirmationValue: emailAddress,
+    );
+    return _handleSignInResult(result);
+  } on AuthException catch (e) {
+    safePrint('Error confirming email address: ${e.message}');
+  }
+}
+```
+
+## TOTP セットアップでサインインを続行する
+
+次のステップが `continueSignInWithTOTPSetup` の場合、ユーザーはサインインプロセスを完了するために TOTP コードを提供する必要があります。このステップは `TOTPSetupDetails` 型の関連値を返し、TOTP の生成に使用されます。`TOTPSetupDetails` は `getSetupURI` というヘルパーメソッドを提供しており、ネイティブパスワードマネージャーによる TOTP 関連付けに使用できる URI を生成できます。例えば、Apple プラットフォームで URI を使用すると、プラットフォームのネイティブパスワードマネージャーがアカウントと TOTP を関連付けるよう促します。より高度なユースケースでは、`TOTPSetupDetails` に含まれる `sharedSecret` を使って QR コードを生成したり、認証アプリに手動で入力したりすることもできます。
+
+認証アプリがセットアップされると、ユーザーは TOTP コードを生成してライブラリに提供し、サインインプロセスを完了できます。
+
+```dart
+Future<void> _handleSignInResult(SignInResult result) async {
+  switch (result.nextStep.signInStep) {
+    // ···
+    case AuthSignInStep.continueSignInWithTotpSetup:
+      final totpSetupDetails = result.nextStep.totpSetupDetails!;
+      final setupUri = totpSetupDetails.getSetupUri(appName: 'MyApp');
+      safePrint('Open URI to complete setup: $setupUri');
+    // ···
+  }
+}
+
+// Then, pass the TOTP code to `confirmSignIn`
+
+Future<void> confirmTotpUser(String totpCode) async {
+  try {
+    final result = await Amplify.Auth.confirmSignIn(
+      confirmationValue: totpCode,
+    );
+    return _handleSignInResult(result);
+  } on AuthException catch (e) {
+    safePrint('Error confirming TOTP code: ${e.message}');
+  }
+}
+```
+
+## MFA セットアップ選択でサインインを続行する
+次のステップが `continueSignInWithMfaSetupSelection` の場合、ユーザーはセットアップしたい利用可能な MFA メソッドを選択する必要があります。ユーザーがセットアップする MFA メソッドを選択したら、実装は `confirmSignIn` API に選択した MFA メソッドを渡す必要があります。
+
+Amplify Auth で現在サポートされている MFA タイプは以下の通りです：
+
+- `MfaType.sms`
+- `MfaType.totp`
+- `MfaType.email`
+
+```dart
+Future<void> _handleSignInResult(SignInResult result) async {
+  switch (result.nextStep.signInStep) {
+    // ···
+    case AuthSignInStep.continueSignInWithMfaSetupSelection:
+      final allowedMfaTypes = result.nextStep.allowedMfaTypes!;
+      final selection = await _promptUserPreference(allowedMfaTypes);
+      return _handleMfaSelection(selection);
+    // ···
+  }
+}
+
+Future<MfaType> _promptUserPreference(Set<MfaType> allowedTypes) async {
+  // ···
+}
+
+Future<void> _handleMfaSelection(MfaType selection) async {
+  try {
+    final result = await Amplify.Auth.confirmSignIn(
+      confirmationValue: selection.confirmationValue,
+    );
+    return _handleSignInResult(result);
+  } on AuthException catch (e) {
+    safePrint('Error selecting MFA method: ${e.message}');
+  }
+}
+```
+
+## カスタムチャレンジでサインインを確認する
+
+次のステップが `confirmSignInWithCustomChallenge` の場合、Amplify Auth はカスタム認証チャレンジの完了を待っています。チャレンジは、[カスタムサインインフロー](/[platform]/build-a-backend/auth/customize-auth-lifecycle/custom-auth-flows/#sign-in-a-user)の一部として設定した AWS Lambda トリガーに基づいています。
+
+例えば、カスタムチャレンジ Lambda がフロントエンドにプロンプトを渡し、ユーザーにシークレットコードの入力を要求する場合があります。
+
+```dart
+Future<void> _handleSignInResult(SignInResult result) async {
+  switch (result.nextStep.signInStep) {
+    // ...
+    case AuthSignInStep.confirmSignInWithCustomChallenge:
+      final parameters = result.nextStep.additionalInfo;
+      final hint = parameters['hint']!;
+      safePrint(hint); // "Enter the secret code"
+    // ...
+  }
+}
+```
+
+このステップを完了するには、ユーザーにカスタムチャレンジの答えを入力するよう促し、その答えを `confirmSignIn` API に渡す必要があります。
+
+```dart
+Future<void> confirmCustomChallenge(String answer) async {
+  try {
+    final result = await Amplify.Auth.confirmSignIn(
+      confirmationValue: answer,
+    );
+    return _handleSignInResult(result);
+  } on AuthException catch (e) {
+    safePrint('Error confirming custom challenge: ${e.message}');
+  }
+}
+```
+
+> **Warning:** **`confirmSignIn` の特別な処理**
+> 
+> Lambda が `failAuthentication=true` を返した場合、Cognito はリクエストのセッションを無効化します。これは `NotAuthorizedException` として表され、`Amplify.Auth.signIn` を再度呼び出してサインインフローを再開する必要があります。
+
+## 新しいパスワードでサインインを確認する
+次のステップが `confirmSignInWithNewPassword` の場合、Amplify Auth はサインインを進める前にユーザーが新しいパスワードを選択する必要があります。 
+
+ユーザーに新しいパスワードを求め、`confirmSignIn` API に渡してください。
+
+```dart
+Future<void> _handleSignInResult(SignInResult result) async {
+  switch (result.nextStep.signInStep) {
+    // ...
+    case AuthSignInStep.confirmSignInWithNewPassword:
+      safePrint('Please enter a new password');
+    // ...
+  }
+}
+```
+
+```dart
+Future<void> confirmNewPassword(String newPassword) async {
+  try {
+    final result = await Amplify.Auth.confirmSignIn(
+      confirmationValue: newPassword,
+    );
+    return _handleSignInResult(result);
+  } on AuthException catch (e) {
+    safePrint('Error confirming new password: ${e.message}');
+  }
+}
+```
+
+## パスワードのリセット
+次のステップが `resetPassword` の場合、Amplify Auth は続行する前にユーザーがパスワードをリセットする必要があります。
+`resetPassword` API を使用してユーザーをパスワードリセットのフローに案内し、完了したら `Amplify.Auth.signIn` を呼び出してサインインフローを再開してください。
+
+詳細については、[パスワードのリセット](/[platform]/build-a-backend/auth/manage-users/manage-passwords/)のドキュメントをご覧ください。
+
+```dart
+Future<void> _handleSignInResult(SignInResult result) async {
+  switch (result.nextStep.signInStep) {
+    // ...
+    case AuthSignInStep.resetPassword:
+      final resetResult = await Amplify.Auth.resetPassword(
+        username: username,
+      );
+      await _handleResetPasswordResult(resetResult);
+    // ...
+  }
+}
+
+Future<void> _handleResetPasswordResult(ResetPasswordResult result) async {
+  switch (result.nextStep.updateStep) {
+    case AuthResetPasswordStep.confirmResetPasswordWithCode:
+      final codeDeliveryDetails = result.nextStep.codeDeliveryDetails!;
+      _handleCodeDelivery(codeDeliveryDetails);
+    case AuthResetPasswordStep.done:
+      safePrint('Successfully reset password');
+  }
+}
+
+void _handleCodeDelivery(AuthCodeDeliveryDetails codeDeliveryDetails) {
+  safePrint(
+    'A confirmation code has been sent to ${codeDeliveryDetails.destination}. '
+    'Please check your ${codeDeliveryDetails.deliveryMedium.name} for the code.',
+  );
+}
+```
+## サインアップの確認
+次のステップが `resetPassword` の場合、Amplify Auth は続行する前にユーザーがメールまたは電話番号を確認する必要があります。
+`resendSignUpCode` API を使用して登録済みのメールまたは電話番号に新しいサインアップコードを送信し、その後 `confirmSignUp` を呼び出してサインアップを完了してください。
+
+詳細については、[サインアップの確認](/[platform]/frontend/auth/sign-up/#confirm-sign-up)のドキュメントをご覧ください。
+
+<Callout>
+
+結果には `AuthCodeDeliveryDetails` メンバーが含まれます。コードの配信に関する追加情報（SMS 受信者の部分的な電話番号など）が含まれており、ユーザーにコードの確認場所を案内するために使用できます。
+
+</Callout>
+
+```dart
+Future<void> _handleSignInResult(SignInResult result) async {
+  switch (result.nextStep.signInStep) {
+    // ...
+    case AuthSignInStep.confirmSignUp:
+      // Resend the sign up code to the registered device.
+      final resendResult = await Amplify.Auth.resendSignUpCode(
+        username: username,
+      );
+      _handleCodeDelivery(resendResult.codeDeliveryDetails);
+    // ...
+  }
+}
+
+void _handleCodeDelivery(AuthCodeDeliveryDetails codeDeliveryDetails) {
+  safePrint(
+    'A confirmation code has been sent to ${codeDeliveryDetails.destination}. '
+    'Please check your ${codeDeliveryDetails.deliveryMedium.name} for the code.',
+  );
+}
+```
+
+```dart
+Future<void> confirmSignUp({
+  required String username,
+  required String confirmationCode,
+}) async {
+  try {
+    await Amplify.Auth.confirmSignUp(
+      username: username,
+      confirmationCode: confirmationCode,
+    );
+  } on AuthException catch (e) {
+    safePrint('Error confirming sign up: ${e.message}');
+  }
+}
+```
+
+サインアップが確認されたら、`Amplify.Auth.signIn` を再度呼び出してサインインフローを再開してください。
+
+## 完了
+
+次のステップが `done` の場合、サインインフローは完了し、ユーザーは正常に認証されています。 
+便宜上、`SignInResult` には `isSignedIn` プロパティも提供されており、次のステップが `done` の場合は true になります。
+
+```dart
+Future<void> _handleSignInResult(SignInResult result) async {
+  switch (result.nextStep.signInStep) {
+    // ...
+    case AuthSignInStep.done:
+      // Could also check that `result.isSignedIn` is `true`
+      safePrint('Sign in is complete');
+  }
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+ユーザーがサインアップを完了した後、サインインに進むことができます。Amplify Auth のサインインフローはマルチステップのプロセスになる場合があります。必要なステップは、[MFA 設定の管理](/[platform]/build-a-backend/auth/concepts/multi-factor-authentication/)ページで説明されているように認証リソースを定義する際に提供した設定によって決まります。
+
+設定によっては、ユーザーのサインインを完了するためにさまざまな API を呼び出す必要がある場合があります。サインインフローの次のステップを特定するには、サインイン結果の `nextStep` パラメータを確認してください。
+
+> **Warning:** *新しい列挙値*
+> 
+> Amplify が新しい列挙値（例：Kotlin の新しい enum クラスエントリやシールドクラスのサブタイプ、Swift/Dart/Kotlin の新しい enum 値）を追加する場合、Amplify ライブラリの新しいマイナーバージョンが公開されます。列挙値を切り替えるプラグインには、新しい列挙値による影響を受けないようにするためのデフォルトハンドラー（Kotlin の else ブランチや Swift/Dart/Kotlin の default 文）を含める必要があります。
+
+成功した場合、サインイン API は `AuthSignInResult` を返します。結果の `nextStep` プロパティを確認して、追加のサインインステップが必要かどうかを確認してください。
+`nextStep` プロパティは `AuthSignInStep` という enum 型です。その値に応じて、コードは以下のいずれかのアクションを実行する必要があります：
+
+#### [Java]
+
+```java
+try {
+    Amplify.Auth.signIn(
+        "hello@example.com",
+        "password",
+        result ->
+        {
+            AuthNextSignInStep nextStep = result.getNextStep();
+            switch (nextStep.getSignInStep()) {
+                case CONFIRM_SIGN_IN_WITH_TOTP_CODE: {
+                    Log.i("AuthQuickstart", "Received next step as confirm sign in with TOTP code");
+                    // Prompt the user to enter the TOTP code generated in their authenticator app
+                    // Then invoke `confirmSignIn` api with the code
+                    break;
+                }
+                case CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION: {
+                    Log.i("AuthQuickstart", "Received next step as continue sign in by selecting an MFA method to setup");
+                    Log.i("AuthQuickstart", "Allowed MFA types for setup" + nextStep.getAllowedMFATypes());
+                    // Prompt the user to select the MFA type they want to setup
+                    // Then invoke `confirmSignIn` api with the MFA type
+                    break;
+                }
+                case CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP: {
+                    Log.i("AuthQuickstart", "Received next step as continue sign in by setting up email MFA");
+                    // Prompt the user to enter the email address they would like to use to receive OTPs
+                    // Then invoke `confirmSignIn` api with the email address
+                    break;
+                }
+                case CONTINUE_SIGN_IN_WITH_TOTP_SETUP: {
+                    Log.i("AuthQuickstart", "Received next step as continue sign in by setting up TOTP");
+                    Log.i("AuthQuickstart", "Shared secret that will be used to set up TOTP in the authenticator app" + nextStep.getTotpSetupDetails().getSharedSecret());
+                    // Prompt the user to enter the TOTP code generated in their authenticator app
+                    // Then invoke `confirmSignIn` api with the code
+                    break;
+                }
+                case CONTINUE_SIGN_IN_WITH_MFA_SELECTION: {
+                    Log.i("AuthQuickstart", "Received next step as continue sign in by selecting MFA type");
+                    Log.i("AuthQuickstart", "Allowed MFA type" + nextStep.getAllowedMFATypes());
+                    // Prompt the user to select the MFA type they want to use
+                    // Then invoke `confirmSignIn` api with the MFA type
+                    break;
+                }
+                case CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION: {
+                    Log.i("AuthQuickstart", "Available authentication factors for this user: " + result.getNextStep().getAvailableFactors());
+                    // Prompt the user to select which authentication factor they want to use to sign-in
+                    // Then invoke `confirmSignIn` api with that selection
+                    break;
+                }
+                case CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE: {
+                    Log.i("AuthQuickstart", "SMS code sent to " + nextStep.getCodeDeliveryDetails().getDestination());
+                    Log.i("AuthQuickstart", "Additional Info :" + nextStep.getAdditionalInfo());
+                    // Prompt the user to enter the SMS MFA code they received
+                    // Then invoke `confirmSignIn` api with the code
+                    break;
+                }
+                case CONFIRM_SIGN_IN_WITH_OTP: {
+                    Log.i("AuthQuickstart", "OTP code sent to " + nextStep.getCodeDeliveryDetails().getDestination());
+                    Log.i("AuthQuickstart", "Additional Info :" + nextStep.getAdditionalInfo());
+                    // Prompt the user to enter the OTP MFA code they received
+                    // Then invoke `confirmSignIn` api with the code
+                    break;
+                }
+              	case CONFIRM_SIGN_IN_WITH_PASSWORD: {
+                		Log.i("AuthQuickstart", "Received next step as confirm sign in with password");
+                		// Prompt the user to enter their password
+                		// Then invoke `confirmSignIn` api with that password
+                		break;
+                }
+                case CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE: {
+                    Log.i("AuthQuickstart", "Custom challenge, additional info: " + nextStep.getAdditionalInfo());
+                    // Prompt the user to enter custom challenge answer
+                    // Then invoke `confirmSignIn` api with the answer
+                    break;
+                }
+                case CONFIRM_SIGN_IN_WITH_NEW_PASSWORD: {
+                    Log.i("AuthQuickstart", "Sign in with new password, additional info: " + nextStep.getAdditionalInfo());
+                    // Prompt the user to enter a new password
+                    // Then invoke `confirmSignIn` api with new password
+                    break;
+                }
+                case DONE: {
+                    Log.i("AuthQuickstart", "SignIn complete");
+                    // User has successfully signed in to the app
+                    break;
+                }
+            }
+        },
+        error -> {
+            if (error instanceof UserNotConfirmedException) {
+                // User was not confirmed during the signup process.
+                // Invoke `confirmSignUp` api to confirm the user if
+                // they have the confirmation code. If they do not have the
+                // confirmation code, invoke `resendSignUpCode` to send the
+                // code again.
+                // After the user is confirmed, invoke the `signIn` api again.
+                Log.i("AuthQuickstart", "Signup confirmation required" + error);
+            } else if (error instanceof PasswordResetRequiredException) {
+                // User needs to reset their password.
+                // Invoke `resetPassword` api to start the reset password
+                // flow, and once reset password flow completes, invoke
+                // `signIn` api to trigger signIn flow again.
+                Log.i("AuthQuickstart", "Password reset required" + error);
+            } else {
+                Log.e("AuthQuickstart", "SignIn failed: " + error);
+            }
+        }
+    );
+} catch (Exception error) {
+    Log.e("AuthQuickstart", "Unexpected error occurred: " + error);
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+try {
+    Amplify.Auth.signIn(
+        "hello@example.com",
+        "password",
+        { result ->
+            val nextStep  = result.nextStep
+            when(nextStep.signInStep){
+                AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE -> {
+                    Log.i("AuthQuickstart", "Received next step as confirm sign in with TOTP code")
+                    // Prompt the user to enter the TOTP code generated in their authenticator app
+                    // Then invoke `confirmSignIn` api with the code
+                }
+                AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION -> {
+                    Log.i("AuthQuickstart", "Received next step as continue sign in by selecting an MFA method to setup")
+                    Log.i("AuthQuickstart", "Allowed MFA types for setup ${nextStep.allowedMFATypes}")
+                    // Prompt the user to select the MFA type they want to setup
+                    // Then invoke `confirmSignIn` api with the MFA type
+                }
+                AuthSignInStep.CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP -> {
+                    Log.i("AuthQuickstart", "Received next step as continue sign in by setting up email MFA")
+                    // Prompt the user to enter the email address they would like to use to receive OTPs
+                    // Then invoke `confirmSignIn` api with the email address
+                }
+                AuthSignInStep.CONTINUE_SIGN_IN_WITH_TOTP_SETUP -> {
+                    Log.i("AuthQuickstart", "Received next step as continue sign in by setting up TOTP")
+                    Log.i("AuthQuickstart", "Shared secret that will be used to set up TOTP in the authenticator app ${nextStep.totpSetupDetails?.sharedSecret}")
+                    // Prompt the user to enter the TOTP code generated in their authenticator app
+                    // Then invoke `confirmSignIn` api with the code
+                }
+                AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION -> {
+                    Log.i("AuthQuickstart", "Received next step as continue sign in by selecting MFA type")
+                    Log.i("AuthQuickstart", "Allowed MFA types ${nextStep.allowedMFATypes}")
+                    // Prompt the user to select the MFA type they want to use
+                    // Then invoke `confirmSignIn` api with the MFA type
+                }
+                AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION -> {
+                    Log.i("AuthQuickstart", "Available authentication factors for this user:  ${result.nextStep.availableFactors}")
+                    // Prompt the user to select which authentication factor they want to use to sign-in
+                    // Then invoke `confirmSignIn` api with that selection
+                }
+                AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE -> {
+                    Log.i("AuthQuickstart", "SMS code sent to ${nextStep.codeDeliveryDetails?.destination}")
+                    Log.i("AuthQuickstart", "Additional Info ${nextStep.additionalInfo}")
+                    // Prompt the user to enter the SMS MFA code they received
+                    // Then invoke `confirmSignIn` api with the code
+                }
+                AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP -> {
+                    Log.i("AuthQuickstart", "OTP code sent to ${nextStep.codeDeliveryDetails?.destination}")
+                    Log.i("AuthQuickstart", "Additional Info ${nextStep.additionalInfo}")
+                    // Prompt the user to enter the OTP MFA code they received
+                    // Then invoke `confirmSignIn` api with the code
+                }
+                AuthSignInStep.CONFIRM_SIGN_IN_WITH_PASSWORD -> {
+                    Log.i("AuthQuickstart", "Received next step as confirm sign in with password")
+                    // Prompt the user to enter their password
+                    // Then invoke `confirmSignIn` api with that password
+                }
+                AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE -> {
+                    Log.i("AuthQuickstart","Custom challenge, additional info: ${nextStep.additionalInfo}")
+                    // Prompt the user to enter custom challenge answer
+                    // Then invoke `confirmSignIn` api with the answer
+                }
+                AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD -> {
+                    Log.i("AuthQuickstart", "Sign in with new password, additional info: ${nextStep.additionalInfo}")
+                    // Prompt the user to enter a new password
+                    // Then invoke `confirmSignIn` api with new password
+                }
+                AuthSignInStep.DONE -> {
+                    Log.i("AuthQuickstart", "SignIn complete")
+                    // User has successfully signed in to the app
+                }
+            }
+
+        }
+    ) { error ->
+        when (error) {
+            is UserNotConfirmedException -> {
+                // User was not confirmed during the signup process.
+                // Invoke `confirmSignUp` api to confirm the user if
+                // they have the confirmation code. If they do not have the
+                // confirmation code, invoke `resendSignUpCode` to send the
+                // code again.
+                // After the user is confirmed, invoke the `signIn` api again.
+                Log.e("AuthQuickstart", "Signup confirmation required", error)
+            }
+            is PasswordResetRequiredException -> {
+                // User needs to reset their password.
+                // Invoke `resetPassword` api to start the reset password
+                // flow, and once reset password flow completes, invoke
+                // `signIn` api to trigger signIn flow again.
+                Log.e("AuthQuickstart", "Password reset required", error)
+            }
+            else -> {
+                Log.e("AuthQuickstart", "Unexpected error occurred: $error")
+            }
+        }
+    }
+} catch (error: Exception) {
+    Log.e("AuthQuickstart", "Unexpected error occurred: $error")
+}
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    val result = Amplify.Auth.signIn(
+        "hello@example.com",
+        "password"
+    )
+    val nextStep = result.nextStep
+    when (nextStep.signInStep) {
+        AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE -> {
+            Log.i("AuthQuickstart", "Received next step as confirm sign in with TOTP code")
+            // Prompt the user to enter the TOTP code generated in their authenticator app
+            // Then invoke `confirmSignIn` api with the code
+        }
+        AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION -> {
+            Log.i("AuthQuickstart", "Received next step as continue sign in by selecting an MFA method to setup")
+            Log.i("AuthQuickstart", "Allowed MFA types for setup ${nextStep.allowedMFATypes}")
+            // Prompt the user to select the MFA type they want to setup
+            // Then invoke `confirmSignIn` api with the MFA type
+        }
+        AuthSignInStep.CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP -> {
+            Log.i("AuthQuickstart", "Received next step as continue sign in by setting up email MFA")
+            // Prompt the user to enter the email address they would like to use to receive OTPs
+            // Then invoke `confirmSignIn` api with the email address
+        }
+        AuthSignInStep.CONTINUE_SIGN_IN_WITH_TOTP_SETUP -> {
+            Log.i("AuthQuickstart", "Received next step as continue sign in by setting up TOTP")
+            Log.i("AuthQuickstart", "Shared secret that will be used to set up TOTP in the authenticator app ${nextStep.totpSetupDetails?.sharedSecret}")
+            // Prompt the user to enter the TOTP code generated in their authenticator app
+            // Then invoke `confirmSignIn` api with the code
+        }
+        AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION -> {
+            Log.i("AuthQuickstart", "Received next step as continue sign in by selecting MFA type")
+            Log.i("AuthQuickstart", "Allowed MFA types ${nextStep.allowedMFATypes}")
+            // Prompt the user to select the MFA type they want to use
+            // Then invoke `confirmSignIn` api with the MFA type
+        }
+        AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION -> {
+            Log.i("AuthQuickstart", "Available authentication factors for this user:  ${result.nextStep.availableFactors}")
+            // Prompt the user to select which authentication factor they want to use to sign-in
+            // Then invoke `confirmSignIn` api with that selection
+        }
+        AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE -> {
+            Log.i("AuthQuickstart", "SMS code sent to ${nextStep.codeDeliveryDetails?.destination}")
+            Log.i("AuthQuickstart", "Additional Info ${nextStep.additionalInfo}")
+            // Prompt the user to enter the SMS MFA code they received
+            // Then invoke `confirmSignIn` api with the code
+        }
+        AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP -> {
+            Log.i("AuthQuickstart", "OTP code sent to ${nextStep.codeDeliveryDetails?.destination}")
+            Log.i("AuthQuickstart", "Additional Info ${nextStep.additionalInfo}")
+            // Prompt the user to enter the OTP MFA code they received
+            // Then invoke `confirmSignIn` api with the code
+        }
+        AuthSignInStep.CONFIRM_SIGN_IN_WITH_PASSWORD -> {
+            Log.i("AuthQuickstart", "Received next step as confirm sign in with password")
+            // Prompt the user to enter their password
+            // Then invoke `confirmSignIn` api with that password
+        }
+        AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE -> {
+            Log.i("AuthQuickstart","Custom challenge, additional info: ${nextStep.additionalInfo}")
+            // Prompt the user to enter custom challenge answer
+            // Then invoke `confirmSignIn` api with the answer
+        }
+        AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD -> {
+            Log.i("AuthQuickstart", "Sign in with new password, additional info: ${nextStep.additionalInfo}")
+            // Prompt the user to enter a new password
+            // Then invoke `confirmSignIn` api with new password
+        }
+        AuthSignInStep.DONE -> {
+            Log.i("AuthQuickstart", "SignIn complete")
+            // User has successfully signed in to the app
+        }
+    }
+} catch (error: Exception) {
+    when (error) {
+        is UserNotConfirmedException -> {
+            // User was not confirmed during the signup process.
+            // Invoke `confirmSignUp` api to confirm the user if
+            // they have the confirmation code. If they do not have the
+            // confirmation code, invoke `resendSignUpCode` to send the
+            // code again.
+            // After the user is confirmed, invoke the `signIn` api again.
+            Log.e("AuthQuickstart", "Signup confirmation required", error)
+        }
+        is PasswordResetRequiredException -> {
+            // User needs to reset their password.
+            // Invoke `resetPassword` api to start the reset password
+            // flow, and once reset password flow completes, invoke
+            // `signIn` api to trigger signIn flow again.
+            Log.e("AuthQuickstart", "Password reset required", error)
+        }
+        else -> {
+            Log.e("AuthQuickstart", "Unexpected error occurred: $error")
+        }
+    }
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.Auth.signIn("hello@example.com", "password").subscribe(
+    result ->
+    {
+        AuthNextSignInStep nextStep = result.getNextStep();
+        switch (nextStep.getSignInStep()) {
+            case CONFIRM_SIGN_IN_WITH_TOTP_CODE: {
+                Log.i("AuthQuickstart", "Received next step as confirm sign in with TOTP code");
+                // Prompt the user to enter the TOTP code generated in their authenticator app
+                // Then invoke `confirmSignIn` api with the code
+                break;
+            }
+            case CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION: {
+                Log.i("AuthQuickstart", "Received next step as continue sign in by selecting an MFA method to setup");
+                Log.i("AuthQuickstart", "Allowed MFA types for setup" + nextStep.getAllowedMFATypes());
+                // Prompt the user to select the MFA type they want to setup
+                // Then invoke `confirmSignIn` api with the MFA type
+                break;
+            }
+            case CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP: {
+                Log.i("AuthQuickstart", "Received next step as continue sign in by setting up email MFA");
+                // Prompt the user to enter the email address they would like to use to receive OTPs
+                // Then invoke `confirmSignIn` api with the email address
+                break;
+            }
+            case CONTINUE_SIGN_IN_WITH_TOTP_SETUP: {
+                Log.i("AuthQuickstart", "Received next step as continue sign in by setting up TOTP");
+                Log.i("AuthQuickstart", "Shared secret that will be used to set up TOTP in the authenticator app" + nextStep.getTotpSetupDetails().getSharedSecret());
+                // Prompt the user to enter the TOTP code generated in their authenticator app
+                // Then invoke `confirmSignIn` api with the code
+                break;
+            }
+            case CONTINUE_SIGN_IN_WITH_MFA_SELECTION: {
+                Log.i("AuthQuickstart", "Received next step as continue sign in by selecting MFA type");
+                Log.i("AuthQuickstart", "Allowed MFA type" + nextStep.getAllowedMFATypes());
+                // Prompt the user to select the MFA type they want to use
+                // Then invoke `confirmSignIn` api with the MFA type
+                break;
+            }
+            case CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION: {
+                Log.i("AuthQuickstart", "Available authentication factors for this user: " + result.getNextStep().getAvailableFactors());
+                // Prompt the user to select which authentication factor they want to use to sign-in
+                // Then invoke `confirmSignIn` api with that selection
+                break;
+            }
+            case CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE: {
+                Log.i("AuthQuickstart", "SMS code sent to " + nextStep.getCodeDeliveryDetails().getDestination());
+                Log.i("AuthQuickstart", "Additional Info :" + nextStep.getAdditionalInfo());
+                // Prompt the user to enter the SMS MFA code they received
+                // Then invoke `confirmSignIn` api with the code
+                break;
+            }
+            case CONFIRM_SIGN_IN_WITH_OTP: {
+                Log.i("AuthQuickstart", "OTP code sent to " + nextStep.getCodeDeliveryDetails().getDestination());
+                Log.i("AuthQuickstart", "Additional Info :" + nextStep.getAdditionalInfo());
+                // Prompt the user to enter the OTP MFA code they received
+                // Then invoke `confirmSignIn` api with the code
+                break;
+            }
+            case CONFIRM_SIGN_IN_WITH_PASSWORD: {
+                Log.i("AuthQuickstart", "Received next step as confirm sign in with password");
+                // Prompt the user to enter their password
+                // Then invoke `confirmSignIn` api with that password
+                break;
+            }
+            case CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE: {
+                Log.i("AuthQuickstart", "Custom challenge, additional info: " + nextStep.getAdditionalInfo());
+                // Prompt the user to enter custom challenge answer
+                // Then invoke `confirmSignIn` api with the answer
+                break;
+            }
+            case CONFIRM_SIGN_IN_WITH_NEW_PASSWORD: {
+                Log.i("AuthQuickstart", "Sign in with new password, additional info: " + nextStep.getAdditionalInfo());
+                // Prompt the user to enter a new password
+                // Then invoke `confirmSignIn` api with new password
+                break;
+            }
+            case DONE: {
+                Log.i("AuthQuickstart", "SignIn complete");
+                // User has successfully signed in to the app
+                break;
+            }
+        }
+    },
+    error -> {
+        if (error instanceof UserNotConfirmedException) {
+            // User was not confirmed during the signup process.
+            // Invoke `confirmSignUp` api to confirm the user if
+            // they have the confirmation code. If they do not have the
+            // confirmation code, invoke `resendSignUpCode` to send the
+            // code again.
+            // After the user is confirmed, invoke the `signIn` api again.
+            Log.i("AuthQuickstart", "Signup confirmation required" + error);
+        } else if (error instanceof PasswordResetRequiredException) {
+            // User needs to reset their password.
+            // Invoke `resetPassword` api to start the reset password
+            // flow, and once reset password flow completes, invoke
+            // `signIn` api to trigger signIn flow again.
+            Log.i("AuthQuickstart", "Password reset required" + error);
+        } else {
+            Log.e("AuthQuickstart", "SignIn failed: " + error);
+        }
+    }
+);
+```
+
+## SMS MFA でサインインを確認する
+
+次のステップが `CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE` の場合、Amplify Auth はユーザーに SMS でランダムなコードを送信し、ユーザーがそれを正常に受け取ったかどうかを確認するのを待っています。このステップを処理するには、アプリの UI でユーザーにコードの入力を促す必要があります。ユーザーがコードを入力したら、実装は Amplify Auth の `confirmSignIn` API にその値を渡す必要があります。
+
+<Callout>
+
+**注記：** 結果には `AuthCodeDeliveryDetails` メンバーも含まれます。SMS 受信者の部分的な電話番号など、コードの配信に関する追加情報が含まれています。
+
+</Callout>
+
+#### [Java]
+
+```java
+try {
+      Amplify.Auth.confirmSignIn(
+            "confirmation code",
+            result -> {
+                if (result.isSignedIn()) {
+                    Log.i("AuthQuickstart", "Confirm signIn succeeded");
+                } else {
+                    Log.i("AuthQuickstart", "Confirm sign in not complete. There might be additional steps: " + result.getNextStep());
+                    // Switch on the next step to take appropriate actions.
+                    // If `signInResult.isSignedIn` is true, the next step
+                    // is 'done', and the user is now signed in.
+                }
+            },
+            error -> Log.e("AuthQuickstart", "Confirm sign in failed: " + error)
+    );
+} catch (Exception error) {
+    Log.e("AuthQuickstart", "Unexpected error: " + error);
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+try {
+    Amplify.Auth.confirmSignIn(
+          "confirmation code",
+          { result ->
+              if (result.isSignedIn) {
+                  Log.i("AuthQuickstart","Confirm signIn succeeded")
+              } else {
+                  Log.i("AuthQuickstart", "Confirm sign in not complete. There might be additional steps: ${result.nextStep}")
+                  // Switch on the next step to take appropriate actions.
+                  // If `signInResult.isSignedIn` is true, the next step
+                  // is 'done', and the user is now signed in.
+              }
+          }
+    ) { error -> Log.e("AuthQuickstart", "Confirm sign in failed: $error")}
+} catch (error: Exception) {
+    Log.e("AuthQuickstart", "Unexpected error: $error")
+}
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    val result = Amplify.Auth.confirmSignIn(
+        "confirmation code"
+    )
+    if (result.isSignedIn) {
+        Log.i("AuthQuickstart", "Confirm signIn succeeded")
+    } else {
+        Log.i("AuthQuickstart", "Confirm sign in not complete. There might be additional steps: ${result.nextStep}"
+        )
+        // Switch on the next step to take appropriate actions.
+        // If `signInResult.isSignedIn` is true, the next step
+        // is 'done', and the user is now signed in.
+    }
+} catch (error: Exception) {
+    Log.e("AuthQuickstart", "Unexpected error: $error")
+}
+```
+
+#### [RxJava]
+
+```java
+
+RxAmplify.Auth.confirmSignIn(
+                "confirmation code").subscribe(
+                result -> {
+                    if (result.isSignedIn()) {
+                        Log.i("AuthQuickstart", "Confirm signIn succeeded");
+                    } else {
+                        Log.i("AuthQuickstart", "Confirm sign in not complete. There might be additional steps: " + result.getNextStep());
+                        // Switch on the next step to take appropriate actions.
+                        // If `signInResult.isSignedIn` is true, the next step
+                        // is 'done', and the user is now signed in.
+                    }
+                },
+                error -> Log.e("AuthQuickstart", "Confirm sign in failed: " + error)
+        );
+```
+
+## TOTP MFA でサインインを確認する
+
+次のステップが `CONFIRM_SIGN_IN_WITH_TOTP_CODE` の場合、セットアップ時に関連付けられた認証アプリから TOTP コードを入力するようユーザーに促してください。コードは 30 秒ごとに変わる 6 桁の数字です。ユーザーは 30 秒のウィンドウが切れる前にコードを入力する必要があります。
+
+ユーザーがコードを入力したら、実装は Amplify Auth の `confirmSignIn` API にその値を渡す必要があります。
+
+## メール MFA でサインインを確認する
+
+次のステップが `CONFIRM_SIGN_IN_WITH_EMAIL_MFA_CODE` の場合、Amplify Auth はユーザーのメールアドレスにランダムなコードを送信し、ユーザーがそれを正常に受け取ったかどうかを確認するのを待っています。このステップを処理するには、アプリの UI でユーザーにコードの入力を促す必要があります。ユーザーがコードを入力したら、実装は Amplify Auth の `confirmSignIn` API にその値を渡す必要があります。
+
+<Callout>
+
+**注記：** 結果には `AuthCodeDeliveryDetails` メンバーも含まれます。受信者の部分的なメールアドレスなど、コードの配信に関する追加情報が含まれています。
+
+</Callout>
+
+## OTP でサインインを確認する
+
+次のステップが `CONFIRM_SIGN_IN_WITH_OTP` の場合、Amplify Auth はユーザーが選択した手段（SMS やメールなど）でランダムなコードを送信し、ユーザーがそのコードを確認するのを待っています。このステップを処理するには、アプリの UI でユーザーにコードの入力を促す必要があります。ユーザーがコードを入力したら、その値を `confirmSignIn` API に渡してください。
+
+<Callout>
+
+**注記：** 結果には `AuthCodeDeliveryDetails` メンバーが含まれます。受信者の部分的なメールアドレスなど、コードの配信に関する追加情報が含まれており、ユーザーにコードの確認場所を案内するために使用できます。
+
+</Callout>
+
+## MFA の選択でサインインを続行する
+
+次のステップが `CONTINUE_SIGN_IN_WITH_MFA_SELECTION` の場合、ユーザーは使用する MFA メソッドを選択する必要があります。Amplify Auth は現在、SMS、TOTP、メールを MFA メソッドとしてサポートしています。ユーザーが MFA メソッドを選択したら、実装は `confirmSignIn` API を使用して選択した MFA メソッドを Amplify Auth に渡す必要があります。
+
+## メールセットアップでサインインを続行する
+
+次のステップが `CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP` の場合、ユーザーはサインインプロセスを完了するためにメールアドレスを提供する必要があります。この値をユーザーから収集したら、`confirmSignIn` API を呼び出して続行してください。
+
+## TOTP セットアップでサインインを続行する
+
+次のステップが `CONTINUE_SIGN_IN_WITH_TOTP_SETUP` の場合、ユーザーはサインインプロセスを完了するために TOTP コードを提供する必要があります。このステップは `TOTPSetupDetails` 型の関連値を返し、TOTP の生成に使用されます。`TOTPSetupDetails` は `getSetupURI` というヘルパーメソッドを提供しており、ネイティブパスワードマネージャーによる TOTP 関連付けに使用できる URI を生成できます。例えば、Apple プラットフォームで URI を使用すると、プラットフォームのネイティブパスワードマネージャーがアカウントと TOTP を関連付けるよう促します。より高度なユースケースでは、`TOTPSetupDetails` に含まれる `sharedSecret` を使って QR コードを生成したり、認証アプリに手動で入力したりすることもできます。
+
+認証アプリがセットアップされると、ユーザーは TOTP コードを生成してライブラリに提供し、サインインプロセスを完了できます。
+
+## MFA セットアップ選択でサインインを続行する
+
+次のステップが `CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION` の場合、ユーザーはセットアップする MFA メソッドを選択する必要があります。Amplify Auth は現在、SMS、TOTP、メールを MFA メソッドとしてサポートしています。ユーザーが MFA メソッドを選択したら、実装は `confirmSignIn` API を使用して選択した MFA メソッドを Amplify Auth に渡す必要があります。
+
+## 第一要素の選択でサインインを続行する
+
+次のステップが `CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION` の場合、ユーザーは認証要素を選択する必要があります（選択していなかったか、選択したものがサポートされていない場合など）。Amplify Auth は現在、SMS、メール、パスワード、WebAuthn を認証要素としてサポートしています。ユーザーが認証メソッドを選択したら、実装は `confirmSignIn` API を使用して選択した認証メソッドを Amplify Auth に渡す必要があります。
+
+`confirmSignIn` API の呼び出し方の例については、[サインインドキュメント](/[platform]/frontend/auth/sign-in/#sign-in-with-passwordless-methods)をご覧ください。
+
+## カスタムチャレンジでサインインを確認する
+
+次のステップが `CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE` の場合、Amplify Auth はカスタム認証チャレンジの完了を待っています。チャレンジは、[カスタムサインインフロー](/[platform]/build-a-backend/auth/customize-auth-lifecycle/custom-auth-flows/#sign-in-a-user)のセットアップ時に設定した Lambda トリガーに基づいています。このステップを完了するには、ユーザーにカスタムチャレンジの答えを入力するよう促し、その答えを `confirmSignIn` API に渡す必要があります。
+
+#### [Java]
+
+```java
+try {
+    Amplify.Auth.confirmSignIn(
+        "challenge answer",
+        result -> {
+            if (result.isSignedIn()) {
+                Log.i("AuthQuickstart", "Confirm signIn succeeded");
+            } else {
+                Log.i("AuthQuickstart", "Confirm sign in not complete. There might be additional steps: " + result.getNextStep());
+                // Switch on the next step to take appropriate actions.
+                // If `signInResult.isSignedIn` is true, the next step
+                // is 'done', and the user is now signed in.
+            }
+        },
+        error -> Log.e("AuthQuickstart", "Confirm sign in failed: " + error)
+    );
+} catch (Exception error) {
+    Log.e("AuthQuickstart", "Unexpected error: " + error);
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+try {
+    Amplify.Auth.confirmSignIn(
+        "challenge answer",
+        { result ->
+            if (result.isSignedIn) {
+              Log.i("AuthQuickstart","Confirm signIn succeeded")
+              } else {
+                  Log.i("AuthQuickstart", "Confirm sign in not complete. There might be additional steps: ${result.nextStep}")
+                  // Switch on the next step to take appropriate actions.
+                  // If `signInResult.isSignedIn` is true, the next step
+                  // is 'done', and the user is now signed in.
+              }
+        }
+    ) { error ->
+        Log.e("AuthQuickstart", "Confirm sign in failed: $error")
+    }
+} catch (error: Exception) {
+    Log.e("AuthQuickstart", "Unexpected error: $error")
+}
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    val result = Amplify.Auth.confirmSignIn(
+        "challenge answer"
+    )
+    if (result.isSignedIn) {
+        Log.i("AuthQuickstart", "Confirm signIn succeeded")
+    } else {
+        Log.i("AuthQuickstart", "Confirm sign in not complete. There might be additional steps: ${result.nextStep}")
+        // Switch on the next step to take appropriate actions.
+        // If `signInResult.isSignedIn` is true, the next step
+        // is 'done', and the user is now signed in.
+    }
+} catch (error: Exception) {
+    Log.e("AuthQuickstart", "Unexpected error: $error")
+}
+```
+
+#### [RxJava]
+
+```java
+
+RxAmplify.Auth.confirmSignIn(
+    "challenge answer").subscribe(
+    result -> {
+        if (result.isSignedIn()) {
+            Log.i("AuthQuickstart", "Confirm signIn succeeded");
+        } else {
+            Log.i("AuthQuickstart", "Confirm sign in not complete. There might be additional steps: " + result.getNextStep());
+            // Switch on the next step to take appropriate actions.
+            // If `signInResult.isSignedIn` is true, the next step
+            // is 'done', and the user is now signed in.
+        }
+    },
+    error -> Log.e("AuthQuickstart", "Confirm sign in failed: " + error)
+);
+```
+
+> **Warning:** **`confirmSignIn` の特別な処理**
+> 
+> `confirmSignIn` の呼び出し中に Lambda から `failAuthentication=true` が返された場合、Cognito によってリクエストのセッションが無効化され、`NotAuthorizedException` が返されます。その場合、`Amplify.Auth.signIn` を介してサインインフローを再開する必要があります。
+> 
+> ```java
+NotAuthorizedException{message=Failed since user is not authorized., cause=NotAuthorizedException(message=Invalid session for the user.), recoverySuggestion=Check whether the given values are correct and the user is authorized to perform the operation.}
+```
+
+## 新しいパスワードでサインインを確認する
+サインイン中に `UserNotConfirmedException` を受け取った場合、Amplify Auth は続行前にユーザーが新しいパスワードを選択する必要があります。ユーザーに新しいパスワードを求め、`confirmSignIn` API に渡してください。
+
+#### [Java]
+
+```java
+try {
+    Amplify.Auth.confirmSignIn(
+            "confirmation code",
+            result -> {
+                if (result.isSignedIn()) {
+                    Log.i("AuthQuickstart", "Confirm signIn succeeded");
+                } else {
+                    Log.i("AuthQuickstart", "Confirm sign in not complete. There might be additional steps: " + result.getNextStep());
+                    // Switch on the next step to take appropriate actions.
+                    // If `signInResult.isSignedIn` is true, the next step
+                    // is 'done', and the user is now signed in.
+                }
+            },
+            error -> Log.e("AuthQuickstart", "Confirm sign in failed: " + error)
+    );
+} catch (Exception error) {
+    Log.e("AuthQuickstart", "Unexpected error: " + error);
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+ try {
+      Amplify.Auth.confirmSignIn(
+          "confirmation code",
+          { result ->
+              if (result.isSignedIn) {
+                Log.i("AuthQuickstart","Confirm signIn succeeded")
+              } else {
+                Log.i("AuthQuickstart", "Confirm sign in not complete. There might be additional steps: ${result.nextStep}")
+              }
+          }
+      ) { error ->
+          Log.e("AuthQuickstart", "Confirm sign in failed: $error")
+      }
+} catch (error: Exception) {
+    Log.e("AuthQuickstart", "Unexpected error: $error")
+}
+}
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    val result = Amplify.Auth.confirmSignIn(
+        "confirmation code"
+    )
+    if (result.isSignedIn) {
+        Log.i("AuthQuickstart", "Confirm signIn succeeded")
+    } else {
+        Log.i("AuthQuickstart", "Confirm sign in not complete. There might be additional steps: ${result.nextStep}")
+    }
+} catch (error: Exception) {
+    Log.e("AuthQuickstart", "Unexpected error: $error")
+}
+```
+
+#### [RxJava]
+
+```java
+
+RxAmplify.Auth.confirmSignIn(
+                "confirmation code").subscribe(
+                result -> {
+                    if (result.isSignedIn()) {
+                        Log.i("AuthQuickstart", "Confirm signIn succeeded");
+                    } else {
+                        Log.i("AuthQuickstart", "Confirm sign in not complete. There might be additional steps: " + result.getNextStep());
+                    }
+                },
+                error -> Log.e("AuthQuickstart", "Confirm sign in failed: " + error)
+        );
+```
+
+## パスワードのリセット
+`PasswordResetRequiredException` を受け取った場合、パスワードをリセットしないと認証フローを続行できません。次のステップは `resetPassword` API を呼び出してパスワードリセットフローを開始することです。
+
+#### [Java]
+
+```java
+try {
+    Amplify.Auth.resetPassword(
+            "username",
+            result -> Log.i("AuthQuickstart", "Reset password succeeded"),
+            error -> Log.e("AuthQuickstart", "Reset password failed : " + error)
+    );
+} catch (Exception error) {
+    Log.e("AuthQuickstart", "Unexpected error: " + error);
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+try {
+      Amplify.Auth.resetPassword(
+          "username",
+          {
+              Log.i("AuthQuickstart", "Reset password succeeded")
+          }
+      ) { error ->
+          Log.e("AuthQuickstart", "Reset password failed : $error")
+      }
+} catch (error: Exception) {
+    Log.e("AuthQuickstart", "Unexpected error: $error")
+}
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    Amplify.Auth.resetPassword("username")
+    Log.i("AuthQuickstart", "Reset password succeeded")
+} catch (error: Exception) {
+    Log.e("AuthQuickstart", "Unexpected error: $error")
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.Auth.resetPassword(
+        "username").subscribe(
+        result -> Log.i("AuthQuickstart", "Reset password succeeded"),
+        error -> Log.e("AuthQuickstart", "Reset password failed : " + error)
+);
+```
+
+## サインアップの確認
+
+次のステップとして `CONFIRM_SIGN_UP` を受け取った場合、メールや電話番号などのユーザー情報を確認しないとサインアップを続行できません。次のステップは `confirmSignUp` API を呼び出してサインアップ確認フローを進めることです。
+
+#### [Java]
+
+```java
+ try {
+      Amplify.Auth.confirmSignUp(
+             "username",
+             "confirmation code",
+             result -> Log.i("AuthQuickstart", "Confirm signUp result completed: " + result.isSignUpComplete()),
+             error -> Log.e("AuthQuickstart", "An error occurred while confirming sign up: " + error)
+      );
+} catch (Exception error) {
+   Log.e("AuthQuickstart", "unexpected error: " + error);
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+ try {
+      Amplify.Auth.confirmSignUp(
+          "username",
+          "confirmation code",
+          { result ->
+              Log.i("AuthQuickstart", "Confirm signUp result completed: ${result.isSignUpComplete}")
+          }
+      ) { error ->
+          Log.e("AuthQuickstart", "An error occurred while confirming sign up: $error")
+      }
+} catch (error: Exception) {
+    Log.e("AuthQuickstart", "unexpected error: $error")
+}
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+     val result = Amplify.Auth.confirmSignUp(
+         "username",
+         "confirmation code"
+     )
+     Log.i("AuthQuickstart", "Confirm signUp result completed: ${result.isSignUpComplete}")
+} catch (error: Exception) {
+   Log.e("AuthQuickstart", "unexpected error: $error")
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.Auth.confirmSignUp(
+        "username",
+        "confirmation code").subscribe(
+        result -> Log.i("AuthQuickstart", "Confirm signUp result completed: " + result.isSignUpComplete()),
+        error -> Log.e("AuthQuickstart", "An error occurred while confirming sign up: " + error)
+);
+```
+
+## 現在のユーザーを取得する
+
+この呼び出しは現在ログインしているユーザーを取得し、ユーザーが正常にサインインした後に使用する必要があります。
+ユーザーがサインインしている場合、現在の `userId` と `username` が返されます。
+
+<Callout>
+**注記：** `accessToken` に値が存在しない場合、`userId` および/または `username` に空の文字列が割り当てられます。
+</Callout>
+
+#### [Java]
+
+```java
+ try {
+    Amplify.Auth.getCurrentUser(
+           result -> Log.i("AuthQuickstart", "Current user details are:" + result.toString(),
+           error -> Log.e("AuthQuickstart", "getCurrentUser failed with an exception: " + error)
+    );
+ } catch (Exception error) {
+    Log.e("AuthQuickstart", "unexpected error: " + error);
+ }
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+Amplify.Auth.getCurrentUser({
+    Log.i("AuthQuickStart", "Current user details are: $it")},{
+    Log.e("AuthQuickStart", "getCurrentUser failed with an exception: $it")
+})
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    val result = Amplify.Auth.getCurrentUser()
+    Log.i("AuthQuickstart", "Current user details are: $result")
+} catch (error: Exception) {
+    Log.e("AuthQuickstart", "getCurrentUser failed with an exception: $error")
+}
+```
+
+#### [RxJava]
+
+```java
+  RxAmplify.Auth.getCurrentUser().subscribe(
+        result -> Log.i("AuthQuickStart getCurrentUser: " + result.toString()),
+        error -> Log.e("AuthQuickStart", error.toString())
+ );
+```
+
+## 完了
+
+`done` が返された場合、サインインフローは完了し、ユーザーは正常に認証されています。便宜上、`SignInResult` には `isSignedIn` プロパティも提供されており、次のステップが `done` の場合は true になります。
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+ユーザーがサインアップを完了した後、サインインに進むことができます。Amplify Auth のサインインフローはマルチステップのプロセスになる場合があります。必要なステップは、[MFA 設定の管理](/[platform]/build-a-backend/auth/concepts/multi-factor-authentication/)ページで説明されているように認証リソースを定義する際に提供した設定によって決まります。
+
+設定によっては、ユーザーのサインインを完了するためにさまざまな API を呼び出す必要がある場合があります。サインインフローの次のステップを特定するには、サインイン結果の `nextStep` パラメータを確認してください。
+
+> **Warning:** *新しい列挙値*
+> 
+> Amplify が新しい列挙値（例：Kotlin の新しい enum クラスエントリやシールドクラスのサブタイプ、Swift/Dart/Kotlin の新しい enum 値）を追加する場合、Amplify ライブラリの新しいマイナーバージョンが公開されます。列挙値を切り替えるプラグインには、新しい列挙値による影響を受けないようにするためのデフォルトハンドラー（Kotlin の else ブランチや Swift/Dart/Kotlin の default 文）を含める必要があります。
+
+成功した場合、サインイン API は `AuthSignInResult` を返します。結果の `nextStep` プロパティを確認して、追加のサインインステップが必要かどうかを確認してください。
+
+```swift
+func signIn(username: String, password: String) async {
+    do {
+        let signInResult = try await Amplify.Auth.signIn(username: username, password: password)
+        switch signInResult.nextStep {
+        case .confirmSignInWithSMSMFACode(let deliveryDetails, let info):
+            print("SMS code sent to \(deliveryDetails.destination)")
+            print("Additional info \(String(describing: info))")
+
+            // Prompt the user to enter the SMSMFA code they received
+            // Then invoke `confirmSignIn` api with the code
+
+        case .confirmSignInWithTOTPCode:
+            print("Received next step as confirm sign in with TOTP code")
+
+            // Prompt the user to enter the TOTP code generated in their authenticator app
+            // Then invoke `confirmSignIn` api with the code
+
+        case .confirmSignInWithOTP(let deliveryDetails):
+            print("Email code sent to \(deliveryDetails.destination)")
+
+            // Prompt the user to enter the Email MFA code they received
+            // Then invoke `confirmSignIn` api with the code
+
+        case .continueSignInWithFirstFactorSelection(let allowedFactors):
+            print("Received next step as continue sign in by selecting first factor")
+            print("Allowed factors \(allowedFactors)")
+
+            // Prompt the user to select the first factor they want to use
+            // Then invoke `confirmSignIn` api with the factor
+
+        case .confirmSignInWithPassword:
+            print("Received next step as confirm sign in with password")
+
+            // Prompt the user to enter the password
+            // Then invoke `confirmSignIn` api with the password
+        
+        case .continueSignInWithTOTPSetup(let setUpDetails):
+            print("Received next step as continue sign in by setting up TOTP")
+            print("Shared secret that will be used to set up TOTP in the authenticator app \(setUpDetails.sharedSecret)")
+            
+            // Prompt the user to enter the TOTP code generated in their authenticator app
+            // Then invoke `confirmSignIn` api with the code
+
+        case .continueSignInWithEmailMFASetup:
+             print("Received next step as continue sign in by setting up email MFA")
+             
+            // Prompt the user to enter the email address they wish to use for MFA
+            // Then invoke `confirmSignIn` api with the email address
+
+        case .continueSignInWithMFASetupSelection(let allowedMFATypes):
+            print("Received next step as continue sign in by selecting MFA type to setup")
+            print("Allowed MFA types \(allowedMFATypes)")
+
+            // Prompt the user to select the MFA type they want to setup
+            // Then invoke `confirmSignIn` api with the MFA type
+
+        case .continueSignInWithMFASelection(let allowedMFATypes):
+            print("Received next step as continue sign in by selecting MFA type")
+            print("Allowed MFA types \(allowedMFATypes)")
+            
+            // Prompt the user to select the MFA type they want to use
+            // Then invoke `confirmSignIn` api with the MFA type
+        
+        case .confirmSignInWithCustomChallenge(let info):
+            print("Custom challenge, additional info \(String(describing: info))")
+            
+            // Prompt the user to enter custom challenge answer
+            // Then invoke `confirmSignIn` api with the answer
+        
+        case .confirmSignInWithNewPassword(let info):
+            print("New password additional info \(String(describing: info))")
+            
+            // Prompt the user to enter a new password
+            // Then invoke `confirmSignIn` api with new password
+        
+        case .resetPassword(let info):
+            print("Reset password additional info \(String(describing: info))")
+            
+            // User needs to reset their password.
+            // Invoke `resetPassword` api to start the reset password
+            // flow, and once reset password flow completes, invoke
+            // `signIn` api to trigger signin flow again.
+        
+        case .confirmSignUp(let info):
+            print("Confirm signup additional info \(String(describing: info))")
+            
+            // User was not confirmed during the signup process.
+            // Invoke `confirmSignUp` api to confirm the user if
+            // they have the confirmation code. If they do not have the
+            // confirmation code, invoke `resendSignUpCode` to send the
+            // code again.
+            // After the user is confirmed, invoke the `signIn` api again.
+        case .done:
+            
+            // Use has successfully signed in to the app
+            print("Signin complete")
+        }
+    } catch let error as AuthError{
+        print ("Sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+`nextStep` プロパティは `AuthSignInStep` という enum 型です。その値に応じて、コードは以下のいずれかのアクションを実行する必要があります：
+
+## SMS MFA でサインインを確認する
+次のステップが `confirmSignInWithSMSMFACode` の場合、Amplify Auth はユーザーに SMS でランダムなコードを送信し、ユーザーがそれを正常に受け取ったかどうかを確認するのを待っています。このステップを処理するには、アプリの UI でユーザーにコードの入力を促す必要があります。ユーザーがコードを入力したら、実装は Amplify Auth の `confirmSignIn` API にその値を渡す必要があります。
+
+注記：サインイン結果には `AuthCodeDeliveryDetails` メンバーも含まれます。SMS 受信者の部分的な電話番号など、コードの配信に関する追加情報が含まれています。
+
+#### [Async/Await]
+
+```swift
+func confirmSignIn(confirmationCodeFromUser: String) async {
+    do {
+        let signInResult = try await Amplify.Auth.confirmSignIn(challengeResponse: confirmationCodeFromUser)
+        if signInResult.isSignedIn {
+            print("Confirm sign in succeeded. The user is signed in.")
+        } else {
+            print("Confirm sign in succeeded.")
+            print("Next step: \(signInResult.nextStep)")
+            // Switch on the next step to take appropriate actions. 
+            // If `signInResult.isSignedIn` is true, the next step 
+            // is 'done', and the user is now signed in.
+        }
+    } catch let error as AuthError {
+        print("Confirm sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func confirmSignIn(confirmationCodeFromUser: String) -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.confirmSignIn(challengeResponse: confirmationCodeFromUser)
+        }.sink {
+            if case let .failure(authError) = $0 {
+                print("Confirm sign in failed \(authError)")
+            }
+        }
+        receiveValue: { signInResult in
+            if signInResult.isSignedIn {
+                print("Confirm sign in succeeded. The user is signed in.")
+            } else {
+                print("Confirm sign in succeeded.")
+                print("Next step: \(signInResult.nextStep)")
+                // Switch on the next step to take appropriate actions. 
+                // If `signInResult.isSignedIn` is true, the next step 
+                // is 'done', and the user is now signed in.
+            }
+        }
+}
+```
+
+## TOTP MFA でサインインを確認する
+
+次のステップが `confirmSignInWithTOTPCode` の場合、セットアップ時に関連付けられた認証アプリから TOTP コードを入力するようユーザーに促してください。コードは 30 秒ごとに変わる 6 桁の数字です。ユーザーは 30 秒のウィンドウが切れる前にコードを入力する必要があります。
+
+ユーザーがコードを入力したら、実装は Amplify Auth の `confirmSignIn` API にその値を渡す必要があります。
+
+#### [Async/Await]
+
+```swift
+func confirmSignIn(totpCode: String) async {
+    do {
+        let signInResult = try await Amplify.Auth.confirmSignIn(challengeResponse: totpCode)
+        if signInResult.isSignedIn {
+            print("Confirm sign in succeeded. The user is signed in.")
+        } else {
+            print("Confirm sign in succeeded.")
+            print("Next step: \(signInResult.nextStep)")
+            // Switch on the next step to take appropriate actions. 
+            // If `signInResult.isSignedIn` is true, the next step 
+            // is 'done', and the user is now signed in.
+        }
+    } catch {
+        print("Confirm sign in failed \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func confirmSignIn(totpCode: String) -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.confirmSignIn(challengeResponse: totpCode)
+        }.sink {
+            if case let .failure(authError) = $0 {
+                print("Confirm sign in failed \(authError)")
+            }
+        }
+        receiveValue: { signInResult in
+            if signInResult.isSignedIn {
+                print("Confirm sign in succeeded. The user is signed in.")
+            } else {
+                print("Confirm sign in succeeded.")
+                print("Next step: \(signInResult.nextStep)")
+                // Switch on the next step to take appropriate actions. 
+                // If `signInResult.isSignedIn` is true, the next step 
+                // is 'done', and the user is now signed in.
+            }
+        }
+}
+```
+
+## メール MFA でサインインを確認する
+次のステップが `confirmSignInWithOTP` の場合、Amplify Auth はユーザーのメールアドレスにランダムなコードを送信し、ユーザーがそれを正常に受け取ったかどうかを確認するのを待っています。このステップを処理するには、アプリの UI でユーザーにコードの入力を促す必要があります。ユーザーがコードを入力したら、実装は Amplify Auth の `confirmSignIn` API にその値を渡す必要があります。
+
+> **Info:** **注記：** サインイン結果には `AuthCodeDeliveryDetails` メンバーも含まれます。受信者の部分的なメールアドレスなど、コードの配信に関する追加情報が含まれています。
+
+#### [Async/Await]
+
+```swift
+func confirmSignIn(confirmationCodeFromUser: String) async {
+    do {
+        let signInResult = try await Amplify.Auth.confirmSignIn(challengeResponse: confirmationCodeFromUser)
+        if signInResult.isSignedIn {
+            print("Confirm sign in succeeded. The user is signed in.")
+        } else {
+            print("Confirm sign in succeeded.")
+            print("Next step: \(signInResult.nextStep)")
+            // Switch on the next step to take appropriate actions. 
+            // If `signInResult.isSignedIn` is true, the next step 
+            // is 'done', and the user is now signed in.
+        }
+    } catch let error as AuthError {
+        print("Confirm sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func confirmSignIn(confirmationCodeFromUser: String) -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.confirmSignIn(challengeResponse: confirmationCodeFromUser)
+        }.sink {
+            if case let .failure(authError) = $0 {
+                print("Confirm sign in failed \(authError)")
+            }
+        }
+        receiveValue: { signInResult in
+            if signInResult.isSignedIn {
+                print("Confirm sign in succeeded. The user is signed in.")
+            } else {
+                print("Confirm sign in succeeded.")
+                print("Next step: \(signInResult.nextStep)")
+                // Switch on the next step to take appropriate actions. 
+                // If `signInResult.isSignedIn` is true, the next step 
+                // is 'done', and the user is now signed in.
+            }
+        }
+}
+```
+
+## MFA の選択でサインインを続行する
+
+次のステップが `continueSignInWithMFASelection` の場合、ユーザーは使用する MFA メソッドを選択する必要があります。Amplify Auth は現在、SMS、TOTP、メールを MFA メソッドとしてサポートしています。ユーザーが MFA メソッドを選択したら、実装は `confirmSignIn` API を使用して選択した MFA メソッドを Amplify Auth に渡す必要があります。
+
+#### [Async/Await]
+
+```swift
+func confirmSignInWithTOTPAsMFASelection() async {
+    do {
+        let signInResult = try await Amplify.Auth.confirmSignIn(
+            challengeResponse: MFAType.totp.challengeResponse)
+
+        if case .confirmSignInWithTOTPCode = signInResult.nextStep {
+            print("Received next step as confirm sign in with TOTP")
+        }
+
+    } catch {
+        print("Confirm sign in failed \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func confirmSignInWithTOTPAsMFASelection() -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.confirmSignIn(
+            challengeResponse: MFAType.totp.challengeResponse)
+        }.sink {
+            if case let .failure(authError) = $0 {
+                print("Confirm sign in failed \(authError)")
+            }
+        }
+        receiveValue: { signInResult in
+        if case .confirmSignInWithTOTPCode = signInResult.nextStep {
+            print("Received next step as confirm sign in with TOTP")
+        }
+    }
+}
+```
+
+## メールセットアップでサインインを続行する
+次のステップが `continueSignInWithEmailMFASetup` の場合、ユーザーはサインインプロセスを完了するためにメールアドレスを提供する必要があります。この値をユーザーから収集したら、`confirmSignIn` API を呼び出して続行してください。
+
+```swift 
+// Confirm sign in with Email Setup
+case .continueSignInWithEmailMFASetup:
+    print("Received next step as continue sign in by setting up email MFA")
+        
+    // Prompt the user to enter the email address they wish to use for MFA
+    // Then invoke `confirmSignIn` api with the email address
+```
+
+## TOTP セットアップでサインインを続行する
+
+次のステップが `continueSignInWithTOTPSetup` の場合、ユーザーはサインインプロセスを完了するために TOTP コードを提供する必要があります。このステップは `TOTPSetupDetails` 型の関連値を返し、TOTP の生成に使用されます。`TOTPSetupDetails` は `getSetupURI` というヘルパーメソッドを提供しており、ネイティブパスワードマネージャーによる TOTP 関連付けに使用できる URI を生成できます。例えば、Apple プラットフォームで URI を使用すると、プラットフォームのネイティブパスワードマネージャーがアカウントと TOTP を関連付けるよう促します。より高度なユースケースでは、`TOTPSetupDetails` に含まれる `sharedSecret` を使って QR コードを生成したり、認証アプリに手動で入力したりすることもできます。
+
+認証アプリがセットアップされると、ユーザーは TOTP コードを生成してライブラリに提供し、サインインプロセスを完了できます。
+
+```swift 
+// Confirm sign in with TOTP setup
+case .continueSignInWithTOTPSetup(let setUpDetails):
+    
+    /// appName parameter will help distinguish the account in the Authenticator app
+    let setupURI = try setUpDetails.getSetupUri(appName: "<Your_App_Name>>") 
+    
+    print("TOTP Setup URI: \(setupURI)")
+```
+
+#### [Async/Await]
+
+```swift
+func confirmSignInWithTOTPSetup(totpCodeFromAuthenticatorApp: String) async {
+    do {
+        let signInResult = try await Amplify.Auth.confirmSignIn(
+            challengeResponse: totpCodeFromAuthenticatorApp)
+
+         if signInResult.isSignedIn {
+            print("Confirm sign in succeeded. The user is signed in.")
+        } else {
+            print("Confirm sign in succeeded.")
+            print("Next step: \(signInResult.nextStep)")
+            // Switch on the next step to take appropriate actions. 
+            // If `signInResult.isSignedIn` is true, the next step 
+            // is 'done', and the user is now signed in.
+        }
+    } catch {
+        print("Confirm sign in failed \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func confirmSignInWithTOTPSetup(totpCodeFromAuthenticatorApp: String) -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.confirmSignIn(
+            challengeResponse: totpCodeFromAuthenticatorApp)
+        }.sink {
+            if case let .failure(authError) = $0 {
+                print("Confirm sign in failed \(authError)")
+            }
+        }
+        receiveValue: { signInResult in
+            if signInResult.isSignedIn {
+                print("Confirm sign in succeeded. The user is signed in.")
+            } else {
+                print("Confirm sign in succeeded.")
+                print("Next step: \(signInResult.nextStep)")
+                // Switch on the next step to take appropriate actions. 
+                // If `signInResult.isSignedIn` is true, the next step 
+                // is 'done', and the user is now signed in.
+            }
+        }
+}
+```
+
+## MFA セットアップ選択でサインインを続行する
+
+次のステップが `continueSignInWithMFASetupSelection` の場合、ユーザーはセットアップしたい利用可能な MFA メソッドを選択する必要があります。ユーザーがセットアップする MFA メソッドを選択したら、実装は `confirmSignIn` API に選択した MFA メソッドを渡す必要があります。
+
+#### [Async/Await]
+
+```swift
+func continueSignInWithEmailMFASetupSelection() async {
+    do {
+        let signInResult = try await Amplify.Auth.confirmSignIn(
+            challengeResponse: MFAType.email.challengeResponse)
+
+        if case .confirmSignInWithTOTPCode = signInResult.nextStep {
+            print("Received next step as confirm sign in with TOTP")
+        }
+
+    } catch {
+        print("Confirm sign in failed \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func continueSignInWithEmailMFASetupSelection() -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.confirmSignIn(
+            challengeResponse: MFAType.email.challengeResponse)
+        }.sink {
+            if case let .failure(authError) = $0 {
+                print("Confirm sign in failed \(authError)")
+            }
+        }
+        receiveValue: { signInResult in
+        if case .confirmSignInWithTOTPCode = signInResult.nextStep {
+            print("Received next step as confirm sign in with TOTP")
+        }
+    }
+}
+```
+
+## カスタムチャレンジでサインインを確認する
+
+次のステップが `confirmSignInWithCustomChallenge` の場合、Amplify Auth はカスタム認証チャレンジの完了を待っています。チャレンジは、[カスタムサインインフロー](/[platform]/build-a-backend/auth/customize-auth-lifecycle/custom-auth-flows/#sign-in-a-user)のセットアップ時に設定した Lambda トリガーに基づいています。このステップを完了するには、ユーザーにカスタムチャレンジの答えを入力するよう促し、その答えを `confirmSignIn` API に渡す必要があります。
+
+#### [Async/Await]
+
+```swift
+func confirmSignIn(challengeAnswerFromUser: String) async {
+    do {
+        let signInResult = try await Amplify.Auth.confirmSignIn(challengeResponse: challengeAnswerFromUser)
+        if signInResult.isSignedIn {
+            print("Confirm sign in succeeded. The user is signed in.")
+        } else {
+            print("Confirm sign in succeeded.")
+            print("Next step: \(signInResult.nextStep)")
+            // Switch on the next step to take appropriate actions.
+            // If `signInResult.isSignedIn` is true, the next step
+            // is 'done', and the user is now signed in.
+        }
+    } catch let error as AuthError {
+        print("Confirm sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func confirmSignIn(challengeAnswerFromUser: String) -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.confirmSignIn(challengeResponse: challengeAnswerFromUser)
+        }.sink {
+            if case let .failure(authError) = $0 {
+                print("Confirm sign in failed \(authError)")
+            }
+        }
+        receiveValue: { signInResult in
+            if signInResult.isSignedIn {
+                print("Confirm sign in succeeded. The user is signed in.")
+            } else {
+                print("Confirm sign in succeeded.")
+                print("Next step: \(signInResult.nextStep)")
+                // Switch on the next step to take appropriate actions.
+                // If `signInResult.isSignedIn` is true, the next step
+                // is 'done', and the user is now signed in.
+            }
+        }
+}
+```
+
+> **Warning:** **`confirmSignIn` の特別な処理**
+> 
+> `confirmSignIn` の呼び出し中に Lambda 関数から `failAuthentication=true` が返された場合、Cognito によってリクエストのセッションが無効化され、`NotAuthorizedException` が返されます。その場合、`Amplify.Auth.signIn` を介して新しいサインイン呼び出しが期待されます。
+> 
+> ```swift
+Exception:  notAuthorized{message=Failed since user is not authorized., cause=NotAuthorizedException(message=Invalid session for the user.), recoverySuggestion=Check whether the given values are correct and the user is authorized to perform the operation.}
+```
+
+## 新しいパスワードでサインインを確認する
+
+次のステップが `confirmSignInWithNewPassword` の場合、Amplify Auth は続行前にユーザーが新しいパスワードを入力する必要があります。ユーザーに新しいパスワードを求め、`confirmSignIn` API に渡してください。
+
+#### [Async/Await]
+
+```swift
+func confirmSignIn(newPasswordFromUser: String) async {
+    do {
+        let signInResult = try await Amplify.Auth.confirmSignIn(challengeResponse: newPasswordFromUser)
+        if signInResult.isSignedIn {
+            print("Confirm sign in succeeded. The user is signed in.")
+        } else {
+            print("Confirm sign in succeeded.")
+            print("Next step: \(signInResult.nextStep)")
+            // Switch on the next step to take appropriate actions. 
+            // If `signInResult.isSignedIn` is true, the next step 
+            // is 'done', and the user is now signed in.
+        }
+    } catch let error as AuthError {
+        print("Confirm sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func confirmSignIn(newPasswordFromUser: String) -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.confirmSignIn(challengeResponse: newPasswordFromUser)
+        }.sink {
+            if case let .failure(authError) = $0 {
+                print("Confirm sign in failed \(authError)")
+            }
+        }
+        receiveValue: { signInResult in
+            if signInResult.isSignedIn {
+                print("Confirm sign in succeeded. The user is signed in.")
+            } else {
+                print("Confirm sign in succeeded.")
+                print("Next step: \(signInResult.nextStep)")
+                // Switch on the next step to take appropriate actions. 
+                // If `signInResult.isSignedIn` is true, the next step 
+                // is 'done', and the user is now signed in.
+            }
+        }
+}
+```
+
+## パスワードのリセット
+
+`resetPassword` を受け取った場合、パスワードをリセットしないと認証フローを続行できません。次のステップは `resetPassword` API を呼び出してパスワードリセットフローを開始することです。完了したら `signIn` を呼び出してサインインフローを再開してください。
+
+#### [Async/Await]
+
+```swift
+func resetPassword(username: String) async {
+    do {
+        let resetPasswordResult = try await Amplify.Auth.resetPassword(for: username)
+        print("Reset password succeeded.")
+        print("Next step: \(resetPasswordResult.nextStep)")
+    } catch let error as AuthError {
+        print("Reset password  failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func resetPassword(username: String) -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.resetPassword(for: username)
+        }.sink {
+            if case let .failure(authError) = $0 {
+                print("Reset password  failed \(authError)")
+            }
+        }
+        receiveValue: { resetPasswordResult in
+            print("Reset password succeeded.")
+            print("Next step: \(resetPasswordResult.nextStep)")
+        }
+}
+```
+
+## サインアップの確認
+
+次のステップとして `confirmSignUp` を受け取った場合、メールや電話番号などのユーザー情報を確認しないとサインアップを続行できません。次のステップは `confirmSignUp` API を呼び出してサインアップ確認フローを進めることです。
+
+#### [Async/Await]
+
+```swift
+func confirmSignUp(for username: String, with confirmationCode: String) async {
+    do {
+        let confirmSignUpResult = try await Amplify.Auth.confirmSignUp(
+            for: username,
+            confirmationCode: confirmationCode
+        )
+        print("Confirm sign up result completed: \(confirmSignUpResult.isSignUpComplete)")
+    } catch let error as AuthError {
+        print("An error occurred while confirming sign up \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func confirmSignUp(for username: String, with confirmationCode: String) -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.confirmSignUp(for: username, confirmationCode: confirmationCode)
+        }.sink {
+            if case let .failure(authError) = $0 {
+                print("An error occurred while confirming sign up \(authError)")
+            }
+        }
+        receiveValue: { _ in
+            print("Confirm signUp succeeded")
+        }
+}
+```
+
+## 完了
+
+`done` が返された場合、サインインフローは完了し、ユーザーは正常に認証されています。便宜上、`SignInResult` には `isSignedIn` プロパティも提供されており、次のステップが `done` の場合は true になります。
+<!-- /Platform -->

@@ -1,0 +1,111 @@
+---
+title: "ユーザープロフィールレコードを作成する"
+section: "build-a-backend/functions/examples"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2024-12-09T22:00:29.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/functions/examples/create-user-profile-record/"
+---
+
+`defineAuth` と `defineFunction` を使用して、[Cognito ポスト確認 Lambda トリガー](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-post-confirmation.html)を作成し、ユーザーが確認されたときにプロフィールレコードを作成できます。
+
+> **Info:** ユーザーは、アカウントを確認したときに「確認済み」になります。通常、これはユーザーが検証メールでメールアドレスを確認したときに発生します。ポスト確認ハンドラーはフェデレーション署名（つまり、ソーシャル署名）に対しては トリガーされ_ません_。
+
+まず、ハンドラータイプを定義するために使用される `aws-lambda` パッケージをインストールします。
+
+```bash title="Terminal" showLineNumbers={false}
+npm add --save-dev @types/aws-lambda
+```
+
+`amplify/data/resource.ts` ファイルを更新して、ユーザーのプロフィール用のデータモデルを定義します。
+
+> **Warning:** 以下でハイライトされているように、`postConfirmation` リソースにアクセスを許可するように認可ルールを設定してください。リソースへのアクセスを許可すると、GraphQL API エンドポイントなどの Function の環境変数が作成されます。詳細については、[Functions の環境変数とシークレットドキュメント](/[platform]/build-a-backend/functions/environment-variables-and-secrets/)を参照してください。
+
+```ts title="amplify/data/resource.ts"
+import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { postConfirmation } from "../auth/post-confirmation/resource";
+
+const schema = a
+  .schema({
+    UserProfile: a
+      .model({
+        email: a.string(),
+        profileOwner: a.string(),
+      })
+      .authorization((allow) => [
+        allow.ownerDefinedIn("profileOwner"),
+      ]),
+  })
+  .authorization((allow) => [allow.resource(postConfirmation)]);
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: "apiKey",
+    apiKeyAuthorizationMode: {
+      expiresInDays: 30,
+    },
+  },
+});
+
+```
+
+新しいディレクトリとリソースファイル `amplify/auth/post-confirmation/resource.ts` を作成します。次に、`defineFunction` を使用して Function を定義します。
+
+```ts title="amplify/auth/post-confirmation/resource.ts"
+import { defineFunction } from '@aws-amplify/backend';
+
+export const postConfirmation = defineFunction({
+  name: 'post-confirmation',
+});
+```
+
+次に、対応するハンドラーファイル `amplify/auth/post-confirmation/handler.ts` を以下の内容で作成します。
+
+```ts title="amplify/auth/post-confirmation/handler.ts"
+import type { PostConfirmationTriggerHandler } from "aws-lambda";
+import { type Schema } from "../../data/resource";
+import { Amplify } from "aws-amplify";
+import { generateClient } from "aws-amplify/data";
+import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
+import { env } from "$amplify/env/post-confirmation";
+
+const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(
+  env
+);
+
+Amplify.configure(resourceConfig, libraryOptions);
+
+const client = generateClient<Schema>();
+
+export const handler: PostConfirmationTriggerHandler = async (event) => {
+  await client.models.UserProfile.create({
+      email: event.request.userAttributes.email,
+      profileOwner: `${event.request.userAttributes.sub}::${event.userName}`,
+  });
+
+  return event;
+};
+
+```
+
+> **Warning:** `getAmplifyDataClientConfig` で Amplify を設定する場合、バックエンドデプロイ中に作成された S3 バケットからスキーマ情報を使用します。このバケットへのバックエンドデプロイ外での変更は、Function を破壊する可能性があります。
+
+最後に、新しく作成した Function リソースを認証リソースに設定します。
+
+```ts title="amplify/auth/resource.ts"
+import { defineAuth } from '@aws-amplify/backend';
+import { postConfirmation } from './post-confirmation/resource';
+
+export const auth = defineAuth({
+  loginWith: {
+    email: true,
+  },
+  triggers: {
+    postConfirmation
+  }
+});
+```
+
+変更をデプロイした後、ユーザーがサインアップしてアカウントを確認するたびに、プロフィールレコードが自動的に作成されます。

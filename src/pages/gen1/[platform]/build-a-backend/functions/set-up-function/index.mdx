@@ -1,0 +1,161 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '関数のセットアップ',
+  description: 'Amplify CLIを使用して、シンプルなガイド付きワークフローでクラウドベースのモバイルおよびウェブアプリに強力なLambda関数を追加します。',
+  platforms: [
+    'javascript',
+    'flutter',
+    'swift',
+    'android',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## 関数のセットアップ
+
+プロジェクトにLambda関数を追加できます。この関数は、REST APIと一緒に使用したり、[`@function`ディレクティブ](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#lambda-function-resolver)を使用してGraphQL APIのデータソースとして使用できます。
+
+```bash
+amplify add function
+```
+
+```console
+? Select which capability you want to add: Lambda function (serverless function)
+? Provide a friendly name for your resource to be used as a label for this category in the project: lambdafunction
+? Provide the AWS Lambda function name: lambdafunction
+? Choose the runtime that you want to use: NodeJS
+? Choose the function template that you want to use: (Use arrow keys)
+> Hello world function
+  CRUD function for Amazon DynamoDB table (Integration with Amazon API Gateway and Amazon DynamoDB)
+  Serverless express function (Integration with Amazon API Gateway)
+```
+
+## 関数テンプレート
+
+- `Hello World function` は、基本的なHello World Lambda関数を作成します
+- `CRUD function for Amazon DynamoDB table (Integration with Amazon API Gateway and Amazon DynamoDB)` 関数は、DynamoDBテーブルへのCRUD操作用の定義済み[serverless-express](https://github.com/awslabs/aws-serverless-express) Lambda関数テンプレートを追加します（CLIプロンプトに従って作成することもできますし、`amplify add storage`コマンドを使用して既に設定したテーブルを使用することもできます）
+- `Serverless express function (Integration with Amazon API Gateway)` は、REST APIパスのルーティングが有効な定義済み[serverless-express](https://github.com/awslabs/aws-serverless-express) Lambda関数テンプレートを追加します。
+
+CLIを使用して、Lambda実行ロールポリシーを更新して、CLIで生成・管理される他のリソースにアクセスできます。
+
+```console
+$ amplify update function
+Please select the Lambda Function you would want to update: lambdafunction
+? Which setting do you want to update? Resource access permissions
+? Select the category (Press <space> to select, <a> to toggle all, <i> to invert selection)
+> api
+  function
+  storage
+  auth
+? Select the operations you want to permit on <YOUR_API_NAME> (Press <space> to select, <a> to toggle all, <i> to invert selection)
+> Query
+  Mutation
+  Subscription
+
+You can access the following resource attributes as environment variables from your Lambda function
+	API_<YOUR_API_NAME>_GRAPHQLAPIENDPOINTOUTPUT
+	API_<YOUR_API_NAME>_GRAPHQLAPIIDOUTPUT
+	API_<YOUR_API_NAME>_GRAPHQLAPIKEYOUTPUT
+```
+
+バックグラウンドで、CLIは選択されたリソースのリソース識別子をLambda環境変数として自動的に入力します。これは関数コードでも確認できます。このプロセスは、Lambda実行ロールのCRUDレベルのIAMポリシーを設定して、Lambda関数からこれらのリソースにアクセスできるようにします。たとえば、上記のフローを使用してAmplifyプロジェクトのDynamoDBテーブルに読み取り/書き込みを行うための許可をLambda関数に付与でき、適切なIAMポリシーがそのLambda関数の実行ポリシーに設定され、そのテーブルのみにスコープされます。
+
+## サポートされているLambda実行時
+
+Amplify CLIを使用すると、次の実行時でLambda関数を作成、テスト、デプロイできます。
+
+| 実行時 | デフォルトバージョン | 要件 |
+| --- | --- | --- |
+| NodeJS | 14.x | - [NodeJS](https://nodejs.org/en/)をインストール |
+| Java | 11 | - [Java 11 JDK](https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/downloads-list.html)および[Gradle 5+](https://docs.gradle.org/current/userguide/installation.html)をインストール |
+| Go | 1.x | - [Go](https://golang.org/doc/install)をインストール |
+| .NET Core | 3.1 | - [.NET Core SDK](https://docs.microsoft.com/en-us/dotnet/core/install/sdk)をインストール |
+| Python | 3.8.x | - [python3](https://www.python.org/downloads/)および[pipenv](https://pypi.org/project/pipenv/)をインストール <br/> - `PATH`で`python3`および`pipenv`コマンドが利用可能であることを確認 |
+
+Lambda関数をローカルで作成およびテストするには、実行時の要件（上表）を満たす必要があります。`amplify add function`を実行するときに、`Choose the runtime you would like to use:` と尋ねられます。
+
+実行時を選択すると、Lambda関数をブートストラップするのに役立つ関数テンプレートを選択できます。
+
+## Lambda関数から既存のAWSリソースへのアクセス
+
+Lambda関数に既存のリソースへのアクセス権を付与できます。`amplify add function`を実行した後、CLIは`amplify/backend/function/<function-name>/`フォルダ下に`custom-policies.json`ファイルを生成します。このファイルで、Lambda関数が指定されたAWSリソースにアクセスするためのグラント[リソース](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_resource.html)と[アクション](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_action.html)を指定できます。
+
+### ファイル構造
+
+```json
+[
+  {
+    "Action": ["s3:CreateBucket"],
+    "Resource": ["arn:aws:s3:::*"]
+  }
+]
+```
+
+**Action:** AWSリソースに付与する必要があるアクションを指定します。ワイルドカード'\*'が受け入れられます。
+
+**Resource**: AWSリソースがアクセスする必要があるリソースを指定します。リソースはサービスの複数のArnを受け入れ、ワイルドカード文字'\*'が受け入れられます。
+
+> 注：リソースまたはアクションを'\*'として指定することは、ベストプラクティスとしては推奨されません。これにより、Amplify関数リソースに管理者権限が付与されるため、避けるべきです。
+
+Amplifyリソースが複数のAWSサービスとリソースへのアクセスを必要とする場合は、別のブロックを作成して、追加のサービスとリソースへのアクセスを付与します。
+
+```json
+[
+  {
+    "Action": ["s3:CreateBucket"],
+    "Resource": ["arn:aws:s3:::*"]
+  },
+  {
+    "Action": ["iam:GetPolicy"],
+    "Resource": ["arn:aws:iam:::policy/*"]
+  }
+]
+```
+
+オプションで、`Effect`フィールドを指定して'Allow'または'Deny'を使用できます。指定しない場合、フィールドはデフォルトで'Allow'に設定されます。
+
+```json
+{
+  "Action": ["s3:CreateBucket"],
+  "Resource": ["arn:aws:s3:::*"],
+  "Effect": "Allow"
+}
+```
+
+### マルチ環境ワークフロー
+
+環境全体でAWS ARNリソースを指定するには、リソースに対してオプションの`\${env}`パラメータを使用できます。AWS ARNリソースの`\${env}`パラメータはデプロイ時に現在のAmplify環境名で入力されます。
+
+```json
+"Resource": ["arn:aws:s3:::${env}my-bucket"]
+```
+
+### 次のステップ
+
+`amplify push`コマンドを実行すると、`custom-policies.json`ファイルで指定されたIAMポリシーが、Lambda関数の実行ロールに関連付けられている既存のIAMポリシーリストに追加されます。
+
+## Lambda関数の定期的な実行をスケジュール
+
+Amplify CLIを使用して、Lambda関数を定期的に実行（例：毎分、毎時間、毎日、毎週、毎月、または毎年）するようにスケジュールできます。AWS Cron Expression（例：_「毎月の最後の金曜日の午前10:15」_）を使用して、より複雑なスケジュールを策定することもできます。詳細については、[ルールのスケジュール式に関するドキュメント](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)を確認してください。
+
+Lambda関数をスケジュールするには、`amplify add function`フロー内の`Do you want to invoke this function on a recurring schedule?`に**Yes**で答えます。関数をデプロイすると、CloudWatch Ruleが作成され、選択したLambda関数が定期的に実行されます。
+
+関数リソースフォルダで生成されるファイルの詳細については、[関数カテゴリファイル](/gen1/[platform]/tools/cli/reference/files/#function-category-files)を参照してください。

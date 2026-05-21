@@ -1,0 +1,2133 @@
+---
+title: "サインイン"
+section: "frontend/auth"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/auth/sign-in/"
+---
+
+Amplify は、Amplify Auth などのバックエンドリソースと対話できるクライアントライブラリを提供しています。
+
+<!-- Platform: react -->
+> **Info:** フロントエンドアプリケーションで Amplify Auth を使い始める最も手軽な方法は、カスタマイズ可能な UI と完全な認証フローを提供する [Authenticator コンポーネント](https://ui.docs.amplify.aws/react/connected-components/authenticator)を使用することです。
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+> **Info:** フロントエンドアプリケーションで Amplify Auth を使い始める最も手軽な方法は、カスタマイズ可能な UI と完全な認証フローを提供する [Authenticator コンポーネント](https://ui.docs.amplify.aws/swift/connected-components/authenticator)を使用することです。
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+> **Info:** フロントエンドアプリケーションで Amplify Auth を使い始める最も手軽な方法は、カスタマイズ可能な UI と完全な認証フローを提供する [Authenticator コンポーネント](https://ui.docs.amplify.aws/flutter/connected-components/authenticator)を使用することです。
+<!-- /Platform -->
+
+<!-- Platform: android -->
+> **Info:** フロントエンドアプリケーションで Amplify Auth を使い始める最も手軽な方法は、カスタマイズ可能な UI と完全な認証フローを提供する [Authenticator コンポーネント](https://ui.docs.amplify.aws/android/connected-components/authenticator)を使用することです。
+<!-- /Platform -->
+
+## signIn API の使用
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+```ts
+import { signIn } from 'aws-amplify/auth'
+
+await signIn({
+  username: "hello@mycompany.com",
+  password: "hunter2",
+})
+```
+<!-- /Platform -->
+<!-- Platform: flutter -->
+```dart
+Future<void> signInUser(String username, String password) async {
+  try {
+    final result = await Amplify.Auth.signIn(
+      username: username,
+      password: password,
+    );
+    await _handleSignInResult(result);
+  } on AuthException catch (e) {
+    safePrint('Error signing in: ${e.message}');
+  }
+}
+```
+
+設定とユーザーのサインアップ方法によっては、1 つ以上の確認が必要になる場合があります。`Amplify.Auth.signIn` から返された `SignInResult` を使用して、サインインの次のステップを確認してください。値が `done` の場合、ユーザーは正常にサインインしています。
+
+```dart
+Future<void> _handleSignInResult(SignInResult result) async {
+  switch (result.nextStep.signInStep) {
+    case AuthSignInStep.confirmSignInWithSmsMfaCode:
+      final codeDeliveryDetails = result.nextStep.codeDeliveryDetails!;
+      _handleCodeDelivery(codeDeliveryDetails);
+      break;
+    case AuthSignInStep.confirmSignInWithNewPassword:
+      safePrint('Enter a new password to continue signing in');
+      break;
+    case AuthSignInStep.confirmSignInWithCustomChallenge:
+      final parameters = result.nextStep.additionalInfo;
+      final prompt = parameters['prompt']!;
+      safePrint(prompt);
+      break;
+    case AuthSignInStep.resetPassword:
+      final resetResult = await Amplify.Auth.resetPassword(
+        username: username,
+      );
+      await _handleResetPasswordResult(resetResult);
+      break;
+    case AuthSignInStep.confirmSignUp:
+      // Resend the sign up code to the registered device.
+      final resendResult = await Amplify.Auth.resendSignUpCode(
+        username: username,
+      );
+      _handleCodeDelivery(resendResult.codeDeliveryDetails);
+      break;
+    case AuthSignInStep.done:
+      safePrint('Sign in is complete');
+      break;
+  }
+}
+
+void _handleCodeDelivery(AuthCodeDeliveryDetails codeDeliveryDetails) {
+  safePrint(
+    'A confirmation code has been sent to ${codeDeliveryDetails.destination}. '
+    'Please check your ${codeDeliveryDetails.deliveryMedium.name} for the code.',
+  );
+}
+```
+<!-- /Platform -->
+<!-- Platform: android -->
+
+#### [Java]
+
+```java
+Amplify.Auth.signIn(
+    "username",
+    "password",
+    result -> Log.i("AuthQuickstart", result.isSignedIn() ? "Sign in succeeded" : "Sign in not complete"),
+    error -> Log.e("AuthQuickstart", error.toString())
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+Amplify.Auth.signIn("username", "password",
+    { result ->
+        if (result.isSignedIn) {
+            Log.i("AuthQuickstart", "Sign in succeeded")
+        } else {
+            Log.i("AuthQuickstart", "Sign in not complete")
+        }
+    },
+    { Log.e("AuthQuickstart", "Failed to sign in", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    val result = Amplify.Auth.signIn("username", "password")
+    if (result.isSignedIn) {
+        Log.i("AuthQuickstart", "Sign in succeeded")
+    } else {
+        Log.e("AuthQuickstart", "Sign in not complete")
+    }
+} catch (error: AuthException) {
+    Log.e("AuthQuickstart", "Sign in failed", error)
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.Auth.signIn("username", "password")
+    .subscribe(
+        result -> Log.i("AuthQuickstart", result.isSignedIn() ? "Sign in succeeded" : "Sign in not complete"),
+        error -> Log.e("AuthQuickstart", error.toString())
+    );
+```
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+
+#### [Async/Await]
+
+```swift
+func signIn(username: String, password: String) async {
+    do {
+        let signInResult = try await Amplify.Auth.signIn(
+            username: username,
+            password: password
+        )
+        if signInResult.isSignedIn {
+            print("Sign in succeeded")
+        }
+    } catch let error as AuthError {
+        print("Sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func signIn(username: String, password: String) -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.signIn(
+            username: username,
+            password: password
+        )
+    }.sink {
+        if case let .failure(authError) = $0 {
+            print("Sign in failed \(authError)")
+        }
+    }
+    receiveValue: { signInResult in
+        if signInResult.isSignedIn {
+            print("Sign in succeeded")
+        }
+    }
+}
+```
+
+<!-- /Platform -->
+
+`signIn` API のレスポンスには `nextStep` プロパティが含まれており、さらなるアクションが必要かどうかを判断するために使用できます。次のステップが返される可能性があります：
+
+<!-- Platform: angular, javascript, react, react-native, nextjs, vue -->
+| 次のステップ | 説明 |
+| --------- | ----------- |
+| `CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED` | ユーザーは一時パスワードで作成されており、新しいパスワードを設定する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE` | サインインはカスタムチャレンジレスポンスで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_TOTP_CODE` | サインインはユーザーからの TOTP コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_SMS_CODE` | サインインはユーザーからの SMS コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_EMAIL_CODE` | サインインはユーザーからの EMAIL コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_PASSWORD` | サインインはユーザーからのパスワードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION` | ユーザーは最初の要素認証のモードを選択する必要があります。`confirmSignIn` の `challengeResponse` フィールドに希望するモードを渡してプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_MFA_SELECTION` | ユーザーはサインイン前に MFA 確認のモードを選択する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION` | ユーザーはセットアップする MFA 確認のモードを選択する必要があります。`confirmSignIn` に `"EMAIL"` または `"TOTP"` を渡してプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_TOTP_SETUP` | TOTP セットアッププロセスを続行する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_EMAIL_SETUP` | EMAIL セットアッププロセスを続行する必要があります。有効なメールアドレスを `confirmSignIn` に渡してプロセスを完了してください。 |
+| `RESET_PASSWORD` | ユーザーは `resetPassword` を使用してパスワードをリセットする必要があります。 |
+| `CONFIRM_SIGN_UP` | ユーザーはサインアップフローを完全に完了しておらず、`confirmSignUp` で確認する必要があります。 |
+| `DONE` | サインインプロセスが完了しました。 |
+<!-- /Platform -->
+
+<!-- Platform: android -->
+| 次のステップ | 説明 |
+| --------- | ----------- |
+| `CONFIRM_SIGN_IN_WITH_NEW_PASSWORD` | ユーザーは一時パスワードで作成されており、新しいパスワードを設定する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE` | サインインはカスタムチャレンジレスポンスで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_TOTP_CODE` | サインインはユーザーからの TOTP コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE` | サインインはユーザーからの SMS コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_OTP` | サインインはユーザーからのコード（SMS またはメールで送信）で確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_PASSWORD` | サインインはユーザーからのパスワードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION` | ユーザーはセットアップする MFA 確認のモードを選択する必要があります。`confirmSignIn` に `MFAType.EMAIL.challengeResponse` または `MFAType.TOTP.challengeResponse` を渡してプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_MFA_SELECTION` | ユーザーはサインイン前に MFA 確認のモードを選択する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_TOTP_SETUP` | TOTP セットアッププロセスを続行する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP` | EMAIL セットアッププロセスを続行する必要があります。有効なメールアドレスを `confirmSignIn` に渡してプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION` | ユーザーは最初の要素認証のモードを選択する必要があります。`confirmSignIn` の `challengeResponse` フィールドに希望するモードを渡してプロセスを完了してください。 |
+| `RESET_PASSWORD` | ユーザーは `resetPassword` を使用してパスワードをリセットする必要があります。 |
+| `CONFIRM_SIGN_UP` | ユーザーはサインアップフローを完全に完了しておらず、`confirmSignUp` で確認する必要があります。 |
+| `DONE` | サインインプロセスが完了しました。 |
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+| 次のステップ | 説明 |
+| --------- | ----------- |
+| `confirmSignInWithNewPassword` | ユーザーは一時パスワードで作成されており、新しいパスワードを設定する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `confirmSignInWithCustomChallenge` | サインインはカスタムチャレンジレスポンスで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `confirmSignInWithTOTPCode` | サインインはユーザーからの TOTP コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `confirmSignInWithSMSMFACode` | サインインはユーザーからの SMS コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `confirmSignInWithOTP` | サインインはユーザーからのコード（SMS またはメールで送信）で確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `confirmSignInWithPassword` | ユーザーは新しいパスワードを設定する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `continueSignInWithFirstFactorSelection` | ユーザーは第一要素認証の優先モードを選択する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `continueSignInWithMFASelection` | ユーザーはサインイン前に MFA 確認のモードを選択する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `continueSignInWithMFASetupSelection` | ユーザーはセットアップする MFA 確認のモードを選択する必要があります。`confirmSignIn` に `MFAType.email.challengeResponse` または `MFAType.totp.challengeResponse ` を渡してプロセスを完了してください。 |
+| `continueSignInWithTOTPSetup` | TOTP セットアッププロセスを続行する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `continueSignInWithEmailMFASetup` | EMAIL セットアッププロセスを続行する必要があります。有効なメールアドレスを `confirmSignIn` に渡してプロセスを完了してください。 |
+| `resetPassword` | ユーザーは `resetPassword` を使用してパスワードをリセットする必要があります。 |
+| `confirmSignUp` | ユーザーはサインアップフローを完全に完了しておらず、`confirmSignUp` で確認する必要があります。 |
+| `done` | サインインプロセスが完了しました。 |
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+| 次のステップ | 説明 |
+| --------- | ----------- |
+| `confirmSignInWithNewPassword` | ユーザーは一時パスワードで作成されており、新しいパスワードを設定する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `confirmSignInWithCustomChallenge` | サインインはカスタムチャレンジレスポンスで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `confirmSignInWithTotpMfaCode` | サインインはユーザーからの TOTP コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `confirmSignInWithSmsMfaCode` | サインインはユーザーからの SMS コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `confirmSignInWithOtpCode` | サインインはユーザーからのコード（SMS またはメールで送信）で確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `continueSignInWithMfaSelection` | ユーザーはサインイン前に MFA 確認のモードを選択する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `continueSignInWithMfaSetupSelection` | ユーザーはセットアップする MFA 確認のモードを選択する必要があります。`confirmSignIn` に `"EMAIL"` または `"TOTP"` を渡してプロセスを完了してください。 |
+| `continueSignInWithTotpSetup` | TOTP セットアッププロセスを続行する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `continueSignInWithEmailMfaSetup` | EMAIL セットアッププロセスを続行する必要があります。有効なメールアドレスを `confirmSignIn` に渡してプロセスを完了してください。 |
+| `resetPassword` | ユーザーは `resetPassword` を使用してパスワードをリセットする必要があります。 |
+| `confirmSignUp` | ユーザーはサインアップフローを完全に完了しておらず、`confirmSignUp` で確認する必要があります。 |
+| `done` | サインインプロセスが完了しました。 |
+<!-- /Platform -->
+
+返される可能性がある MFA ステップの処理の詳細については、[多要素認証](/[platform]/build-a-backend/auth/concepts/multi-factor-authentication/)を参照してください。
+
+<!-- Platform: android -->
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+
+#### [Async/Await]
+
+```swift
+func confirmSignIn() async {
+    do {
+        let signInResult = try await Amplify.Auth.confirmSignIn(challengeResponse: "<confirmation code received via SMS>")
+        print("Confirm sign in succeeded. Next step: \(signInResult.nextStep)")
+    } catch let error as AuthError {
+        print("Confirm sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func confirmSignIn() -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.confirmSignIn(challengeResponse: "<confirmation code received via SMS>")
+    }.sink {
+            if case let .failure(authError) = $0 {
+                print("Confirm sign in failed \(authError)")
+            }
+        }
+        receiveValue: { signInResult in
+            print("Confirm sign in succeeded. Next step: \(signInResult.nextStep)")
+        }
+}
+```
+
+<!-- /Platform -->
+<!-- Platform: flutter -->
+
+<!-- /Platform -->
+
+<!-- Platform: javascript, nextjs, react -->
+### 実践的な例
+
+<!-- Platform: javascript, nextjs, react -->
+```tsx title="src/App.tsx"
+import type { FormEvent } from "react"
+import { Amplify } from "aws-amplify"
+// highlight-next-line
+import { signIn } from "aws-amplify/auth"
+import outputs from "../amplify_outputs.json"
+
+Amplify.configure(outputs)
+
+interface SignInFormElements extends HTMLFormControlsCollection {
+  email: HTMLInputElement
+  password: HTMLInputElement
+}
+
+interface SignInForm extends HTMLFormElement {
+  readonly elements: SignInFormElements
+}
+
+export default function App() {
+  async function handleSubmit(event: FormEvent<SignInForm>) {
+    event.preventDefault()
+    const form = event.currentTarget
+    // ... validate inputs
+    await signIn({
+      username: form.elements.email.value,
+      password: form.elements.password.value,
+    })
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label htmlFor="email">Email:</label>
+      <input type="text" id="email" name="email" />
+      <label htmlFor="password">Password:</label>
+      <input type="password" id="password" name="password" />
+      <input type="submit" />
+    </form>
+  )
+}
+```
+<!-- /Platform -->
+<!-- /Platform -->
+
+## 多要素認証が有効な場合
+
+メールまたは SMS MFA が有効になっている場合、Cognito はユーザーに代わってメッセージを送信します。メールメッセージと SMS メッセージは、ユーザーがそれぞれメールアドレスと電話番号の属性を持っている必要があります。メール MFA または SMS MFA を使用する場合は、これらの属性をユーザープールで必須に設定することをお勧めします。これらの属性が必須の場合、ユーザーはサインアッププロセスを完了する前にこれらの情報を提供する必要があります。
+
+MFA を必須に設定し、複数の認証要素を有効にした場合、Cognito は新しいユーザーに使用する MFA 要素を選択するよう促します。SMS を選択するには電話番号が必要で、メール MFA を選択するにはメールアドレスが必要です。
+
+利用可能なメッセージベースの MFA に必要な属性が定義されていないユーザーがいる場合、Cognito は TOTP のセットアップを促します。
+
+バックエンド認証リソースで MFA を有効にする方法の詳細については、[多要素認証のドキュメント](/[platform]/build-a-backend/auth/concepts/multi-factor-authentication/)を参照してください。
+
+<!-- Platform: android -->
+
+#### [Java]
+
+```java
+ArrayList<AuthUserAttribute> attributes = new ArrayList<>();
+attributes.add(new AuthUserAttribute(AuthUserAttributeKey.email(), "my@email.com"));
+attributes.add(new AuthUserAttribute(AuthUserAttributeKey.phoneNumber(), "+15551234567"));
+
+Amplify.Auth.signUp(
+    "username",
+    "Password123",
+    AuthSignUpOptions.builder().userAttributes(attributes).build(),
+    result -> Log.i("AuthQuickstart", result.toString()),
+    error -> Log.e("AuthQuickstart", error.toString())
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+val attrs = mapOf(
+    AuthUserAttributeKey.email() to "my@email.com",
+    AuthUserAttributeKey.phoneNumber() to "+15551234567"
+)
+val options = AuthSignUpOptions.builder()
+    .userAttributes(attrs.map { AuthUserAttribute(it.key, it.value) })
+    .build()
+Amplify.Auth.signUp("username", "Password123", options,
+    { Log.i("AuthQuickstart", "Sign up result = $it") },
+    { Log.e("AuthQuickstart", "Sign up failed", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+val attrs = mapOf(
+    AuthUserAttributeKey.email() to "my@email.com",
+    AuthUserAttributeKey.phoneNumber() to "+15551234567"
+)
+val options = AuthSignUpOptions.builder()
+    .userAttributes(attrs.map { AuthUserAttribute(it.key, it.value) })
+    .build()
+try {
+    val result = Amplify.Auth.signUp("username", "Password123", options)
+    Log.i("AuthQuickstart", "Sign up OK: $result")
+} catch (error: AuthException) {
+    Log.e("AuthQuickstart", "Sign up failed", error)
+}
+```
+
+#### [RxJava]
+
+```java
+ArrayList<AuthUserAttribute> attributes = new ArrayList<>();
+attributes.add(new AuthUserAttribute(AuthUserAttributeKey.email(), "my@email.com"));
+attributes.add(new AuthUserAttribute(AuthUserAttributeKey.phoneNumber(), "+15551234567"));
+
+RxAmplify.Auth.signUp(
+    "username",
+    "Password123",
+    AuthSignUpOptions.builder().userAttributes(attributes).build())
+    .subscribe(
+        result -> Log.i("AuthQuickstart", result.toString()),
+        error -> Log.e("AuthQuickstart", error.toString())
+    );
+```
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+
+#### [Async/Await]
+
+```swift
+func signUp(username: String, password: String, email: String, phonenumber: String) async {
+    let userAttributes = [AuthUserAttribute(.email, value: email), AuthUserAttribute(.phoneNumber, value: phonenumber)]
+    let options = AuthSignUpRequest.Options(userAttributes: userAttributes)
+
+    do {
+        let signUpResult = try await Amplify.Auth.signUp(
+            username: username,
+            password: password,
+            options: options
+        )
+
+        if case let .confirmUser(deliveryDetails, _, userId) = signUpResult.nextStep {
+            print("Delivery details \(String(describing: deliveryDetails)) for userId: \(String(describing: userId)))")
+        } else {
+            print("SignUp Complete")
+        }
+    } catch let error as AuthError {
+        print("An error occurred while registering a user \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func signUp(username: String, password: String, email: String, phonenumber: String) -> AnyCancellable {
+    let userAttributes = [
+        AuthUserAttribute(.email, value: email),
+        AuthUserAttribute(.phoneNumber, value: phonenumber)
+    ]
+    let options = AuthSignUpRequest.Options(userAttributes: userAttributes)
+    Amplify.Publisher.create {
+        try await Amplify.Auth.signUp(
+            username: username,
+            password: password,
+            options: options
+        )
+    }.sink {
+        if case let .failure(authError) = $0 {
+            print("An error occurred while registering a user \(authError)")
+        }
+    }
+    receiveValue: { signUpResult in
+        if case let .confirmUser(deliveryDetails, _, userId) = signUpResult.nextStep {
+            print("Delivery details \(String(describing: deliveryDetails)) for userId: \(String(describing: userId)))")
+        } else {
+            print("SignUp Complete")
+        }
+    }
+    return sink
+}
+```
+
+<!-- /Platform -->
+
+### サインインの確認
+
+<!-- Platform: angular, javascript, react, react-native, nextjs, vue -->
+サインイン後、次のいずれかのタイプの `nextStep` がサインイン結果として返されます。ユーザーのレスポンスを収集し、`confirmSignIn` API に渡してサインインフローを完了してください。
+| 次のステップ | 説明 |
+| --------- | ----------- |
+| `CONFIRM_SIGN_IN_WITH_TOTP_CODE` | サインインはユーザーからの TOTP コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_SMS_CODE` | サインインはユーザーからの SMS コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_EMAIL_CODE` | サインインはユーザーからの EMAIL コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_PASSWORD` | サインインはユーザーからのパスワードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION` | ユーザーは最初の要素認証のモードを選択する必要があります。`confirmSignIn` の `challengeResponse` フィールドに希望するモードを渡してプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_MFA_SELECTION` | ユーザーはサインイン前に MFA 確認のモードを選択する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION` | ユーザーはセットアップする MFA 確認のモードを選択する必要があります。`confirmSignIn` に `"EMAIL"` または `"TOTP"` を渡してプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_TOTP_SETUP` | TOTP セットアッププロセスを続行する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_EMAIL_SETUP` | EMAIL セットアッププロセスを続行する必要があります。有効なメールアドレスを `confirmSignIn` に渡してプロセスを完了してください。 |
+<!-- /Platform -->
+
+<!-- Platform: android -->
+サインイン後、次のいずれかのタイプの `nextStep` がサインイン結果として返されます。ユーザーのレスポンスを収集し、`confirmSignIn` API に渡してサインインフローを完了してください。
+| 次のステップ | 説明 |
+| --------- | ----------- |
+| `CONFIRM_SIGN_IN_WITH_TOTP_CODE` | サインインはユーザーからの TOTP コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE` | サインインはユーザーからの SMS コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_OTP` | サインインはユーザーからのコード（SMS またはメールで送信）で確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONFIRM_SIGN_IN_WITH_PASSWORD` | サインインはユーザーからのパスワードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION` | ユーザーは最初の要素認証のモードを選択する必要があります。`confirmSignIn` の `challengeResponse` フィールドに希望するモードを渡してプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_MFA_SELECTION` | ユーザーはサインイン前に MFA 確認のモードを選択する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION` | ユーザーはセットアップする MFA 確認のモードを選択する必要があります。`confirmSignIn` に `MFAType.EMAIL.challengeResponse` または `MFAType.TOTP.challengeResponse` を渡してプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_TOTP_SETUP` | TOTP セットアッププロセスを続行する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP` | EMAIL セットアッププロセスを続行する必要があります。有効なメールアドレスを `confirmSignIn` に渡してプロセスを完了してください。 |
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+サインイン後、次のいずれかのタイプの `nextStep` がサインイン結果として返されます。ユーザーのレスポンスを収集し、`confirmSignIn` API に渡してサインインフローを完了してください。
+| 次のステップ | 説明 |
+| --------- | ----------- |
+| `confirmSignInWithTOTPCode` | サインインはユーザーからの TOTP コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `confirmSignInWithSMSMFACode` | サインインはユーザーからの SMS コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `confirmSignInWithOTP` | サインインはユーザーからのコード（SMS またはメールで送信）で確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `confirmSignInWithPassword` | ユーザーは新しいパスワードを設定する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `continueSignInWithFirstFactorSelection` | ユーザーは第一要素認証の優先モードを選択する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `continueSignInWithMFASelection` | ユーザーはサインイン前に MFA 確認のモードを選択する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `continueSignInWithMFASetupSelection` | ユーザーはセットアップする MFA 確認のモードを選択する必要があります。`confirmSignIn` に `MFAType.email.challengeResponse` または `MFAType.totp.challengeResponse ` を渡してプロセスを完了してください。 |
+| `continueSignInWithTOTPSetup` | TOTP セットアッププロセスを続行する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `continueSignInWithEmailMFASetup` | EMAIL セットアッププロセスを続行する必要があります。有効なメールアドレスを `confirmSignIn` に渡してプロセスを完了してください。 |
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+サインイン後、次のいずれかのタイプの `nextStep` がサインイン結果として返されます。ユーザーのレスポンスを収集し、`confirmSignIn` API に渡してサインインフローを完了してください。
+| 次のステップ | 説明 |
+| --------- | ----------- |
+| `confirmSignInWithTotpMfaCode` | サインインはユーザーからの TOTP コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `confirmSignInWithSmsMfaCode` | サインインはユーザーからの SMS コードで確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `confirmSignInWithOtpCode` | サインインはユーザーからのコード（SMS またはメールで送信）で確認する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `continueSignInWithMfaSelection` | ユーザーはサインイン前に MFA 確認のモードを選択する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `continueSignInWithMfaSetupSelection` | ユーザーはセットアップする MFA 確認のモードを選択する必要があります。`confirmSignIn` に `MfaType.email.confirmationValue` または `MfaType.totp.confirmationValue` を渡してプロセスを完了してください。 |
+| `continueSignInWithTotpSetup` | TOTP セットアッププロセスを続行する必要があります。`confirmSignIn` でプロセスを完了してください。 |
+| `continueSignInWithEmailMfaSetup` | EMAIL セットアッププロセスを続行する必要があります。有効なメールアドレスを `confirmSignIn` に渡してプロセスを完了してください。 |
+<!-- /Platform -->
+
+<!-- Platform: android, flutter, react-native, swift -->
+> **Info:** **注意：** `confirmSignIn` は `signIn` を呼び出したのと同じアプリセッションで呼び出す必要があります。アプリを閉じた場合は、再度 `signIn` を呼び出す必要があります。そのため、テスト目的では、少なくとも SMS で送信されたコードを入力して `confirmSignIn` に渡すことができる入力フィールドが必要になります。
+<!-- /Platform -->
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+```ts title="src/main.ts"
+import { confirmSignIn, signIn } from "aws-amplify/auth";
+
+const { nextStep } = await signIn({
+  username: "hello@mycompany.com",
+  password: "hunter2",
+});
+
+if (
+  nextStep.signInStep === "CONFIRM_SIGN_IN_WITH_SMS_CODE" ||
+  nextStep.signInStep === "CONFIRM_SIGN_IN_WITH_EMAIL_CODE" ||
+  nextStep.signInStep === "CONFIRM_SIGN_IN_WITH_TOTP_CODE"
+) {
+  // collect OTP from user
+  await confirmSignIn({
+    challengeResponse: "123456",
+  });
+}
+
+if (nextStep.signInStep === "CONTINUE_SIGN_IN_WITH_MFA_SELECTION") {
+  // present nextStep.allowedMFATypes to user
+  // collect user selection
+  await confirmSignIn({
+    challengeResponse: "EMAIL", // 'EMAIL', 'SMS', or 'TOTP'
+  });
+}
+
+if (nextStep.signInStep === "CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION") {
+  // present nextStep.allowedMFATypes to user
+  // collect user selection
+  await confirmSignIn({
+    challengeResponse: "EMAIL", // 'EMAIL' or 'TOTP'
+  });
+}
+
+if (nextStep.signInStep === "CONTINUE_SIGN_IN_WITH_EMAIL_SETUP") {
+  // collect email address from user
+  await confirmSignIn({
+    challengeResponse: "hello@mycompany.com",
+  });
+}
+
+if (nextStep.signInStep === "CONTINUE_SIGN_IN_WITH_TOTP_SETUP") {
+  // present nextStep.totpSetupDetails.getSetupUri() to user
+  // collect OTP from user
+  await confirmSignIn({
+    challengeResponse: "123456",
+  });
+}
+
+```
+> **Info:** **注意：** Amplify 認証フローは、ページセッションのライフスパン全体にわたって関連するセッションデータを保持します。これにより、ログインページからサインイン確認ページへのリダイレクトなど、マルチページアプリケーションでのページ全体のリフレッシュ後でも `confirmSignIn` API を活用できます。
+<!-- /Platform -->
+
+<!-- Platform: android -->
+
+#### [Java]
+
+```java
+Amplify.Auth.confirmSignIn(
+    "confirmation code received via SMS",
+    result -> Log.i("AuthQuickstart", result.toString()),
+    error -> Log.e("AuthQuickstart", error.toString())
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+Amplify.Auth.confirmSignIn("code received via SMS",
+    { Log.i("AuthQuickstart", "Confirmed signin: $it") },
+    { Log.e("AuthQuickstart", "Failed to confirm signin", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    val result = Amplify.Auth.confirmSignIn("code received via SMS")
+    Log.i("AuthQuickstart", "Confirmed signin: $result")
+} catch (error: AuthException) {
+    Log.e("AuthQuickstart", "Failed to confirm signin", error)
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.Auth.confirmSignIn("confirmation code received via SMS")
+    .subscribe(
+        result -> Log.i("AuthQuickstart", result.toString()),
+        error -> Log.e("AuthQuickstart", error.toString())
+    );
+```
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+
+#### [Async/Await]
+
+```swift
+func confirmSignIn() async {
+    do {
+        let signInResult = try await Amplify.Auth.confirmSignIn(challengeResponse: "<confirmation code received via SMS>")
+        print("Confirm sign in succeeded. Next step: \(signInResult.nextStep)")
+    } catch let error as AuthError {
+        print("Confirm sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func confirmSignIn() -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.confirmSignIn(challengeResponse: "<confirmation code received via SMS>")
+    }.sink {
+            if case let .failure(authError) = $0 {
+                print("Confirm sign in failed \(authError)")
+            }
+        }
+        receiveValue: { signInResult in
+            print("Confirm sign in succeeded. Next step: \(signInResult.nextStep)")
+        }
+}
+```
+
+<!-- /Platform -->
+
+## 外部 ID プロバイダーでサインイン
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+Google などの外部 ID プロバイダーを使用してサインインするには、`signInWithRedirect` 関数を使用します。
+
+> **Info:** Amplify で外部 ID プロバイダーを設定するガイダンスについては、[外部 ID プロバイダー](/[platform]/build-a-backend/auth/concepts/external-identity-providers/)を参照してください。
+
+```ts
+import { signInWithRedirect } from "aws-amplify/auth"
+
+signInWithRedirect({ provider: "Google" })
+```
+
+> **Info:** **注意：** `signInWithRedirect` に引数を渡さない場合、ユーザーは [Cognito Hosted UI](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-app-integration.html) にリダイレクトされますが、カスタマイズのサポートは限定的です。
+
+また、認証リソースに OIDC または SAML ベースの ID プロバイダーを設定している場合は、`signInWithRedirect` で「custom」プロバイダーを指定できます：
+
+```ts
+import { signInWithRedirect } from "aws-amplify/auth"
+
+signInWithRedirect({ provider: {
+  custom: "MyOidcProvider"
+}})
+```
+
+## 自動サインイン
+
+`autoSignIn` API は、`signUp` API によって事前に有効にされていた場合、次のいずれかのケースが完了した後にユーザーを自動的にサインインします：
+
+- ユーザーが電話またはメールに送信された確認コードでアカウントを確認した場合（デフォルトオプション）。
+- ユーザーが電話またはメールに送信された確認リンクでアカウントを確認した場合。このオプションを有効にするには、[Amazon Cognito コンソール](https://aws.amazon.com/pm/cognito)にアクセスし、ユーザープールを探して、`Messaging` タブに移動し、`Verification message` オプション内の `link` モードを有効にする必要があります。最後に、`Auth` 設定の `Cognito` オプション内で `signUpVerificationMethod` を `link` として定義する必要があります。
+
+```ts title="src/main.ts"
+import { autoSignIn } from 'aws-amplify/auth';
+
+await autoSignIn();
+```
+<Callout>
+**注意：** MFA が有効な場合、ユーザーはサインアップと後続のサインインフローを進めるために OTP を入力する必要がある複数の連続したステップが表示される場合があります。この要件は `USER_AUTH` フローを使用する場合には存在しません。
+</Callout>
+<!-- /Platform -->
+<InlineFilter filters={['react-native']}
+>
+
+### ネイティブモジュールのインストール
+
+`signInWithRedirect` は、プラットフォーム依存のウェブビュー内にサインイン UI を表示します。iOS デバイスでは [ASWebAuthenticationSession](https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession) が起動し、Android では [Custom Tab](https://developer.chrome.com/docs/android/custom-tabs/) が起動します。サインインプロセスが完了すると、サインイン UI はアプリにリダイレクトします。
+
+この機能を有効にするには、追加の依存関係をインストールする必要があります。
+
+```bash title="Terminal" showLineNumbers={false}
+npm add @aws-amplify/rtn-web-browser
+```
+
+### プラットフォームのセットアップ
+
+iOS では、追加のセットアップ手順はありません。
+
+#### Android
+
+サインインが成功した後、サインイン UI はアプリケーションにリダイレクトしようとします。上で設定したリダイレクト URI スキームをデバイスに登録するために、React Native アプリの `android/app/src/main` ディレクトリにある `AndroidManifest.xml` ファイルに `intent-filter` を追加する必要があります。
+
+`myapp` をリダイレクト URI スキームに置き換えて、アプリケーションのメインアクティビティに `intent-filter` を追加してください。
+
+```xml title="android/app/src/main/AndroidManifest.xml"
+<application ...>
+    <activity android:name=".MainActivity" ...>
+        ...
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="myapp" />
+        </intent-filter>
+        ...
+    </activity>
+</application>
+```
+
+</InlineFilter>
+<!-- Platform: flutter -->
+Google などの外部 ID プロバイダーを使用してサインインするには、`signInWithWebUI` 関数を使用します。
+
+### 仕組み
+
+Web UI でのサインインは、ウェブビュー内にサインイン UI を表示します。サインインプロセスが完了すると、サインイン UI はアプリにリダイレクトします。
+
+### プラットフォームのセットアップ
+
+#### Web
+
+Flutter Web アプリケーションでローカルに Hosted UI を使用するには、リダイレクト URI を設定したときに localhost に割り当てたポートの値を使用して、`--web-port=3000` 引数でアプリを実行する必要があります。
+
+#### Android
+
+アプリの `android/app/src/main` ディレクトリにある `AndroidManifest.xml` ファイルに以下の `queries` 要素を追加し、同じファイルの `MainActivity` に以下の `intent-filter` を追加してください。
+
+必要に応じて `myapp` をリダイレクト URI スキームに置き換えてください：
+
+```xml
+<queries>
+    <intent>
+        <action android:name=
+            "android.support.customtabs.action.CustomTabsService" />
+    </intent>
+</queries>
+<application>
+  ...
+  <activity
+        android:name=".MainActivity" android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="myapp" />
+        </intent-filter>
+  </activity>
+  ...
+</application>
+```
+
+#### macOS
+
+XCode を開き、App Sandbox 機能を有効にして、「Network」の下の「Incoming Connections (Server)」を選択してください。
+
+![Incoming Connections setting selected in the App Sandbox section of the runner signing and capabilities tab.](/images/project-setup/flutter/mac/xcode-entitlements.png)
+
+#### iOS、Windows、Linux
+
+特定のプラットフォーム設定は必要ありません。
+
+### ソーシャル Web UI サインインの起動
+
+これで、外部プロバイダーの Web UI でサインインを起動する準備ができました。
+
+```dart
+Future<void> socialSignIn() async {
+  try {
+    final result = await Amplify.Auth.signInWithWebUI(
+      provider: AuthProvider.google,
+    );
+    safePrint('Sign in result: $result');
+  } on AuthException catch (e) {
+    safePrint('Error signing in: ${e.message}');
+  }
+}
+```
+<!-- /Platform -->
+<!-- Platform: android -->
+Google などの外部 ID プロバイダーを使用してサインインするには、`signInWithSocialWebUI` 関数を使用します。
+
+### AndroidManifest.xml の更新
+
+アプリの `AndroidManifest.xml` ファイルに以下のアクティビティとクエリタグを追加してください。必要に応じて `myapp` をリダイレクト URI プレフィックスに置き換えてください：
+
+```xml
+<application ...>
+  ...
+  <activity
+      android:name="com.amplifyframework.auth.cognito.activities.HostedUIRedirectActivity"
+      android:exported="true">
+      <intent-filter>
+          <action android:name="android.intent.action.VIEW" />
+          <category android:name="android.intent.category.DEFAULT" />
+          <category android:name="android.intent.category.BROWSABLE" />
+          <data android:scheme="myapp" />
+      </intent-filter>
+  </activity>
+  ...
+</application>
+```
+
+### ソーシャル Web UI サインインの起動
+
+これで、ソーシャルプロバイダーの Web UI でサインインを起動する準備ができました。
+
+今は、使用しているプロバイダーを指定して（以下は Facebook を使用した例）、このメソッドを MainActivity の `onCreate` メソッドに追加してください：
+
+#### [Java]
+
+```java
+// Replace facebook with your chosen auth provider such as google, amazon, or apple
+Amplify.Auth.signInWithSocialWebUI(
+    AuthProvider.facebook(),
+    this,
+    result -> Log.i("AuthQuickstart", result.toString()),
+    error -> Log.e("AuthQuickstart", error.toString())
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+// Replace facebook with your chosen auth provider such as google, amazon, or apple
+Amplify.Auth.signInWithSocialWebUI(
+    AuthProvider.facebook(),
+    this,
+    { Log.i("AuthQuickstart", "Sign in OK: $it") },
+    { Log.e("AuthQuickstart", "Sign in failed", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    // Replace facebook with your chosen auth provider such as google, amazon, or apple
+    val result = Amplify.Auth.signInWithSocialWebUI(AuthProvider.facebook(), this)
+    Log.i("AuthQuickstart", "Sign in OK: $result")
+} catch (error: AuthException) {
+    Log.e("AuthQuickstart", "Sign in failed", error)
+}
+```
+
+#### [RxJava]
+
+```java
+// Replace facebook with your chosen auth provider such as google, amazon, or apple
+RxAmplify.Auth.signInWithSocialWebUI(AuthProvider.facebook(), this)
+    .subscribe(
+        result -> Log.i("AuthQuickstart", result.toString()),
+        error -> Log.e("AuthQuickstart", error.toString())
+    );
+```
+
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+Google などの外部 ID プロバイダーを使用してサインインするには、`signInWithWebUI` 関数を使用します。
+
+### Info.plist の更新
+
+Web UI でのサインインには、Amplify プラグインがウェブビュー内にサインイン UI を表示する必要があります。サインインプロセスが完了すると、アプリにリダイレクトします。
+アプリの `Info.plist` でこれを有効にする必要があります。Info.plist を右クリックして、「Open As > Source Code」を選択してください。URL スキームに以下のエントリを追加してください：
+
+```xml
+
+ <plist version="1.0">
+
+     <dict>
+     <!-- YOUR OTHER PLIST ENTRIES HERE -->
+
+     <!-- ADD AN ENTRY TO CFBundleURLTypes for Cognito Auth -->
+     <!-- IF YOU DO NOT HAVE CFBundleURLTypes, YOU CAN COPY THE WHOLE BLOCK BELOW -->
+     <key>CFBundleURLTypes</key>
+     <array>
+         <dict>
+             <key>CFBundleURLSchemes</key>
+             <array>
+                 <string>myapp</string>
+             </array>
+         </dict>
+     </array>
+
+     <!-- ... -->
+     </dict>
+```
+
+Xcode 13 を使用して新しい SwiftUI アプリを作成すると、Info.plist などの設定ファイルが不要になりました。このファイルがない場合は、プロジェクトターゲットをクリックし、「Info」、「Url Types」の下の「+」をクリックして新しい URL タイプを追加してください。URL Schemes に `myapp` を追加してください。CFBundleURLSchemes のエントリを含む Info.plist ファイルが表示されます。
+
+### ソーシャル Web UI サインインの起動
+
+使用しているプロバイダーを指定して以下の API を呼び出してください（以下は Facebook を使用した例）：
+
+#### [Async/Await]
+
+```swift
+func socialSignInWithWebUI() async {
+    do {
+        let signInResult = try await Amplify.Auth.signInWithWebUI(for: .facebook, presentationAnchor: self.view.window!)
+        if signInResult.isSignedIn {
+            print("Sign in succeeded")
+        }
+    } catch let error as AuthError {
+        print("Sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func socialSignInWithWebUI() -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.signInWithWebUI(for: .facebook, presentationAnchor: self.view.window!)
+        }.sink {
+            if case let .failure(authError) = $0 {
+                print("Sign in failed \(authError)")
+            }
+        }
+        receiveValue: { signInResult in
+            if signInResult.isSignedIn {
+                print("Sign in succeeded")
+            }
+        }
+}
+```
+
+<!-- /Platform -->
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue, swift, android -->
+## パスワードレス方式でサインイン
+
+アプリケーションのユーザーはパスワードレス方式でサインインすることもできます。さまざまなパスワードレス認証フローのセットアップ方法を含む詳細については、[パスワードレスのコンセプトページ](/[platform]/build-a-backend/auth/concepts/passwordless/)を参照してください。
+
+### SMS OTP
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+SMS OTP を使用したパスワードレス認証フローを開始するには、`signIn` API を呼び出す際に `preferredChallenge` として `SMS_OTP` を渡します。
+
+```ts
+const { nextStep: signInNextStep } = await signIn({
+	username: '+15551234567',
+	options: {
+		authFlowType: 'USER_AUTH',
+		preferredChallenge: 'SMS_OTP',
+	},
+});
+
+if (signInNextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_SMS_CODE') {
+	// prompt user for otp code delivered via SMS
+	const { nextStep: confirmSignInNextStep } = await confirmSignIn({
+		challengeResponse: '123456',
+	});
+
+	if (confirmSignInNextStep.signInStep === 'DONE') {
+		console.log('Sign in successful!');
+	}
+}
+```
+<!-- /Platform -->
+<!-- Platform: android -->
+SMS OTP を使用したパスワードレス認証フローを開始するには、`signIn` API を呼び出す際に `preferredFirstFactor` として `SMS_OTP` を渡します。
+
+#### [Java]
+
+```java
+// Use options to specify the preferred first factor
+AWSCognitoAuthSignInOptions options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .preferredFirstFactor(AuthFactorType.SMS_OTP) // Sign in using SMS OTP
+    .build();
+
+// Sign in the user
+Amplify.Auth.signIn(
+    username,
+    null, // no password
+    options,
+    result -> {
+        if (result.getNextStep().getSignInStep() == AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP) {
+            // Show UI to collect OTP
+        }
+    },
+    error -> Log.e("AuthQuickstart", error.toString())
+);
+
+// Then pass that OTP into the confirmSignIn API
+Amplify.Auth.confirmSignIn(
+    "123456",
+    result -> {
+        // result.getNextStep().getSignInStep() should be "DONE" now
+    },
+    error -> Log.e("AuthQuickstart", error.toString())
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+// Use options to specify the preferred first factor
+val options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .preferredFirstFactor(AuthFactorType.SMS_OTP) // Sign in using SMS OTP
+    .build()
+
+// Sign in the user
+Amplify.Auth.signIn(
+    username,
+    null, // no password
+    options,
+    { result: AuthSignInResult ->
+        if (result.nextStep.signInStep == AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP) {
+            // Show UI to collect OTP
+        }
+    },
+    { error: AuthException -> Log.e("AuthQuickstart", error.toString()) }
+)
+
+// Then pass that OTP into the confirmSignIn API
+Amplify.Auth.confirmSignIn(
+    "123456",
+    { result: AuthSignInResult? -> },
+    { error: AuthException -> Log.e("AuthQuickstart", error.toString()) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+// Use options to specify the preferred first factor
+val options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .preferredFirstFactor(AuthFactorType.SMS_OTP) // Sign in using SMS OTP
+    .build()
+
+// Sign in the user
+val result = Amplify.Auth.signIn(
+    username = username,
+    password = null,
+    options = options
+)
+if (result.nextStep.signInStep == AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP) {
+    // Show UI to collect OTP
+}
+
+// Then pass that OTP into the confirmSignIn API
+val confirmResult = Amplify.Auth.confirmSignIn(
+    challengeResponse = "123456"
+)
+// confirmResult.nextStep.signInStep should be "DONE"
+```
+
+#### [RxJava]
+
+```java
+// Use options to specify the preferred first factor
+AWSCognitoAuthSignInOptions options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .preferredFirstFactor(AuthFactorType.SMS_OTP) // Sign in using SMS OTP
+    .build();
+
+// Sign in the user
+RxAmplify.Auth.signIn(
+    username,
+    null, // no password
+    options
+).subscribe(
+    result -> {
+        if (result.getNextStep().getSignInStep() == AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP) {
+            // Show UI to collect OTP
+        }
+    },
+    error -> Log.e("AuthQuickstart", error.toString())
+)
+
+// Then pass that OTP into the confirmSignIn API
+RxAmplify.Auth.confirmSignIn("123456")
+    .subscribe(
+        result -> {
+            // result.getNextStep().getSignInStep() should be "DONE" now
+        },
+        error -> Log.e("AuthQuickstart", error.toString())
+    );
+```
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+SMS OTP を使用したパスワードレス認証フローを開始するには、`signIn` API を呼び出す際に `preferredFirstFactor` として `smsOTP` を渡します。
+
+#### [Async/Await]
+
+```swift
+// sign in with `smsOTP` as preferred factor
+func signIn(username: String) async {
+    do {
+        let pluginOptions = AWSAuthSignInOptions(
+                authFlowType: .userAuth(preferredFirstFactor: .smsOTP))
+        let signInResult = try await Amplify.Auth.signIn(
+            username: username,
+            options: .init(pluginOptions: pluginOptions))
+        print("Sign in succeeded. Next step: \(signInResult.nextStep)")
+    } catch let error as AuthError {
+        print("Sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+
+// confirm sign in with the code received
+func confirmSignIn() async {
+    do {
+        let signInResult = try await Amplify.Auth.confirmSignIn(challengeResponse: "<confirmation code received via SMS>")
+        print("Confirm sign in succeeded. Next step: \(signInResult.nextStep)")
+    } catch let error as AuthError {
+        print("Confirm sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+
+```
+
+#### [Combine]
+
+```swift
+// sign in with `smsOTP` as preferred factor
+func signIn(username: String) -> AnyCancellable {
+    Amplify.Publisher.create {
+        let pluginOptions = AWSAuthSignInOptions(
+                authFlowType: .userAuth(preferredFirstFactor: .smsOTP))
+        try await Amplify.Auth.signIn(
+            username: username,
+            options: .init(pluginOptions: pluginOptions))
+    }.sink {
+        if case let .failure(authError) = $0 {
+            print("Sign in failed \(authError)")
+        }
+    }
+    receiveValue: { signInResult in
+        print("Sign in succeeded. Next step: \(signInResult.nextStep)")
+    }
+}
+
+// confirm sign in with the code received
+func confirmSignIn() -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.confirmSignIn(challengeResponse: "<confirmation code received via SMS>")
+    }.sink {
+        if case let .failure(authError) = $0 {
+            print("Confirm sign in failed \(authError)")
+        }
+    }
+    receiveValue: { signInResult in
+        print("Confirm sign in succeeded. Next step: \(signInResult.nextStep)")
+    }
+}
+```
+
+<!-- /Platform -->
+
+### Email OTP
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+メール OTP を使用したパスワードレス認証フローを開始するには、`signIn` API を呼び出す際に `preferredChallenge` として `EMAIL_OTP` を渡します。
+
+```ts
+const { nextStep: signInNextStep } = await signIn({
+	username: 'hello@example.com',
+	options: {
+		authFlowType: 'USER_AUTH',
+		preferredChallenge: 'EMAIL_OTP',
+	},
+});
+
+if (signInNextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_EMAIL_CODE') {
+	// prompt user for otp code delivered via email
+	const { nextStep: confirmSignInNextStep } = await confirmSignIn({
+		challengeResponse: '123456',
+	});
+
+	if (confirmSignInNextStep.signInStep === 'DONE') {
+		console.log('Sign in successful!');
+	}
+}
+```
+<!-- /Platform -->
+<!-- Platform: android -->
+Email OTP を使用したパスワードレス認証フローを開始するには、`signIn` API を呼び出す際に `preferredFirstFactor` として `EMAIL_OTP` を渡します。
+
+#### [Java]
+
+```java
+// Use options to specify the preferred first factor
+AWSCognitoAuthSignInOptions options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .preferredFirstFactor(AuthFactorType.EMAIL_OTP) // Sign in using Email OTP
+    .build();
+
+// Sign in the user
+Amplify.Auth.signIn(
+    username,
+    null, // no password
+    options,
+    result -> {
+        if (result.getNextStep().getSignInStep() == AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP) {
+            // Show UI to collect OTP
+        }
+    },
+    error -> Log.e("AuthQuickstart", error.toString())
+);
+
+// Then pass that OTP into the confirmSignIn API
+Amplify.Auth.confirmSignIn(
+    "123456",
+    result -> {
+        // result.getNextStep().getSignInStep() should be "DONE" now
+    },
+    error -> Log.e("AuthQuickstart", error.toString())
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+// Use options to specify the preferred first factor
+val options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .preferredFirstFactor(AuthFactorType.EMAIL_OTP) // Sign in using Email OTP
+    .build()
+
+// Sign in the user
+Amplify.Auth.signIn(
+    username,
+    null, // no password
+    options,
+    { result: AuthSignInResult ->
+        if (result.nextStep.signInStep == AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP) {
+            // Show UI to collect OTP
+        }
+    },
+    { error: AuthException -> Log.e("AuthQuickstart", error.toString()) }
+)
+
+// Then pass that OTP into the confirmSignIn API
+Amplify.Auth.confirmSignIn(
+    "123456",
+    { result: AuthSignInResult? -> },
+    { error: AuthException -> Log.e("AuthQuickstart", error.toString()) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+// Use options to specify the preferred first factor
+val options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .preferredFirstFactor(AuthFactorType.EMAIL_OTP) // Sign in using Email OTP
+    .build()
+
+// Sign in the user
+val result = Amplify.Auth.signIn(
+    username = username,
+    password = null,
+    options = options
+)
+if (result.nextStep.signInStep == AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP) {
+    // Show UI to collect OTP
+}
+
+// Then pass that OTP into the confirmSignIn API
+val confirmResult = Amplify.Auth.confirmSignIn(
+    challengeResponse = "123456"
+)
+// confirmResult.nextStep.signInStep should be "DONE"
+```
+
+#### [RxJava]
+
+```java
+// Use options to specify the preferred first factor
+AWSCognitoAuthSignInOptions options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .preferredFirstFactor(AuthFactorType.EMAIL_OTP) // Sign in using Email OTP
+    .build();
+
+// Sign in the user
+RxAmplify.Auth.signIn(
+    username,
+    null, // no password
+    options
+).subscribe(
+    result -> {
+        if (result.getNextStep().getSignInStep() == AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP) {
+            // Show UI to collect OTP
+        }
+    },
+    error -> Log.e("AuthQuickstart", error.toString())
+)
+
+// Then pass that OTP into the confirmSignIn API
+RxAmplify.Auth.confirmSignIn("123456")
+    .subscribe(
+        result -> {
+            // result.getNextStep().getSignInStep() should be "DONE" now
+        },
+        error -> Log.e("AuthQuickstart", error.toString())
+    );
+```
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+Email OTP を使用したパスワードレス認証フローを開始するには、`signIn` API を呼び出す際に `preferredFirstFactor` として `emailOTP` を渡します。
+
+#### [Async/Await]
+
+```swift
+// sign in with `emailOTP` as preferred factor
+func signIn(username: String) async {
+    do {
+        let pluginOptions = AWSAuthSignInOptions(
+                authFlowType: .userAuth(preferredFirstFactor: .emailOTP))
+        let signInResult = try await Amplify.Auth.signIn(
+            username: username,
+            options: .init(pluginOptions: pluginOptions))
+        print("Sign in succeeded. Next step: \(signInResult.nextStep)")
+    } catch let error as AuthError {
+        print("Sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+
+// confirm sign in with the code received
+func confirmSignIn() async {
+    do {
+        let signInResult = try await Amplify.Auth.confirmSignIn(challengeResponse: "<confirmation code received via SMS>")
+        print("Confirm sign in succeeded. Next step: \(signInResult.nextStep)")
+    } catch let error as AuthError {
+        print("Confirm sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+
+```
+
+#### [Combine]
+
+```swift
+// sign in with `emailOTP` as preferred factor
+func signIn(username: String) -> AnyCancellable {
+    Amplify.Publisher.create {
+        let pluginOptions = AWSAuthSignInOptions(
+                authFlowType: .userAuth(preferredFirstFactor: .emailOTP))
+        try await Amplify.Auth.signIn(
+            username: username,
+            options: .init(pluginOptions: pluginOptions))
+    }.sink {
+        if case let .failure(authError) = $0 {
+            print("Sign in failed \(authError)")
+        }
+    }
+    receiveValue: { signInResult in
+        print("Sign in succeeded. Next step: \(signInResult.nextStep)")
+    }
+}
+
+// confirm sign in with the code received
+func confirmSignIn() -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.confirmSignIn(challengeResponse: "<confirmation code received via SMS>")
+    }.sink {
+        if case let .failure(authError) = $0 {
+            print("Confirm sign in failed \(authError)")
+        }
+    }
+    receiveValue: { signInResult in
+        print("Confirm sign in succeeded. Next step: \(signInResult.nextStep)")
+    }
+}
+```
+
+<!-- /Platform -->
+
+### WebAuthn パスキー
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+WebAuthn 認証情報を使用したパスワードレス認証フローを開始するには、`WEB_AUTHN` を `preferredChallenge` として渡します。
+
+```ts
+const { nextStep: signInNextStep } = await signIn({
+	username: 'hello@example.com',
+	options: {
+		authFlowType: 'USER_AUTH',
+		preferredChallenge: 'WEB_AUTHN',
+	},
+});
+
+if (signInNextStep.signInStep === 'DONE') {
+	console.log('Sign in successful!');
+}
+```
+<!-- /Platform -->
+<!-- Platform: android -->
+WebAuthn 認証情報を使用したパスワードレス認証フローを開始するには、`WEB_AUTHN` を `preferredFirstFactor` として渡します。このフローは
+アプリケーションからの追加のインタラクションなしに完了するため、WebAuthn には 1 つの `Amplify.Auth` 呼び出しのみが必要です。
+
+<Callout>
+この認証要素を使用するには、ユーザーが事前に認証情報を関連付けている必要があります。詳細については、[WebAuthn 認証情報の管理ページ](/[platform]/build-a-backend/auth/manage-users/manage-webauthn-credentials/)を参照してください。
+</Callout>
+
+<Callout>
+Amplify は WebAuthn を使用する際に PassKey UI をアプリケーションの [Task](https://developer.android.com/guide/components/activities/tasks-and-back-stack) にアタッチするために `Activity` 参照を必要とします。`Activity` が提供されない場合、UI は別の Task に表示されます。このため、アプリケーションがユーザーにパスキーでサインインを許可している場合は、`signIn` と `confirmSignIn` の両方の API に常に `callingActivity` オプションを渡すことを強くお勧めします。
+</Callout>
+
+#### [Java]
+
+```java
+// Use options to specify the preferred first factor
+AWSCognitoAuthSignInOptions options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .callingActivity(callingActivity)
+    .preferredFirstFactor(AuthFactorType.WEB_AUTHN) // Sign in using WebAuthn
+    .build();
+
+// Sign in the user
+Amplify.Auth.signIn(
+    username,
+    null, // no password
+    options,
+    result -> Log.i("AuthQuickStart", "Next sign in step: " + result.getNextStep()),
+    error -> Log.e("AuthQuickstart", error.toString())
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+// Use options to specify the preferred first factor
+val options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .callingActivity(callingActivity)
+    .preferredFirstFactor(AuthFactorType.WEB_AUTHN) // Sign in using WebAuthn
+    .build()
+
+// Sign in the user
+Amplify.Auth.signIn(
+    username,
+    null, // no password
+    options,
+    { result: AuthSignInResult -> Log.i("AuthQuickStart", "Next sign in step: ${result.nextStep}") },
+    { error: AuthException -> Log.e("AuthQuickStart", error.toString()) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+// Use options to specify the preferred first factor
+val options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .callingActivity(callingActivity)
+    .preferredFirstFactor(AuthFactorType.WEB_AUTHN) // Sign in using WebAuthn
+    .build()
+
+// Sign in the user
+val result = Amplify.Auth.signIn(
+    username = username,
+    password = null,
+    options = options
+)
+
+// result.nextStep.signInStep should be "DONE" if use granted access to the passkey
+// NOTE: `signIn` will throw a UserCancelledException if user dismissed the passkey UI
+```
+
+#### [RxJava]
+
+```java
+// Use options to specify the preferred first factor
+AWSCognitoAuthSignInOptions options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .callingActivity(callingActivity)
+    .preferredFirstFactor(AuthFactorType.WEB_AUTHN) // Sign in using WebAuthn
+    .build();
+
+// Sign in the user
+RxAmplify.Auth.signIn(
+    username,
+    null, // no password
+    options
+).subscribe(
+    result -> Log.i("AuthQuickStart", "Next sign in step: " + result.getNextStep()),
+    error -> Log.e("AuthQuickstart", error.toString())
+)
+```
+
+WebAuthn サインインを使用すると、いくつかの例外タイプが発生する可能性があります。
+
+- `UserCancelledException` - ユーザーがシステム UI でパスキーへのアクセス認可を拒否した場合。`confirmSignIn` を再度呼び出して WebAuthn フローを再試行するか、`signIn` プロセスを再起動して別の `AuthFactorType` を選択できます。
+- `WebAuthnNotEnabledException` - これはユーザープールで WebAuthn が有効になっていないことを示します。
+- `WebAuthnNotSupportedException` - これはユーザーのデバイスで WebAuthn がサポートされていないことを示します。
+- `WebAuthnRpMismatchException` - これはリライングパーティにデプロイされた `assetlinks.json` ファイルに問題があることを示します。
+- `WebAuthnFailedException` - この例外は WebAuthn で発生する可能性のある他のエラーに使用されます。最善の対処方法を判断するために `cause` を調査してください。
+<!-- /Platform -->
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+WebAuthn 認証情報を使用したパスワードレス認証フローを開始するには、`webAuthn` を `preferredFirstFactor` として渡します。
+
+#### [Async/Await]
+
+```swift
+// sign in with `webAuthn` as preferred factor
+func signIn(username: String) async {
+    do {
+        let authFactorType : AuthFactorType
+        if #available(iOS 17.4, *) {
+            authFactorType = .webAuthn
+        } else {
+            // Fallback on earlier versions
+            authFactorType = .passwordSRP
+        }
+
+        let signInResult = try await Amplify.Auth.signIn(
+            username: username,
+            options: .init(pluginOptions: AWSAuthSignInOptions(
+                authFlowType: .userAuth(
+                    preferredFirstFactor: authFactorType))))
+        print("Sign in succeeded. Next step: \(signInResult.nextStep)")
+    } catch let error as AuthError {
+        print("Sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+
+```
+
+#### [Combine]
+
+```swift
+// sign in with `webAuthn` as preferred factor
+func signIn(username: String) async {
+    Amplify.Publisher.create {
+        let authFactorType : AuthFactorType
+        if #available(iOS 17.4, *) {
+            authFactorType = .webAuthn
+        } else {
+            // Fallback on earlier versions
+            authFactorType = .passwordSRP
+        }
+
+        try await Amplify.Auth.signIn(
+            username: username,
+            options: .init(pluginOptions: AWSAuthSignInOptions(
+                authFlowType: .userAuth(
+                    preferredFirstFactor: authFactorType))))
+    }.sink {
+        if case let .failure(authError) = $0 {
+            print("Sign in failed \(authError)")
+        }
+    }
+    receiveValue: { signInResult in
+        print("Sign in succeeded. Next step: \(signInResult.nextStep)")
+    }
+}
+```
+
+<!-- /Platform -->
+
+### パスワード
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+従来のパスワードベースの認証フローを開始するには、`preferredChallenge` として `PASSWORD` または `PASSWORD_SRP` を渡します。
+
+```ts
+const { nextStep: signInNextStep } = await signIn({
+	username: 'hello@example.com',
+	password: 'example-password',
+	options: {
+		authFlowType: 'USER_AUTH',
+		preferredChallenge: 'PASSWORD_SRP', // or 'PASSWORD'
+	},
+});
+
+if (confirmSignInNextStep.signInStep === 'DONE') {
+	console.log('Sign in successful!');
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+従来のパスワードベースの認証フローを開始するには、`preferredFirstFactor` として `PASSWORD` または `PASSWORD_SRP` を渡します。
+
+#### [Java]
+
+```java
+// Use options to specify the preferred first factor
+AWSCognitoAuthSignInOptions options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .preferredFirstFactor(AuthFactorType.PASSWORD) // Sign in using Password
+    .build();
+
+// Sign in the user
+Amplify.Auth.signIn(
+    username,
+    password, // supply the password if preferredFirstFactor is PASSWORD or PASSWORD_SRP
+    options,
+    result -> Log.i("AuthQuickStart", "Next sign in step: " + result.getNextStep()),
+    error -> Log.e("AuthQuickstart", error.toString())
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+// Use options to specify the preferred first factor
+val options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .preferredFirstFactor(AuthFactorType.PASSWORD) // Sign in using Password
+    .build()
+
+// Sign in the user
+Amplify.Auth.signIn(
+    username,
+    password, // supply the password if preferredFirstFactor is PASSWORD or PASSWORD_SRP
+    options,
+    { result: AuthSignInResult -> Log.i("AuthQuickStart", "Next sign in step: ${result.nextStep}") },
+    { error: AuthException -> Log.e("AuthQuickstart", error.toString()) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+// Use options to specify the preferred first factor
+val options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .preferredFirstFactor(AuthFactorType.PASSWORD) // Sign in using Password
+    .build()
+
+// Sign in the user
+val result = Amplify.Auth.signIn(
+    username = username,
+    password = password, // supply the password if preferredFirstFactor is PASSWORD or PASSWORD_SRP
+    options = options
+)
+
+// result.nextStep.signInStep should be "DONE"
+```
+
+#### [RxJava]
+
+```java
+// Use options to specify the preferred first factor
+AWSCognitoAuthSignInOptions options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .preferredFirstFactor(AuthFactorType.Password) // Sign in using Password
+    .build();
+
+// Sign in the user
+RxAmplify.Auth.signIn(
+    username,
+    password, // supply the password if preferredFirstFactor is PASSWORD or PASSWORD_SRP
+    options
+).subscribe(
+    result -> Log.i("AuthQuickStart", "Next sign in step: " + result.getNextStep()),
+    error -> Log.e("AuthQuickstart", error.toString())
+)
+```
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+従来のパスワードベースの認証フローを開始するには、`preferredFirstFactor` として `password` または `passwordSRP` を渡します。
+
+#### [Async/Await]
+
+```swift
+// sign in with `password` as preferred factor
+func signIn(username: String) async {
+    do {
+        let pluginOptions = AWSAuthSignInOptions(
+                authFlowType: .userAuth(preferredFirstFactor: .password))
+        let signInResult = try await Amplify.Auth.signIn(
+            username: username,
+            options: .init(pluginOptions: pluginOptions))
+        print("Sign in succeeded. Next step: \(signInResult.nextStep)")
+    } catch let error as AuthError {
+        print("Sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+
+```
+
+#### [Combine]
+
+```swift
+// sign in with `password` as preferred factor
+func signIn(username: String) async {
+    Amplify.Publisher.create {
+        let pluginOptions = AWSAuthSignInOptions(
+                authFlowType: .userAuth(preferredFirstFactor: .password))
+        try await Amplify.Auth.signIn(
+            username: username,
+            options: .init(pluginOptions: pluginOptions))
+    }.sink {
+        if case let .failure(authError) = $0 {
+            print("Sign in failed \(authError)")
+        }
+    }
+    receiveValue: { signInResult in
+        print("Sign in succeeded. Next step: \(signInResult.nextStep)")
+    }
+}
+```
+
+<!-- /Platform -->
+
+### 第一要素の選択
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+`preferredChallenge` パラメーターを省略して、特定のユーザーに利用可能な第一要素を検出します。これは、ユーザーがサインイン方法を選択できるようにするのに役立ちます。
+
+その後、`confirmSignIn` API を使用してチャレンジを選択し、関連する認証フローを開始できます。
+
+```ts
+const { nextStep: signInNextStep } = await signIn({
+	username: '+15551234567',
+	options: {
+		authFlowType: 'USER_AUTH',
+	},
+});
+
+if (
+	signInNextStep.signInStep === 'CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION'
+) {
+	// present user with list of available challenges
+	console.log(`Available Challenges: ${signInNextStep.availableChallenges}`);
+
+	// respond with user selection using `confirmSignIn` API
+	const { nextStep: nextConfirmSignInStep } = await confirmSignIn({
+		challengeResponse: 'SMS_OTP', // or 'EMAIL_OTP', 'WEB_AUTHN', 'PASSWORD', 'PASSWORD_SRP'
+	});
+}
+
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+`preferredFirstFactor` オプションを省略して、特定のユーザーに利用可能な第一要素を検出します。これは、ユーザーがサインイン方法を選択できるようにするのに役立ちます。
+
+その後、`confirmSignIn` API を使用してチャレンジを選択し、関連する認証フローを開始できます。
+
+#### [Java]
+
+```java
+// Omit preferredFirstFactor. If the user has more than one factor available then
+// the next step will be CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION.
+AuthSignInOptions options = AWSCognitoAuthSignInOptions.builder()
+                                .authFlowType(AuthFlowType.USER_AUTH)
+                                .build();
+
+// Step 1: Sign in the user
+Amplify.Auth.signIn(
+    "hello@example.com",
+    null,
+    options,
+    result -> {
+        if (result.getNextStep().getSignInStep() == AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION) {
+            Log.i(
+                "AuthQuickstart",
+                "Available authentication factors for this user: " + result.getNextStep().getAvailableFactors()
+            );
+        }
+    },
+    error -> Log.e("AuthQuickstart", error.toString())
+);
+
+// Step 2: Select SMS OTP for sign in
+Amplify.Auth.confirmSignIn(
+    AuthFactorType.SMS_OTP.getChallengeResponse(),
+    result -> {
+        if (result.getNextStep().getSignInStep() == AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP) {
+            Log.i(
+                "AuthQuickStart",
+                "OTP code sent to " + result.getNextStep().getCodeDeliveryDetails()
+            )
+            // Show UI to collect OTP
+        }
+    },
+    error -> Log.e("AuthQuickstart", error.toString())
+);
+
+// Step 3: Then pass that OTP into the confirmSignIn API
+Amplify.Auth.confirmSignIn(
+    "123456",
+    result -> {
+        // result.getNextStep().getSignInStep() should be "DONE" now
+    },
+    error -> Log.e("AuthQuickstart", error.toString())
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+// Omit preferredFirstFactor. If the user has more than one factor available then
+// the next step will be CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION.
+val options: AuthSignInOptions = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .build()
+
+// Step 1: Sign in the user
+Amplify.Auth.signIn(
+    "hello@example.com",
+    null,
+    options,
+    { result: AuthSignInResult ->
+        if (result.nextStep.signInStep == AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION) {
+            Log.i(
+                "AuthQuickstart",
+                "Available authentication factors for this user: ${result.nextStep.availableFactors}"
+            )
+        }
+    },
+    { error: AuthException -> Log.e("AuthQuickstart", error.toString()) }
+)
+
+// Step 2: Select SMS OTP for sign in
+Amplify.Auth.confirmSignIn(
+    AuthFactorType.SMS_OTP.getChallengeResponse(),
+    { result: AuthSignInResult ->
+        if (result.nextStep.signInStep == AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP) {
+            Log.i(
+                "AuthQuickStart",
+                "OTP code sent to ${result.nextStep.codeDeliveryDetails}"
+            )
+            // Show UI to collect OTP
+        }
+    },
+    { error: AuthException -> Log.e("AuthQuickstart", error.toString()) }
+)
+
+// Step 3: Then pass that OTP into the confirmSignIn API
+Amplify.Auth.confirmSignIn(
+    "123456",
+    { result: AuthSignInResult? -> 
+        // result.nextStep.signInStep should be "DONE" now
+    },
+    { error: AuthException -> Log.e("AuthQuickstart", error.toString()) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+// Omit preferredFirstFactor. If the user has more than one factor available then
+// the next step will be CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION.
+val options: AuthSignInOptions = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .build()
+
+// Step 1: Sign in the user
+val result = Amplify.Auth.signIn(
+    username = "hello@example.com",
+    password = null,
+    options = options
+)
+
+if (result.nextStep.signInStep == AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION) {
+    Log.i(
+        "AuthQuickStart",
+        "Available authentication factors for this user: ${result.nextStep.availableFactors}"
+    )
+}
+
+// Step 2: Select SMS OTP for sign in
+val selectFactorResult = Amplify.Auth.confirmSignIn(challengeResponse = AuthFactorType.SMS_OTP.challengeResponse)
+
+if (result.nextStep.signInStep == AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP) {
+    Log.i(
+        "AuthQuickStart",
+        "OTP code sent to ${result.nextStep.codeDeliveryDetails}"
+    )
+    // Show UI to collect OTP
+}
+
+// Step 3: Then pass that OTP into the confirmSignIn API
+val confirmResult = Amplify.Auth.confirmSignIn(challengeResponse = "123456")
+
+// confirmResult.nextStep.signInStep should be "DONE" now
+```
+
+#### [RxJava]
+
+```java
+// Omit preferredFirstFactor. If the user has more than one factor available then
+// the next step will be CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION.
+AWSCognitoAuthSignInOptions options = AWSCognitoAuthSignInOptions.builder()
+    .authFlowType(AuthFlowType.USER_AUTH)
+    .build();
+
+// Step 1: Sign in the user
+RxAmplify.Auth.signIn(
+    username,
+    null, // no password
+    options
+).subscribe(
+    result -> {
+        if (result.getNextStep().getSignInStep() == AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION) {
+            Log.i(
+                "AuthQuickstart",
+                "Available authentication factors for this user: " + result.getNextStep().getAvailableFactors()
+            );
+        }
+    },
+    error -> Log.e("AuthQuickstart", error.toString())
+)
+
+// Step 2: Select SMS OTP for sign in
+RxAmplify.Auth.confirmSignIn(AuthFactorType.SMS_OTP.getChallengeResponse())
+    .subscribe(
+        result -> {
+            if (result.getNextStep().getSignInStep() == AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP) {
+                Log.i(
+                    "AuthQuickStart",
+                    "OTP code sent to " + result.getNextStep().getCodeDeliveryDetails()
+                )
+                // Show UI to collect OTP
+            }
+        },
+        error -> Log.e("AuthQuickstart", error.toString())
+    );
+
+// Step 3: Then pass that OTP into the confirmSignIn API
+RxAmplify.Auth.confirmSignIn("123456")
+    .subscribe(
+        result -> {
+            // result.getNextStep().getSignInStep() should be "DONE" now
+        },
+        error -> Log.e("AuthQuickstart", error.toString())
+    );
+```
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+`preferredFirstFactor` パラメーターを省略して、特定のユーザーに利用可能な第一要素を検出します。これは、ユーザーがサインイン方法を選択できるようにするのに役立ちます。
+
+その後、`confirmSignIn` API を使用してチャレンジを選択し、関連する認証フローを開始できます。
+
+#### [Async/Await]
+
+```swift
+// Step 1: Initiate UserAuth Sign-In
+let pluginOptions = AWSAuthSignInOptions(authFlowType: .userAuth)
+let signInResult = try await Amplify.Auth.signIn(
+    username: "user@example.com",
+    options: .init(pluginOptions: pluginOptions)
+)
+
+switch signInResult.nextStep {
+case .continueSignInWithFirstFactorSelection(let availableFactors):
+    print("Available factors to select: \(availableFactors)")
+    // Prompt the user to select a first factor
+default:
+    break
+}
+
+// Step 2: Select Authentication Factor
+let confirmSignInResult = try await Amplify.Auth.confirmSignIn(
+    challengeResponse: AuthFactorType.emailOTP.challengeResponse
+)
+
+switch confirmSignInResult.nextStep {
+case .confirmSignInWithOTP(let deliveryDetails):
+    print("Delivery details: \(deliveryDetails)")
+    // Prompt the user to enter email OTP code received
+default:
+    break
+}
+
+// Step 3: Complete Sign-In with OTP Code
+let finalSignInResult = try await Amplify.Auth.confirmSignIn(
+    challengeResponse: "<code>"
+)
+
+if case .done = finalSignInResult.nextStep {
+    print("Login successful")
+}
+```
+
+#### [Combine]
+
+```swift
+func signInWithUserAuth(username: String, getOTP: @escaping () async -> String) -> AnyCancellable {
+    Amplify.Publisher.create {
+        // Step 1: Initiate UserAuth Sign-In
+        let pluginOptions = AWSAuthSignInOptions(authFlowType: .userAuth)
+        let signInResult = try await Amplify.Auth.signIn(
+            username: username,
+            options: .init(pluginOptions: pluginOptions)
+        )
+        
+        // Step 2: Handle factor selection
+        if case .continueSignInWithFirstFactorSelection(let availableFactors) = signInResult.nextStep {
+            print("Available factors to select: \(availableFactors)")
+            
+            // For this example, we select emailOTP. You could prompt the user here.
+            let confirmSignInResult = try await Amplify.Auth.confirmSignIn(
+                challengeResponse: AuthFactorType.emailOTP.challengeResponse
+            )
+            
+            // Step 3: Handle OTP delivery
+            if case .confirmSignInWithOTP(let deliveryDetails) = confirmSignInResult.nextStep {
+                print("Delivery details: \(deliveryDetails)")
+                
+                // Prompt user for OTP code (async closure)
+                let code = await getOTP()
+                
+                // Step 4: Complete sign-in with OTP code
+                let finalSignInResult = try await Amplify.Auth.confirmSignIn(
+                    challengeResponse: code
+                )
+                
+                return finalSignInResult
+            } else {
+                // Handle other next steps if needed
+                return confirmSignInResult
+            }
+        } else {
+            // Handle other next steps or immediate sign-in
+            return signInResult
+        }
+    }
+    .sink(
+        receiveCompletion: { completion in
+            if case let .failure(authError) = completion {
+                print("Sign in failed: \(authError)")
+            }
+        },
+        receiveValue: { result in
+            if result.isSignedIn || (result.nextStep == .done) {
+                print("Sign in succeeded")
+            } else {
+                print("Next step: \(result.nextStep)")
+            }
+        }
+    )
+}
+```
+
+<!-- /Platform -->

@@ -1,0 +1,92 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '既存のAWSリソースを使用する',
+  description: '既存のAmazon S3バケットを構成で参照して、Amplifyライブラリを使用するように設定します。',
+  platforms: [
+    'javascript',
+    'flutter',
+    'swift',
+    'android',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import common_existing_resources from '/src/fragments/lib/storage/existing-resources.mdx';
+
+<Fragments
+  fragments={{
+    android: common_existing_resources,
+    flutter: common_existing_resources,
+    swift: common_existing_resources
+  }}
+/>
+
+<InlineFilter filters={['javascript', 'react-native', 'angular', 'nextjs', 'react', 'vue']}>
+
+Amplify CLIを使用している場合、既存のAmazon S3バケットは以下を実行することでAmplifyライブラリで使用できます：
+
+```bash
+amplify import storage
+```
+
+詳細については、[既存のS3バケットまたはDynamoDBテーブルを使用する](/gen1/[platform]/build-a-backend/storage/import/)方法を参照してください。
+
+Amplify CLIを使用していない場合、既存のAmazon S3バケットは`Amplify.configure`ステートメントに追加することで使用できます。
+
+<Callout warning>
+  Amplify CLIを使用していない場合、既存のAmazon S3バケットをアプリケーションに追加する際に、バケットアクセス権限の設定が必要になる場合があります。例えば、Amplify Authカテゴリで使用しているCognitoユーザープールへの読み取り/書き込みアクセスの有効化などです。
+</Callout>
+```javascript
+import { Amplify } from 'aws-amplify';
+import { parseAmplifyConfig } from "aws-amplify/utils";
+import resourceConfig from './amplifyconfiguration.json';
+
+Amplify.configure({
+  ...parseAmplifyConfig(resourceConfig),
+  Storage: {
+    S3: {
+      region: '[REGION]', // (required) - Amazon S3 bucket region
+      bucket: '[BUCKET NAME]' // (required) - Amazon S3 bucket URI
+    }
+  }
+});
+```
+
+- **bucket**: ストレージに使用するバケットの名前
+- **region**: バケットがプロビジョニングされているAWSリージョン（例：_us-east-1_）
+
+アプリケーションにAWSリソースを追加する前に、アプリケーションにAmplifyライブラリをインストールする必要があることに注意してください。このステップを実行する必要がある場合は、[Amplifyライブラリのインストール](/gen1/[platform]/start/project-setup/create-application/#n2-install-amplify-libraries)を参照してください。
+
+## S3オブジェクトロックを設定する
+
+`isObjectLockEnabled`設定フィールドを使用して、バケットの[**S3オブジェクトロック**](https://aws.amazon.com/blogs/storage/protecting-data-with-amazon-s3-object-lock/)パラメータを設定できます。デフォルトでは、`isObjectLockEnabled`は`false`に設定されています。オブジェクトロックが有効になっているバケットに対してコンソール経由で`put`操作を実行する場合は、まず`isObjectLockEnabled`をtrueに設定する必要があります。
+
+```javascript
+Amplify.configure(existingConfig, {
+  Storage: {
+    S3: {
+      isObjectLockEnabled: true //OPTIONAl - Object Lock parameter
+    }
+  }
+});
+```
+
+</InlineFilter>

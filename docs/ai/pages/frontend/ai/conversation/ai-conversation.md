@@ -1,0 +1,340 @@
+---
+title: "AI Conversation"
+section: "frontend/ai/conversation"
+platforms: ["nextjs", "react"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/ai/conversation/ai-conversation/"
+---
+
+<UIWrapper>
+<AIConversation
+  allowAttachments
+  messages={MESSAGES}
+  handleSendMessage={() => {}}
+/>
+</UIWrapper>
+*注記: この例はモック コンポーネントであり、ライブ バックエンドに接続されていません*
+
+## はじめに
+
+`<AIConversation>` コンポーネントは、任意のアプリケーションに適合するように高度にカスタマイズ可能です。このコンポーネントは `useAIConversation` フックと連携するように構築されています。フックはコンポーネントの状態とライフサイクルを管理します。コンポーネント自体は、フックが提供する会話状態のレンダラーに過ぎません。`<AIConversation>` コンポーネントには、いくつかの props が必要です:
+* `messages` 会話内のメッセージの配列
+* `handleSendMessage` ユーザーメッセージが送信されたときに呼び出されるハンドラー
+
+`useAIConversation` フックはこれらの値を提供し、ユーザーメッセージが送信されてアシスタント レスポンスがストリーミング バックされるときにメッセージ状態を管理します。
+
+```tsx title="Mock conversation"
+import { AIConversation } from '@aws-amplify/ui-react-ai';
+
+export default function Chat() {
+  return (
+    <AIConversation
+      messages={[]}
+      handleSendMessage={() => {}}
+    />
+  )
+}
+```
+
+上記のコードはあまり機能しませんが、コンポーネントを試してみたり、どのように見えるかを視覚的にテストしたい場合は、メッセージの独自のセットを渡すことでそれを行うことができます。
+
+## はじめに
+
+まず、[Amplify AI kit のはじめに ガイド](/[platform]/ai/set-up-ai)に従って、Amplify AI バックエンドをセットアップしてください。
+
+会話にはログインしているユーザーが必要なため、[`<Authenticator>`](/[platform]/frontend/auth/using-the-authenticator/) コンポーネントを使用して、アプリに認証フローを簡単に追加することをお勧めします。
+
+<!-- Platform: react -->
+```tsx title="src/App.tsx"
+import { Amplify } from 'aws-amplify';
+import { generateClient } from "aws-amplify/api";
+import { Authenticator } from "@aws-amplify/ui-react";
+import { AIConversation, createAIHooks } from '@aws-amplify/ui-react-ai';
+import '@aws-amplify/ui-react/styles.css';
+import outputs from "../amplify_outputs.json";
+import { Schema } from "../amplify/data/resource";
+
+Amplify.configure(outputs);
+
+const client = generateClient<Schema>({ authMode: "userPool" });
+const { useAIConversation } = createAIHooks(client);
+
+export default function App() {
+  const [
+    {
+      data: { messages },
+      isLoading,
+    },
+    handleSendMessage,
+  ] = useAIConversation('chat');
+  // 'chat' is based on the key for the conversation route in your schema.
+
+  return (
+    <Authenticator>
+      <AIConversation
+        messages={messages}
+        isLoading={isLoading}
+        handleSendMessage={handleSendMessage}
+      />
+    </Authenticator>
+  );
+}
+```
+<!-- /Platform -->
+
+## Markdown のフォーマット
+
+LLM は Markdown で応答できます。`<AIConversation>` コンポーネントには組み込みの Markdown レンダリング機能はありませんが、独自の Markdown レンダラーを渡すことができます。
+
+```tsx
+import ReactMarkdown from 'react-markdown';
+
+<AIConversation
+  messageRenderer={{
+    text: ({ text }) => <ReactMarkdown>{text}</ReactMarkdown>
+  }}
+/>
+```
+
+`messageRenderer` プロパティを使用すると、アプリケーションのニーズに応じて、チャット内で Markdown がレンダリングされる方法をカスタマイズできます。以下の例は、`ReactMarkdown` と `rehypeHighlight` を使用してコード構文ハイライトを追加する方法を示しています。
+
+```tsx
+import ReactMarkdown from 'react-markdown';
+import rehypeHighlight from 'rehype-highlight';
+
+<AIConversation
+  messageRenderer={{
+    text: ({ text }) => (
+      <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+        {text}
+      </ReactMarkdown>
+    )
+  }}
+/>
+```
+
+## 画像のレンダリング
+
+`<AIConversation>` コンポーネントはデフォルトで会話履歴の画像をレンダリングします。上記のテキスト例と同様に、`messageRenderer` を使用して画像のレンダリング方法をカスタマイズすることもできます。
+
+```tsx
+// Note: the image in a message comes in as a byte array
+// you will need to convert this to base64
+function convertBufferToBase64(
+  buffer: ArrayBuffer,
+  format: 'png' | 'jpeg' | 'gif' | 'webp'
+): string {
+  const base64string = Buffer.from(new Uint8Array(buffer)).toString('base64');
+  return `data:image/${format};base64,${base64string}`;
+}
+
+<AIConversation
+  messageRenderer={{
+    image: ({ image }) => (
+      <img
+        className="testing"
+        width={200}
+        height={200}
+        src={convertBufferToBase64(image.source.bytes, image.format)}
+        alt=""
+      />
+    ),
+  }}
+/>
+```
+
+## ウェルカム メッセージ
+
+`<AIConversation>` コンポーネントを設定して、ユーザーが新しい会話を開始するときにウェルカム メッセージを表示できます。
+
+<UIWrapper>
+<AIConversation
+  messages={[]}
+  handleSendMessage={() => {}}
+  welcomeMessage={
+    <Card variation="outlined">
+      <Text>I am your virtual assistant, ask me any questions you like!</Text>
+    </Card>
+  }
+/>
+</UIWrapper>
+
+```tsx
+<AIConversation
+  welcomeMessage={
+    <Card variation="outlined">
+      <Text>I am your virtual assistant, ask me any questions you like!</Text>
+    </Card>
+  }
+/>
+```
+
+ウェルカム メッセージは、メッセージが送信されるとすぐに消えます。
+
+## タイムスタンプのカスタマイズ
+
+すべてのメッセージには、ユーザー名の横に表示されるタイムスタンプが関連付けられています。タイムスタンプの表示方法をカスタマイズするには、`getMessageTimestampText` というカスタム テキスト フォーマッター関数を `<AIConversation>` コンポーネントの `displayText` プロパティに渡すことができます。この関数は `Date` オブジェクトを引数として受け取り、文字列を返す必要があります。
+
+ブラウザには `Intl.DateTimeFormat` という本当に便利な組み込み日時フォーマッターがあります。
+
+<UIWrapper>
+<AIConversation
+  messages={MESSAGES}
+  handleSendMessage={() => {}}
+  displayText={{
+    getMessageTimestampText: (date) => new Intl.DateTimeFormat('en-US', {
+      timeStyle: 'short',
+      hour12: true,
+      timeZone: 'UTC'
+    }).format(date)
+  }}
+/>
+</UIWrapper>
+
+```tsx
+<AIConversation
+  displayText={{
+    getMessageTimestampText: (date) => new Intl.DateTimeFormat('en-US', {
+      timeStyle: 'short',
+      hour12: true,
+      timeZone: 'UTC'
+    }).format(date)
+  }}
+/>
+```
+
+タイムスタンプを完全に非表示にしたい場合は、空の文字列を返すこともできます。
+
+## 添付ファイル
+
+Anthropic の Claude 3 ファミリーなどの新しい LLM は、マルチモーダル入力をサポートしているため、メッセージ内でモデルに画像を送信でき、メッセージに基づいて応答できます。コンポーネントでこの機能を有効にするには、`allowAttachments` prop を有効にできます。
+
+添付された画像のファイル タイプとサイズには制限があります。各ファイルのファイル サイズは、base64 エンコードされた場合、400kb 未満である必要があります。また、現在サポートされているファイル タイプは png、jpg、gif、webp です。
+
+<UIWrapper>
+<AIConversation
+  messages={MESSAGES}
+  handleSendMessage={() => {}}
+  allowAttachments
+/>
+</UIWrapper>
+
+```tsx
+<AIConversation
+  //...
+  allowAttachments
+/>
+```
+
+## アバター
+
+`avatars` prop を使用して、`AIConversation` コンポーネントで使用されるユーザー名とアバターをカスタマイズできます。これにより、チャットでの AI アシスタントの外観と、ユーザー名とアバターを制御できます。
+
+アバターは 2 つあります。`user` と `ai` があり、それぞれに `username` と `avatar` 属性があります。`avatar` は React ノードで、`username` は文字列です。
+
+<UIWrapper>
+<AIConversation
+  messages={MESSAGES}
+  handleSendMessage={() => {}}
+  allowAttachments
+  avatars={{
+    user: {
+      avatar: <UserAvatar />,
+      username: "danny"
+    },
+    ai: {
+      avatar: <AssistantAvatar />,
+      username: "Amplify assistant"
+    }
+  }}
+/>
+</UIWrapper>
+
+```tsx
+<AIConversation
+  avatars={{
+    user: {
+      avatar: <Avatar src="/images/user.jpg" />,
+      username: "danny",
+    },
+    ai: {
+      avatar: <Avatar src="/images/ai.jpg" />,
+      username: "Amplify assistant"
+    }
+  }}
+/>
+```
+
+## レスポンス コンポーネント
+
+レスポンス コンポーネントは、会話内で LLM が応答できるカスタム UI コンポーネントを定義する方法です。これにより、テキスト レスポンスだけでは得られるより豊かなエクスペリエンスが実現され、会話がより対話的でエンゲージングになります。レスポンス コンポーネントを定義するには、任意の React コンポーネントを使用して、名前、説明、LLM が知っておく必要がある props を定義する必要があります。
+
+<UIWrapper>
+<AIConversation
+  messages={MESSAGES_RESPONSE_COMPONENTS}
+  handleSendMessage={() => {}}
+  responseComponents={{
+    WeatherCard: {
+      description:
+        'Used to display the weather of a given city to the user',
+      component: ({ city }) => {
+        return (
+          <Card variation="outlined">
+            {city}
+          </Card>
+        );
+      },
+      props: {
+        city: {
+          type: 'string',
+          required: true,
+        },
+      },
+    },
+  }}
+/>
+</UIWrapper>
+
+```tsx
+<AIConversation
+  responseComponents={{
+    WeatherCard: {
+      description: 'Used to display the weather of a given city to the user',
+      component: ({ city }) => {
+        return <Card>{city}</Card>;
+      },
+      props: {
+        city: {
+          type: 'string',
+          required: true,
+        },
+      },
+    },
+  }}
+/>
+```
+
+レスポンス コンポーネントは単なる React コンポーネントです。独自のインタラクティブな状態、データ取得、共有状態の更新、または本当に考えられることはすべてできます。レスポンス コンポーネントを [データ ツール](/[platform]/frontend/ai/conversation/tools)と組み合わせることができます。LLM はデータをクエリしてから、コンポーネントを使用そのデータを表示できます。または、レスポンス コンポーネント自体がデータを取得できます。
+
+### フォールバックの追加
+
+レスポンス コンポーネントは実行時に定義され、会話履歴はデータベースに保存されるため、現在のアプリケーションがレスポンス コンポーネントを持たないメッセージ履歴にレスポンス コンポーネントが存在する場合があります。レスポンス コンポーネントは、メッセージ履歴に「toolUse」ブロックとして保存されます。これは LLM がツールを呼び出したい場合の応答方法と似ています。toolUse ブロックには、コンポーネントの名前と、LLM がコンポーネントに渡したい props が含まれています。LLM は UI コードを直接送信していませんが、むしろ何をレンダリングしたいかの抽象表現です。
+
+AIConversation コンポーネントが、与えられていないレスポンス コンポーネントのレスポンス コンポーネント メッセージを受け取った場合、デフォルトでは何もレンダリングされません。ただし、名前に基づいてコンポーネントが見つからない場合にフォールバック コンポーネントを追加したい場合は、`FallbackResponseComponent` prop を使用できます。これはレスポンス コンポーネント用の 404 ページのように考えることができます。
+
+<UIWrapper>
+<AIConversation
+  messages={MESSAGES_RESPONSE_COMPONENTS}
+  handleSendMessage={() => {}}
+  FallbackResponseComponent={(props) => <Card variation="outlined">{JSON.stringify(props, null, 2)}</Card>}
+/>
+</UIWrapper>
+
+```tsx
+<AIConversation
+  FallbackResponseComponent={(props) => (
+    <Card variation="outlined">{JSON.stringify(props, null, 2)}</Card>
+  )}
+/>
+```

@@ -1,0 +1,58 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '仕組み',
+  description: 'Amplify DataStoreは、オンラインでもオフラインでもデータの書き込み、読み込み、変更を監視できる永続的なオンデバイスストレージリポジトリを提供し、クラウドおよびデバイス間でのシームレスな同期を実現します。仕組みの詳細を学びます。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'flutter',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios0 from '/src/fragments/lib/datastore/native_common/how-it-works.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import android1 from '/src/fragments/lib/datastore/native_common/how-it-works.mdx';
+
+<Fragments fragments={{ android: android1 }} />
+
+import flutter2 from '/src/fragments/lib/datastore/native_common/how-it-works.mdx';
+
+<Fragments fragments={{ flutter: flutter2 }} />
+
+import js3 from '/src/fragments/lib/datastore/native_common/how-it-works.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js3,
+    angular: js3,
+    nextjs: js3,
+    react: js3,
+    vue: js3
+  }}
+/>
+
+import reactnative0 from '/src/fragments/lib/datastore/native_common/how-it-works.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative0 }} />

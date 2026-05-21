@@ -1,0 +1,346 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '認証イベントをリッスンする',
+  description: '様々な認証イベントをリッスンする',
+  platforms: [
+    'javascript',
+    'flutter',
+    'swift',
+    'android',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript",  "react-native", "angular", "nextjs", "react", "vue"]}>
+
+認証イベントをリッスンすることで、ユーザーフローをリアルタイムで反応させ、カスタムビジネスロジックをトリガーできます。例えば、データをキャプチャし、アプリの状態を同期し、ユーザー体験をパーソナライズしたい場合があります。サインインやサインアウトなど、認証ライフサイクル全体でイベントをリッスンして対応できます。このガイドでは、これらの認証イベントをリッスンする方法について説明します。
+
+開始する前に、以下が必要です：
+
+- 認証カテゴリが設定されたAmplifyプロジェクト
+- インストールおよび設定されたAmplifyライブラリ
+
+## 認証アクションへの応答としてトリガーされるHubイベントを公開する
+
+Amplify Hubと組み込みのAmplify認証イベントを使用して、パブリッシュ・サブスクライブパターンを使用するリスナーをサブスクライブし、アプリケーションの異なる部分間でイベントをキャプチャできます。Amplify認証カテゴリは、アプリコードとは関係なく`signIn`、`signUp`、`signOut`などの認証イベントが発生すると、`auth`チャネルでパブリッシュします。
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+Amplify Hubガイドで[詳細を学ぶ](/gen1/[platform]/build-a-backend/utilities/hub/)ことができます。
+
+<Callout warning>
+
+チャネルは、ディスパッチとリッスンの整理に役立つ論理的なグループ名です。ただし、一部のチャネルは保護されており、カスタムイベントをパブリッシュするために使用できません。`auth`はこれらのチャネルの1つです。予期しないペイロードを保護されたチャネルに送信すると、認証フローに影響を与えるなどの望ましくない副作用が生じる可能性があります。詳細は[Amplify Hub](/gen1/[platform]/build-a-backend/utilities/hub/)ガイドで他の保護されたチャネルを参照してください。
+
+</Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+Amplify Hubガイドで[詳細を学ぶ](/gen1/[platform]/build-a-backend/utilities/hub/)ことができます。
+
+<Callout warning>
+
+チャネルは、ディスパッチとリッスンの整理に役立つ論理的なグループ名です。ただし、一部のチャネルは保護されており、カスタムイベントをパブリッシュするために使用できません。`auth`はこれらのチャネルの1つです。予期しないペイロードを保護されたチャネルに送信すると、認証フローに影響を与えるなどの望ましくない副作用が生じる可能性があります。詳細は[Amplify Hub](/gen1/[platform]/build-a-backend/utilities/hub/)ガイドで他の保護されたチャネルを参照してください。
+
+</Callout>
+
+</InlineFilter>
+
+`auth`チャネルを通じてエミットされるイベントをログするリスナーを設定する基本的な例を次に示します：
+
+```javascript
+import { Hub } from 'aws-amplify';
+
+const listener = (data) => {
+  console.log(data);
+};
+
+Hub.listen('auth', listener);
+```
+
+アプリが`auth`チャネルから特定のイベントタイプをサブスクライブしてリッスンするように設定されると、イベントが発生したときにリスナーは非同期で通知されます。このパターンにより、1つの認証イベントがサブスクライブされた多くの異なるリスナーと共有される1対多の関係が可能になります。これにより、アプリは情報をプロアクティブにポーリングするのではなく、イベントに基づいて反応できます。
+
+さらに、リスナーをセットアップして、イベントペイロードからデータを抽出し、定義したコールバックを実行できます。例えば、`signIn`または`signOut`イベント後にアプリのUI要素を更新してユーザーの認証状態を反映したり、`signUp`イベントをリッスンしてユーザー登録をキャプチャしたり、成功または失敗後にメトリクスをキャプチャしたりできます。
+
+### 認証イベントをリッスンしてログする
+
+最も一般的なワークフローの1つはイベントをログすることです。この例では、`switch`を使用して特定の`auth`イベントをリッスンおよびターゲットし、独自のメッセージをログする方法を確認できます。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Hub } from 'aws-amplify';
+
+const listener = (data) => {
+  switch (data?.payload?.event) {
+    case 'configured':
+      console.log('the Auth module is configured');
+      break;
+    case 'signIn':
+      console.log('user signed in');
+      break;
+    case 'signIn_failure':
+      console.log('user sign in failed');
+      break;
+    case 'signUp':
+      console.log('user signed up');
+      break;
+    case 'signUp_failure':
+      console.log('user sign up failed');
+      break;
+    case 'confirmSignUp':
+      console.log('user confirmation successful');
+      break;
+    case 'completeNewPassword_failure':
+      console.log('user did not complete new password flow');
+      break;
+    case 'autoSignIn':
+      console.log('auto sign in successful');
+      break;
+    case 'autoSignIn_failure':
+      console.log('auto sign in failed');
+      break;
+    case 'forgotPassword':
+      console.log('password recovery initiated');
+      break;
+    case 'forgotPassword_failure':
+      console.log('password recovery failed');
+      break;
+    case 'forgotPasswordSubmit':
+      console.log('password confirmation successful');
+      break;
+    case 'forgotPasswordSubmit_failure':
+      console.log('password confirmation failed');
+      break;
+    case 'verify':
+      console.log('TOTP token verification successful');
+      break;
+    case 'tokenRefresh':
+      console.log('token refresh succeeded');
+      break;
+    case 'tokenRefresh_failure':
+      console.log('token refresh failed');
+      break;
+    case 'cognitoHostedUI':
+      console.log('Cognito Hosted UI sign in successful');
+      break;
+    case 'cognitoHostedUI_failure':
+      console.log('Cognito Hosted UI sign in failed');
+      break;
+    case 'customOAuthState':
+      console.log('custom state returned from CognitoHosted UI');
+      break;
+    case 'customState_failure':
+      console.log('custom state failure');
+      break;
+    case 'parsingCallbackUrl':
+      console.log('Cognito Hosted UI OAuth url parsing initiated');
+      break;
+    case 'userDeleted':
+      console.log('user deletion successful');
+      break;
+    case 'updateUserAttributes':
+      console.log('user attributes update successful');
+      break;
+    case 'updateUserAttributes_failure':
+      console.log('user attributes update failed');
+      break;
+    case 'signOut':
+      console.log('user signed out');
+      break;
+    default:
+      console.log('unknown event type');
+      break;
+  }
+};
+
+Hub.listen('auth', listener);
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { Hub } from 'aws-amplify';
+
+const listener = (data) => {
+  switch (data?.payload?.event) {
+    case 'configured':
+      console.log('the Auth module is configured');
+      break;
+    case 'signIn':
+      console.log('user signed in');
+      break;
+    case 'signIn_failure':
+      console.log('user sign in failed');
+      break;
+    case 'signUp':
+      console.log('user signed up');
+      break;
+    case 'signUp_failure':
+      console.log('user sign up failed');
+      break;
+    case 'confirmSignUp':
+      console.log('user confirmation successful');
+      break;
+    case 'completeNewPassword_failure':
+      console.log('user did not complete new password flow');
+      break;
+    case 'autoSignIn':
+      console.log('auto sign in successful');
+      break;
+    case 'autoSignIn_failure':
+      console.log('auto sign in failed');
+      break;
+    case 'forgotPassword':
+      console.log('password recovery initiated');
+      break;
+    case 'forgotPassword_failure':
+      console.log('password recovery failed');
+      break;
+    case 'forgotPasswordSubmit':
+      console.log('password confirmation successful');
+      break;
+    case 'forgotPasswordSubmit_failure':
+      console.log('password confirmation failed');
+      break;
+    case 'verify':
+      console.log('TOTP token verification successful');
+      break;
+    case 'tokenRefresh':
+      console.log('token refresh succeeded');
+      break;
+    case 'tokenRefresh_failure':
+      console.log('token refresh failed');
+      break;
+    case 'cognitoHostedUI':
+      console.log('Cognito Hosted UI sign in successful');
+      break;
+    case 'cognitoHostedUI_failure':
+      console.log('Cognito Hosted UI sign in failed');
+      break;
+    case 'customOAuthState':
+      console.log('custom state returned from CognitoHosted UI');
+      break;
+    case 'customState_failure':
+      console.log('custom state failure');
+      break;
+    case 'parsingCallbackUrl':
+      console.log('Cognito Hosted UI OAuth url parsing initiated');
+      break;
+    case 'userDeleted':
+      console.log('user deletion successful');
+      break;
+    case 'updateUserAttributes':
+      console.log('user attributes update successful');
+      break;
+    case 'updateUserAttributes_failure':
+      console.log('user attributes update failed');
+      break;
+    case 'signOut':
+      console.log('user signed out');
+      break;
+    default:
+      console.log('unknown event type');
+      break;
+  }
+};
+
+Hub.listen('auth', listener);
+```
+
+</Block>
+</BlockSwitcher>
+
+### イベントのリッスンを停止する
+
+`Hub.listen()`関数の結果を呼び出すことで、メッセージのリッスンを停止することもできます。これは、アプリケーションフロー内でメッセージを受け取る必要がなくなった場合に役立つ可能性があります。これはまた、Amplify Hubを複数のチャネルで大量のデータを送信するときに、低電力デバイスでのメモリリークを回避するのに役立ちます。
+
+特定のイベントのリッスンを停止するには、リスナー関数を変数でラップし、不要になったら呼び出す必要があります：
+
+```javascript
+/* メッセージのリッスンを開始 */
+const hubListenerCancelToken = Hub.listen('auth', (data) => {
+  console.log('Listening for all auth events: ', data.payload.data);
+});
+
+/* 後で */
+hubListenerCancelToken(); // メッセージのリッスンを停止
+```
+
+これで、認証イベントをリッスンして対応するいくつかのユースケースと例があります。
+
+## まとめ
+
+おめでとうございます！**認証イベントをリッスンする**ガイドを完了しました。このガイドでは、ワークフロー全体で認証イベントをリッスンする方法を学びました。
+
+## 次のステップ
+
+認証イベントをリッスンできるようになったので、いくつかの追加機能を追加することもできます。以下についてさらに学ぶことをお勧めします：
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+- [ユーザープロフィールを管理する](/gen1/[platform]/prev/build-a-backend/auth/manage-user-profile/)
+- [パスワード変更と復旧をセットアップする](/gen1/[platform]/prev/build-a-backend/auth/manage-passwords/)
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+- [ユーザープロフィールを管理する](/gen1/[platform]/prev/build-a-backend/auth/manage-user-profile/)
+- [パスワード変更と復旧をセットアップする](/gen1/[platform]/prev/build-a-backend/auth/manage-passwords/)
+
+</InlineFilter>
+
+</InlineFilter>
+
+<InlineFilter filters={["swift","android","flutter"]}>
+
+AWS Cognito認証プラグインは、Amplify Hubを通じて重要なイベントを送信します。
+
+import ios_maintenance from '/src/fragments/lib-v1/ios-maintenance.mdx';
+
+<Fragments fragments={{ swift: ios_maintenance }} />
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+
+import ios1 from '/src/fragments/lib-v1/auth/ios/hub_events/10_listen_events.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import android_maintenance from '/src/fragments/lib-v1/android-maintenance.mdx';
+
+<Fragments fragments={{ android: android_maintenance }} />
+
+import android2 from '/src/fragments/lib-v1/auth/android/hub_events/10_listen_events.mdx';
+
+<Fragments fragments={{ android: android2 }} />
+
+import flutter3 from '/src/fragments/lib-v1/auth/flutter/hub_events/10_listen_events.mdx';
+
+<Fragments fragments={{ flutter: flutter3 }} />
+
+</InlineFilter>

@@ -1,0 +1,85 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '認証リソースへのアクセス許可',
+  description: '認証リソースへのアクセス許可を付与する方法を学習します',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps() {
+  return {
+    props: {
+      meta
+    }
+  };
+}
+
+Amplify Auth は `access` プロパティで定義でき、アクションを指定することで他のリソースが認証と相互作用できます。
+
+```ts title="amplify/auth/resource.ts"
+import { defineAuth } from "@aws-amplify/backend"
+import { addUserToGroup } from "../functions/add-user-to-group/resource"
+
+/**
+ * Define and configure your auth resource
+ * @see https://docs.amplify.aws/gen2/build-a-backend/auth
+ */
+export const auth = defineAuth({
+  loginWith: {
+    email: true,
+  },
+  access: (allow) => [
+    allow.resource(addUserToGroup).to(["addUserToGroup"])
+  ],
+})
+```
+
+<Callout>
+
+Amplify バックエンドで別のリソースへのアクセス許可をfunction に付与すると、そのfunction が有効なAWSサービスにSDK呼び出しを行うための環境変数が設定されます。これらの環境変数は型付けされており、`env` オブジェクトの一部として利用可能です。
+
+</Callout>
+
+## アクション一覧
+
+|アクション名|説明|Cognito IAM アクション|
+|-|-|-|
+|manageUsers | UserPool 内のユーザーへの CRUD アクセスを許可します | <ul><li>cognito-idp:AdminConfirmSignUp</li><li>cognito-idp:AdminCreateUser</li><li>cognito-idp:AdminDeleteUser</li><li>cognito-idp:AdminDeleteUserAttributes</li><li>cognito-idp:AdminDisableUser</li><li>cognito-idp:AdminEnableUser</li><li>cognito-idp:AdminGetUser</li><li>cognito-idp:AdminListGroupsForUser</li><li>cognito-idp:AdminRespondToAuthChallenge</li><li>cognito-idp:AdminSetUserMFAPreference</li><li>cognito-idp:AdminSetUserSettings</li><li>cognito-idp:AdminUpdateUserAttributes</li><li>cognito-idp:AdminUserGlobalSignOut</li></ul>|
+|manageGroupMembership | グループ内のユーザーを追加および削除するアクセス許可を付与します | <ul><li>cognito-idp:AdminAddUserToGroup</li><li>cognito-idp:AdminRemoveUserFromGroup</li></ul>|
+|manageGroups | UserPool 内のグループへの CRUD アクセスを許可します | <ul><li>cognito-idp:GetGroup</li><li>cognito-idp:ListGroups</li><li>cognito-idp:CreateGroup</li><li>cognito-idp:DeleteGroup</li><li>cognito-idp:UpdateGroup</li></ul>|
+|manageUserDevices | ユーザーに登録されたデバイスを管理します| <ul><li>cognito-idp:AdminForgetDevice</li><li>cognito-idp:AdminGetDevice</li><li>cognito-idp:AdminListDevices</li><li>cognito-idp:AdminUpdateDeviceStatus</li></ul>|
+|managePasswordRecovery | ユーザーのパスワードをリセットするアクセス許可を付与します | <ul><li>cognito-idp:AdminResetUserPassword</li><li>cognito-idp:AdminSetUserPassword</li></ul>| 
+|addUserToGroup | 任意のユーザーを任意のグループに追加するアクセス許可を付与します。 | <ul><li>cognito-idp:AdminAddUserToGroup</li></ul>
+|createUser | 新しいユーザーを作成し、メールまたは SMS でウェルカムメッセージを送信するアクセス許可を付与します。 | <ul><li>cognito-idp:AdminCreateUser</li></ul>
+|deleteUser | 任意のユーザーを削除するアクセス許可を付与します | <ul><li>cognito-idp:AdminDeleteUser</li></ul>
+|deleteUserAttributes | 任意のユーザーから属性を削除するアクセス許可を付与します | <ul><li>cognito-idp:AdminDeleteUserAttributes</li></ul>
+|disableUser | 任意のユーザーを無効化するアクセス許可を付与します | <ul><li>cognito-idp:AdminDisableUser</li></ul>
+|enableUser | 任意のユーザーを有効化するアクセス許可を付与します | <ul><li>cognito-idp:AdminEnableUser</li></ul>
+|forgetDevice | 任意のユーザーのデバイスの登録を解除するアクセス許可を付与します | <ul><li>cognito-idp:AdminForgetDevice</li></ul>
+|getDevice | 任意のユーザーのデバイスに関する情報を取得するアクセス許可を付与します | <ul><li>cognito-idp:AdminGetDevice</li></ul>
+|getUser | ユーザー名で任意のユーザーを検索するアクセス許可を付与します | <ul><li>cognito-idp:AdminGetUser</li></ul>
+|listUsers | UserPool 内のユーザーとその基本的な詳細情報をリストするアクセス許可を付与します | <ul><li>cognito-idp:ListUsers</li></ul>
+|listDevices | 任意のユーザーの保存されたデバイスをリストするアクセス許可を付与します | <ul><li>cognito-idp:AdminListDevices</li></ul>
+|listGroupsForUser | 任意のユーザーが属するグループをリストするアクセス許可を付与します | <ul><li>cognito-idp:AdminListGroupsForUser</li></ul>
+|listUsersInGroup | 指定したグループ内のユーザーをリストするアクセス許可を付与します | <ul><li>cognito-idp:ListUsersInGroup</li></ul>
+|removeUserFromGroup | 任意のユーザーを任意のグループから削除するアクセス許可を付与します | <ul><li>cognito-idp:AdminRemoveUserFromGroup</li></ul>
+|resetUserPassword | 任意のユーザーのパスワードをリセットするアクセス許可を付与します | <ul><li>cognito-idp:AdminResetUserPassword</li></ul>
+|setUserMfaPreference | 任意のユーザーの優先 MFA 方法を設定するアクセス許可を付与します | <ul><li>cognito-idp:AdminSetUserMFAPreference</li></ul>
+|setUserPassword | 任意のユーザーのパスワードを設定するアクセス許可を付与します | <ul><li>cognito-idp:AdminSetUserPassword</li></ul>
+|setUserSettings | 任意のユーザーのユーザー設定を設定するアクセス許可を付与します | <ul><li>cognito-idp:AdminSetUserSettings</li></ul>
+|updateDeviceStatus | 任意のユーザーの保存されたデバイスのステータスを更新するアクセス許可を付与します | <ul><li>cognito-idp:AdminUpdateDeviceStatus</li></ul>
+|updateUserAttributes | 任意のユーザーの標準またはカスタム属性を更新するアクセス許可を付与します | <ul><li>cognito-idp:AdminUpdateUserAttributes</li></ul>

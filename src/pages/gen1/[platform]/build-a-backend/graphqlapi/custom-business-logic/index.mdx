@@ -1,0 +1,954 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'カスタムクエリとミューテーションの設定',
+  description: 'GraphQLスキーマに認可ルールを追加して、データへのアクセスを制御します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert
+  url={'/gen1/[platform]/tools/cli-legacy/function-directive/'}
+/>
+
+Lambda関数リゾルバー、HTTPリゾルバー、またはAppSync JavaScriptまたはVTLリゾルバーでカスタムビジネスロジックを定義し、GraphQLクエリまたはミューテーションで公開します。Amplify生成のGraphQLリゾルバーを拡張またはオーバーライドして、特定のユースケースに最適化します。
+
+## カスタムクエリまたはミューテーションの作成
+
+`@model`は自動的に専用の「create」、「read」、「update」、「delete」、「subscription」クエリまたはミューテーションを生成しますが、スタンドアロンのクエリまたはミューテーションを定義したい場合があります。
+
+1. カスタムクエリまたはミューテーションを定義します
+
+```graphql
+type Mutation {
+  myCustomMutation(args: String): String # your custom mutations here
+}
+
+type Query {
+  myCustomQuery(args: String): String # your custom queries here
+}
+```
+
+2. クエリまたはミューテーションリクエストを処理するために、以下のリゾルバー選択肢のいずれかを使用します:
+
+   - [Lambda関数リゾルバー](#lambda-function-resolver): カスタムLambda関数を使用してクエリまたはミューテーションを処理します
+   - [HTTPリゾルバー](#http-resolver): クエリまたはミューテーション時にHTTPエンドポイントを呼び出します
+   - [AppSync JavaScriptまたはVTLリゾルバー](#appsync-javascript-or-vtl-resolver)(最も高度): AppSyncのJavaScriptリゾルバーまたはAppSyncのVTLマッピングテンプレートを使用してクエリとミューテーションのロジックをカスタマイズします
+
+3. [フィールドレベルの認可ルール](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)でカスタムクエリまたはミューテーションを保護します
+   - 注: 動的認可ルールはカスタムクエリまたはミューテーションではサポートされていません。
+
+## Lambda関数リゾルバー
+
+`@function`ディレクティブを使用すると、GraphQL APIでAWS Lambdaリゾルバーを迅速かつ簡単に設定できます。Amplify CLIで作成されたAWS Lambda関数、AWS CDK、または他の方法で作成された既存のAWS Lambda関数を参照できます。
+
+<BlockSwitcher>
+
+<Block name="Amplify CLI">
+
+例えば、`amplify add function`を使用して、次のハンドラーを持つ「echofunction」というLambda関数を追加します:
+
+```js
+exports.handler = async function (event, context) {
+  return event.arguments.msg;
+};
+```
+
+GraphQL APIにAWS Lambdaリゾルバーを接続するには、スキーマのフィールドに`@function`ディレクティブを追加します。
+
+```graphql
+type Query {
+  echo(msg: String): String @function(name: "echofunction-${env}")
+}
+```
+
+Amplify CLIは複数の環境の維持をサポートしています。`amplify add function`を使用して関数をデプロイすると、Lambda関数名に自動的に環境サフィックスが追加されます。例えば、`dev`環境で`amplify add function`を使用して`echofunction`という名前の関数を作成すると、デプロイされた関数は`echofunction-dev`という名前になります。`@function`ディレクティブは、`${env}`を使用して現在のAmplify CLI環境を参照できます。
+
+</Block>
+
+<Block name="AWS CDK">
+
+まず、ロジックとともにCDKでLambda関数を作成し、`functionName`パラメータを設定します。
+
+```ts
+const echoLambda = new lambda.Function(this, 'EchoLambda', {
+  functionName: 'echofunction', // MAKE SURE THIS MATCHES THE @function's "name" PARAMETER
+  code: lambda.Code.fromAsset(path.join(__dirname, 'handlers/echo')),
+  handler: 'index.handler',
+  runtime: lambda.Runtime.NODEJS_18_X
+});
+
+const amplifyApi = new AmplifyGraphqlApi(this, 'AmplifyCdkGraphQlApi', {
+  definition: AmplifyGraphqlDefinition.fromFiles(
+    path.join(__dirname, 'schema.graphql')
+  ),
+  authorizationModes: {
+    defaultAuthorizationMode: 'API_KEY',
+    apiKeyConfig: {
+      expires: cdk.Duration.days(30)
+    }
+  }
+});
+```
+
+GraphQL APIにAWS Lambdaリゾルバーを接続するには、GraphQLスキーマのフィールドに`@function`ディレクティブを追加します。
+
+```graphql
+type Query {
+  echo(msg: String): String @function(name: "echofunction")
+}
+```
+
+オプションとして、GraphQLスキーマに関数名をハードコードしたくない場合は、GraphQLスキーマで任意の名前を設定し、CDK内で関数を関数名にマップできます。
+
+```ts
+const coolLambdaFunction = new lambda.Function(this, 'MyCoolLambdaFunction', {
+  code: lambda.Code.fromAsset(path.join(__dirname, 'handlers/echo')),
+  handler: 'index.handler',
+  runtime: lambda.Runtime.NODEJS_18_X
+});
+
+const amplifyApi = new AmplifyGraphqlApi(this, 'AmplifyCdkGraphQlApi', {
+  definition: AmplifyGraphqlDefinition.fromFiles(
+    path.join(__dirname, 'schema.graphql')
+  ),
+  authorizationModes: {
+    defaultAuthorizationMode: 'API_KEY',
+    apiKeyConfig: {
+      expires: cdk.Duration.days(30)
+    }
+  },
+  functionNameMap: {
+    echofunction: coolLambdaFunction // Remap the function name to any function you define or reference within CDK.
+  }
+});
+```
+
+</Block>
+
+<Block name="Reference existing Lambda function">
+
+Amplify CLIを使わずにLambda関数をデプロイした場合は、`name`パラメータに完全なLambda関数名を指定する必要があります。echoFunctionという名前で同じ関数をデプロイした場合は:
+
+```graphql
+type Query {
+  echo(msg: String): String @function(name: "echofunction")
+}
+```
+
+</Block>
+
+</BlockSwitcher>
+
+### 関数イベントの構造
+
+`@function`ディレクティブを介して接続されたLambda関数を作成する場合、AWS Lambda `event`オブジェクトについて次の構造を期待できます。
+
+| キー | 説明 |
+| --- | --- |
+| typeName | 解決されるフィールドの親オブジェクト型の名前。 |
+| fieldName | 解決されるフィールドの名前。 |
+| arguments | 解決されるフィールドに渡される引数を含むマップ。 |
+| identity | リクエストのID情報を含むマップ。ネストされたキー「claims」を含み、JWTクレームが存在する場合はそれを含みます。 |
+| source | クエリ内のネストされたフィールドを解決する場合、sourceはランタイムで親の値を含みます。例えば`Post.comments`を解決する場合、sourceはPostオブジェクトになります。 |
+| request | AppSyncリクエストオブジェクト。ヘッダー情報を含みます。 |
+| prev | パイプラインリゾルバーを使用する場合、これは前の関数が返したオブジェクトを含みます。監査のユースケースのために前の値を返すことができます。 |
+
+関数は特定の言語の Lambda ハンドラーのガイドラインに従う必要があります。選択した言語の [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html) ドキュメントの開発者ガイドを参照してください。構造型を使用する場合、型は上記で説明したAWS Lambdaイベントオブジェクトをシリアライズする必要があります。例えば、Golangを使用している場合は、上記のフィールドを持つ構造体を定義する必要があります。
+
+### 異なるリージョンの関数の呼び出し
+
+デフォルトでは、関数はAmplifyプロジェクトと同じリージョンにあることが予想されます。異なるまたは特定のリージョンの関数を呼び出す必要がある場合は、**region**引数を指定できます。
+
+```graphql
+type Query {
+  echo(msg: String): String @function(name: "echofunction", region: "us-east-1")
+}
+```
+
+異なるAWSアカウントの関数を呼び出すことは`@function`ディレクティブではサポートされていませんが、AWS AppSyncではサポートされています。
+
+### 関数の連鎖
+
+複数の`@function`リゾルバーをチェーンして、フィールドのリゾルバーが呼び出されたときに連続して呼び出されるようにできます。複数のAWS Lambda関数を連続して呼び出すパイプラインリゾルバーを作成するには、フィールドに複数の`@function`ディレクティブを使用します。同様に、`@function`はフィールドレベルの`@auth`と組み合わせることができます。これらのフィールドディレクティブを組み合わせる場合、スキーマの順序付けはパイプラインリゾルバー内の順序付けと一致します。フィールドレベルの認可が適用される前後に関数を持つことを選択できます。
+
+> **注:** ルート型のフィールドで@authディレクティブを使用する場合は注意が必要です。フィールド定義の@authディレクティブはソースオブジェクトを使用して認可ロジックを実行し、ルート型のフィールドではソースは空のオブジェクトになります。静的グループ認可は期待どおりに機能する必要があります。
+
+```graphql
+type Mutation {
+  doSomeWork(msg: String): String
+    @function(name: "worker-function")
+    @function(name: "audit-function")
+}
+```
+
+上記の例では、`Mutation.doSomeWork`フィールドを呼び出すミューテーションを実行すると、**worker-function**が最初に呼び出され、その後**audit-function**が**worker-function**の結果を含む**event.prev.result**キーの下にある結果を含むイベントで呼び出されます。**worker-function**の結果がフィールドに返されるようにしたい場合、**audit-function**は**event.prev.result**を返す必要があります。
+
+### 仕組み
+
+`@function`ディレクティブの定義:
+
+```graphql
+directive @function(name: String!, region: String) on FIELD_DEFINITION
+```
+
+内部では、Amplifyはドキュメント内の`@function`の一意のインスタンスごとに`AppSync::FunctionConfiguration`を作成し、特定のフィールドの各`@function`に対してパイプラインリゾルバーへのポインタを含むポインタを作成します。
+
+`@function`ディレクティブは必要に応じてこれらのリソースを生成します:
+
+1. 関数を呼び出す権限を持つAWS IAMロール、およびAWS AppSyncとの信頼ポリシー。
+2. 新しいロールと既存の関数をAppSync APIに登録するAWS AppSyncデータソース。
+3. Lambdaイベントを準備し、新しいデータソースを呼び出すAWS AppSyncパイプライン関数。
+4. GraphQLフィールドにアタッチして新しいパイプライン関数を呼び出すAWS AppSyncリゾルバー。
+
+## HTTPリゾルバー
+
+`@http`ディレクティブを使用すると、GraphQL API内でHTTPリゾルバーを迅速に設定できます。
+
+エンドポイントに接続するには、GraphQLスキーマのフィールドに@httpディレクティブを追加します。ディレクティブを使用すると、URLパスパラメータを定義し、クエリ文字列を指定するか、リクエストボディを指定できます。例えば、Post型の定義が与えられた場合:
+
+```graphql
+type Post {
+  id: ID!
+  title: String
+  description: String
+  views: Int
+}
+
+type Query {
+  listPosts: [Post] @http(url: "https://www.example.com/posts")
+}
+```
+
+Amplifyは以下の定義を生成し、listPostsクエリを使用するときにURLにリクエストを送信します。
+
+```graphql
+type Query {
+  listPosts: [Post]
+}
+```
+
+### リクエストヘッダー
+
+`@http`ディレクティブはXMLとJSON応答を処理できるリゾルバーを生成します。HTTPメソッドが定義されていない場合、`GET`が使用されます。ディレクティブ定義でバックエンドへのHTTPリクエストに渡される静的ヘッダーのリストを指定できます。
+
+```graphql
+type Query {
+  listPosts: [Post]
+    @http(
+      url: "https://www.example.com/posts"
+      headers: [{ key: "X-Header", value: "X-Header-Value" }]
+    )
+}
+```
+
+### パスパラメータ
+
+ディレクティブURLで特別な`:<parameter>`表記を使用してパラメータを指定することで、動的パスを作成できます。パラメータのセットは、クエリの params入力オブジェクトで指定できます。パスパラメータはリクエストボディまたはクエリ文字列に追加されません。複数のパラメータを定義できます。
+
+```graphql
+type Query {
+  getPost: Post @http(url: "https://www.example.com/posts/:id")
+}
+```
+
+上記の例では、`:id`パラメータが以下に示す適切なクエリ入力を生成します:
+
+```graphql
+type Query {
+  getPost(params: QueryGetPostParamsInput!): Post
+}
+
+input QueryGetPostParamsInput {
+  id: String!
+}
+```
+
+params入力オブジェクトにidを入れて、特定のポストを取得できます。
+
+```graphql
+query post {
+  getPost(params: { id: "POST_ID" }) {
+    id
+    title
+  }
+}
+```
+
+これにより、以下のリクエストが実行されます:
+
+```console
+GET /posts/POST_ID
+Host: www.example.com
+```
+
+### クエリ文字列
+
+クエリ用に変数を指定することで、リクエストにクエリ文字列を送信できます。クエリ文字列はすべてのリクエストメソッドでサポートされています。
+
+定義が与えられた場合
+
+```graphql
+type Query {
+  listPosts(sort: String!, from: String!, limit: Int!): Post
+    @http(url: "https://www.example.com/posts")
+}
+```
+
+Amplifyは以下を生成します
+
+```graphql
+type Query {
+  listPosts(query: QueryListPostsQueryInput!): [Post]
+}
+
+input QueryListPostsQueryInput {
+  sort: String!
+  from: String!
+  limit: Int!
+}
+```
+
+`query`入力オブジェクトを使用してポストをクエリできます
+
+```graphql
+query posts {
+  listPosts(query: { sort: "DESC", from: "last-week", limit: 5 }) {
+    id
+    title
+    description
+  }
+}
+```
+
+これにより、以下のリクエストが送信されます:
+
+```text
+GET /posts?sort=DESC&from=last-week&limit=5
+Host: www.example.com
+```
+
+### リクエストボディ
+
+`@http`ディレクティブを使用すると、`POST`、`PUT`、`PATCH`リクエストに使用されるリクエストボディを指定することもできます。新しいポストを作成するには、以下を定義できます。
+
+```graphql
+type Mutation {
+  addPost(title: String!, description: String!, views: Int): Post
+    @http(method: POST, url: "https://www.example.com/post")
+}
+```
+
+Amplifyは`addPost`クエリフィールドに`query`と`body`入力オブジェクトを生成します。このタイプのリクエストはクエリ文字列もサポートするためです。生成されたリゾルバーは、非nullの引数(例: `title`と`description`)が少なくともいずれかの入力オブジェクトで渡されることを確認します。そうでない場合はエラーが返されます。
+
+```graphql
+type Mutation {
+  addPost(query: QueryAddPostQueryInput, body: QueryAddPostBodyInput): Post
+}
+
+input QueryAddPostQueryInput {
+  title: String
+  description: String
+  views: Int
+}
+
+input QueryAddPostBodyInput {
+  title: String
+  description: String
+  views: Int
+}
+```
+
+`body`入力オブジェクトを使用してポストを追加できます:
+
+```graphql
+mutation add {
+  addPost(body: { title: "new post", description: "fresh content" }) {
+    id
+  }
+}
+```
+
+これにより送信されます
+
+```text
+POST /post
+Host: www.example.com
+{
+  title: "new post"
+  description: "fresh content"
+}
+```
+
+### Amplify環境名の参照
+
+`@http`ディレクティブを使用すると、`${env}`を使用して現在のAmplify CLI環境を参照できます。
+
+```graphql
+type Query {
+  listPosts: Post @http(url: "https://www.example.com/${env}/posts")
+}
+```
+
+`DEV`環境では、以下が送信されます
+
+```text
+GET /DEV/posts
+Host: www.example.com
+```
+
+**異なるコンポーネントの組み合わせ**
+
+`@http`ディレクティブ定義でパラメータ、クエリ、ボディ、ヘッダー、環境の組み合わせを使用できます。
+
+定義が与えられた場合
+
+```graphql
+type Post {
+  id: ID!
+  title: String
+  description: String
+  views: Int
+  comments: [Comment]
+}
+
+type Comment {
+  id: ID!
+  content: String
+}
+
+type Mutation {
+  updatePost(
+    title: String!
+    description: String!
+    views: Int
+    withComments: Boolean
+  ): Post
+    @http(
+      method: PUT
+      url: "https://www.example.com/${env}/posts/:id"
+      headers: [{ key: "X-Header", value: "X-Header-Value" }]
+    )
+}
+```
+
+以下でポストを更新できます
+
+```graphql
+mutation update {
+  updatePost(
+    body: { title: "new title", description: "updated description", views: 100 }
+    params: { id: "EXISTING_ID" }
+    query: { withComments: true }
+  ) {
+    id
+    title
+    description
+    comments {
+      id
+      content
+    }
+  }
+}
+```
+
+`DEV`環境では、以下が送信されます
+
+```text
+PUT /DEV/posts/EXISTING_ID?withComments=true
+Host: www.example.com
+X-Header: X-Header-Value
+{
+  title: "new title"
+  description: "updated description"
+  views: 100
+}
+```
+
+### 既存フィールドデータの参照
+
+場合によっては、既存のフィールドデータに基づいてリクエストを送信したいことがあります。ポストを取得し、単一のクエリでポストに関連するコメントを取得するシナリオを考えます。`Post`と`Comment`の前の定義を使用しましょう。
+
+```graphql
+type Post {
+  id: ID!
+  title: String
+  description: String
+  views: Int
+  comments: [Comment]
+}
+
+type Comment {
+  id: ID!
+  content: String
+}
+```
+
+ポストは`/posts/:id`で取得でき、ポストのコメントは`/posts/:id/comments`で取得できます。以下の更新された定義でポストIDに基づいてコメントを取得できます。`$ctx.source`は親フィールド(`Post`)の解決を含むマップであり、`id`へのアクセスを提供します。
+
+```graphql
+type Post {
+  id: ID!
+  title: String
+  description: String
+  views: Int
+  comments: [Comment]
+    @http(url: "https://www.example.com/posts/${ctx.source.id}/comments")
+}
+
+type Comment {
+  id: ID!
+  content: String
+}
+
+type Query {
+  getPost: Post @http(url: "https://www.example.com/posts/:id")
+}
+```
+
+以下のクエリと選択セットを使用して、特定のポストのコメントを取得できます。
+
+```graphql
+query post {
+  getPost(params: { id: "POST_ID" }) {
+    id
+    title
+    description
+    comments {
+      id
+      content
+    }
+  }
+}
+```
+
+`getPost`がid `POST_ID`を持つポストを取得すると仮定すると、commentsフィールドはエンドポイントへのこのリクエストを送信することで解決されます
+
+```text
+GET /posts/POST_ID/comments
+Host: www.example.com
+```
+
+参照変数(ここではポストID)が存在することを確認するチェックはありません。このテクニックを使用する場合、参照フィールドがnon-nullであることを確認することをお勧めします。
+
+### 仕組み
+
+`@http`ディレクティブの定義:
+
+```graphql
+directive @http(
+  method: HttpMethod
+  url: String!
+  headers: [HttpHeader]
+) on FIELD_DEFINITION
+enum HttpMethod {
+  PUT
+  POST
+  GET
+  DELETE
+  PATCH
+}
+input HttpHeader {
+  key: String
+  value: String
+}
+```
+
+`@http`トランスフォーマーは、識別された各ベースURL用に1つのHTTPデータソースを作成します。例えば、複数のHTTPリゾルバーが「https://www.example.com」エンドポイントと相互作用する場合、1つのデータソースだけが作成されます。各ディレクティブは1つのリゾルバーを生成します。定義に応じて、適切な`body`、`params`、`query`入力型が作成されます。`@http`トランスフォーマーは、Signature Version 4署名プロセスが必要な他のAWSサービスを呼び出すことをサポートしていません。
+
+## AppSync JavaScriptまたはVTLリゾルバー
+
+AWS Cloud Development Kit (CDK)を使用して、GraphQL API用のカスタムAppSyncリゾルバーを定義できます。`@auth`ディレクティブは、JavaScriptまたはVTLリゾルバーに接続されているカスタムクエリまたはミューテーションではサポートされていません。これは、特定のクエリまたはミューテーションに対するAmplifyの自動生成機能をカスタム定義のクラウドリソースに置き換えているためです。
+
+```bash
+amplify add custom
+```
+
+```console
+? How do you want to define this custom resource?
+❯ AWS CDK
+? Provide a name for your custom resource
+❯ MyCustomResolvers
+```
+
+次に、カスタムリソースのAppSync依存関係をインストールします:
+
+```bash
+cd amplify/backend/custom/MyCustomResolvers
+npm i @aws-cdk/aws-appsync@~1.172.0
+```
+
+> **注:** '\~'文字を使用したインストールはpackage.jsonを変更しません。デフォルトnpm設定で'\~'を使用するには、CDKの互換性エラーを回避するためにpackage.jsonが正しい依存関係を反映していることを確認してください。
+
+最後に、`cdk-stack.ts`ファイルにカスタムリゾルバーを追加します。JavaScriptまたはVTLを`cdk-stack.ts`ファイルにインラインで追加できます。
+
+#### ユニットリゾルバー
+
+<BlockSwitcher>
+
+<Block name="JavaScript resolver">
+
+JavaScriptリゾルバーの例については、[AppSync JavaScriptリゾルバーチュートリアル](https://docs.aws.amazon.com/appsync/latest/devguide/tutorials-js.html)を確認してください。
+
+```ts
+import * as cdk from 'aws-cdk-lib';
+import * as AmplifyHelpers from '@aws-amplify/cli-extensibility-helper';
+import * as appsync from 'aws-cdk-lib/aws-appsync';
+import { AmplifyDependentResourcesAttributes } from '../../types/amplify-dependent-resources-ref';
+import { Construct } from 'constructs';
+
+const jsResolverTemplate = `
+export function request(ctx) {
+  return {
+    payload: null
+  }
+}
+
+export function response(ctx) {
+  return ctx.arguments.message
+}
+`
+
+export class cdkStack extends cdk.Stack {
+  constructor(
+    scope: Construct,
+    id: string,
+    props?: cdk.StackProps,
+    amplifyResourceProps?: AmplifyHelpers.AmplifyResourceProps
+  ) {
+    super(scope, id, props);
+    /* Do not remove - Amplify CLI automatically injects the current deployment environment in this input parameter */
+    new cdk.CfnParameter(this, 'env', {
+      type: 'String',
+      description: 'Current Amplify CLI env name'
+    });
+
+    // Access other Amplify Resources
+    const retVal: AmplifyDependentResourcesAttributes =
+      AmplifyHelpers.addResourceDependency(
+        this,
+        amplifyResourceProps.category,
+        amplifyResourceProps.resourceName,
+        [
+          {
+            category: 'api',
+            resourceName: '<YOUR-API-NAME>'
+          }
+        ]
+      );
+
+    const resolver = new appsync.CfnResolver(this, 'CustomResolver', {
+      // apiId: retVal.api.new.GraphQLAPIIdOutput,
+      // https://github.com/aws-amplify/amplify-cli/issues/9391#event-5843293887
+      // If you use Amplify you can access the parameter via Ref since it's a CDK parameter passed from the root stack.
+      // Previously the ApiId is the variable Name which is wrong , it should be variable value as below
+      apiId: cdk.Fn.ref(retVal.api.replaceWithAPIName.GraphQLAPIIdOutput),
+      fieldName: 'echo',
+      typeName: 'Query', // Query | Mutation | Subscription
+      code: jsResolverTemplate,
+      dataSourceName: 'NONE_DS', // DataSource name
+      runtime: {
+        name: 'APPSYNC_JS',
+        runtimeVersion: '1.0.0'
+      }
+    });
+  }
+}
+```
+
+</Block>
+
+<Block name="VTL resolver">
+
+VTLテンプレートの詳細については、[リゾルバーマッピングテンプレートプログラミングガイド](https://docs.aws.amazon.com/appsync/latest/devguide/resolver-mapping-template-reference-programming-guide.html)を確認してください。
+
+```ts
+import * as cdk from 'aws-cdk-lib';
+import * as AmplifyHelpers from '@aws-amplify/cli-extensibility-helper';
+import * as appsync from 'aws-cdk-lib/aws-appsync';
+import { AmplifyDependentResourcesAttributes } from '../../types/amplify-dependent-resources-ref';
+import { Construct } from 'constructs';
+
+const requestVTL = `
+<YOUR CUSTOM VTL REQUEST MAPPING TEMPLATE HERE>
+`;
+const responseVTL = `
+<YOUR CUSTOM VTL RESPONSE MAPPING TEMPLATE HERE>
+`;
+
+export class cdkStack extends cdk.Stack {
+  constructor(
+    scope: Construct,
+    id: string,
+    props?: cdk.StackProps,
+    amplifyResourceProps?: AmplifyHelpers.AmplifyResourceProps
+  ) {
+    super(scope, id, props);
+    /* Do not remove - Amplify CLI automatically injects the current deployment environment in this input parameter */
+    new cdk.CfnParameter(this, 'env', {
+      type: 'String',
+      description: 'Current Amplify CLI env name'
+    });
+
+    // Access other Amplify Resources
+    const retVal: AmplifyDependentResourcesAttributes =
+      AmplifyHelpers.addResourceDependency(
+        this,
+        amplifyResourceProps.category,
+        amplifyResourceProps.resourceName,
+        [
+          {
+            category: 'api',
+            resourceName: '<YOUR-API-NAME>'
+          }
+        ]
+      );
+
+    const resolver = new appsync.CfnResolver(this, 'custom-resolver', {
+      // apiId: retVal.api.new.GraphQLAPIIdOutput,
+      // https://github.com/aws-amplify/amplify-cli/issues/9391#event-5843293887
+      // If you use Amplify you can access the parameter via Ref since it's a CDK parameter passed from the root stack.
+      // Previously the ApiId is the variable Name which is wrong , it should be variable value as below
+      apiId: cdk.Fn.ref(retVal.api.replaceWithAPIName.GraphQLAPIIdOutput),
+      fieldName: 'querySomething',
+      typeName: 'Query', // Query | Mutation | Subscription
+      requestMappingTemplate: requestVTL,
+      responseMappingTemplate: responseVTL,
+      dataSourceName: 'TodoTable' // DataSource name
+    });
+  }
+}
+```
+
+#### パイプラインリゾルバー
+
+```ts
+import * as cdk from 'aws-cdk-lib';
+import * as AmplifyHelpers from '@aws-amplify/cli-extensibility-helper';
+import * as appsync from 'aws-cdk-lib/aws-appsync';
+import { AmplifyDependentResourcesAttributes } from '../../types/amplify-dependent-resources-ref';
+import { Construct } from 'constructs';
+
+const beforeMappingVTL = `
+<YOUR CUSTOM VTL REQUEST MAPPING TEMPLATE HERE>
+`;
+const afterMappingVTL = `
+<YOUR CUSTOM VTL RESPONSE MAPPING TEMPLATE HERE>
+`;
+const function1requestVTL = `
+<YOUR CUSTOM VTL FUNCTION 1 REQUEST MAPPING TEMPLATE HERE>
+`;
+const function1responseVTL = `
+<YOUR CUSTOM VTL FUNCTION 1 RESPONSE MAPPING TEMPLATE HERE>
+`;
+const function2requestVTL = `
+<YOUR CUSTOM VTL FUNCTION 2 REQUEST MAPPING TEMPLATE HERE>
+`;
+const function2responseVTL = `
+<YOUR CUSTOM VTL FUNCTION 2 RESPONSE MAPPING TEMPLATE HERE>
+`;
+export class cdkStack extends cdk.Stack {
+  constructor(
+    scope: Construct,
+    id: string,
+    props?: cdk.StackProps,
+    amplifyResourceProps?: AmplifyHelpers.AmplifyResourceProps
+  ) {
+    super(scope, id, props);
+    /* Do not remove - Amplify CLI automatically injects the current deployment environment in this input parameter */
+    new cdk.CfnParameter(this, 'env', {
+      type: 'String',
+      description: 'Current Amplify CLI env name'
+    });
+
+    // Access other Amplify Resources
+    const retVal: AmplifyDependentResourcesAttributes =
+      AmplifyHelpers.addResourceDependency(
+        this,
+        amplifyResourceProps.category,
+        amplifyResourceProps.resourceName,
+        [
+          {
+            category: 'api',
+            resourceName: '<YOUR-API-NAME>'
+          }
+        ]
+      );
+
+    const function1 = new appsync.CfnFunctionConfiguration(this, 'function1', {
+      apiId: cdk.Fn.ref(retVal.api.replaceWithAPIName.GraphQLAPIIdOutput),
+      dataSourceName: 'NONE_DS', // DataSource name
+      functionVersion: '2018-05-29',
+      name: 'function1',
+      requestMappingTemplate: function1requestVTL,
+      responseMappingTemplate: function1responseVTL
+    });
+
+    const function2 = new appsync.CfnFunctionConfiguration(this, 'function2', {
+      apiId: cdk.Fn.ref(retVal.api.replaceWithAPIName.GraphQLAPIIdOutput),
+      dataSourceName: 'TodoTable', // DataSource name
+      functionVersion: '2018-05-29',
+      name: 'function2',
+      requestMappingTemplate: function2requestVTL,
+      responseMappingTemplate: function2responseVTL
+    });
+
+    const resolver = new appsync.CfnResolver(this, 'pipeline-resolver', {
+      apiId: cdk.Fn.ref(retVal.api.replaceWithAPIName.GraphQLAPIIdOutput),
+      fieldName: 'querySomething',
+      typeName: 'Query', // Query | Mutation | Subscription
+      kind: 'PIPELINE',
+      pipelineConfig: {
+        functions: [function1.attrFunctionId, function2.attrFunctionId]
+      },
+      requestMappingTemplate: beforeMappingVTL,
+      responseMappingTemplate: afterMappingVTL
+    });
+  }
+}
+```
+
+> **注:** ElasticSearchからOpenSearchに移行するユーザーは、アップグレードプロセスがソース名を変更した場合、データソース名を`ElasticSearchDomain`から`OpenSearchDataSource`に変更する必要があります。新しい@searchableモデルの場合、データソース名はデフォルトで`OpenSearchDataSource`になります。
+
+別の方法として、VTLテンプレートを`amplify/backend/custom/MyCustomResolvers/`内の`Query.querySomething.req.vtl`または`Query.querySomething.res.vtl`などの別のファイルで定義できます。次に、以下のコードスニペットを使用してそれらを取得します:
+
+```ts
+requestMappingTemplate: appsync.MappingTemplate.fromFile(path.join(__dirname, "..", "Query.testColin.req.vtl")).renderTemplate(),
+responseMappingTemplate: appsync.MappingTemplate.fromFile(path.join(__dirname, "..", "Query.testColin.res.vtl")).renderTemplate(),
+```
+
+> **注:** パスは常に`build`フォルダを基準にしているため、`..`がパスに追加されます。
+
+</Block>
+
+</BlockSwitcher>
+
+## カスタムクエリとミューテーションに認可ルールを追加
+
+認可ルールは、フィールドレベルの認可ルールと同じ方法で`@auth`ディレクティブを使用して適用できます。詳細は[フィールドレベルの認可ルール](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/#field-level-authorization-rules)を参照してください。
+
+以下の例では、`myCustomMutation`はIAMで認証されたサインイン済みの顧客のみが実行できます:
+
+```graphql
+type Mutation {
+  myCustomMutation(args: String): String
+    @auth(rules: [{ allow: private, provider: iam }])
+}
+```
+
+> **既知の制限:** VTLリゾルバーを使用しているカスタムクエリまたはミューテーションと`@auth`ディレクティブを組み合わせることはできません。
+
+## Amplify生成のリゾルバーをオーバーライド
+
+Amplifyはクエリとミューテーション用に[AWS AppSyncパイプラインリゾルバー](https://docs.aws.amazon.com/appsync/latest/devguide/pipeline-resolvers.html)を生成します。リゾルバーは以下のAPIリソースのフォルダ`amplify/backend/api/<resource_name>/build/resolvers/`に一覧表示されます。
+
+Amplify生成のリゾルバーをオーバーライドするには:
+
+1. `build/resolvers`の下でオーバーライドしたいリゾルバーファイル名を見つけます
+2. リソースの`resolvers/`(`build/`の下ではない)に同じファイル名の`.vtl`を配置します
+3. 次の`amplify api gql-compile`または`amplify push`時にAmplify生成のリゾルバーファイルがオーバーライドされたリゾルバーファイルに置き換わります
+
+```console
+amplify/backend/api/<resource_name>
+├── build
+│   ├── ...
+│   ├── resolvers
+│   │   ├── ...
+│   │   ├── Query.searchTodos.req.vtl # Find resolver file name
+│   │   └── ...
+|   ...
+├── resolvers
+│   └── Query.searchTodos.req.vtl # Place resolver overrides with the same file name here
+```
+
+上記の例は、`Query.searchTodos.req.vtl`がカスタムリゾルバーでオーバーライドされる方法を示しています。[リゾルバーマッピングテンプレートプログラミングガイド](https://docs.aws.amazon.com/appsync/latest/devguide/resolver-mapping-template-reference-programming-guide.html)を確認して、VTLテンプレートの詳細を学びます。
+
+## Amplify生成のリゾルバーを拡張
+
+Amplifyは[AWS AppSyncパイプラインリゾルバー](https://docs.aws.amazon.com/appsync/latest/devguide/pipeline-resolvers.html)をクエリとミューテーション用に生成します。Amplify生成のリゾルバー間にカスタムビジネスロジックを「スロット」できます。Amplify生成のリゾルバーはAPIリソースの`build/resolvers/`フォルダの下に見つかります。リゾルバー関数ファイル名はスロットシーケンス内の配置を決定します。
+
+```console
+File name convention:
+  [Query|Mutation|Subscription].[field name].[slot name].[slot placement].[req|res].vtl
+Example:
+  Mutation.createTodo.postAuth.1.req.vtl
+```
+
+Amplify生成のリゾルバーを拡張するには:
+
+1. カスタムビジネスロジックを追加したい[リゾルバースロット](#supported-resolver-slots)を見つけます
+2. `resolvers/`(`build/`の下ではない)に正しいファイル命名規則の`.vtl`ファイルを配置します
+3. 次の`amplify api gql-compile`または`amplify push`時にAmplify生成のリゾルバーファイルはリゾルバーシーケンス内の目的のスロット内に置き換わります。
+
+```console
+amplify/backend/api/<resource_name>
+├── build
+│   ├── ...
+│   ├── resolvers
+│   │   ├── ...
+│   │   ├── Mutation.createTodo.postAuth.1.req.vtl # Amplify-generated resolvers
+│   │   └── ...
+|   ...
+├── resolvers
+│   └── Mutation.createTodo.postAuth.2.req.vtl # Custom resolver slotted in after postAuth.1 resolver
+```
+
+例えば、`Mutation.createTodo.postAuth.2.req.vtl`という名前のリゾルバー関数ファイルは、`Mutation.createTodo.postAuth.1.req.vtl`リゾルバーの直後にスロットされます。[リゾルバーマッピングテンプレートプログラミングガイド](https://docs.aws.amazon.com/appsync/latest/devguide/resolver-mapping-template-reference-programming-guide.html)を確認して、VTLテンプレートの詳細を学びます。
+
+### サポートされているリゾルバースロット
+
+#### Query
+
+| シーケンス | スロット名 | 説明 |
+| --- | --- | --- |
+| 1 | init | 実行される初期リゾルバー。通常はデフォルト値の初期化に使用されます。 |
+| 2 | preAuth | 認可ルールチェックが適用される前に実行される予定のリゾルバー。 |
+| 3 | auth | 認可ルールチェックを実装するリゾルバー。 |
+| 4 | postAuth | 認可ルールチェック後に実行されるリゾルバー。 |
+| 5 | preDataLoad | データソースにリクエストを送信するための値を設定するリゾルバー。 |
+| 6 | postDataLoad | データソースへのリクエスト後のポスト処理用リゾルバー。 |
+| 7 | finish | クライアントにレスポンスが返される前の最終的なリゾルバーセット。通常はクリーンアップに使用されます。 |
+
+#### Mutation
+
+| シーケンス | スロット名 | 説明 |
+| --- | --- | --- |
+| 1 | init | 実行される初期リゾルバー。通常はデフォルト値の初期化に使用されます。 |
+| 2 | preAuth | 認可ルールチェックが適用される前に実行される予定のリゾルバー。 |
+| 3 | auth | 認可ルールチェックを実装するリゾルバー。 |
+| 4 | postAuth | 認可ルールチェック後に実行されるリゾルバー。 |
+| 5 | preUpdate | データソースにリクエストを送信するための値を設定するリゾルバー。 |
+| 6 | postUpdate | データソースへのリクエスト後のポスト処理用リゾルバー。 |
+| 7 | finish | クライアントにレスポンスが返される前の最終的なリゾルバーセット。通常はクリーンアップに使用されます。 |
+
+#### Subscription
+
+| シーケンス | スロット名 | 説明 |
+| --- | --- | --- |
+| 1 | init | 実行される初期リゾルバー。通常はデフォルト値の初期化に使用されます。 |
+| 2 | preAuth | 認可ルールチェックが適用される前に実行される予定のリゾルバー。 |
+| 3 | auth | 認可ルールチェックを実装するリゾルバー。 |
+| 4 | postAuth | 認可ルールチェック後に実行されるリゾルバー。 |
+| 5 | preSubscribe | 認可後だが購読が返される前に実行するリゾルバースロット |

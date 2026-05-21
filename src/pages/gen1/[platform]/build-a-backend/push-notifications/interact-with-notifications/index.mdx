@@ -1,0 +1,24 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: '通知と連携する',
+  description: '様々なイベントを通じてプッシュ通知と連携します。',
+  platforms: ['react-native', 'flutter']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import commonRoute from '/src/fragments/lib/push-notifications/common/interact_with_notifications/interact-with-notifications.mdx';
+
+<Fragments fragments={{ flutter: commonRoute, 'react-native': commonRoute }} />

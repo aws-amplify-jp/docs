@@ -1,0 +1,429 @@
+---
+title: "フロントエンドを接続する"
+section: "frontend/ai/conversation"
+platforms: ["javascript", "react-native", "angular", "nextjs", "react", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/ai/conversation/connect-your-frontend/"
+---
+
+このガイドでは、会話の作成、更新、削除、およびメッセージの送信とアシスタント応答の購読方法について学びます。
+
+会話とそれに関連するメッセージはAmazon DynamoDBに永続化されます。これは、会話の以前のメッセージがLLMに送信されたチェーンに自動的に含まれることを意味します。会話とメッセージへのアクセスは、[所有者ベースの認可戦略](/[platform]/build-a-backend/data/customize-authz/per-user-per-owner-data-access/)を通じて個々のユーザーにスコープされます。
+
+## 会話とメッセージの種類
+
+### 会話
+
+会話フロー内には、`Conversation`と`Message`という2つのメインタイプがあります。
+
+`Conversation`はアプリケーションユーザーとLLM間のチャットセッションのインスタンスです。会話と対話するためのデータとメソッドが含まれています。会話はそのメッセージとの1対多の関係があります。
+
+`Conversation`タイプは`Schema['myChat']['type']`タイプ定義を通じてアクセス可能です。ここで`'myChat'`はデータスキーマ内の会話ルートの名前です。
+
+| プロパティ/メソッド | 型 | 説明 |
+|------------------|:-------|:-------------|
+| `id`             | `string` | 会話の一意の識別子 |
+| `name`           | `string \| undefined` | 会話の名前。<br/>会話を作成または更新するときに名前を指定できます。 |
+| `metadata`       | `Record<string, string> \| undefined` | 会話に関連するメタデータ。<br/>会話を作成または更新するときに任意のメタデータを指定できます。 |
+| `createdAt`      | `string` | 会話が作成された日時 |
+| `updatedAt`      | `string` | 最後のユーザーメッセージが送信された日時 |
+| `sendMessage()`  | `(content: MessageContent) => {`<br/>&nbsp;&nbsp;`data: Message;`<br/>&nbsp;&nbsp;`errors: Error[]`<br/>`}` | AIアシスタントにメッセージを送信 |
+| `listMessages()` | `() => {`<br/>&nbsp;&nbsp;`data: Message[];`<br/>&nbsp;&nbsp;`errors: Error[]`<br/>`}` | 会話のすべてのメッセージをリスト表示 |
+| `onStreamEvent()`| `(options: {`<br/>&nbsp;&nbsp;`next: (event: StreamEvent) => void;`<br/>&nbsp;&nbsp;`error: (error: Error) => void;`<br/>`}) => void` | アシスタント応答を購読 |
+
+### メッセージ
+
+`Message`はアプリケーションユーザーとLLM間の単一のチャットメッセージです。各メッセージには`role`プロパティがあり、メッセージがユーザーからのものかアシスタントからのものかを示します。ユーザーとアシスタントのメッセージは1対1の関係があります。アシスタントメッセージには、アシスタント応答をトリガーしたユーザーメッセージの`id`を指す`associatedUserMessageId`プロパティが含まれています。
+
+`Message`タイプは`Schema['myChat']['messageType']`を通じてアクセス可能です。ここで`'myChat'`はデータスキーマ内の会話ルートの名前です。
+
+| プロパティ | 型 | 説明 |
+|-----------|:-------|:-------------|
+| `id` | `string` | メッセージの一意の識別子 |
+| `conversationId` | `string` | このメッセージが属する会話のID |
+| `associatedUserMessageId` | `string \| undefined` | アシスタントメッセージの場合、応答をトリガーしたユーザーメッセージのID |
+| `content` | `MessageContent[]` | メッセージの内容 |
+| `role` | `'user' \| 'assistant'` | メッセージがユーザーからのものかアシスタントからのものか |
+| `createdAt` | `string` | メッセージが作成された日時 |
+
+## リクエストレスポンスフロー
+
+1. `.create()`で新しい会話を作成するか、`.get()`で既存の会話を取得します。
+2. `.onStreamEvent()`で会話のアシスタント応答を購読します。
+3. `.sendMessage()`で会話にメッセージを送信します。
+
+```ts
+import { generateClient } from 'aws-amplify/data';
+import { type Schema } from '../amplify/data/resource'
+
+const client = generateClient<Schema>();
+
+// 1. 会話を作成
+const { data: chat, errors } = await client.conversations.chat.create();
+
+// 2. アシスタント応答を購読
+const subscription = chat.onStreamEvent({
+  next: (event) => {
+    // アシスタント応答ストリームイベントを処理
+    console.log(event);
+  },
+  error: (error) => {
+    // エラーを処理
+    console.error(error);
+  },
+});
+
+// 3. 会話にメッセージを送信
+const { data: message, errors } = await chat.sendMessage('Hello, world!');
+```
+
+## 会話の管理
+
+### 会話を作成
+
+会話ルートで`.create()`メソッドを呼び出して新しい会話を作成します。以下の例では、`chat`という名前の会話ルートを使用しています。
+
+```ts
+const { data: chat, errors } = await client.conversations.chat.create();
+
+/**
+会話データの例
+{
+  id: '123e4567-e89b-12d3-a456-426614174000',
+  createdAt: '2024-01-01T00:00:00.000Z',
+  updatedAt: '2024-01-01T00:00:00.000Z',
+}
+*/
+```
+
+`.create()`メソッドに引数として`name`と`metadata`を渡すことで、会話に任意に`name`と`metadata`を付与することができます。会話の`name`または`metadata`値には一意性制約がありません。`metadata`を使用して、チャットを整理し、特定のトピックにグループ化することができます。
+
+```ts
+const { data: chat, errors } = await client.conversations.chat.create({
+  name: 'My conversation',
+  metadata: {
+    value: '1234567890',
+  },
+});
+
+/**
+会話データの例
+{
+  id: '123e4567-e89b-12d3-a456-426614174000',
+  name: 'My conversation',
+  metadata: {
+    value: '1234567890',
+  },
+  createdAt: '2024-01-01T00:00:00.000Z',
+  updatedAt: '2024-01-01T00:00:00.000Z',
+}
+*/
+```
+
+### 既存の会話を取得
+
+会話ルートで`.get()`メソッドを呼び出して、会話の`id`を指定することで、既存の会話を取得できます。
+
+```ts
+const id = '123e4567-e89b-12d3-a456-426614174000';
+const { data: chat, errors } = await client.conversations.chat.get({ id });
+
+/**
+会話データの例
+{
+  id: '123e4567-e89b-12d3-a456-426614174000',
+  createdAt: '2024-01-01T00:00:00.000Z',
+  updatedAt: '2024-01-01T00:00:00.000Z',
+}
+*/
+```
+
+### 会話をリスト表示
+
+`.list()`メソッドで、ユーザーのすべての会話をリスト表示できます。取得された会話は`updatedAt`で降順にソートされます。これは、最近使用された会話が最初に返されることを意味します。
+
+```ts
+const { data: chat, errors } = await client.conversations.chat.list();
+
+/**
+会話データの例
+{
+  items: [
+    {
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+    },
+    ...
+  ],
+  nextToken: '...',
+}
+*/
+```
+
+`nextToken`値を使用して会話をページネーションし、オプションで`limit`を指定して返される会話の数を制限します。
+
+```ts
+const { data: chat, errors } = await client.conversations.chat.list({
+  limit: 10,
+  nextToken: '...',
+});
+```
+
+### 会話を更新
+
+`.update()`メソッドで会話の`name`と`metadata`を更新できます。
+
+これは、送信されたメッセージに基づいて会話名を更新したい場合や、後で任意のメタデータを添付したい場合に便利です。
+
+```ts
+const id = '123e4567-e89b-12d3-a456-426614174000';
+const { data: chat, errors } = await client.conversations.chat.update({
+  id,
+  name: 'My updated conversation',
+});
+
+/**
+会話データの例
+{
+  id: '123e4567-e89b-12d3-a456-426614174000',
+  name: 'My updated conversation',
+  createdAt: '2024-01-01T00:00:00.000Z',
+  updatedAt: '2024-01-02T00:00:00.000Z',
+}
+*/
+```
+
+### 会話を削除
+
+<Callout type="info">
+  会話を削除すると、今後使用できなくなります。ただし、関連するメッセージは削除されません。
+</Callout>
+
+```ts
+const id = '123e4567-e89b-12d3-a456-426614174000';
+const { data: chat, errors } = await client.conversations.chat.delete({ id });
+```
+
+## 会話インスタンスの使用
+
+会話インスタンスを取得したら、インスタンスでメソッドを呼び出すことで対話できます。これらのメソッドは、[会話とメッセージの種類](#会話とメッセージの種類)セクションで説明しています。
+
+### メッセージを送信
+
+会話インスタンスを取得したら、`.sendMessage()`メソッドを呼び出すことでAIアシスタントにメッセージを送信できます。最も単純な形式では、メッセージの内容をテキストとして渡すだけです。
+
+<Callout type="info">
+  返されるメッセージは送信されたユーザーメッセージです。アシスタントメッセージはクライアントにストリーミングされ、`.onStreamEvent()`メソッドで購読できます。詳細は[アシスタント応答を購読](#アシスタント応答を購読)を参照してください。
+</Callout>
+
+```ts
+const { data: message, errors } = await chat.sendMessage('Hello, world!');
+
+/**
+メッセージデータの例
+{
+  id: '98765432-dcba-4321-9876-543210987654',
+  conversationId: '123e4567-e89b-12d3-a456-426614174000',
+  content: 'Hello, world!',
+  role: 'user',
+  createdAt: '2024-01-01T00:00:00.000Z',
+}
+*/
+```
+
+`.sendMessage()`に渡すことができる他の引数があり、アプリケーションの必要に応じてメッセージをカスタマイズできます。
+
+#### メッセージコンテンツのカスタマイズ
+
+`sendMessage()`は`content`プロパティを持つオブジェクト型を受け入れ、AIアシスタントに異なるタイプのコンテンツを送信する柔軟な方法を提供します。
+
+##### 画像コンテンツ
+`image`を使用してAIアシスタントに画像を送信します。
+サポートされている画像形式は`png`、`gif`、`jpeg`、`webp`です。
+
+```ts
+const { data: message, errors } = await chat.sendMessage({
+  content: [
+    {
+      image: {
+        format: 'png',
+        source: {
+          bytes: new Uint8Array([1, 2, 3]),
+        },
+      },
+    },
+  ],
+});
+```
+
+単一のメッセージで`text`と`image`を混在させることができます。
+
+```ts
+const { data: message, errors } = await chat.sendMessage({
+  content: [
+    {
+      text: 'describe the image in detail',
+    },
+    {
+      image: {
+        format: 'png',
+        source: {
+          bytes: new Uint8Array([1, 2, 3]),
+        },
+      },
+    },
+  ],
+});
+```
+
+#### AIコンテキスト
+
+`aiContext`引数を使用すると、任意にメッセージにデータを添付できます。これは、ユーザー情報やアプリケーションの現在の状態など、追加情報をユーザーメッセージでAIアシスタントに渡すのに便利です。
+
+```ts
+const { data: message, errors } = await chat.sendMessage({
+  content: [{ text: 'Hello, world!' }],
+  aiContext: {
+    user: {
+      name: "Dan"
+    }
+  },
+});
+```
+
+#### ツール構成
+
+`toolConfiguration`引数を使用すると、クライアントツール構成をAIアシスタントにユーザーメッセージで渡すことができます。ツールの詳細については、[ツールのコンセプトページ](/[platform]/frontend/ai/conversation/tools)と[ツールのガイド](/[platform]/frontend/ai/conversation/tools/)を参照してください。
+
+<Callout type="info">
+  クライアントツールは概念的にはデータツールとlambda実行可能ツールと同じです。ユーザーメッセージと一緒にLLMに提供されるAPI定義です。LLMは提供されたツール構成を使用して、ユーザーに応じるために呼び出すツール（ある場合）を決定できます。ただし、クライアントツールに関して重要な区別があります。ツール実行ロジックを実装し、ツールの応答でAIアシスタントに応答する責任があります。
+</Callout>
+
+`json`プロパティはツールの入力のJSON Schemaの定義です。AIアシスタントはこのスキーマを使用して、ツールに期待される入力を提供します。
+```ts
+const { data: message, errors } = await conversation.sendMessage({
+  content: [
+    {
+      text: "I'd like to make a chocolate cake for my friend with a gluten intolerance. What ingredients do I need?",
+    },
+  ],
+  toolConfiguration: {
+    tools: {
+      generateRecipe: {
+        description: "List ingredients needed for a recipe",
+        inputSchema: {
+          json: {
+            type: "object",
+            properties: {
+              ingredients: {
+                type: "array",
+                items: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+AIアシスタントからの応答は、`inputSchema`定義に一致するJSONオブジェクトです。応答を処理する方法の詳細については、[アシスタント応答を購読](#アシスタント応答を購読)を参照してください。
+
+### アシスタント応答を購読
+
+アシスタント応答は、生成されるにつれてクライアントにストリーミングされます。これにより、ユーザーはAIアシスタントからの完全な応答を待たずに進捗を確認し、応答の読み取りを開始することができる、より自然な会話フローが可能になります。アシスタント応答を購読するには、会話インスタンスで`.onStreamEvent()`メソッドを呼び出します。
+
+```ts
+const subscription = conversation.onStreamEvent({
+  next: (event) => {
+    console.log(event);
+  },
+  error: (error) => {
+    console.error(error);
+  },
+});
+
+// 後で...
+subscription.unsubscribe();
+```
+
+`onStreamEvent()`は`next`と`error`という2つのコールバック関数を引数として受け取ります。`next`コールバックは各アシスタント応答で呼び出されます。
+
+`error`コールバックはメッセージ処理中にエラーが発生した場合に呼び出されます。
+
+`next`コールバックは`ConversationStreamEvent`オブジェクトで呼び出されます。このタイプは`Schema['myChat']['streamEventType']`を通じてアクセス可能で、以下のタイプの共用体です:
+
+#### ConversationStreamTextEvent
+
+テキストがクライアントにストリーミングされるにつれて、`next`コールバックは`ConversationStreamTextEvent`オブジェクトで呼び出されます。
+
+| プロパティ | 型 | 説明 |
+|----------|:-----|:------------|
+| `id` | `string` | ストリームイベントの一意の識別子 |
+| `conversationId` | `string` | このイベントが属する会話のID |
+| `associatedUserMessageId` | `string` | この応答をトリガーしたユーザーメッセージのID |
+| `contentBlockIndex` | `number` | ストリーミングされているコンテンツブロックのインデックス |
+| `contentBlockDeltaIndex` | `number` | コンテンツブロック内のデルタのインデックス |
+| `text` | `string` | ストリーミングされているテキストコンテンツ |
+
+#### ConversationStreamDoneAtIndexEvent
+
+AIアシスタントがコンテンツブロックを完成させると、`next`コールバックは`ConversationStreamDoneAtIndexEvent`オブジェクトで呼び出されます。
+
+| プロパティ | 型 | 説明 |
+|----------|:-----|:------------|
+| `id` | `string` | ストリームイベントの一意の識別子 |
+| `conversationId` | `string` | このイベントが属する会話のID |
+| `associatedUserMessageId` | `string` | この応答をトリガーしたユーザーメッセージのID |
+| `contentBlockIndex` | `number` | 完了したコンテンツブロックのインデックス |
+| `contentBlockDoneAtIndex` | `number` | コンテンツブロックが完了するインデックス |
+
+#### ConversationStreamTurnDoneEvent
+
+AIアシスタントがターンを完了すると、`next`コールバックは`ConversationStreamTurnDoneEvent`オブジェクトで呼び出されます。このイベントは、アシスタントがターンを完了し、次のユーザーメッセージを待っていることを示します。
+
+| プロパティ | 型 | 説明 |
+|----------|:-----|:------------|
+| `id` | `string` | ストリームイベントの一意の識別子 |
+| `conversationId` | `string` | このイベントが属する会話のID |
+| `associatedUserMessageId` | `string` | この応答をトリガーしたユーザーメッセージのID |
+| `contentBlockIndex` | `number` | ターンの最後のコンテンツブロックのインデックス |
+| `stopReason` | `string` | アシスタントが応答の生成を停止した理由 |
+
+#### ConversationStreamToolUseEvent
+
+AIアシスタントがクライアントツールを使用すると、`next`コールバックは`ConversationStreamToolUseEvent`オブジェクトで呼び出されます。ツール使用イベントはクラウドリソースに蓄積され、単一のイベントとしてクライアントに送信されます。
+
+| プロパティ | 型 | 説明 |
+|----------|:-----|:------------|
+| `id` | `string` | ストリームイベントの一意の識別子 |
+| `conversationId` | `string` | このイベントが属する会話のID |
+| `associatedUserMessageId` | `string` | この応答をトリガーしたユーザーメッセージのID |
+| `contentBlockIndex` | `number` | ストリーミングされているコンテンツブロックのインデックス |
+| `toolUse` | `ToolUseBlock` | 関数呼び出し情報を含むツール使用ブロック |
+
+<Callout type="info">
+  **順序に関する注意**
+
+  イベントがクライアントによって受け取られた順序を保証するものはありません。例えば、`contentBlockDeltaIndex`が`1`の`ConversationStreamTextEvent`は、前のテキスト(`contentBlockDeltaIndex`が`0`)の前に受け取られることがあります。イベントが順序外で受け取られる可能性があると仮定し、`contentBlockIndex`と`contentBlockDeltaIndex`プロパティを使用して必要に応じてイベントを注文してください。
+</Callout>
+
+### 会話のメッセージをリスト表示
+
+会話インスタンスで`.listMessages()`メソッドを呼び出すことで、会話のすべてのメッセージを取得します。メッセージは自動的に永続化されるため、いつでも取得して会話履歴を表示できます。
+
+```ts
+const { data: messages, errors } = await conversation.listMessages();
+```
+
+`client.conversations.chat.list()`メソッドと同様に、取得されたメッセージはページネーションされます。`nextToken`値を使用してメッセージをページネーションし、オプションで`limit`を指定して返されるメッセージの数を制限します。
+
+```ts
+const { data: messages, errors } = await conversation.listMessages({
+  limit: 10,
+  nextToken: '...',
+});
+```

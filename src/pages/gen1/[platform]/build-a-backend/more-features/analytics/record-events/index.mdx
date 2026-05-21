@@ -1,0 +1,112 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'イベントの記録',
+  description: 'Amplifyを使用して分析イベントを記録する方法を学びます。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'swift',
+    'android',
+    'flutter',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import android_record from '/src/fragments/lib/analytics/android/record.mdx';
+import flutter_record from '/src/fragments/lib/analytics/flutter/record.mdx';
+import ios_record from '/src/fragments/lib/analytics/ios/record.mdx';
+
+<Fragments
+  fragments={{
+    android: android_record,
+    flutter: flutter_record,
+    swift: ios_record
+  }}
+/>
+
+<InlineFilter filters={['javascript',  'react-native', "angular", "nextjs", "react", "vue"]}>
+
+## カスタムイベントの記録
+
+カスタムイベントを記録するには、`record` APIを呼び出します：
+
+```javascript
+import { record } from 'aws-amplify/analytics';
+
+record({
+  name: 'albumVisit',
+});
+```
+
+<Callout>
+
+分析イベントはメモリにバッファリングされ、定期的にサービスに送信されます。アプリケーションセッション間でローカルに保存されません。バッファリングされたイベントが送信される前にセッションが終了した場合、イベントは失われます。`flushEvents` APIを使用して、バッファリングされたイベントを手動でサービスに送信してください。
+
+</Callout>
+
+## 属性付きカスタムイベントの記録
+
+`record` APIを使用すると、イベントに追加の属性を追加できます。例えば、_albumVisit_イベントと共に_artist_情報を記録するには：
+
+```javascript
+import { record } from 'aws-amplify/analytics';
+
+record({
+  name: 'albumVisit',
+  attributes: { genre: '', artist: '' },
+});
+```
+
+記録されたイベントはバッファリングされ、定期的にPinpointに送信されます。
+
+## エンゲージメントメトリクスの記録
+
+メトリクスをイベントに追加することもできます：
+
+```javascript
+import { record } from 'aws-amplify/analytics';
+
+record({
+  name: 'albumVisit',
+  metrics: { minutesListened: 30 },
+});
+```
+
+メトリクス値は、floatまたはintegerなどの`Number`型である必要があります。
+
+<Callout>
+
+AWS Pinpointのイベント数は、イベント記録後数分で更新されます。
+
+ただし、フィルターセクションにイベントが表示され、Pinpointにカスタム属性が表示されるまでに、30分以上かかる場合があります。
+
+</Callout>
+
+## イベントのフラッシュ
+
+記録されたイベントはバッファに保存され、定期的にリモートサーバーに送信されます。必要に応じて、'flushEvents' APIを使用してバッファからすべてのイベントを手動でクリアすることができます。
+
+```javascript
+import { flushEvents } from 'aws-amplify/analytics';
+
+flushEvents();
+```
+
+</InlineFilter>

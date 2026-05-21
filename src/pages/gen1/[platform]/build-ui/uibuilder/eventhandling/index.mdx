@@ -1,0 +1,334 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'UIイベントハンドラー',
+  description: 'Amplify StudioでFigmaからReactコードへ',
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify Studioは、UIコンポーネントイベント（`onClick`、`onChange`など）をアクションにバインドして、インタラクティブなコンポーネントを構築する機能を提供します。UIコンポーネントエディターを使用して、UIコンポーネントのイベントをアクションにマッピングしてから、ナビゲーション、データ操作、認証などを実行できます。すべてのデータバインディングは自動的に生成されたコードに含まれます。
+
+1. アプリの[Amplify Studioを起動](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)します
+2. ボタンなどのUI要素を選択します
+3. **子プロパティ**パネルで`Set onClick action`をクリックします
+4. UI要素にバインドするアクションを選択します
+
+## UIをナビゲーションアクションにバインドする
+
+UI要素をナビゲーションアクションにバインドできます。ナビゲーションアクションには、URLへの移動、新しいタブでのURL開く、アンカーへのスクロール、ページの更新機能が含まれます。
+
+### URLへ移動
+
+「URLへ移動」アクションは、顧客を指定されたURLにナビゲートします。コンポーネントのトップレベルプロパティによって提供される動的データを使用してURLを構築することもできます。
+
+1. `URLへ移動`を選択します
+2. ターゲットURLを入力します。例：`https://support.example.com`
+
+|「URLへ移動」へのStudioインターフェース|URLにナビゲートするライブアプリ|
+|-|-|
+|![「URLへ移動」を設定するStudioインターフェース](/images/console/go_to_url_studio.png) | ![インタラクティブなウェブサイト](/images/console/go_to_url_app.gif)|
+
+3. コレクション内の特定のアイテムのURLに動的にナビゲートするには、アイテムのidを連結します。下の例では、URLは`home`の`id`フィールドと連結されています。
+
+![URLを要素IDに動的にバインドするStudioインターフェース](/images/console/go_to_url_collection.png) 
+
+### 新しいタブでURLを開く
+
+「新しいタブでURLを開く」を選択して、ターゲットURLを新しいタブで開きます。[URLへ移動](#go-to-url)と同様に、コンポーネントのトップレベルプロパティによって提供される動的データを使用してURLを構築することもできます。
+
+### アンカーにスクロール
+
+onClickアクションを指定されたアンカー（HTMLの`id`属性に基づく）にバインドして、ページ上をスクロールできます。例えば、目次セクションがあり、UI内の特定の要素にナビゲートします。
+
+1. `アンカーにスクロール`を選択します
+2. 値として`lorem-ipsum`を入力します
+3. アプリコードで`id="lorem-ipsum"`のHTML要素を追加します
+
+<table>
+<tbody>
+<tr>
+  <td>
+
+```jsx
+import { HeroLayout1 } from './ui-components'
+
+<div className="App">
+  <HeroLayout1 />
+  ...
+  <div id="lorem-ipsum">
+    <h2>Lorem Ipsum</h2>
+    <p>
+      Here is a description of my new feature.
+    </p>
+  </div>
+  ...
+</div>
+```
+
+</td>
+<td>
+
+![特定の要素のidにスクロール](/images/console/scroll_to_anchor.gif) 
+
+</td>
+</tr>
+</tbody>
+</table>
+
+
+### ページを更新
+
+「更新」を選択して、現在のページのブラウザー更新を実行します。
+
+## UIをデータレコードの作成、更新、削除にバインドする
+
+<Callout warning>
+
+**Amplify Studioは現在、Reactフォームを構築する新しいエクスペリエンスを提供しています**。以下に記載されているデータアクションバインディングを使用する前に、[フォームビルダー（React）](/gen1/[platform]/build-ui/formbuilder/)を確認することをお勧めします。
+
+</Callout>
+
+UI要素をデータアクションにバインドして、Figmaで生成されたUIコンポーネントがフォームとして機能するようにできます。データアクションには、データベースからレコードを作成、更新、削除する機能が含まれます。
+
+アクセシビリティのために、コンポーネントを`form`としてマークしてください。
+1. 要素ツリーからトップ要素を選択します
+2. `as`という名前の新しい子プロパティを追加します
+3. 値を`form`に設定します
+
+これにより、コンポーネントはHTML`<form />`要素内でレンダリングされます。
+
+### DataStoreの使用
+
+StudioイベントハンドラーでAnyを使用して作成されたフォームは、任意のAmplify GraphQL APIで機能します。DataStoreの有無にかかわらず使用できます。
+
+ただし、DataStoreを使用している場合、DataStoreはデフォルト認証タイプのみを使用し、MULTI_AUTH有効で設定されていない限り、追加のタイプは使用しません。ほとんどの場合、フォームに認証が必要です。例えば、アプリは公開コンテンツに`API Key`を使用し、ユーザーがログインしたら`Cognito User Pool`を個人向けコンテンツに使用できます。
+
+DataStore＆Amplify Formsで複数の認証タイプを有効にするには、[複数の認証タイプの設定](/gen1/[platform]/build-a-backend/more-features/datastore/authz-rules-setup/#configure-multiple-authorization-types)を参照してください。
+
+### データベースにレコードを作成する
+
+入力フィールドによって提供される値に基づいて新しいレコードを作成できます。例えば、賃貸リスティングサイト用に新しい「Home」を作成するフォームがあります。フォームには、アドレス、価格、および画像URLの入力が含まれます。
+
+<table>
+<tbody>
+<tr>
+<td>
+
+1. 「送信」ボタン要素を選択します
+2. 要素にonClickアクションを追加します
+3. 「作成」データアクションを選択します
+4. レコードを作成するデータベースモデルを選択します
+5. モデルフィールドを入力値にマッピングします
+
+</td>
+<td>
+
+
+![レコードを作成するStudioコンソールエクスペリエンス](/images/console/create_data_studio.gif)
+
+</td>
+</tr>
+</tbody>
+</table>
+
+
+「作成」データアクションでコンポーネントをレンダリングします。**プロチップ：** Amplify Studioのコレクションコンポーネントはデータをリアルタイムで同期します。新しいレコードがデータベースで利用可能な場合、アプリに自動的に同期されます。
+
+```jsx
+import { NewHomeInput, HomeCollection } from './ui-components'
+
+...
+<div>
+  <NewHomeInput />
+  <HomeCollection />
+</div>
+```
+
+![アプリ内レコード作成データアクションバインディング](/images/console/create_data_app.gif)
+
+### データベースからレコードを更新する
+
+「更新」データアクションを使用して既存のレコードを更新できます。例えば、ユーザーはコレクション内のホームをクリックして、フォームで値を更新できます。
+
+<table>
+  <tbody>
+<tr>
+<td>
+
+1. 「送信」ボタン要素を選択します
+2. 要素にonClickアクションを追加します
+3. 「更新」データアクションを選択します
+4. レコードを作成するデータベースモデルを選択します
+5. 更新するレコードのIDを入力します
+6. モデルフィールドを入力値にマッピングします
+
+</td>
+<td>
+
+
+![レコードを作成するStudioコンソールエクスペリエンス](/images/console/update_data_studio.gif)
+
+</td>
+</tr>
+</tbody>
+</table>
+
+コレクション内の`overrideItems`プロパティを使用して、`onClick`ハンドラーを設定し、更新するホームを選択します。オプションで、フォームのプレースホルダー値を現在のホーム値に設定します。
+
+**プロチップ：** Amplify Studioのコレクションコンポーネントはデータをリアルタイムで同期します。レコードがデータベースで更新されると、アプリに自動的に同期されます。
+
+```jsx
+import { UpdateHome, HomeCollection } from './ui-components'
+import { useState } from 'react'
+
+...
+
+function App() {
+  const [updateHome, setUpdateHome] = useState()
+  return (
+    <div>
+      <UpdateHome home={updateHome}/>
+      <HomeCollection overrideItems={({ item }) => ({
+        onClick: () => setUpdateHome(item)
+      })} />
+    </div>
+  )
+}
+```
+
+![アプリ内レコード更新データアクションバインディング](/images/console/update_data_app.gif)
+
+### データベースからレコードを削除する
+
+モデルのIDフィールドに基づいて新しいレコードを削除できます。例えば、賃貸リスティングサイトから「Home」を削除するモーダルがある場合です。
+
+<table>
+  <tbody>
+<tr>
+<td>
+
+1. 「削除」ボタン要素を選択します
+2. 要素にonClickアクションを追加します
+3. 「削除」データアクションを選択します
+4. 削除するデータベースモデルを選択します
+5. IDの値をプロパティにマッピングします
+
+</td>
+<td>
+
+
+![レコードを作成するStudioコンソールエクスペリエンス](/images/console/delete_data_studio.gif)
+
+</td>
+</tr>
+</tbody>
+</table>
+
+アプリコードで、Homeコレクションに対するonClickハンドラーを設定して、削除モーダルを表示できます。その後、`DeleteHome`コンポーネントの`home`プロパティを設定して、削除するホームを設定します。また、`ui` Hubイベントをリッスンして、レコードが削除された後のモーダルを閉じることもできます。
+
+```jsx
+import { HomeCollection, DeleteHome } from './ui-components'
+import { Hub } from 'aws-amplify/utils'
+import { useState, useEffect } from 'react'
+
+...
+
+function App() {
+  const [showDeleteHome, setShowDeleteHome] = useState()
+  useEffect(() => {
+    Hub.listen('ui', ({ payload }) => {
+      if (payload.event === 'actions:datastore:delete:finished') {
+        setShowDeleteHome()
+      }
+    })
+  }, [setShowDeleteHome])
+
+  return (
+    <div className="App">
+      <HomeCollection overrideItems={({ item }) => ({
+        onClick: () => setShowDeleteHome(item)
+      })} />
+      {showDeleteHome &&
+        <div className='modal'>
+          <DeleteHome home={showDeleteHome} />
+        </div>}
+    </div>
+  );
+}
+```
+
+![アプリ内レコード削除エクスペリエンス](/images/console/delete_data_app.gif) 
+
+## UIイベントを別のUI要素の変更にバインドする
+
+要素変更アクションバインディングを使用して、コンポーネントにより多くのUIレベルのインタラクティビティを導入してください。例えば、ホバーエフェクトを設定したり、ユーザーが要素をクリックしたときに色の変更をトリガーしたり、ユーザーインタラクションに基づいて他の要素の可視性を切り替えたりできます。要素にホバーエフェクトを追加するには：
+
+1. 「onMouseEnter」プロパティを設定します
+2. 「要素プロパティを変更」を選択します
+3. 変更するコンポーネントを選択します
+4. 例として「backgroundColor」を選択します
+5. 目的の背景色の値を更新します
+6. 「onMouseLeave」プロパティで繰り返して背景値をリセットします
+
+![ホバーエフェクトを設定するStudioエクスペリエンス](/images/console/modify_element_studio.gif) 
+
+## UIを「サインアウト」アクションにバインドする
+
+「サインアウト」アクションを使用して、ユーザーをアプリからサインアウトさせてください。現在のデバイスからサインアウトするか、すべてのデバイスからサインアウト（グローバルサインアウトとも呼ばれます）するかを選択します。
+
+<table>
+<tbody>
+<tr>
+<td>
+
+1. 「サインアウト」ボタン要素を選択します
+2. 要素にonClickアクションを追加します
+3. 「このデバイスからサインアウト」データアクションを選択します
+
+</td>
+<td>
+
+
+![サインアウトアクションを設定するStudioコンソールエクスペリエンス](/images/console/sign_out_studio.gif)
+
+</td>
+</tr>
+</tbody>
+</table>
+
+サインアウトアクションは[`Authenticator`コンポーネント](https://ui.docs.amplify.aws/react/components/authenticator)と組み合わせて機能します。サインアウトすると、Authenticatorが表示されて、ユーザーに再度サインインするよう促します。
+
+```jsx
+import { withAuthenticator } from '@aws-amplify/ui-react'
+import { UserInfo } from './ui-components'
+
+function App() {
+  return <UserInfo />
+}
+
+export default withAuthenticator(App);
+```
+
+![アプリ内サインアウトエクスペリエンス](/images/console/sign_out_app.gif) 
+
+## アクション実行後のUI変更を処理する
+
+アクションが実行された後に追加のビジネスロジックを追加する場合は、[アクション実行の前後に追加のビジネスロジックを追加](/gen1/[platform]/build-ui/uibuilder/override/#add-business-logic-during-or-after-action-execution)を確認してください。この機能を使用して、データレコードが作成された後のモーダルを閉じたり、アクション後に分析イベントを送信したり、レコードが作成されているときにロード中のインジケーターを表示したりできます。

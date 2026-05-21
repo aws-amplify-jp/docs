@@ -1,0 +1,123 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '転送アクセラレーションを使用する',
+  description: "S3バケットでS3の転送アクセラレーションを有効にして使用する方法",
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue',
+    'flutter'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import js from '/src/fragments/lib-v1/storage/js/transfer-acceleration.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js,
+    'react-native': js,
+    angular: js,
+    nextjs: js,
+    react: js,
+    vue: js
+  }}
+/>
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+
+<Callout warning>
+
+転送アクセラレーションを使用すると、追加のデータ転送料金が発生する可能性があります。価格詳細については、[Amazon S3の価格](https://aws.amazon.com/s3/pricing/)を参照してください。
+
+</Callout>
+
+<InlineFilter filters={['flutter']}>
+
+[転送アクセラレーション](https://docs.aws.amazon.com/AmazonS3/latest/userguide/transfer-acceleration.html)を有効にすると、エンドユーザーデバイスとS3バケット間の長距離での高速かつセキュアなファイル転送が可能になります。このセットアップではストレージリソースをオーバーライドし、`useAccelerateEndpoint`パラメータを使用して加速S3エンドポイントを活用できます。
+
+## ストレージリソースのオーバーライド
+
+まず、ストレージリソースをオーバーライドしてS3バケットで転送アクセラレーションを有効にします。
+
+```sh
+$ amplify override storage
+✅ Successfully generated "override.ts" folder at <project>/amplify/backend/storage/accelerated-bucket
+✔ Do you want to edit override.ts file now? (Y/n) · yes
+Edit the file in your editor: <project>/amplify/backend/storage/accelerated-bucket/override.ts
+```
+
+生成された`override.ts`ファイルで、次のCDKスニペットを使用して転送アクセラレーションを有効にします。
+
+```javascript
+// amplify/backend/storage/accelerated-bucket/override.ts
+import { AmplifyS3ResourceTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyS3ResourceTemplate) {
+  resources.s3Bucket.accelerateConfiguration = {
+    accelerationStatus: 'Enabled'
+  }
+}
+```
+
+次に、このストレージリソースをデプロイします：
+
+```sh
+amplify push
+```
+
+## ストレージ操作で転送アクセラレーションを使用する
+
+以下のAPIを呼び出すときに転送アクセラレーションを使用できます：
+
+* `getUrl`
+* `downloadData`
+* `downloadFile`
+* `uploadData`
+* `uploadFile`
+
+対応するStorage S3プラグインオプションで`useAccelerateEndpoint`を`true`に設定して、加速S3エンドポイントを操作に適用します。例えば、転送アクセラレーションを使用してファイルをアップロードします：
+
+```dart
+import 'package:amplify_storage_s3/amplify_storage_s3.dart';
+
+Future<void> uploadFileUsingAcceleration(String filePath, String path) async {
+  final localFile = AWSFile.fromPath(filePath);
+  try {
+    final uploadFileOperation = Amplify.Storage.uploadFile(
+      localFile: localFile,
+      path: const StoragePath.fromString(path),
+      options: const StorageUploadFileOptions(
+        pluginOptions: S3UploadFilePluginOptions(
+          useAccelerateEndpoint: true,
+        ),
+      ),
+    );
+
+    final result = await uploadFileOperation.result;
+    safePrint('Uploaded file: ${result.uploadedItem.path}');
+  } on StorageException catch (error) {
+    safePrint('Something went wrong uploading file: ${error.message}');
+  }
+}
+```
+
+</InlineFilter>

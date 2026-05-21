@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"javascript","meta":{"title":"Amplify HTTP API をセットアップする","description":"API カテゴリは HTTP API エンドポイントへの HTTP リクエストを送信するためのソリューションを提供します。API ライブラリは、API Gateway Authorization が AWS_IAM または Cognito User Pools に設定されている場合に Amazon API Gateway に対して署名付きリクエストを作成するために使用できます。","platforms":["angular","javascript","nextjs","react","react-native","vue"]}},"__N_SSG":true}

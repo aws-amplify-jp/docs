@@ -1,0 +1,286 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'REST API を設定する',
+  description: "Amplify CLIのシンプルなガイド付きワークフローを使用して、クラウドベースのウェブおよびモバイルアプリケーションにREST APIを追加します。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify CLIは、ウェブアプリケーションやモバイルアプリケーションからAWSリソースにアクセスするREST APIを簡単に追加、開発、テスト、管理するためのガイド付きワークフローを提供しています。
+
+REST APIまたはHTTPエンドポイントは1つ以上のパスで構成されます。例: `/items`。各パスはLambda関数を使用してHTTPリクエストとレスポンスを処理します。Amplify CLIはAmazon API Gatewayに単一のリソースを作成するため、Lambda プロキシ統合を通じて、すべてのルート、HTTPメソッド、パスを単一のLambda関数で処理できます。HTTPプロキシ統合は、すべてのリクエストとレスポンスをHTTPエンドポイントに直接転送します。
+
+Amplify CLIを使用すると、既存のLambda関数を選択するか、新しい関数を作成できます。実装を開始するために、以下のテンプレートから選択できます:
+
+- Serverless ExpressJS関数
+- DynamoDB用CRUD関数
+
+> Lambdaテンプレートは[serverless-express](https://github.com/awslabs/aws-serverless-express)を使用し、REST API開発を開始するための構成要素を提供します。
+
+> すべての[サポートされているLambdaランタイム](/gen1/[platform]/build-a-backend/functions/set-up-function/)のリストを参照してください。
+
+Amplify CLIを使用すると、REST APIへのアクセスを以下に制限できます:
+
+- 認証されたユーザーのみ
+- 認証されたユーザーとゲストユーザー
+- ユーザープールグループ
+
+これらのユーザータイプの説明については、以下を参照してください
+
+| ユーザータイプ | 説明 |
+| --- | --- |
+| 認証されたユーザー | REST APIを使用するにはサインインする必要があります |
+| ゲストユーザー | REST APIを使用するためにサインインする必要はありません |
+| ユーザープールグループ | REST APIを使用するにはサインインし、ユーザープールグループに属している必要があります |
+
+各ユーザータイプについて、それが持つアクションへのアクセスをさらに指定できます。
+
+| ユーザータイプ | アクション | HTTPメソッド | 認証プロバイダー |
+| --- | --- | --- | --- |
+| 認証されたユーザー | 作成、読み取り、更新、削除 | POST、GET、PUT、PATCH、DELETE | Amazon Cognito |
+| ゲストユーザー | 作成、読み取り、更新、削除 | POST、GET、PUT、PATCH、DELETE | Amazon Cognito |
+| ユーザープールグループ | 作成、読み取り、更新、削除 | POST、GET、PUT、PATCH、DELETE | Amazon Cognito |
+
+REST APIは[複数の環境](/gen1/[platform]/tools/cli/teams/) (例: dev、qa、prod) をサポートしています。これにより、異なるAmplify環境を使用してREST APIの異なるバージョンを簡単に分離できます。
+
+Amplify環境は異なるAWSアカウントにある可能性があるため、API Gatewayの環境機能を使用することはできません。各Amplify環境には、関連付けられた個別のAPI Gatewayリソースがあります。例えば:
+
+```console
+https://<API ID 1>.execute-api.eu-west-2.amazonaws.com/dev/items
+https://<API ID 2>.execute-api.eu-west-2.amazonaws.com/prod/items
+```
+
+## REST APIを作成する
+
+JavaScriptプロジェクト、iOSプロジェクト、またはAndroidプロジェクトのルートに移動して、以下を実行します:
+
+```bash
+amplify init
+```
+
+ウィザードに従って新しいアプリを作成します。ウィザードが完了した後、以下を実行します:
+
+```bash
+amplify add api
+```
+
+以下のオプションを選択します:
+
+- 以下から1つ選択してください: **REST**
+- このカテゴリのラベルとして使用するリソースのフレンドリー名を入力してください: **itemsApi**
+- パスを入力してください (例: /book/\{isbn}): **/items**
+
+これがAPI Gatewayの`/items`パスの設定になります:
+
+```console
+/
+ |_ /items               メインリソース。例: /items
+    ANY                    メソッドを含みます: DELETE、GET、HEAD、OPTIONS、PATCH、POST、PUT
+    OPTIONS                ブラウザのCORSプリフライトリクエストを許可します
+    |_ /\{proxy+}         プロキシリソース。例: /items/、/items/id、items/object/\{id}
+       ANY                  メソッドを含みます: DELETE、GET、HEAD、OPTIONS、PATCH、POST、PUT
+       OPTIONS              ブラウザのCORSプリフライトリクエストを許可します
+```
+
+デフォルトでは、Amplify CLIは貪欲なパス変数`/items/\{proxy+}`を作成し、パスのすべての子リソースをキャッチして、Lambda に転送します。これは`/items/id`や`/items/object/id`を含むすべての子ルートにマッチします。
+
+- Lambda ソースを選択 **新しいLambda関数を作成する**
+- このカテゴリのラベルとして使用するリソースのフレンドリー名を入力してください: **itemsLambda**
+- AWS Lambda関数名を入力してください: **itemsLambda**
+- 使用したいランタイムを選択してください: **NodeJS**
+- 使用したい関数テンプレートを選択してください: **Serverless ExpressJS関数**
+
+Lambda関数テンプレート**Serverless ExpressJS関数**は、`GET`、`POST`、`PUT`、`DELETE` HTTPメソッドと`/items`および`/items/*`パスのルートハンドラーを実装します。いくつかの可能なルート例を示します:
+
+```console
+GET /items         すべてのアイテムをリスト表示
+GET /items/1       IDでアイテムを読み込む
+POST /items        アイテムを作成
+PUT /items         アイテムを更新
+DELETE /items/1    IDでアイテムを削除
+```
+
+- このプロジェクトからLambda関数で他のリソースにアクセスしたいですか? **いいえ**
+- この関数を定期的なスケジュールで呼び出したいですか? **いいえ**
+- この関数のLambdaレイヤーを設定したいですか? **いいえ**
+- ローカルLambda関数を編集しますか? **はい**
+
+> このテンプレートを変更するつもりはありませんが、次のステップに従うときにそれが開いているのは良いことです。
+
+- Enterキーを押して続行します
+- APIアクセスを制限 **はい**
+- 誰がアクセス権を持つべきですか? **認証されたユーザーとゲストユーザー**
+- 認証されたユーザーにどのようなアクセスを許可したいですか? **作成、読み取り、更新、削除**
+- ゲストユーザーにどのようなアクセスを許可したいですか? **読み取り**
+
+APIの設定が完了すると、CLIはこのカテゴリのローカルCLIメタデータを設定したことを確認するメッセージを表示します。`amplify status`を実行することでこれを確認できます。最後に、変更をクラウドにデプロイします:
+
+Amplify CLIは、認証用にAmazon Cognitoとルートでの実行権限を付与するためにAWS IAM (Identity and Access Management) を組み合わせてAPIアクセスを制限します。
+
+- 別のパスを追加したいですか? **いいえ**
+
+新しいAPIをデプロイします。
+
+```bash
+amplify push
+```
+
+このコマンドの最後に、新しいREST APIのURLを記録できます。
+
+```console
+REST API endpoint: https://a5b4c3d2e1.execute-api.eu-west-2.amazonaws.com/dev
+```
+
+> REST APIは`https://{restapi-id}.execute-api.\{region}.amazonaws.com/\{environment}/\{path}`というパターンに従います。
+
+Amplify CLIによって作成されたすべてのリソースの概要を見てみましょう。
+
+```console
+REST
+ |_ /items (path)
+    |_ itemsApi (Amazon API Gateway)
+       |_ itemsLambda (AWS Lambda)
+          |_ Logs (Amazon CloudWatch)
+```
+
+## REST APIを作成し、特定のルートを特定のユーザープールグループに制限する
+
+アプリケーションがユーザープールグループを使用して異なるユーザータイプを管理し、特定のルートへのアクセスを特定のユーザープールグループに制限したい場合。以下のフローで実現できます:
+
+- APIルートを作成します。
+- APIルートハンドラー関数を追加します。
+- ユーザープールグループへのAPIルートへのアクセスを制限します。
+
+> 以下の例フローは、書店用の2つのユーザープールグループ: AdminUsersおよびGuestUsersの存在を前提としています。アプリケーションは、書籍レコードの更新などの管理機能をAdminUsersユーザープールグループに限定し、本の借用と返却をGuestUsersユーザープールグループに限定したいとします。
+>
+> - パス: /book/adminはAdminUsersに制限され、コマンドはbookAdminHandlerLambda関数によって処理されます
+> - パス: /book/guestはGuestUsersに制限され、コマンドはbookGuestHandlerLambda関数によって処理されます
+
+```bash
+amplify add api
+$> ? Select from one of the below mentioned services: REST
+$> ✔ Provide a friendly name for your resource to be used as a label for this category in the project: · mybookapi
+$> ✔ Provide a path (e.g., /book/\{isbn}): · /book/admin
+$> ✔ Choose a Lambda source · Create a new Lambda function
+$> ? Provide an AWS Lambda function name: bookAdminHandler
+$> ? Choose the runtime that you want to use: NodeJS
+$> ? Choose the function template that you want to use: Hello World
+$> ? Do you want to configure advanced settings? No
+$> ? Do you want to edit the local lambda function now? No
+Successfully added resource bookAdminHandler locally.
+$> ✔ Restrict API access? (Y/n) · yes
+$> ✔ Restrict access by: · Individual Groups
+$> ✔ Select groups: AdminUsers
+$> ✔ What permissions do you want to grant to AdminUsers users? · create, read, update, delete
+$> ✔ Do you want to add another path? (y/N) · yes
+$> ✔ Provide a path (e.g., /book/\{isbn}): · /book/guest
+$> ✔ Choose a Lambda source · Create a new Lambda function
+$> ? Provide an AWS Lambda function name: bookGuestHandler
+$> ? Choose the runtime that you want to use: NodeJS
+$> ? Choose the function template that you want to use: Hello World
+$> ? Do you want to configure advanced settings? No
+$> ? Do you want to edit the local lambda function now? No
+Successfully added resource bookGuestHandler locally.
+$> ✔ Restrict API access? (Y/n) · yes
+$> ✔ Restrict access by: Individual Groups
+$> ✔ Select groups: GuestUsers
+$> ✔ What permissions do you want to grant to GuestUsers users?  create, read, update
+$> ✔ Do you want to add another path? (y/N) No
+✅ Successfully added resource mybookapi locally
+```
+
+このコマンドの最後で、以下のパスにある`cli-inputs.json`ファイルでルートとそれぞれのユーザープールグループ制限を確認できます。
+
+```bash
+ <project-root>/amplify/backend/api/<api-resource-name>/cli-inputs.json
+```
+
+## 新しいLambda関数をトリガーするRESTエンドポイント
+
+CLI設定の際に、REST APIパス用にルーティングが有効になった事前定義済みの[serverless-express](https://github.com/awslabs/aws-serverless-express)テンプレートを使用して新しいLambda関数を作成するガイダンスが表示されます。
+
+```bash
+amplify add api
+```
+
+```console
+? Please select from one of the below mentioned services REST
+? Provide a friendly name for your resource to be used as a label for this category in the project: itemsApi
+? Provide a path (e.g., /book/\{isbn}) /items
+? Choose a Lambda source Create a new Lambda function
+? Provide a friendly name for your resource to be used as a label for this category in the project: itemsLambda
+? Provide the AWS Lambda function name: itemsLambda
+? Choose the function template that you want to use:
+  CRUD function for Amazon DynamoDB
+❯ Serverless ExpressJS function
+```
+
+## 既存のLambda関数をトリガーするRESTエンドポイント
+
+CLI設定の際に、`amplify add function`コマンドを使用してCLIプロジェクトの一部として初期化した独自のLambda関数を使用するようにガイドされます。これにより、Lambda関数にカスタムロジックを持たせることができ、上の例のようにCLIによって生成された事前定義済みの[serverless-express](https://github.com/awslabs/aws-serverless-express)テンプレートを使用する必要はありません。
+
+```bash
+amplify add api
+```
+
+```console
+? Please select from one of the below mentioned services REST
+? Provide a friendly name for your resource to be used as a label for this category in the project: itemsApi
+? Provide a path (e.g., /book/\{isbn}) /items
+? Choose a Lambda source
+  Create a new Lambda function
+❯ Use a Lambda function already added in the current Amplify project
+```
+
+## Amazon DynamoDBを使用したREST APIの設定
+
+CLI設定の際に、REST APIパス用にルーティングが有効になった事前定義済みの[serverless-express](https://github.com/awslabs/aws-serverless-express)テンプレートを使用して新しいLambda関数を作成するガイダンスが表示されます。DynamoDBテーブルへのCRUD操作がサポートされます (CLIプロンプトに従って作成できます。または`amplify add storage`コマンドを使用して既に設定したテーブルを使用できます)。
+
+```bash
+amplify add api
+```
+
+```console
+? Please select from one of the below mentioned services REST
+? Provide a friendly name for your resource to be used as a label for this category in the project: itemsApi
+? Provide a path (e.g., /book/\{isbn}) /items
+? Choose a Lambda source Create a new Lambda function
+? Provide a friendly name for your resource to be used as a label for this category in the project: itemsLambda
+? Provide the AWS Lambda function name: itemsLambda
+? Choose the function template that you want to use:
+❯ CRUD function for Amazon DynamoDB
+  Serverless ExpressJS function
+```
+
+上の例の`/items`パスで、以下のAPIが作成されます:
+
+1. GET /items/[ID] は[ID]のアイテムを含むリストを返します。アイテムが存在しない場合は、空の配列が返されます。
+2. GET /items/object/[ID] は[ID]の単一アイテムを返します。アイテムが存在しない場合は、空のオブジェクトが返されます。
+3. PUT /items (リクエスト本文にアイテムを含む) はアイテムを作成または更新します。
+4. POST /items (リクエスト本文にアイテムを含む) はアイテムを作成または更新します。
+5. DELETE /items/object/[ID] はアイテムを削除します。
+
+ソートキーがある場合は、パスの末尾に追加できます。例えば: `GET /items/object/[ID]/[SORT_KEY_ID]`

@@ -1,0 +1,262 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'パスワード変更とリカバリーの設定',
+  description: 'AWS Cognito Authプラグインを使用してユーザーパスワードを更新またはリセットする',
+  platforms: [
+    'javascript',
+    'flutter',
+    'swift',
+    'android',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript",  "react-native", "angular", "nextjs", "react", "vue"]}>
+
+Amplify Authは、ユーザーがパスワードを変更したり、忘れたパスワードを復旧したりするための安全な方法を提供します。これにより、ユーザーの手間を安全に軽減し、アプリケーションへのアクセス体験を向上させます。
+
+始める前に、以下が必要です：
+
+- Authカテゴリーが設定されたAmplifyプロジェクト
+- インストールして設定されたAmplifyライブラリ
+
+## ユーザーが忘れたパスワードを置き換えられるようにする
+
+ユーザーは自分のアカウントへのアクセスを取り戻し、忘れたパスワードを置き換えたいと考えるかもしれません。ユーザーはセルフサービスでアカウント所有権を検証した後にパスワードをリセットするか、管理者にアカウントのパスワードをリセットするよう要求することができます。
+
+### セルフサービスを通じて新しいパスワードに変更する
+
+`forgotPassword`メソッドを使用することで、セルフサービスを有効にすることができます。これはユーザーのメールアドレスまたは電話番号に確認コードを送信します（Cognito ユーザープールで検証されている属性により異なります）。その後、`forgotPasswordSubmit`メソッドを使用して、その確認コードと新しいパスワードを入力することができます。これにより、ユーザーはパスワードをリセットし、新しいパスワードでサインインすることができます。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Auth } from 'aws-amplify';
+
+// Send confirmation code to user's email or phone number
+async function forgotPassword(username: string) {
+  try {
+    const data = await Auth.forgotPassword(username);
+    console.log(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+// Collect confirmation code and new password
+async function forgotPasswordSubmit(
+  username: string,
+  code: string,
+  newPassword: string
+) {
+  try {
+    const data = await Auth.forgotPasswordSubmit(username, code, newPassword);
+    console.log(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```javascript
+import { Auth } from 'aws-amplify';
+
+// Send confirmation code to user's email
+async function forgotPassword(username) {
+  try {
+    const data = await Auth.forgotPassword(username);
+    console.log(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+// Collect confirmation code and new password
+async function forgotPasswordSubmit(username, code, newPassword) {
+  try {
+    const data = await Auth.forgotPasswordSubmit(username, code, newPassword);
+    console.log(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+### 管理者リセット後に新しいパスワードに変更する
+
+ユーザーのアカウントパスワードを管理者がリセットする必要がある場合、確認コードはリセットがトリガーされるとすぐにユーザーのメールアドレスまたは電話番号に送信されます（Cognito ユーザープールで検証されている属性により異なります）。その後、`forgotPasswordSubmit`メソッドを使用して、その確認コードと新しいパスワードを入力することができます。これにより、ユーザーはパスワードをリセットし、新しいパスワードでサインインすることができます。
+
+<Callout>
+
+**注：** 管理者は、Cognito Userpoolコンソールにアクセスし、ユーザーを選択し、「アクション」ドロップダウンの下で「パスワードをリセット」を選択することでユーザーのパスワードをリセットできます。これはCognito API Action `AdminResetUserPassword`を使用してプログラムで実行することもできます。[管理者としてユーザーのパスワードをリセットする](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminResetUserPassword.html)について詳しく学びます。
+
+</Callout>
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Auth } from 'aws-amplify';
+
+async function forgotPasswordSubmit(
+  username: string,
+  code: string,
+  newPassword: string
+) {
+  try {
+    const data = await Auth.forgotPasswordSubmit(username, code, newPassword);
+    console.log(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { Auth } from 'aws-amplify';
+
+async function forgotPasswordSubmit(username, code, newPassword) {
+  try {
+    const data = await Auth.forgotPasswordSubmit(username, code, newPassword);
+    console.log(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+ユーザーはこれでアカウントを復旧し、新しいパスワードにリセットできます。
+
+## ユーザーがパスワードを変更できるようにする
+
+他の場合には、ユーザーが時間をかけてパスワードを変更できるようにしたいかもしれません。Amplify Librariesを使用してこれを設定できます。
+
+### アカウントにサインイン中にパスワードを変更する
+
+`changePassword`メソッドを使用することで、ユーザーがパスワードを変更できるようにすることができます。これはユーザーに現在のパスワード`oldPassword`と新しいパスワード`newPassword`を入力するよう促します。成功した場合、パスワードが更新されます。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Auth } from 'aws-amplify';
+
+async function changePassword(oldPassword: string, newPassword: string) {
+  try {
+    const user = await Auth.currentAuthenticatedUser();
+    const data = await Auth.changePassword(user, oldPassword, newPassword);
+    console.log(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```javascript
+import { Auth } from 'aws-amplify';
+
+async function changePassword(oldPassword, newPassword) {
+  try {
+    const user = await Auth.currentAuthenticatedUser();
+    const data = await Auth.changePassword(user, oldPassword, newPassword);
+    console.log(data);
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+これで、ユーザーはパスワードを変更できるようになります。
+
+<Accordion title='検証エラーのトラブルシューティング' headingLevel='2' eyebrow='トラブルシューティング'>
+
+ユーザーが設定した要件を満たさない無効なパスワードを入力した場合、フォーム検証エラーが発生する可能性があります。たとえば、最小文字数が8文字である場合、ユーザーが8文字未満を入力するとエラーメッセージを表示する必要があります。
+
+また、APIコールを`try`ブロックと`catch`ブロックでラップして、エラーをキャッチする必要があります。その後、ユーザーフレンドリーなエラーメッセージをUIに表示して、ユーザーが何が起こったかわかるようにすることができます。これにより、ユーザー体験でサイレント失敗がないようにすることができます。
+
+</Accordion>
+
+## おわりに
+
+おめでとうございます。**ユーザーパスワードの変更とリカバリーの設定**ガイドを完了しました。このガイドでは、ユーザーがパスワードを変更できるようにする方法と、登録されたメールアドレスまたは電話番号を使用してアカウントを復旧し、パスワードを置き換えるのを支援する方法を学びました。
+
+## 次のステップ
+
+パスワード管理を有効にしたので、さらに機能を追加することも検討できます。以下について詳しく学ぶことをお勧めします：
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+- [ソーシャルサインイン（OAuth）](/gen1/[platform]/prev/build-a-backend/auth/add-social-provider/)
+- [多要素認証](/gen1/[platform]/prev/build-a-backend/auth/manage-mfa/)
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+- [ソーシャルサインイン（OAuth）](/gen1/[platform]/prev/build-a-backend/auth/add-social-provider/)
+- [多要素認証](/gen1/[platform]/prev/build-a-backend/auth/manage-mfa/)
+
+</InlineFilter>
+
+</InlineFilter>
+
+import ios_maintenance from '/src/fragments/lib-v1/ios-maintenance.mdx';
+
+<Fragments fragments={{ swift: ios_maintenance }} />
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+
+import ios0 from '/src/fragments/lib-v1/auth/native_common/password_management/common.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import android_maintenance from '/src/fragments/lib-v1/android-maintenance.mdx';
+
+<Fragments fragments={{ android: android_maintenance }} />
+
+import android1 from '/src/fragments/lib-v1/auth/native_common/password_management/common.mdx';
+
+<Fragments fragments={{ android: android1 }} />
+
+import flutter2 from '/src/fragments/lib-v1/auth/native_common/password_management/common.mdx';
+
+<Fragments fragments={{ flutter: flutter2 }} />

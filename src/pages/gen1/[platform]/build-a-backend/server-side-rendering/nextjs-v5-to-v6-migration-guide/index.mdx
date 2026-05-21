@@ -1,0 +1,361 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'v5から v6への移行',
+  description: 'Amplify JavaScript v5 から v6 への Server-Side APIs のアップグレード移行ステップについて詳しく学びます',
+  platforms: ['nextjs'],
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+このガイドは、`withSSRContext` を使用する v5 SSR 実装を v6 の新しい `Next.js` アダプターに移行するのに役立ちます。
+
+## ステップ 1: `Next.js` アダプターをインストール
+
+<Callout>既存の[環境](/gen1/[platform]/build-a-backend/troubleshooting/migrate-from-javascript-v5-to-v6/#1-upgrade-your-dev-environment)、[依存関係](/gen1/[platform]/build-a-backend/troubleshooting/migrate-from-javascript-v5-to-v6/#2-update-your-amplify-project-dependencies)、および[amplify cli](/gen1/[platform]/build-a-backend/troubleshooting/migrate-from-javascript-v5-to-v6/#3-upgrade-amplify-cli-version-and-configuration-file) を `aws-amplify@6` 互換バージョンにアップグレードする必要があります</Callout>
+
+```sh
+npm install @aws-amplify/adapter-nextjs
+```
+
+## ステップ 2: サーバー側の構成
+
+Amplify JS v5 の `withSSRContext` ユーティリティは、Amplify JS v6 では利用できなくなりました。`@aws-amplify/adapter-nextjs` からエクスポートされた `createServerRunner` 関数を使用して `runWithAmplifyServerContext` 関数を作成し、この関数を使用して Next.js アプリのサーバー側から Amplify API 呼び出しを実行する必要があります。
+
+コードベースの `utils` フォルダに `amplifyServerUtils.ts` ファイルを作成できます。このファイルで、Amplify CLI によって生成される `amplifyconfiguration.json` ファイルから Amplify 構成オブジェクトをインポートし、`createServerRunner` 関数を使用して `runWithAmplifyServerContextRunner` 関数を作成します。
+
+たとえば、`utils/amplifyServerUtils.ts` ファイルには以下の内容が含まれる場合があります:
+
+```ts
+import { createServerRunner } from '@aws-amplify/adapter-nextjs';
+import config from '@/amplifyconfiguration.json';
+
+export const { runWithAmplifyServerContext } = createServerRunner({
+  config
+});
+```
+
+## ステップ 3: クライアント側の構成
+
+`Amplify.configure` には 2 つのパラメーターが含まれるようになりました: `resourcesConfig` と `libraryOptions`。`ssr.true` は `libraryOptions` で送信されるようになりました。
+
+<Columns columns="2">
+  <div>
+    **V5**
+
+    ```ts
+    import { Amplify } from 'aws-amplify';
+    import awsExports from '@/aws-exports';
+
+    Amplify.configure({
+        ...awsExports,
+        ssr: true
+    });
+    ```
+
+  </div>
+  <div>
+    **V6**
+
+    ```ts
+    import { Amplify } from 'aws-amplify';
+    import amplifyConfig from '@/amplifyconfiguration.json';
+
+    Amplify.configure(
+        amplifyConfig, 
+        { ssr: true }
+    );
+    ```
+  </div>
+</Columns>
+
+> `Amplify.configure` への反復的な呼び出しを避けるために、トップレベルのクライアント側レンダリングされたレイアウトコンポーネントで 1 回呼び出すことができます。詳細については、[クライアント側使用用に Amplify ライブラリを構成する](/gen1/[platform]/build-a-backend/server-side-rendering/#configure-amplify-library-for-client-side-usage)を参照してください。
+
+## ステップ 4: `withSSRContext` を `runWithAmplifyServerContext` に置き換え
+
+サーバーコンテキストにいるときは、必ず `/server` サブパスから API をインポートしてください。サーバー側でサポートされている [API の完全なリスト](/gen1/[platform]/build-a-backend/server-side-rendering/#supported-apis-for-nextjs-server-side-usage)を参照してください。
+
+<Columns columns="2">
+  <div>
+    **V5**
+
+    ```ts
+    import {  withSSRContext } from 'aws-amplify';
+    import { listTodos } from './graphql/queries';
+
+    const getServerSideProps = async ({ req }) => {
+      const SSR = withSSRContext({ req });
+      const user = await SSR.Auth.currentAuthenticatedUser();
+      
+      return { props: { user } };
+    };
+    ```
+
+  </div>
+  <div>
+    **V6**
+
+    ```ts
+    import { getCurrentUser } from 'aws-amplify/auth/server';
+    import { runWithAmplifyServerContext } from '@/utils/amplifyServerUtils';
+
+    const getServerSideProps = async ({ req, res }) => {
+      const user = await runWithAmplifyServerContext({
+        nextServerContext: { request: req, response: res },
+        operation: (contextSpec) => getCurrentUser(contextSpec)
+      });
+
+      return { props: { user } };
+    }
+    ```
+
+  </div>
+</Columns>
+
+> **注記:** Next.js Middleware が v6 でサポートされるようになりました。実装手順は以下で確認できます: [Next.js Middleware を使用して認証セッションを管理する](/gen1/[platform]/build-a-backend/server-side-rendering/#manage-auth-session-with-the-nextjs-middleware)
+
+## v6 で API カテゴリを使用
+
+Amplify v6 は Next.js サーバーランタイム用の [2 つの特殊化された GraphQL API クライアント](/gen1/[platform]/build-a-backend/graphqlapi/connect-from-server-runtime/#step-1---choose-the-correct-graphql-api-client-for-nextjs-server-runtimes)を提供します (`@aws-amplify/adapter-nextjs/api` からインポート)。これは、[`cookies`](https://nextjs.org/docs/app/api-reference/functions/cookies) を使用してユーザートークンを取得するか、[`NextRequest` と `NextResponse`](https://nextjs.org/docs/app/api-reference/functions/next-request) を使用するかによって使い分けます。v5 で以前利用可能だったものを反映するために、リクエスト/レスポンスベースのサーバークライアントを使用した移行を示します。
+
+まず、[`amplifyServerUtils` ファイル](/gen1/[platform]/build-a-backend/server-side-rendering/nextjs-v5-to-v6-migration-guide/#2-server-side-configuration)にサーバー側のクライアント生成を追加します:
+
+```ts
+import { createServerRunner } from '@aws-amplify/adapter-nextjs';
+import config from '@/amplifyconfiguration.json';
+
+export const { runWithAmplifyServerContext } = createServerRunner({
+  config
+});
+
+export const reqResBasedClient = generateServerClientUsingReqRes({
+  config
+});
+```
+
+次に、サーバー側レンダリングコンポーネントの実装を更新します:
+
+<Columns columns="2">
+  <div>
+    **V5**
+
+    ```ts
+    import { withSSRContext } from 'aws-amplify';
+    import { listTodos } from './graphql/queries';
+
+    const getServerSideProps = async ({ req }) => {
+      const SSR = withSSRContext({ req });
+      const { data } = await SSR.API.graphql({ query: listTodos });
+
+      return {
+        props: {
+          posts: data.listTodos.items
+        }
+      };
+    };
+    ```
+
+  </div>
+  <div>
+    **V6**
+
+    ```ts
+    import { 
+      reqResBasedClient,
+      runWithAmplifyServerContext
+    } from '@/utils/amplifyServerUtils';
+    import { listTodos } from './graphql/queries';
+
+    const getServerSideProps = async ({ req, res }) => {
+      const data = await runWithAmplifyServerContext({
+        nextServerContext: { request: req, response: res },
+        operation: async (contextSpec) => {
+          return reqResBasedClient.graphql(contextSpec, {
+            query: listTodos
+          });
+        }
+      });
+
+      return {
+        props: {
+          todos: data.listTodos.items
+        }
+      };
+    };
+    ```
+
+  </div>
+</Columns>
+
+## DataStore から GraphQL API クライアントへのサーバーコンテキストでの移行
+
+DataStore は v6 のサーバーコンテキスト内ではサポートされなくなりました。代わりに GraphQL API クライアントを使用する必要があります。
+
+API カテゴリへの正常な移行には、[競合解決がどのように機能するか](https://docs.aws.amazon.com/appsync/latest/devguide/conflict-detection-and-sync.html#conflict-detection-and-resolution)を理解する必要があります。DataStore API は `auto-merge` 戦略をデフォルトとして使用します。これは以下の例で想定されています。`auth-merge` 戦略には、標準 GraphQL 操作への次の調整が必要です:
+
+1. GraphQL クエリを実行するときに `_deleted: false` でフィルタリングして、削除されたレコードを無視する必要があります
+
+2. GraphQL クエリ、ミューテーション、サブスクリプションの選択セットに `_version` を含める必要があります (amplify 生成ステートメントではデフォルトで含まれています)。
+
+DataStore から GraphQL に操作を移行するときは、リターン構造が異なることも考慮してください: `DataStore.query` は `Todo[]` を返しますが、`API.graphql` リスト操作は `{ data: { listTodos: { items: Todo[] } } }` を返し、`DataStore.save` は `Todo` を返しますが、`API.graphql` 作成/更新操作はそれぞれ `{ data: { createTodo: Todo } }` と `{ data: { updateTodo: Todo } }` を返します。
+
+プロジェクトに GraphQL ミューテーション、クエリ、サブスクリプション、型が含まれていない場合は、以下の amplify cli スクリプトを使用してこれらのファイルを生成できます ([API (GraphQL) ドキュメント](/gen1/[platform]/build-a-backend/graphqlapi/client-code-generation/#shared-schema-modified-elsewhere-eg-console-or-team-workflows)を参照してください)
+
+```sh
+amplify codegen statements
+amplify codegen types
+```
+
+<Callout>GraphQL 操作によって返されたアイテムで DataStore ミューテーションを直接実行しないでください。返された型は互換性がなく、混在させないでください。DataStore クライアント側を使用してアイテムを更新する必要がある場合は、まず DataStore を使用してそのアイテムをクエリし、その後更新を実行してください。</Callout>
+
+### API クライアントのセットアップ
+
+[v6 で API カテゴリを使用する](/gen1/[platform]/build-a-backend/server-side-rendering/nextjs-v5-to-v6-migration-guide/#using-the-api-category-in-v6)の手順に従って、リクエスト/レスポンスベースのサーバークライアントをセットアップしてください。
+
+### `DataStore.query` を `API.graphql` に置き換え
+
+> **注記:** DataStore で `MULTI_AUTH` 認証モード戦略を使用していた場合、`API.graphql` 呼び出しで authMode を送信する必要がある場合があります。
+
+<Columns columns="2">
+  <div>
+    **V5**
+
+    ```ts
+    import { serializeModel } from '@aws-amplify/datastore/ssr';
+    import { Todo } from '@/src/models';
+    import { withSSRContext } from 'aws-amplify';
+
+    export async function getServerSideProps({ req }) {
+      const SSR = withSSRContext({ req });
+      const todos = await SSR.DataStore.query(Todo);
+
+      return {
+        props: {
+          todos: serializeModel(todos),
+        },
+      };
+    }
+    ```
+  </div>
+  <div>
+    **V6**
+
+    ```ts
+    import { 
+      reqResBasedClient,
+      runWithAmplifyServerContext
+    } from '@/utils/amplifyServerUtils';
+    import { listTodos } from '@/graphql/queries';
+
+    // Server-Side
+    const getServerSideProps = async ({ req, res }) => {
+      const data = await runWithAmplifyServerContext({
+        nextServerContext: { request: req, response: res },
+        operation: async (contextSpec) => {
+          const variables = {
+            filter: { 
+              _deleted: { eq: false } 
+            }
+          };
+          
+          return reqResBasedClient.graphql(contextSpec, {
+            query: listTodos,
+            variables,
+            authMode: 'apiKey' // May be required when using multi-auth 
+          });
+        }
+      });
+
+      return {
+        props: {
+          todos: data.listTodos.items
+        }
+      };
+    };
+    ```
+  </div>
+
+</Columns>
+
+### `DataStore.save` を `API.graphql` に置き換え
+
+> **注記:** DataStore で `MULTI_AUTH` 認証モード戦略を使用していた場合、`API.graphql` 呼び出しで authMode を送信する必要がある場合があります。
+
+<Columns columns="2">
+  <div>
+    **V5**
+
+    ```ts
+    import { serializeModel } from '@aws-amplify/datastore/ssr';
+    import { Todo } from '@/src/models';
+    import { withSSRContext } from 'aws-amplify';
+
+    export async function getServerSideProps({ req }) {
+      const SSR = withSSRContext({ req });
+      
+      const original = await SSR.DataStore.query(Todo, '123456');
+      const updatedTodo = await SSR.DataStore.save(
+        Todo.copyOf(original, updated => {
+        updated.lastViewed = new Date()
+      })
+    );
+      
+      return {
+        props: {
+          todo: serializeModel(updatedTodo),
+        },
+      };
+    }
+    ```
+
+  </div>
+  <div>
+    **V6**
+
+    ```ts
+    import { 
+      reqResBasedClient,
+      runWithAmplifyServerContext
+    } from '@/utils/amplifyServerUtils';
+    import { updateTodo } from '@/graphql/queries';
+    import { GRAPHQL_AUTH_MODE } from 
+
+    // Server-Side
+    const getServerSideProps = async ({ req, res }) => {
+      const data = await runWithAmplifyServerContext({
+        nextServerContext: { request: req, response: res },
+        operation: async (contextSpec) => {
+          const todoDetails = {
+            id: '123456',
+            lastViewed: new Date()
+          };
+          
+          return reqResBasedClient.graphql(contextSpec, {
+            query: updateTodo,
+            variables: { input: todoDetails },
+            authMode: 'userPool' // May be required when using multi-auth 
+          });
+        }
+      });
+
+      return {
+        props: {
+          todo: data.updateTodo
+        }
+      };
+    };
+    ```
+  </div>
+
+</Columns>

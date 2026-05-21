@@ -1,0 +1,33 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'IAM ポリシー',
+  description: "Amplify CLI は、すべてのカテゴリ全体でアクションを実行するためにいくつかの IAM ポリシーを必要とします。必要に応じて「Action」セクションの項目を含めたり削除したりすることで、カテゴリのアクセス許可を付与または制限できます。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+このページは、AWS Amplify 用の AWS マネージドポリシーの採用により廃止されました。[`AdministratorAccess-Amplify` ポリシー](https://docs.aws.amazon.com/amplify/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-AdministratorAccess-Amplify)を参照してください。

@@ -1,0 +1,48 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'Lambda レイヤーの動作の更新',
+  description: 'Amplify CLI バージョン 5.0.0 で Lambda レイヤーのバージョン管理の方法が更新されました。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify CLI バージョン 5.0.0 で [Lambda レイヤー](/gen1/[platform]/build-a-backend/functions/layers/)のバージョン管理方法が更新されました。Amplify CLI を使用すると、Lambda レイヤーを設定して、Lambda 関数の共通コードとアセットを一元管理されたロケーションにプルすることができます。
+
+最新の機能とバグ修正を利用するには、古い Amplify CLI バージョンで作成されたレイヤーに対して一方向のマイグレーションが必要です。共通の Amplify プロジェクトで作業しているすべての開発者と CI/CD パイプラインは [Amplify CLI の最新バージョンにアップグレード](/gen1/[platform]/tools/cli/start/key-workflows/#upgrade-amplify-cli)する必要があります。
+
+## レイヤーマイグレーションの開始方法
+
+既存の Lambda レイヤーを更新すると、`amplify push` 時にそのレイヤーのマイグレーションがトリガーされます。レイヤーがマイグレーションされると、Amplify CLI バージョン 5.0.0 以下では使用できなくなります。
+
+## レイヤーの動作の変更
+
+Amplify CLI バージョン 5.0.0 以降では、Lambda レイヤーに以下の変更が加えられます。
+- 関数を常に Lambda レイヤーの最新バージョンを使用するようにピンできる機能
+- レイヤーが `package.json` または `Pipfile` にリストされている依存関係を自動的にインストールしてパッケージ化
+- レイヤーバージョンの説明をカスタマイズする機能
+- 個別の Lambda レイヤーバージョンを削除する機能
+- _バグ修正:_ レイヤーバージョンの更新がグローバルに管理されるようになり、複数のチームメンバーが競合するレイヤーバージョンを作成するのを防止します

@@ -1,0 +1,68 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'ベストプラクティス',
+  description: "Amplify StudioのFigmaからReactへの変換機能の制約",
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify Studioを継続的に改善してFigmaからReactへのコード変換を向上させていますが、考慮する必要のある制約があります。
+
+## Figmaでフレームをコンポーネントとしてマークすることを確認してください
+Amplify Studioはfigmaコンポーネントのみを変換します。Figmaの「フレーム」のみを持っている場合、フレームはコンポーネントのセットをレイアウトするために使用されることが多いため、Studioはそれを無視します。
+
+Figmaチームの以下のビデオでFigmaコンポーネントの動作方法とその作成方法について詳しく知ることができます：
+
+<YoutubeEmbed embedId="k74IrUNaJVk?start=40" />
+
+## フォントは自動的に統合されません
+
+デフォルトでは、Amplify StudioはFigmaファイルからフォントを自動的にエクスポートし、`src/ui-components/`フォルダの一部としてダウンロードしません。これを回避するには、Reactアプリで通常行うようにフォントを含めることができます。
+
+Create React Appの[フォントの追加](https://create-react-app.dev/docs/adding-images-fonts-and-files/)ドキュメントを確認して、これを設定する方法を参照してください。
+
+## 可能な限りFigmaのオートレイアウトを使用してください
+
+Figmaの「オートレイアウト」により、要素に固定位置を使用する場合よりもコンポーネントが大幅に応答性が高くなる可能性があります。FigmaのオートレイアウトはCSSの「フレックスボックス」（`display: flex`）と考えてください。
+
+Figmaチームの以下のビデオでFigmaのオートレイアウトの動作方法について詳しく知ることができます：
+
+<YoutubeEmbed embedId="PNJxeD29ZTg" />
+
+## コードでUI要素の状態を表現します（ホバー、アクティブ）
+
+Amplify Studioは現在、UIの状態のFigmaからReactへのコード変換をサポートしていません。たとえば、ボタンにホバー効果を追加したい場合は、Figmaでホバーバリアントを作成する代わりに、[コード内でコンポーネントの動作をオーバーライド](/gen1/[platform]/build-ui/uibuilder/override/#set-hover-states-on-icons)する必要があります。
+
+## Figmaバリアントは同じ子要素を持つ必要があります
+
+Figmaバリアントは同じコンポーネント構造を持つ必要があります。バリアントが同じ子要素を持っていない場合、Amplify Studioはコンポーネントをインポートできません。
+
+以下の例では、「ベース」バリアントは「小さいバリアント」と同じ子要素を持っています。各個別要素に変更を加えることはできます。
+
+![コンポーネント構造が同じである必要があることを示す画像](/images/studio/responsive/component-structure2.png)
+
+## コンポーネントが正しくサイズ変更されるようにするために「Hug contents」と「Fill container」を使用します
+
+要素に実世界のデータが割り当てられたときにコンポーネントが正しくサイズ変更されることを確認するには、Figmaの「制約」機能を使用してください。これは、テキストが予期せず折り返されたり、要素が予期せず切り取られたりした場合の問題の一般的なソースです。サイズ変更時に要素が「その内容を採用する」または「それが含まれるコンテナを埋める」かどうかを指定できます。
+
+Figmaチームの以下のビデオでFigmaの制約の動作方法について詳しく知ることができます：
+
+<YoutubeEmbed embedId="LHY9cm_2zwU?start=15" />

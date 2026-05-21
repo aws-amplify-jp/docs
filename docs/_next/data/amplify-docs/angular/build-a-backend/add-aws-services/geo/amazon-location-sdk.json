@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"angular","meta":{"title":"Amazon Location Service SDKを使用する","description":"Amplifyが機能を提供していない特殊なユースケースの場合、エスケープハッチを使用してAmazon Location Serviceの低レベルクライアントインスタンスにアクセスできます。","platforms":["javascript","swift","android","angular","nextjs","react","vue"]}},"__N_SSG":true}

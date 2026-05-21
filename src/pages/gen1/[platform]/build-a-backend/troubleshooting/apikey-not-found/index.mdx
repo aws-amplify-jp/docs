@@ -1,0 +1,112 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'API Key Not Found の問題',
+  description: 'API Key Not Found の問題を解決する',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify プロジェクトで「API Key Not Found」の問題が発生している場合は、以下の手順に従ってトラブルシューティングと解決を行ってください。
+
+## ステップ 1: API キーを削除するために `parameters.json` を変更する
+
+1. プロジェクト内の `amplify/backend/api/<api-name>/parameters.json` ファイルに移動します。
+2. ファイルに次の行を追加します。
+
+  ```json title="amplify/backend/api/<api-name>/parameters.json"
+  {
+        "CreateAPIKey": 0
+  }
+  ```      
+  これが JSON オブジェクトの最後に追加される場合は、前の行の後にコンマを配置してください。
+
+## ステップ 2: Lambda 関数の属性から API キーを削除する
+
+1. `amplify/backend/backend-config.json` ファイルを開きます。
+2. `GraphQLAPIKeyOutput` を含む JSON 属性配列を見つけます。
+3. `GraphQLAPIKeyOutput` エントリを削除して配列を変更します。例えば：
+
+    * 次を変更：
+
+      ```json title="amplify/backend/backend-config.json"
+      {
+        "attributes": [
+            "GraphQLAPIIdOutput",
+            "GraphQLAPIEndpointOutput",
+            "GraphQLAPIKeyOutput"
+        ]
+      }
+      ```
+
+    * 次のようにします：
+
+      ```json title="amplify/backend/backend-config.json"
+      {
+        "attributes": [
+            "GraphQLAPIIdOutput",
+            "GraphQLAPIEndpointOutput"
+        ]
+      }
+      ```
+      API を使用する各 Lambda 関数に対してこの変更を実行してください。
+
+
+## ステップ 3: 変更を適用する
+
+1. クラウドに変更をプッシュします。
+
+  ```terminal
+  amplify push -y
+  ```
+  このプロセスが完了すると、API キーはアプリケーションと関連する Lambda 関数の両方から削除されます。
+
+## ステップ 4: API キーを復元する
+
+1. `amplify/backend/api/<apiName>/parameters.json` から `CreateAPIKey: 0` エントリを削除します。
+2. 変更をプッシュして、API キーをアプリケーションに復元します。
+
+  ```terminal
+  amplify push -y
+  ```
+  このステップ後、API キーはアプリケーションに復元されますが、Lambda 関数には関連付けられません。
+
+
+## ステップ 5: Lambda 関数リソースを更新する
+
+1. 次のコマンドを使用して、以前に API に関連付けられていた各 Lambda 関数を更新します。
+
+  ```terminal
+  amplify update function
+  ```
+2. プロンプトに従って Lambda からリソースを削除します。
+3. 同じコマンドを使用して、API を各 Lambda 関数に復元します。
+
+  ```terminal
+  amplify update function
+  ```
+4. 最後に、変更をプッシュしてを適用します。
+
+  ```terminal
+  amplify push -y
+  ```
+  これにより、プロセスが完了し、「API Key Not Found」の問題が解決されます。

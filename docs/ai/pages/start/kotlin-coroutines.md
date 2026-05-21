@@ -1,0 +1,134 @@
+---
+title: "Kotlinコルーチンサポート"
+section: "start"
+platforms: ["android"]
+gen: 2
+last-updated: "2024-05-06T19:20:38.000Z"
+url: "https://docs.amplify.aws/react/start/kotlin-coroutines/"
+---
+
+AmplifyはKotlinの[コルーチン](https://developer.android.com/kotlin/coroutines)と[フロー](https://developer.android.com/kotlin/flow)の使用に完全に焦点を当てたオプションの独立したAPIサーフェスを提供しています。
+
+これを使用するには、`core`ではなく`core-kotlin`から**`Amplify`**ファサードをインポートします。詳細はインストール手順を参照してください。
+
+Coroutines APIでは、ほとんどのAmplify関数は`suspend`関数として表現されます。サスペンド関数は、Android Architectureコンポーネントの[ライフサイクル対応コルーチンスコープ](https://developer.android.com/topic/libraries/architecture/coroutines#lifecyclescope)を使用して起動できます。
+
+```kotlin
+import com.amplifyframework.kotlin.core.Amplify
+// ...
+
+val post = Post.builder()
+    .title("My First Post")
+    .build()
+
+lifecycleScope.launch {
+    try {
+        Amplify.DataStore.save(post) // This is suspending function!
+        Log.i("AmplifyKotlinDemo", "Saved a post")
+    } catch (failure: DataStoreException) {
+        Log.e("AmplifyKotlinDemo", "Save failed", failure)
+    }
+}
+```
+
+コルーチンは依存する非同期呼び出しの可読性を大幅に向上させることができます。さらに、スコープ、ディスパッチャー、およびその他のKotlinコルーチンプリミティブを使用して、実行コンテキストをより詳細に制御できます。
+
+3つの依存操作がある場合を考えてみましょう。`Post`を保存してから`Editor`を保存し、最後に`PostEditor`を保存したいとします。Amplifyのコルーチンインターフェースを使用すれば、これらの操作を順序付けて記述できます。
+
+```kotlin
+lifecycleScope.launch {
+    try {
+        listOf(post, editor, postEditor)
+            .forEach { Amplify.DataStore.save(it) }
+        Log.i("AmplifyKotlinDemo", "Post, Editor, and PostEditor saved")
+    } catch (failure: DataStoreException) {
+        Log.e("AmplifyKotlinDemo", "An item failed to save", failure)
+    }
+}
+```
+
+Amplifyのバニラ版APIでは、これによって3つのネストされたコールバックを持つ大きなコードブロックが作成されます。
+
+## インストール
+
+Amplifyのコルーチンサポートはオプションのモジュール`core-kotlin`に含まれています。
+
+1.  **Gradle Scripts**の下で**build.gradle.kts (Module :app)**を開き、`dependencies`に次の行を追加します。
+
+    ```kotlin title="app/build.gradle.kts"
+    dependencies {
+        // Add the below line in `dependencies`
+        implementation("com.amplifyframework:core-kotlin:ANDROID_VERSION")
+    }
+    ```
+
+2. **`Amplify`**ファサードを使用する場所では、`com.amplifyframework.core.Amplify`ではなく`com.amplifyframework.kotlin.core.Amplify`をインポートします。
+
+    ```kotlin
+    import com.amplifyframework.kotlin.core.Amplify
+    ```
+
+## 使用方法
+
+Amplifyは、コールバックベースのAPIの動作をKotlinプリミティブに直感的な方法でマッピングしようとします。単一の値（またはエラー）を発行するコールバックを持つ関数は現在、サスペンド関数として表現され、値を代わりに返します。値のストリームを発行するコールバックを持つ関数は、代わりにKotlin`Flow`を返すようになります。
+
+## 特殊なケース
+
+一部のAPIはキャンセルできる操作を返します。例には、APIへのリアルタイムサブスクリプションやストレージからのオブジェクトのアップロード/ダウンロードが含まれます。
+
+### APIサブスクリプション
+
+APIカテゴリの`subscribe()`関数は、サスペンド関数**と** Flowの両方を使用します。この関数はAPIサブスクリプションが確立されるまでサスペンドします。その後、フロー上で値を発行し始めます。
+
+```kotlin
+lifecycleScope.async {
+    try {
+        Amplify.API.subscribe(request) // Suspends until subscription established
+            .catch { Log.e("AmplifyKotlinDemo", "Error on subscription", it) }
+            .collect { Log.i("AmplifyKotlinDemo", "Data on subscription = $it") }
+    } catch (error: ApiException) {
+        Log.e("AmplifyKotlinDemo", "Failed to establish subscription", error)
+    }
+}
+```
+
+### ストレージのアップロードおよびダウンロード操作
+
+ストレージカテゴリの`downloadFile()`および`uploadFile()`関数はやや複雑です。これらのAPIを使用すると、転送進捗を観察し、結果も取得できます。進捗結果は`progress()`関数から返されたフロー上で配信されます。完了イベントはサスペンド`result()`関数によって配信されます。
+
+```kotlin
+// Download
+val download = Amplify.Storage.downloadFile(StoragePath.fromString("public/example.txt"), localFile)
+
+lifecycleScope.async {
+    download
+        .progress()
+        .collect { Log.i("AmplifyKotlinDemo", "Download progress = $it") }
+}
+
+lifecycleScope.async {
+    try {
+        val result = download.result()
+        Log.i("AmplifyKotlinDemo", "Download finished! ${result.file.path}")
+    } catch (failure: StorageException) {
+        Log.e("AmplifyKotlinDemo", "Download failed", failure)
+    }
+}
+
+// Upload
+val upload = Amplify.Storage.uploadFile(StoragePath.fromString("public/example.txt"), localFile)
+
+lifecycleScope.async {
+    upload
+        .progress()
+        .collect { Log.i("AmplifyKotlinDemo", "Upload progress = $it") }
+}
+lifecycleScope.async {
+    try {
+        val result = upload.result()
+        Log.i("AmplifyKotlinDemo", "Upload finished! ${result.path}")
+    } catch (failure: StorageException) {
+        Log.e("AmplifyKotlinDemo", "Upload failed", failure)
+    }
+}
+```

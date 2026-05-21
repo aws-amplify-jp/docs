@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"flutter","meta":{"title":"Kinesis Data Streamsクライアント","description":"Amazon Kinesis Data Streamsにデータをストリーミングするための独立型クライアント。オフラインサポート、自動バッチ処理、構成可能なフラッシング機能を備えています。","platforms":["swift","android","flutter"]}},"__N_SSG":true}

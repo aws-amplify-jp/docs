@@ -1,0 +1,78 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '既存のAWSリソースを使用する',
+  description: '既存のAmazon API Gatewayリソースをリファレンスして設定することで、Amplify Librariesを設定します。',
+  platforms: [
+    'flutter',
+    'swift',
+    'android',
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import android0 from '/src/fragments/lib/restapi/existing-resources.mdx';
+
+<Fragments fragments={{ android: android0 }} />
+
+import ios1 from '/src/fragments/lib/restapi/existing-resources.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import flutter2 from '/src/fragments/lib/restapi/existing-resources.mdx';
+
+<Fragments fragments={{ flutter: flutter2 }} />
+
+<InlineFilter filters={['javascript','angular','nextjs','react','vue','react-native']}>
+
+既存のAmazon API Gatewayリソースは、API Gateway APIの名前とオプションを参照して`Amplify.configure()`を呼び出すことで、Amplify Librariesで使用できます。`Amplify.configure()`を呼び出すときに、完全なリソース設定とライブラリオプションオブジェクトを提供する必要があることに注意してください。次の例は、既存のAmplifyアプリケーションに追加のAPI Gatewayリソースを設定する方法を示しています。
+
+```javascript
+import { Amplify } from 'aws-amplify';
+import { parseAmplifyConfig } from "aws-amplify/utils";
+import amplifyconfig from './src/amplifyconfiguration.json';
+
+const resourceConfig = parseAmplifyConfig(amplifyconfig);
+
+// Add existing resource to the existing configuration.
+Amplify.configure({
+  ...resourceConfig,
+  API: {
+    ...resourceConfig.API,
+    REST: {
+      ...resourceConfig.API?.REST,
+      YourAPIName: {
+        endpoint:
+          'https://abcdefghij1234567890.execute-api.us-east-1.amazonaws.com/stageName',
+        region: 'us-east-1' // Optional
+      }
+    }
+  }
+});
+```
+
+- **YourAPIName**: APIのフレンドリー名
+  - **endpoint**: APIのHTTPSエンドポイント
+  - **region**: リソースがプロビジョニングされているAWSリージョン。指定されない場合、リージョンはエンドポイントから推測されます。
+
+AWSリソースをアプリケーションに追加する前に、アプリケーションにAmplifyライブラリをインストールしておく必要があります。このステップを実行する必要がある場合は、「[Amplify Librariesのインストール](/gen1/[platform]/start/project-setup/create-application/#n2-install-amplify-libraries)」を参照してください。
+
+</InlineFilter>

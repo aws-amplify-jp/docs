@@ -1,0 +1,81 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: '診断',
+  description: 'Amplify CLIの診断コマンドの詳細情報',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+以下のコマンドを実行して、Amplifyバックエンドの機密でない設定をAmplifyと安全に共有できます
+
+```bash
+amplify diagnose --send-report
+```
+
+CLIはAmplifyバックエンドの機密でないファイルをzipファイルに収集し、安全な場所に送信します。以下は、CLIが収集、送信、保存するファイルです：
+
+* [backend-config.json](/gen1/[platform]/tools/cli/reference/files/#backend-configjson): プロジェクトで提供されたすべてのカテゴリを含みます。
+* CloudFormationファイル: リソースを提供するために使用されるCLI生成のCloudFormationファイル。
+* [cli.json](/gen1/[platform]/tools/cli/reference/files/#clijson): フィーチャーフラグの設定。
+* [amplify.state](/gen1/[platform]/tools/cli/reference/files/#general-category-files): 関数カテゴリを呼び出す方法に関する内部メタデータ。
+* [parameters.json](/gen1/[platform]/tools/cli/reference/files/#category-parametersjson)とcli-inputs.json。
+* GraphQL APIの一部であるschema.graphqlまたはschemaフォルダ。
+* override.tsはCloudFormationへのカスタム拡張を提供します。
+* 関数カテゴリの依存情報がパッケージファイルに保存されます。
+
+zipファイルが正常に送信された後、現在のプロジェクトの一意の識別子が出力されます。この識別子は、サポートエンジニアがデバッグ目的でzipファイルにアクセスするために使用されます。
+
+
+```bash
+Project Identifier: 56b5981ed6cf5caad90fb2f8aed150e2
+```
+
+## 自動レポート共有
+
+
+Amplify CLIの改善を支援するため、失敗時にプロジェクト設定をAmplify CLIと自動的に共有することをオプトインできます。これはプロジェクトレベルの設定で、プロジェクトごとにトグルできます。プロジェクトは以下を実行することでオプトアウトできます
+
+
+```bash
+amplify diagnose --auto-send-off
+```
+
+そしてオプトインは以下で行えます
+
+```bash
+amplify diagnose --auto-send-on
+``` 
+
+CLIは以下のファイルと`amplify diagnose --send-report`を使用して収集されたファイルを含む2つの追加ファイルを収集します
+
+* エラーの詳細: スタックトレース、メッセージ、エラー名を含みます。
+* `amplify push`が呼び出されたときのCloudFormationの更新。
+
+
+## セキュリティ
+
+転送中、zipファイルは公開鍵暗号と秘密鍵復号化スキームを使用して暗号化されます。保存時には、ファイルはAES 256ビット暗号化で保存されます。ファイルは60日間保持され、その期間中にファイルは削除用にマークされます。ファイルはデバッグ目的でのみ使用され、チーム外で共有されることはありません。

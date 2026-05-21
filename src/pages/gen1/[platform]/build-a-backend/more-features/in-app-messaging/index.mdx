@@ -1,0 +1,51 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+
+export const meta = {
+  title: 'アプリ内メッセージング',
+  description: 'Amplify アプリ内メッセージングは、ユーザーがアプリケーションを積極的に使用している間に表示できるメッセージで、ユーザーの参加度を向上させるのに役立ちます。定義したユーザーセグメントに対してターゲット化されたメッセージを送信したり、ユーザーの行動に基づいてコンテキストメッセージをトリガーしたりできます。アプリ内メッセージングを設定して実行したら、アプリケーションにネイティブに見えるメッセージを作成し、追加のコード変更なしでユーザーに配信できます。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue'
+  ],
+  route: '/gen1/[platform]/build-a-backend/more-features/in-app-messaging'
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      platform: context.params.platform,
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+import reactnative0 from '/src/fragments/lib/in-app-messaging/overview/overview.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative0 }} />
+
+import js0 from '/src/fragments/lib/in-app-messaging/overview/overview.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>
+
+## さらに詳しく
+
+<Overview childPageNodes={props.childPageNodes} />

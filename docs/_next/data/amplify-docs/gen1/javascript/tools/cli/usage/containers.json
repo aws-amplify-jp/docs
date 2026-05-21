@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"javascript","meta":{"title":"サーバーレスコンテナ","description":"AWSにコンテナをデプロイします。サーバーレスコンテナは、アカウント内でREST APIまたはGraphQL APIを構築する際にAWS Fargateを活用します。コンテナは単一のDockerfile定義を使用するか、Docker Composeファイルを使用してデプロイでき、ビルドおよびデプロイメントパイプラインはAWSアカウント内に作成されます。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

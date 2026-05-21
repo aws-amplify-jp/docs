@@ -1,0 +1,175 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'コマンド',
+  description: 'これらの Amplify CLI コマンドを使用して、複数の環境でチームワークフローを管理します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+ 
+## チームワークフロー
+
+Amplify の環境は、ローカル環境とクラウド環境を管理して、チームワークフローをミラーリングするのに役立ちます。一般的なタスクは以下の通りです：
+
+- 開発プロセス（例：開発、ステージング、本番環境）をサポートするための環境の管理
+- 新機能を安全にテスト
+- チームメンバー間での環境の共有
+- チームワークフローのサポート
+
+新しい Amplify プロジェクトで利用可能なすべてのコマンドを表示するには、ルートディレクトリから次のコマンドを実行してください。
+
+```bash
+amplify env
+```
+
+## コマンド概要
+
+| コマンド  | 説明  |
+|---|---|
+| [`amplify env add [--permissions-boundary <IAM Policy ARN>]`](#add-a-new-environment) | 新しい環境を追加します |
+| [`amplify env pull [--restore]`](#pull-the-environment-from-the-cloud) | 現在の環境をクラウドからプルします |
+| [`amplify env checkout <env-name> [--restore]`](#checkout-an-environment) | 選択した環境に切り替えます |
+| [`amplify env list [--details] [--json]`](#list-environments) | すべての環境のリストを表示します |
+| [`amplify env get --name <env-name>`](#show-environment-details) | 環境の詳細を表示します |
+| [`amplify env update [--permissions-boundary <IAM Policy ARN>]`](/gen1/[platform]/tools/cli/project/permissions-boundary/) | 環境の IAM アクセス権限の境界を更新します |
+| [`amplify env import --name <env-name> --config <provider-configs> [--awsInfo <aws-configs>]`](#import-an-environment) | 環境をインポートします |
+| [`amplify env remove <env-name>`](#remove-an-environment) | 環境を削除します |
+
+## 環境 CLI コマンド
+
+### 新しい環境を追加する
+
+```bash
+amplify env add
+```
+
+`add` コマンドは以下のステップを実行します：
+
+- 新しい環境の名前を要求します
+- 未認証ユーザー用の IAM ロールを作成します
+- 認証済みユーザー用の IAM ロールを作成します
+- デプロイ用の S3 バケットを作成します
+- [AWS Amplify Console](https://console.aws.amazon.com/amplify) に新しいバックエンド環境を作成して、リソースを表示・管理します。
+
+オプションで、`--permissions-boundary` パラメーターを使用して、すべての Amplify 生成ロール用に IAM アクセス権限の境界を設定できます。IAM アクセス権限の境界を設定する方法の詳細については、[Amplify 生成ロール用の IAM アクセス権限の境界](/gen1/[platform]/tools/cli/project/permissions-boundary/)を参照してください。
+
+### クラウドから環境をプルする
+
+```bash
+amplify env pull [--restore]
+```
+
+このコマンドを使用して、現在の環境をクラウドからプルします。`--restore` フラグを追加して、`amplify pull` コマンドのようにローカルの変更を上書きします。
+
+### 環境をチェックアウトする
+
+```bash
+amplify env checkout <env-name> [--restore]
+```
+
+このコマンドを使用して、&lt;env-name&gt; 環境をチェックアウトします。`--restore` フラグを追加して、ローカルの変更を上書きします。
+
+### 環境を一覧表示する
+
+```bash
+amplify env list [--details] [--json]
+```
+
+このコマンドを使用して、すべての環境を一覧表示します。`--details` または `--json` フラグを追加して、より詳細な情報を表示し、出力をフォーマットします。詳細には、AWS リージョン、IAM ロール、S3 バケット、およびスタック情報が含まれます。
+
+以下は、`dev` と `test` 環境を持つ Amplify プロジェクトの出力例です。アクティブな環境にはアスタリスクが付きます。
+
+```bash
+amplify env list
+```
+
+```console
+| Environments |
+| ------------ |
+| *dev         |
+| test         |
+```
+
+### 環境の詳細を表示する
+
+```bash
+amplify env get --name <env-name>
+```
+
+このコマンドを使用して、&lt;env-name&gt; 環境のすべての詳細を一覧表示します。詳細には、AWS リージョン、IAM ロール、S3 バケット、およびスタック情報が含まれます。
+
+### 環境をインポートする
+
+```bash
+amplify env import --name <env-name> --config <provider-configs> [--awsInfo <aws-configs>]
+```
+
+このコマンドを使用して、既存の環境をインポートします。以下は bash コマンドの例です。
+
+```bash
+#!/bin/bash
+set -e
+IFS='|'
+ 
+AWSCLOUDFORMATIONCONFIG="{\
+\"Region\": \"us-east-1\",\
+\"DeploymentBucketName\": \"mytestproject-20181106123241-deployment\",\
+\"UnauthRoleName\": \"mytestproject-20181106123241-unauthRole\",\
+\"StackName\": \"mytestproject-20181106123241\",\
+\"StackId\": \"arn:aws:cloudformation:us-east-1:132393967379:stack/mytestproject67-20181106123241/1c03a3e0-e203-11e8-bea9-500c20ff1436\",\
+\"AuthRoleName\": \"mytestproject67-20181106123241-authRole\",\
+\"UnauthRoleArn\": \"arn:aws:iam::132393967379:role/mytestproject67-20181106123241-unauthRole\",\
+\"AuthRoleArn\": \"arn:aws:iam::132393967379:role/mytestproject67-20181106123241-authRole\"\
+}"
+PROVIDER_CONFIG="{\
+\"awscloudformation\":$AWSCLOUDFORMATIONCONFIG\
+}"
+ 
+ 
+AWS_CONFIG="{\
+\"configLevel\":\"project\",\
+\"useProfile\":true,\
+\"profileName\":\"default\"\
+}"
+ 
+amplify env import \
+--name dev \
+--config $PROVIDER_CONFIG \
+--awsInfo $AWS_CONFIG \
+--yes
+ 
+```
+
+`AWSCLOUDFORMATIONCONFIG` は、既存の Amplify プロジェクトの `team-provider-info.json` ファイルから取得できます。
+
+### 環境を削除する
+
+```bash
+amplify env remove <env-name>
+```
+
+このコマンドを使用して、環境を削除します。これにより、ローカル環境とクラウド環境の両方が削除され、プロビジョニングされたすべてのサービスとリソースが含まれます。

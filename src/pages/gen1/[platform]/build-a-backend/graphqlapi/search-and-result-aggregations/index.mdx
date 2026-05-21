@@ -1,0 +1,479 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '検索およびアグリゲーションクエリの構築',
+  description: 'GraphQLスキーマに認可ルールを追加して、データへのアクセスを制御します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert url={'/gen1/[platform]/tools/cli-legacy/searchable-directive'} />
+
+`@searchable`ディレクティブを`@model`タイプに追加して、OpenSearchベースのデータ検索と結果アグリゲーションを有効化します。これにより、以下のことができます：
+
+- 部分文字列マッチング、ワイルドカード、正規表現、`and`/`or`/`not`条件などの高度なフィルタを使用してデータを検索する
+- 合計、平均、最小値、最大値、用語などのアグリゲーション値を取得する
+- 検索結果の総数を取得する
+- 1つまたは複数のフィールド全体で検索結果をソートする
+
+```graphql
+type Student @model @searchable {
+  name: String
+  dateOfBirth: AWSDate
+  email: AWSEmail
+  examsCompleted: Int
+}
+```
+
+> `@searchable`ディレクティブが追加されると、モデルに追加されたすべての新しいレコードはOpenSearchにストリーミングされます。既存のデータをバックフィルするには、[DynamoDBテーブルからOpenSearchインデックスをバックフィルする](/gen1/[platform]/build-a-backend/graphqlapi/troubleshooting/#backfill-opensearch-index-from-dynamodb-table)を参照してください。
+
+## データの検索とフィルター
+
+`@searchable`ディレクティブが付加されたすべてのモデルは、レコードを検索およびフィルターするための新しい「search」GraphQLクエリを生成します。上記の例では、「searchStudents」クエリを使用して「Student」レコードを検索できます。
+
+`filter`パラメータを使用して、フィールド値に基づいてレコードをフィルターできます。
+
+```graphql
+query SearchStudentsByEmail {
+  searchStudents(filter: { name: { eq: "Rene Brandel" } }) {
+    items {
+      id
+      name
+      email
+    }
+  }
+}
+```
+
+上記の例では、検索結果は「Rene Brandel」という名前の学生で構成されています。
+
+### サポートされている検索操作
+
+| フィールドタイプ | サポートされている検索操作 |
+| --- | --- |
+| String | ne, eq, match, matchPhrase, matchPhrasePrefix, multiMatch, exists, wildcard, regexp |
+| Int | ne, gt, lt, gte, lte, eq, range |
+| Float | ne, gt, lt, gte, lte, eq, range |
+| Boolean | eq, ne |
+| Enum | ne, eq, match, matchPhrase, matchPhrasePrefix, multiMatch, exists, wildcard, regexp |
+
+### ネストされた検索条件（and、or、not）
+
+フィルターパラメータを使用して、ネストされた`and`/`or`/`not`条件を渡します。
+
+```graphql
+query MyQuery {
+  searchStudents(
+    filter: {
+      name: { wildcard: "*Brandel" }
+      or: [{ dateOfBirth: { lt: "2000-01-01" } }, { email: { exists: true } }]
+    }
+  ) {
+    items {
+      id
+      name
+      email
+      dateOfBirth
+    }
+  }
+}
+```
+
+デフォルトでは、フィルタープロパティ内のすべての操作は`and`されています。検索クエリの`filter`パラメータで`or`または`not`プロパティを使用して、この動作をオーバーライドしてください。
+
+上記のクエリは、以下の条件を満たす「Student」を返します：
+
+- 名前が「Brandel」で終わる
+- `and`
+  - 生年月日が2000-01-01より前である
+  - `or`
+  - メールアドレスが存在する
+
+## 検索結果のソート
+
+`sort`パラメータを使用して、フィールドを昇順または降順で検索結果をソートします。`field`引数はモデルで利用可能なフィールドを受け付けます。`direction`は`asc`または`desc`を受け付けます。
+
+```graphql
+query SearchAndSort {
+  searchStudents(
+    filter: { name: { wildcard: "*Brandel" } }
+    sort: { direction: desc, field: name }
+  ) {
+    items {
+      name
+      id
+    }
+  }
+}
+```
+
+上記の例では、検索結果は`desc`（降順）で`name`に基づいてソートされています。
+
+### 複数フィールドでの検索結果のソート
+
+複数のフィールドでソートするには、ソート条件の配列を指定します。複数のフィールドでソートする場合、ソート条件は`sort`配列の順序で適用されます。
+
+```graphql
+query SearchAndSort {
+  searchStudents(
+    filter: { name: { wildcard: "*Brandel" } }
+    sort: [
+      { field: name, direction: desc } # ソート条件 #1
+      { field: dateOfBirth, direction: asc } # ソート条件 #2
+    ]
+  ) {
+    items {
+      id
+      name
+      dateOfBirth
+    }
+  }
+}
+```
+
+上記の例では、検索結果は最初に`name`で`desc`（降順）でソートされ、次に`dateOfBirth`で`asc`（昇順）でソートされます。
+
+## 検索結果の改ページネーション
+
+デフォルトでは、検索結果のページサイズは100です。ページサイズをカスタマイズするには、`limit`パラメータを変更します。`nextToken`をクエリして、後続の改ページネーションリクエストで使用します：
+
+```
+query MyQuery {
+  searchTodos(nextToken: "<YOUR_NEXT_TOKEN>") { # クエリにnextTokenを渡す
+    items {
+      description
+      id
+      name
+      createdAt
+    }
+    nextToken # 改ページネーションのためのNextToken
+  }
+}
+```
+
+## 検索結果の合計数
+
+クエリ応答に`total`フィールドを追加して、検索結果ヒットの総数を取得します。
+
+```graphql
+query MyQuery {
+  searchStudents(filter: { name: { wildcard: "*Brandel" } }) {
+    items {
+      id
+    }
+    total # 合計数を取得するために指定
+  }
+}
+```
+
+上記の例では、応答の`total`フィールドに、名前が「Brandel」で終わる「Students」の検索結果の総数が含まれます。注：`total`は改ページネーション設定に関わらず、すべてのレコードに基づいて計算されます。
+
+## 検索結果のアグリゲーション値（最小値、最大値、平均値、合計、用語）
+
+`aggregates`パラメータを使用して、「最小値」、「最大値」、「平均値」、「合計」などのアグリゲーション値を取得し、`aggregateItems`フィールドで返します。注：`aggregates`は改ページネーション設定に関わらず、すべてのレコードに基づいて計算されます。
+
+<BlockSwitcher>
+<Block name="最小値（min）">
+
+`aggregate``type`として`min`値を指定し、応答フィールドで`aggregateItems`を指定します。
+
+```graphql
+query MyQuery {
+  searchStudents(
+    aggregates: {
+      type: min # 「min」値を取得することを指定
+      field: examsCompleted # アグリゲーション値のフィールドを指定
+      name: "minimumExams" # 応答フィールドで参照するための名前を指定
+    }
+    filter: { name: { wildcard: "Rene*" } }
+  ) {
+    aggregateItems {
+      name
+      result {
+        ... on SearchableAggregateScalarResult {
+          value
+        }
+      }
+    }
+  }
+}
+```
+
+上記の例では、応答に「Rene」で始まる名前を持つすべての学生の「examsCompleted」の最小値が含まれます。
+
+```graphql
+{
+  "data": {
+    "searchStudents": {
+      "aggregateItems": [{
+        "name": "minimumExams",
+        "result": {
+          "value": 7
+        }
+      }]
+    }
+  }
+}
+```
+
+</Block>
+
+<Block name="最大値（max）">
+
+`aggregate``type`として`max`値を指定し、応答フィールドで`aggregateItems`を指定します。
+
+```graphql
+query MyQuery {
+  searchStudents(
+    aggregates: {
+      type: max # 「max」値を取得することを指定
+      field: examsCompleted # アグリゲーション値のフィールドを指定
+      name: "maximumExams" # 応答フィールドで参照するための名前を指定
+    }
+    filter: { name: { wildcard: "Rene*" } }
+  ) {
+    aggregateItems {
+      name
+      result {
+        ... on SearchableAggregateScalarResult {
+          value
+        }
+      }
+    }
+  }
+}
+```
+
+上記の例では、応答に「Rene」で始まる名前を持つすべての学生の「examsCompleted」の最大値が含まれます。
+
+```graphql
+{
+  "data": {
+    "searchStudents": {
+      "aggregateItems": [{
+        "name": "maximumExams",
+        "result": {
+          "value": 28
+        }
+      }]
+    }
+  }
+}
+```
+
+</Block>
+
+<Block name="平均値（avg）">
+
+`aggregate``type`として`avg`値を指定し、応答フィールドで`aggregateItems`を指定します。
+
+```graphql
+query MyQuery {
+  searchStudents(
+    aggregates: {
+      type: avg # 「avg」値を取得することを指定
+      field: examsCompleted # アグリゲーション値のフィールドを指定
+      name: "averageExams" # 応答フィールドで参照するための名前を指定
+    }
+    filter: { name: { wildcard: "Rene*" } }
+  ) {
+    aggregateItems {
+      name
+      result {
+        ... on SearchableAggregateScalarResult {
+          value
+        }
+      }
+    }
+  }
+}
+```
+
+上記の例では、応答に「Rene」で始まる名前を持つすべての学生の「examsCompleted」の平均値が含まれます。
+
+```graphql
+{
+  "data": {
+    "searchStudents": {
+      "aggregateItems": [{
+        "name": "averageExams",
+        "result": {
+          "value": 17.3
+        }
+      }]
+    }
+  }
+}
+```
+
+</Block>
+
+<Block name="合計（sum）">
+
+`aggregate``type`として`sum`値を指定し、応答フィールドで`aggregateItems`を指定します。
+
+```graphql
+query MyQuery {
+  searchStudents(
+    aggregates: {
+      type: sum # 「sum」値を取得することを指定
+      field: examsCompleted # アグリゲーション値のフィールドを指定
+      name: "examsSum" # 応答フィールドで参照するための名前を指定
+    }
+    filter: { name: { wildcard: "Rene*" } }
+  ) {
+    aggregateItems {
+      name
+      result {
+        ... on SearchableAggregateScalarResult {
+          value
+        }
+      }
+    }
+  }
+}
+```
+
+上記の例では、応答に「Rene」で始まる名前を持つすべての学生のすべての「examsCompleted」値の合計が含まれます。
+
+```graphql
+{
+  "data": {
+    "searchStudents": {
+      "aggregateItems": [{
+        "name": "examsSum",
+        "result": {
+          "value": 392
+        }
+      }]
+    }
+  }
+}
+```
+
+</Block>
+<Block name="用語">
+
+`aggregate``type`として`terms`値を指定し、応答フィールドで`aggregateItems`を指定します。
+
+```graphql
+query MyQuery {
+  searchTodos(
+    aggregates: { field: description, type: terms, name: "descriptionTerms" }
+  ) {
+    aggregateItems {
+      result {
+        ... on SearchableAggregateBucketResult {
+          __typename
+          buckets {
+            doc_count
+            key
+          }
+        }
+      }
+      name
+    }
+  }
+}
+```
+
+上記の例では、応答に説明の用語とそのカウントが含まれます：
+
+```graphql
+{
+  "data": {
+    "searchTodos": {
+      "aggregateItems": [
+        {
+          "result": {
+            "__typename": "SearchableAggregateBucketResult",
+            "buckets": [{
+                "doc_count": 2,
+                "key": "Shopping list"
+              }, {
+                "doc_count": 1,
+                "key": "Me next todo"
+              }]
+          },
+          "name": "descriptionTerms"
+        }
+      ]
+    }
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+## 本番環境のOpenSearchをセットアップ
+
+デフォルトでは、Amplify CLIはt2.smallインスタンスタイプを設定します。これはプロトタイピングを開始するのに適していますが、[OpenSearchベストプラクティス](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/bp.html)によると本番環境での使用は推奨されていません。
+
+環境ごとにOpenSearchインスタンスタイプを設定するには：
+
+1. `amplify env add`を実行して新しい環境を作成します（例：「prod」）
+2. `amplify/team-provider-info.json`ファイルを編集し、`OpenSearchInstanceType`をアプリケーションに適したインスタンスタイプに設定します
+
+```json
+{
+  "dev": {
+    "categories": {
+      "api": {
+        "<your-api-name>": {
+          "OpenSearchInstanceType": "t2.small.elasticsearch"
+        }
+      }
+    }
+  },
+  "prod": {
+    "categories": {
+      "api": {
+        "<your-api-name>": {
+          "OpenSearchInstanceType": "t2.medium.elasticsearch"
+        }
+      }
+    }
+  }
+}
+```
+
+3. `amplify push`で変更をデプロイします
+
+Amazon OpenSearchServiceインスタンスタイプの詳細については、[こちら](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/supported-instance-types.html)をご覧ください。
+
+## 動作方法
+
+`@searchable`ディレクティブは@modelタイプのデータをAmazon OpenSearchServiceにストリーミングし、OpenSearchに対してクエリを実行するための検索リゾルバーを設定します。
+
+`@searchable`ディレクティブのタイプ定義：
+
+```graphql
+# DynamoDBからOpenSearchにデータをストリーミングし、検索機能を公開します。
+directive @searchable(queries: SearchableQueryMap) on OBJECT
+input SearchableQueryMap {
+  search: String
+}
+```

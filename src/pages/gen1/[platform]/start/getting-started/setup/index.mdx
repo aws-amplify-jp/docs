@@ -1,0 +1,779 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'フルスタックプロジェクトのセットアップ',
+  description: 'Amplifyの始め方 - フルスタックプロジェクトのセットアップ',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'swift',
+    'react',
+    'react-native',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios7 from '/src/fragments/start/getting-started/ios/setup.mdx';
+
+<Fragments fragments={{ swift: ios7 }} />
+
+import android8 from '/src/fragments/start/getting-started/android/setup.mdx';
+
+<Fragments fragments={{ android: android8 }} />
+
+import flutter9 from '/src/fragments/start/getting-started/flutter/setup.mdx';
+
+<Fragments fragments={{ flutter: flutter9 }} />
+
+<InlineFilter filters={['javascript','react','angular','nextjs','react-native','vue']}>
+
+<InlineFilter filters={['javascript']}>
+
+次のコマンドを使用して、Viteで新しいVanilla JavaScriptアプリを作成し、アプリのディレクトリとファイルを作成します。
+
+```bash
+npm create vite@latest
+✔ Project name: amplify-js-app
+✔ Select a framework: › Vanilla
+✔ Select a variant: › JavaScript
+```
+
+npmを初期化し、依存関係と開発依存関係をインストールします。
+
+```bash
+cd amplify-js-app
+npm install
+npm run dev
+```
+
+これは開発サーバーを実行し、ビルドによって生成された出力を確認できるようにします。[http://localhost:5173](http://localhost:5173)にアクセスすることで、実行中のアプリを確認できます。
+
+`index.html`ファイルに以下を追加します:
+
+```html title="index.html"
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Amplify</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="style.css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div class="app">
+      <div class="app-header">
+        <h1>Welcome to Amplify</h1>
+      </div>
+      <div class="app-body">
+        <h1>Mutation Results</h1>
+        <button id="MutationEventButton">Add data</button>
+        <div id="MutationResult"></div>
+        <hr />
+
+        <h1>Query Results</h1>
+        <div id="QueryResult"></div>
+        <hr />
+
+        <h1>Subscription Results</h1>
+        <div id="SubscriptionResult"></div>
+      </div>
+    </div>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
+```
+
+`style.css`ファイルに以下を追加します:
+
+```css title="style.css"
+html,
+body {
+  font-family: 'Amazon Ember', 'Helvetica', 'sans-serif';
+  margin: 0;
+}
+a {
+  color: #ff9900;
+}
+h1 {
+  font-weight: 300;
+}
+hr {
+  height: 1px;
+  background: lightgray;
+  border: none;
+}
+.app {
+  width: 100%;
+}
+.app-header {
+  color: white;
+  text-align: center;
+  background: linear-gradient(30deg, #f90 55%, #ffc300);
+  width: 100%;
+  margin: 0 0 1em 0;
+  padding: 3em 0 3em 0;
+  box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.3);
+}
+.app-body {
+  width: 400px;
+  margin: 0 auto;
+  text-align: center;
+}
+.app-body button {
+  background-color: #ff9900;
+  font-size: 14px;
+  color: white;
+  text-transform: uppercase;
+  padding: 1em;
+  border: none;
+}
+.app-body button:hover {
+  opacity: 0.8;
+}
+```
+
+`main.js`からボイラープレートコードを削除して空のままにします。ブラウザをリフレッシュして変更を確認します。
+
+</InlineFilter>
+
+<InlineFilter filters={['react']}>
+
+## 新しいReactアプリの作成
+
+開始するには、まず新しいReactアプリを作成し、Amplify CLIをインストールして使用して、アプリにバックエンド機能を追加することで開始します。
+
+プロジェクトディレクトリから、次のコマンドを実行してプロンプトに応答します:
+
+<BlockSwitcher>
+  <Block name="TypeScript">
+
+    ```bash
+    npm create vite@latest
+    ✔ Project name: react-amplified
+    ✔ Select a framework: › React
+    ✔ Select a variant: › TypeScript
+    ```
+
+  </Block>
+  <Block name="JavaScript">
+
+    ```bash
+    npm create vite@latest
+    ✔ Project name: react-amplified
+    ✔ Select a framework: › React
+    ✔ Select a variant: › JavaScript
+    ```
+
+  </Block>
+</BlockSwitcher>
+
+これは**react-amplified**というディレクトリに新しいReactアプリを作成します。次のコマンドを実行して、新しい**react-amplified**ディレクトリに切り替え、プロジェクトの依存関係をインストールし、アプリを実行できます:
+
+```bash
+cd react-amplified
+npm install
+npm run dev
+```
+
+これは開発サーバーを実行し、ビルドによって生成された出力を確認できるようにします。[http://localhost:5173](http://localhost:5173)にアクセスすることで、実行中のアプリを確認できます。
+
+</InlineFilter>
+
+<InlineFilter filters={['angular']}>
+
+[Angular CLI](https://angular.dev/tools/cli)を使用して新しいAngularアプリをブートストラップします:
+
+```bash
+npx -p @angular/cli ng new amplify-app
+```
+
+```console
+? Which stylesheet format would you like to use? CSS
+? Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Pre-rendering)? No
+```
+
+これはフォルダ`amplify-app`にAngularアプリを作成します。次のコマンドを使用してそのフォルダに切り替えます:
+
+```bash
+cd amplify-app
+```
+
+</InlineFilter>
+
+<InlineFilter filters={['nextjs']}>
+
+<Callout>
+
+このチュートリアルは[Next.js App Router](https://nextjs.org/docs/app/building-your-application/routing)を使用して構築されています。
+
+**注意:** Amplify JS v6は次のバージョン範囲のNext.jsをサポートしています: `>=13.5.0 <16.0.0`。
+Amplifyと統合するには、正しいバージョンがあることを確認してください。
+
+</Callout>
+
+プロジェクトをセットアップするには、[Create Next App](https://nextjs.org/docs/api-reference/create-next-app)で新しいNext.jsアプリを作成します。これは新しいNext.jsアプリケーションを構築し始めるために必要なすべてを備えて迅速に開始できるシンプルなCLIツールです。その後、Amplifyを追加して新しいプロジェクトを初期化します。
+
+プロジェクトディレクトリから、次のコマンドを実行します:
+
+```bash
+npm create next-app@14 -- next-amplified --ts --no-eslint --src-dir --import-alias '@/*' --no-tailwind --app
+cd next-amplified
+```
+
+このコマンドは次のオプションでプロジェクトをブートストラップします:
+
+- App Router
+- TypeScript
+- ESLintなし
+- `src`ディレクトリ付き
+- Tailwind CSSなし
+- `@/`にエイリアスされたインポート(デフォルト)
+
+プロジェクトのルートにいるので、次のコマンドを使用してアプリを実行できます:
+
+```bash
+npm run dev
+```
+
+これは開発サーバーを実行し、ビルドによって生成された出力を確認できるようにします。[http://localhost:3000](http://localhost:3000)にアクセスすることで、実行中のアプリを確認できます。
+
+</InlineFilter>
+
+<InlineFilter filters={['react-native']}>
+
+開始するには、AndroidまたはiOS用の新しいReact Nativeプロジェクトを初期化します。
+
+<BlockSwitcher>
+<Block name="Expo CLI">
+
+<Callout>
+
+AmplifyはExpo SDKを通じて利用できない新しいネイティブモジュールが必要になりました。その結果、Expo Goはサポートされなくなりましたが、それでもExpoを使用できるようにしてください。[Amplify v6でExpo Goのサポート廃止について詳しく知る](/gen1/react-native/build-a-backend/troubleshooting/migrate-from-javascript-v5-to-v6/#dropping-support-for-expo-go)。
+
+</Callout>
+
+次のコマンドで新しいアプリを作成します:
+
+```sh
+npx create-expo-app amplified_todo
+
+cd amplified_todo
+```
+
+次のコマンドでアプリを開始します:
+
+Android向け:
+
+```sh
+npx expo run:android
+```
+
+iOS向け:
+
+```sh
+npx expo run:ios
+```
+
+追加のプロンプトに従い、ビルドの構成に時間をかけてください。準備ができたら、アプリが各シミュレーターで起動します。
+
+</Block>
+<Block name="React Native CLI">
+
+[開発環境をセットアップ](https://reactnative.dev/docs/environment-setup)した後、次のコマンドで新しいアプリを作成します:
+
+```bash
+npx react-native init amplified_todo
+
+cd amplified_todo
+```
+
+次のコマンドでアプリを開始します:
+
+```bash
+npm start
+```
+
+```console
+r - reload the app
+d - open developer menu
+i - run on iOS
+a - run on Android
+```
+
+</Block>
+</BlockSwitcher>
+
+</InlineFilter>
+
+<InlineFilter filters={['vue']}>
+
+Vue Viteで動作する`create-app`を使用して、新しいVue 3アプリをブートストラップします(デフォルトを選択するとこのプロジェクトに役立ちます):
+
+```bash
+npm init vue@3
+
+Need to install the following packages:
+  create-vue@3
+Ok to proceed? (y) y
+
+✔ Project name: … vue-amplified
+✔ Add TypeScript? … No
+✔ Add JSX Support? … No
+✔ Add Vue Router for Single Page Application development? … No
+✔ Add Pinia for state management? … No
+✔ Add Vitest for Unit Testing? … No
+✔ Add Cypress for both Unit and End-to-End testing? … No
+✔ Add ESLint for code quality? … No
+```
+
+これは**vue-amplified**というディレクトリに新しいVueアプリを作成します。次のコマンドを実行して、新しい**vue-amplified**ディレクトリに切り替え、プロジェクトの依存関係をインストールし、アプリを実行できます:
+
+```bash
+cd vue-amplified
+npm install
+npm run dev
+```
+
+</InlineFilter>
+
+## 新しいバックエンドの初期化
+
+実行中のアプリが完成したので、Amplifyをセットアップして、アプリをサポートするために必要なバックエンドサービスを作成できるようにします。
+
+新しいターミナルを開きます。プロジェクトのルートから、次を実行します:
+
+```bash
+amplify init
+```
+
+Amplifyを初期化するときに、アプリに関する情報の入力を求めるプロンプトが表示されます:
+
+<InlineFilter filters={['javascript']}>
+
+```console
+? Enter a name for the project: amplifyjsapp
+The following configuration will be applied:
+
+Project information
+| Name: amplifyjsapp
+| Environment: dev
+| Default editor: Visual Studio Code
+| App type: javascript
+| Javascript framework: none
+| Source Directory Path: src
+| Distribution Directory Path: dist
+| Build Command: npm run-script build
+| Start Command: npm run-script start
+
+? Initialize the project with the above configuration? Yes
+Using default provider  awscloudformation
+? Select the authentication method you want to use: AWS profile
+
+For more information on AWS Profiles, see:
+https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html
+
+? Please choose the profile you want to use: default
+```
+
+</InlineFilter>
+
+<InlineFilter filters={['react']}>
+
+```console
+? Enter a name for the project reactamplified
+The following configuration will be applied:
+
+?Project information
+| Name:  reactamplified
+| Environment: dev
+| Default editor: Visual Studio Code
+| App type: javascript
+| Javascript framework: react
+| Source Directory Path: src
+```
+
+<Callout>
+
+**Distribution Directory Path**として**dist**を設定していることを確認してください。
+
+</Callout>
+
+```console
+| Distribution Directory Path: dist
+```
+
+```console
+| Build Command: npm run-script build
+| Start Command: npm run-script start
+
+? Initialize the project with the above configuration? Yes
+Using default provider  awscloudformation
+? Select the authentication method you want to use: AWS profile
+
+...
+
+? Please choose the profile you want to use default
+```
+
+</InlineFilter>
+
+<InlineFilter filters={['angular']}>
+
+より新しいバージョンのAngularでは、Angular がプロジェクトをビルドする方法に合わせるために、Distribution Directory Pathを`dist`から`dist/amplify-app/browser`に変更する必要があります。
+
+```console
+? Enter a name for the project: amplifyapp
+The following configuration will be applied:
+
+Project information
+| Name: amplifyapp
+| Environment: dev
+| Default editor: Visual Studio Code
+| App type: javascript
+| Javascript framework: angular
+| Source Directory Path: src
+| Distribution Directory Path: dist/amplify-app/browser
+| Build Command: npm run-script build
+| Start Command: ng serve
+
+? Initialize the project with the above configuration? Yes
+Using default provider  awscloudformation
+? Select the authentication method you want to use: AWS profile
+
+For more information on AWS Profiles, see:
+https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html
+
+? Please choose the profile you want to use: default
+```
+
+</InlineFilter>
+
+<InlineFilter filters={['nextjs']}>
+
+```console
+? Enter a name for the project (nextamplified)
+The following configuration will be applied:
+
+Project information
+| Name: next-amplified
+| Environment: dev
+| Default editor: Visual Studio Code
+| App type: javascript
+| Javascript framework: react
+| Source Directory Path: src
+| Distribution Directory Path: build
+| Build Command: npm run-script build
+| Start Command: npm run-script start
+
+? Initialize the project with the above configuration? Yes
+Using default provider  awscloudformation
+? Select the authentication method you want to use: AWS profile
+
+For more information on AWS Profiles, see:
+https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html
+
+? Please choose the profile you want to use: default
+```
+
+</InlineFilter>
+
+<InlineFilter filters={['react-native']}>
+
+```console
+? Enter a name for the project (amplified_todo)
+The following configuration will be applied:
+
+Project information
+| Name: amplified_todo
+| Environment: dev
+| Default editor: Visual Studio Code
+| App type: javascript
+| Javascript framework: react-native
+| Source Directory Path: /
+| Distribution Directory Path: /
+| Build Command: npm run-script build
+| Start Command: npm run-script start
+
+? Initialize the project with the above configuration? Yes
+Using default provider  awscloudformation
+? Select the authentication method you want to use: AWS profile
+? Please choose the profile you want to use default
+```
+
+</InlineFilter>
+
+<InlineFilter filters={['vue']}>
+
+バックエンドでリソースを作成するときに使用するプロジェクト名が必要です。バックエンドプロジェクトに`todo`という名前を付けてください
+
+```console
+? Enter a name for the project (myamplifyproject) todo
+```
+
+その後、推奨値を受け入れるよう求めるメッセージが表示されます:
+
+```
+The following configuration will be applied:
+
+Project information
+| Name: todo
+| Environment: dev
+| Default editor: Visual Studio Code
+| App type: javascript
+| Javascript framework: vue
+| Source Directory Path: src
+| Distribution Directory Path: dist
+| Build Command: npm run-script build
+| Start Command: npm run-script serve
+
+? Initialize the project with the above configuration? Yes
+
+```
+
+> CLIは可能な限り、Amplifyが初期化されているプロジェクトのタイプに基づいて適切な構成を推測します。この場合、Vueを使用していることを知っており、アプリのタイプ、フレームワーク、ソース、配布、ビルド、および開始オプションの適切な構成を提供しました。
+
+次に、プロジェクトでローカルに作業するために使用する認証方法を選択する必要があります:
+
+```
+? Select the authentication method you want to use: (Use arrow keys)
+> AWS profile
+  AWS access keys
+```
+
+AWS プロファイルを選択し、[前提条件](/gen1/[platform]/start/getting-started/installation/)で設定したプロファイルを選択します。
+
+</InlineFilter>
+
+新しいAmplifyプロジェクトを初期化するときに、いくつかのことが起こります:
+
+- バックエンド定義を保存する`amplify`というトップレベルディレクトリを作成します。チュートリアルを進める際に、GraphQL APIやWebホスティングなどのクラウド機能を追加します。これらの機能を追加すると、`amplify`フォルダはバックエンドスタックを定義するインフラストラクチャアズコードテンプレートで成長します。インフラストラクチャアズコードは、複製可能なバックエンドスタックを作成するベストプラクティス方法です。
+- 指定した**Source Directory Path**に`amplifyconfiguration.json`というファイルを作成します。これはAmplifyで作成するサービスのすべての構成を保持します。これは、Amplify JavaScriptクライアントライブラリがバックエンドサービスに接続するために必要な情報を取得する方法です。
+- `.gitignore`ファイルを変更し、生成されたファイルを無視リストに追加します
+
+<InlineFilter filters={['react-native']}>
+<Callout>
+
+**注意:** Expo EAS buildを使用している場合は、`eas build`コマンドを実行する前に、`amplifyconfiguration.json`ファイルをローカルgitリポジトリにフォース認証する必要があります。これは、`amplifyconfiguration.json`ファイルがデフォルト`.gitignore`で除外されており、`eas build`コマンドはビルドに未追跡ファイルを含まないためです。<b>ビルドが完了したら、`amplifyconfiguration.json`ファイルをgitリポジトリから削除し、リモートリポジトリにコミットおよびプッシュしないでください</b>。
+
+</Callout>
+</InlineFilter>
+
+## Amplifyライブラリをインストール
+
+<InlineFilter filters={['react','javascript','vue','angular']}>
+
+`aws-amplify`パッケージは、プロジェクトでAmplify Librariesを使用するためのメインライブラリです:
+
+```bash
+npm install aws-amplify
+```
+
+</InlineFilter>
+
+<InlineFilter filters={['nextjs']}>
+
+`aws-amplify`パッケージは、プロジェクトでAmplify Librariesを使用するためのメインライブラリです。`@aws-amplify/adapter-nextjs`パッケージには、Amplifyライブラリをサーバー側で使用するための追加のNext.js固有の関数が含まれています:
+
+```bash
+npm install aws-amplify @aws-amplify/adapter-nextjs
+```
+
+</InlineFilter>
+
+<InlineFilter filters={['react-native']}>
+次のコマンドを実行して必要な依存関係をインストールします:
+
+<BlockSwitcher>
+<Block name="Expo CLI">
+
+```sh
+npm install aws-amplify @aws-amplify/react-native @react-native-community/netinfo @react-native-async-storage/async-storage react-native-get-random-values
+```
+
+</Block>
+<Block name="React Native CLI">
+
+import rnVersionCallout from '/src/fragments/common/react-native-version-deployment-target.mdx';
+
+<Fragments fragments={{ all: rnVersionCallout }} />
+
+```sh
+npm install aws-amplify @aws-amplify/react-native @react-native-community/netinfo @react-native-async-storage/async-storage react-native-get-random-values
+```
+
+iOS用のポッド依存関係もインストールする必要があります:
+
+```sh
+npx pod-install
+```
+
+ポッド依存関係をインストールした後、アプリを再構築します:
+
+```sh
+npm run ios
+```
+
+</Block>
+</BlockSwitcher>
+
+<Callout>
+
+**注意:** `@react-native-async-storage/async-storage`と`react-native-get-random-values`をインストールしていることを確認してください。そうしないと、実行時にエラーが発生します。
+
+</Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={["angular"]}>
+
+<Callout>
+
+Angular CLIの出力警告: Angular 9以上を使用しているときにCommonJSまたはAMD依存関係の最適化のベイルアウト警告が表示される場合は、この[gist](https://gist.github.com/wlee221/6d98d96740bea6f53327b4db4a432616)を使用してそれらを削除できます。これらの詳細については[こちら](https://angular.io/guide/build#configuring-commonjs-dependencies)を参照してください。
+
+</Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={['react','javascript','angular','vue']}>
+## フロントエンドのセットアップ
+
+次に、Amplifyライブラリをクライアント側で構成して、バックエンドサービスと対話できるようにします。
+
+    <InlineFilter filters={['react']}>
+        **src/main.tsx**または**src/main.jsx**を開き、最後のインポートの下に次のコードを追加します:
+    </InlineFilter>
+
+    <InlineFilter filters={['javascript']}>
+        **main.js**を開き、次のコードを追加します:
+    </InlineFilter>
+
+    <InlineFilter filters={['angular']}>
+        **main.ts**を開き、最後のインポートの下に次のコードを追加します:
+    </InlineFilter>
+
+    <InlineFilter filters={['nextjs']}>
+        Next.js Pages Routerを使用している場合は、**pages/_app.js**を開き、最後のインポートの下に次のコードを追加します:
+    </InlineFilter>
+
+    <InlineFilter filters={['vue']}>
+        **src/main.js**を開き、最後のインポートの下に次のコードを追加します:
+    </InlineFilter>
+
+    <InlineFilter filters={["angular"]}>
+
+    ```javascript title="src/main.ts"
+    import { Amplify } from 'aws-amplify';
+    import amplifyconfig from './amplifyconfiguration.json';
+    Amplify.configure(amplifyconfig);
+    ```
+
+    </InlineFilter>
+
+    <InlineFilter filters={["react", "vue"]}>
+
+    ```javascript title="src/main.jsx"
+    import { Amplify } from 'aws-amplify';
+    import amplifyconfig from './amplifyconfiguration.json';
+    Amplify.configure(amplifyconfig);
+    ```
+
+    </InlineFilter>
+
+
+    <InlineFilter filters={["javascript"]}>
+
+    ```javascript title="main.js"
+    import './style.css'
+    import { Amplify } from 'aws-amplify';
+    import amplifyconfig from './src/amplifyconfiguration.json';
+    Amplify.configure(amplifyconfig);
+    ```
+
+    </InlineFilter>
+
+</InlineFilter>
+
+<InlineFilter filters={['react-native']}>
+
+<BlockSwitcher>
+<Block name="Expo CLI">
+
+```javascript
+// App.js
+
+import { Amplify } from 'aws-amplify';
+import amplifyconfig from './src/amplifyconfiguration.json';
+Amplify.configure(amplifyconfig);
+```
+
+</Block>
+<Block name="React Native CLI">
+
+```javascript
+// index.js
+
+import { Amplify } from 'aws-amplify';
+import amplifyconfig from './src/amplifyconfiguration.json';
+Amplify.configure(amplifyconfig);
+```
+
+</Block>
+</BlockSwitcher>
+
+</InlineFilter>
+
+<InlineFilter filters={['angular']}>
+
+Typescriptで`amplifyconfiguration.json`ファイルをインポートするために、tsconfig.jsonを変更し、`strict`モードが有効な場合は`resolveJsonModule`と`allowSyntheticDefaultImports`を有効にする必要がある場合があります。
+
+```json
+{
+  ...
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    ...
+  }
+}
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["javascript", "react", "angular", "react-native", "vue"]}>
+
+<Callout warning="true">
+
+アプリケーションのライフサイクルのできるだけ早い段階で`Amplify.configure`を呼び出していることを確認してください。構成がないか、`Amplify.configure`がほかのAmplify JavaScript APIの前に呼び出されていない場合は`NoCredentials`エラーがスローされます。[ライブラリが構成されていないトラブルシューティングガイド](/gen1/[platform]/build-a-backend/troubleshooting/library-not-configured/)でこの問題の考えられる原因を確認してください。
+
+</Callout>
+
+以上がAmplifyの構成に必要なすべてです。Amplify CLIを使用してカテゴリを追加または削除し、バックエンド構成を更新すると、**amplifyconfiguration.json**の構成が自動的に更新されます。
+
+アプリがセットアップされ、Amplifyが初期化されたので、次のステップでAPIを追加できます。
+
+</InlineFilter>
+
+<InlineFilter filters={["nextjs"]}>
+
+これはAmplify LibrariesをあなたのNext.jsアプリケーションと一緒にインストールするために必要なすべてです。次に、新しいバックエンドAPIとデータベーステーブルを作成します。その後、AmplifyライブラリのNext.jsアダプターを使用してAPI要求を新しいバックエンドに行います。
+
+</InlineFilter>
+
+</InlineFilter>

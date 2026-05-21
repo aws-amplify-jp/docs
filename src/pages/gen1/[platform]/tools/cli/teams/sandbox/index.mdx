@@ -1,0 +1,68 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'サンドボックス環境',
+  description: 'Amplifyプロジェクトのサンドボックス環境を有効にする方法を学びます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+これで、クラウドに2つの独立した環境（mainとdev）と、Git上のAmplifyバックエンドインフラストラクチャコードに対応するgitブランチが完成しました。チームメンバーが同じAmplifyプロジェクトで作業し、機能を追加してからdev環境にプッシュして変更をテストしたいとします。以下の手順を実行します。
+
+```console
+$ git clone <git-repo>
+$ cd <project-dir>
+$ git checkout -b mysandbox
+$ amplify env add
+? Do you want to use an existing environment? No
+? Enter a name for the environment mysandbox
+// 初期化ステップの残り
+// amplify add/update <category>を使用してバックエンド設定を追加/更新
+$ amplify push
+$ git push -u origin mysandbox
+```
+
+次に、チームメンバーがこれらの変更をdevおよびmain環境/ブランチに移動したいとします。
+
+```console
+$ git checkout dev
+$ amplify env checkout dev
+$ git merge mysandbox
+$ amplify push
+$ git push -u origin dev
+```
+
+devステージですべてが正常に機能することをテストした後、devをmainのgitブランチにマージできます。
+
+```console
+$ git checkout main
+$ amplify env checkout main
+$ git merge dev
+$ amplify push
+$ git push -u origin main
+```
+
+このアプローチでは、gitブランチ（devとmain）をソースオブトゥルースと見なすことができ、すべてのチームメンバーはブランチから作業し、ワークスペースを同期させておく必要があります。

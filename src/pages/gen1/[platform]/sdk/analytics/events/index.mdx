@@ -1,0 +1,33 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'イベント',
+  description:
+    'AWS Android SDK for Pinpoint を使用して、使用データ、またはイベントを Amazon Pinpoint にレポートできます。セッション時間、ユーザーの購買行動、サインイン試行、または必要なカスタムイベントタイプなどの情報をキャプチャするイベントをレポートできます。',
+  platforms: ['swift', 'android']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import all0 from '/src/fragments/sdk/library-callout.mdx';
+
+<Fragments fragments={{ all: all0 }} />
+
+import ios1 from '/src/fragments/sdk/analytics/ios/events.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import android2 from '/src/fragments/sdk/analytics/android/events.mdx';
+
+<Fragments fragments={{ android: android2 }} />

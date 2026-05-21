@@ -1,0 +1,1171 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ファイルプロパティをリストする',
+  description: 'Amplify Storageを使用してファイルまたはファイルプロパティのリストを取得する',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+すべてのファイルをダウンロードすることなく、ファイルをリストできます。これは、Amplify Library for Storageの`list` APIを使用して実行できます。 <InlineFilter filters={["react", "angular", "javascript", "vue", "nextjs", "react-native"]}>または、`getProperties` APIを使用して、ファイルのプロパティを個別に取得することもできます。</InlineFilter>
+
+## ファイルをリストする
+
+<InlineFilter filters={["react", "angular", "javascript", "vue", "nextjs", "react-native"]}>
+```javascript
+import { list } from 'aws-amplify/storage';
+
+const result = await list({
+	path: 'album/photos/',
+  // または、path: ({identityId}) => `album/${identityId}/photos/`
+});
+```
+
+末尾のスラッシュ`/`に注意してください。`list({ path: 'album/photos' })`をリクエストした場合、`album/photos123.jpg`と同様に`album/photos/123.jpg`にもマッチします。
+
+レスポンスの形式は、以下の例のようになります：
+
+```js
+{
+  items: [
+    {
+      path: "album/photos/123.jpg",
+      eTag: "30074401292215403a42b0739f3b5262",
+      lastModified: "Thu Oct 08 2020 23:59:31 GMT+0800 (Singapore Standard Time)",
+      size: 138256
+    },
+    // ...
+  ],
+}
+````
+
+`pageSize`が全ファイルサイズより低く設定されている場合、単一の`list`呼び出しはすべてのファイルのサブセットのみを返します。複数の呼び出しですべてのファイルをリストするには、ユーザーは`nextToken`フラグを使用できます：
+
+```javascript
+import { list } from 'aws-amplify/storage';
+
+const PAGE_SIZE = 20;
+let nextToken;
+// ...
+const loadNextPage = async () => {
+  const response = await list({
+    path: 'photos/',
+    // または、path: ({ identityId }) => `album/${identityId}/photos/`
+    options: {
+      pageSize: PAGE_SIZE,
+      nextToken,
+    },
+  });
+  if (response.nextToken) {
+    nextToken = response.nextToken;
+  } else {
+    nextToken = undefined;
+  }
+  // response.itemsからリストアイテムをレンダリング
+};
+```
+
+### すべてのファイルをリストする
+```javascript
+import { list } from 'aws-amplify/storage';
+
+const result = await list({
+	path: 'album/photos/',
+  // または、path: ({identityId}) => `album/${identityId}/photos/`,
+  options: {
+    listAll: true,
+  }
+});
+```
+
+
+{/* 他のファイルではパスではなくフォルダを参照しているので、用語を統一できますか？ */} 手動で作成されたフォルダは`size`が0のファイルとして表示されますが、`file.key.match(/\.[0-9a-z]+$/i)`のようなрегexに対してキーをマッチさせることで、ファイルとフォルダを区別することもできます。「フォルダ」はAmazon S3では仮想概念であるため、任意のファイルは名前に`/`があるだけで任意の深さのフォルダを宣言できます。
+
+「フォルダ」のコンテンツとサブパスにアクセスするには、2つのオプションがあります：
+
+1. パス全体をリクエストしてコンテンツを解析する。
+2. subpathStrategyオプションを使用して、指定されたパス内のファイルのみを取得します（つまり、サブパス下のファイルを除外）。
+
+### パス内のすべてのネストされたファイルを取得する
+
+これは、指定されたパス下のすべてのファイルとフォルダを取得します。結果を解析して、指定されたパス内のファイルのみを取得する必要がある場合があります。
+
+```js
+function processStorageList(response) {
+  let files = [];
+  let folders = new Set();
+  response.items.forEach((res) => {
+    if (res.size) {
+      files.push(res);
+      // 時々ファイルは内部に/を持つフォルダを宣言します
+      let possibleFolder = res.path.split('/').slice(0, -1).join('/');
+      if (possibleFolder) folders.add(possibleFolder);
+    } else {
+      folders.add(res.path);
+    }
+  });
+  return { files, folders };
+}
+```
+
+ファイルとフォルダをネストされたオブジェクトの観点から必要な場合（例えば、エクスプローラーUIをビルドするため）、再帰的に解析することができます：
+
+```js
+function processStorageList(response) {
+  const filesystem = {};
+  // https://stackoverflow.com/questions/44759750/how-can-i-create-a-nested-object-representation-of-a-folder-structure
+  const add = (source, target, item) => {
+    const elements = source.split('/');
+    const element = elements.shift();
+    if (!element) return; // 空白
+    target[element] = target[element] || { __data: item }; // element;
+    if (elements.length) {
+      target[element] =
+        typeof target[element] === 'object' ? target[element] : {};
+      add(elements.join('/'), target[element], item);
+    }
+  };
+  response.items.forEach((item) => add(item.path, filesystem, item));
+  return filesystem;
+}
+```
+
+これは各アイテムのデータを特別な`__data`キーに配置します。
+
+### サブパスを除外する
+
+パスのすべてのコンテンツを取得するために`list` APIを使用することに加えて、サブパス下のファイルを除外しながらパス内のファイルのみを取得するために使用することもできます。
+
+例えば、`path`内の以下のキーが与えられた場合、「vacation」サブパスとそのコンテンツではなく、jpgオブジェクトのみを返したい場合があります：
+
+```
+photos/photo1.jpg
+photos/vacation/
+```
+
+これは`subpathStrategy`オプションで実現できます：
+
+```ts title="src/main.ts"
+import { list } from "aws-amplify/storage";
+const result = await list({ 
+  path: "photos/",
+  options:{
+    subpathStrategy: { strategy:'exclude' }
+  }
+});
+```
+
+レスポンスには`photos/`パス内のオブジェクトのみが含まれ、除外されたサブパスも伝えます：
+
+```js
+{
+    excludedSubpaths: [
+      'photos/vacation/'
+    ],
+    items: [
+      {
+        path: "photos/photo1.jpg",
+        eTag: "30074401292215403a42b0739f3b5262",
+        lastModified: "Thu Oct 08 2020 23:59:31 GMT+0800 (Singapore Standard Time)",
+        size: 138256
+      },
+    ]
+}
+```
+
+デフォルトの区切り文字は`/`ですが、カスタム区切り文字を指定して変更できます：
+
+```ts title="src/main.ts"
+const result = await list({
+  // パスは`/`ではなく`-`文字を使用してファイルを整理します
+  path: 'photos-',
+  options: {
+    subpathStrategy: {
+      strategy: 'exclude',
+      delimiter: '-'
+    }
+  }
+});
+```
+
+### 指定されたバケットからファイルをリストする
+
+`bucket`オプションを指定することで、特定のバケットに対して`copy`操作を実行することもできます。このオプションは、Amplify Backendで割り当てられたバケット名を表す文字列、またはコンソールから指定されたバケット名とリージョンを指定するオブジェクトです。
+
+```ts
+import { list } from 'aws-amplify/storage';
+
+const result = await list({
+  path: 'photos/',
+  options: {
+    // Amplify Backendで割り当てられた名前を使用してターゲットバケットを指定する
+    bucket: 'assignedNameInAmplifyBackend',
+    // または、コンソールからバケット名と関連するリージョンを指定します
+    // bucket: {
+    //   bucketName: 'generated-secondary-bucket-name',
+    //   region: 'us-east-2'
+    // }
+  }
+});
+```
+
+### その他の`list`オプション
+
+| オプション | 型 | デフォルト | 説明 |
+| -- | :--: | :--: | ----------- |
+| bucket | string \| <br />\{ bucketName: string;<br/> region: string; \} | Amplify設定のデフォルトバケットとリージョン | Amplify Backendで割り当てられたターゲットバケット名を表す文字列、またはコンソールから指定されたバケット名とリージョンを指定するオブジェクト。<br/><br/>[追加のストレージバケットを構成する](/[platform]/build-a-backend/storage/set-up-storage/#configure-additional-storage-buckets)で詳細を確認できます |
+| listAll | boolean | false | 指定された`path`内のすべてのファイルをリストするにはtrueに設定します |
+| pageSize | number | 1000 | 返すファイルの最大数を設定します。範囲は0～1000です |
+| nextToken | string | — | このバケットでリストが続いているかどうかを示すトークン |
+| subpathStrategy | \{ strategy: 'include' \} \|<br/>\{ 'exclude',<br />delimiter?: string \} | \{ strategy: 'include' \} | サブパス包含戦略と除外結果をグループ化するために使用される区切り文字を表すオブジェクト。 <br/><br/> [サブパスを除外する](/[platform]/frontend/storage/list-files/#excluding-subpaths)で詳細を確認できます |
+| useAccelerateEndpoint | boolean | false | 高速化エンドポイントを使用するかどうか。 <br/><br/> [転送の高速化](/[platform]/build-a-backend/storage/extend-s3-resources/#example---enable-transfer-acceleration)で詳細を確認できます |
+| expectedBucketOwner | string | オプション | リクエストされたバケットを所有するアカウントID。 |
+
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+次の例は、`public/photos/`パス内のすべてのオブジェクトをリストします：
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+StoragePagedListOptions options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .build();
+
+Amplify.Storage.list(
+    StoragePath.fromString("public/photos/"),
+    options,
+    result -> {
+        for (StorageItem item : result.getItems()) {
+            Log.i("MyAmplifyApp", "Item: " + item.getPath());
+        }
+        Log.i("MyAmplifyApp", "Next Token: " + result.getNextToken());
+    },
+    error -> Log.e("MyAmplifyApp", "List failure", error);
+);
+```
+
+</Block>
+<Block name="Kotlin - Callbacks">
+
+```kotlin
+val options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .build()
+
+Amplify.Storage.list(StoragePath.fromString("public/photos/"), options,
+    { result ->
+        result.items.forEach { item ->
+            Log.i("MyAmplifyApp", "Item: ${item.path}")
+        }
+        Log.i("MyAmplifyApp", "Next Token: ${result.nextToken}")
+    },
+    { Log.e("MyAmplifyApp", "List failure", it) }
+)
+```
+
+</Block>
+<Block name="Kotlin - Coroutines">
+
+```kotlin
+val options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .build()
+
+try {
+    val result = Amplify.Storage.list(StoragePath.fromString("public/photos/"), options)
+    result.items.forEach {
+        Log.i("MyAmplifyApp", "Item: $it")
+    }
+    Log.i("MyAmplifyApp", "next token: ${result.nextToken}")
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "List failure", error)
+}
+```
+
+</Block>
+<Block name="RxJava">
+
+```java
+StoragePagedListOptions options = StoragePagedListOptions.builder()
+        .setPageSize(1000)
+        .build();
+
+RxAmplify.Storage.list(StoragePath.fromString("public/photos/"), options)
+        .subscribe(
+            result -> {
+                for (StorageItem item : result.getItems()) {
+                    Log.i("MyAmplifyApp", "Item: " + item.getPath());
+                }
+                Log.i("MyAmplifyApp", "Next Token: " + result.getNextToken());
+            },
+            error -> Log.e("MyAmplifyApp", "List failure", error);
+        );
+```
+
+</Block>
+</BlockSwitcher>
+
+<Callout>
+指定されたパス内の末尾のスラッシュ`/`に注意してください。
+
+`public/photos`をパスとして使用した場合、`public/photos01.jpg`のようなファイルにもマッチします。
+</Callout>
+
+### 指定されたバケットからファイルをリストする
+
+`bucket`オプションを指定することで、特定のバケットに対してリスト操作を実行することもできます。Amplify Backendで割り当てられたターゲットバケット名を表す文字列を渡すことができます。
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+StorageBucket secondBucket = StorageBucket.fromOutputs("secondBucket");
+StoragePagedListOptions options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .bucket(secondBucket)
+    .build();
+
+Amplify.Storage.list(
+    StoragePath.fromString("public/photos/"),
+    options,
+    result -> {
+        for (StorageItem item : result.getItems()) {
+            Log.i("MyAmplifyApp", "Item: " + item.getPath());
+        }
+        Log.i("MyAmplifyApp", "Next Token: " + result.getNextToken());
+    },
+    error -> Log.e("MyAmplifyApp", "List failure", error);
+);
+```
+
+</Block>
+<Block name="Kotlin - Callbacks">
+
+```kotlin
+val secondBucket = StorageBucket.fromOutputs("secondBucket")
+val options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .bucket(secondBucket)
+    .build()
+
+Amplify.Storage.list(StoragePath.fromString("public/photos/"), options,
+    { result ->
+        result.items.forEach { item ->
+            Log.i("MyAmplifyApp", "Item: ${item.path}")
+        }
+        Log.i("MyAmplifyApp", "Next Token: ${result.nextToken}")
+    },
+    { Log.e("MyAmplifyApp", "List failure", it) }
+)
+```
+
+</Block>
+<Block name="Kotlin - Coroutines">
+
+```kotlin
+val secondBucket = StorageBucket.fromOutputs("secondBucket")
+val options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .bucket(secondBucket)
+    .build()
+
+try {
+    val result = Amplify.Storage.list(StoragePath.fromString("public/photos/"), options)
+    result.items.forEach {
+        Log.i("MyAmplifyApp", "Item: $it")
+    }
+    Log.i("MyAmplifyApp", "next token: ${result.nextToken}")
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "List failure", error)
+}
+```
+
+</Block>
+<Block name="RxJava">
+
+```java      
+StorageBucket secondBucket = StorageBucket.fromOutputs("secondBucket");
+StoragePagedListOptions options = StoragePagedListOptions.builder()
+        .setPageSize(1000)
+        .bucket(secondBucket)
+        .build();
+
+RxAmplify.Storage.list(StoragePath.fromString("public/photos/"), options)
+        .subscribe(
+            result -> {
+                for (StorageItem item : result.getItems()) {
+                    Log.i("MyAmplifyApp", "Item: " + item.getPath());
+                }
+                Log.i("MyAmplifyApp", "Next Token: " + result.getNextToken());
+            },
+            error -> Log.e("MyAmplifyApp", "List failure", error);
+        );
+```
+
+</Block>
+</BlockSwitcher>
+
+または、コンソールからバケット名とリージョンを指定することで、オブジェクトを渡すこともできます。
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+BucketInfo bucketInfo = new BucketInfo("second-bucket-name-from-console", "us-east-2");
+StorageBucket secondBucket = StorageBucket.fromBucketInfo(bucketInfo);
+StoragePagedListOptions options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .bucket(secondBucket)
+    .build();
+
+Amplify.Storage.list(
+    StoragePath.fromString("public/photos/"),
+    options,
+    result -> {
+        for (StorageItem item : result.getItems()) {
+            Log.i("MyAmplifyApp", "Item: " + item.getPath());
+        }
+        Log.i("MyAmplifyApp", "Next Token: " + result.getNextToken());
+    },
+    error -> Log.e("MyAmplifyApp", "List failure", error);
+);
+```
+
+</Block>
+<Block name="Kotlin - Callbacks">
+
+```kotlin
+val bucketInfo = BucketInfo("second-bucket-name-from-console", "us-east-2")
+val secondBucket = StorageBucket.fromBucketInfo(bucketInfo)
+val options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .bucket(secondBucket)
+    .build()
+
+Amplify.Storage.list(StoragePath.fromString("public/photos/"), options,
+    { result ->
+        result.items.forEach { item ->
+            Log.i("MyAmplifyApp", "Item: ${item.path}")
+        }
+        Log.i("MyAmplifyApp", "Next Token: ${result.nextToken}")
+    },
+    { Log.e("MyAmplifyApp", "List failure", it) }
+)
+```
+
+</Block>
+<Block name="Kotlin - Coroutines">
+
+```kotlin
+val bucketInfo = BucketInfo("second-bucket-name-from-console", "us-east-2")
+val secondBucket = StorageBucket.fromBucketInfo(bucketInfo)
+val options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .bucket(secondBucket)
+    .build()
+
+try {
+    val result = Amplify.Storage.list(StoragePath.fromString("public/photos/"), options)
+    result.items.forEach {
+        Log.i("MyAmplifyApp", "Item: $it")
+    }
+    Log.i("MyAmplifyApp", "next token: ${result.nextToken}")
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "List failure", error)
+}
+```
+
+</Block>
+<Block name="RxJava">
+
+```java
+BucketInfo bucketInfo = new BucketInfo("second-bucket-name-from-console", "us-east-2");
+StorageBucket secondBucket = StorageBucket.fromBucketInfo(bucketInfo);
+StoragePagedListOptions options = StoragePagedListOptions.builder()
+        .setPageSize(1000)
+        .bucket(secondBucket)
+        .build();
+
+RxAmplify.Storage.list(StoragePath.fromString("public/photos/"), options)
+        .subscribe(
+            result -> {
+                for (StorageItem item : result.getItems()) {
+                    Log.i("MyAmplifyApp", "Item: " + item.getPath());
+                }
+                Log.i("MyAmplifyApp", "Next Token: " + result.getNextToken());
+            },
+            error -> Log.e("MyAmplifyApp", "List failure", error);
+        );
+```
+
+</Block>
+</BlockSwitcher>
+
+### ネストされたサブパスから結果を除外する
+
+デフォルトでは、`list` APIは、ネストされたサブパス内のオブジェクトを含む、指定されたパス内に含まれるすべてのオブジェクトを返します。
+
+例えば、前の`public/photos/`パスには、これらのオブジェクトが含まれます：
+
+```bash
+Path: public/photos/photo1.jpg
+Path: public/photos/vacation/photo1.jpg
+Path: public/photos/thumbnails/photo1.jpg
+```
+
+`vacation`および`thumbnails`サブパス内のオブジェクトを除外するには、`subpathStrategy`オプションを`SubpathStrategy.Exclude()`に設定します：
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+StoragePagedListOptions options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .setSubpathStrategy(SubpathStrategy.Exclude())
+    .build();
+
+Amplify.Storage.list(
+    StoragePath.fromString("public/photos/"),
+    options,
+    result -> {
+        for (StorageItem item : result.getItems()) {
+            Log.i("MyAmplifyApp", "Item: " + item.getPath());
+        }
+        Log.i("MyAmplifyApp", "Next Token: " + result.getNextToken());
+    },
+    error -> Log.e("MyAmplifyApp", "List failure", error);
+);
+```
+
+</Block>
+<Block name="Kotlin - Callbacks">
+
+```kotlin
+val options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .setSubpathStrategy(SubpathStrategy.Exclude())
+    .build()
+
+Amplify.Storage.list(StoragePath.fromString("public/photos/"), options,
+    { result ->
+        result.items.forEach { item ->
+            Log.i("MyAmplifyApp", "Item: ${item.path}")
+        }
+        Log.i("MyAmplifyApp", "Next Token: ${result.nextToken}")
+    },
+    { Log.e("MyAmplifyApp", "List failure", it) }
+)
+```
+
+</Block>
+<Block name="Kotlin - Coroutines">
+
+```kotlin
+val options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .setSubpathStrategy(SubpathStrategy.Exclude())
+    .build()
+
+try {
+    val result = Amplify.Storage.list(StoragePath.fromString("public/photos/"), options)
+    result.items.forEach {
+        Log.i("MyAmplifyApp", "Item: $it")
+    }
+    Log.i("MyAmplifyApp", "next token: ${result.nextToken}")
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "List failure", error)
+}
+```
+
+</Block>
+<Block name="RxJava">
+
+```java
+StoragePagedListOptions options = StoragePagedListOptions.builder()
+        .setPageSize(1000)
+        .setSubpathStrategy(SubpathStrategy.Exclude())
+        .build();
+
+RxAmplify.Storage.list(StoragePath.fromString("public/photos/"), options)
+        .subscribe(
+            result -> {
+                for (StorageItem item : result.getItems()) {
+                    Log.i("MyAmplifyApp", "Item: " + item.getPath());
+                }
+                Log.i("MyAmplifyApp", "Next Token: " + result.getNextToken());
+            },
+            error -> Log.e("MyAmplifyApp", "List failure", error);
+        );
+```
+
+</Block>
+</BlockSwitcher>
+
+レスポンスには`public/photos/`パス内のオブジェクトのみが含まれ、除外されたサブパスのリストも提供します：
+
+```bash
+Path: public/photos/photo01.jpg
+Subpath: public/photos/vacation/
+Subpath: public/photos/thumbnails/
+```
+
+デフォルトの区切り文字は`"/"`ですが、カスタム区切り文字を指定して変更できます：
+
+<BlockSwitcher>
+<Block name="Java">
+
+```java
+StoragePagedListOptions options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .setSubpathStrategy(SubpathStrategy.Exclude("-"))
+    .build();
+
+Amplify.Storage.list(
+    StoragePath.fromString("public/photos/"),
+    options,
+    result -> {
+        for (StorageItem item : result.getItems()) {
+            Log.i("MyAmplifyApp", "Item: " + item.getPath());
+        }
+        Log.i("MyAmplifyApp", "Next Token: " + result.getNextToken());
+    },
+    error -> Log.e("MyAmplifyApp", "List failure", error);
+);
+```
+
+</Block>
+<Block name="Kotlin - Callbacks">
+
+```kotlin
+val options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .setSubpathStrategy(SubpathStrategy.Exclude("-"))
+    .build()
+
+Amplify.Storage.list(StoragePath.fromString("public/photos/"), options,
+    { result ->
+        result.items.forEach { item ->
+            Log.i("MyAmplifyApp", "Item: ${item.path}")
+        }
+        Log.i("MyAmplifyApp", "Next Token: ${result.nextToken}")
+    },
+    { Log.e("MyAmplifyApp", "List failure", it) }
+)
+```
+
+</Block>
+<Block name="Kotlin - Coroutines">
+
+```kotlin
+val options = StoragePagedListOptions.builder()
+    .setPageSize(1000)
+    .setSubpathStrategy(SubpathStrategy.Exclude("-"))
+    .build()
+
+try {
+    val result = Amplify.Storage.list(StoragePath.fromString("public/photos/"), options)
+    result.items.forEach {
+        Log.i("MyAmplifyApp", "Item: $it")
+    }
+    Log.i("MyAmplifyApp", "next token: ${result.nextToken}")
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "List failure", error)
+}
+```
+
+</Block>
+<Block name="RxJava">
+
+```java
+StoragePagedListOptions options = StoragePagedListOptions.builder()
+        .setPageSize(1000)
+        .setSubpathStrategy(SubpathStrategy.Exclude("-"))
+        .build();
+
+RxAmplify.Storage.list(StoragePath.fromString("public/photos/"), options)
+        .subscribe(
+            result -> {
+                for (StorageItem item : result.getItems()) {
+                    Log.i("MyAmplifyApp", "Item: " + item.getPath());
+                }
+                Log.i("MyAmplifyApp", "Next Token: " + result.getNextToken());
+            },
+            error -> Log.e("MyAmplifyApp", "List failure", error);
+        );
+```
+
+</Block>
+</BlockSwitcher>
+
+レスポンスには、`public/photos/`パス内のオブジェクトのみが含まれ、区切り文字`-`でグループ化されません。
+
+```bash
+Path: public/photos/2023/photos01.jpg
+Path: public/photos/2024/photos02.jpg
+Subpath: public/photos/202-
+```
+
+### すべての`list`オプション
+
+| オプション | 型 | 説明 |
+| --- | --- | --- |
+| subpathStrategy | SubpathStrategy | サブパスからコンテンツをリストするときに使用する戦略。 |
+| pageSize | int | サーバーからファイルリストを取得するときに取得するエントリ数の制限を示す1～1,000の間の数。 |
+| bucket | StorageBucket | オブジェクトが保存されているバケット。 |
+| nextToken | String | リストを再開するページオフセットを示す文字列。 |
+
+
+`pageSize`が利用可能な全ファイルサイズより低く設定されている場合、単一の`list`呼び出しはすべてのファイルのサブセットのみを返します。複数の呼び出しですべてのファイルをリストするには、ユーザーは前のレスポンスから`nextToken`値を使用できます。
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+次の例は、`public/photos/`パス内のすべてのオブジェクトをリストします：
+
+<BlockSwitcher>
+
+<Block name="Async/Await">
+
+```swift
+let listResult = try await Amplify.Storage.list(
+    path: .fromString("public/photos/")
+)
+listResult.items.forEach { item in
+    print("Path: \(item.path)")
+}
+```
+
+</Block>
+
+<Block name="Combine">
+
+```swift
+let sink = Amplify.Publisher.create {
+    try await Amplify.Storage.list(
+        path: .fromString("public/photos/")
+    )
+}.sink {
+    if case let .failure(error) = $0 {
+        print("Failed: \(error)")
+    }
+}
+receiveValue: { listResult in
+    listResult.items.forEach { item in
+        print("Path: \(item.path)")
+    }
+}
+```
+
+</Block>
+
+</BlockSwitcher>
+
+<Callout>
+指定されたパス内の末尾のスラッシュ`/`に注意してください。
+
+`public/photos`をパスとして使用した場合、`public/photos01.jpg`のようなファイルにもマッチします。
+</Callout>
+
+### 指定されたバケットからファイルをリストする
+
+`bucket`オプションを指定することで、特定のバケットからリスト操作を実行できます。
+
+<BlockSwitcher>
+<Block name="From Outputs">
+`.fromOutputs(name:)`を使用して、Amplify Backendで割り当てられたターゲットバケット名を表す文字列を指定できます。
+
+```swift
+let listResult = try await Amplify.Storage.list(
+    path: .fromString("public/photos/"),
+    options: .init(
+        bucket: .fromOutputs(name: "secondBucket")
+    )
+)
+```
+</Block>
+
+<Block name="From Bucket Info">
+`.fromBucketInfo(_:)`を使用してバケット名とリージョンを直接指定することもできます。
+
+```swift
+let listResult = try await Amplify.Storage.list(
+    path: .fromString("public/photos/"),
+    options: .init(
+        bucket: .fromBucketInfo(.init(
+            bucketName: "another-bucket-name",
+            region: "another-bucket-region")
+        )    
+    )
+)
+```
+</Block>
+</BlockSwitcher>
+
+### ネストされたサブパスから結果を除外する
+
+デフォルトでは、`list` APIは、ネストされたサブパス内のオブジェクトを含む、指定されたパス内に含まれるすべてのオブジェクトを返します。
+
+例えば、前の`public/photos/`パスには、これらのオブジェクトが含まれます：
+
+```bash
+Path: public/photos/photo1.jpg
+Path: public/photos/vacation/photo1.jpg
+Path: public/photos/thumbnails/photo1.jpg
+```
+
+`vacation`および`thumbnails`サブパス内のオブジェクトを除外するには、`subpathStrategy`オプションを`.exclude`に設定します：
+
+<BlockSwitcher>
+
+<Block name="Async/Await">
+
+```swift
+let listResult = try await Amplify.Storage.list(
+    path: .fromString("public/photos/"),
+    options: .init(
+        subpathStrategy: .exclude
+    )
+)
+listResult.items.forEach { item in
+    print("Path: \(item.path)")
+}
+listResult.excludedSubpaths.forEach { subpath in
+    print("Subpath: \(subpath)")
+}
+```
+
+</Block>
+
+<Block name="Combine">
+
+```swift
+let sink = Amplify.Publisher.create {
+    try await Amplify.Storage.list(
+        path: .fromString("public/photos/"),
+        options: .init(
+            subpathStrategy: .exclude
+        )
+    )
+}.sink {
+    if case let .failure(error) = $0 {
+        print("Failed: \(error)")
+    }
+}
+receiveValue: { listResult in
+    listResult.items.forEach { item in
+        print("Path: \(item.path)")
+    }
+    listResult.excludedSubpaths.forEach { subpath in
+        print("Subpath: \(subpath)")
+    }
+}
+```
+
+</Block>
+
+</BlockSwitcher>
+
+レスポンスには`public/photos/`パス内のオブジェクトのみが含まれ、除外されたサブパスのリストも提供します：
+
+```bash
+Path: public/photos/photo01.jpg
+Subpath: public/photos/vacation/
+Subpath: public/photos/thumbnails/
+```
+
+デフォルトの区切り文字は`"/"`ですが、カスタム区切り文字を指定して変更できます：
+
+<BlockSwitcher>
+
+<Block name="Async/Await">
+
+```swift
+let listResult = try await Amplify.Storage.list(
+    path: .fromString("public/photos-"),
+    options: .init(
+        subpathStrategy: .exclude(delimitedBy: "-")
+    )
+)
+```
+
+</Block>
+
+<Block name="Combine">
+
+```swift
+let sink = Amplify.Publisher.create {
+    try await Amplify.Storage.list(
+        path: .fromString("public/photos-"),
+        options: .init(
+            subpathStrategy: .exclude(delimitedBy: "-")
+        )
+    )
+}.sink {
+    if case let .failure(error) = $0 {
+        print("Failed: \(error)")
+    }
+}
+receiveValue: { listResult in
+    // ...
+}
+```
+
+</Block>
+
+</BlockSwitcher>
+
+### すべての`list`オプション
+
+| オプション | 型 | 説明 |
+| --- | --- | --- |
+| subpathStrategy | SubpathStrategy | サブパスからコンテンツをリストするときに使用する戦略 |
+| pageSize | UInt | サーバーからファイルリストを取得するときに取得するエントリ数の制限を示す1～1,000の間の数 |
+| bucket | StorageBucket | オブジェクトが保存されているバケット |
+| nextToken | String | リストを再開するページオフセットを示す文字列。 |
+
+
+`pageSize`が利用可能な全ファイルサイズより低く設定されている場合、単一の`list`呼び出しはすべてのファイルのサブセットのみを返します。複数の呼び出しですべてのファイルをリストするには、ユーザーは前のレスポンスから`nextToken`値を使用できます。
+
+</InlineFilter>
+
+<InlineFilter filters={["flutter"]}>
+
+これは、以下のパス`album`の下にあるすべてのファイルをリストします：
+
+- `private`アクセスレベルを持つ
+- `album/`のルートにある（結果はサブパス下のファイルを含まない）
+
+```dart
+Future<void> listAlbum() async {
+  try {
+    String? nextToken;
+    bool hasNextPage;
+    do {
+      final result = await Amplify.Storage.list(
+        path: const StoragePath.fromString('public/album/'),
+        options: StorageListOptions(
+          pageSize: 50,
+          nextToken: nextToken,
+          pluginOptions: const S3ListPluginOptions(
+            excludeSubPaths: true,
+          ),
+        ),
+      ).result;
+      safePrint('Listed items: ${result.items}');
+      nextToken = result.nextToken;
+      hasNextPage = result.hasNextPage;
+    } while (hasNextPage);
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+
+ページネーションはデフォルトで有効です。デフォルトの`pageSize`は、`StorageListOptions`で設定されていない場合は`1000`です。
+
+### ページネーションなしですべてのファイルをリストする
+
+`pluginOptions`と`S3ListPluginOptions.listAll()`コンストラクタを使用して、ページネーションなしで指定されたパス下のすべてのファイルをリストすることもできます。
+
+これはすべての公開ファイル（つまり、`guest`アクセスレベルを持つファイル）をリストします：
+
+```dart
+
+Future<void> listAllUnderPublicPath() async {
+  try {
+    final result = await Amplify.Storage.list(
+      path: const StoragePath.fromString('public/'),
+      options: const StorageListOptions(
+        pluginOptions: S3ListPluginOptions.listAll(),
+      ),
+    ).result;
+    safePrint('Listed items: ${result.items}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+
+```
+<InlineFilter filters={["flutter"]}>
+
+### 指定されたバケットからファイルをリストする
+`bucket`オプションを指定することで、特定のバケットに対してリスト操作を実行することもできます。Amplify Backendで定義された名前から、ターゲットバケットを表す`StorageBucket`オブジェクトを渡すことができます。
+
+```dart
+final result = await Amplify.Storage.list(
+  path: const StoragePath.fromString('path/to/dir'),
+  options: StorageListOptions(
+    // highlight-start
+    // Amplify Backendで割り当てられた名前を使用してターゲットバケットを指定する
+    bucket: StorageBucket.fromOutputs('secondBucket'),
+    // highlight-end
+  ),
+).result;
+```
+または、コンソールからバケット名とリージョンを指定することで、オブジェクトを渡すこともできます。
+
+```dart
+final result = await Amplify.Storage.list(
+  path: const StoragePath.fromString('path/to/dir'),
+  options: StorageListOptions(
+    // highlight-start
+    // または、コンソールからバケット名と関連するリージョンを指定します
+   bucket: StorageBucket.fromBucketInfo(
+        BucketInfo(
+          bucketName: 'second-bucket-name-from-console',
+          region: 'us-east-2',
+        ),
+      ),
+      // highlight-end
+  ),
+).result;
+```
+</InlineFilter>
+
+### その他の`list`オプション
+
+| オプション | 型 | 説明 |
+| --- | --- | --- |
+| bucket | StorageBucket | Amplify Backendで割り当てられた名前から、またはコンソール内のバケット名とリージョンからターゲットバケット<br/><br/>このオプションが指定されていない場合、Amplify設定のデフォルトバケットとリージョンにデフォルト設定されます。<br/><br/>[追加のストレージバケットを構成する](/[platform]/build-a-backend/storage/set-up-storage/#configure-additional-storage-buckets)で詳細を確認できます |
+| excludeSubPaths | boolean | パスのサブパス下のオブジェクトを除外するかどうか。デフォルトはfalseです。 |
+| delimiter | String | サブパスを評価するときに使用する区切り文字。excludeSubPathsがfalseの場合、この値は動作に影響を与えません。 |
+
+</InlineFilter>
+
+<InlineFilter filters={["react", "angular", "javascript", "vue", "nextjs", "react-native"]}>
+
+## ファイルプロパティを取得する
+
+個別のファイルのプロパティを表示することもできます。
+
+```javascript
+import { getProperties } from 'aws-amplify/storage';
+
+try {
+  const result = await getProperties({
+    path: 'album/2024/1.jpg',
+    // または、path: ({ identityId }) => `album/${identityId}/1.jpg`
+    options: {
+      // Amplify Backendで割り当てられた名前を使用してターゲットバケットを指定する
+      bucket: 'assignedNameInAmplifyBackend'
+    }
+  });
+  console.log('File Properties ', result);
+} catch (error) {
+  console.log('Error ', error);
+}
+```
+
+プロパティとメタデータは以下の例に似ています
+
+```js
+{
+  path: "album/2024/1.jpg",
+  contentType: "image/jpeg",
+  contentLength: 6873,
+  eTag: "\"56b32cf4779ff6ca3ba3f2d455fa56a7\"",
+  lastModified: Wed Apr 19 2023 14:20:55 GMT-0700 (Pacific Daylight Time) {},
+  metadata: { owner: 'aws' }
+}
+```
+
+### その他の`getProperties`オプション
+
+オプション | 型 | デフォルト | 説明 |
+| -- | -- | -- | ----------- |
+| bucket | string \| <br />\{ bucketName: string;<br/> region: string; \} | Amplify設定のデフォルトバケットとリージョン | Amplify Backendで割り当てられたターゲットバケット名を表す文字列、またはコンソールから指定されたバケット名とリージョンを指定するオブジェクト。<br/><br/>[追加のストレージバケットを構成する](/[platform]/build-a-backend/storage/set-up-storage/#configure-additional-storage-buckets)で詳細を確認できます |
+| useAccelerateEndpoint | boolean | false | 高速化エンドポイントを使用するかどうか。 | [転送の高速化](/[platform]/build-a-backend/storage/extend-s3-resources/#example---enable-transfer-acceleration) |
+
+<Callout>
+
+すべてのAPIで結果内のメタデータを取得するには、CORSでユーザー定義メタデータを構成する必要があります。
+
+[CORS ポリシー](/[platform]/build-a-backend/storage/extend-s3-resources/#for-manually-configured-s3-resources)を適切に設定する方法の詳細を確認してください。
+
+</Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={["flutter"]}>
+
+## ファイルプロパティを取得する
+
+個別のファイルのプロパティを表示することもできます。
+
+```dart
+Future<void> getFileProperties() async {
+  try {
+    final result = await Amplify.Storage.getProperties(
+      path: const StoragePath.fromString('example.txt'),
+    ).result;
+    safePrint('File size: ${result.storageItem.size}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+
+また、ターゲットバケットを指定してファイルのプロパティを表示することもできます
+
+```dart
+Future<void> getFileProperties() async {
+  try {
+    final result = await Amplify.Storage.getProperties(
+      path: const StoragePath.fromString('example.txt'),
+      options: StorageGetPropertiesOptions(
+        StorageBucket.fromOutputs('secondBucket'),
+      ),
+      // または、コンソールからバケット名と関連するリージョンを指定します
+      /*
+      options: StorageGetPropertiesOptions( 
+        bucket: StorageBucket.fromBucketInfo(
+          BucketInfo(
+            bucketName: 'second-bucket-name-from-console',
+            region: 'us-east-2',
+          ),
+        ),
+      ),
+      */
+    ).result;
+    safePrint('File size: ${result.storageItem.size}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+
+<Callout>
+
+Webターゲットに対してビルドする場合、すべてのAPIで結果内のメタデータを取得するには、CORSでユーザー定義メタデータを構成する必要があります。
+
+[CORS ポリシー](/[platform]/build-a-backend/storage/extend-s3-resources/#for-manually-configured-s3-resources)を適切に設定する方法の詳細を確認してください。
+
+</Callout>
+
+</InlineFilter>

@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"android","meta":{"title":"既存の Cognito ユーザープールとアイデンティティプールを使用する","description":"既存の Amazon Cognito ユーザープールとアイデンティティプールリソースを認証および認可メカニズムとして使用するように Amplify CLI を設定します（API、ストレージなど、他の Amplify カテゴリ用）。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

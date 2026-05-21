@@ -1,0 +1,51 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'テキスト音声合成',
+  description: 'Amplifyを使用してアプリケーションにテキスト音声合成機能を統合する方法について学びます。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue',
+  ]
+};
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps() {
+  return {
+    props: {
+      meta
+    }
+  };
+}
+
+<Callout informational>
+
+**注意:** まず[スタートガイド](../set-up-predictions)セクションを完了してください。ここで、適切なポリシーアクションを持つIAMロールをセットアップします。
+
+</Callout>
+
+## APIの使用
+
+テキスト入力から再生用のオーディオバッファを生成します。
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const result = await Predictions.convert({
+  textToSpeech: {
+    source: {
+      text: textToGenerateSpeech
+    },
+    voiceId: "Amy" 
+  }
+})
+```
+
+voiceIdオプションの完全なリストを表示するには、[Amazon Pollyの音声](https://docs.aws.amazon.com/polly/latest/dg/voicelist.html)を参照してください。

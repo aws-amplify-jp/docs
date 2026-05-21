@@ -1,0 +1,59 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ストリーミング分析データ',
+  description: 'Amazon Kinesis分析プロバイダーを使用すると、分析データをAmazon Kinesisストリームに送信してリアルタイム処理を行うことができます。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import js0 from '/src/fragments/lib/analytics/js/streaming.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>
+
+import reactnative0 from '/src/fragments/lib/analytics/js/streaming.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative0 }} />
+
+<InlineFilter filters={['react-native']}>
+
+## 既知の問題
+
+デフォルトのPinpointプロバイダーの代わりに、以下のリストに示されているプロバイダーを代替サービスプロバイダーとしてインポートする場合：
+
+- Kinesis (`aws-amplify/analytics/kinesis`)
+- Kinesis Data Firehose (`aws-amplify/analytics/kinesis-firehose`)
+- Personalize Event (`aws-amplify/analytics/personalize`)
+
+バンドラーの起動時に次のエラーが発生する可能性があります：
+
+> Error: Unable to resolve module stream from /path/to/node_modules/@aws-sdk/... これは[既知の問題](https://github.com/aws/aws-sdk-js-v3/issues/4877)です。このエラーを解決するために、[このissue](https://github.com/aws/aws-sdk-js-v3/issues/4877#issuecomment-1656007484)で概説されている手順に従ってください。
+
+</InlineFilter>

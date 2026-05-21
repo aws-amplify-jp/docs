@@ -1,0 +1,164 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'IAMロールとMFA',
+  description: "共有の'~/.aws/config'ファイルでロール用のプロファイルを定義することで、Amplify CLIがIAMロールを引き受けるように設定します。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+ 
+
+共有の`~/.aws/config`ファイルでロール用の[プロファイル](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html)を定義することで、Amplify CLIがIAMロールを引き受けるようにオプションで設定できます。これは短期認証情報を含む[AWS CLI](https://aws.amazon.com/cli/)の機能方法と同じです。複数の開発者が1つ以上のAWSアカウントを使用する場合や、チームワークフローで開発者が行うことができるカテゴリアップデートを制限したい場合に便利です。AWSの設定ファイルと認証情報ファイルはAmplify CLI、AWS CLI、その他のAWS SDKで共有されます。ただし、Amplify CLIは`.`などの特殊文字を正しくエスケープ（`\.`）しない限り解析しません。設定ファイルと認証情報ファイルの形式についての詳しい情報は[こちら](https://docs.aws.amazon.com/sdkref/latest/guide/file-format.html)をご覧ください。
+
+`amplify init`または`amplify configure project`コマンドの実行中にプロンプトが表示されたら、ロール用に設定されたプロファイルを選択します。すると、Amplify CLIが一時認証情報の取得、キャッシュ、更新のロジックを処理します。多要素認証（MFA）が有効になっている場合、一時認証情報を取得または更新する必要があるときにCLIはMFAトークンコードの入力を促します。
+
+Amplify CLIには独自の一時認証情報キャッシング機構があり、AWS CLIと同じキャッシュを使用しません。一時認証情報は`~/.amplify/awscloudformation/cache.json`にキャッシュされます。キャッシュされたすべての認証情報を削除するには、このファイルを削除します。
+特定のプロジェクトに関連付けられたキャッシュ一時認証情報のみを削除したい場合は、プロジェクトで`amplify awscloudformation reset-cache`またはそのエイリアスの`amplify aws reset-cache`を実行してください。
+
+## IAMロールを作成して引き受けるステップバイステップガイド
+
+以下は、IAMロールを作成してAmplify CLIで使用可能にする方法のステップバイステップガイドです。
+
+セットアップは3つの部分に分かれており、この機能を実演するための例を使用します。
+
+Biz Corpが開発会社のDev Corpにインベントリ管理ウェブポータルの開発を依頼することにしたと仮定します。Dev CorpはAmplify CLIを使用して開発プロセスを加速させています。
+
+## 1. ロールをセットアップする（Biz Corp）
+
+1. AWSマネジメントコンソールにサインインして、[IAM](https://console.aws.amazon.com/iam/)コンソールを開きます。
+2. コンソールのナビゲーションペインで`Roles`を選択してから`Create role`を選択します。
+3. `Another AWS account`ロールタイプを選択します。
+4. アカウントIDについて、Dev CorpのAWSアカウントID（AWSリソースへのアクセスを許可する対象のエンティティのアカウントID）を入力します。
+5. オプションですが、`Require external ID`を選択してDev Corpから提供されたexternal idを入力することをお勧めします。（external IDの詳細は[こちら](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html)をクリック）。
+6. ロールを多要素認証（MFA）でサインインするユーザーに制限したい場合は、`Require MFA`を選択します（MFAの詳細は[こちら](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa.html)をクリック）。
+7. `Next: Permissions`を選択します。
+8. ロールを引き受けるときにDev Corpの開発者が持つようにしたいアクセス許可ポリシーを選択します。
+注：ロールにCloudFormationアクションを実行し、関連するリソース（プロジェクトで使用するカテゴリに応じて）を作成するアクセス許可を付与する必要があります。以下のようなものが含まれます：
+
+- Cognito ユーザーとアイデンティティプール
+- S3バケット
+- DynamoDBテーブル
+- AppSync API
+- API Gateway API
+- Pinpointエンドポイント
+- Cloudfront ディストリビューション
+- IAMロール
+- Lambda関数
+- Lex ボット
+
+9. `Next: Tagging`を選択して、必要に応じてタグを適用します（オプション）。
+10. `Next: Review`を選択してロール名を入力し、オプションでロール説明を追加します。
+11. 「Role name」などの必須フィールドを入力します。
+11. `Create role`を選択します。
+12. ロールのARNをDev Corpに提供します。
+
+## 2. ロールを引き受けるユーザーをセットアップする（Dev Corp）
+
+### 2.1 Biz Corpが上記で作成したロールを引き受けるアクセス許可を持つポリシーを作成する
+
+1. Biz Corpからロール ARNを取得します。
+2. AWSマネジメントコンソールにサインインして、[IAM](https://console.aws.amazon.com/iam/)コンソールを開きます。（Dev Corpが別のAWSアカウントを持っていると仮定）。
+3. コンソールのナビゲーションペインで`Policies`を選択してから`Create policy`を選択します。
+4. 「JSON」タブを選択して、以下の内容をペインに貼り付けます。`<biz_corp_rol_arn>`を前述の値に置き換えます。
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "sts:AssumeRole",
+            "Resource": "<biz_corp_rol_arn>"
+        }
+    ]
+}
+```
+
+5. `Review policy`を選択します。
+6. ポリシー名を入力し、オプションでポリシー説明を追加します。
+7. `Create policy`を選択します。
+
+### 2.2 ポリシーをユーザーに適用する
+
+1. AWSマネジメントコンソールにサインインして、[IAM](https://console.aws.amazon.com/iam/)コンソールを開きます。
+2. コンソールのナビゲーションペインで`Users`を選択してから`Add user`を選択します。
+3. 新しいユーザーの`User name`を入力します。
+4. `Access type`でプログラムによるアクセスを選択します。
+5. `Next: Permissions`を選択します。
+6. 「Set Permissions」ページで`Attach existing policies directly`を選択します。
+7. 2.1で作成したポリシーを選択します。
+8. `Next: Tagging`を選択して、必要に応じてタグを適用します（オプション）。
+9. `Next: Review`を選択します。
+10. `Create User`を選択します。
+11. `Download .csv`をクリックして、認証情報のコピーをダウンロードします。オプションで、アクセスキーIDとシークレットアクセスキーをコピーして安全な場所に保存できます。これらの認証情報は後のセクションで使用されます。
+
+### 2.3 MFAデバイスを割り当てる（オプション）
+
+Biz Corpがロール作成時に`Require MFA`を選択した場合、これをセットアップする必要があります。これはDev Corpユーザーと彼らのそれぞれのAWSアカウントでセットアップする必要があります。<br/>
+この例では、Google Authenticatorアプリなどの仮想MFAデバイスを使用しています。
+
+1. AWSマネジメントコンソールにサインインして、[IAM](https://console.aws.amazon.com/iam/)コンソールを開きます。
+2. コンソールのナビゲーションペインで`Users`を選択して、2.2で上記で作成したユーザーを選択します。
+3. `Security Credentials`タブを選択します。
+4. `Assigned MFA device`ラベルの横にある`Manage`オプションを選択します。
+5. Manage MFA Deviceウィザードで`Virtual MFA device`を選択してから`Continue`を選択します。
+6. MFAアプリがQRコードをサポートしている場合は`Show QR code`を選択して、仮想デバイス（この場合はGoogle Authenticatorアプリ）からQRコードをスキャンします。サポートしていない場合は`Show secret key`を選択してMFAアプリに入力します。
+7. 「MFA code 1」ボックスで、仮想MFAデバイスに現在表示されているワンタイムパスワードを入力します。デバイスが新しいワンタイムパスワードを生成するまで待ちます。次に、2番目のワンタイムパスワードを「MFA code 2」ボックスに入力します。次に「Assign MFA」を選択します。
+8. `Assigned MFA device`の隣にあるMFAデバイスarnをコピーします。このarnはパート3で使用されます。
+
+## 3. ローカル開発環境をセットアップする（Dev Corp）
+
+1. ローカル開発システムで、以下の2つのファイルが存在しない場合は作成します。<br/>
+  `~/.aws/config`<br/>
+  `~/.aws/credentials`<br/>
+2. `~/.aws/config`ファイルに以下の内容を挿入します：
+
+```ini
+[profile bizcorprole]
+role_arn=<role_arn_from_part#1>
+source_profile=devcorpuser
+mfa_serial=<mfa_serial_from_part_2.3---optional>
+external_id=<external_id_as_mentioned_in_part#1--optional>
+region=us-east-1
+
+[profile devcorpuser]
+region=us-east-1
+```
+
+`mfa_serial`と`external_id`はオプションです。設定されていない場合は削除してください。
+
+3. `~/.aws/credentials`ファイルに以下の内容を挿入します：
+
+```ini
+[devcorpuser]
+aws_access_key_id=<key_id_from_part_2.2>
+aws_secret_access_key=<secret_access_key_from_part_2.2>
+```
+
+これでDev CorpがAmplifyプロジェクトを初期化しようとするとき、ユーザーは上記で設定された`bizcorprole`プロファイルを選択できます。セットアップされた認証方法に基づいて、ユーザーにはMFAコードなどの対応する質問が表示されます。その後、ユーザーはBiz Corpのアカウントで（Biz Corpが設定したアクセスポリシーに基づいて）AWSリソースを正常にデプロイ/管理できるようになります。
+
+IAMロールとその使用法の詳細については、[AWS IAM](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user.html)と[AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html)のドキュメントをご覧ください。

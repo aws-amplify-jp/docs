@@ -1,0 +1,52 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+
+export const meta = {
+  title: 'バックエンドの構築と接続',
+  description: 'アプリのバックエンドを構築する方法、または既存のリソースと接続する方法についてさらに詳しく学びます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ],
+  route: '/gen1/[platform]/prev/build-a-backend'
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      platform: context.params.platform,
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+<Callout info>
+
+Amplifyで新しいプロジェクトをセットアップする場合は、サポートされている言語とプラットフォームの[最新バージョン](/gen1/[platform]/start/project-setup/)を使用することをお勧めします。ただし、前のバージョンを使用する必要がある場合は、[プロジェクトセットアップの手順](/gen1/[platform]/prev/start/project-setup/)に従ってください。
+
+</Callout>
+
+<Overview childPageNodes={props.childPageNodes} />
+
+<InlineFilter filters={["swift"]}>
+
+<Callout info>
+
+Appleでは、アプリをApp Storeに提出する際に、アプリのデータ使用ポリシーを提供するようアプリ開発者に要求しています。Appleが特定した異なるカテゴリーと、Amplifyライブラリで使用される対応するデータタイプを確認できます。詳細は**[データ使用ポリシー情報](/gen1/[platform]/prev/build-a-backend/auth/data-usage-policy/)**をご覧ください。
+
+</Callout>
+
+</InlineFilter>

@@ -1,0 +1,31 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'パーソナライズされたレコメンデーション',
+  description: 'Amazon Personalizeはイベントデータ、履歴データ、またはその両方の組み合わせを使用してレコメンデーションを作成できます。イベントデータはレコメンデーション作成に使用できます。',
+  platforms: [
+    'javascript',
+    'react',
+    'vue',
+    'angular',
+    'nextjs',
+    'react-native'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import js0 from '/src/fragments/lib-v1/analytics/js/personalize.mdx';
+
+<Fragments fragments={{ all: js0 }} />

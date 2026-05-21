@@ -1,0 +1,94 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ファイルの削除',
+  description: 'Amplifyのストレージカテゴリを使用してファイルを削除する方法について説明します',
+  platforms: [
+    'javascript',
+    'flutter',
+    'swift',
+    'android',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["android", "swift"]}>
+
+<Callout info>
+Amplify Storageの最新バージョンは、S3オブジェクトをパスとして指定することをサポートしています。  
+S3オブジェクトを指定するには、`key`の代わりに`path`を使用することをお勧めします。
+
+注: `key`パラメータは非推奨であり、次のメジャーバージョンで削除される可能性があります。
+</Callout>
+
+</InlineFilter>
+
+import android_remove from '/src/fragments/lib/storage/android/remove.mdx';
+import flutter_remove from '/src/fragments/lib/storage/flutter/remove.mdx';
+import ios_remove from '/src/fragments/lib/storage/ios/remove.mdx';
+
+<Fragments
+  fragments={{
+    android: android_remove,
+    flutter: flutter_remove,
+    swift: ios_remove
+  }}
+/>
+
+<InlineFilter filters={['javascript', 'react-native', 'angular', 'nextjs', 'react', 'vue']}>
+
+ストレージバケットから保存されたデータを削除します。ファイルを削除するには、完全に指定された`path`を提供する必要があります。
+
+ファイルは現在のユーザーのみ削除できます。削除機能は他のユーザーに関連付けられたファイルには適用されません。
+
+<BlockSwitcher>
+<Block name="With Path (Above v6.2.0)">
+```javascript
+import { remove } from 'aws-amplify/storage';
+
+try {
+  await remove({ 
+    path: 'public/album/2024/1.jpg',
+    // Alternatively, path: ({identityId}) => `protected/${identityId}/album/2024/1.jpg`
+  });
+} catch (error) {
+  console.log('Error ', error);
+}
+```
+</Block>
+<Block name="With Key (Deprecated)">
+```javascript
+import { remove } from 'aws-amplify/storage';
+
+try {
+  await remove({ 
+    key: 'album/2024/1.jpg', 
+    options: { 
+      accessLevel: 'guest' // defaults to `guest` but can be 'private' | 'protected' | 'guest'
+    } 
+  });
+} catch (error) {
+  console.log('Error ', error);
+}
+```
+</Block>
+</BlockSwitcher>
+
+</InlineFilter>

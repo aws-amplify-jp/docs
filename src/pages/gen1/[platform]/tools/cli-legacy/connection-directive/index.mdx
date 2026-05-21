@@ -1,0 +1,391 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'タイプ間のリレーションシップを追加する',
+  description: 'スキーマ内の他のタイプとのリレーションシップを定義します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert
+  isLegacy
+  url={'/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/'}
+/>
+
+## @connection
+
+`@connection` ディレクティブを使用すると、`@model` タイプ間のリレーションシップを指定できます。現在、1対1、1対多、多対1のリレーションシップをサポートしています。多対多のリレーションシップは、2つの1対多接続と結合 `@model` タイプを使用して実装できます。詳細については、使用例セクションを参照してください。
+
+[リレーショナル設計に関連する17のパターンを含む完全に機能するスキーマも提供しています](/gen1/[platform]/tools/cli-legacy/data-access-patterns/)。
+
+### 定義
+
+```graphql
+directive @connection(keyName: String, fields: [String!]) on FIELD_DEFINITION
+```
+
+### 使用方法
+
+タイプ間のリレーションシップは、`@model` オブジェクトタイプのフィールドに `@connection` ディレクティブで注釈を付けることで指定されます。
+
+`fields` 引数を指定することで、接続されたオブジェクトをクエリするために使用できるフィールドを示すことができます。`keyName` 引数は、オプションでリレーションシップ内の他のタイプからクエリする必要があるセカンダリインデックス（`@key` を使用して設定されたインデックス）の名前を指定するために使用できます。
+
+`keyName` を指定する場合、`fields` 引数を指定して、接続されたオブジェクトを取得するために使用するフィールドを示す必要があります。`keyName` が指定されない場合、`@connection` はターゲットテーブルのプライマリインデックスをクエリします。
+
+### Has one
+
+最も簡単な場合は、プロジェクトが1つのチームを持つ1対1接続を定義できます。
+
+```graphql
+type Project @model {
+  id: ID!
+  name: String
+  team: Team @connection
+}
+
+type Team @model {
+  id: ID!
+  name: String!
+}
+```
+
+fields 配列の最初の引数に入力し、タイプのフィールドと一致させることで、接続に使用するフィールドを定義することもできます。
+
+```graphql
+type Project @model {
+  id: ID!
+  name: String
+  teamID: ID!
+  team: Team @connection(fields: ["teamID"])
+}
+
+type Team @model {
+  id: ID!
+  name: String!
+}
+```
+
+この場合、Project タイプには `teamID` フィールドがプロジェクトが属するチームの識別子として追加されます。その後、`@connection` は、この `teamID` を使用して Team テーブルをクエリして、接続されたチームオブジェクトを取得できます。
+
+変換後、次のようにプロジェクトを作成し、接続されたチームをクエリできます。
+
+```graphql
+mutation CreateProject {
+  createProject(input: { name: "New Project", teamID: "a-team-id" }) {
+    id
+    name
+    team {
+      id
+      name
+    }
+  }
+}
+```
+
+> **注：** **Project.team** リゾルバーは、定義されたコネクションを使用するように構成されています。これは、`teamID` が引数として渡される Team テーブルのクエリで行われます。
+
+Has One @connection はモデルのプライマリインデックスのみを参照できます（つまり、下の Has Many セクションで説明されているように "keyName" を指定することはできません）。
+
+### Has many
+
+次のスキーマは、多くのコメントを持つことができるポストを定義しています。
+
+```graphql
+type Post @model {
+  id: ID!
+  title: String!
+  comments: [Comment] @connection(keyName: "byPost", fields: ["id"])
+}
+
+type Comment @model @key(name: "byPost", fields: ["postID", "content"]) {
+  id: ID!
+  postID: ID!
+  content: String!
+}
+```
+
+1対多の接続は `@key` が必要であることに注意してください。これにより、コメントを postID でクエリできます。接続はこのキーを使用して、呼び出されたポストの id である postID を持つすべてのコメントを取得します。変換後、次のようにコメントを作成し、接続されたポストをクエリできます。
+
+```graphql
+mutation CreatePost {
+  createPost(input: { id: "a-post-id", title: "Post Title" }) {
+    id
+    title
+  }
+}
+
+mutation CreateCommentOnPost {
+  createComment(
+    input: { id: "a-comment-id", content: "A comment", postID: "a-post-id" }
+  ) {
+    id
+    content
+  }
+}
+```
+
+ポストをそのコメントと共にクエリできます。
+
+```graphql
+query getPost {
+  getPost(id: "a-post-id") {
+    id
+    title
+    comments {
+      items {
+        id
+        content
+      }
+    }
+  }
+}
+```
+
+### Belongs to
+
+既に1対多の接続を持つタイプに多対1の接続を追加することで、接続を双方向にすることができます。この場合、各コメントがポストに属するため、Comment から Post への接続を追加します。
+
+```graphql
+type Post @model {
+  id: ID!
+  title: String!
+  comments: [Comment] @connection(keyName: "byPost", fields: ["id"])
+}
+
+type Comment @model @key(name: "byPost", fields: ["postID", "content"]) {
+  id: ID!
+  postID: ID!
+  content: String!
+  post: Post @connection(fields: ["postID"])
+}
+```
+
+変換後、次のようにポストを持つコメントを作成できます。
+
+```graphql
+mutation CreatePost {
+  createPost(input: { id: "a-post-id", title: "Post Title" }) {
+    id
+    title
+  }
+}
+
+mutation CreateCommentOnPost1 {
+  createComment(
+    input: {
+      id: "a-comment-id-1"
+      content: "A comment #1"
+      postID: "a-post-id"
+    }
+  ) {
+    id
+    content
+  }
+}
+
+mutation CreateCommentOnPost2 {
+  createComment(
+    input: {
+      id: "a-comment-id-2"
+      content: "A comment #2"
+      postID: "a-post-id"
+    }
+  ) {
+    id
+    content
+  }
+}
+```
+
+接続をナビゲートして、そのポストのポストと、そのポストのすべてのコメントを照会できます。
+
+```graphql
+query GetCommentWithPostAndComments {
+  getComment(id: "a-comment-id-1") {
+    id
+    content
+    post {
+      id
+      title
+      comments {
+        items {
+          id
+          content
+        }
+      }
+    }
+  }
+}
+```
+
+### 多対多接続
+
+2つの1対多 @接続、@key、および結合 @model を使用して、多対多を実装できます。例えば：
+
+```graphql
+type Post @model {
+  id: ID!
+  title: String!
+  editors: [PostEditor] @connection(keyName: "byPost", fields: ["id"])
+}
+
+# 結合モデルを作成し、クエリを無効にします。Post.editors と User.posts
+# を通じてクエリできるため、必要ありません
+type PostEditor
+  @model(queries: null)
+  @key(name: "byPost", fields: ["postID", "editorID"])
+  @key(name: "byEditor", fields: ["editorID", "postID"]) {
+  id: ID!
+  postID: ID!
+  editorID: ID!
+  post: Post! @connection(fields: ["postID"])
+  editor: User! @connection(fields: ["editorID"])
+}
+
+type User @model {
+  id: ID!
+  username: String!
+  posts: [PostEditor] @connection(keyName: "byEditor", fields: ["id"])
+}
+```
+
+このケースは双方向多対多であるため、PostEditor モデルで2つの `@key` コールが必要です。まずポストとユーザーを作成してから、PostEditor オブジェクトを作成することで、それらの間の接続を追加できます。
+
+```graphql
+mutation CreateData {
+  p1: createPost(input: { id: "P1", title: "Post 1" }) {
+    id
+  }
+  p2: createPost(input: { id: "P2", title: "Post 2" }) {
+    id
+  }
+  u1: createUser(input: { id: "U1", username: "user1" }) {
+    id
+  }
+  u2: createUser(input: { id: "U2", username: "user2" }) {
+    id
+  }
+}
+
+mutation CreateLinks {
+  p1u1: createPostEditor(input: { id: "P1U1", postID: "P1", editorID: "U1" }) {
+    id
+  }
+  p1u2: createPostEditor(input: { id: "P1U2", postID: "P1", editorID: "U2" }) {
+    id
+  }
+  p2u1: createPostEditor(input: { id: "P2U1", postID: "P2", editorID: "U1" }) {
+    id
+  }
+}
+```
+
+User タイプも Post タイプも、接続されたオブジェクトの識別子がないことに注意してください。接続情報は完全に PostEditor オブジェクト内に保持されます。
+
+特定のユーザーとそのポストをクエリできます。
+
+```graphql
+query GetUserWithPosts {
+  getUser(id: "U1") {
+    id
+    username
+    posts {
+      items {
+        post {
+          title
+        }
+      }
+    }
+  }
+}
+```
+
+また、特定のポストとそのエディター、およびそれらのエディターのポストをすべて1つのクエリで照会できます。
+
+```graphql
+query GetPostWithEditorsWithPosts {
+  getPost(id: "P1") {
+    id
+    title
+    editors {
+      items {
+        editor {
+          username
+          posts {
+            items {
+              post {
+                title
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+<Callout warning>
+  Amplify Studio はカスタム命名をサポートしていません。自動生成された
+  名前を変更すると、Amplify Studio が破損します。
+</Callout>
+
+#### 代替の定義
+
+上記の定義は、API 内のモデルタイプ間にリレーションシップを作成する推奨される方法です。これには、`@key` を使用したインデックス構造の定義と、`@connection` を使用した接続リゾルバーの定義が含まれます。古い `@connection` のパラメーター化があり、インデックスと接続リゾルバーを作成しますが、後方互換性の理由でまだ機能しています。`@key` と fields 引数を使用した新しい `@connection` を使用することをお勧めします。
+
+```graphql
+directive @connection(
+  name: String
+  keyField: String
+  sortField: String
+  limit: Int
+) on FIELD_DEFINITION
+```
+
+このパラメーター化は `@key` と互換性がありません。上記のパラメーター化を参照して、@key で作成されたインデックスで `@connection` を使用してください。
+
+### Limit
+
+ネストされたオブジェクトのデフォルト数は100です。**limit** 引数を設定することで、この動作をオーバーライドできます。例えば：
+
+```graphql
+type Post @model {
+  id: ID!
+  title: String!
+  comments: [Comment] @connection(limit: 50)
+}
+
+type Comment @model {
+  id: ID!
+  content: String!
+}
+```
+
+### Generates
+
+接続クエリを高速かつ効率的に保つために、GraphQL 変換は @connection を使用する場合、ユーザーに代わって生成されたテーブル上のグローバルセカンダリインデックス（GSI）を管理します。
+
+> **注：** `@connection` ディレクティブをプッシュした後は、それを変更しようとしないでください。変更しようとすると、DynamoDB UpdateTable 操作が失敗します。`@connection` を変更する必要がある場合は、新しいアクセスパターンを実装する新しい `@connection` を追加し、新しい `@connection` を使用するようにアプリケーションを更新してから、不要になった古い `@connection` を削除してください。

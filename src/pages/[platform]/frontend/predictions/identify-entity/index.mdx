@@ -1,0 +1,166 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '画像からエンティティを識別',
+  description: 'Amplifyを使用して画像からエンティティを識別する方法について学びます。',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue',
+  ]
+};
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps() {
+  return {
+    props: {
+      meta
+    }
+  };
+}
+
+<Callout informational>
+
+**注:** 最初に[はじめに](/[platform]/build-a-backend/add-aws-services/predictions/set-up-predictions/)セクションを完了してください。ここでは適切なポリシーアクションでIAMロールをセットアップします。
+
+</Callout>
+
+
+## APIの使用
+
+`Predictions.identify({entities: {...}}) => Promise<>`
+画像からエンティティを検出し、位置、顔、ランドマークなどの関連情報を取得します。以前に追加されたセレブリティと追加されたエンティティも識別できます。この関数は、識別されたエンティティを含むオブジェクトを返すPromiseを返します。
+
+入力はブラウザから直接送信できます（FileオブジェクトまたはArrayBufferオブジェクトを使用）、またはプロジェクトバケットのAmazon S3キーから送信できます。
+
+ブラウザからアップロードされた画像から直接エンティティを検出します。(Fileオブジェクト)
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const response = await Predictions.identify({
+  entities: {
+    source: {
+      file,
+    },
+  }
+});
+```
+
+ブラウザからの画像バイナリから直接エンティティを検出します。(ArrayBufferオブジェクト)
+このテクニックは、base64エンコードされたバイナリ画像データ（例えば、Webカメラソースから）を取得した場合に便利です。
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const response = await Predictions.identify({
+  entities: {
+    source: {
+      bytes: imageArrayBuffer,
+    },
+  }
+});
+```
+
+Amazon S3キーから
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const response = await Predictions.identify({
+  entities: {
+    source: {
+      key: pathToPhoto,
+      level: 'guest' | 'private' | 'protected', //optional, default is the configured on Storage category
+    },
+  }
+});
+```
+
+以下のオプションは、どの`source`が指定されているかに関わらず独立しています。デモンストレーション目的で`file`を使用しますが、S3キーも使用できます。
+
+画像から顔の境界ボックスとそのランドマーク（目、口、鼻）を検出します。
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const { entities } = await Predictions.identify({
+  entities: {
+    source: {
+      file,
+    },
+  }
+})
+for (const { boundingBox, landmarks } of entities) {
+  const { 
+    width, // ratio of overall image width
+    height, // ratio of overall image height
+    left, // left coordinate as a ratio of overall image width
+    top // top coordinate as a ratio of overall image height
+  } = boundingBox;
+  
+  for (const landmark of landmarks) {
+    const {
+      type, // string "eyeLeft", "eyeRight", "mouthLeft", "mouthRight", "nose"
+      x, // ratio of overall image width
+      y // ratio of overall image height
+    } = landmark;
+  }
+}
+```
+
+画像からセレブリティを検出します。名前と関連情報を含むURLのみが返されます。
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const { entities } = await Predictions.identify({
+  entities: {
+    source: {
+      file,
+    },
+    celebrityDetection: true // boolean. It will only show detected celebrities 
+  }
+})
+
+for (const { boundingBox, landmarks, metadata } of entities) {
+  const { 
+    name,
+    urls 
+  } = metadata; // celebrity info
+  
+  // ...
+}
+.catch(err => console.log({ err }));
+```
+
+以前にアップロードされた画像からエンティティを検出します（例：エンティティ識別の詳細な構成）
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const { entities } = await Predictions.identify({
+  entities: {
+    source: {
+      file,
+    },
+    collection: true
+  }
+})
+
+for (const { boundingBox, metadata } of entities) {
+  const {
+    width, // ratio of overall image width
+    height, // ratio of overall image height
+    left, // left coordinate as a ratio of overall image width
+    top // top coordinate as a ratio of overall image height
+  } = boundingBox;
+  const { externalImageId } = metadata; // this is the object key on S3 from the original image
+}
+```

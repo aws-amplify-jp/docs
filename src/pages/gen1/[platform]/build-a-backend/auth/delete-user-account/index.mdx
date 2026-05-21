@@ -1,0 +1,104 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ユーザーアカウントの削除',
+  description: 'ユーザーアカウントを削除する方法を学習します。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'flutter',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript",  "react-native", "angular", "nextjs", "react", "vue"]}>
+
+ユーザーがアカウントを削除できる機能を提供することで、信頼性と透明性を向上させることができます。Amplify Auth を使用してセルフサービス型のアカウント削除を有効にできます。このガイドでは、ユーザーがこの機能を使用できるようにする方法について説明します。
+
+開始する前に、以下が必要です。
+
+- Auth カテゴリが設定された Amplify プロジェクト
+- インストールおよび設定された Amplify ライブラリ
+- 削除するテストユーザー
+
+## ユーザーがアカウントを削除できるようにする
+
+Amplify ライブラリを使用すると、ユーザーのアカウント削除をすばやく設定できます。Auth カテゴリの `deleteUser` API を呼び出してユーザーを削除すると、ユーザーもサインアウトします。
+
+アプリケーションがデフォルト設定である Cognito User Pool を使用している場合、このアクションは Cognito User Pool からのみユーザーを削除します。Cognito Identity Pool のみでフェデレーションを行っている場合、効果はありません。
+
+<Callout warning>
+
+`deleteUser` API を呼び出す前に、Cognito に保存されていない関連するユーザーデータを削除する必要がある場合があります。たとえば、Amplify GraphQL API を使用してユーザーデータを保存している場合は、[これらの指示](https://gist.github.com/aws-amplify-ops/27954c421bd72930874d48c15c284807)に従って関連するユーザーデータを削除できます。これにより、アカウントを削除するユーザーに関連するデータを削除する必要があるガイドライン (GDPR など) に対応できます。
+
+</Callout>
+
+次のメソッドを使用してアカウント削除を有効にできます。
+
+```ts
+import { deleteUser } from 'aws-amplify/auth';
+
+async function handleDeleteUser() {
+  try {
+    await deleteUser();
+  } catch (error) {
+    console.log(error);
+  }
+}
+```
+
+ユーザーにアカウントが削除されたことを通知するために UI を更新し、テストユーザーでこの機能をテストすることをお勧めします。ユーザーがアカウントを削除すると、アプリケーションからサインアウトされることに注意してください。
+
+## まとめ
+
+おめでとうございます。**ユーザーアカウントの削除**ガイドを完了しました。このガイドでは、ユーザーのアカウント削除を有効にする方法を学習しました。
+
+## 次のステップ
+
+アカウント削除を有効にしたら、追加の機能を追加することもお勧めします。以下の詳細を学習することをお勧めします。
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+- [ユーザープロフィールの管理](/gen1/[platform]/build-a-backend/auth/manage-user-profile/)
+- [パスワード変更と回復の設定](/gen1/[platform]/build-a-backend/auth/manage-passwords/)
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+- [ユーザープロフィールの管理](/gen1/[platform]/build-a-backend/auth/manage-user-profile/)
+- [パスワード変更と回復の設定](/gen1/[platform]/build-a-backend/auth/manage-passwords/)
+
+</InlineFilter>
+
+</InlineFilter>
+
+import ios0 from '/src/fragments/lib/auth/native_common/delete_user/common.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import flutter1 from '/src/fragments/lib/auth/native_common/delete_user/common.mdx';
+
+<Fragments fragments={{ flutter: flutter1 }} />
+
+import android3 from '/src/fragments/lib/auth/native_common/delete_user/common.mdx';
+
+<Fragments fragments={{ android: android3 }} />

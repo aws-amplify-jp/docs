@@ -1,0 +1,183 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '機械学習サービスの接続',
+  description: '@predictions ディレクティブを使用すると、Amazon Rekognition、Amazon Translate、Amazon Polly などの AI/ML サービスのオーケストレーションをクエリできます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert
+  isLegacy
+  url={'/gen1/[platform]/build-a-backend/graphqlapi/connect-machine-learning-services/'}
+/>
+
+## @predictions
+
+`@predictions` ディレクティブを使用すると、Amazon Rekognition、Amazon Translate、Amazon Polly などの AI/ML サービスのオーケストレーションをクエリできます。
+
+> 注: `@predictions` ディレクティブの追加のサポートは、CLI を経由して設定される S3 ストレージバケットを使用します。現在のところ、このディレクティブは `public/` 内に配置されたオブジェクトでのみ機能します。
+
+### 定義
+
+このディレクティブでサポートされているアクションは定義に含まれています。
+
+```graphql
+directive @predictions(actions: [PredictionsActions!]!) on FIELD_DEFINITION
+enum PredictionsActions {
+  identifyText # uses Amazon Rekognition to detect text
+  identifyLabels # uses Amazon Rekognition to detect labels
+  convertTextToSpeech # uses Amazon Polly in a lambda to output a presigned url to synthesized speech
+  translateText # uses Amazon Translate to translate text from source to target language
+}
+```
+
+### 使用方法
+
+以下のスキーマが与えられた場合、クエリ操作が定義され、提供されたイメージに対して次の処理が実行されます。
+
+- イメージからテキストを識別する
+- そのイメージからテキストを翻訳する
+- 翻訳されたテキストから音声を合成する
+
+```graphql
+type Query {
+  speakTranslatedImageText: String
+    @predictions(actions: [identifyText, translateText, convertTextToSpeech])
+}
+```
+
+そのクエリの例は次のようになります:
+
+```graphql
+query SpeakTranslatedImageText($input: SpeakTranslatedImageTextInput!) {
+  speakTranslatedImageText(
+    input: {
+      identifyText: { key: "myimage.jpg" }
+      translateText: { sourceLanguage: "en", targetLanguage: "es" }
+      convertTextToSpeech: { voiceID: "Conchita" }
+    }
+  )
+}
+```
+
+JS ライブラリを使用したコード例:
+
+```js
+import React, { useState } from 'react';
+import { Amplify, Storage, API, graphqlOperation } from 'aws-amplify';
+import awsconfig from './aws-exports';
+import { speakTranslatedImageText } from './graphql/queries';
+
+/* Configure Exports */
+Amplify.configure(awsconfig);
+
+function SpeakTranslatedImage() {
+  const [src, setSrc] = useState('');
+  const [img, setImg] = useState('');
+
+  function putS3Image(event) {
+    const file = event.target.files[0];
+    Storage.put(file.name, file)
+      .then(async (result) => {
+        setSrc(await speakTranslatedImageTextOP(result.key));
+        setImg(await Storage.get(result.key));
+      })
+      .catch((err) => console.log(err));
+  }
+
+  return (
+    <div className="Text">
+      <div>
+        <h3>Upload Image</h3>
+        <input
+          type="file"
+          accept="image/jpeg"
+          onChange={(event) => {
+            putS3Image(event);
+          }}
+        />
+        <br />
+        {img && <img src={img}></img>}
+        {src && (
+          <div>
+            {' '}
+            <audio id="audioPlayback" controls>
+              <source id="audioSource" type="audio/mp3" src={src} />
+            </audio>{' '}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+async function speakTranslatedImageTextOP(key) {
+  const inputObj = {
+    translateText: {
+      sourceLanguage: 'en',
+      targetLanguage: 'es'
+    },
+    identifyText: { key },
+    convertTextToSpeech: { voiceID: 'Conchita' }
+  };
+  const response = await client.graphql(
+    graphqlOperation(speakTranslatedImageText, { input: inputObj })
+  );
+  return response.data.speakTranslatedImageText;
+}
+function App() {
+  return (
+    <div className="App">
+      <h1>Speak Translated Image</h1>
+      <SpeakTranslatedImage />
+    </div>
+  );
+}
+export default App;
+```
+
+### 仕組み
+
+上記のスキーマ例から、`@predictions` は Amazon Rekognition、Translate、Polly と通信するためのリソースを作成します。各アクションに対して以下が作成されます:
+
+- 各サービスの IAM ポリシー (例: Amazon Rekognition `detectText` ポリシー)
+- AppSync VTL 関数
+- AppSync データソース
+
+最後に、`speakTranslatedImageText` のリゾルバーが作成されます。これは、ディレクティブで提供されるアクションリストによって定義される AppSync 関数で構成されたパイプラインリゾルバーです。
+
+### アクション
+
+@predictions 定義セクションで説明されている各アクションは、個別に、またはシーケンスで使用できます。現在サポートされているアクションのシーケンスは以下の通りです:
+
+- `identifyText -> translateText -> convertTextToSpeech`
+- `identifyLabels -> translateText -> convertTextToSpeech`
+- `translateText -> convertTextToSpeech`
+
+### アクションリソース
+
+- [`translateText` サポート言語コード](https://docs.aws.amazon.com/translate/latest/dg/what-is.html#what-is-languages)
+- [`convertTextToSpeech` サポートボイス ID](https://docs.aws.amazon.com/polly/latest/dg/voicelist.html)

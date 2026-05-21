@@ -1,0 +1,436 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify と Amazon Bedrock を使用して生成 AI サンドボックスを構築する',
+  description: 'Amazon Bedrock と AWS Amplify を使用して生成 AI サンドボックスを構築する方法',
+  platforms: [
+    'javascript',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## 概要
+
+AWS Amplify は、[Amazon Bedrock](https://aws.amazon.com/bedrock/) と統合するフルスタックアプリケーションを構築するために必要なツールを提供することで、生成 AI アプリケーションの構築とデプロイを支援します。Amazon Bedrock は、Foundation Models (FM) へのアクセスを提供する完全マネージドサービスであり、AI インフラストラクチャの管理について心配することなく、生成 AI アプリケーションを簡単に構築できます。生成 AI 機能をアプリケーションに統合するか、独自の生成 AI アプリケーションを構築するには、Foundation Model への呼び出しを行うだけでは不十分です。フルスタック生成 AI アプリケーションを構築するには、Amazon Bedrock に加えて、以下が必要になります。
+
+1. 認証
+2. API レイヤー
+3. ホスティング
+4. アクセス可能な UI
+
+Amplify と Amazon Bedrock を使用すれば、1 時間以内に簡単に生成 AI アプリケーションを作成できます。このガイドでは、生成 AI サンドボックスを構築するステップを説明します。
+
+## プロジェクトセットアップ
+
+ここでは、React と Next.js を使用して、Amplify Hosting での Next.js サーバーサイドレンダリング (SSR) 機能の完全マネージドホスティングを活用します。最初のステップは、yarn、npm、pnpm、または Bun を使用して新しい Next.js プロジェクトを作成することです。
+
+```bash
+npx create-next-app@14
+```
+
+```bash
+✔ Would you like to use TypeScript with this project? … No / Yes
+✔ Would you like to use ESLint with this project? … No / Yes
+✔ Would you like to use Tailwind CSS with this project? … No / Yes
+✔ Would you like to use `src/` directory with this project? … No / Yes
+✔ Would you like to use experimental `app/` directory with this project? … No / Yes
+✔ What import alias would you like configured? … @/*
+```
+
+このプロジェクトでは Next.js Pages ルーターを使用します。設定は自由に変更できます。新しく作成した Next.js アプリに移動して、Amplify CLI で Amplify をプロジェクトに追加します。
+
+```bash
+amplify init
+```
+
+```bash
+? Enter a name for the project amplify-gen-ai
+The following configuration will be applied:
+
+Project information
+| Name: amplify-gen-ai
+| Environment: dev
+| Default editor: Visual Studio Code
+| App type: javascript
+| Javascript framework: react
+| Source Directory Path: src
+| Distribution Directory Path: build
+| Build Command: npm run-script build
+| Start Command: npm run-script start
+? Initialize the project with the above configuration? Yes
+```
+
+### 認証の追加
+
+アプリに認証を追加することはオプションですが、ユーザーが認証なしで LLM をアプリを通して使用できるようにすることは実務的にはお勧めできません。これは、LLM へのリクエストは LLM との間で送受信されるテキストの量に基づいてコストが発生するためです。Amazon Bedrock のほとんどの LLM は、レート制限も適用します。
+
+Amplify CLI または Amplify Studio を使用して、アプリケーションに認証を追加できます。ここでは CLI を使用します。
+
+```bash
+amplify add auth
+```
+
+CLI からの出力は次のようになります。
+
+```bash
+Using service: Cognito, provided by: awscloudformation
+
+ The current configured provider is Amazon Cognito.
+
+ Do you want to use the default authentication and security configuration? _**Default configuration**_
+ Warning: you will not be able to edit these selections.
+ How do you want users to be able to sign in? _**Email**_
+ Do you want to configure advanced settings? _**No, I am done.**_
+```
+
+次に、Amplify プロジェクトをクラウドにプッシュします。
+
+```bash
+amplify push
+```
+
+以下のような表示が出ます。
+
+```bash
+✔ Successfully pulled backend environment dev from the cloud.
+
+    Current Environment: dev
+
+┌──────────┬──────────────────────┬───────────┬───────────────────┐
+│ Category │ Resource name        │ Operation │ Provider plugin   │
+├──────────┼──────────────────────┼───────────┼───────────────────┤
+│ Auth     │ amplifyGenAi         │ Create    │ awscloudformation │
+└──────────┴──────────────────────┴───────────┴───────────────────┘
+```
+
+### Amplify の設定
+
+Amplify と Amplify UI のフロントエンドパッケージを追加します。
+
+```bash
+npm i --save @aws-amplify/ui-react aws-amplify
+```
+
+次に、これらのインポートを **src/pages/\_app.tsx** の先頭に追加します。
+
+```js
+import '@aws-amplify/ui-react/styles.css';
+import { Amplify } from 'aws-amplify';
+import awsconfig from '../aws-exports';
+```
+
+次に、インポート後に以下を追加して、Amplify を設定します。
+
+```js
+Amplify.configure({
+  ...awsconfig,
+  // this lets you run Amplify code on the server-side in Next.js
+  ssr: true
+});
+```
+
+次に、`<Component />` を JSX でラップして、'@aws-amplify/ui-react' から `Authenticator` コンポーネントを使用します。ファイルは次のようになります。
+
+```js
+import '@aws-amplify/ui-react/styles.css';
+import { Amplify } from 'aws-amplify';
+import awsconfig from '../aws-exports';
+import type { AppProps } from 'next/app';
+import { Authenticator } from '@aws-amplify/ui-react';
+
+Amplify.configure({
+  ...awsconfig,
+  // this lets you run Amplify code on the server-side in Next.js
+  ssr: true
+});
+
+export default function App({ Component, pageProps }: AppProps) {
+  return (
+    <Authenticator>
+      <Component {...pageProps} />
+    </Authenticator>
+  );
+}
+```
+
+ローカル開発サーバーを起動すると、以下が表示されます。
+
+![メールとパスワードのフィールドとサインインボタンが含まれている Amplify 認証ログインフォーム。](/images/gen-ai/login-form.png)
+
+テスト用に自分のアカウントを作成します。ログインすると、デフォルトの Next.js スターターホームページが表示されます。
+
+### API レイヤーの追加
+
+Amazon Bedrock SDK を依存関係に追加します。
+
+```bash
+npm i --save @aws-sdk/client-bedrock-runtime
+```
+
+Pages ルーターを使用するデフォルトの Next.js テンプレートは、**src/pages/api/hello.ts** に API ルートの例が含まれているはずです。そのファイルを **chat.ts** に名前変更しましょう。このファイルで最初に行う必要があることは、サーバーサイドで Amplify を設定することです。そのためには、Amplify と Amplify が作成する Amplify 設定ファイルをインポートします。
+
+```js
+import { Amplify } from 'aws-amplify';
+import awsconfig from '@/aws-exports';
+
+Amplify.configure({
+  ...awsconfig,
+  ssr: true
+});
+```
+
+次に、認証認証情報を取得するために、`aws-amplify` から `withSSRContext` をインポートします。デフォルトのハンドラ関数を async 関数に変更します。
+
+```diff
+- export default function handler(
++ export default async function handler(
+```
+
+次に、関数本体内で SSR コンテキストを作成します。
+
+```js
+const SSR = withSSRContext({ req });
+```
+
+これにより、Auth モジュールを使用するなど、サーバーサイドでのすべての Amplify ライブラリ機能にアクセスできます。ユーザーの現在の認証情報を取得するには、以下を含めます。
+
+```js
+const credentials = await SSR.Auth.currentCredentials();
+```
+
+これが機能していることをテストするには、認証情報をコンソールに出力して、ローカルサーバーを起動できます。これを行って、これまでのところすべてが機能していることを確認しましょう。**src/pages/index.tsx** で、API エンドポイントへの `fetch` を実行する `callAPI` 関数を作成します。
+
+```js
+const callAPI = () => {
+  fetch('/api/hello');
+};
+```
+
+次に、ページの JSX で、クリック時に `callAPI` 関数を呼び出すボタンを追加します。
+
+```jsx
+<button onClick={callAPI}>Click me</button>
+```
+
+ログインしてボタンをクリックすると、認証認証情報がターミナルのコンソールに出力されます。
+
+```js
+fetch('/api/hello', {
+  method: 'POST',
+  body: JSON.stringify({ input: 'Who are you?' })
+});
+```
+
+**src/pages/api/chat.ts** を開き、その `console.log` を削除して、ユーザーの認証情報を使用して Amazon Bedrock クライアントを初期化します。
+
+```js
+const bedrock = new BedrockRuntimeClient({
+  serviceId: 'bedrock',
+  region: 'us-east-1',
+  credentials
+});
+```
+
+次に、Bedrock クライアントに `InvokeModel` コマンドを送信できます。以下は、実行内容について説明するコメント付きの完全な **chat.ts** ファイルです。
+
+```js
+import {
+  BedrockRuntimeClient,
+  InvokeModelCommand
+} from '@aws-sdk/client-bedrock-runtime';
+import { Amplify, withSSRContext } from 'aws-amplify';
+import type { NextApiRequest, NextApiResponse } from 'next';
+import awsExports from '@/aws-exports';
+
+Amplify.configure({
+  ...awsExports,
+  ssr: true
+});
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const body = JSON.parse(req.body);
+  const SSR = withSSRContext({ req });
+  const credentials = await SSR.Auth.currentCredentials();
+  const bedrock = new BedrockRuntimeClient({
+    serviceId: 'bedrock',
+    region: 'us-east-1',
+    credentials
+  });
+
+  // Anthropic's Claude model expects a chat-like string
+  // of 'Human:' and 'Assistant:' responses separated by line breaks.
+  // You should always end your prompt with 'Assistant:' and Claude
+  // will respond. There are various prompt engineering techniques
+  // and frameworks like LangChain you can use here too.
+  const prompt = `Human:${body.input}\n\nAssistant:`;
+
+  const result = await bedrock.send(
+    new InvokeModelCommand({
+      modelId: 'anthropic.claude-v2',
+      contentType: 'application/json',
+      accept: '*/*',
+      body: JSON.stringify({
+        prompt,
+        // LLM costs are measured by Tokens, which are roughly equivalent
+        // to 1 word. This option allows you to set the maximum amount of
+        // tokens to return
+        max_tokens_to_sample: 2000,
+        // Temperature (1-0) is how 'creative' the LLM should be in its response
+        // 1: deterministic, prone to repeating
+        // 0: creative, prone to hallucinations
+        temperature: 1,
+        top_k: 250,
+        top_p: 0.99,
+        // This tells the model when to stop its response. LLMs
+        // generally have a chat-like string of Human and Assistant message
+        // This says stop when the Assistant (Claude) is done and expects
+        // the human to respond
+        stop_sequences: ['\n\nHuman:'],
+        anthropic_version: 'bedrock-2023-05-31'
+      })
+    })
+  );
+  // The response is a Uint8Array of a stringified JSON blob
+  // so you need to first decode the Uint8Array to a string
+  // then parse the string.
+  res.status(200).json(JSON.parse(new TextDecoder().decode(result.body)));
+}
+```
+
+次に、JSON レスポンスを受け入れるようにフロントエンドの `callAPI` 関数を更新します。
+
+```js
+fetch('/api/hello', {
+  method: 'POST',
+  body: JSON.stringify({ input: 'Who are you?' })
+})
+  .then((res) => res.json())
+  .then((data) => {
+    console.log(data);
+  });
+```
+
+しかし、そのボタンをクリックすると、ターミナルに以下が表示されます。
+
+```
+ ⨯ AccessDeniedException: User: arn:aws:sts::553879240338:assumed-role/amplify-amplifyGenAi-dev-205330-authRole/CognitoIdentityCredentials is not authorized to perform: bedrock:InvokeModel on resource:
+```
+
+Amplify で認証バックエンドを作成すると、Amazon Cognito が設定され、認証されていないユーザーと認証されたユーザーの 2 つの IAM ロールが作成されます。これらの IAM ロールにより、AWS は認証されたゲストユーザーがアクセスできるリソースを認識します。まだ認証されたユーザーに Amazon Bedrock へのアクセスを許可していません。これを今すぐ行いましょう。
+
+[オーバーライド](/gen1/[platform]/tools/cli/project/override-iam/) を使用して、Amplify が作成する IAM ポリシーを更新できます。このコマンドを実行します。
+
+```
+amplify override project
+```
+
+作成された **override.ts** ファイルを編集して、認証されたロールに Amazon Bedrock の `InvokeModel` コマンドへのアクセスを許可するポリシーを追加します。
+
+```js
+import {
+  AmplifyProjectInfo,
+  AmplifyRootStackTemplate
+} from '@aws-amplify/cli-extensibility-helper';
+
+export function override(
+  resources: AmplifyRootStackTemplate,
+  amplifyProjectInfo: AmplifyProjectInfo
+) {
+  const authRole = resources.authRole;
+
+  const basePolicies = Array.isArray(authRole.policies)
+    ? authRole.policies
+    : [authRole.policies];
+
+  authRole.policies = [
+    ...basePolicies,
+    {
+      policyName: '',
+      policyDocument: {
+        Version: '2012-10-17',
+        Statement: [
+          {
+            Effect: 'Allow',
+            Action: 'bedrock:InvokeModel',
+            Resource:
+              'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-v2'
+          }
+        ]
+      }
+    }
+  ];
+}
+```
+
+`amplify push` を実行して、変更をクラウドと同期します。次に、ローカル Next.js サーバーを再起動して、API ルート経由で Amazon Bedrock を再度呼び出してみます。
+
+![テキスト補完を含むオブジェクト: 「I'm Claude, an AI assistant created by Anthropic」](/images/gen-ai/claude.png)
+
+## ホスティング
+
+最後に行うことは、Next.js アプリケーションにホスティングを追加することです。Amplify はここでもあなたをカバーしています。GitHub、Bitbucket、または GitLab で新しい Git リポジトリを作成します。コードをコミットして、選択した Git プロバイダーにプッシュします。GitHub を例として使用しましょう。[GitHub CLI](https://cli.github.com/) がインストールされている場合は、以下を実行できます。
+
+```bash
+gh repo create
+```
+
+```bash
+? What would you like to do? Push an existing local repository to GitHub
+? Path to local repository .
+? Repository name amplify-gen-ai
+? Repository owner danny
+? Description
+? Visibility Private
+✓ Created repository danny/amplify-gen-ai on GitHub
+? Add a remote? Yes
+? What should the new remote be called? origin
+✓ Added remote git@github.com:danny/amplify-gen-ai.git
+? Would you like to push commits from the current branch to "origin"? Yes
+```
+
+これで Amplify CLI から Amplify Hosting を追加できます。
+
+```bash
+amplify add hosting
+```
+
+![Amplify ビルド設定フォーム](/images/gen-ai/build-settings.png)
+
+```bash
+✔ Select the plugin module to execute · Hosting with Amplify Console (Managed hosting with custom domains, Continuous deployment)
+
+? Choose a type Continuous deployment (Git-based deployments)
+? Continuous deployment is configured in the Amplify Console. Please hit enter once you connect your repository
+Amplify hosting urls:
+┌──────────────┬───────────────────────────────────────────┐
+│ FrontEnd Env │ Domain                                    │
+├──────────────┼───────────────────────────────────────────┤
+│ main         │ https://main.dade6up5cdfhu.amplifyapp.com │
+```
+
+これで、Amplify を使用した Amazon Bedrock に接続されたホストされたフルスタックアプリケーションが完成しました。
+
+TypeScript を使用している場合は、プロジェクトのルートの tsconfig ファイルで Amplify ディレクトリを無視する必要があります。そうしないと、Amplify が Next.js アプリケーションをビルドしようとするときに型エラーが発生する可能性があります。tsconfig の「exclude」配列を更新して「amplify」を含めます。
+
+```js
+"exclude": ["node_modules","amplify"]
+```

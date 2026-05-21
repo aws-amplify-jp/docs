@@ -1,0 +1,433 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Lambda リゾルバーの設定',
+  description: 'AWS AppSync API 内で AWS Lambda リゾルバーを素早く簡単に設定します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert
+  isLegacy
+  url={'/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/'}
+/>
+
+## @function
+
+`@function` ディレクティブを使用すると、AWS AppSync API 内で AWS Lambda リゾルバーを素早く簡単に設定できます。
+
+### 定義
+
+```graphql
+directive @function(name: String!, region: String) on FIELD_DEFINITION
+```
+
+### 使用法
+
+`@function` ディレクティブを使用すると、Lambda リゾルバーを AppSync API にすばやく接続できます。AWS Lambda 関数は Amplify CLI、AWS Lambda コンソール、または他のツールを使用してデプロイできます。AWS Lambda リゾルバーを接続するには、`schema.graphql` のフィールドに `@function` ディレクティブを追加します。
+
+以下の内容でデプロイされた _echo_ 関数があると仮定します。
+
+```js
+exports.handler = async function (event, context) {
+  return event.arguments.msg;
+};
+```
+
+**`function` カテゴリを使用して関数をデプロイした場合**
+
+Amplify CLI は、複数の環境を維持するためのサポートをそのまま提供しています。`amplify add function` を使用して関数をデプロイすると、環境サフィックスが自動的に Lambda 関数名に追加されます。たとえば、**dev** 環境で `amplify add function` を使用して **echofunction** という名前の関数を作成した場合、デプロイされた関数は **echofunction-dev** という名前になります。`@function` ディレクティブを使用すると、`${env}` を使用して現在の Amplify CLI 環境を参照できます。
+
+```graphql
+type Query {
+  echo(msg: String): String @function(name: "echofunction-${env}")
+}
+```
+
+**Amplify なしで関数をデプロイした場合**
+
+Amplify なしで API をデプロイした場合は、完全な Lambda 関数名を指定する必要があります。**echofunction** という名前で同じ関数をデプロイした場合は、以下のようになります。
+
+```graphql
+type Query {
+  echo(msg: String): String @function(name: "echofunction")
+}
+```
+
+**例: カスタムデータを返し、カスタムロジックを実行する**
+
+`@function` ディレクティブを使用して、AWS Lambda 関数でカスタムビジネスロジックを記述できます。開始するには、`amplify add function`、AWS Lambda コンソール、または他のツールを使用して、以下の内容で AWS Lambda 関数をデプロイします。
+
+例の目的のため、関数が `GraphQLResolverFunction` という名前であると仮定します。
+
+```js
+const POSTS = [
+  { id: 1, title: 'AWS Lambda: How To Guide.' },
+  { id: 2, title: 'AWS Amplify Launches @function and @key directives.' },
+  { id: 3, title: 'Serverless 101' }
+];
+const COMMENTS = [
+  { postId: 1, content: 'Great guide!' },
+  { postId: 1, content: 'Thanks for sharing!' },
+  { postId: 2, content: "Can't wait to try them out!" }
+];
+
+// Get all posts. Write your own logic that reads from any data source.
+function getPosts() {
+  return POSTS;
+}
+
+// Get the comments for a single post.
+function getCommentsForPost(postId) {
+  return COMMENTS.filter((comment) => comment.postId === postId);
+}
+
+/**
+ * Using this as the entry point, you can use a single function to handle many resolvers.
+ */
+const resolvers = {
+  Query: {
+    posts: (ctx) => {
+      return getPosts();
+    }
+  },
+  Post: {
+    comments: (ctx) => {
+      return getCommentsForPost(ctx.source.id);
+    }
+  }
+};
+
+// event
+// {
+//   "typeName": "Query", /* Filled dynamically based on @function usage location */
+//   "fieldName": "me", /* Filled dynamically based on @function usage location */
+//   "arguments": { /* GraphQL field arguments via $ctx.arguments */ },
+//   "identity": { /* AppSync identity object via $ctx.identity */ },
+//   "source": { /* The object returned by the parent resolver. E.G. if resolving field 'Post.comments', the source is the Post object. */ },
+//   "request": { /* AppSync request object. Contains things like headers. */ },
+//   "prev": { /* If using the built-in pipeline resolver support, this contains the object returned by the previous function. */ },
+// }
+exports.handler = async (event) => {
+  const typeHandler = resolvers[event.typeName];
+  if (typeHandler) {
+    const resolver = typeHandler[event.fieldName];
+    if (resolver) {
+      return await resolver(event);
+    }
+  }
+  throw new Error('Resolver not found.');
+};
+```
+
+**例: Amazon Cognito User Pools からログインしたユーザーを取得する**
+
+アプリケーションを構築する場合、現在のユーザーの情報を取得すると便利です。`@function` ディレクティブを使用して、AppSync 識別情報を使用して Amazon Cognito User Pools からユーザーを取得するリゾルバーをすばやく追加できます。まず、`amplify add auth` を使用して Amazon Cognito User Pools を有効にし、`amplify add api` を使用して GraphQL API を amplify プロジェクトに追加したことを確認してください。ユーザープールを作成したら、amplify プロジェクトの **backend/** ディレクトリ内の **amplify-meta.json** から **UserPoolId** を取得します。この値は、環境変数として後で提供します。次に、Amplify 関数カテゴリ、AWS コンソール、または他のツールを使用して、以下の内容で AWS Lambda 関数をデプロイします。
+
+例の目的のため、関数が `GraphQLResolverFunction` という名前であると仮定します。
+
+<BlockSwitcher>
+
+<Block name="AWS SDK V2">
+
+```js
+/* Amplify Params - DO NOT EDIT
+You can access the following resource attributes as environment variables from your Lambda function
+var environment = process.env.ENV
+var region = process.env.REGION
+var authMyResourceNameUserPoolId = process.env.AUTH_MYRESOURCENAME_USERPOOLID
+
+Amplify Params - DO NOT EDIT */
+
+const { CognitoIdentityServiceProvider } = require('aws-sdk');
+const cognitoIdentityServiceProvider = new CognitoIdentityServiceProvider();
+
+/**
+ * Get user pool information from environment variables.
+ */
+const COGNITO_USERPOOL_ID = process.env.AUTH_MYRESOURCENAME_USERPOOLID;
+if (!COGNITO_USERPOOL_ID) {
+  throw new Error(
+    `Function requires environment variable: 'COGNITO_USERPOOL_ID'`
+  );
+}
+const COGNITO_USERNAME_CLAIM_KEY = 'cognito:username';
+
+/**
+ * Using this as the entry point, you can use a single function to handle many resolvers.
+ */
+const resolvers = {
+  Query: {
+    echo: (ctx) => {
+      return ctx.arguments.msg;
+    },
+    me: async (ctx) => {
+      var params = {
+        UserPoolId: COGNITO_USERPOOL_ID /* required */,
+        Username: ctx.identity.claims[COGNITO_USERNAME_CLAIM_KEY] /* required */
+      };
+      try {
+        // Read more: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentityServiceProvider.html#adminGetUser-property
+        return await cognitoIdentityServiceProvider
+          .adminGetUser(params)
+          .promise();
+      } catch (e) {
+        throw new Error(`NOT FOUND`);
+      }
+    }
+  }
+};
+
+// event
+// {
+//   "typeName": "Query", /* Filled dynamically based on @function usage location */
+//   "fieldName": "me", /* Filled dynamically based on @function usage location */
+//   "arguments": { /* GraphQL field arguments via $ctx.arguments */ },
+//   "identity": { /* AppSync identity object via $ctx.identity */ },
+//   "source": { /* The object returned by the parent resolver. E.G. if resolving field 'Post.comments', the source is the Post object. */ },
+//   "request": { /* AppSync request object. Contains things like headers. */ },
+//   "prev": { /* If using the built-in pipeline resolver support, this contains the object returned by the previous function. */ },
+// }
+exports.handler = async (event) => {
+  const typeHandler = resolvers[event.typeName];
+  if (typeHandler) {
+    const resolver = typeHandler[event.fieldName];
+    if (resolver) {
+      return await resolver(event);
+    }
+  }
+  throw new Error('Resolver not found.');
+};
+```
+</Block>
+
+<Block name="AWS SDK V3">
+
+```js
+/* Amplify Params - DO NOT EDIT
+You can access the following resource attributes as environment variables from your Lambda function
+var environment = process.env.ENV
+var region = process.env.REGION
+var authMyResourceNameUserPoolId = process.env.AUTH_MYRESOURCENAME_USERPOOLID
+
+Amplify Params - DO NOT EDIT */
+
+const { CognitoIdentityProviderClient, AdminGetUserCommand } = require('@aws-sdk/client-cognito-identity-provider');
+const cognitoIdentityProviderClient = new CognitoIdentityProviderClient({ region: process.env.REGION });
+
+/**
+ * Get user pool information from environment variables.
+ */
+const COGNITO_USERPOOL_ID = process.env.AUTH_MYRESOURCENAME_USERPOOLID;
+if (!COGNITO_USERPOOL_ID) {
+  throw new Error(
+    `Function requires environment variable: 'COGNITO_USERPOOL_ID'`
+  );
+}
+const COGNITO_USERNAME_CLAIM_KEY = 'cognito:username';
+
+/**
+ * Using this as the entry point, you can use a single function to handle many resolvers.
+ */
+const resolvers = {
+  Query: {
+    echo: (ctx) => {
+      return ctx.arguments.msg;
+    },
+    me: async (ctx) => {
+      const params = {
+        UserPoolId: COGNITO_USERPOOL_ID,
+        Username: ctx.identity.claims[COGNITO_USERNAME_CLAIM_KEY]
+      };
+      try {
+        const response = await cognitoIdentityProviderClient.send(new AdminGetUserCommand(params));
+        return response.UserAttributes;
+      } catch (e) {
+        throw new Error(`NOT FOUND`);
+      }
+    }
+  }
+};
+
+// event
+// {
+//   "typeName": "Query", /* Filled dynamically based on @function usage location */
+//   "fieldName": "me", /* Filled dynamically based on @function usage location */
+//   "arguments": { /* GraphQL field arguments via $ctx.arguments */ },
+//   "identity": { /* AppSync identity object via $ctx.identity */ },
+//   "source": { /* The object returned by the parent resolver. E.G. if resolving field 'Post.comments', the source is the Post object. */ },
+//   "request": { /* AppSync request object. Contains things like headers. */ },
+//   "prev": { /* If using the built-in pipeline resolver support, this contains the object returned by the previous function. */ },
+// }
+exports.handler = async (event) => {
+  const typeHandler = resolvers[event.typeName];
+  if (typeHandler) {
+    const resolver = typeHandler[event.fieldName];
+    if (resolver) {
+      return await resolver(event);
+    }
+  }
+  throw new Error('Resolver not found.');
+};
+```
+</Block>
+
+</BlockSwitcher>
+
+この関数を Amplify を使用してデプロイされた AppSync API に接続できます。このスキーマを使用します。
+
+```graphql
+type Query {
+  posts: [Post] @function(name: "GraphQLResolverFunction")
+}
+type Post {
+  id: ID!
+  title: String!
+  comments: [Comment] @function(name: "GraphQLResolverFunction")
+}
+type Comment {
+  postId: ID!
+  content: String
+}
+```
+
+この単純な lambda 関数は、選択した言語でカスタムロジックを記述する方法を示しています。例を独自のデータとロジックで拡張してみてください。
+
+> 関数をデプロイする際に、関数が認証リソースにアクセスできることを確認してください。CLI の `amplify update function` コマンドを実行して、`AUTH_<RESOURCE_NAME>_USERPOOLID` という名前の環境変数を関数に自動的に提供し、対応する CRUD ポリシーを関数の実行ロールに関連付けることができます。
+
+関数をデプロイ後、いくつかのタイプを定義して @function ディレクティブを使用することにより、それを AppSync に接続できます。スキーマに以下を追加して、`Query.echo` および `Query.me` リゾルバーを新しい関数に接続します。
+
+```graphql
+type Query {
+  me: User @function(name: "ResolverFunction")
+  echo(msg: String): String @function(name: "ResolverFunction")
+}
+# These types derived from https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentityServiceProvider.html#adminGetUser-property
+type User {
+  Username: String!
+  UserAttributes: [Value]
+  UserCreateDate: String
+  UserLastModifiedDate: String
+  Enabled: Boolean
+  UserStatus: UserStatus
+  MFAOptions: [MFAOption]
+  PreferredMfaSetting: String
+  UserMFASettingList: String
+}
+type Value {
+  Name: String!
+  Value: String
+}
+type MFAOption {
+  DeliveryMedium: String
+  AttributeName: String
+}
+enum UserStatus {
+  UNCONFIRMED
+  CONFIRMED
+  ARCHIVED
+  COMPROMISED
+  UNKNOWN
+  RESET_REQUIRED
+  FORCE_CHANGE_PASSWORD
+}
+```
+
+次に `amplify push` を実行して、プロジェクトのデプロイが完了するまで待ちます。すべてが正常に機能していることを確認するには、`amplify api console` を実行して API の GraphiQL エディターを開きます。ユーザーをまだ持っていない場合は、Amazon Cognito User Pools コンソールを開いてユーザーを作成する必要があります。ユーザーを作成したら、AppSync コンソールのクエリページに戻り、「Login with User Pools」をクリックします。**ClientId** は **amplify-meta.json** の **AppClientIDWeb** キーの下にあります。その値をモーダルに貼り付けて、ユーザー名とパスワードでログインします。これでこのクエリを実行できます。
+
+```graphql
+query {
+  me {
+    Username
+    UserStatus
+    UserCreateDate
+    UserAttributes {
+      Name
+      Value
+    }
+    MFAOptions {
+      AttributeName
+      DeliveryMedium
+    }
+    Enabled
+    PreferredMfaSetting
+    UserMFASettingList
+    UserLastModifiedDate
+  }
+}
+```
+
+これにより、ユーザープールから直接現在のユーザーに関連するユーザー情報が返されます。
+
+### 関数イベントの構造
+
+`@function` ディレクティブを使用して接続された Lambda 関数を作成する場合、AWS Lambda イベントオブジェクトに対して以下の構造を期待できます。
+
+| キー | 説明 |
+| --- | --- |
+| typeName | リゾルバーされているフィールドの親オブジェクトタイプの名前。 |
+| fieldName | リゾルバーされているフィールドの名前。 |
+| arguments | リゾルバーされているフィールドに渡された引数を含むマップ。 |
+| identity | リクエストの識別情報を含むマップ。ネストされたキー 'claims' を含み、JWT クレームが存在する場合はそれを含みます。 |
+| source | クエリで入れ子になったフィールドをリゾルバーする場合、ソースは実行時に親の値を含みます。たとえば `Post.comments` をリゾルバーする場合、ソースは Post オブジェクトになります。 |
+| request | AppSync リクエストオブジェクト。ヘッダー情報を含みます。 |
+| prev | パイプラインリゾルバーを使用する場合、これには前の関数によって返されたオブジェクトが含まれます。監査のユースケースのために前の値を返すことができます。 |
+
+関数は選択した言語の lambda ハンドラーガイドラインに従う必要があります。[AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html) ドキュメントの選択した言語の開発者ガイドを参照してください。構造化されたタイプを使用することを選択した場合、タイプは上記の AWS Lambda イベントオブジェクトをシリアライズする必要があります。たとえば、Golang を使用する場合は、上記のフィールドを持つ構造体を定義する必要があります。
+
+### 異なるリージョンで関数を呼び出す
+
+デフォルトでは、関数は amplify プロジェクトと同じリージョンにあると想定されています。異なる（または静的な）リージョンの関数を呼び出す必要がある場合は、**region** 引数を指定できます。
+
+```graphql
+type Query {
+  echo(msg: String): String @function(name: "echofunction", region: "us-east-1")
+}
+```
+
+@function ディレクティブを使用して異なる AWS アカウントの関数を呼び出すことはサポートされていませんが、AWS AppSync によってサポートされています。
+
+### 関数のチェーン
+
+@function ディレクティブは AWS AppSync パイプラインリゾルバーをサポートしています。つまり、複数の関数をチェーンして、フィールドのリゾルバーが呼び出される場合に順番に呼び出されるようにできます。複数の AWS Lambda 関数を順番に呼び出すパイプラインリゾルバーを作成するには、フィールドで複数の `@function` ディレクティブを使用します。
+
+```graphql
+type Mutation {
+  doSomeWork(msg: String): String
+    @function(name: "worker-function")
+    @function(name: "audit-function")
+}
+```
+
+上記の例では、`Mutation.doSomeWork` フィールドを呼び出すミューテーションを実行する場合、**worker-function** が最初に呼び出され、次に **audit-function** が **event.prev.result** キーの下に **worker-function** の結果を含むイベントで呼び出されます。**worker-function** の結果をフィールドに対して返された結果として返す場合は、**audit-function** は **event.prev.result** を返す必要があります。内部的には、Amplify はドキュメント内の `@function` の一意のインスタンスごとに `AppSync::FunctionConfiguration` を作成し、特定のフィールド上の各 `@function` に対して関数へのポインターを含むパイプラインリゾルバーを作成します。
+
+#### 生成
+
+`@function` ディレクティブは、必要に応じてこれらのリソースを生成します。
+
+1. 関数を呼び出すアクセス許可を持つ AWS IAM ロール、および AWS AppSync との信頼ポリシー。
+2. 新しいロールと既存の関数を AppSync API に登録する AWS AppSync データソース。
+3. Lambda イベントを準備して新しいデータソースを呼び出す AWS AppSync パイプライン関数。
+4. GraphQL フィールドに接続して新しいパイプライン関数を呼び出す AWS AppSync リゾルバー。

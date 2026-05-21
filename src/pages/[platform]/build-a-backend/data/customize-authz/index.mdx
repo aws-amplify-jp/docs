@@ -1,0 +1,307 @@
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '認可ルールをカスタマイズする',
+  description: '認可ルールをカスタマイズして組み合わせる方法を学びます。',
+  route: "/[platform]/build-a-backend/data/customize-authz",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+
+`.authorization()` 修飾子を使用して、公開、サインイン済みユーザー、ユーザー別、ユーザーグループ別のデータアクセスに対する認可ルールを設定します。**認可ルールはデフォルト拒否の原則に基づいています**。つまり、認可ルールが明示的に設定されていない場合、それは拒否されます。
+
+```ts
+const schema = a.schema({
+  Post: a.model({
+    content: a.string()
+  }).authorization(allow => [
+    // Allow anyone auth'd with an API key to read everyone's posts.
+    allow.publicApiKey().to(['read']),
+    // Allow signed-in user to create, read, update,
+    // and delete their __OWN__ posts.
+    allow.owner(),
+  ])
+})
+```
+上の例では、すべてのユーザー（`public`）がすべての投稿を読むことができますが、認証済みユーザー（`owner`）は自分の投稿を作成、読取、更新、削除できます。Amplifyでは、許可された操作を制限したり、複数の認可ルールを組み合わせたり、きめ細かいフィールドレベルの認可を適用することもできます。
+
+## 利用可能な認可戦略
+
+以下のガイドを使用して、ユースケースに適した認可戦略を選択してください。
+
+| **推奨される用途** | **戦略** | **`authMode`** |
+|--------------------------|--------------|----------------|
+| [ユーザーやデバイスが匿名である公開データアクセス。AppSync APIキーを持つ誰もがアクセス権を付与されます。](/[platform]/build-a-backend/data/customize-authz/public-data-access) | `publicApiKey` | `apiKey` |
+| [本番環境の公開データアクセスに推奨。Amazon Cognitoアイデンティティプールの未認証アイデンティティ向けロールを使用して、未認証ユーザーやデバイスに権限を付与する公開データアクセス。]( /[platform]/build-a-backend/data/customize-authz/public-data-access/#add-public-authorization-rule-using-iam-authentication) | `guest` | `identityPool` |
+| [ユーザー別のデータアクセス。アクセスはレコードの「所有者」に制限されます。デフォルトでは `amplify/auth/resource.ts` Cognito ユーザープールを活用します。](/[platform]/build-a-backend/data/customize-authz/per-user-per-owner-data-access) | `owner`/`ownerDefinedIn`/`ownersDefinedIn` | `userPool` / `oidc` |
+| [サインイン済みユーザーのデータアクセス。所有者ベースのアクセスとは異なり、**すべての**サインイン済みユーザーがアクセス可能です。](/[platform]/build-a-backend/data/customize-authz/signed-in-user-data-access) | `authenticated` | `userPool` / `oidc` / `identityPool` |
+| [ユーザーグループ別のデータアクセス。特定またはダイナミックに設定されたユーザーグループがアクセスを持ちます。](/[platform]/build-a-backend/data/customize-authz/user-group-based-data-access) | `group`/`groupDefinedIn`/`groups`/`groupsDefinedIn` | `userPool` / `oidc` |
+| [サーバーレス関数内でカスタム認可ルールを定義します。](/[platform]/build-a-backend/data/customize-authz/custom-data-access-patterns) | `custom` | `lambda` |
+
+## 認可ルールの適用方法を理解する
+
+認可ルールは、スキーマ内のすべてのデータモデルに対してグローバルに、特定のデータモデルに、または特定のフィールドに適用できます。
+
+Amplifyは常に利用可能な最も具体的な認可ルールを使用します。たとえば、フィールドの認可ルールとそのフィールドが属するモデルの認可ルールがある場合、Amplifyはフィールドレベルの認可ルールに対して評価します。詳細は[フィールドレベルの認可ルール](#field-level-authorization-rules)を参照してください。
+
+複数の認可ルールが存在する場合、それらは論理的にOR演算されます。詳細は[複数の認可ルールを設定する](#configure-multiple-authorization-rules)を参照してください。`userPools` および `oidc` 認可モードの場合、ルールは `authenticated` > `group(s)` > `owner(s)DefinedIn` > `group(s)DefinedIn` の順序で評価されます。
+
+### グローバル認可ルール（開始時のみ）
+
+開始を支援するために、すべてのデータモデルに適用されるデータスキーマに認可ルールを定義できます。ただし、モデルレベルの認可ルールを持たないモデルに対してのみ適用されます。すべての本番環境でグローバル認可ルールを持つ代わりに、各モデルまたはフィールドに対して特定の認可ルールを作成することをお勧めします。
+
+以下のグローバル認可ルールは `allow.publicApiKey()` を使用します。この例は、誰もが作成、読取、更新、削除を行うことができ、すべてのデータモデルに適用されることを許可しています。
+
+```ts
+const schema = a.schema({
+  // Because no model-level authorization rule is present
+  // this model will use the global authorization rule.
+  Todo: a.model({
+    content: a.string()
+  }),
+
+  // Will use model-level authorization rule
+  Notes: a.model({
+    content: a.string()
+    // [Model-level authorization rule]
+  }).authorization(allow => [allow.publicApiKey().to(['read'])])
+
+// [Global authorization rule]
+}).authorization(allow => [
+  allow.publicApiKey()
+])
+```
+
+### モデルレベルの認可ルール
+
+認可ルールをモデルに追加して、認可ルールをそのモデルのすべてのフィールドに適用します。
+
+```ts
+const schema = a.schema({
+  Post: a.model({
+    content: a.string(),
+    createdBy: a.string()
+    // [Model-level authorization rule]
+    // All fields (content, createdBy) will be protected by
+    // this authorization rule
+  }).authorization(allow => [
+    allow.publicApiKey().to(['read']),
+    allow.owner(),
+  ])
+})
+```
+
+### フィールドレベルの認可ルール
+
+認可ルールがフィールドに追加されると、フィールドに適用された認可ルールが厳密に定義されます。フィールドレベルの認可ルールはモデルレベルの認可ルールを継承**しません**。つまり、指定されたフィールドレベルの認可ルールのみが適用されます。
+
+以下の例では：
+- 所有者は、自分が所有する従業員レコードの作成、読取、更新、削除が許可されます
+- サインイン済みユーザーは読取アクセスを持ち、`ssn` フィールドを除くデータを読むことができます
+- `ssn` フィールドのみが `owner` 認可を持ち、このフィールドレベルの認可ルールはモデルレベルの認可ルールが適用されないことを意味します
+
+```ts
+const schema = a.schema({
+  Employee: a.model({
+    name: a.string(),
+    email: a.string(),
+    // [Field-level authorization rule]
+    // This auth rule will be used for the "ssn" field
+    // All other fields will use the model-level auth rule
+    ssn: a.string().authorization(allow => [allow.owner()]),
+  })
+
+  // [Model-level authorization rule]
+  .authorization(allow => [
+    allow.authenticated().to(["read"]),
+    allow.owner()
+  ]),
+});
+```
+
+### 非モデル認可ルール
+
+**非モデル**タイプは、`a.model()` を使用せずにスキーマに追加されたすべてのタイプです。これらは `a.customType()`、`a.enum()`、`a.query()`、`a.mutation()`、または `a.subscription()` などの修飾子で構成されます。
+
+`allow.owner()`、`allow.ownerDefinedIn()`、`allow.groupDefinedIn()` などの動的認可ルールは**非モデル**タイプに対してはサポートされていません。
+
+```ts
+const schema = a.schema({
+  // ...
+  listCustomType: a
+    .query()
+    .returns(a.ref("CustomType").array())
+    .handler(
+      a.handler.custom({
+        entry: "./handler.js",
+      })
+    )
+    .authorization((allow) => [
+      // Static auth rules - Supported
+      allow.guest(),
+      allow.publicApiKey(),
+      allow.authenticated(),
+      allow.group("Admin"),
+      allow.groups(["Teacher", "Student"]),
+
+      // Dynamic auth rules - Not supported
+      allow.owner(),
+      allow.ownerDefinedIn("owner"),
+      allow.ownersDefinedIn("otherOwners"),
+      allow.groupDefinedIn("group"),
+      allow.groupsDefinedIn("otherGroups"),
+    ]),
+});
+```
+
+カスタムクエリおよびミューテーションで未サポートの認可ルールが定義されている場合、TS警告と検証チェックが実施され、サンドボックスのデプロイが失敗します。
+
+
+### 複数の認可ルールを設定する
+
+複数の認可ルールを組み合わせる場合、それらは「論理的にOR演算」されます。以下の例では：
+- すべてのユーザー（Amazon Cognitoアイデンティティプールの未認証ロールを使用）がすべての投稿を読むことが許可されます
+- 所有者は、自分の投稿を作成、読取、更新、削除することが許可されます
+
+```ts
+const schema = a.schema({
+  Post: a.model({
+    title: a.string(),
+    content: a.string()
+  }).authorization(allow => [
+    allow.guest().to(["read"]),
+    allow.owner()
+  ])
+})
+```
+
+クライアント側では、対応する認可モードで常に認証することを確認してください。
+
+<InlineFilter filters={["javascript", "angular", "react-native", "react", "nextjs", "vue", "android", "flutter"]}>
+
+```ts
+import { generateClient } from 'aws-amplify/data'
+import type { Schema } from '@/amplify/data/resource' // Path to your backend resource definition
+
+const client = generateClient<Schema>()
+
+// Creating a post is restricted to Cognito User Pools
+const { data: newPostResult , errors } = await client.models.Post.create({
+	query: queries.createPost,
+	variables: { input: { title: 'Hello World' } },
+	authMode: 'userPool',
+});
+
+// Listing posts is available to unauthenticated users (verified by Amazon Cognito identity pool's unauthenticated role)
+const { data: listPostsResult , errors } = await client.models.Post.list({
+	query: queries.listPosts,
+	authMode: 'identityPool',
+});
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+投稿の作成はCognito User Poolsに制限されています。
+
+```swift
+do {
+    let post = Post(title: "Hello World")
+    let createdTodo = try await Amplify.API.mutate(request: .create(
+        post,
+        authMode: .amazonCognitoUserPools)).get()
+} catch {
+    print("Failed to create post", error)
+}
+```
+
+投稿のリスト化は未認証ユーザーが利用可能です（Amazon Cognitoアイデンティティプールの未認証ロールで検証）
+
+```swift
+do {
+    let queriedPosts = try await Amplify.API.query(request: .list(
+        Post.self,
+        authMode: .awsIAM)).get()
+    print("Number of posts:", queriedPosts.count)
+} catch {
+    print("Failed to list posts", error)
+}
+```
+
+</InlineFilter>
+
+## IAM認可
+
+すべてのAmplify Gen 2プロジェクトはデータアクセスに対してIAM認可を有効にしています。これにより、Amplifyコンソールの[データマネージャー](/[platform]/build-a-backend/data/manage-with-amplify-console/)がAPIにアクセスできることが保証されます。また、独自のIAMポリシーを使用して、他の管理用またはマシン間アクセスを認可することもできます。AWS AppSyncの動作方法の詳細については、[AWS AppSync開発者ガイド](https://docs.aws.amazon.com/appsync/latest/devguide/security_iam_service-with-iam.html)を参照してください。
+
+## カスタムタイプの認可
+
+認可ルールはデータモデル（モデルレベルおよびフィールドレベル）およびカスタム操作（クエリ、ミューテーション、サブスクリプション）でのみサポートされています。カスタムタイプ（カスタム操作によって返されるカスタムタイプを含む）では完全にサポートされていません。たとえば、カスタムタイプを返すカスタムクエリを考えてみてください：
+
+```ts
+const schema = a.schema({
+  Counter: a.customType({
+    value: a.integer(),
+  })
+  .authorization(...), // <-- not supported
+  getCounter: a
+    .mutation()
+    .arguments({
+      id: a.string().required(),
+    })
+    .returns(a.ref("Counter"))
+    .handler(
+      a.handler.custom({
+        entry: "./getCounter.js",
+      })
+    )
+    .authorization((allow) => [allow.authenticated()]),
+});
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema: schema,
+  authorizationModes: {
+    defaultAuthorizationMode: "userPool",
+  },
+});
+```
+
+ご覧のように、カスタム `Counter` タイプは `.authorization()` 修飾子をサポートしていません。代わりに、背景で、Amplifyが認証済みユーザーが `Counter` にアクセスできるようにするために、適切な認可ルールを追加します。つまり、すべてのサインイン済みユーザーがカスタム操作とカスタムタイプのすべてのフィールドにアクセスできます。
+
+<Callout info>
+
+**注**：`defaultAuthorizationMode` が `iam` でない場合、IAM認可は現在、カスタムタイプを返すカスタム操作に対してサポートされていません。詳細と推奨される回避策については、[GitHubの問題#2929](https://github.com/aws-amplify/amplify-category-api/issues/2929)を参照してください。
+
+</Callout>
+
+## 特定の認可戦略の詳細を学ぶ
+
+<Overview childPageNodes={props.childPageNodes} />

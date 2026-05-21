@@ -1,0 +1,125 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'StoragePathの使用',
+  description: "Amplify Storage APIで使用するStoragePathの構築方法について詳しく知る",
+  platforms: [
+    'swift',
+    'android',
+    'flutter'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["android", "swift", "flutter"]}>
+`StoragePath` を使用して、S3バケット内の任意のパスにアクセス、アップロード、またはダウンロードできます。Amplify Gen 1 CLIは自動的に以下のディレクトリを作成します:
+- `public/`: アプリケーションのすべてのユーザーがアクセス可能
+- `protected/<identityId>/`: すべてのユーザーが読み取り可能（ファイルをアップロードしたユーザーのidentityIDを指定する必要があります）。書き込みはユーザーのみが可能
+- `private/<identityId>/`: 作成したユーザーのみが読み取りと書き込みが可能
+
+Amplify Gen2またはAmplifyで作成されていないS3バケットを使用している場合は、StoragePathを使用してバケット内の任意のディレクトリにアクセス、アップロード、またはダウンロードできます。
+
+`StoragePath` を文字列から直接作成するか、ユーザーのCognito IdentityIdでパスを構築することで、S3リソースへのパスを指定できます。
+
+`StoragePath` は以下の条件を満たす必要があります:
+
+1. '/'（先頭スラッシュ）で始まらない
+2. 空でない
+
+## 文字列からStoragePathを作成する
+文字列からStoragePathを構築するとき、指定された文字列がパスになります。
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+```swift
+// "public/exampleFile.txt" に解決されます
+StoragePath.fromString("public/exampleFile.txt")
+```
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+  <BlockSwitcher>
+    <Block name="Java">
+    ```java
+    // "public/exampleFile.txt" に解決されます
+    StoragePath.fromString("public/exampleFile.txt") 
+    ```
+    </Block>
+
+    <Block name="Kotlin">
+      ```kotlin
+      // "public/exampleFile.txt" に解決されます
+      StoragePath.fromString("public/exampleFile.txt") 
+      ```
+    </Block>
+  </BlockSwitcher>
+</InlineFilter>
+
+<InlineFilter filters={["flutter"]}>
+```dart
+// "public/exampleFile.txt" に解決されます
+const StoragePath.fromString('public/exampleFile.txt');
+```
+</InlineFilter>
+
+<InlineFilter filters={["android", "swift", "flutter"]}>
+
+## ユーザーのIdentityIdを含むStoragePathを作成する
+Amplify AuthユーザーのIdentityIdを含むStoragePathを構築したい場合があります。Storage APIが呼び出されるときに、ユーザーのIdentityIdを注入するヘルパー関数を作成しました。これは、AuthプラグインからのIdentityId取得が非同期ではないためです。
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+```swift
+// ユーザーのidentityIdが "123" の場合、
+// StoragePathは "private/123/exampleFile.txt" に解決されます
+StoragePath.fromIdentityID { identityId in
+  return "private/\(identityId)/exampleFile.txt"
+}
+```
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+  <BlockSwitcher>
+    <Block name="Java">
+    ```java
+    // ユーザーのidentityIdが "123" の場合、
+    // StoragePathは "private/123/exampleFile.txt" に解決されます
+    StoragePath.fromIdentityId(identityId -> 
+      "private/" + identityId + "/exampleFile.txt"
+    );
+    ```
+    </Block>
+
+    <Block name="Kotlin">
+    ```kotlin
+    // ユーザーのidentityIdが "123" の場合、
+    // StoragePathは "private/123/exampleFile.txt" に解決されます
+    StoragePath.fromIdentityId { identityId -> 
+      "private/${identityId}/exampleFile.txt" 
+    }
+    ```
+    </Block>
+  </BlockSwitcher>
+</InlineFilter>
+
+<InlineFilter filters={["flutter"]}>
+```dart
+// ユーザーのidentityIdが "123" の場合、
+// StoragePathは "private/123/exampleFile.txt" に解決されます
+StoragePath.fromIdentityId(
+  (String identityId) => 'private/$identityId/exampleFile.txt',
+};
+```
+</InlineFilter>

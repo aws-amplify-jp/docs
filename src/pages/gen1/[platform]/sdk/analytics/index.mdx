@@ -1,0 +1,29 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+
+export const meta = {
+  title: 'アナリティクス',
+  description: 'ユーザーセッション、カスタムユーザー属性、アプリ内メトリクスを追跡するドロップイン分析で情報に基づいた決定を下します',
+  platforms: [
+    'android',
+    'swift'
+  ],
+  route: '/gen1/[platform]/sdk/analytics'
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      platform: context.params.platform,
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+<Overview childPageNodes={props.childPageNodes} />

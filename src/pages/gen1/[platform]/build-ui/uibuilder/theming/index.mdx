@@ -1,0 +1,133 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'テーマ設定',
+  description: 'Amplify Theme Editor Figmaプラグインを使用して、Amplifyで生成されたUIコンポーネントをブランドに合わせてカスタマイズします',
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+[AWS Amplify UI Builderプラグイン](https://www.figma.com/community/plugin/1040722185526429545)を使用して、FigmaファイルのUIプリミティブをカスタマイズして、ブランドのルックアンドフィールに合わせることができます。Amplify Studioを使用すると、[Amplify UIテーマ](https://ui.docs.amplify.aws/react/theming)定義を視覚的に設定できます。
+
+プラグインはテーマをFigmaファイル自体に直接保存するため、Studio アプリをFigmaと同期すると、更新されたテーマが自動的に持ち込まれます。
+
+## AWS Amplify UI Builder（Figmaプラグイン）をインストール
+
+UI Builderプラグインをインストールするには：
+1. [UI Builderプラグインページ](https://www.figma.com/community/plugin/1040722185526429545)に移動します
+2. 右上隅の「Install」をクリックします
+3. Figmaファイルに移動します
+4. キャンバスの空いている領域を右クリックして、**Plugins** > **AWS Amplify UI Builder** を選択するか、`command/control + /` を押してFigmaのクイックアクションメニューを使用し、「AWS Amplify」と入力します
+
+## 色
+
+### 1. ブランドカラーを変更する
+
+独自のブランドカラーを選択するか、プリセットを選択します。ブランドカラーはほぼすべてのUIプリミティブに影響し、コンポーネントのルックアンドフィールをブランドに合わせて素早く変更できます。
+
+![ブランドカラーを変更](/images/studio/theming/pick-brand-color.gif)
+
+Amplify Theme Editorは自動的にカラーレベル10～100をカスケードさせます。自動生成されたレベルをさらに変更するには、レベルを選択してHEXまたはHSL値を正確な仕様に合わせて調整します。
+
+### 2. Figmaでブランドカラーを使用する
+
+Amplify Theme Editorにリストされているすべての色は、Figmaカラースタイルとしても利用可能です。
+
+![Figmaでブランドカラーを使用](/images/studio/theming/color-styles.gif)
+
+任意のレイヤーを選択して、塗りつぶしをブランドカラーに割り当てることができます。プラグインでブランドカラーを更新すると、カラースタイルが更新されます。
+
+![ブランドカラーレベルの自動カスケード](/images/studio/theming/brand-color-cascade.gif)
+
+<Callout>
+  Figmaプラグインはテーマ内の色と一致するカラースタイルを作成します。ただし、カラースタイルに直接加えた変更はテーマに影響しません。
+</Callout>
+
+### 3. UIプリミティブの色を変更する
+
+アラートなどの個々のプリミティブには、ルックアンドフィールを微調整するための色バインディングもあります。これは、「success」、「warning」、「error」、「info」などのステート用に色を定義し始める際に特に便利です。
+
+UIプリミティブの色を変更するには：
+1. Amplify Theme Editorを開きます
+2. 「Component」タブをクリックします
+3. 編集する値を選択します。例：`components.badge.error.backgroundColor`。また、上部の検索バーを使用してコンポーネントトークンのリストをフィルタリングすることもできます
+4. 新しい色を選択します
+5. 「Update theme」をクリックします
+
+![UIプリミティブの色を変更](/images/studio/theming/component-color.gif)
+
+テーマの色は、*他の*色への参照または正確なHex、HSL、またはRGB値のいずれかです。
+
+![HSLを使用してUIプリミティブの色を変更](/images/studio/theming/component-color-hsl.gif)
+
+## スペース
+
+各Amplify UIテーマには、「small」、「large」、「xl」などのスペーシング定義が含まれています。Amplify Theme Editorの「Space」タブ内にスペーシングスケールを定義できます。
+
+![Figmaでスペース定義を使用](/images/studio/theming/space.gif)
+
+スペーストークンを独自のコンポーネントに適用するには：
+1. Amplify Theme Editorを開きます
+2. 「Apply」タブをクリックします
+3. フレームを選択します
+4. `{space.<SPACING_TOKEN>}` を入力してそれを参照として構成します。例：`{space.small}`
+5. 「Update theme」をクリックします
+
+![Figmaでテーマ値を適用](/images/studio/theming/apply.gif)
+
+
+## フォントサイズ
+
+テーマ内のフォントサイズを更新するには：
+1. Amplify Theme Editorを開きます
+2. 「Font sizes」タブをクリックします
+3. フォントサイズのいずれかをクリックして編集します
+
+![Figmaでフォントサイズを使用](/images/studio/theming/font-size.gif)
+
+「rem」値または「px」値を入力できます。フォントサイズを更新すると、プリミティブ、テキストスタイル、およびそのフォントサイズを使用するFigmaレイヤーが更新されます。
+
+## ボーダー
+
+色に加えてボーダー幅と半径も編集できます。
+
+テーマ内のフォントサイズを更新するには：
+1. Amplify Theme Editorを開きます
+2. 「Borders」タブをクリックします
+3. ボーダー幅または半径のいずれかをクリックして編集します
+
+これらのボーダー値を独自のコンポーネントに適用するには、「Apply」タブを選択してフレームコンポーネントを選択します。コアボーダー幅と半径への後続の変更により、Figmaドキュメント内の使用法が更新されます。
+
+![Figmaでボーダーを使用](/images/studio/theming/border.gif)
+
+## ブレークポイント
+
+Amplify Theme Editorを使用すると、コンポーネントバリアントにブレークポイントを適用して、レスポンシブにすることができます。ブレークポイントのピクセル値を変更するには：
+1. Amplify Theme Editorを開きます
+2. <strong>Breakpoints</strong>タブを選択します
+3. ブレークポイントサイズを選択します
+4. そのブレークポイントの好適なピクセル値を入力します
+
+![Amplify Theme Editor内のBreakpointsタブ。smallブレークポイントが選択され、480ピクセルに設定されています](/images/studio/responsive/breakpoints.png)
+
+
+グレーバーはアウトラインボックス内で、標準的な1920pxワイドディスプレイと比較したピクセル値を示します。
+
+ブレークポイントの使用方法の詳細については、[レスポンシブコンポーネントのドキュメント](/gen1/[platform]/build-ui/uibuilder/responsive/)を参照してください。

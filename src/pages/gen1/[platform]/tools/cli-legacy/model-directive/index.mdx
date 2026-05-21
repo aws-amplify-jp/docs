@@ -1,0 +1,299 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'モデル型を定義する',
+  description: 'スキーマを構成するさまざまな型を指定します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert
+  isLegacy
+  url={'/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/'}
+/>
+
+## @model
+
+`@model` で注釈が付けられたオブジェクト型は、生成されたAPIのトップレベルエンティティです。`@model` で注釈が付けられたオブジェクトはAmazon DynamoDBに保存され、`@auth` を介して保護したり、`@connection` を介して他のオブジェクトに関連付けたり、`@searchable` を介してAmazon OpenSearchにストリーミングしたりすることができます。また、`@versioned` ディレクティブを適用して、バージョンフィールドと競合検出をモデル型に即座に追加することもできます。
+
+### 定義
+
+以下のSDLは、Amazon DynamoDBに支援されたAPIのトップレベルオブジェクト型を簡単に定義できる `@model` ディレクティブを定義しています。
+
+```graphql
+directive @model(
+  queries: ModelQueryMap
+  mutations: ModelMutationMap
+  subscriptions: ModelSubscriptionMap
+  timestamps: TimestampConfiguration
+) on OBJECT
+input ModelMutationMap {
+  create: String
+  update: String
+  delete: String
+}
+input ModelQueryMap {
+  get: String
+  list: String
+}
+input ModelSubscriptionMap {
+  onCreate: [String]
+  onUpdate: [String]
+  onDelete: [String]
+  level: ModelSubscriptionLevel
+}
+enum ModelSubscriptionLevel {
+  off
+  public
+  on
+}
+input TimestampConfiguration {
+  createdAt: String
+  updatedAt: String
+}
+```
+
+### 使用方法
+
+GraphQLオブジェクト型を定義し、`@model` ディレクティブで注釈を付けて、そのタイプのオブジェクトをDynamoDBに保存し、CRUDL クエリとミューテーションを自動的に設定します。
+
+```graphql
+type Post @model {
+  id: ID! # id: ID! is a required attribute.
+  title: String!
+  tags: [String!]!
+}
+```
+
+生成されたクエリ、ミューテーション、サブスクリプションの名前をオーバーライドするか、操作を完全に削除することもできます。
+
+```graphql
+type Post
+  @model(queries: { get: "post" }, mutations: null, subscriptions: null) {
+  id: ID!
+  title: String!
+  tags: [String!]!
+}
+```
+
+これにより、単一のクエリフィールド `post(id: ID!): Post` が作成・設定され、ミューテーションフィールドは生成されません。
+
+Model ディレクティブは、各エンティティに createdAt および updatedAt タイムスタンプを自動的に追加します。タイムスタンプフィールド名は、`timestamps` 属性をディレクティブに渡すことで変更できます。
+
+```graphql
+type Post
+  @model(timestamps: { createdAt: "createdOn", updatedAt: "updatedOn" }) {
+  id: ID!
+  title: String!
+  tags: [String!]!
+}
+```
+
+上記のスキーマは、以下に示すように `createdOn` および `updatedOn` フィールドを持つPost を生成します。
+
+```graphql
+type Post {
+  id: ID!
+  title: String!
+  tags: [String!]!
+  createdOn: AWSDateTime!
+  updatedOn: AWSDateTime!
+}
+```
+
+自動的に追加される `createdAt` および `updatedAt` フィールドは、作成または更新ミューテーションで設定することはできません。これらのフィールドをミューテーションの一部として制御する必要がある場合、それらは入力スキーマに含める必要があり、型として `AWSDateTime` を持つ必要があります。
+
+```graphql
+type Post @model {
+  id: ID!
+  title: String!
+  tags: [String!]!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+```
+
+### 生成
+
+単一の `@model` ディレクティブは以下のAWSリソースを設定します。
+
+- デフォルトでPAY_PER_REQUEST課金モードが有効になっているAmazon DynamoDBテーブル。
+- 上記のテーブルにアクセスするよう設定されたAWS AppSync データソース。
+- AWS AppSyncがあなたの代わりに上記のテーブルを呼び出すことができるようにするデータソースに接続されたAWS IAMロール。
+- 最大8つのリゾルバー（作成、更新、削除、取得、リスト、onCreate、onUpdate、onDelete）ですが、これは `@model` ディレクティブの `queries`、`mutations`、および `subscriptions` 引数を介して設定できます。
+- 作成、更新、削除ミューテーション用の入力オブジェクト。
+- リストクエリおよび接続フィールド内のオブジェクトをフィルタリングできるフィルタ入力オブジェクト。
+- リストクエリの場合、デフォルトで返されるオブジェクト数は100です。**limit** 引数を設定することで、この動作をオーバーライドできます。
+
+この入力スキーマドキュメント
+
+```graphql
+type Post @model {
+  id: ID!
+  title: String
+  metadata: MetaData
+}
+type MetaData {
+  category: Category
+}
+enum Category {
+  comedy
+  news
+}
+```
+
+は以下のスキーマパーツを生成します。
+
+```graphql
+type Post {
+  id: ID!
+  title: String!
+  metadata: MetaData
+  createdAt: AWSDatetime
+  updatedAt: AWSDateTime
+}
+
+type MetaData {
+  category: Category
+}
+
+enum Category {
+  comedy
+  news
+}
+
+input MetaDataInput {
+  category: Category
+}
+
+enum ModelSortDirection {
+  ASC
+  DESC
+}
+
+type ModelPostConnection {
+  items: [Post]
+  nextToken: String
+}
+
+input ModelStringFilterInput {
+  ne: String
+  eq: String
+  le: String
+  lt: String
+  ge: String
+  gt: String
+  contains: String
+  notContains: String
+  between: [String]
+  beginsWith: String
+}
+
+input ModelIDFilterInput {
+  ne: ID
+  eq: ID
+  le: ID
+  lt: ID
+  ge: ID
+  gt: ID
+  contains: ID
+  notContains: ID
+  between: [ID]
+  beginsWith: ID
+}
+
+input ModelIntFilterInput {
+  ne: Int
+  eq: Int
+  le: Int
+  lt: Int
+  ge: Int
+  gt: Int
+  contains: Int
+  notContains: Int
+  between: [Int]
+}
+
+input ModelFloatFilterInput {
+  ne: Float
+  eq: Float
+  le: Float
+  lt: Float
+  ge: Float
+  gt: Float
+  contains: Float
+  notContains: Float
+  between: [Float]
+}
+
+input ModelBooleanFilterInput {
+  ne: Boolean
+  eq: Boolean
+}
+
+input ModelPostFilterInput {
+  id: ModelIDFilterInput
+  title: ModelStringFilterInput
+  and: [ModelPostFilterInput]
+  or: [ModelPostFilterInput]
+  not: ModelPostFilterInput
+}
+
+type Query {
+  getPost(id: ID!): Post
+  listPosts(
+    filter: ModelPostFilterInput
+    limit: Int
+    nextToken: String
+  ): ModelPostConnection
+}
+
+input CreatePostInput {
+  title: String!
+  metadata: MetaDataInput
+}
+
+input UpdatePostInput {
+  id: ID!
+  title: String
+  metadata: MetaDataInput
+}
+
+input DeletePostInput {
+  id: ID
+}
+
+type Mutation {
+  createPost(input: CreatePostInput!): Post
+  updatePost(input: UpdatePostInput!): Post
+  deletePost(input: DeletePostInput!): Post
+}
+
+type Subscription {
+  onCreatePost: Post @aws_subscribe(mutations: ["createPost"])
+  onUpdatePost: Post @aws_subscribe(mutations: ["updatePost"])
+  onDeletePost: Post @aws_subscribe(mutations: ["deletePost"])
+}
+```

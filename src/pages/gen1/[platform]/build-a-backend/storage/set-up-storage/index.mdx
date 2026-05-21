@@ -1,0 +1,132 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify Storage のセットアップ',
+  description: 'Amplify Storage カテゴリは、アプリのユーザーコンテンツを公開、保護、またはプライベートストレージバケットで管理するためのシンプルなメカニズムを提供します。Amplify AWS S3 Storage プラグインは Amazon S3 を活用しています。',
+  platforms: [
+    'javascript',
+    'flutter',
+    'swift',
+    'android',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import common_getting_started from '/src/fragments/lib/storage/native_common/getting-started/common.mdx';
+
+<Fragments
+  fragments={{
+    android: common_getting_started,
+    flutter: common_getting_started,
+    swift: common_getting_started
+  }}
+/>
+
+<InlineFilter filters={['javascript', 'react-native', 'angular', 'nextjs', 'react', 'vue']}>
+
+## 前提条件
+
+以下の手順が完了していることを確認してください:
+
+- [CLI とプロジェクトセットアップの手順を完了している](/gen1/[platform]/start/project-setup/prerequisites/)
+
+## バックエンドストレージをプロビジョニングする
+
+AWS Amplify Storage モジュールは、アプリのユーザーコンテンツを公開、保護、またはプライベートストレージバケットで管理するためのシンプルなメカニズムを提供します。Storage カテゴリには Amazon S3 の組み込みサポートが付属しています。
+
+バックエンドでストレージリソースのプロビジョニングを開始するには、プロジェクトディレクトリに移動して **以下のコマンドを実行** してください:
+
+```bash
+amplify add storage
+```
+
+プロンプトで以下のように入力してください:
+
+```console
+? Please select from one of the below mentioned services:
+    `Content (Images, audio, video, etc.)`
+? You need to add auth (Amazon Cognito) to your project in order to add storage for user files. Do you want to add auth now?
+    `Yes`
+? Do you want to use the default authentication and security configuration?
+    `Default configuration`
+? How do you want users to be able to sign in?
+    `Username`
+? Do you want to configure advanced settings?
+    `No, I am done.`
+? Please provide a friendly name for your resource that will be used to label this category in the project:
+    `S3friendlyName`
+? Please provide bucket name:
+    `storagebucketname`
+? Who should have access:
+    `Auth and guest users`
+? What kind of access do you want for Authenticated users?
+    `create/update, read, delete`
+? What kind of access do you want for Guest users?
+    `create/update, read, delete`
+? Do you want to add a Lambda Trigger for your S3 Bucket?
+    `No`
+```
+
+変更をクラウドにプッシュするには、**以下のコマンドを実行** してください:
+
+```bash
+amplify push
+```
+
+バックエンドが正常に更新されると、新しい設定ファイル `amplifyconfiguration.json` がソースディレクトリ (例: '/src') にコピーされます。
+
+### アプリケーションを設定する
+
+`yarn` または `npm` で Amplify をアプリに追加します:
+
+```bash
+npm install aws-amplify
+```
+
+import js0 from '/src/fragments/lib/common/js/import_configuration.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>
+
+```typescript
+import { Amplify } from 'aws-amplify';
+import amplifyconfig from './amplifyconfiguration.json';
+
+Amplify.configure(amplifyconfig);
+```
+
+<Callout warning="true">
+
+`Amplify.configure` をアプリケーションのライフサイクルの早い段階で呼び出すことを確認してください。`Amplify.configure` が他の Amplify JavaScript API の前に呼び出されていない場合、設定の欠落または `NoCredentials` エラーがスローされます。この問題の考えられる原因については、[ライブラリが設定されていないトラブルシューティングガイド](/gen1/[platform]/build-a-backend/troubleshooting/library-not-configured/)を確認してください。
+
+</Callout>
+
+## Amplify CLI を使用したモックとローカルテスト
+
+Amplify CLI は Amazon S3 でアプリケーションをテストするためのローカルモックサーバーの実行をサポートしています。詳細については [CLI ツールチェーンドキュメント](/gen1/[platform]/tools/cli/usage/mock/)を参照してください。
+
+</InlineFilter>

@@ -1,0 +1,834 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'MFA設定を管理する',
+  description: 'Amplifyで多要素認証を有効にする方法を学びます。',
+  platforms: [
+    'javascript',
+    'flutter',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+
+<InlineFilter filters={["javascript",  "react-native", "angular", "nextjs", "react", "vue"]}>
+
+Auth カテゴリは、ユーザーサインインフローの多要素認証 (MFA) をサポートしています。MFA は、アカウントへのアクセスを試みるユーザーが本人であることを確認するために使用される追加のセキュリティレイヤーです。ユーザーは本人確認のための追加情報を提供する必要があります。Amplify Auth は、時間ベースのワンタイムパスワード (TOTP) およびテキストメッセージ (SMS) による MFA 方法をサポートしています。このガイドでは、TOTP と SMS を使用した MFA の設定方法と、これらの方法のトレードオフを確認して、アプリケーションに適したセットアップを選択するのに役立てます。また、MFA がデバイスを記憶し、ユーザーのサインインの摩擦を減らすように設定する方法も確認します。
+
+開始する前に、以下が必要です:
+
+- Amplify ライブラリがインストールおよび構成されていること
+- _オプション_ SMS を使用する場合は、[SNS/Pinpoint](https://docs.aws.amazon.com/sns/latest/dg/channels-sms-originating-identities.html) でプロビジョニングされた電話番号が必要です
+
+## 多要素認証を有効にする
+
+以下は、Amplify CLI を使用して SMS または TOTP で MFA を設定するために使用できる手順です。Amplify ライブラリは、Amazon Cognito リソースを別途セットアップした場合でも MFA と連携するように設計されています。
+
+<Callout>
+
+Amazon Cognito コンソールを使用して MFA を有効にすることもできます。まず Cognito ユーザープールの MFA を有効にしてから、アプリの MFA をセットアップします。詳細は、[_Amazon Cognito デベロッパーガイド_](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-mfa.html)を参照して Amazon Cognito で MFA をセットアップしてください。同じ Cognito コンソールを使用して MFA を有効または無効にできます。
+
+</Callout>
+
+### MFA オプションを理解する
+
+MFA を有効にする場合、2 つの重要な決定を行う必要があります:
+
+- **MFA 強制:** このセットアップの一部として、MFA の強制方法を決定します。MFA ログインを「ON」に設定して MFA を必須にする場合、すべてのユーザーはサインインするために MFA を完了する必要があります。「Optional」のままにした場合、ユーザーはアカウントの MFA を有効にするかどうかを選択できます。
+- **MFA 方法:** また、使用する MFA 方法 (TOTP (時間ベースのワンタイムパスワード)、SMS (テキストメッセージ)、またはその両方) を指定します。TOTP ベースの MFA の方がより安全であり、SMS をアカウント復旧用に予約できるため、TOTP ベースの MFA の使用をお勧めします。
+
+<Accordion title='TOTP と SMS MFA 方法を比較する' headingLevel='4' eyebrow='詳細を学ぶ'>
+
+|  | 時間ベースのワンタイムパスワード (TOTP) | ショートメッセージサービス (SMS) |
+| :-- | :-- | :-- |
+| **説明** | 認証器アプリを使用して、共有シークレットキーと現在時刻を含む短期間有効な数字コードを生成します。 | テキストメッセージ経由で共有されるワンタイムコードを生成し、他の認証情報と共に入力してユーザー認証を行います。 |
+| **メリット** | コードはローカルで生成され、ネットワーク経由で送信されないため SMS よりも安全です。また、TOTP アプリがインストールされていればセルサービスがなくても動作します。 | ユーザーが提供する電話番号で簡単にセットアップでき、ユーザーにとって一般的な認証方法として馴染みがあります。 |
+| **制限** | コードを生成するためのアプリが必要で、アカウントの初期セットアップに追加の手間がかかります。また、コードの有効期限が短く、生成後すぐに使用する必要があります。 | SMS はセルサービスが必要で、ユーザーに追加の費用がかかる可能性があります。稀ですが、SMS メッセージが傍受される可能性もあります。 |
+
+</Accordion>
+
+### Amplify CLI で MFA を有効にする
+
+<Callout warning>
+
+**注:** Amplify CLI を使用して作成したユーザープール (via `amplify add auth` を使用) で MFA を有効にしなかった場合、更新時 (via `amplify update auth`) に MFA の「OPTIONAL」構成のみを選択できます。同様に、ユーザープールで MFA が有効になると、(via `amplify update auth`) で無効にすることはできません。
+
+</Callout>
+
+<BlockSwitcher>
+<Block name="New Project">
+
+`amplify add auth` を実行して新しい Cognito Auth リソースを作成し、MFA をフローに統合する方法に応じて以下のプロンプトに従います。
+
+MFA を「ON」にすると、すべてのユーザーに必須になり、「Optional」にするとユーザーごとに有効にすることができます。
+
+#### SMS MFA
+
+<Callout>
+
+**注:** Cognito ユーザープールの SMS MFA 構成を作成または更新する場合、Cognito サービスはテスト SMS メッセージを内部番号に送信して、構成を検証します。これらのテストメッセージは Amazon SNS によって請求されます。
+
+Amazon SNS の価格については、[世界中の SMS 価格](https://aws.amazon.com/sns/sms-pricing/)を参照してください。
+
+</Callout>
+
+```
+$ amplify add auth
+
+? Do you want to use the default authentication and security configuration?
+  Manual configuration
+
+# Answer as appropriate
+
+? Multifactor authentication (MFA) user login options:
+  ON (Required for all logins, can not be enabled later)
+? For user login, select the MFA types:
+  SMS Text Message
+? Please specify an SMS authentication message:
+  Your authentication code is {####}
+
+# Answer as appropriate
+
+Some next steps:
+"amplify push" will build all your local backend resources and provision it in the cloud
+"amplify publish" will build all your local backend and frontend resources (if you have hosting category added) and provision it in the cloud
+```
+
+#### TOTP MFA
+
+```
+$ amplify add auth
+
+? Do you want to use the default authentication and security configuration?
+  Manual configuration
+
+# Answer as appropriate
+
+? Multifactor authentication (MFA) user login options:
+  ON (Required for all logins, can not be enabled later)
+? For user login, select the MFA types:
+  Time-Based One-Time Password (TOTP)
+
+# Answer as appropriate
+
+Some next steps:
+"amplify push" will build all your local backend resources and provision it in the cloud
+"amplify publish" will build all your local backend and frontend resources (if you have hosting category added) and provision it in the cloud
+```
+
+</Block>
+<Block name="Existing Project">
+
+`amplify update auth` を実行し、以下のガイダンスに従ってプロンプトに従います。
+
+以下の手順では、MFA をユーザーの「Optional」として有効にする方法を示しています。このモード、MFA はユーザーごとに有効にする必要があります (Admin SDK 経由 (サインアッププロセスの一部として Lambda トリガー経由など) または Cognito コンソールで手動)。
+
+ユーザーに対して MFA を必須にしたい場合は、`amplify remove auth` を実行して認証リソースを削除してから、このページの**新規プロジェクト**フローに従う必要があります。
+
+#### SMS MFA
+
+<Callout>
+
+**注:** Cognito ユーザープールの SMS MFA 構成を作成または更新する場合、Cognito サービスはテスト SMS メッセージを内部番号に送信して、構成を検証します。これらのテストメッセージは Amazon SNS によって請求されます。
+
+Amazon SNS の価格については、[世界中の SMS 価格](https://aws.amazon.com/sns/sms-pricing/)を参照してください。
+
+</Callout>
+
+```
+$ amplify update auth
+
+? What do you want to do?
+  Walkthrough all the auth configurations
+
+# Answer as appropriate
+
+? Multifactor authentication (MFA) user login options:
+  OPTIONAL (Individual users can use MFA)
+? For user login, select the MFA types:
+  SMS Text Message
+? Please specify an SMS authentication message:
+  Your authentication code is {####}
+
+# Answer as appropriate
+
+Some next steps:
+"amplify push" will build all your local backend resources and provision it in the cloud
+"amplify publish" will build all your local backend and frontend resources (if you have hosting category added) and provision it in the cloud
+```
+
+#### TOTP MFA
+
+```
+$ amplify update auth
+
+? What do you want to do?
+  Walkthrough all the auth configurations
+
+# Answer as appropriate
+
+? Multifactor authentication (MFA) user login options:
+  OPTIONAL (Individual users can use MFA)
+? For user login, select the MFA types:
+  Time-Based One-Time Password (TOTP)
+
+# Answer as appropriate
+
+Some next steps:
+"amplify push" will build all your local backend resources and provision it in the cloud
+"amplify publish" will build all your local backend and frontend resources (if you have hosting category added) and provision it in the cloud
+```
+
+</Block>
+</BlockSwitcher>
+
+MFA を有効にした後、ユーザーがサインアップするときに MFA セットアップを含める必要があります。これは SMS、TOTP、またはその両方を有効にしているかどうかによって異なります。
+
+### SMS で MFA をセットアップする
+
+上記のように MFA で SMS を 2 番目の認証層として設定した後、ユーザーはユーザー名とパスワードでサインインした後、サインインを完了するためにテキストメッセージで認証コードを取得します。
+
+既存のものがない場合は、Amazon Simple Notification Service (Amazon SNS) で使用する IAM ロールを構成してから、SMS メッセージを管理する必要があります。次に、Amazon Cognito コンソールでユーザープールの「Messaging」タブの下にこのロールを追加します。詳細については、[_Amazon Cognito SMS テキストメッセージ MFA_](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-mfa-sms-text-message.html) ドキュメントを参照してください。
+
+#### サインアップ時に SMS MFA を有効にする
+
+サインアップ時にユーザーの SMS MFA を有効にするには、`phone_number` をユーザー属性として渡す必要があります。ただし、Cognito リソースのプライマリサインインメカニズムが `phone_number` である場合 (`username` を有効にしない)、属性として渡す必要はありません。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```typescript
+import { Auth } from 'aws-amplify';
+
+async function signIn() {
+  try {
+    const user = await Auth.signUp({
+      username,
+      password,
+      attributes: {
+        phone_number: '+15558675309' // Replace with a valid phone number
+      }
+    });
+  } catch (err) {
+    console.log(error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { Auth } from 'aws-amplify';
+
+async function signIn() {
+  try {
+    const user = await Auth.signUp({
+      username,
+      password,
+      attributes: {
+        phone_number: '+15558675309' // Replace with a valid phone number
+      }
+    });
+  } catch (err) {
+    console.log(error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+デフォルトでは、`confirmSignUp` API を使用してサインアップ後にユーザーアカウントを確認する必要があります。これは、Amazon Cognito 構成に応じて、ユーザーの電話番号またはメールアドレスにワンタイムパスワードを送信します。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```typescript
+import { Auth } from 'aws-amplify';
+
+async function confirmSignUp() {
+  try {
+    await Auth.confirmSignUp(username, code);
+  } catch (error) {
+    console.log('error confirming sign up', error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```javascript
+import { Auth } from 'aws-amplify';
+
+async function confirmSignUp() {
+  try {
+    await Auth.confirmSignUp(username, code);
+  } catch (error) {
+    console.log('error confirming sign up', error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+#### サインイン時に SMS MFA を管理する
+
+ユーザーがサインインした後、アカウントで MFA が有効になっている場合、チャレンジが返されます。このチャレンジは `confirmSignIn` API を呼び出す必要があり、ユーザーは電話番号に送信された確認コードを提供します。Amplify は、Cognito で SMS コードが有効であることを確認し、アクセストークン、ID トークン、リフレッシュトークンを返してサインインプロセスを完了します。これらはすべて Amplify によって内部的に処理されます。ユーザーが SMS テキストメッセージフローを完了すると、その電話番号はユーザープール内で検証済みとしてマークされます。
+
+以下の例では、MFA が「ON」であるか、ユーザーのオプションとして有効になっているため、電話に送信された OTP で `confirmSignIn` を呼び出す必要があります。ユーザーがサインインした後、`setPreferredMFA` を呼び出して、MFA タイプをユーザーに対して有効として記録し、後続のログインでこの MFA タイプを使用するようにデフォルト設定できます。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Auth } from 'aws-amplify';
+
+type ConfirmSignInWithMFAParameters = {
+  username: string;
+  password: string;
+};
+
+type MFAType = 'SMS_MFA';
+
+async function signInWithMFA({
+  username,
+  password
+}: ConfirmSignInWithMFAParameters) {
+  try {
+    const user = await Auth.signIn(username, password);
+    if (
+      user.challengeName === 'SMS_MFA' ||
+      user.challengeName === 'SOFTWARE_TOKEN_MFA'
+    ) {
+      // You need to get the code from the UI inputs
+      // and then trigger the following function with a button click.
+      const code: string = await getCodeFromUserInput();
+      const mfaType: MFAType = await getMFATypeFromUserInput();
+      // If MFA is enabled, sign-in should be confirmed with the confirmation code:
+      const loggedUser = await Auth.confirmSignIn(
+        user, // Return object from Auth.signIn()
+        code, // Confirmation code
+        mfaType // MFA Type e.g. SMS_MFA, SOFTWARE_TOKEN_MFA
+      );
+      console.log(loggedUser);
+    } else {
+      // The user directly signs in:
+      console.log(user);
+    }
+  } catch (error) {
+    console.log(`error signing in`, error);
+  }
+}
+
+async function getCodeFromUserInput(): Promise<string> {
+  // fetch code using a user form input
+}
+async function getMFATypeFromUserInput(): Promise<MFAType> {
+  // fetch MFA type from user form input
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```javascript
+import { Auth } from 'aws-amplify';
+
+async function signInWithMFA() {
+  try {
+    const user = await Auth.signIn(username, password);
+    if (
+      user.challengeName === 'SMS_MFA' ||
+      user.challengeName === 'SOFTWARE_TOKEN_MFA'
+    ) {
+      // You need to get the code from the UI inputs
+      // and then trigger the following function with a button click.
+      const code = getCodeFromUserInput();
+      const mfaType = getMFATypeFromUserInput();
+      // If MFA is enabled, sign-in should be confirmed with the confirmation code
+      const loggedUser = await Auth.confirmSignIn(
+        user, // Return object from Auth.signIn()
+        code, // Confirmation code
+        mfaType // MFA Type e.g. SMS_MFA, SOFTWARE_TOKEN_MFA
+      );
+      console.log(loggedUser);
+    } else {
+      // The user directly signs in
+      console.log(user);
+    }
+  } catch (error) {
+    console.log(`error signing in`, error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+### TOTP で MFA をセットアップする
+
+Web またはモバイルアプリケーションで多要素認証 (MFA) に時間ベースのワンタイムパスワード (TOTP) を使用できます。Amplify Auth カテゴリには、認証器アプリを使用した TOTP セットアップと検証のサポートが含まれており、統合されたソリューションとユーザーのセキュリティが向上しています。これらのアプリ (Google Authenticator や Microsoft Authenticator など) には TOTP アルゴリズムが組み込まれており、共有シークレットキーと現在時刻を使用して短期間有効な 6 桁のパスワードを生成することで機能します。
+
+#### ユーザーの TOTP を有効にする
+
+`signIn` API でユーザーサインインを開始し、ユーザーが MFA 方法として TOTP をセットアップする必要がある場合、API 呼び出しはチャレンジとして `setupTOTP` を返し、アプリで処理する次のステップを返します。次の条件が満たされると、このチャレンジが得られます:
+
+- MFA が Cognito ユーザープール内で「Required」としてマークされている。
+- TOTP が Cognito ユーザープール内で有効になっている
+- ユーザーが既に TOTP MFA をセットアップしていない。
+
+`setupTOTP` API でアプリ内のユーザーの TOTP をセットアップできます。このワークフローの一部として、ユーザーが認証器アプリから取得したコードの表示方法 (数字コードまたは QR コード) の指定、認証器アプリでの初期セットアップの確認、TOTP を優先 MFA 方法として設定、および `confirmSignIn` API を使用して MFA タイプと共に TOTP コードを渡すこともできます:
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { CognitoUserSession } from 'amazon-cognito-identity-js';
+import { Auth } from 'aws-amplify';
+
+type SetupTOTPAuthParameters = {
+  user: string;
+  challengeAnswer: string;
+  mfaType?: 'SMS_MFA' | 'SOFTWARE_TOKEN_MFA';
+};
+
+async function setupTOTPAuth({
+  user,
+  challengeAnswer,
+  mfaType
+}: SetupTOTPAuthParameters) {
+  // To set up TOTP, first you need to get a `authorization code` from Amazon Cognito.
+  // `user` is the current Authenticated user:
+  const secretCode = await Auth.setupTOTP(user);
+
+  // You can directly display the `code` to the user or convert it to a QR code to be scanned.
+  // For example, use following code sample to render a QR code with `qrcode.react` component:
+  //      import QRCodeCanvas from 'qrcode.react';
+  //      const str = "otpauth://totp/AWSCognito:"+ username + "?secret=" + secretCode + "&issuer=" + issuer;
+  //      <QRCodeCanvas value={str}/>
+
+  // ...
+
+  // Then you will have your TOTP account in your TOTP-generating app (like Google Authenticator)
+  // use the generated one-time password to verify the setup.
+  try {
+    const cognitoUserSession: CognitoUserSession = await Auth.verifyTotpToken(
+      user,
+      challengeAnswer
+    );
+    // Don't forget to set TOTP as the preferred MFA method.
+    await Auth.setPreferredMFA(user, 'TOTP');
+  } catch (error) {
+    // Token is not verified
+  }
+
+  // ...
+
+  // Finally, when sign-in with MFA is enabled, use the `confirmSignIn` API
+  // to pass the TOTP code and MFA type.
+  const OTPCode = '123456'; // Code retrieved from authenticator app.
+  await Auth.confirmSignIn(user, OTPCode, mfaType); // Optional, MFA Type e.g. SMS_MFA || SOFTWARE_TOKEN_MFA
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { Auth } from 'aws-amplify';
+
+async function setupTOTPAuth(user, challengeAnswer, mfaType) {
+  // To set up TOTP, first you need to get a `authorization code` from Amazon Cognito.
+  // `user` is the current Authenticated user:
+  const OTPCode = '123456'; // Code retrieved from authenticator app.
+
+  // You can directly display the `code` to the user or convert it to a QR code to be scanned.
+  // For example, use following code sample to render a QR code with `qrcode.react` component:
+  //      import QRCodeCanvas from 'qrcode.react';
+  //      const str = "otpauth://totp/AWSCognito:"+ username + "?secret=" + code + "&issuer=" + issuer;
+  //      <QRCodeCanvas value={str}/>
+
+  // ...
+
+  // Then you will have your TOTP account in your TOTP-generating app (like Google Authenticator)
+  // use the generated one-time password to verify the setup.
+  try {
+    const cognitoUserSession = await Auth.verifyTotpToken(
+      user,
+      challengeAnswer
+    );
+    // Don't forget to set TOTP as the preferred MFA method.
+    await Auth.setPreferredMFA(user, 'TOTP');
+  } catch (error) {
+    // Token is not verified
+  }
+
+  // ...
+
+  // Finally, when sign-in with MFA is enabled, use the `confirmSignIn` API
+  // to pass the TOTP code and MFA type.
+  await Auth.confirmSignIn(user, code, mfaType); // Optional, MFA Type e.g. SMS_MFA || SOFTWARE_TOKEN_MFA
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+認証器アプリがセットアップされると、ユーザーは TOTP コードを生成して、ライブラリに提供してサインインプロセスを完了できます。
+
+<Accordion title='ユーザーがサインインした後に TOTP を有効にする' headingLevel='4' eyebrow='詳細を学ぶ'>
+
+TOTP MFA は、ユーザーがサインインした後にセットアップできます。これは次の条件が満たされた場合に実行できます:
+
+- MFA が Cognito ユーザープール内で「Optional」または「Required」としてマークされている
+- TOTP が Cognito ユーザープール内で有効な MFA 方法としてマークされている
+
+`setupTOTP` と `verifyTotpToken` API を呼び出して、`Auth` カテゴリで TOTP をセットアップできます。
+
+`setupTOTP` API を呼び出して `SetupTOTPAuthParameters` オブジェクトを生成します。これは Microsoft Authenticator や Google Authenticator のような認証器アプリを設定するために使用する必要があります。より高度なユースケースでは、`SetupTOTPAuthParameters` に `secretCode` も含まれており、QR コードを生成するか、認証器アプリに手動で入力するために使用できます。認証器アプリがセットアップされた後、ユーザーは TOTP コードを生成して、ライブラリに提供する必要があります。TOTP セットアッププロセスを完了するには、コードを `verifyTotpToken` に渡します。
+
+</Accordion>
+
+#### 紛失した TOTP デバイスから復旧する
+
+<Callout warning>
+
+ユーザーが TOTP デバイスへのアクセスを失った場合、管理者に連絡してアカウントへのアクセスを支援してもらう必要があります。Cognito ユーザープール構成に基づいて、管理者は [AdminSetUserMFAPreference](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminSetUserMFAPreference.html) を使用して MFA 環設定を別の MFA 方法に変更するか、ユーザーの MFA を無効にすることができます。
+
+</Callout>
+
+MFA が Cognito ユーザープール内で「Required」としてマークされており、別の MFA 方法がセットアップされていないシナリオでは、管理者は最初に [AdminUpdateUserAttributes](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminUpdateUserAttributes.html) 呼び出しを開始して、ユーザーの電話番号属性を更新する必要があります。これが完了したら、管理者は上記のように MFA 環設定を SMS に変更し続けることができます。
+
+### ユーザーの優先 MFA 方法を設定する
+
+SMS MFA と TOTP MFA の両方の方法が Amazon Cognito でサポートされているため、ユーザーに 2 番目の認証係数を選択するか、オプトアウトするオプションを提供できます。両方が利用可能な場合は、`setupMFAType` API で後続のセッションのためにその環設定を保存する必要があります:
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Auth } from 'aws-amplify';
+
+type PreferredMFAType = 'TOTP' | 'SMS' | 'NOMFA';
+
+async function setupMFAType(preferredMFA: PreferredMFAType) {
+  try {
+    const user = await Auth.currentAuthenticatedUser();
+    const data = await Auth.setPreferredMFA(user, preferredMFA);
+    console.log(data);
+  } catch (error) {
+    console.log('error setting up MFA type', error);
+  }
+}
+
+// Select TOTP as preferred.
+setupMFAType('TOTP');
+
+// Select SMS as preferred.
+setupMFAType('SMS');
+
+// Select no MFA.
+setupMFAType('NOMFA');
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { Auth } from 'aws-amplify';
+
+async function setupMFAType(preferredMFA) {
+  try {
+    const user = await Auth.currentAuthenticatedUser();
+    const data = await Auth.setPreferredMFA(user, preferredMFA);
+    console.log(data);
+  } catch (error) {
+    console.log('error setting up MFA type', error);
+  }
+}
+
+// Select TOTP as preferred.
+setupMFAType('TOTP');
+
+// Select SMS as preferred.
+setupMFAType('SMS');
+
+// Select no MFA.
+setupMFAType('NOMFA');
+```
+
+</Block>
+</BlockSwitcher>
+
+#### 現在の優先 MFA 方法を取得する
+
+優先 MFA 方法をユーザー用に設定したら、`getPreferredMFAType` メソッドを使用して、将来のサインイン確認用にこの環設定を呼び出します:
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Auth } from 'aws-amplify';
+
+async function getPreferredMFAType() {
+  try {
+    // Will retrieve the current MFA type from cache
+    // `bypassCache` is optional and by default is false.
+    // If set to true, it will get the MFA type from server-side
+    // instead of from local cache.
+    const user = await Auth.currentAuthenticatedUser();
+    const data = await Auth.getPreferredMFA(user, { bypassCache: false });
+    console.log('Current preferred MFA type is: ' + data);
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { Auth } from 'aws-amplify';
+
+async function getPreferredMFAType() {
+  try {
+    // Will retrieve the current MFA type from cache
+    // `bypassCache` is optional and by default is false.
+    // If set to true, it will get the MFA type from server-side
+    // instead of from local cache.
+    const user = await Auth.currentAuthenticatedUser();
+    const data = await Auth.getPreferredMFA(user, { bypassCache: false });
+    console.log('Current preferred MFA type is: ' + data);
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+<Callout warning>
+
+一度に 1 つの MFA 方法のみを優先として マークできます。ユーザーが複数の MFA 方法を有効にし、複数の MFA 方法を優先としてマークしようとした場合、API はエラーをスロー します。Cognito からの予期しない応答を避けるために、`Auth.getPreferredMFA()` で MFA 設定を取得する_前に_ `Auth.setPreferredMFA()` を呼び出してユーザーが MFA 方法を設定していることを確認することをお勧めします。
+
+</Callout>
+
+これでマルチファクタ認証を有効にして、TOTP または SMS で第 2 認証方法を指定できます。ユーザーは優先方法を設定でき、サインイン時にこれをユーザー用に取得できます。デバイスを記憶して、サインインワークフローの摩擦を減らすようにするなどの機能を追加することができます。
+
+## デバイスを記憶する
+
+デバイスを記憶することは MFA と組み合わせると有用です。これにより、ユーザーがそのデバイスでサインインするときに、2 番目の係数要件が自動的に満たされ、サインイン体験の摩擦が減ります。
+
+<Callout>
+
+**注:** [デバイス追跡と記憶](https://aws.amazon.com/blogs/mobile/tracking-and-remembering-devices-using-amazon-cognito-your-user-pools/)機能は、Cognito ユーザープールまたはホスト UI でフェデレーション OAuth フローを使用している場合、ライブラリ内では現在利用できません。
+
+</Callout>
+
+### デバイス追跡を構成する
+
+Cognito ユーザープールコンソールで記憶されたデバイス機能を有効にできます。開始するには、プロジェクトディレクトリに移動して、以下のコマンドを実行します:
+
+```bash
+amplify auth console
+```
+
+Cognito ユーザープールコンソールを開く以下のオプションを選択します:
+
+```bash
+? Which Console
+    User Pool
+```
+
+コンソールが開いたら、「Device Tracking」セクションまでスクロールして「Edit」ボタンをクリックします。これにより、ユーザーのデバイスを記憶するための環設定を構成できる以下のページが表示されます。
+
+![デバイス追跡オプションのリストを編集し、記憶しないがハイライトされているのが表示されています。](/images/auth/webconsole_remember1.png)
+
+ユーザーのデバイスを既定で記憶する「Always remember」を選択するか、ユーザーが選択できるようにする「User Opt-in」を選択します。
+
+MFA が有効になると、多要素認証時に第 2 係数を抑制するオプションが表示されます。記憶されたデバイスを第 2 係数メカニズムとして使用する場合は、「Yes」を選択します。
+
+![信頼できるデバイスの MFA をバイパスするようにユーザーに許可するオプション。](/images/auth/webconsole_remember2.png)
+
+選択を行った後、「Save changes」をクリックします。これで、記憶されたデバイスを管理するようにコードを更新する準備ができました。
+
+<Accordion title='デバイス追跡に使用される重要な用語を理解する' headingLevel='4' eyebrow='詳細を学ぶ'>
+
+記憶されたデバイス、忘れたデバイス、および追跡されたデバイスを操作する場合に留意する違いがあります。
+
+- **追跡:** ユーザーが新しいデバイスでサインインするたびに、クライアントは成功した認証イベントの最後にデバイスキーを指定されます。このデバイスキーを使用して、ソルトとパスワード検証器を生成し、これは `ConfirmDevice` API を呼び出すために使用されます。この時点で、デバイスは「追跡」されている と見なされます。デバイスが追跡状態になると、Amazon Cognito コンソールを使用して、追跡を開始した時刻、最後の認証時刻、そのデバイスに関するその他の情報を確認できます。
+- **記憶:** 記憶されたデバイスも追跡されます。ユーザー認証中に、記憶されたデバイスに割り当てられたデバイスキーとシークレットペアを使用して、デバイスを認証し、ユーザーが以前に使用したのと同じデバイスであることを確認します。
+- **記憶されない:** 記憶されないデバイスは、Cognito がユーザーにデバイスを記憶するよう「オプトイン」するように構成されているが、ユーザーがデバイスを記憶しないことを選択した追跡されたデバイスです。このユースケースは、所有していないデバイスからアプリケーションにサインインしているユーザー向けです。
+- **忘れた:** デバイスを記憶または追跡したくなくなった場合、`Auth.forgetDevice()` API を使用してデバイスを忘れることができます。デバイスは記憶も追跡もされなくなります。
+
+</Accordion>
+
+### デバイスを記憶する
+
+以下を使用してデバイスを記憶できます:
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Auth } from 'aws-amplify';
+
+async function rememberDevice() {
+  try {
+    const result = await Auth.rememberDevice();
+    console.log(result);
+  } catch (error) {
+    console.log('Error remembering device', error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { Auth } from 'aws-amplify';
+
+async function rememberDevice() {
+  try {
+    const result = await Auth.rememberDevice();
+    console.log(result);
+  } catch (error) {
+    console.log('Error remembering device', error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+#### デバイスを忘れる
+
+デバイスも忘れることができますが、忘れたデバイスは記憶も追跡もされていないことに注意してください。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Auth } from 'aws-amplify';
+
+async function forgetDevice() {
+  try {
+    await Auth.forgetDevice();
+  } catch (error) {
+    console.log('Error forgetting device', error);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { Auth } from 'aws-amplify';
+
+async function forgetDevice() {
+  try {
+    await Auth.forgetDevice();
+  } catch (error) {
+    console.log('Error forgetting device', error);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+#### デバイスをフェッチする
+
+以下を使用して記憶されたデバイスのリストをフェッチできます:
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { Auth } from 'aws-amplify';
+
+async function fetchDevices() {
+  try {
+    const result = await Auth.fetchDevices();
+    console.log(result);
+  } catch (err) {
+    console.log('Error fetching devices', err);
+  }
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```js
+import { Auth } from 'aws-amplify';
+
+async function fetchDevices() {
+  try {
+    const result = await Auth.fetchDevices();
+    console.log(result);
+  } catch (err) {
+    console.log('Error fetching devices', err);
+  }
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+これでデバイスを記憶、忘れ、およびフェッチできるようになりました。
+
+## まとめ
+
+おめでとうございます。**MFA 設定を管理する**ガイドを完了しました。このガイドでは、ユーザーの MFA をセットアップして構成し、MFA の環設定とデバイスを記憶するのオプションを提供しました。
+
+## 次のステップ
+
+マルチファクタ認証のセットアップを完了した後、追加のカスタマイズを追加することもできます。以下の詳細を学習することをお勧めします:
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+- [認証フローを切り替える](/gen1/[platform]/prev/build-a-backend/auth/switch-auth/#customauth-flow)
+- [高度なワークフロー](/gen1/[platform]/prev/build-a-backend/auth/advanced-workflows/)
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+- [認証フローを切り替える](/gen1/[platform]/prev/build-a-backend/auth/switch-auth/#customauth-flow)
+- [高度なワークフロー](/gen1/[platform]/prev/build-a-backend/auth/advanced-workflows/)
+
+</InlineFilter>
+
+</InlineFilter>
+
+import flows from '/src/fragments/lib-v1/auth/common/mfa/flows.mdx';
+
+<Fragments fragments={{flutter: flows}} />

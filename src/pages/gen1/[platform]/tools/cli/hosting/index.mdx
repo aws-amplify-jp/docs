@@ -1,0 +1,109 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'ホスティング',
+  description: 'Amplify Console または Amazon CloudFront/S3 を使用してアプリをデプロイおよびホストします。Amplify Console は、インスタント キャッシュ無効化とアトミック デプロイなどの機能を備えた完全マネージド ホスティングを提供します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify Console または Amazon CloudFront/S3 を使用してアプリをデプロイおよびホストします。Amplify Console は、インスタント キャッシュ無効化とアトミック デプロイなどの機能を備えた完全マネージド ホスティングを提供します。CDN とホスティング バケットの設定をより細かく制御するには、CloudFront と S3 を使用します。
+
+## ワークフロー
+
+- `amplify add hosting`<br/>
+これでバックエンドにホスティング リソースが追加されます。完了すると、リソースの CloudFormation テンプレートが amplify/backend/hosting ディレクトリに配置されます。<br/><br/>
+- `amplify configure hosting`<br/>
+このコマンドは、S3、CloudFront、パブリッシュ無視を含むホスティングに使用されるリソースの異なるセクションを構成するステップを案内します。詳細については、以下を参照してください。<br/><br/>
+- `amplify publish`<br/>
+`amplify publish` コマンドは、プロジェクトのバックエンドとフロントエンドの両方をビルドおよびパブリッシュするために設計されています。現在の実装では、フロントエンド パブリッシュ機能は JavaScript プロジェクトで静的ウェブ ホスティング用にのみ利用可能です。<br/><br/>
+- `amplify remove hosting`<br/>
+これでホスティング リソースがバックエンドからローカルに削除されます。次の `amplify push` でプロビジョニングされたホスティング リソースはクラウドから削除されます。<br/><br/>
+
+## AWS Amplify Console の使用
+
+<Callout>
+
+AWS Amplify Console は、Amplify ウェブ アプリの継続的デプロイメントおよびホスティング サービスです。[詳細情報](https://console.amplify.aws)。
+
+</Callout>
+
+AWS Amplify Console は、ソース コントロールから Amplify ウェブ アプリ（フロントエンドとバックエンドの両方）をビルド、デプロイ、ホストするための Git ベースのワークフローを提供します。フィーチャー ブランチを接続すると、すべてのコード コミットが `amplifyapp.com` サブドメインまたはカスタム ドメインに自動的にデプロイされます。[開始する](https://docs.aws.amazon.com/amplify/latest/userguide/getting-started.html)
+
+以下は、Amplify プロジェクトのホスティング オプションとして Amplify console を追加するときに遭遇する概念です。
+
+### デプロイメントのタイプ
+
+`amplify add hosting` フロー内で Amplify Console をホスティング オプションとして選択すると、フロー の一部として選択できる 2 つのステージがあります:
+
+- **継続的デプロイメント**では、GitHub、Bitbucket、GitLab、または AWS CodeCommit リポジトリを接続してコード コミットごとに変更をパブリッシュできます。このオプションを選択すると、AWS Amplify コンソールが開き、Git リポジトリを接続できます。リポジトリが接続されたら、`git push` を実行して、バックエンドとフロントエンドの両方への変更を 1 つのワークフローでデプロイします。
+- **手動デプロイメント**では、Git プロバイダを接続せずに、ウェブ アプリを Amplify Console にパブリッシュできます。このオプションを選択すると、クラウドで変更を反映させたいときはいつでも `amplify publish` コマンドを実行する必要があります。
+
+デプロイメント タイプを変更するには、`amplify remove hosting` を実行してから `amplify add hosting` を実行して、新しい優先デプロイメント タイプを選択する必要があります。
+
+### カスタム ドメイン、リダイレクト、その他
+
+Amplify Console オプションの `amplify configure hosting` コマンドは、AWS Amplify Console ブラウザ タブを開きます。ここで、リライト/リダイレクト URL、パスワード保護、カスタム ドメインなどの設定を構成できます。
+これらの設定は環境間で複製またはクローンされません。環境ごとに個別に構成する必要があります。
+
+**注:**
+
+Amplify Console はキャッシュ無効化を自動的に処理し、追加の設定やコマンド/コマンドライン パラメータは必要ありません。
+
+Amplify Console のホーム ページから開始してプロジェクトのコード リポジトリを接続する場合（`Connect app` ボタンをクリック）、ワークフローが正常に完了すると、プロジェクトのフロントエンド環境が作成されます。Amplify Console でホスティングを設定した後は、Amplify CLI のローカル インストールから `amplify hosting add` コマンドを実行できません。ホスティングを無効にするには、Amplify Console にアクセスして、`App settings > General` ページからブランチを切断してください。
+
+[`react-router`](https://reactrouter.com/en/main/start/tutorial) などのルーティングを備えたシングル ページ ウェブ アプリ (SPA) をホストしている場合、Amplify コンソールに [リダイレクト](https://docs.aws.amazon.com/amplify/latest/userguide/redirects.html#redirects-for-single-page-web-apps-spa) を追加する必要があります。
+
+![SPA redirect](/images/hosting/spa-redirect.png)
+
+[リダイレクト アドレスはリダイレクト ドキュメントと一致する必要があります。](https://docs.aws.amazon.com/amplify/latest/userguide/redirects.html#redirects-for-single-page-web-apps-spa)
+
+## Amazon S3 および Amazon CloudFront
+
+Amplify CLI は、Amazon S3 および Amazon CloudFront を直接使用して静的ウェブサイトのホスティングを管理するオプションも提供します。以下は、Amplify プロジェクトのホスティング オプションとして S3 と CloudFront を追加するときに遭遇する概念です。
+
+### ステージ
+
+CloudFront Distribution をグローバル CDN フットプリント全体にプロビジョニングするのに時間がかかる場合があります。15 分以上かかることもあります。Amazon CloudFront サービスは、`amplify hosting configure` コマンドを使用して、Amazon S3 バケットの上に Amplify プロジェクト内に後で追加または削除することもできます。ホスティング S3 バケットが us-east-1 以外のリージョンで新しく作成されている場合、CloudFront を通じてパブリッシュされたアプリケーションにアクセスすると、最初は `HTTP 307 Temporary Redirect` エラーが発生する可能性があります。これは、CloudFront が要求をデフォルト S3 エンドポイント (s3.amazonaws.com) に転送し、これは us-east-1 リージョンにあり、新しいホスティング バケット名がグローバルに伝播するまで最大 24 時間かかる可能性があるためです。
+
+Amazon S3 および Amazon CloudFront の詳細については、ドキュメントを確認してください:
+[S3 静的ウェブ ホスティング](https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteHosting.html)
+[CloudFront 開発ガイド](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html)
+
+### キャッシュ無効化
+
+`amplify add hosting` フロー内で Amazon S3 & Amazon CloudFront をホスティングに選択すると、フロントエンド ビルド アーティファクトが S3 ホスティング バケットにアップロードされます。Amazon CloudFront が有効化されている場合、`--invalidateCloudFront` または `-c` フラグ付きで実行された `amplify publish` コマンドは、Amazon CloudFront サービスに無効化要求を送信してキャッシュを無効化します。
+
+### 高度な設定
+
+`amplify configure hosting` コマンドは、Amazon S3 & Amazon CloudFront を通じてホスティングするときに使用されるリソースの異なるセクションを構成するステップを案内します。以下は、利用可能な設定可能なオプションです:
+
+- `Website`<br/>
+静的ウェブ ホスティング用に S3 バケットを構成します。このオプションを構成することで、インデックス ドキュメント と エラー ドキュメントの参照を設定できます。両方ともデフォルトで `index.html` に設定されています。<br/><br/>
+- `CloudFront`<br/>
+CloudFront コンテンツ配信ネットワーク (CDN) を構成します。デフォルト キャッシュ動作用の TTL (Time To Live) を構成したり、カスタム エラー レスポンスを構成したりできます。<br/><br/>
+- `Publish`<br/>
+パブリッシュ コマンド用のパブリッシュ無視パターン（git ベースのプロジェクトの .gitignore ファイルに似ています）を構成します。パブリッシュ コマンドは、パターンと一致する名前を持つディストリビューション フォルダ内のディレクトリとファイルのセットを無視します。

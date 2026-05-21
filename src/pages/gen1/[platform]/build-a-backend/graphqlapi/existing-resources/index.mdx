@@ -1,0 +1,33 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '既存のAWSリソースを使用する',
+  description:
+    'Amplify ライブラリを設定して、既存の AWS AppSync リソースを使用し、設定内でそれらを参照します。',
+  platforms: ['swift', 'android', 'flutter']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import android0 from '/src/fragments/lib/graphqlapi/existing-resources.mdx';
+
+<Fragments fragments={{ android: android0 }} />
+
+import ios1 from '/src/fragments/lib/graphqlapi/existing-resources.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import flutter2 from '/src/fragments/lib/graphqlapi/existing-resources.mdx';
+
+<Fragments fragments={{ flutter: flutter2 }} />

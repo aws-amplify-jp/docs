@@ -1,0 +1,48 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'コード内で入力要素を拡張する',
+  description: "'overrides' プロパティを使用して、任意のフォーム入力のプロパティをオーバーライドします。これは Studio 内でカスタマイズできないプロパティがある場合のエスケープハッチとして使用してください。",
+  platforms: [
+    'javascript',
+    'react', 
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify Studio フォームはすべて [Amplify UI ライブラリ](https://ui.docs.amplify.aws/) に基づいています。生成されたフォームは、各入力コンポーネントのプロパティをオーバーライドするメカニズムを提供します。
+
+## 特定の入力プロパティを動的に変更する
+
+`overrides` プロパティを使用して、オーバーライドする入力コンポーネントを選択し、変更したいプロップを渡します。たとえば、特定のフォーム要素の説明テキストを動的に切り替えたいとします：
+
+```jsx
+function ProductFormContainer({ productType }) {
+  return (
+    <div className="App">
+      <ProductForm
+        overrides={{
+          name: {
+            descriptiveText: `Enter ${productType} name`
+          }
+        }}
+      />
+    </div>
+  );
+}
+```
+
+**注:** 生成されたフォームによってすでに設定されているプロパティをオーバーライドすることはお勧めしません。これにより、実行時に予期しない動作が発生する可能性があります。設定されたプロパティは、`src/ui-components/<your-form-component>.jsx` ファイルのコンポーネントに移動して確認してください。

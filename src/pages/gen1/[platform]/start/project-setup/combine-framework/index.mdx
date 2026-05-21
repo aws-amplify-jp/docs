@@ -1,0 +1,24 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify で Combine フレームワークを使用する',
+  description: "Apple の Combine フレームワークに対する Amplify のサポート",
+  platforms: ['swift']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios0 from '/src/fragments/lib/project-setup/ios/combine/combine.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />

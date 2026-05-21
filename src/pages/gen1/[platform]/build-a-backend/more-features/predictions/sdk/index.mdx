@@ -1,0 +1,31 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'AWS SDK を使用する',
+  description: 'Amplify が機能を提供していない高度なユースケースでは、エスケープハッチを取得して AWSRekognition インスタンスにアクセスできます。',
+  platforms: [
+    'swift',
+    'android'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import ios0 from '/src/fragments/lib/predictions/ios/escapehatch.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import android1 from '/src/fragments/lib/predictions/android/escapehatch.mdx';
+
+<Fragments fragments={{ android: android1 }} />

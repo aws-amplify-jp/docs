@@ -1,0 +1,261 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { IconCheckCircle } from '@/components/Icons';
+
+export const meta = {
+  title: 'Amplifyの仕組み',
+  description: 'AWS Amplifyの機能と、フルスタックアプリ開発のためにそれらをどのように組み合わせて使用したり、独立して使用したりできるかを学びます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+## 概要
+
+Amplifyは開発者に、フルスタックアプリケーション開発のための柔軟でモジュール化されたクラウドサービスとライブラリのコレクションを提供します。各機能は他の機能と統合されるように設計されていますが、カスタマイズされた実装のために単独で使用することもできます。開発者はプロジェクトのニーズに基づいてAmplify機能を組み合わせて選択し、必要な構成要素だけを活用できます。例えば、開発者はAmplifyのデータ機能をフルスタックアプリのバックエンドとフロントエンドに使用したり、アプリのフロントエンドをホストするだけにしたり、ユーザーインターフェイスをAmazon S3バケットなどの既存のAWSリソースに接続したりできます。このガイドでは、Amplifyが提供するさまざまな機能と、それらを一緒に使用したり独立して使用したりする方法について説明します。
+
+## Amplifyの機能
+
+Amplifyは、アプリバックエンドの構築、アプリフロントエンドのバックエンドリソースへの接続、およびフロントエンドアプリのホストを行うためのツール機能を提供します。
+
+エンドツーエンドのフルスタック開発の場合、Amplifyを使用してアプリのフロントエンドをホストし、ビジュアルまたはコマンドラインを通じてバックエンドリソースをプロビジョニングし、Figmaからコードへの生成とAmplifyのフロントエンドライブラリを使用してアプリのフロントエンドユーザーインターフェイスを構築します。このダイアグラムは完全なAmplifyフローを示していますが、各部分を独立して使用することもできます。例えば、フロントエンドだけをホストしたり、UIコンポーネントを使用してアプリのフロントエンドを構築したりできます。
+
+![Amplifyの機能を一緒に、または独立して使用する方法。](/images/how-amplify-works/amplify-flow.png)
+
+Amplifyが実現できるさまざまなユースケースをもっと詳しく見てみましょう。このガイドではコードスニペットにJavaScriptを使用しますが、AmplifyはSwift、Android、Flutterを使用するモバイル開発者もサポートしています。
+
+## アプリの構築
+
+### データ
+
+Amplifyを使用すると、GraphQLまたはREST APIをデータベースに接続して素早くセットアップできます。
+
+APIをアプリのバックエンドに追加するには、次のCLIコマンドを実行できます：
+
+```bash
+amplify add api
+```
+
+CLIはスキーマを設定し、GraphQLまたはRESTのいずれかを選択するためのプロンプトを表示します。ターミナルのこれらのプロンプトに応答して、APIをセットアップします。Amplifyはバックエンドのセットアップを処理し、AWS AppSyncまたはAmazon API Gatewayで支援されたAPIとAmazon DynamoDBデータベースをプロビジョニングします。
+
+<InlineFilter filters={['angular','javascript','nextjs','react','react-native','vue']}>
+
+次に、フロントエンドコードからAPIにアクセスします。例えば、GraphQLを使用するToDoリストアプリの場合：
+
+```javascript
+import { generateClient } from 'aws-amplify/api';
+import { listTodos } from './graphql/queries';
+
+const client = generateClient();
+
+const result = await client.graphql({
+  query: listTodos
+});
+console.log(result);
+```
+
+</InlineFilter>
+
+詳しくは[Amplify Data](/gen1/[platform]/build-a-backend/graphqlapi/)を参照してください。
+
+### 認証
+
+Amplify Authを使用すると、アプリケーションに完全なユーザー認証フローを簡単に追加できます。
+
+バックエンド認証を追加するには、次のコマンドを実行できます：
+
+```bash
+amplify add auth
+```
+
+カスタマイズされたサインインおよび登録フロー、多要素認証（MFA）、サードパーティのソーシャルプロバイダーを使用して認証フローをカスタマイズできます。Amplifyは、アプリに認証を追加するとAmazon Cognitoインスタンスをお客様のAWSアカウントにデプロイします。
+
+<InlineFilter filters={['react']}>
+
+その後、Amplifyの`Authenticator`コンポーネントまたはクライアントライブラリを使用してユーザーフローを追加できます。
+
+```javascript
+import { withAuthenticator } from '@aws-amplify/ui-react';
+
+function App({ signOut, user }) {
+  return (
+    <>
+      <h1>Hello {user.username}</h1>
+      <button onClick={signOut}>Sign out</button>
+    </>
+  );
+}
+
+export default withAuthenticator(App);
+```
+
+</InlineFilter>
+
+詳しくは[Amplify Auth](/gen1/[platform]/build-a-backend/auth/)を参照してください。
+
+### ストレージ
+
+Amplify Storageは、クラウド内の画像、動画、ドキュメントなどのファイルとデータストレージを管理するシンプルなメカニズムを提供します。
+
+バックエンドのアプリにストレージバケットを追加するには、次のコマンドを実行します：
+
+```bash
+amplify add storage
+```
+
+Amplifyはお客様のAWSアカウントにAmazon S3バケットまたはAmazon DynamoDBデータベースを追加してコンテンツを保存します。
+
+<InlineFilter filters={['angular','javascript','nextjs','react','react-native','vue']}>
+
+アプリのフロントエンドでは、ファイルをアップロードできます：
+
+```javascript
+import { uploadData } from 'aws-amplify/storage';
+
+const result = await uploadData({
+  key: 'example.png',
+  data: file
+});
+```
+
+またはユーザーに表示するコンテンツを取得できます：
+
+```javascript
+import { getUrl } from 'aws-amplify/storage';
+
+const image = await getUrl({
+  key: 'example.png'
+});
+```
+
+</InlineFilter>
+
+詳しくは[Amplify Storage](/gen1/[platform]/build-a-backend/storage/set-up-storage/)を参照してください。
+
+### UI構築
+
+Amplifyを使用すると、コンポーネントライブラリとFigmaからコードへの生成を使用して、Webおよびモバイルアプリのユーザーインターフェイスを素早く構築できます。
+
+Figmaからコード機能を使用すると、FigmaのデザインをダイレクトにReactコンポーネントに変換できます。その後、これらのコンポーネントをAmplify Studioのクラウドデータに接続し、コードベースで必要に応じてカスタマイズできます。これにより、デザインモックからUIをコーディングするプロセスが自動化されます。
+
+Figmaからコードはレアクトユーザーが利用できます。詳しくは[Figmaからコード生成](/gen1/react/build-ui/uibuilder/)を参照してください。
+
+![Figmaからコードを示すスクリーンショット](/images/how-amplify-works/figma-to-code.png)
+
+Amplifyはまた、カスタムテーマ、検証ロジック、ライフサイクル管理、検証を含むReactフォームを生成するフォーム構築機能を備えています。
+
+フォームビルダーはReactユーザーが利用できます。詳しくは[フォームビルダー](/gen1/react/build-ui/formbuilder/)を参照してください。
+
+![左側のナビゲーションペインに自動生成されたフォームを表示するStudioコンソール](/images/how-amplify-works/ui-library-form-builder.png)
+
+Amplifyは、認証、ファイルストレージ、データ管理などの一般的なユースケースを処理するオープンソースのReactコンポーネントのライブラリを含みます。これらのコンポーネントはバックエンドデータソースとしてAWSサービスを使用します。例えば、`<Authenticator>`コンポーネントは認証リソースに接続することで完全な認証フローを提供します。
+
+詳しくは[クラウド接続コンポーネント](https://ui.docs.amplify.aws/react/connected-components/authenticator)を参照してください。
+
+![メール、パスワード、サインイン、およびアカウント作成機能を備えたAmplifyのデフォルトサインインフォーム。](/images/how-amplify-works/ui-library-sign-in.png)
+
+AmplifyはまたCSSおよびReactで構築された40以上の[プリミティブReactコンポーネント](https://ui.docs.amplify.aws/react/components)を提供し、アプリケーション全体を構築するための基盤を提供します。これらのプリミティブコンポーネントは、カスタムユーザーインターフェイスを構築するための基本的な構成要素を提供します。
+
+![Amplify UIプリミティブコンポーネント](/images/how-amplify-works/ui-library-primitive-components.png)
+
+### さらに詳しく！
+
+Amplifyはコアデータ、ストレージ、認証機能を超えたさらに多くの機能を提供しています。また、以下を含む追加のカテゴリも提供しています：
+
+- サーバーレス関数 – AWS Lambdaファンクションをプロジェクトに追加して、アプリにカスタムビジネスロジックを追加します。
+- ロケーションサービス – マッピング機能、ジオフェンシング、ロケーション追跡を追加します。
+- 分析 – ユーザーの行動を理解し、主要なメトリクスを追跡します。
+- AI/ML – 自然言語処理、テキスト音声変換、推奨事項などのAI搭載機能を組み込みます。
+- PubSub – アプリインスタンス間とアプリバックエンド間でメッセージを送信して、リアルタイムのインタラクティブなエクスペリエンスを作成します。
+- インタラクション – 音声とチャットボットで動作する会話インターフェイスを作成します。
+- アプリ内メッセージング – 定義されたユーザーセグメントにターゲットメッセージを送信するか、ユーザーの行動に基づいてコンテキストメッセージをトリガーします。
+
+## フロントエンドホスティング
+
+Amplify Hostingは、静的でサーバーサイドレンダリングされたNext.jsアプリ用のホストを提供します。組み込みのCI/CDワークフローがあるため、すべてのコミットで自動的に再デプロイできます。GitブランチをAmplify Hostingに接続して、すべてのプッシュでフロントエンドとバックエンドの変更を自動的にデプロイします。プルリクエストプレビューを有効にして、マージ前に本番ブランチに新機能を表示します。
+
+リポジトリブランチを接続します：
+
+![リポジトリプロバイダーとブランチ名を選択するなど、Amplify Hostingフォームを通じてリポジトリを追加します。](/images/how-amplify-works/hosting-form.png)
+
+ビルド設定を確認し、APIキーまたはパラメータに必要な環境変数を追加してから、保存してデプロイします。Amplifyはビルド環境をプロビジョニングしてリポジトリをクローンし、Amplifyバックエンドがある場合はデプロイし、その後フロントエンドをデプロイします。すべてAmplifyによって完全に管理されます。
+
+![完全にデプロイされたサイトを表示するAmplify Hosting。](/images/how-amplify-works/hosting-deployed-site.png)
+
+詳しくは[Amplify Hosting](https://docs.aws.amazon.com/amplify/latest/userguide/welcome.html)を参照してください。
+
+## Amplifyを超えたAWSへの接続
+
+### 既存リソースへの接続
+
+Amplifyは既存のAWSリソースと設定で動作するように設計されています。例えば、Amplifyの事前に構築された認証UIコンポーネントを、別に作成して設定した既存のAmazon Cognitoユーザープールで使用できます。または、Amplify Storageと統合することで、既存のS3バケットからの画像とファイルをアプリのユーザーインターフェイスに表示できます。
+
+Amplifyのライブラリは既存のAWSサービスを活用するためのインターフェイスを提供するので、既存のバックエンドインフラストラクチャを中断することなく、現在のワークフローにAmplifyの機能を段階的に採用できます。
+
+この柔軟性により、既存のリソースを使用して認証、API、ストレージ、ビジネスロジックなどのAmplifyフロントエンド機能を簡単に使い始めることができます。AmplifyはUIコード、アプリケーションロジック、およびバックエンドクラウドサービス間の統合を合理化します。
+
+### CDKで拡張
+
+Amplifyは、CLIが提供するデフォルトを超えてインフラストラクチャをカスタマイズするための3つのオーバーライド機能を提供します。
+
+- オーバーライド – Amplifyで生成されたインフラストラクチャを追加設定でオーバーライドします。例えば、Amplifyではダイレクトに利用できないがAmazon Cognitoでは利用できる認証設定を追加できます。
+- カスタム – Amplifyで作成されたバックエンドにAWSサービスを追加します。
+- エクスポート – AmplifyバックエンドをCDKスタックにエクスポートします。
+
+他のAmplifyアクションと同様に、CLIコマンドを実行することで拡張可能性機能を有効にできます。例えば：
+
+```javascript
+amplify override
+```
+
+詳しくは[拡張可能性](/gen1/[platform]/tools/cli/#extensibility)を参照してください。
+
+## サポートマトリックス
+
+Amplifyはサポートされている言語全体で次のカテゴリと機能をサポートしています：
+
+|  | Swift | Android | Flutter | JavaScript |
+| :-- | :-: | :-: | :-: | :-: |
+| ホスティング |  |  |  | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |
+| Figmaからコード |  |  |  | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |
+| 認証 | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |
+| GraphQL API | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |
+| ストレージ | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |
+| 関数 | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |
+| REST API | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |
+| 分析 | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |
+| 予測 | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |  | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |
+| アプリ内メッセージング |  |  |  | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |
+| プッシュ通知 | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |
+| PubSub |  |  |  | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |
+| Geo | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |  | <IconCheckCircle color="purple.60" aria-hidden="false" aria-label="Supported" /> |
+
+## Amplifyアーキテクチャの例
+
+以下のダイアグラムは、Amplifyで実装できるいくつかのシナリオの概要を示しています。AWS Amplifyで表示されるUI、Amplifyでプロビジョニングされたバックエンドリソース、Amplifyがお客様用にデプロイする基盤となるAWSサービスを示しています。
+
+![異なるAmplify実装。](/images/how-amplify-works/amplify-scenarios.png)
+
+Amplifyはお客様のニーズに応じて成長し、フルスタックのフロント・ツー・バック・ソリューション、フロントエンドホストのみ、またはお客様のAWSリソースと統合するUIコンポーネントなど、最適な方法で使用できます。
+
+AWS Amplifyのコアコンセプトと機能を理解したので、構築を開始しましょう。ステップバイステップの入門チュートリアルは、新しいアプリケーションにAmplifyを設定して統合する方法を説明しています。これらのチュートリアルはReact、JavaScript、Flutterなど多くの人気のある開発プラットフォームとフレームワークで利用できます。

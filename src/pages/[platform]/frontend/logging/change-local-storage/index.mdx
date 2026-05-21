@@ -1,0 +1,102 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ローカルストレージを変更する',
+  description: 'デバイス上のログローカルストレージを変更する',
+  platforms: [
+    'android',
+    'swift'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify Logger を使用する場合、ログされたすべてのメッセージは、CloudWatch に送信される前にまずユーザーのデバイスにローカルで保存されます。
+
+このセクションでは、ローカルに保存されるログの最大量を構成する方法について説明します。これは、ネットワークの可用性とオフライン使用ケースに応じてローカルに保存されるログの量を決定するのに役立ちます。
+
+## ローカルストレージの最大サイズを変更する
+
+以下は、ローカルストレージサイズを 2 MB に設定する例です：
+
+
+
+
+<BlockSwitcher>
+  <Block name="設定ファイルを使用する場合">
+設定ファイルの `localStoreMaxSizeInMB` フィールドを更新します。
+
+```json
+{
+    "awsCloudWatchLoggingPlugin": {
+        "enable": true,
+        "logGroupName": "<log-group-name>",
+        "region": "<region>",
+        "localStoreMaxSizeInMB": 2,
+        "flushIntervalInSeconds": 60,
+        "loggingConstraints": {
+            "defaultLogLevel": "WARN"
+        }
+    }
+}
+```
+  </Block>
+  <Block name="コードを使用する場合">
+    <InlineFilter filters={['android']}>
+    <BlockSwitcher>
+<Block name="Java">
+
+```java
+AWSCloudWatchLoggingPluginConfiguration config = new AWSCloudWatchLoggingPluginConfiguration (<log-group-name>, <region>, true, 2);
+Amplify.addPlugin(new AWSCloudWatchLoggingPlugin(config));
+```
+
+</Block>
+<Block name="Kotlin">
+
+```kotlin
+val config = AWSCloudWatchLoggingPluginConfiguration(logGroupName = <log-group-name>, region = <region>, localStoreMaxSizeInMB = 2)
+Amplify.addPlugin(AWSCloudWatchLoggingPlugin(config))
+```
+</Block>
+<Block name="RxJava">
+
+```java
+AWSCloudWatchLoggingPluginConfiguration config = new AWSCloudWatchLoggingPluginConfiguration (<log-group-name>, <region>, true, 2);
+Amplify.addPlugin(new AWSCloudWatchLoggingPlugin(config));
+```
+
+</Block>
+</BlockSwitcher>
+
+</InlineFilter>
+
+
+<InlineFilter filters={['swift']}>
+`AWSCloudWatchLoggingPlugin` の初期化と設定で `localStoreMaxSizeInMB` パラメータを指定します。
+
+```swift
+do {
+    let loggingConfiguration = AWSCloudWatchLoggingPluginConfiguration(logGroupName: "<log-group-name>", region: "<region>", localStoreMaxSizeInMB: 2)
+    let loggingPlugin = AWSCloudWatchLoggingPlugin(loggingPluginConfiguration: loggingConfiguration)
+    try Amplify.add(plugin: loggingPlugin)
+    try Amplify.configure(with: .amplifyOutputs)
+} catch {
+    assert(false, "Error initializing Amplify: \(error)")
+}
+```
+</InlineFilter>
+
+  </Block>
+</BlockSwitcher>

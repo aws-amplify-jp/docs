@@ -1,0 +1,121 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Authenticator の使用',
+  description: 'Amplify UI ライブラリの Authenticator コンポーネントの使用方法を学ぶ',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps() {
+  return {
+    props: {
+      meta,
+    }
+  };
+}
+
+<InlineFilter filters={["swift"]}>
+
+フロントエンドアプリケーションで Amplify Auth を始める最も簡単な方法は、カスタマイズ可能な UI と完全な認証フローを提供する [Authenticator コンポーネント](https://ui.docs.amplify.aws/swift/connected-components/authenticator) です。
+
+```swift
+import Amplify
+import Authenticator
+import AWSCognitoAuthPlugin
+import SwiftUI
+
+@main
+struct MyApp: App {
+    init() {
+        do {
+            try Amplify.add(plugin: AWSCognitoAuthPlugin())
+            try Amplify.configure(with: .amplifyOutputs)
+        } catch {
+            print("Unable to configure Amplify \(error)")
+        }
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            Authenticator { state in
+                VStack {
+                    Text("Hello, \(state.user.username)")
+                    Button("Sign out") {
+                        Task {
+                            await state.signOut()
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["flutter"]}>
+
+フロントエンドアプリケーションで Amplify Auth を始める最も簡単な方法は、カスタマイズ可能な UI と完全な認証フローを提供する [Authenticator コンポーネント](https://ui.docs.amplify.aws/flutter/connected-components/authenticator) です。
+
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+
+フロントエンドアプリケーションで Amplify Auth を始める最も簡単な方法は、カスタマイズ可能な UI と完全な認証フローを提供する [Authenticator コンポーネント](https://ui.docs.amplify.aws/android/connected-components/authenticator) です。
+
+</InlineFilter>
+
+<InlineFilter filters={["javascript", "nextjs", "react"]}>
+
+フロントエンドアプリケーションで Amplify Auth を始める最も簡単な方法は、カスタマイズ可能な UI と完全な認証フローを提供する [Authenticator コンポーネント](https://ui.docs.amplify.aws/react/connected-components/authenticator) です。
+
+
+```tsx title="src/App.tsx"
+import { Authenticator } from '@aws-amplify/ui-react';
+import { Amplify } from 'aws-amplify';
+import '@aws-amplify/ui-react/styles.css';
+import outputs from "../amplify_outputs.json";
+
+Amplify.configure(outputs);
+
+export default function App() {
+  return (
+    <Authenticator>
+      {({ signOut, user }) => (
+        <main>
+          <h1>Hello {user?.username}</h1>
+          <button onClick={signOut}>Sign out</button>
+        </main>
+      )}
+    </Authenticator>
+  );
+}
+```
+
+</InlineFilter>
+
+Authenticator コンポーネントは、バックエンドから生成された出力に基づいて自動的に設定されます。Authenticator の詳細とその外観をカスタマイズする方法について詳しくは、[Amplify UI ドキュメント](https://ui.docs.amplify.aws/) を参照してください。
+
+<InlineFilter filters={["javascript", "nextjs", "react"]}>
+別の方法として、独自の UI を使用し、[`aws-amplify`](https://www.npmjs.com/package/aws-amplify) のライブラリを活用して認証フローを手動で処理することもできます。
+</InlineFilter>
+
+{/* using the Authenticator Provider */}
+{/* useAuthenticator */}
+{/* ## Next Steps */}
+{/* learn how to use the auth api's */}

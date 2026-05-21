@@ -1,0 +1,761 @@
+---
+title: "外部 Amazon DynamoDB データソースへの接続"
+section: "build-a-backend/data/connect-to-existing-data-sources"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2025-11-19T09:34:45.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/data/connect-to-existing-data-sources/connect-external-ddb-table/"
+---
+
+`a.model()` データモデルを使用すると、モデルが Amplify によって管理される DynamoDB テーブルでサポートされている AWS AppSync API の GraphQL スキーマを定義できます。生成されたスキーマは、Amplify Data クライアントにクエリとミューテーションも提供します。ただし、外部 DynamoDB テーブルに接続して、代わりにそれに対してカスタムビジネスロジックを実行することもできます。
+
+> **Info:** 外部 DynamoDB テーブルをデータソースとして使用することは、シングルテーブル設計などのパターンを活用する必要がある場合に役立つ可能性があります。
+
+以下のセクションでは、外部 DynamoDB テーブルをデータソースとして API に追加および使用するための手順を説明します。
+
+1. Amazon DynamoDB テーブルをセットアップする
+2. Amazon DynamoDB テーブルをデータソースとして追加する
+3. カスタムクエリとミューテーションを定義する
+4. カスタムビジネスロジックハンドラーコードを構成する
+5. カスタムクエリまたはミューテーションを呼び出す
+
+## ステップ 1 - Amazon DynamoDB テーブルをセットアップする
+
+このガイドの目的のために、`Post` タイプを定義し、それ用のレコードを保存する外部 DynamoDB テーブルを作成します。Amplify Gen 2 では、`customType` は Amplify によって生成された DynamoDB テーブルでサポートされていないタイプをスキーマに追加します。
+
+`Post` タイプが定義されている場合、カスタムクエリとミューテーションを定義するときに戻り値の型として参照できます。
+
+まず、`Post` カスタムタイプをスキーマに追加します。
+
+```ts title="amplify/data/resource.ts"
+import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+
+const schema = a.schema({
+  Todo: a
+    .model({
+      content: a.string(),
+    })
+    .authorization(allow => [allow.publicApiKey()]),
+  // highlight-start
+  Post: a.customType({
+    id: a.id().required(),
+    author: a.string().required(),
+    title: a.string(),
+    content: a.string(),
+    url: a.string(),
+    ups: a.integer(),
+    downs: a.integer(),
+    version: a.integer(),
+  }),
+  // highlight-end
+});
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: 'apiKey',
+    apiKeyAuthorizationMode: {
+      expiresInDays: 30,
+    },
+  },
+});
+```
+
+> **Info:** **注:** GraphQL 仕様に準拠するために、スキーマが有効であるにはクエリが少なくとも 1 つ必要です。そうしないと、デプロイメントはスキーマエラーで失敗します。Amplify Data スキーマは、`Todo` モデルとそれに対応するクエリを備えた自動生成スキーマです。次のステップでスキーマに最初のカスタムクエリを追加するまで、`Todo` モデルをスキーマに残すことができます。
+
+デプロイメントが正常に完了したら、外部データソースとして機能する DynamoDB テーブルを作成する必要があります。AWS Console、AWS CLI、または AWS CDK を使用してこのテーブルを作成できます。この例では、DynamoDB コンソールを使用して作成します。
+
+1. [DynamoDB コンソール](https://console.aws.amazon.com/dynamodb/)に移動します。
+
+2. **テーブルの作成** を選択します。
+
+3. **テーブル名** に、`PostTable` を入力します。
+
+4. **パーティションキー** に `id` を入力し、タイプとして **String** を選択します。
+
+5. **ソートキー** は空のままにします (この例では必要ありません)。
+
+6. 残りのオプションのデフォルト設定を保持し、**テーブルの作成** を選択します。
+
+または、AWS CLI を使用してテーブルを作成できます。
+
+```bash
+aws dynamodb create-table \
+    --table-name PostTable \
+    --attribute-definitions \
+        AttributeName=id,AttributeType=S \
+    --key-schema \
+        AttributeName=id,KeyType=HASH \
+    --provisioned-throughput \
+        ReadCapacityUnits=5,WriteCapacityUnits=5
+```
+
+これで、Amplify で生成されたリソースとは独立して存在する `PostTable` という新しい DynamoDB テーブルができました。このテーブルを、カスタムクエリとミューテーションのデータソースとして使用します。
+
+## ステップ 2 - Amazon DynamoDB テーブルをデータソースとして追加する
+
+`amplify/backend.ts` ファイルで、DynamoDB テーブルを API のデータソースとして追加します。
+
+```ts title="amplify/backend.ts"
+import { defineBackend } from "@aws-amplify/backend";
+import { auth } from "./auth/resource";
+import { data } from "./data/resource";
+import { aws_dynamodb } from "aws-cdk-lib";
+
+export const backend = defineBackend({
+  auth,
+  data,
+});
+
+// highlight-start
+const externalDataSourcesStack = backend.createStack("MyExternalDataSources");
+
+const externalTable = aws_dynamodb.Table.fromTableName(
+  externalDataSourcesStack,
+  "MyExternalPostTable",
+  "PostTable"
+);
+
+backend.data.addDynamoDbDataSource(
+  "ExternalPostTableDataSource",
+  externalTable
+);
+// highlight-end
+```
+
+## ステップ 3 - カスタムクエリとミューテーションを定義する
+
+DynamoDB テーブルがデータソースとして追加されたので、データソースの名前とリゾルバーのエントリポイントを受け入れる `a.handler.custom()` 修飾子を使用して、カスタムクエリとミューテーションでそれを参照できます。
+
+以下のコード例を使用して、`addPost`、`getPost`、`updatePost`、および `deletePost` をカスタムクエリとミューテーションとしてスキーマに追加します。
+
+#### [addPost]
+```ts title="amplify/data/resource.ts"
+import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+
+const schema = a.schema({
+  Post: a.customType({
+    author: a.string().required(),
+    title: a.string(),
+    content: a.string(),
+    url: a.string(),
+    ups: a.integer(),
+    downs: a.integer(),
+    version: a.integer(),
+  }),
+  // highlight-start
+  addPost: a
+    .mutation()
+    .arguments({
+      id: a.id(),
+      author: a.string().required(),
+      title: a.string(),
+      content: a.string(),
+      url: a.string(),
+    })
+    .returns(a.ref("Post"))
+    .authorization(allow => [allow.publicApiKey()])
+    .handler(
+      a.handler.custom({
+        dataSource: "ExternalPostTableDataSource",
+        entry: "./addPost.js",
+      })
+    ),
+  // highlight-end
+});
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: 'apiKey',
+    apiKeyAuthorizationMode: {
+      expiresInDays: 30,
+    },
+  },
+});
+```
+
+#### [getPost]
+```ts title="amplify/data/resource.ts"
+import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+
+const schema = a.schema({
+  Post: a.customType({
+    author: a.string().required(),
+    title: a.string(),
+    content: a.string(),
+    url: a.string(),
+    ups: a.integer(),
+    downs: a.integer(),
+    version: a.integer(),
+  }),
+  // highlight-start
+  getPost: a
+    .query()
+    .arguments({ id: a.id().required() })
+    .returns(a.ref("Post"))
+    .authorization(allow => [allow.publicApiKey()])
+    .handler(
+      a.handler.custom({
+        dataSource: "ExternalPostTableDataSource",
+        entry: "./getPost.js",
+      })
+    ),
+  // highlight-end
+});
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: 'apiKey',
+    apiKeyAuthorizationMode: {
+      expiresInDays: 30,
+    },
+  },
+});
+```
+
+#### [updatePost]
+```ts title="amplify/data/resource.ts"
+import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+
+const schema = a.schema({
+  Post: a.customType({
+    author: a.string().required(),
+    title: a.string(),
+    content: a.string(),
+    url: a.string(),
+    ups: a.integer(),
+    downs: a.integer(),
+    version: a.integer(),
+  }),
+  // highlight-start
+  updatePost: a
+    .mutation()
+    .arguments({
+      id: a.id().required(),
+      author: a.string(),
+      title: a.string(),
+      content: a.string(),
+      url: a.string(),
+      expectedVersion: a.integer().required(),
+    })
+    .returns(a.ref("Post"))
+    .authorization(allow => [allow.publicApiKey()])
+    .handler(
+      a.handler.custom({
+        dataSource: "ExternalPostTableDataSource",
+        entry: "./updatePost.js",
+      })
+    ),
+  // highlight-end
+});
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: 'apiKey',
+    apiKeyAuthorizationMode: {
+      expiresInDays: 30,
+    },
+  },
+});
+```
+
+#### [deletePost]
+```ts title="amplify/data/resource.ts"
+import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+
+const schema = a.schema({
+  Post: a.customType({
+    author: a.string().required(),
+    title: a.string(),
+    content: a.string(),
+    url: a.string(),
+    ups: a.integer(),
+    downs: a.integer(),
+    version: a.integer(),
+  }),
+  // highlight-start
+  deletePost: a
+    .mutation()
+    .arguments({ id: a.id().required(), expectedVersion: a.integer() })
+    .returns(a.ref("Post"))
+    .authorization(allow => [allow.publicApiKey()])
+    .handler(
+      a.handler.custom({
+        dataSource: "ExternalPostTableDataSource",
+        entry: "./deletePost.js",
+      })
+    ),
+  // highlight-end
+});
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: 'apiKey',
+    apiKeyAuthorizationMode: {
+      expiresInDays: 30,
+    },
+  },
+});
+```
+
+## ステップ 4 - カスタムビジネスロジックハンドラーコードを構成する
+
+次に、`amplify/data` フォルダーで以下のファイルを作成し、コード例を使用して、前のステップでスキーマに追加したカスタムクエリとミューテーションのカスタムリゾルバーを定義します。これらは AppSync JavaScript リゾルバーです。
+
+#### [addPost]
+```js title="amplify/data/addPost.js"
+import { util } from "@aws-appsync/utils";
+import * as ddb from "@aws-appsync/utils/dynamodb";
+
+export function request(ctx) {
+  const item = { ...ctx.arguments, ups: 1, downs: 0, version: 1 };
+  const key = { id: ctx.args.id ?? util.autoId() };
+  return ddb.put({ key, item });
+}
+
+export function response(ctx) {
+  return ctx.result;
+}
+```
+
+#### [getPost]
+```js title="amplify/data/getPost.js"
+import * as ddb from "@aws-appsync/utils/dynamodb";
+
+export function request(ctx) {
+  return ddb.get({ key: { id: ctx.args.id } });
+}
+
+export const response = (ctx) => ctx.result;
+```
+
+#### [updatePost]
+```js title="amplify/data/updatePost.js"
+import { util } from "@aws-appsync/utils";
+import * as ddb from "@aws-appsync/utils/dynamodb";
+
+export function request(ctx) {
+  const { id, expectedVersion, ...rest } = ctx.args;
+  const values = Object.entries(rest).reduce((obj, [key, value]) => {
+    obj[key] = value ?? ddb.operations.remove();
+    return obj;
+  }, {});
+
+  return ddb.update({
+    key: { id },
+    condition: { version: { eq: expectedVersion } },
+    update: { ...values, version: ddb.operations.increment(1) },
+  });
+}
+
+export function response(ctx) {
+  const { error, result } = ctx;
+  if (error) {
+    util.appendError(error.message, error.type);
+  }
+  return result;
+}
+```
+
+#### [deletePost]
+```js title="amplify/data/deletePost.js"
+import { util } from "@aws-appsync/utils";
+import * as ddb from "@aws-appsync/utils/dynamodb";
+
+export function request(ctx) {
+  let condition = null;
+  if (ctx.args.expectedVersion) {
+    condition = {
+      or: [
+        { id: { attributeExists: false } },
+        { version: { eq: ctx.args.expectedVersion } },
+      ],
+    };
+  }
+  return ddb.remove({ key: { id: ctx.args.id }, condition });
+}
+
+export function response(ctx) {
+  const { error, result } = ctx;
+  if (error) {
+    util.appendError(error.message, error.type);
+  }
+  return result;
+}
+```
+
+## ステップ 5 - カスタムクエリまたはミューテーションを呼び出す
+
+生成された Data クライアントから、すべてのカスタムクエリとミューテーションは、それぞれ `client.queries.` および `client.mutations.` API の下にあります。
+
+#### [addPost]
+```ts title="App.tsx"
+const { data, errors } = await client.mutations.addPost({
+  title: "My Post",
+  content: "My Content",
+  author: "Chris",
+});
+```
+
+#### [getPost]
+```ts title="App.tsx"
+const { data, errors } = await client.queries.getPost({
+  id: "<post-id>"
+});
+```
+
+#### [updatePost]
+```ts title="App.tsx"
+const { data, errors } = await client.mutations.updatePost({
+  id: "<post-id>",
+  title: "An Updated Post",
+  expectedVersion: 1,
+});
+```
+
+#### [deletePost]
+```ts title="App.tsx"
+const { data, errors } = await client.mutations.deletePost({
+  id: "<post-id>",
+});
+```
+
+## まとめ
+
+このガイドでは、外部 DynamoDB テーブルを Amplify GraphQL API のデータソースとして追加し、AppSync JS リゾルバーで処理されるカスタムクエリとミューテーションを定義して、Amplify Gen 2 Data クライアントを使用して外部 DynamoDB テーブル内の Post アイテムを操作しました。
+
+クリーンアップするには、ターミナルでサンドボックスプロセスを終了するときにプロンプトを受け入れることでサンドボックスを削除できます。または、AWS Amplify コンソールを使用してサンドボックス環境を管理および削除することもできます。
+
+外部 DynamoDB テーブルを削除するには、AppSync コンソールに移動し、データソースリストのテーブルの名前をクリックします。これにより DynamoDB コンソールが表示され、そこでテーブルを削除できます。
+
+## すべての DynamoDB 操作とサンプルリゾルバー
+
+### GetItem
+
+[参考資料](https://docs.aws.amazon.com/appsync/latest/devguide/js-resolver-reference-dynamodb.html#js-aws-appsync-resolver-reference-dynamodb-getitem) - `GetItem` リクエストを使用すると、AWS AppSync DynamoDB 関数に `GetItem` リクエストを DynamoDB に行うように指示でき、以下を指定できます。
+
+- DynamoDB のアイテムのキー
+- 一貫性のある読み取りを使用するかどうか
+
+**例:**
+
+```js
+export function request(ctx) {
+  const { foo, bar } = ctx.args;
+  return {
+    operation: 'GetItem',
+    key: util.dynamodb.toMapValues({ foo, bar }),
+    consistentRead: true
+  };
+}
+```
+
+### PutItem
+
+[PutItem](https://docs.aws.amazon.com/appsync/latest/devguide/js-resolver-reference-dynamodb.html#js-aws-appsync-resolver-reference-dynamodb-putitem) - `PutItem` リクエストマッピングドキュメントを使用すると、AWS AppSync DynamoDB 関数に `PutItem` リクエストを DynamoDB に行うように指示でき、以下を指定できます。
+
+- DynamoDB のアイテムのキー
+- アイテムの完全な内容 (キーと attributeValues で構成)
+- 操作が成功するための条件
+
+**例:**
+
+```js
+import { util } from '@aws-appsync/utils';
+
+export function request(ctx) {
+  const { foo, bar, ...values } = ctx.args;
+  return {
+    operation: 'PutItem',
+    key: util.dynamodb.toMapValues({ foo, bar }),
+    attributeValues: util.dynamodb.toMapValues(values)
+  };
+}
+```
+
+### UpdateItem
+
+[UpdateItem](https://docs.aws.amazon.com/appsync/latest/devguide/js-resolver-reference-dynamodb.html#js-aws-appsync-resolver-reference-dynamodb-updateitem) - `UpdateItem` リクエストを使用すると、AWS AppSync DynamoDB 関数に `UpdateItem` リクエストを DynamoDB に行うように指示でき、以下を指定できます。
+
+- DynamoDB のアイテムのキー
+- DynamoDB のアイテムの更新方法を説明する更新式
+- 操作が成功するための条件
+
+**例:**
+
+```js
+import { util } from '@aws-appsync/utils';
+
+export function request(ctx) {
+  const { id } = ctx.args;
+  return {
+    operation: 'UpdateItem',
+    key: util.dynamodb.toMapValues({ id }),
+    update: {
+      expression: 'ADD #voteField :plusOne, version :plusOne',
+      expressionNames: { '#voteField': 'upvotes' },
+      expressionValues: { ':plusOne': { N: 1 } }
+    }
+  };
+}
+```
+
+### DeleteItem
+
+[DeleteItem](https://docs.aws.amazon.com/appsync/latest/devguide/js-resolver-reference-dynamodb.html#js-aws-appsync-resolver-reference-dynamodb-deleteitem) - `DeleteItem` リクエストを使用すると、AWS AppSync DynamoDB 関数に `DeleteItem` リクエストを DynamoDB に行うように指示でき、以下を指定できます。
+
+- DynamoDB のアイテムのキー
+- 操作が成功するための条件
+
+**例:**
+
+```js
+import { util } from '@aws-appsync/utils';
+
+export function request(ctx) {
+  return {
+    operation: 'DeleteItem',
+    key: util.dynamodb.toMapValues({ id: ctx.args.id })
+  };
+}
+```
+
+### Query
+
+[Query](https://docs.aws.amazon.com/appsync/latest/devguide/js-resolver-reference-dynamodb.html#js-aws-appsync-resolver-reference-dynamodb-query) - Query リクエストオブジェクトを使用すると、AWS AppSync DynamoDB リゾルバーに Query リクエストを DynamoDB に行うように指示でき、以下を指定できます。
+
+- キー式
+- どのインデックスを使用するか
+- その他のフィルター
+- 返すアイテムの数
+- 一貫性のある読み取りを使用するかどうか
+- クエリ方向 (前方または後方)
+- ページネーショントークン
+
+**例:**
+
+```js
+import { util } from '@aws-appsync/utils';
+
+export function request(ctx) {
+  const { owner } = ctx.args;
+  return {
+    operation: 'Query',
+    query: {
+      expression: 'ownerId = :ownerId',
+      expressionValues: util.dynamodb.toMapValues({ ':ownerId': owner })
+    },
+    index: 'owner-index'
+  };
+}
+```
+### Scan
+
+[Scan](https://docs.aws.amazon.com/appsync/latest/devguide/js-resolver-reference-dynamodb.html#js-aws-appsync-resolver-reference-dynamodb-scan) - `Scan` リクエストを使用すると、AWS AppSync DynamoDB 関数に `Scan` リクエストを DynamoDB に行うように指示でき、以下を指定できます。
+
+- 結果を除外するフィルター
+- どのインデックスを使用するか
+- 返すアイテムの数
+- 一貫性のある読み取りを使用するかどうか
+- ページネーショントークン
+- 並列スキャン
+
+**例:**
+
+```js
+export function request(ctx) {
+  return { operation: 'Scan' };
+}
+```
+### Sync
+
+[Sync](https://docs.aws.amazon.com/appsync/latest/devguide/js-resolver-reference-dynamodb.html#js-aws-appsync-resolver-reference-dynamodb-sync) - `Sync` リクエストオブジェクトを使用すると、DynamoDB テーブルからすべての結果を取得して、最後のクエリ以降に変更されたデータのみを受け取ることができます (デルタ更新)。`Sync` リクエストは、バージョン付き DynamoDB データソースに対してのみ作成できます。以下を指定できます。
+
+- 結果を除外するフィルター
+
+- 返すアイテムの数
+
+- ページネーショントークン
+
+- 最後の Sync 操作が開始された時間
+
+**例:**
+
+```js
+export function request(ctx) {
+  const { nextToken, lastSync } = ctx.args;
+  return { operation: 'Sync', limit: 100, nextToken, lastSync };
+}
+```
+
+### BatchGetItem
+
+[BatchGetItem](https://docs.aws.amazon.com/appsync/latest/devguide/js-resolver-reference-dynamodb.html#js-aws-appsync-resolver-reference-dynamodb-batch-get-item) - `BatchGetItem` リクエストオブジェクトを使用すると、AWS AppSync DynamoDB 関数に `BatchGetItem` リクエストを DynamoDB に行わせることができ、複数のテーブルから複数のアイテムを取得できます。このリクエストオブジェクトの場合、以下を指定する必要があります。
+
+- アイテムを取得するテーブル名
+
+- 各テーブルから取得するアイテムのキー
+
+DynamoDB `BatchGetItem` 制限が適用され、**条件式は提供できません**。
+
+**例:**
+```js
+import { util } from '@aws-appsync/utils';
+
+export function request(ctx) {
+  const { authorId, postId } = ctx.args;
+  return {
+    operation: 'BatchGetItem',
+    tables: {
+      authors: [util.dynamodb.toMapValues({ authorId })],
+      posts: [util.dynamodb.toMapValues({ authorId, postId })],
+    },
+  };
+}
+```
+
+### BatchDeleteItem
+
+[BatchDeleteItem](https://docs.aws.amazon.com/appsync/latest/devguide/js-resolver-reference-dynamodb.html#js-aws-appsync-resolver-reference-dynamodb-batch-delete-item) - BatchDeleteItem リクエストオブジェクトを使用すると、AWS AppSync DynamoDB 関数に BatchWriteItem リクエストを DynamoDB に行わせることができ、複数のテーブルから複数のアイテムを削除できます。このリクエストオブジェクトの場合、以下を指定する必要があります。
+
+- アイテムを削除するテーブル名
+
+- 各テーブルから削除するアイテムのキー
+
+DynamoDB `BatchWriteItem` 制限が適用され、**条件式は提供できません**。
+
+**例:**
+
+```js
+import { util } from '@aws-appsync/utils';
+
+export function request(ctx) {
+  const { authorId, postId } = ctx.args;
+  return {
+    operation: 'BatchDeleteItem',
+    tables: {
+      authors: [util.dynamodb.toMapValues({ authorId })],
+      posts: [util.dynamodb.toMapValues({ authorId, postId })],
+    },
+  };
+}
+```
+
+### BatchPutItem
+
+[BatchPutItem](https://docs.aws.amazon.com/appsync/latest/devguide/js-resolver-reference-dynamodb.html#js-aws-appsync-resolver-reference-dynamodb-batch-put-item) - `BatchPutItem` リクエストオブジェクトを使用すると、AWS AppSync DynamoDB 関数に `BatchWriteItem` リクエストを DynamoDB に行わせることができ、複数のテーブルに複数のアイテムを配置できます。このリクエストオブジェクトの場合、以下を指定する必要があります。
+
+- アイテムを配置するテーブル名
+
+- 各テーブルに配置する完全なアイテム
+
+DynamoDB `BatchWriteItem` 制限が適用され、**条件式は提供できません**。
+
+**例:**
+
+```js
+import { util } from '@aws-appsync/utils';
+
+export function request(ctx) {
+  const { authorId, postId, name, title } = ctx.args;
+  return {
+    operation: 'BatchPutItem',
+    tables: {
+      authors: [util.dynamodb.toMapValues({ authorId, name })],
+      posts: [util.dynamodb.toMapValues({ authorId, postId, title })],
+    },
+  };
+}
+```
+
+### TransactGetItems
+
+[TransactGetItems](https://docs.aws.amazon.com/appsync/latest/devguide/js-resolver-reference-dynamodb.html#js-aws-appsync-resolver-reference-dynamodb-transact-get-items) - `TransactGetItems` リクエストオブジェクトを使用して、AWS AppSync DynamoDB 関数に `TransactGetItems` リクエストを DynamoDB に行わせることができ、複数のテーブルから複数のアイテムを取得できます。このリクエストオブジェクトの場合、以下を指定する必要があります。
+
+- アイテムを取得する各リクエストアイテムのテーブル名
+
+- 各テーブルから取得する各リクエストアイテムのキー
+
+DynamoDB `TransactGetItems` 制限が適用され、**条件式は提供できません**。
+
+**例:**
+
+```js
+import { util } from '@aws-appsync/utils';
+
+export function request(ctx) {
+  const { authorId, postId } = ctx.args;
+  return {
+    operation: 'TransactGetItems',
+    transactItems: [
+      {
+        table: 'posts',
+        key: util.dynamodb.toMapValues({ postId }),
+      },
+      {
+        table: 'authors',
+        key: util.dynamodb.toMapValues({ authorId }),
+      },
+    ],
+  };
+}
+```
+
+### TransactWriteItems
+
+[TransactWriteItems](https://docs.aws.amazon.com/appsync/latest/devguide/js-resolver-reference-dynamodb.html#js-aws-appsync-resolver-reference-dynamodb-transact-write-items) - `TransactWriteItems` リクエストオブジェクトを使用して、AWS AppSync DynamoDB 関数に `TransactWriteItems` リクエストを DynamoDB に行わせることができ、複数のアイテムを複数のテーブルに書き込むことができます。このリクエストオブジェクトの場合、以下を指定する必要があります。
+
+- 各リクエストアイテムの宛先テーブル名
+
+- 実行する各リクエストアイテムの操作。4 つの種類の操作がサポートされています: `PutItem`、`UpdateItem`、`DeleteItem`、および `ConditionCheck`
+
+- 書き込む各リクエストアイテムのキー
+
+DynamoDB `TransactWriteItems` 制限が適用されます。
+
+**例:**
+
+```js
+import { util } from '@aws-appsync/utils';
+
+export function request(ctx) {
+  const { authorId, postId, title, description, oldTitle, authorName } = ctx.args;
+  return {
+    operation: 'TransactWriteItems',
+    transactItems: [
+      {
+        table: 'posts',
+        operation: 'PutItem',
+        key: util.dynamodb.toMapValues({ postId }),
+        attributeValues: util.dynamodb.toMapValues({ title, description }),
+        condition: util.transform.toDynamoDBConditionExpression({
+          title: { eq: oldTitle },
+        }),
+      },
+      {
+        table: 'authors',
+        operation: 'UpdateItem',
+        key: util.dynamodb.toMapValues({ authorId }),
+        update: {
+          expression: 'SET authorName = :name',
+          expressionValues: util.dynamodb.toMapValues({ ':name': authorName }),
+        },
+      },
+    ],
+  };
+}
+```

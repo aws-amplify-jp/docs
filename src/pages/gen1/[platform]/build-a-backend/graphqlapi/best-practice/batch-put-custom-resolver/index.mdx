@@ -1,0 +1,151 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'バッチカスタムリゾルバーの配置',
+  description: 'GraphQL ミューテーションを活用して、各オブジェクトを個別に作成するための順序付きリクエストを行う代わりに、1 つのリクエストで複数のオブジェクトを効率的に作成します。',
+  platforms: [
+    'javascript',
+    'angular',
+    'nextjs',
+    'react',
+    'vue',
+    'swift',
+    'android',
+    'flutter',
+    'react-native'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+個別のオブジェクトを順序付けで作成し、すべてのリクエストが完了するのを待つのではなく、オブジェクトをバッチで作成する必要がある場合があります。
+
+1. カスタムミューテーションでスキーマを定義します。カスタムミューテーションは、これらの手順に従う場合、AppSync に事前にデプロイされるべきではなく、CLI は独自のリゾルバーをアタッチして、この方法でカスタムリソースをアタッチするのを防ぎます。
+```graphql
+type Todo @model {
+  id: ID!
+  name: String!
+  description: String
+}
+
+type Mutation {
+  batchCreateTodo(todos: [BatchCreateTodo]): [Todo]
+}
+
+input BatchCreateTodo {
+  id: ID
+  name: String!
+  description: String
+}
+```
+
+2. [リゾルバー用のカスタムリソースを作成](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#vtl-resolver)して、以下のコードスニペットをガイドとして使用して開始します
+
+2. カスタムリゾルバーを作成するための手順に従います:
+```bash
+amplify add custom
+```
+```console
+? How do you want to define this custom resource?
+❯ AWS CDK
+? Provide a name for your custom resource
+❯ MyCustomResolvers
+```
+
+次に、カスタムリソース用の AppSync 依存関係をインストールします:
+```bash
+cd amplify/backend/custom/MyCustomResolvers
+npm i @aws-cdk/aws-appsync@~1.124.0
+```
+
+カスタム CDK スタックの開始点として以下のテンプレートを使用します。リゾルバーは環境参照でテンプレート化する必要があります。
+
+```ts
+import * as cdk from '@aws-cdk/core';
+import * as AmplifyHelpers from '@aws-amplify/cli-extensibility-helper';
+import * as appsync from '@aws-cdk/aws-appsync';
+import { AmplifyDependentResourcesAttributes } from '../../types/amplify-dependent-resources-ref';
+
+export class cdkStack extends cdk.Stack {
+  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps, amplifyResourceProps?: AmplifyHelpers.AmplifyResourceProps) {
+    super(scope, id, props);
+    /* Do not remove - Amplify CLI automatically injects the current deployment environment in this input parameter */
+    new cdk.CfnParameter(this, 'env', {
+      type: 'String',
+      description: 'Current Amplify CLI env name',
+    });
+    
+    // Access other Amplify Resources 
+    const retVal:AmplifyDependentResourcesAttributes = AmplifyHelpers.addResourceDependency(this, 
+      amplifyResourceProps.category, 
+      amplifyResourceProps.resourceName, 
+      [{
+        category: "api",
+        resourceName: "<YOUR-API-NAME>"
+      }]
+    );
+
+    const requestVTL = `
+      ## [Start] Initialization default values. **
+      $util.qr($ctx.stash.put("defaultValues", $util.defaultIfNull($ctx.stash.defaultValues, {})))
+      #set( $createdAt = $util.time.nowISO8601() )
+      #set($todosArray = [])
+      #foreach($item in \${ctx.args.todos})
+        $util.qr($item.put("id", $util.defaultIfNullOrBlank($item.id, $util.autoId())))
+        $util.qr($item.put("createdAt", $util.defaultIfNull($item.createdAt, $createdAt)))
+        $util.qr($item.put("updatedAt", $util.defaultIfNull($item.updatedAt, $createdAt)))
+        $util.qr($item.put("__typename", "Todo"))
+        $util.qr($todosArray.add($util.dynamodb.toMapValues($item)))
+      #end
+      ## [End] Initialization default values. **
+      $util.toJson( {
+        "version": "2018-05-29",
+        "operation": "BatchPutItem",
+        "tables": {
+          "<TYPE-NAME-HERE>-${apiIdRef}-${envRef}": $todosArray
+        }
+      } )
+    `
+    const responseVTL = `
+      ## [Start] ResponseTemplate. **
+      #if( $ctx.error )
+        $util.error($ctx.error.message, $ctx.error.type)
+      #else
+        $util.toJson($ctx.result.data.<TYPE-NAME-HERE>-${apiIdRef}-${envRef})
+      #end
+      ## [End] ResponseTemplate. **
+    `;
+
+
+    const resolver = new appsync.CfnResolver(this, "custom-resolver", {
+      // apiId: retVal.api.new.GraphQLAPIIdOutput,
+      // https://github.com/aws-amplify/amplify-cli/issues/9391#event-5843293887
+      // If you use Amplify you can access the parameter via Ref since it's a CDK parameter passed from the root stack.
+      // Previously the ApiId is the variable Name which is wrong , it should be variable value as below
+      apiId: cdk.Fn.ref(retVal.api.replaceWithAPIName.GraphQLAPIIdOutput),
+      fieldName: "querySomething", 
+      typeName: "Query", // Query | Mutation | Subscription
+      requestMappingTemplate: requestVTL,
+      responseMappingTemplate: responseVTL,
+      dataSourceName: "TodoTable" // DataSource name
+    })
+  }
+}
+```
+
+CloudFormation パラメーターを使用することで、カスタムリゾルバーを作業環境に合わせてコンテキスト化できます。
+
+3. `amplify push` を実行して API をデプロイします
+
+カスタムリゾルバーの完全なドキュメントは[こちらで利用できます](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#vtl-resolver)

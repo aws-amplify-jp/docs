@@ -1,0 +1,974 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '認可ルールをカスタマイズする',
+  description: 'GraphQLスキーマに認可ルールを追加して、データへのアクセスを制御します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert url={'/gen1/[platform]/tools/cli-legacy/auth-directive/'} />
+
+`@auth`ディレクティブを使用して、パブリック、サインインユーザー、ユーザー単位、およびユーザーグループ単位のデータアクセスに対する認可ルールを構成します。**認可ルールはデフォルト拒否原則に従います**。つまり、認可ルールが具体的に構成されていない場合、それは拒否されます。
+
+```graphql
+type Todo @model @auth(rules: [{ allow: owner }]) {
+  content: String
+}
+```
+
+上の例では、サインインしている各ユーザー（「オーナー」とも呼ばれます）は、自分のTodoを作成、読取、更新、および削除できます。
+
+Amplifyでは、許可されている操作を制限したり、複数の認可ルールを組み合わせたり、きめ細かいフィールドレベルの認可を適用することもできます。
+
+```graphql
+type Todo
+  @model
+  @auth(rules: [{ allow: public, operations: [read] }, { allow: owner }]) {
+  content: String
+}
+```
+
+上の例では、誰もが（`public`）すべてのTodoを読み取ることができますが、オーナー（認証されたユーザー）は自分のTodoを作成、読取、更新、および削除できます。
+
+## グローバル認可ルール（はじめに使用するのみ）
+
+はじめに使用するために、新しいGraphQLスキーマを作成するときに定義されたグローバル認可ルールがあります。本番環境では、グローバル認可ルールを削除し、代わりに各モデルにルールを適用してください。
+
+<BlockSwitcher>
+
+<Block name="Amplify CLI">
+
+```graphql
+input AMPLIFY {
+  globalAuthRule: AuthRule = { allow: public }
+}
+```
+
+</Block>
+<Block name="AWS CDK">
+
+CDKコンストラクトでは、これを「サンドボックスモード」と呼び、入力パラメータを介して明示的に有効にする必要があります。
+
+```ts
+new AmplifyGraphqlApi(this, "MyNewApi", {
+  ...,
+  translationBehavior: {
+    sandboxModeEnabled: true
+  }
+});
+```
+
+</Block>
+
+</BlockSwitcher>
+
+グローバル認可ルール（この場合、`{ allow: public }`—誰でも作成、読取、更新、削除を許可）は、GraphQLスキーマ内のすべてのデータモデルに適用されます。
+
+**注：** Amplifyは常に存在する最も具体的な認可ルールを使用します。たとえば、フィールドレベルの認可ルールはモデルレベルの認可ルールより優先され、同様にモデルレベルの認可ルールはグローバル認可ルールより優先されます。
+
+<Callout warning>
+
+現在のところ、`{ allow: public }`のみがグローバル認可ルールとしてサポートされています。
+
+</Callout>
+
+## 認可戦略
+
+以下のガイドを使用して、ユースケースに適切な認可戦略を選択してください：
+
+| **推奨される使用例** | **戦略** | **プロバイダー** |
+| --- | --- | --- |
+| ユーザーまたはデバイスが匿名であるパブリックデータアクセス。AppSync APIキーを持つ誰もがアクセスを許可されます。 | [`public`](#public-data-access) | `apiKey` |
+| 本番環境のパブリックデータアクセスに推奨されます。認証されていないユーザーまたはデバイスがAWS IAMコントロールを使用して権限を付与されるパブリックデータアクセス。 | [`public`](#public-data-access) | `iam`（またはCDKコンストラクト使用時は`identityPool`） |
+| ユーザー単位のデータアクセス。アクセスはレコードの「オーナー」に制限されます。デフォルトでは`amplify add auth`のCognito user poolを活用します。 | [`owner`](#per-user--owner-based-data-access) | `userPools` / `oidc` |
+| 任意のサインインユーザーのデータアクセス。オーナーベースのアクセスとは異なり、**任意の**サインインユーザーがアクセスできます。 | [`private`](#signed-in-user-data-access) | `userPools` / `oidc` / `iam` |
+| ユーザーグループ単位のデータアクセス。特定の、または動的に構成されたユーザーのグループがアクセスできます | [`groups`](#user-group-based-data-access) | `userPools` / `oidc` |
+| Lambda関数内で独自のカスタム認可ルールを定義します | [`custom`](#custom-authorization-rule) | `function` |
+
+### パブリックデータアクセス
+
+誰もがアクセスできるようにするには、`public`認可戦略を使用します。舞台裏では、APIはAPIキーで保護されます。
+
+```graphql
+type Todo @model @auth(rules: [{ allow: public }]) {
+  content: String
+}
+```
+
+認可プロバイダーをオーバーライドすることもできます。以下の例では、APIキーの代わりにCognito IDプール内の「認証されていないロール」をパブリックアクセスに使用できます。
+
+<BlockSwitcher>
+<Block name="Amplify CLI">
+
+`amplify add auth`を実行すると、Amplify CLIはCognito IDプール内の「認証されていないロール」に対してスコープが制限されたIAMポリシーを自動的に生成します。
+
+```graphql
+# プロバイダーオーバーライド付きのパブリック認可
+type Post @model @auth(rules: [{ allow: public, provider: iam }]) {
+  id: ID!
+  title: String!
+}
+```
+
+</Block>
+<Block name="AWS CDK">
+
+`identityPoolConfig`プロパティを設定して、Amazon Cognito IDプールの認証されていない識別情報のロールを指定します：
+
+```ts
+// 注：このサンプルはアルファ版のCognito Identity Poolコンストラクトを使用していますが、必須ではなく、CfnIdentityPoolも使用できます
+import cognito_identitypool from '@aws-cdk/aws-cognito-identitypool-alpha';
+
+const identityPool = new cognito_identitypool.IdentityPool(stack, 'MyNewIdentityPool', {
+  allowUnauthenticatedIdentities: true,
+  authenticationProviders: { userPools: [new cognito_identitypool.UserPoolAuthenticationProvider({
+    userPool: <your_user_pool>,
+    userPoolClient: <your_user_pool_client>,
+  })] },
+});
+
+new AmplifyGraphqlApi(this, "MyNewApi", {
+  definition: AmplifyGraphqlDefinition.fromFiles(path.join(__dirname, "schema.graphql")),
+  authorizationModes: {
+    defaultAuthorizationMode: 'API_KEY',
+    apiKeyConfig: {
+      expires: cdk.Duration.days(30)
+    },
+    identityPoolConfig: {
+      identityPoolId: identityPool.identityPoolId,
+      authenticatedUserRole: identityPool.authenticatedRole,
+      unauthenticatedUserRole: identityPool.unauthenticatedRole,
+    }
+  },
+})
+```
+
+```graphql
+# プロバイダーオーバーライド付きのパブリック認可
+type Post @model @auth(rules: [{ allow: public, provider: identityPool }]) {
+  id: ID!
+  title: String!
+}
+```
+
+<InlineFilter filters={["react", "angular", "nextjs", "vue", "react-native", "javascript"]}>
+
+Amplifyライブラリのクライアント構成ファイル（`amplifyconfiguration.json`）で`allowGuestAccess`を`true`に設定します。これにより、ユーザーがログインしていない場合、AmplifyライブラリはログインしているCognito IDプールから認証されていないロールを使用できます。
+
+```json
+{
+	"Auth": {
+		"Cognito": {
+			"userPoolId": "YOUR_USER_POOL_ID",
+			"userPoolClientId": "YOUR_USER_POOL_CLIENT_ID",
+			"identityPoolId": "YOUR_IDENTITY_POOL_ID",
+			"allowGuestAccess": true
+		},
+	},
+	"API": {
+		"GraphQL": {
+			"endpoint": "YOUR_API_ENDPOINT",
+			"region": "YOUR_API_REGION",
+			"defaultAuthMode": "YOUR_DEFAULT_AUTHORIZATION_MODE",
+		},
+	},
+}
+```
+
+</InlineFilter>
+
+</Block>
+</BlockSwitcher>
+
+
+
+### ユーザー単位/オーナーベースのデータアクセス
+
+レコードのアクセスを特定のユーザーに制限するには、`owner`認可戦略を使用します。`owner`認可が構成されている場合、レコードの`owner`のみが指定された操作を実行できます。
+
+```graphql
+# Todoの「オーナー」は、自分のtodoを作成、読取、更新、および削除できます
+type Todo @model @auth(rules: [{ allow: owner }]) {
+  content: String
+}
+
+# Todoレコードの「オーナー」は、それを作成、読取、更新することのみが許可されます。
+# Todoレコードの「オーナー」は削除することが拒否されます。
+type Todo
+  @model
+  @auth(rules: [{ allow: owner, operations: [create, read, update] }]) {
+  content: String
+}
+```
+
+舞台裏では、Amplifyは各レコードに自動的に`owner: String`フィールドを追加します。このフィールドには、レコード作成時のレコードオーナーの識別情報が含まれます。
+
+デフォルトでは、Cognito user poolのユーザー情報が`owner`フィールドに入力されます。保存される値には、`<sub>::<username>`の形式で`sub`と`username`が含まれます。APIは`<sub>::<username>`または`sub` / `username`の完全な値に対して認可を行い、`username`を返します。また、[OpenID Connectを認可プロバイダーとして構成](#using-oidc-authorization-provider)することもできます。
+
+`ownerField`を認可ルールで指定することで、`owner`フィールドを独自の優先フィールドにオーバーライドできます。
+
+<Callout>
+
+`ownerField`をプライマリキーフィールドまたは`id`フィールド（プライマリキーが指定されていない場合）に設定しないでください。`ownerField`でクエリを実行したい場合は、そのフィールドに`@index`を使用して、セカンダリインデックスを作成します。
+
+</Callout>
+
+```graphql
+type Todo @model @auth(rules: [{ allow: owner, ownerField: "author" }]) {
+  content: String #^^^^^^^^^^^^^^^^^^^^
+  author: String # レコードオーナー情報が「author」フィールドに保存されます
+}
+```
+
+<Callout warning>
+
+**デフォルトでは、オーナーは既存レコードのオーナーを別のユーザーに再割り当てできます。**
+
+オーナーがレコードを別のユーザーに再割り当てするのを防ぐには、オーナーフィールド（デフォルト`owner: String`）を[フィールドレベルの認可ルール](#field-level-authorization-rules)で保護します。たとえば、ソーシャルメディアアプリでは、AliceがAliceのPostをBobに再割り当てできないようにしたいでしょう。
+
+```graphql
+type Todo @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  description: String
+  owner: String @auth(rules: [{ allow: owner, operations: [read, delete] }])
+}
+```
+
+</Callout>
+
+### マルチユーザーのデータアクセス
+
+ユーザーのセットにレコードへのアクセスを許可したい場合は、`ownerField`をオーナーのリストにオーバーライドできます。レコードにアクセスするための動的なユーザーセットを使用したい場合は、これを使用します。
+
+```graphql
+type Todo @model @auth(rules: [{ allow: owner, ownerField: "authors" }]) {
+  content: String
+  authors: [String]
+}
+```
+
+上の例では、レコード作成時に`authors`リストがレコード作成者によって入力されます。作成者は、その後`authors`フィールドを追加ユーザーで更新できます。`authors`フィールドにリストされている任意のユーザーはレコードにアクセスできます。
+
+### サインインユーザーのデータアクセス
+
+レコードのアクセスをすべてのサインインユーザーに制限するには、`private`認可戦略を使用します。
+
+> レコードのアクセスを特定のユーザーに制限したい場合は、[ユーザー単位/オーナーベースのデータアクセス](#per-user--owner-based-data-access)を参照してください。`private`認可は、**すべての**サインインユーザーアクセスに認可ルールを適用します。
+
+```graphql
+type Todo @model @auth(rules: [{ allow: private }]) {
+  content: String
+}
+```
+
+上の例では、Cognito user poolからの有効なJWTトークンを持つ誰もがすべてのTodoにアクセスできます。
+
+認可プロバイダーをオーバーライドすることもできます。以下の例では、Cognito IDプール内の「認証されたロール」をサインインユーザーへのアクセス許可に使用できます。
+
+<BlockSwitcher>
+<Block name="Amplify CLI">
+
+`amplify add auth`を実行すると、Amplify CLIはCognito IDプール内の「認証されたロール」に対してスコープが制限されたIAMポリシーを自動的に生成します。
+
+```graphql
+# プロバイダーオーバーライド付きのパブリック認可
+type Post @model @auth(rules: [{ allow: private, provider: iam }]) {
+  id: ID!
+  title: String!
+}
+```
+</Block>
+<Block name="AWS CDK">
+
+`identityPoolConfig`プロパティを設定して、Amazon Cognito IDプールの認証された識別情報のロールを指定します：
+
+```ts
+// 注：このサンプルはアルファ版のCognito Identity Poolコンストラクトを使用していますが、必須ではなく、CfnIdentityPoolも使用できます
+import cognito_identitypool from '@aws-cdk/aws-cognito-identitypool-alpha';
+
+const identityPool = new cognito_identitypool.IdentityPool(stack, 'MyNewIdentityPool', {
+  allowUnauthenticatedIdentities: true,
+  authenticationProviders: { userPools: [new cognito_identitypool.UserPoolAuthenticationProvider({
+    userPool: <your_user_pool>,
+    userPoolClient: <your_user_pool_client>,
+  })] },
+});
+
+new AmplifyGraphqlApi(this, "MyNewApi", {
+  definition: AmplifyGraphqlDefinition.fromFiles(path.join(__dirname, "schema.graphql")),
+  authorizationModes: {
+    defaultAuthorizationMode: 'API_KEY',
+    apiKeyConfig: {
+      expires: cdk.Duration.days(30)
+    },
+    identityPoolConfig: {
+      identityPoolId: identityPool.identityPoolId,
+      authenticatedUserRole: identityPool.authenticatedRole,
+      unauthenticatedUserRole: identityPool.unauthenticatedRole,
+    }
+  },
+})
+```
+
+```graphql
+# プロバイダーオーバーライド付きのパブリック認可
+type Post @model @auth(rules: [{ allow: private, provider: identityPool }]) {
+  id: ID!
+  title: String!
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+
+さらに、OpenID Connectを`private`認可と共に使用することもできます。[OpenID Connectを認可プロバイダーとして使用](#using-oidc-authorization-provider)を参照してください。
+
+**注：** 子モデルが接続されていて、`private`レベルアクセスを許可する場合、親モデルからそれをフェッチすることを認可されたユーザーは、接続された子モデルを読み取ることができます。例えば、
+
+```graphql
+type Todo @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  name: String!
+  task: [Task] @hasMany
+}
+
+type Task
+  @model
+  @auth(rules: [{ allow: owner }, { allow: private, operations: [read] }]) {
+  id: ID!
+  description: String!
+}
+```
+
+上の関係では、`Todo`レコードのオーナーは、それに接続されたすべてのタスクをクエリできます。`Task`モデルは`private`読み取りアクセスを許可しているからです。
+
+### ユーザーグループベースのデータアクセス
+
+ユーザーグループに基づいてアクセスを制限するには、`group`認可戦略を使用します。
+
+**静的グループ認可**：特定のユーザーグループのセットへのアクセスを制限したい場合は、`groups`パラメータにグループ名を指定します。
+
+```graphql
+type Salary @model @auth(rules: [{ allow: groups, groups: ["Admin"] }]) {
+  id: ID!
+  wage: Int
+  currency: String
+}
+```
+
+上の例では、「Admin」ユーザーグループの一部であるユーザーのみがSalaryモデルへのアクセスを許可されています。
+
+<InlineFilter filters={["javascript", "react-native", "angular", "nextjs", "react", "vue"]}>
+**動的グループ認可**：ユーザーグループのセットへのアクセスを制限したい場合。
+
+```graphql
+# 複数グループでの動的グループ認可
+type Post @model @auth(rules: [{ allow: groups, groupsField: "groups" }]) {
+  id: ID!
+  title: String
+  groups: [String]
+}
+
+# 単一グループでの動的グループ認可
+type Post @model @auth(rules: [{ allow: groups, groupsField: "group" }]) {
+  id: ID!
+  title: String
+  group: String
+}
+```
+
+動的グループ認可では、各レコードは、どのCognitoグループがそれにアクセスできるかを指定する属性を含みます。`groupsField`引数を使用して、基礎となるデータストアでこのグループ情報を保持する属性を指定します。単一のグループがアクセスできるように指定するには、`String`型のフィールドを使用します。複数のグループがアクセスできるように指定するには、`[String]`型のフィールドを使用します。
+
+デフォルトでは、`group`認可はAmazon Cognito user poolグループを活用していますが、OpenID Connectを`group`認可で使用することもできます。[OpenID Connectを認可プロバイダーとして使用](#using-oidc-authorization-provider)を参照してください。
+
+**動的グループ認可を使用する場合のリアルタイムサブスクリプション既知の制限**：
+
+1. 単一のグループに基づいて認可する場合、ユーザーが5以下のユーザーグループの一部である場合、サブスクリプションのみがサポートされます
+2. グループの配列（上記の`groups: [String]`例）によって認可する場合、
+
+- ユーザーが20以下のグループの一部である場合、サブスクリプションのみがサポートされます
+- レコードごとに20以下のユーザーグループを認可することのみができます
+</InlineFilter>
+
+### カスタム認可ルール
+
+Lambda関数を使用して独自のカスタム認可ルールを定義できます。
+
+```graphql
+type Salary @model @auth(rules: [{ allow: custom }]) {
+  id: ID!
+  wage: Int
+  currency: String
+}
+```
+
+選択されたLambda関数はクライアントから認可トークンを受け取り、目的の認可ロジックを実行します。AppSync GraphQL APIは、API呼び出しを許可または拒否するために、呼び出し後にLambdaからペイロードを受け取ります。
+
+<BlockSwitcher>
+<Block name="Amplify CLI">
+
+Lambda認可モードを使用してGraphQL APIを構成するには、ターミナルで以下のコマンドを実行します：
+
+```bash
+amplify update api
+```
+
+```
+? Select a setting to edit:
+> Authorization modes
+
+> Lambda
+
+? Choose a Lambda source:
+> Create a new Lambda function
+```
+
+</Block>
+<Block name="AWS CDK">
+
+Lambda関数を認可モードとして構成するには、CDKコンストラクトで`lambdaConfig`を設定します。`ttl`を使用してトークン有効期限を指定します。
+
+```ts
+const amplifyApi = new AmplifyGraphqlApi(this, 'MyNewApi', {
+  definition: AmplifyGraphqlDefinition.fromFiles(
+    path.join(__dirname, 'schema.graphql')
+  ),
+  authorizationModes: {
+    defaultAuthorizationMode: 'AWS_LAMBDA',
+    lambdaConfig: {
+      function: new lambda.Function(this, 'MyAuthLambda', {
+        code: lambda.Code.fromAsset(path.join(__dirname, 'handlers/auth')),
+        handler: 'index.handler',
+        runtime: lambda.Runtime.NODEJS_18_X
+      }),
+      ttl: cdk.Duration.seconds(10)
+    }
+  }
+});
+```
+
+このLambda関数コードテンプレートを参考として使用して、認可ハンドラーコードを作成できます：
+
+```js
+// これはサンプルコードです。スキーマに合わせて更新してください
+
+/**
+ * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
+ */
+exports.handler = async (event) => {
+  console.log(`EVENT: ${JSON.stringify(event)}`);
+  const {
+    authorizationToken,
+    requestContext: { apiId, accountId }
+  } = event;
+  const response = {
+    isAuthorized: authorizationToken === 'custom-authorized',
+    resolverContext: {
+      // eslint-disable-next-line spellcheck/spell-checker
+      userid: 'user-id',
+      info: 'contextual information A',
+      more_info: 'contextual information B'
+    },
+    deniedFields: [
+      `arn:aws:appsync:${process.env.AWS_REGION}:${accountId}:apis/${apiId}/types/Event/fields/comments`,
+      `Mutation.createEvent`
+    ],
+    ttlOverride: 300
+  };
+  console.log(`response >`, JSON.stringify(response, null, 2));
+  return response;
+};
+```
+
+</Block>
+</BlockSwitcher>
+
+デフォルトのAmplify提供テンプレートをカスタム認可ルールの開始点として使用できます。認可Lambda関数は以下を受け取ります：
+
+```json
+{
+    "authorizationToken": "ExampleAuthToken123123123", # クライアントによって指定される認可トークン
+    "requestContext": {
+        "apiId": "aaaaaa123123123example123", # AppSync API ID
+        "accountId": "111122223333", # AWS Account ID
+        "requestId": "f4081827-1111-4444-5555-5cf4695f339f",
+        "queryString": "mutation CreateEvent {...}\n\nquery MyQuery {...}\n", # GraphQLクエリ
+        "operationName": "MyQuery", # GraphQLオペレーション名
+        "variables": {} # オペレーションに提供される追加の変数
+    }
+}
+```
+
+Lambda認可関数は、以下のJSONを返す必要があります：
+
+```json
+{
+  // 必須
+  "isAuthorized": true, // 「false」の場合、UnauthorizedExceptionが発生し、アクセスが拒否されます
+  "resolverContext": { "banana": "very yellow" }, // VTLリゾルバーテンプレートで$ctx.identity.resolverContextとして表示されるJSONオブジェクト
+
+  // オプション
+  "deniedFields": ["TypeName.FieldName"], // フィールドをクライアントに返すときに「null」に強制します
+  "ttlOverride": 10 // レスポンスをキャッシュすべき秒数。「amplify update api」で指定されたデフォルトをオーバーライドします
+}
+```
+
+[GraphQL API](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules#aws-lambda)および[DataStore](/gen1/[platform]/build-a-backend/more-features/datastore/authz-rules-setup/#configure-custom-authorization-logic-with-aws-lambda)のカスタム認可トークンを設定するにはAmplifyライブラリドキュメントを確認してください。
+
+## 複数の認可ルールを構成する
+
+複数の認可ルールを組み合わせる場合、それらは「論理的OR」で結合されます。
+
+```graphql
+type Post
+  @model
+  @auth(
+    rules: [
+      { allow: public, operations: [read], provider: iam }
+      { allow: owner }
+    ]
+  ) {
+  title: String
+  content: String
+}
+```
+
+```js
+import { createPost } from './graphql/mutations';
+import { listPosts } from './graphql/queries';
+
+// ポストの作成はCognito User Poolsに制限されています
+const newPostResult = await client.graphql({
+  query: queries.createPost,
+  variables: { input: { title: 'Hello World' } },
+  authMode: 'userPool'
+});
+
+// ポストのリスト化は（IAMで検証された）すべてのユーザーが利用できます
+const listPostsResult = await client.graphql({
+  query: queries.listPosts,
+  authMode: 'iam'
+});
+```
+
+上の例では：
+
+- すべてのユーザー（IAMで検証されたサインインしているか否か）がすべてのポストを読み取ることが許可されています
+- オーナーは、自分のポストを作成、読取、更新、および削除できます。
+
+DataStoreを使用していて複数の認可ルールがある場合は、DataStoreにクライアント側から最適な認可モードを自動的に決定させることができます。DataStore上で[複数の認可タイプを構成](/gen1/[platform]/build-a-backend/more-features/datastore/authz-rules-setup/#configure-multiple-authorization-types)する方法の詳細を確認してください。
+
+## フィールドレベルの認可ルール
+
+フィールドに認可ルールを追加する場合、それはフィールドに適用される認可ルールを厳密に定義します。フィールドレベルの認可ルールはモデルレベルの認可ルールを**継承しません**。つまり、指定されたフィールドレベルの認可ルールのみが適用されます。
+
+```graphql
+type Employee
+  @model
+  @auth(rules: [{ allow: private, operations: [read] }, { allow: owner }]) {
+  name: String
+  email: String
+  ssn: String @auth(rules: [{ allow: owner }])
+}
+```
+
+上の例では：
+
+- オーナーは、所有するEmployeeレコードを作成、読取、更新、および削除できます
+- 任意のサインインユーザーは読み取りアクセスを持ちます
+- すべてのサインインユーザーは`ssn`フィールドを除いて、データを読み取ることができます。このフィールドにはオーナー認可のみが適用されており、フィールドレベルの認可ルールはモデルレベルの認可ルールが適用されないことを意味します
+
+<Callout warning>
+
+機密データがサブスクリプションを介して送信されるのを防ぐために、GraphQL Transformerはそれらのフィールドのミューテーションレスポンスを変更して、nullに設定する必要があります。したがって、サブスクリプションでのフィールドレベルの認可を容易にするには、すべての**必須**フィールドにフィールドレベルの認可ルールを適用するか、他のフィールドをnullableにするか、サブスクリプションを無効にする必要があります。
+
+</Callout>
+
+上の例では：
+
+- **任意のサインインユーザー**は従業員の`name`および`email`フィールドのリストを読み取ることが許可されています
+- **従業員/オーナー自身のみ**が`ssn`フィールドへのCRUDアクセスを持ちます
+
+<Callout warning>
+
+意図しないデータ喪失を防ぐために、レコードを`delete`しようとするユーザーまたはロールは、`@model`注釈が付いたGraphQLタイプのすべてのフィールドに対して削除権限を持つべきです。例えば、以下のスキーマで：
+
+```graphql
+type Todo
+  @model
+  @auth(
+    rules: [
+      { allow: private, provider: iam }
+      { allow: groups, groups: ["Admin"] }
+    ]
+  ) {
+  id: ID!
+  name: String!
+    @auth(
+      rules: [
+        { allow: private, provider: iam }
+        { allow: groups, groups: ["Admin"] }
+      ]
+    )
+  description: String @auth(rules: [{ allow: private, provider: iam }])
+}
+```
+
+`description`フィールドは「Admin」Cognitoグループユーザーがアクセスできないため、彼らは`Todo`レコードを削除できません。
+
+</Callout>
+
+## 高度な設定
+
+### アクセス制御マトリックスをレビューして出力する
+
+APIのアクセス制御マトリックスをレビューするには、以下のコマンドを実行します：
+
+```bash
+amplify status api -acm Blog
+```
+
+```console
+iam:public
+  ┌─────────┬────────┬──────┬────────┬────────┐
+  │ (index) │ create │ read │ update │ delete │
+  ├─────────┼────────┼──────┼────────┼────────┤
+  │  title  │ false  │ true │ false  │ false  │
+  │ content │ false  │ true │ false  │ false  │
+  └─────────┴────────┴──────┴────────┴────────┘
+userPools:owner:owner
+  ┌─────────┬────────┬──────┬────────┬────────┐
+  │ (index) │ create │ read │ update │ delete │
+  ├─────────┼────────┼──────┼────────┼────────┤
+  │  title  │  true  │ true │  true  │  true  │
+  │ content │  true  │ true │  true  │  true  │
+  └─────────┴────────┴──────┴────────┴────────┘
+```
+
+### AppSyncコンソール内でIAM認可を使用する
+
+
+<BlockSwitcher>
+<Block name="Amplify CLI">
+
+IAMベースの`@auth`ルールはAmplify生成IAMロールでのみ機能するようにスコープが制限されています。AppSyncコンソール内でGraphQL APIがIAM認可でアクセスするには、IAMユーザーの名前を明示的にホワイトリストに登録する必要があります。`amplify/backend/api/<your-api-name>/custom-roles.json`にホワイトリストに登録されたIAMユーザーを追加します。（`custom-roles.json`ファイルが存在しない場合は作成してください）。`adminRoleNames`配列にIAMロールまたはユーザー名を追加します：
+
+```json
+{
+  "adminRoleNames": ["<YOUR_IAM_USER_OR_ROLE_NAME>"]
+}
+```
+
+</Block>
+<Block name="AWS CDK">
+
+Amazon Cognito IDプールロール**の例外を除いて**、任意のIAMプリンシパル（AWSリソース、IAMロール、IAMユーザーなど）にこのGraphQL APIへのアクセスを許可するには、CDKコンストラクトの`iamConfig`プロパティでIAM認可モードを有効にする必要があります。
+
+```typescript
+const userRole = Role.fromRoleName(
+  this,
+  'MyUserRole',
+  '<INSERT YOUR USER ROLE NAME HERE>'
+);
+
+const amplifyApi = new AmplifyGraphqlApi(this, 'MyNewApi', {
+  definition: AmplifyGraphqlDefinition.fromFiles(
+    path.join(__dirname, 'schema.graphql')
+  ),
+  authorizationModes: {
+    defaultAuthorizationMode: 'API_KEY',
+    apiKeyConfig: {
+      expires: cdk.Duration.days(30)
+    },
+    iamConfig: {
+      // この値をtrueに設定します。
+      enableIamAuthorizationMode: true
+    }
+  }
+});
+```
+
+これらの「Admin Roles」は特別なアクセス権限を持っており、特定の`@auth`ルールではなく、その[IAMポリシー](https://docs.aws.amazon.com/appsync/latest/devguide/security-authz.html#aws-iam-authorization)に基づいてスコープが制限されています。
+
+</Block>
+</BlockSwitcher>
+これらの「Admin Roles」は特別なアクセス権限を持っており、特定の`@auth`ルールではなく、その[IAMポリシー](https://docs.aws.amazon.com/appsync/latest/devguide/security-authz.html#aws-iam-authorization)に基づいてスコープが制限されています。
+
+### OIDC認可プロバイダーを使用する
+
+`private`、`owner`、および`group`認可はOpenID Connect（OIDC）認可モードで構成できます。認可ルールに`provider: oidc`を追加します。
+
+<BlockSwitcher>
+<Block name="Amplify CLI">
+
+次の`amplify push`で、Amplify CLIは_OpenID Connect プロバイダードメイン_、_Client ID_、_Issued at TTL_、および_Auth Time TTL_を求めるプロンプトを表示します。
+
+</Block>
+<Block name="AWS CDK">
+
+`oidcConfig`プロパティを使用して、_OpenID Connect プロバイダードメイン_、_Client ID_、_Issued at TTL_、および_Auth Time TTL_を構成します。
+
+```ts
+const amplifyApi = new AmplifyGraphqlApi(this, 'MyNewApi', {
+  definition: AmplifyGraphqlDefinition.fromFiles(
+    path.join(__dirname, 'schema.graphql')
+  ),
+  authorizationModes: {
+    defaultAuthorizationMode: 'OPENID_CONNECT',
+    oidcConfig: {
+      oidcIssuerUrl: '...',
+      oidcProviderName: '...',
+      tokenExpiryFromAuth: '...',
+      tokenExpiryFromIssue: '...',
+      clientId: '...'
+    }
+  }
+});
+```
+
+</Block>
+</BlockSwitcher>
+
+```graphql
+type Todo
+  @model
+  @auth(
+    rules: [
+      { allow: owner, provider: oidc, identityClaim: "user_id" }
+      { allow: private, provider: oidc }
+      { allow: group, provider: oidc, groupClaim: "user_groups" }
+    ]
+  ) {
+  content: String
+}
+```
+
+上の例は、`oidc`認可プロバイダーでサポートされている認可戦略を強調しています。`owner`および`group`認可の場合、[カスタム識別情報およびグループクレームを指定](#configure-custom-identity-and-group-claims)することも必要です。
+
+### カスタム識別情報およびグループクレームを構成する
+
+`@auth`は、デフォルトのAmazon Cognito提供の「cognito:groups」または二重コロン区切りのクレーム「sub::username」を使用したくない場合、カスタムクレームの使用をサポートしています。これは、3rdパーティOIDCシステムからのトークンを使用している場合、または外部システム（[Pre Token Generation Lambda Trigger](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html)を使用して外部データベースから読み取る場合など）からグループのリストで要求を入力したい場合に役立ちます。カスタムクレームを使用するには、以下の例のように`identityClaim`または`groupClaim`を指定します：
+
+```graphql
+type Post
+  @model
+  @auth(
+    rules: [
+      { allow: owner, identityClaim: "user_id" }
+      { allow: groups, groups: ["Moderator"], groupClaim: "user_groups" }
+    ]
+  ) {
+  id: ID!
+  owner: String
+  postname: String
+  content: String
+}
+```
+
+この例では、レコードオーナーは`user_id`クレームに対してチェックされます。同様に、`user_groups`クレームに「Moderator」文字列が含まれている場合、アクセスが許可されます。
+
+### Lambda関数にGraphQL APIへのアクセス権を付与する
+
+Lambda関数のIAM実行ロールはAmplifyのGraphQL APIへのアクセスを即座に許可しません。APIは「デフォルト拒否」ベースで動作するためです。アクセスは明示的に付与される必要があります。関数がどのようにデプロイされているかに応じて、ワークフローは若干異なります
+
+<BlockSwitcher>
+
+<Block name="Amplify CLI">
+
+`amplify update function`経由でプロジェクトのLambda関数にGraphQL APIへのアクセスを許可する場合、Lambda関数のIAM実行ロールは、`Query`、`Mutation`、および`Subscription`タイプで許可されている権限を尊重するようにホワイトリストに登録されます。
+
+したがって、これらの関数は特定の`@auth`ルールではなく、その[IAMポリシー](https://docs.aws.amazon.com/appsync/latest/devguide/security-authz.html#aws-iam-authorization)に基づいてスコープが制限された特別なアクセス権限を持ちます。
+
+<Callout>
+
+関数にGraphQL APIへのアクセスを許可した後、APIをリデプロイして权限を適用する必要があります。これを行うには、`amplify push`経由のデプロイの前に`amplify api gql-compile --force`コマンドを実行してください。
+
+</Callout>
+
+</Block>
+
+<Block name="AWS CDK">
+任意のIAMプリンシパル（AWSリソース、IAMロール、IAMユーザーなど）**（Amazon Cognito IDプールロールの例外を除いて）**にこのGraphQL APIへのアクセスを許可するには、CDKコンストラクトでIAM認可モードを有効にする必要があります。
+
+```typescript
+const amplifyApi = new AmplifyGraphqlApi(this, 'MyNewApi', {
+  definition: AmplifyGraphqlDefinition.fromFiles(
+    path.join(__dirname, 'schema.graphql')
+  ),
+  authorizationModes: {
+    defaultAuthorizationMode: 'API_KEY',
+    apiKeyConfig: {
+      expires: cdk.Duration.days(30)
+    },
+    iamConfig: {
+      // `true`に設定する必要があります。その後、Lambda関数の実行ロールにAPIへのアクセスを許可します
+      enableIamAuthorizationMode: true
+    }
+  }
+});
+```
+
+これらの「Admin Roles」は特別なアクセス権限を持っており、特定の`@auth`ルールではなく、その[IAMポリシー](https://docs.aws.amazon.com/appsync/latest/devguide/security-authz.html#aws-iam-authorization)に基づいてスコープが制限されています。
+
+</Block>
+
+<Block name="他のツールでデプロイされた関数">
+
+外部AWSリソースまたはIAMロールにこのGraphQL APIへのアクセスを許可するには、`amplify/backend/api/<your-api-name>/custom-roles.json`にIAMロール名またはAWSリソース名を明示的にリストしる必要があります。（`custom-roles.json`ファイルが存在しない場合は作成してください）。`adminRoleNames`配列にIAMロール名またはAWSリソース名を追加します：
+
+```json
+{
+  "adminRoleNames": ["<YOUR_IAM_ROLE_NAME>", "<YOUR_AWS_RESOURCE_NAME>"]
+}
+```
+
+現在のAmplify CLI環境を参照するために記号`${env}`を使用できます。
+
+これらの「Admin Roles」は特別なアクセス権限を持っており、特定の`@auth`ルールではなく、その[IAMポリシー](https://docs.aws.amazon.com/appsync/latest/devguide/security-authz.html#aws-iam-authorization)に基づいてスコープが制限されています。
+
+</Block>
+
+</BlockSwitcher>
+
+<InlineFilter filters={["javascript", "vue", "angular", "react", "nextjs", "react-native"]}>
+
+[サンプルコード](/gen1/[platform]/build-a-backend/graphqlapi/connect-from-server-runtime/#iam-authorization)を参照して、IAM認可を使用してGraphQL APIへのリクエストに署名する方法を学びます。
+
+</InlineFilter>
+
+### `@manyToMany`関係を認可する
+
+舞台裏では、[`@manyToMany`ディレクティブ](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#many-to-many-relationship)はmany-to-many関係を容易にするために「join table」を`relationName`に従って作成します。Amplifyが「join table」に適用する認可ルールは、many-to-many関係の個々のモデルの認可ルールの和集合です。
+
+たとえば、`Post`のオーナー（`owner`ルールで保護）がシステム管理者によって作成された`Tag`を適用できるスキーマを考えます（`groups`ルールで保護）。舞台裏では、Amplifyは`owner`と`groups`認可の両方を含む`PostTags`テーブルを作成します：
+
+```graphql
+type Post
+  @model
+  @auth(
+    rules: [
+      { allow: owner }
+    ]
+  ) {
+  id: ID!
+  title: String!
+  content: String
+  tags: [Tag] @manyToMany(relationName: "PostTags")
+}
+
+type Tag
+  @model
+  @auth(
+    rules: [
+      { allow: groups, groups: ["admins"] }
+    ]
+  ) {
+  id: ID!
+  label: String!
+  posts: [Post] @manyToMany(relationName: "PostTags")
+}
+
+### 舞台裏で作成
+type PostTags
+  @model
+  @auth(
+    rules: [
+      { allow: owner }
+      { allow: groups, groups: ["admins"] }
+    ]
+  ) {
+  id: ID!
+  postId: ID!
+  tagId: ID!
+  post: Post!
+  tag: Tag!
+  owner: String
+}
+```
+
+join tableの認可ルールをより詳細に制御するには、join tableを明示的に作成し、`@hasMany`/`@belongsTo`関係で各モデルにリンクし、アプリケーションに適切な認可ルールを設定できます。
+
+### 仕組み
+
+`@auth`ディレクティブの定義：
+
+```graphql
+# タイプに適用される場合、アプリケーションを拡張します
+# オーナーおよびグループベースの認可ルール。
+directive @auth(rules: [AuthRule!]!) on OBJECT | FIELD_DEFINITION
+input AuthRule {
+  allow: AuthStrategy!
+  provider: AuthProvider
+  ownerField: String # デフォルトはオーナー認可を使用する場合「owner」
+  identityClaim: String # デフォルトはオーナー認可を使用する場合「sub::username」
+  groupClaim: String # デフォルトはグループ認可を使用する場合「cognito:groups」
+  groups: [String] # 静的グループ認可を使用する場合は必須
+  groupsField: String # デフォルトは動的グループ認可を使用する場合「groups」
+  operations: [ModelOperation] # より細かい制御が必要な場合は必須
+}
+
+enum AuthStrategy {
+  owner
+  groups
+  private
+  public
+  custom
+}
+enum AuthProvider {
+  apiKey
+  iam
+  oidc
+  userPools
+  function
+}
+enum ModelOperation {
+  create
+  update
+  delete
+  read # 「get」、「list」、「sync」、「listen」、および「search」を許可するための短縮形
+  get # 個別の項目を取得します
+  list # 項目のリストを取得します
+  sync # オフライン/オンライン変更を同期できるようにします（DataStore経由を含む）
+  listen # リアルタイム変更にサブスクライブします
+  search # @searchableディレクティブを使用した検索を有効にします
+}
+```
+
+認可ルールは以下で構成されます：
+
+- **認可戦略**（`allow`）：認可ルールが適用される対象
+- **認可プロバイダー**（`provider`）：認可ルールを適用するために使用されるメカニズム（APIキー、IAM、Amazon Cognito user pool、OIDC）
+- **許可される操作**（`operations`）：指定された戦略とプロバイダーに対して許可される操作。指定されない場合、`create`、`read`、`update`、および`delete`操作が許可されます。
+  - **`read`操作**：`read`操作は、より詳細なクエリアクセスのために`get`、`list`、`sync`、`listen`、および`search`に置き換えることができます
+
+<Callout warning>
+
+API カテゴリの代わりに DataStore を使用してAppSync APIに接続する場合、データモデルに対して`listen`および`sync`操作を許可する必要があります。
+
+</Callout>
+
+**APIキー**はパブリックAPI（またはパブリックにしたいスキーマの部分）またはプロトタイピングに最適で、デプロイする前に有効期限を指定する必要があります。**IAM**認可は[署名バージョン4](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html)を使用して、ロールに接続されたポリシーでリクエストを作成します。**Amazon Cognito user pool**または**3rdパーティOpenID Connect**プロバイダーによって提供されるOIDCトークンも認可に使用でき、これを有効にすると、ユーザーがAPI操作にアクセスするのを認可するために認証する必要があります。

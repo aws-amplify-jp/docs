@@ -1,0 +1,139 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import schema from "./amplify-outputs-schema-v1.json"
+
+export const meta = {
+  title: 'amplify_outputs.json について',
+  description: 'amplify_outputs.json のリファレンス',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export async function getStaticProps() {
+  return {
+    props: {
+      meta,
+    }
+  };
+}
+
+Amplify Gen 2 では、CLI が `amplify_outputs.json` ファイルを生成します。このファイルにはデータエンドポイントと認証メタデータなどのバックエンドの出力が含まれています。このファイルは「クライアント設定ファイル」とも呼ばれており、クライアントライブラリを設定してバックエンドリソースと相互作用するために使用されます。ローカルでは、このファイルは `ampx sandbox` を使用する際に作成されます。Amplify の CI/CD では、現在の Amplify アプリ ID と git ブランチに基づいて自動的に作成されます。
+
+[`ampx generate outputs`](/[platform]/reference/cli-commands#npx-ampx-generate-outputs) を使用して、指定された Amplify アプリ ID とブランチ、または AWS CloudFormation スタック名に対してこのファイルを手動で作成することもできます。
+
+{/* @TODO full type/interface to reference */}
+
+<InlineFilter filters={['react-native']}>
+<Callout>
+
+**注意:** Expo EAS ビルドを使用している場合、`eas build` コマンドを実行する前に、`amplify_outputs.json` ファイルをローカル git リポジトリに強制的にコミットする必要があります。これは、`amplify_outputs.json` ファイルがデフォルトの `.gitignore` で除外されており、`eas build` コマンドはビルドに追跡されていないファイルを含めないためです。<b>ビルドが完了したら、`amplifyconfiguration.json` ファイルを git リポジトリから削除し、リモートリポジトリにコミットまたはプッシュしないでください</b>。
+
+</Callout>
+</InlineFilter>
+
+## Amplify 出力ファイルの拡張
+
+`amplify_outputs.json` ファイルは単なる静的なアーティファクトではなく、アプリケーションの進化するニーズに対応するために拡張できるように設計されています。バックエンドの `addOutput` メソッドを活用することで、プログラムで設定を追加できます。これは、Amplify コンストラクトで直接公開されていない出力をカスタマイズしたり、バックエンド戦略の変更に応じてアプリケーションの設定を動的に調整したりする場合に特に便利です。
+
+<Callout warning>
+
+`amplify_outputs.json` の Amplify 管理設定のオーバーライドはサポートされていません。
+
+</Callout>
+
+設定の拡張が便利なよくあるシナリオは、`amplify_outputs.json` にカスタム出力を追加したり、手動ファイル編集なしで既存の設定を拡張したりする必要がある場合です。
+
+アプリケーションがファイルを保存するために使用する S3 バケットとそのリージョンを指定する出力パラメータを `amplify_outputs.json` に追加する必要があるシナリオを考えてください。
+
+```ts title="amplify/backend.ts"
+import { defineBackend } from "@aws-amplify/backend";
+import { auth } from "./auth/resource";
+import { data } from "./data/resource";
+
+const backend = defineBackend({
+  auth, 
+  data, 
+});
+
+backend.addOutput({
+  storage: {
+    aws_region: "us-east-1",
+    bucket_name: "my-externally-managed-bucket",
+  },
+});
+```
+
+フロントエンドアプリケーションで、Amplify を次のように設定できます。
+
+```ts title="src/index.ts"
+import { Amplify } from "aws-amplify";
+import outputs from "@/amplify_outputs.json";
+
+Amplify.configure(outputs);
+```
+
+### カスタム設定
+
+既存の設定を拡張するだけでなく、`amplify_outputs.json` にカスタム出力パラメータを追加することもできます。これは、任意の出力、カスタム CDK リソースからの値、またはアプリケーションのロジックまたは設定に必要なその他の情報を表示するのに便利です。
+
+```ts title="amplify/backend.ts"
+import { defineBackend } from "@aws-amplify/backend";
+import { auth } from "./auth/resource";
+import { data } from "./data/resource";
+
+const backend = defineBackend({
+  auth, 
+  data, 
+});
+
+backend.addOutput({
+  custom: {
+    api_id: "restAPIId",
+    api_endpoint: "https://api.example.com",
+    api_name: "restApiName",
+  },
+});
+```
+
+フロントエンドアプリケーションでは、次のようにこれらのカスタム設定にアクセスできます。
+
+```ts title="src/index.ts"
+import { Amplify } from "aws-amplify";
+import { parseAmplifyConfig } from "aws-amplify/utils";
+import outputs from "@/amplify_outputs.json";
+
+const amplifyConfig = parseAmplifyConfig(outputs);
+
+Amplify.configure({
+  ...amplifyConfig,
+  API: {
+    REST: {
+      [outputs.custom.api_name]: {
+        endpoint: outputs.custom.api_endpoint,
+        region: "us-east-1",
+      },
+    },
+  },
+});
+```
+{/* @TODO  Link examples once published*/}
+
+## スキーマリファレンス
+
+Amplify 出力ファイルは JSON スキーマを使用して定義されています。このスキーマは [`aws-amplify/amplify-backend` リポジトリ](https://github.com/aws-amplify/amplify-backend/blob/main/packages/client-config/src/client-config-schema/schema_v1.json) で見つけることができます。
+
+<pre><code tabIndex="0" style={{ maxWidth: "100%", overflowX: "scroll" }}>
+{JSON.stringify(schema, null, 2)}
+</code></pre>

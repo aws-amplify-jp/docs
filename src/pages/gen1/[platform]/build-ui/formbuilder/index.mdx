@@ -1,0 +1,223 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'フォームビルダー',
+  description: "Amplify Studioのフォームビルダーは、データモデル、任意のJSONオブジェクト、またはゼロから、クラウド接続フォームをReactコードとして自動生成します。バリデーションロジックを構成し、テーマを調整し、すべてコンソール内でプレゼンテーションをカスタマイズできます。",
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify Studioの**フォームビルダー**は、Reactフォームを作成するためのビジュアルインターフェースです。バリデーションロジックを構成し、テーマを調整し、すべてコンソール内でプレゼンテーションをカスタマイズできます。
+
+フォームは完全に拡張可能で、ライフサイクル管理を可能にし、外部APIの呼び出しや別のデータベースに対する検証を含む、コード内のカスタムバリデーションロジックをサポートしています。
+
+<Callout warning>
+
+フォームビルダーは現在、**コンフリクト解決なしのGraphQL API**へのデータバインディングをサポートしています。[GraphQLおよびコンフリクト解決の詳細についてはこちらをご覧ください](/gen1/[platform]/tools/console/data/data-model/#datastore-and-graphql)。
+
+</Callout>
+
+## はじめに
+
+フォームビルダーでフォームを構築すると、Amplify Studioは設計に基づいて再利用可能なReactコンポーネントを生成します。このコンポーネントコードはプロジェクトディレクトリにプルでき、インポートして、わずか数行のコードでアプリでレンダリングできます。
+
+Studioアプリでフォームビルダーを使い始めるには...
+
+1. [Studioアプリケーションにログイン](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)
+2. 左側のナビゲーションバーで**UIライブラリ**を選択
+3. 次のいずれかのパスを実行します:
+
+<BlockSwitcher>
+
+<Block name="デフォルトフォーム">
+
+Amplifyアプリにデプロイされたデータモデルがある場合、Studioはデフォルト[接続フォーム](/gen1/[platform]/build-ui/formbuilder/data-binding/#connected-forms)を自動生成します。
+
+デフォルトフォームを使用するには:
+
+1. [Amplify Studio](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)にログインして、[データモデル](/gen1/[platform]/tools/console/data/data-model/)をデプロイします
+2. **Studio Console > UIライブラリ**に移動します
+
+フォームは左側のナビゲーションバーの**フォーム**ヘッダーの下に一覧表示されます
+
+![左側のナビゲーションバーに自動生成されたフォームを表示するStudioコンソール](/images/console/formbuilder/overview1.png)
+
+デフォルトフォームはフォーム名の横にあるAmplifyアイコンで識別できます
+
+![デフォルトフォームであることを示すAmplifyアイコン付きのフォーム名](/images/console/formbuilder/defaultform.png)
+
+<Callout info>
+
+**フォームが見つかりませんか？** デプロイされたデータモデルがあるが、フォームがない場合は、自動フォーム生成が無効になっている可能性があります。UIライブラリの右上隅で**UIライブラリ設定**を選択し、**自動フォーム作成**を有効にしてください。
+
+</Callout>
+
+デフォルトフォームはそのまま使用することも、カスタマイズすることもできます。デフォルトフォームをカスタマイズするには、左側のナビゲーションバーでフォームを選択し、右上隅の**構成**をクリックします。考え直した場合は、フォームを削除でき、新しいデフォルトフォームが生成されます。
+
+フォームに満足したら、[アプリでレンダリング](#render-react-form-in-your-app)できます。
+
+</Block>
+
+<Block name="新しい接続フォーム">
+
+接続フォームを使用するには、最初にデータモデルが必要です。[Amplify Studio](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)にログインして、[データモデル](/gen1/[platform]/tools/console/data/data-model/)をデプロイします。
+
+新しい接続フォームを構築するには...
+
+1. **UIライブラリ**を選択
+2. 左側のナビゲーションバーの**フォーム**セクションで、**新規** ![フォームビルダーの「新規」セクションの赤いボックス](/images/console/formbuilder/overview7.png)を選択
+3. フォームに名前を付け、[作成または更新](#create-and-update-forms)を選択
+4. **データモデル**ドロップダウンで、フォームが接続すべきモデルを選択
+5. **フォームを作成**を選択
+
+![Publisherデータモデルが「データモデル」セクションでハイライトされた新しいフォーム画面](/images/console/formbuilder/connectedform.png)
+
+フォームビルダーは、接続されたデータモデルのフィールドと一致する入力フィールドを持つ新しいフォームを生成します。ここから、[入力をカスタマイズ](./customize)し、フォームに満足したら、[アプリでレンダリング](#render-react-form-in-your-app)できます。
+
+</Block>
+
+<Block name="新しいJSONフォーム">
+
+Amplify Studioは、出力したいJSONオブジェクトに基づいて、接続されていないフォームを生成できます。これは別のAPIとインターフェースしている場合に特に便利です - ほとんどのAPIエンドポイントは入力データをJSON形式で期待しているため、サンプルペイロードを貼り付けるだけで、すばやくフォームを生成できます。
+
+JSONからフォームを生成するには:
+
+1. [Amplify Studioコンソール](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)で、**UIライブラリ**に移動
+2. 左側のナビゲーションバーで、**フォーム**ヘッダーの横にある**新規** ![フォームビルダーの「新規」セクションの赤いボックス](/images/console/formbuilder/overview7.png)を選択
+3. フォームに名前を付け、[作成または更新](#create-and-update-forms)を選択
+4. 新規フォームページで、**JSONオブジェクト**を選択
+5. JSONをコードエディターに貼り付けて、**フォームを作成**をクリック
+
+フォームビルダーは値に基づいて入力要素タイプを推測でき、配列とネストされたJSON値を処理できます。たとえば、このJSONサンプルを使用します:
+
+```json
+{
+  "basics": {
+    "firstName": "Wesley",
+    "emailAddress": "wesley@example.com"
+  },
+  "favoriteThings": {
+    "animals": ["Cats", "Snakes", "Quokka"],
+    "month": "December",
+    "number": 17
+  },
+  "active": true,
+  "enabled": false
+}
+```
+
+このJSONは次のフォームをレンダリングします:
+
+![キーペア値から推測されたタイプを持つ見出しとフィールドを表示するJSONからレンダリングされたフォーム](/images/console/formbuilder/overview6.png)
+
+JSONオブジェクトから、Amplify Studioは自動的に...
+
+- ...**メールアドレス**と**数値**に正しいタイプを設定
+- ...**動物**を複数の値を受け取るように設定
+- ...**アクティブ**と**有効**をスイッチに設定
+
+このフォームに満足したら、[データモデルにバインド](#form-binding)することで接続フォームに変換したり、[アプリでレンダリング](#render-react-form-in-your-app)したりできます。
+
+</Block>
+
+<Block name="新しい空白フォーム">
+
+Amplify Studioは、ビジュアルインターフェースを使用して、ゼロから完全に接続されていないフォームをビルドすることを可能にします。基本的で、まったく新しいフォームを生成するには:
+
+1. [Amplify Studioコンソール](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)で、**UIライブラリ**に移動
+2. 左側のナビゲーションバーで、**フォーム**ヘッダーの横にある**新規** ![フォームビルダーの「新規」セクションの赤いボックス](/images/console/formbuilder/overview7.png)を選択
+3. フォームに名前を付け、[作成または更新](#create-and-update-forms)を選択
+4. **ブランクフォーム**を選択したままにして、**フォームを作成**をクリック
+
+![新しいフォームページで、新しいフォーム作成時に利用可能なオプションを表示](/images/console/formbuilder/overview2.png)
+
+**フォームを作成**をクリックすると、フォーム編集ページが表示されます。**プラス記号**を選択し、フォームに追加する入力要素を選択します。
+
+![入力要素をフォームに追加する機能を示す青いバーとプラス記号を持つフォーム作成ページの画像](/images/console/formbuilder/overview3.png)
+
+フォーム入力のカスタマイズを続けることができ、満足したら、[データモデルにバインド](#form-binding)することで接続フォームに変換したり、[アプリでレンダリング](#render-react-form-in-your-app)したりできます。
+
+</Block>
+
+</BlockSwitcher>
+
+<Callout info>
+
+または、AWSにログインせずに開始するには、[Amplify Sandboxで接続されていないフォームをビルド](https://sandbox.amplifyapp.com/ui-library)できます。
+
+</Callout>
+
+## アプリでReactフォームをレンダリング
+
+### 初期プロジェクト設定
+
+アプリケーションでフォームを使用するには、まずプロジェクトをAmplify Studio生成コンポーネントを使用するように構成する必要があります。開始するには、[新しいReactアプリ](/gen1/[platform]/start/project-setup/create-application/#create-a-new-react-app)を作成してから、
+
+1. アプリケーションのルートディレクトリに移動し、次のnpm依存関係をインストール
+
+```
+npm install -g @aws-amplify/cli
+```
+
+```
+npm install aws-amplify @aws-amplify/ui-react
+```
+
+2. アプリケーションのエントリーポイントファイル(create-react-appの場合は`src/index.js`、Viteの場合は`src/main.jsx`)で、次のインポートと構成を追加
+
+```jsx
+import '@aws-amplify/ui-react/styles.css';
+
+import { Amplify } from 'aws-amplify';
+import { ThemeProvider } from '@aws-amplify/ui-react';
+
+import amplifyconfig from './amplifyconfiguration.json';
+import studioTheme from './ui-components/studioTheme';
+
+Amplify.configure(amplifyconfig);
+```
+
+3. アプリケーションのエントリーポイントファイル(create-react-appの場合は`src/index.js`、Viteの場合は`src/main.jsx`)で、`<App />`コンポーネントを次でラップ:
+
+```jsx
+<ThemeProvider theme={studioTheme}>
+  <App />
+</ThemeProvider>
+```
+
+### フォームをインポートしてレンダリング
+
+次に、フォームをAmplifyクラウドからプロジェクトにプルして、コードにインポートする必要があります。
+
+1. アプリケーションのルートディレクトリに移動して、`amplify pull`を実行
+2. フォームを名前でインポート。`ProductCreateForm`という名前のフォームの場合、次のコードを使用します:
+
+```jsx
+import { ProductCreateForm } from './ui-components';
+```
+
+3. コードにフォームを配置。Reactプロジェクトで`ProductCreateForm`という名前のフォームの場合、次のAppコードを使用できます:
+
+```jsx
+function App() {
+  return <ProductCreateForm />;
+}
+
+export default App;
+```

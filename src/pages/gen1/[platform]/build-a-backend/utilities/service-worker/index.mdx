@@ -1,0 +1,265 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Service Worker',
+  description: 'AWS Amplify ServiceWorker クラスは、ブラウザにサービスワーカーを登録し、postMessage イベント経由で通信できるようにします。これにより、Push API とアナリティクスを使用してリッチなオフライン体験を作成できます。',
+  platforms: [
+    'javascript',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+AWS Amplify の*ServiceWorker* クラスは、ブラウザにサービスワーカーを登録し、*postMessage* イベント経由で通信できるようにします。これにより、[Push API](https://developer.mozilla.org/en-US/docs/Web/API/Push_API) とアナリティクスを使用してリッチなオフライン体験を作成できます。
+
+サービスワーカーを登録すると、ServiceWorker モジュールは状態の変更を監視し、メッセージのディスパッチを試みます。また、サービスワーカーのライフサイクルに基づいてアナリティクスイベントを記録します。
+
+<Callout>
+
+postMessage イベントは、すべてのブラウザで現在サポートされているわけではありません。詳細と Service Worker API の詳しい情報については、[こちらを参照してください](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/)。
+
+</Callout>
+
+## インストール
+
+*ServiceWorker* をインポートして、新しいインスタンスをインスタンス化します（異なるスコープで複数のワーカーを持つことができます）:
+
+```javascript
+import { ServiceWorker } from 'aws-amplify/utils';
+const serviceWorker = new ServiceWorker();
+```
+
+## API を使った操作
+
+### register()
+
+`register` メソッドを使用して、ブラウザ用のサービスワーカーを登録できます。
+
+まず、サービスワーカースクリプト **service-worker.js** を作成する必要があります。サービスワーカースクリプトには、オフラインアクセス用のキャッシュ設定と、関連するライフサイクルイベント用のイベントハンドラーが含まれています。[サンプルサービスワーカースクリプトを見る](#example-service-worker)を参照してください。
+
+ワーカースクリプトがビルドに含まれていることを確認し、登録時にソースディレクトリの相対スクリプトパスを指定してください:
+
+```javascript
+// `service-worker.js` をサービスワーカースコープ `/` で登録します。
+registeredServiceWorker = await serviceWorker.register('/service-worker.js', '/');
+```
+
+このメソッドは、アプリの Web プッシュ通知を有効にします。アプリが以前にプッシュサービスに登録されていない場合、提供された*公開鍵*を使用して新しいサブスクリプションが作成されます。
+
+```javascript
+    serviceWorker.enablePush('BLx__NGvdasMNkjd6VYPdzQJVBkb2qafh')
+```
+
+<Callout>
+
+Web プッシュサービスプロバイダーから公開鍵を生成し、実際のプッシュ通知を送信する必要があります。本番環境以外の環境でプッシュメッセージをテストするには、[このチュートリアル](https://developers.google.com/web/fundamentals/codelabs/push-notifications/)に従うことができます。
+
+</Callout>
+
+### プッシュ通知の処理
+
+サービスワーカーで受信したプッシュ通知を処理するには、スクリプトが `push` イベント用のイベントハンドラーを登録する必要があります。
+
+*service-worker.js* ファイルに、次のイベントリスナーを追加します:
+
+```javascript
+/**
+ * 受信したプッシュイベントをリッスンします
+ */
+
+addEventListener('push', (event) => {
+    var data = {};
+    console.log('[Service Worker] Push Received.');
+    console.log(`[Service Worker] Push had this data: "${event.data.text()}"`);
+
+    if (!(self.Notification && self.Notification.permission === 'granted')) 
+        return;
+    
+    if (event.data) 
+        data = event.data.json();
+    
+    // メッセージボックスの UI をカスタマイズします
+    var title = data.title || "Web Push Notification";
+    var message = data.message || "New Push Notification Received";
+    var icon = "images/notification-icon.png";
+    var badge = 'images/notification-badge.png';
+    var options = {
+        body: message,
+        icon: icon,
+        badge: badge
+    };
+
+    event.waitUntil(self.registration.showNotification(title,options));
+
+});
+```
+
+Notifications API の詳しい情報については、[こちら](https://developer.mozilla.org/en-US/docs/Web/API/notification)を参照してください。
+
+### send()
+
+`send` メソッドは、Web アプリからサービスワーカーにメッセージを送信します。アプリのコードとサービスワーカースクリプトは異なるコンテキストで動作し、2 つの間の通信は*send()* メソッドで可能になることに注意してください。
+
+これは、サービスワーカーのキャッシュをクリーニングするなど、アプリからサービスワーカーロジックを制御する場合に便利です:
+
+```javascript
+
+    registeredServiceWorker.send({
+      'message': 'CleanAllCache'
+    });
+
+```
+
+Message API の詳しい情報については、[こちら](https://developer.mozilla.org/en-US/docs/Web/Events/message_(ServiceWorker))を参照してください。
+
+#### メッセージの受信
+
+サービスワーカーでメッセージを受信するには、**message** イベント用のイベントハンドラーを追加する必要があります。
+
+*service-worker.js* ファイルに、次のイベントリスナーを追加します:
+
+```javascript
+    /**
+     * メッセージは、アプリケーションから送信されたメッセージを受信します。
+     * これはサービスワーカーの更新や、
+     * 他のクライアントへのメッセージング（ブラウザの制限あり）に役立ちます
+     * https://developer.mozilla.org/en-US/docs/Web/API/Client/postMessage
+     */
+    addEventListener('message', (event) => {
+        console.log('[Service Worker] Message Event: ', event.data)
+    })
+    
+```
+
+### ライフサイクルイベントの監視
+
+AWS Amplify の [Analytics](/gen1/[platform]/build-a-backend/more-features/analytics/set-up-analytics/) カテゴリーを有効にすると、*ServiceWorker* モジュールは自動的にサービスワーカーの状態変更とメッセージイベントを追跡します。
+
+これらのアナリティクスイベントと関連メトリクスは、Amazon Pinpoint コンソールで確認できます。
+
+## API リファレンス
+
+ServiceWorker モジュールの完全な API ドキュメントについては、[API リファレンス](https://aws-amplify.github.io/amplify-js/api/classes/aws_amplify.utils.ServiceWorker.html)を参照してください。
+
+## サンプルサービスワーカー
+
+```javascript
+var appCacheFiles = [
+	'/',
+	'/index.html'
+], 
+// Cache Storage の名前
+appCache = 'aws-amplify-v1';
+
+/**
+ * install イベントは、サービスワーカーが
+ * インストールされたときに発火します。
+ * https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API
+ */
+addEventListener('install', (event) => {
+	console.log('[Service Worker] Install Event', event)
+	event.waitUntil(
+    	caches.open(appCache).then(function(cache) {
+	      return cache.addAll(appCacheFiles);
+    	})
+  	);
+})
+
+/**
+ * activate イベントは、サービスワーカーが
+ * アクティベートされてホーム画面に追加されたときに発火します。
+ * https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API
+ */
+addEventListener('activate', (event) => {
+	console.log('[Service Worker] Activate Event ', event)
+})
+
+/**
+ * fetch イベントは、すべてのネットワークリクエストに対して発火します。
+ * また、サービスワーカーが登録されたスコープに依存します。
+ * https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API
+ */
+addEventListener('fetch', function(event) {
+	//return fetch(event.request);
+  console.log('[Service Worker] Fetch: ', event);
+	let url = new URL(event.request.url);
+	//url.pathname
+  event.respondWith(
+    caches.match(event.request).then(function(resp) {
+      return resp || fetch(event.request).then(function(response) {
+        return caches.open(appCache).then(function(cache) {
+          if (event.request.method === 'GET') {
+          	cache.put(event.request, response.clone());
+      	  }
+          return response;
+        });
+      });
+    })
+	);
+});
+/**
+ * メッセージはアプリケーションから送信されたメッセージを受信します。
+ * これはサービスワーカーの更新や、
+ * 他のクライアントへのメッセージング（ブラウザの制限あり）に役立ちます
+ * https://developer.mozilla.org/en-US/docs/Web/API/Client/postMessage
+ */
+addEventListener('message', (event) => {
+	console.log('[Service Worker] Message Event: ', event.data)
+})
+
+/**
+ * 受信したプッシュイベントをリッスンします
+ */
+addEventListener('push', (event) => {
+	console.log('[Service Worker] Push Received.');
+	console.log(`[Service Worker] Push had this data: "${event.data.text()}"`);
+
+	if (!(self.Notification && self.Notification.permission === 'granted'))
+		return;
+		
+	var data = {};
+  if (event.data)
+    data = event.data.json();
+
+	var title = data.title || "Web Push Notification";
+	var message = data.message || "New Push Notification Received";
+	var icon = "images/notification-icon.png";
+	var badge = 'images/notification-badge.png';
+	var options = {
+		body: message,
+		icon: icon,
+		badge: badge
+	};
+	event.waitUntil(self.registration.showNotification(title,options));
+});
+
+/**
+ * 通知クリックを処理します
+ */
+addEventListener('notificationclick', (event) => {
+	console.log('[Service Worker] Notification click: ', event);
+	event.notification.close();
+	event.waitUntil(
+		clients.openWindow('https://aws-amplify.github.io/amplify-js')
+	);
+});
+```
+
+</InlineFilter>

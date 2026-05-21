@@ -1,0 +1,39 @@
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'AI を使って開発する',
+  description:
+    'AI コーディングアシスタントを使用して Amplify 開発を加速させます。Claude Code と Cursor、Kiro、MCP Server のエージェントプラグインを設定し、プロジェクトレベルのステアリングファイルを使用します。',
+  route: '/[platform]/develop-with-ai',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      platform: context.params.platform,
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+AI コーディングアシスタントを使用して Amplify アプリケーションをより迅速に構築します。これらのツールは Amplify の TypeScript ファーストなパターンを理解し、バックエンドのスキャフォルディング、フロントエンドコードの生成、アプリのデプロイをサポートします。
+
+<Overview childPageNodes={props.childPageNodes} />

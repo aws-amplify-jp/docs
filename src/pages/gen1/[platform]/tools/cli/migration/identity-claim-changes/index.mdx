@@ -1,0 +1,247 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'GraphQL Transformer @auth アイデンティティクレーム変更',
+  description: '',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify CLIは、v8.1.0でGraphQL APIのデフォルトオーナー値を変更しています。これまで、APIはデフォルトで`username`のみを保存していました。この次のリリースではフィーチャーフラグの背後にあり、今後のメジャーCLIリリースでは、GraphQL Transformerはユーザーの一意な`sub`と`username`を保存します。
+
+## 何が変わるのか？
+
+Amplify CLI >= v8.0.3では、オーナーベースの`@auth`ルールはAWS CognitoのJSON Web Tokenからデフォルトのアイデンティティクレームとして`"username"`を使用し、アプリのDynamoDBテーブルの`owner`フィールドに保存します。これは、レコードの`owner`フィールドがユーザーのユーザー名で照会および入力されることを意味します。Amplify CLI GraphQL Transformerは、デフォルトの`identityClaim`を、Cognitoユーザープールから与えられた一意のID（uuid）である`sub`と、JWTトークンからの`username`の組み合わせに変更し、デリミタとして`::`を使用します。
+
+## 何が重大な変更ですか？
+
+`@primaryKey`のソートキーフィールドは、もはやオーナーベースの認可の`ownerField`の一部になることはできません。これは、オーナーベースの認可`@auth(rules: [{ allow: owner }])`を追加するときに自動生成される`owner`フィールドにも適用されます。サポートされていない2つの主要な例を以下に示します：
+
+```graphql
+## NOT supported schema example 1 ##
+type Item @auth(rules: [{ allow: owner }]) @model {
+  id: ID! @primaryKey(sortKeyFields: ["owner"])
+  owner: String ## "owner" is an auto-generated field of the owner-based authorization rule
+}
+```
+
+```graphql
+## NOT supported schema example 2 ##
+type Item @auth(rules: [{ allow: owner, ownerField: "user" }]) @model {
+  id: ID! @primaryKey(sortKeyFields: ["owner"])
+  user: String ## "user" is the designated "ownerField" of the owner-based authorization rule
+}
+```
+
+テーブルがこの構成を必要とする場合、`identityClaim`を`username`に設定することをお勧めします。
+
+さらに、オーナーフィールドをセカンダリクエリパラメータとして継続的に照会したい場合は、代わりに`@index`ディレクティブを使用することを検討してください。上記の例を使用して、次のようなクエリを設定できます：
+
+```graphql
+type Todo @auth(rules: [{ allow: owner, ownerField: "user" }]) {
+  listId: ID!
+    @primaryKey
+    @index(name: "byUser", sortKeyFields: ["user"], queryField: "todoByUser")
+  user: String!
+}
+```
+
+次のクエリを使用して、`Todo`を`user`で照会できます：
+
+```
+query byUser($user: String!) {
+  todoByUser(user: $user) {
+    items {
+      listId
+      user
+    }
+    nextToken
+  }
+}
+```
+
+[`@index`ディレクティブの構成について詳しくはこちら](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#configure-a-secondary-index)をご覧ください。
+
+新しいデフォルトアイデンティティクレームを使用する場合、GraphQL APIに他の重大な変更はありません。リゾルバーは、これらの値をDynamoDBテーブルに`<sub>::<username>`の形式で保存し、デフォルトではクライアントコードに`username`を返します。
+
+他のディレクティブは現在の機能のように機能しますが（例：`@searchable`、`@function`）、データベースへのカスタムクエリを使用すると変更が必要になる場合があります。例えば、`filter`パラメータを使用してクエリを実行している場合、1つの引数のみを使用した`filter`クエリから、次のような`or`条件文を使用するように変更する必要があります：
+
+```graphql
+query MyQuery {
+  listPrivateNotes(
+    filter: {
+      or: [{ owner: { contains: "::user1" } }, { owner: { eq: "user1" } }]
+    }
+  ) {
+    nextToken
+    items {
+      id
+      content
+    }
+  }
+}
+```
+
+クエリを変更する別の例は、次のようなカスタムクエリにOpenSearchを使用している場合、保存されたオーナーフィールドの形式に対応する一致操作でクエリをアカウントする必要があります。[サポートされている検索操作](/gen1/[platform]/build-a-backend/graphqlapi/search-and-result-aggregations/)を参照してください。`match`操作を使用した例を以下に示します：
+
+```graphql
+query SearchAndSort {
+  searchStudents(filter:
+    or: [{
+      owner: { match: "*::user1" }
+    }, {
+      owner: { eq: "user1" }
+    }],
+  ) {
+    items {
+      name
+      id
+    }
+  }
+}
+```
+
+## GraphQL APIを移行するにはどうすればよいですか？
+
+### CLIが新しいアプリに対して行う自動変更
+
+新しいAmplifyプロジェクトを作成している場合、アプリのGraphQL APIは`"sub::username"`アイデンティティクレームを使用して作成され、これ以上のアクションは必要ありません。データベースレコードは、uuidとユーザー名を`owner`フィールドに`<sub>::<username>`の形式で保存し、APIは`<username>`を返します。
+
+サブを保存せずに識別クレームにユーザー名を使用したい場合は、スキーマで以下を指定します：
+
+```graphql
+type Todo
+  @model
+  @auth(
+    rules: [
+      {
+        allow: owner
+        identityClaim: "username" # explicit use of username
+      }
+    ]
+  ) {
+  id: ID!
+  title: String!
+}
+```
+
+### 既存のアプリで`"username"`を使い続けるための手動変更
+
+オーナーベースの`@auth`を次のような暗黙的なアイデンティティクレームルールで使用する既存のスキーマがある場合：
+
+```graphql
+type Todo
+  @model
+  @auth(
+    rules: [
+      {
+        allow: owner # no explicit identity claim
+      }
+    ]
+  ) {
+  id: ID!
+  title: String!
+}
+```
+
+GraphQL スキーマはデフォルトアイデンティティクレーム`"username"`を使用しており、Amplify CLI GraphQL Transformerはデフォルト値を使用してVTLファイルを生成しています。したがって、スキーマは次のように読み込まれます：
+
+```graphql
+type Todo
+  @model
+  @auth(
+    rules: [
+      {
+        allow: owner
+        identityClaim: "username" # explicit identity claim
+      }
+    ]
+  ) {
+  id: ID!
+  title: String!
+}
+```
+
+Amplify CLIはv9.0.0でデフォルトを`"sub::username"`に変更するため、`identityClaim`が明示的に定義されていない場合、スキーマで上記のように`"username"`を設定していない限り、トランスフォーマーは`"sub::username"`を使用します。
+
+初期リリースでは、この機能はフィーチャーフラグ`useSubUsernameForDefaultIdentityClaim`の背後にあり、デフォルト値は`false`です。フィーチャーフラグを`true`に設定すると、トランスフォーマーは新しいアイデンティティクレームを使用できるようになります。ただし、このフィーチャーフラグは一時的なものであるため、今後は明示的にアイデンティティクレームを指定することをお勧めします（上記のように）。
+
+### 既存のアプリで`"sub::username"`を使用するための手動変更
+
+v9.0.0の変更前にVTLファイルを移行したい場合は、`identityClaim`を`"sub::username"`に設定します。
+
+```graphql
+type Todo
+  @model
+  @auth(
+    rules: [
+      {
+        allow: owner
+        identityClaim: "sub::username" # set your identity claim
+      }
+    ]
+  ) {
+  id: ID!
+  title: String!
+}
+```
+
+データベースに既存のオーナーレコードがあり、コードベースにオーナー依存コードがある場合、これらの変更はデータを移行しないことに注意してください。リゾルバーは下位互換性があるため、APIは`owner`フィールドの`username`を使用する以前の契約との互換性があります。つまり、`sub::username`アイデンティティクレームを使用する場合、リゾルバーはレコード内のJWTと一致する`username`と`sub`値の両方を認可しますが、オーナーフィールドの入力が指定されていない場合、`<sub>::<username>`を書き込みます。
+
+## タイムラインは何ですか？
+
+Amplify CLI v8.1.0は、`useSubUsernameForDefaultIdentityClaim`フィーチャーフラグを導入し、開発者が`sub::username`デフォルトをオプトインできます。新しく作成されたAmplifyプロジェクトは既にフィーチャーフラグにオプトインしていますが、新しいデフォルトを使用したい開発者はオプトインする必要があります。フィーチャーフラグを持たない既存のAmplifyプロジェクトの場合、`useSubUsernameForDefaultIdentityClaim`はデフォルトで`false`になります。
+
+Amplify CLIチームはv9.0.0をリリースし、フィーチャーフラグは削除され、開発者は以前のAPI契約を維持するためにスキーマに`"username"`を手動で設定するか、リゾルバーはデータベースに`sub::username`を保存し始める必要があります。
+
+## 無効なオーナーアイデンティティクレームをチェック
+
+Amplify CLI `v10.0.0`は、顧客のJWTトークンに有効なオーナーアイデンティティクレームが存在することを確認するための厳密なチェックを追加しています。**以前は**、開発者が指定したオーナーアイデンティティクレームが顧客のJWTトークンに存在しない場合、デフォルトnone値がオーナーフィールドに保存されていました。
+
+**Amplify CLI `v10.0.0`以降**、開発者が指定したアイデンティティクレームが顧客のJWTトークンに存在しない場合、顧客はレコードへのアクセスを認可されません。
+
+以前に保存されたオーナーフィールドのデフォルトnone値からオーナーを判定することはできないため、これらのレコードへのアクセスリクエストは認可されません。
+
+カスタムオーナーアイデンティティクレーム付きの次のスキーマを検討してください：
+
+```graphql
+type Todo @model @auth(rules: [{ allow: owner, identityClaim: "userID" }]) {
+  id: ID!
+  title: String!
+}
+```
+
+開発者が指定したオーナーアイデンティティクレーム、つまり`userID`は、顧客が認可されるために顧客のJWTトークンに存在する必要があります。
+
+デフォルトオーナーアイデンティティクレーム付きの次のスキーマを検討してください：
+
+```graphql
+type Todo @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  title: String!
+}
+```
+
+クレーム`sub`と`username`は、顧客が認可されるために顧客のJWTトークンに存在する必要があります。

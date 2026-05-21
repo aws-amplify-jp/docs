@@ -1,0 +1,95 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Lambda レイヤー',
+  description:
+    '関数にレイヤーを追加する方法を学ぶ',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps() {
+  return {
+    props: {
+      meta
+    }
+  };
+}
+
+Amplify は、ライブラリ依存関係を含むレイヤーを関数に追加する機能を提供しています。Lambda レイヤーを使用すると、関数コードをその依存関係から分離でき、複数の関数間での共有コンポーネントの管理が容易になり、デプロイメントパッケージのサイズが削減されます。
+
+<Callout info>
+
+**注意:** `defineFunction` でレイヤーを設定または追加することは、[カスタム関数](/[platform]/build-a-backend/functions/custom-functions/)ではサポートされていません。
+
+</Callout>
+
+Lambda レイヤーを関数に追加するには、以下の手順に従ってください。
+
+1. まず、AWS で Lambda レイヤーを作成して設定してください。これは AWS コンソールまたは AWS CLI を使用して実行できます。レイヤーの作成に関するガイダンスについては、[Lambda レイヤーの作成に関する AWS ドキュメント](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html#configuration-layers-create)を参照してください。
+
+2. レイヤーが作成され AWS で利用可能になったら、以下に示すように Amplify プロジェクトで参照できます。
+
+   `defineFunction` に `layers` プロパティを指定します。例えば：
+
+   ```ts title="amplify/functions/my-function/resource.ts"
+   import { defineFunction } from "@aws-amplify/backend";
+
+   export const myFunction = defineFunction({
+     name: "my-function",
+     layers: {
+      "@aws-lambda-powertools/logger":
+         "arn:aws:lambda:us-east-1:094274105915:layer:AWSLambdaPowertoolsTypeScriptV2:12",
+     },
+   });
+   ```
+   
+   Lambda レイヤーはキー/バリューペアのオブジェクトで表現されます。キーはレイヤーからエクスポートされるモジュール名で、値はレイヤーの ARN です。キー（モジュール名）はモジュール依存関係を外部化するために使用され、Lambda 関数にバンドルされないようにします。最大 5 個のレイヤーを関数にアタッチでき、それらは関数と同じリージョンにある必要があります。
+   
+   <br/>または、レイヤーを `myLayer:1` として指定することもできます。ここで `myLayer` はレイヤーの名前で、`1` はレイヤーのバージョンです。例えば：
+
+   ```ts title="amplify/functions/my-function/resource.ts"
+   import { defineFunction } from "@aws-amplify/backend";
+
+   export const myFunction = defineFunction({
+     name: "my-function",
+     layers: {
+      "some-module": "myLayer:1"
+     },
+   });
+   ```
+
+   Amplify は、既存のアカウント ID とリージョンを使用して、これを完全なレイヤー ARN 形式 `arn:aws:lambda:<region>:<account-id>:layer:myLayer:1` に自動的に変換します。
+  
+   <Callout type="warning">
+
+   レイヤーを使用する場合は、バージョン管理に注意してください。ARN にはバージョン番号が含まれます（例では `:12`）。適切なバージョンを使用していることを確認し、新しいバージョンがリリースされたときにレイヤーを更新するための戦略を立ててください。
+
+   </Callout>
+
+3. 次に、関数ハンドラーで局所的にインストールされたモジュールを使用します。
+   ```ts title="amplify/functions/my-function/handler.ts"
+   import { Logger } from "@aws-lambda-powertools/logger";
+   import type { Handler } from "aws-lambda";
+
+   const logger = new Logger({ serviceName: "serverlessAirline" });
+
+   export const handler: Handler = async (event, context) => {
+     logger.info("Hello World");
+   };
+   ```
+
+レイヤーの作成と管理の詳細については、[Lambda レイヤーに関する AWS ドキュメント](https://docs.aws.amazon.com/lambda/latest/dg/chapter-layers.html)を参照してください。

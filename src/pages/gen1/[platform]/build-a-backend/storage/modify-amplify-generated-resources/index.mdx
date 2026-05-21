@@ -1,0 +1,110 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify生成リソースの修正',
+  description: "'amplify override storage' コマンドは、開発者が設定可能な 'overrides' TypeScript ファイルを生成します。このファイルは、Amplify生成の S3 および DynamoDB リソースを CDK コンストラクトとして提供します。例えば、開発者は 'amplify override storage' コマンドを実行して、Amplify生成の S3 バケットの転送高速化を有効にできます。",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify Storage は S3 と DynamoDB などの基礎となる AWS サービスとリソースを使用しています。これらの基礎となるリソースをご自身のユースケースに合わせてカスタマイズできます。
+
+```bash
+amplify override storage
+```
+
+上記のコマンドを実行して、S3 バケット、DynamoDB テーブルなど、Amplify生成のストレージリソースをオーバーライドします。
+
+このコマンドは `amplify/backend/storage/<resource-name>/` の下に新しい `overrides.ts` ファイルを作成します。このファイルは、Amplify生成のリソースを [CDK コンストラクト](https://docs.aws.amazon.com/cdk/latest/guide/home.html) として提供します。
+
+## Amplify生成の S3 リソースのカスタマイズ
+
+すべてのオーバーライドを `override(...)` 関数に適用します。例えば、S3 バケットでバージョニングを有効にするには：
+
+```ts
+import { AmplifyS3ResourceTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyS3ResourceTemplate) {
+  resources.s3Bucket.versioningConfiguration = {
+    status: 'Enabled'
+  };
+}
+```
+
+Amplify が生成する以下の S3 関連リソースをオーバーライドできます：
+
+| Amplify生成リソース | 説明 |
+| --- | --- |
+| [s3Bucket](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket.html) | `amplify add storage` 実行時に Amplify が生成するファイルストレージ用 S3 バケット |
+| [s3AuthPublicPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | 認証済みユーザーの `public/*` プレフィックスへの書き込みアクセス用 IAM ポリシー |
+| [s3AuthProtectedPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | 認証済みユーザーの `protected/*` プレフィックスへの書き込みアクセス用 IAM ポリシー |
+| [s3AuthPrivatePolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | 認証済みユーザーの `private/*` プレフィックスへの書き込みアクセス用 IAM ポリシー |
+| [s3AuthUploadPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | 認証済みユーザーの `uploads/*` プレフィックスへの書き込みアクセス用 IAM ポリシー |
+| [s3AuthReadPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | 認証済みユーザーの読み取りアクセス用 IAM ポリシー |
+| [s3GuestPublicPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | ゲストユーザーの `public/*` プレフィックスへの書き込みアクセス用 IAM ポリシー |
+| [s3GuestUploadPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | ゲストユーザーの `uploads/*` プレフィックスへの書き込みアクセス用 IAM ポリシー |
+| [s3GuestReadPolicy](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-policy.html) | ゲストユーザーの読み取りアクセス用 IAM ポリシー |
+
+<br />
+
+例えば、`amplify override storage` を使用して、S3 バケットのデフォルトの public Auth ポリシーに追加の PUT と GET アクセス IAM ポリシーステートメントを追加できます：
+
+```ts
+import { AmplifyS3ResourceTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyS3ResourceTemplate) {
+  resources.s3AuthPublicPolicy.policyDocument.Statement = [
+    ...resources.s3AuthPublicPolicy.policyDocument.Statement,
+    {
+      Effect: 'Allow',
+      Action: ['s3:PutObject', 's3:PutObjectAcl', 's3:GetObject'],
+      Resource: '<ARN of the S3 resource>'
+    }
+  ];
+}
+```
+
+Amazon S3 のアクション、リソース、および条件キーの詳細については、[IAM ドキュメント](https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3.html)を参照してください。
+
+## Amplify生成の DynamoDB テーブルのカスタマイズ
+
+すべてのオーバーライドを `override(...)` 関数に適用します。例えば、DynamoDB テーブルでタイムトゥリーブ仕様を有効にするには：
+
+```ts
+import { AmplifyDDBResourceTemplate } from '@aws-amplify/cli-extensibility-helper';
+
+export function override(resources: AmplifyDDBResourceTemplate) {
+  resources.dynamoDBTable.timeToLiveSpecification = {
+    attributeName: 'ttl',
+    enabled: true
+  };
+}
+```
+
+Amplify が生成する以下の DynamoDB リソースをオーバーライドできます：
+
+| Amplify生成リソース | 説明 |
+| --- | --- |
+| [dynamoDBTable](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html) | `amplify add storage` 実行時に Amplify が作成する DynamoDB テーブル |

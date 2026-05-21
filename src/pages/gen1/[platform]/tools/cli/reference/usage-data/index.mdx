@@ -1,0 +1,64 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'Amplify CLIの使用データ',
+  description: 'Amplify CLIの使用データについての詳細情報',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+  
+
+AWSでは、お客様とのやり取りから得られた学習に基づいてサービスを開発および立ち上げています。カスタマーフィードバックを使用して製品を改善しています。匿名化された使用データにより、お客様のニーズをより良く理解し、問題を診断し、顧客体験を改善する機能を提供することができます。
+
+Amplify CLIは、システムメタデータ、使用メトリクス、エラーなどの匿名化された情報を送信します。データは収集時点から1年後に削除されるようマークされています。Amplify CLIは、メールアドレス、ユーザー名、キー、ARNなどの個人識別情報、および名前、ARN、キーなどのプロジェクト情報を収集**しません**。
+
+## Amplify CLIインスタンスの使用データ収集を管理する
+
+**使用データ収集を無効にする**
+
+次のコマンドを実行して、Amplify CLIの使用データ収集をオフにします
+
+```bash
+amplify configure --usage-data-off
+```
+
+**使用データ収集を有効にする**
+
+次のコマンドを実行して、Amplify CLIの使用データ収集をオンにします
+
+```bash
+amplify configure --usage-data-on
+```
+
+**使用データ収集はマシンごとのインストールベースで管理されており、有効化/無効化はそのインスタンス上のすべてのプロジェクトで変更されます*
+
+## 詳細情報
+
+収集される使用データはAWSのデータプライバシーポリシーに準拠しています。詳細については、以下を参照してください：
+
+- [AWS Service Terms](https://aws.amazon.com/service-terms/)
+- [Data Privacy](https://aws.amazon.com/compliance/data-privacy-faq/)

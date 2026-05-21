@@ -1,0 +1,47 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ファイルプロパティの取得',
+  description: "Amplifyのストレージカテゴリを使用して、ファイルをダウンロードせずにファイルのプロパティを取得する方法について詳しく説明します。",
+  platforms: [
+    'javascript',
+    'angular',
+    'nextjs',
+    'react',
+    'vue',
+    'flutter'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+
+import js0 from '/src/fragments/lib-v1/storage/js/get-properties.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>
+
+import flutter0 from '/src/fragments/lib-v1/storage/flutter/get-properties.mdx';
+
+<Fragments fragments={{ flutter: flutter0 }} />

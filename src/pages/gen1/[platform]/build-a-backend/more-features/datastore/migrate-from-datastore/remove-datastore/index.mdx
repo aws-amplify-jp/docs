@@ -1,0 +1,231 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'DataStore を削除する',
+  description: 'Amplify DataStore をプロジェクトから削除し、Amplify API カテゴリまたは Apollo Kotlin への移行を準備します。',
+  platforms: [
+    'android',
+    'flutter',
+    'swift'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["flutter"]}>
+
+DataStore の呼び出しを移行する前に、Amplify DataStore をプロジェクトから削除し、API プラグインを設定してモデルを使用するようにします。
+
+## 依存関係を更新する
+
+`pubspec.yaml` から `amplify_datastore` パッケージを削除し、`amplify_api` パッケージが存在することを確認します：
+
+```yaml
+dependencies:
+  # このようにコメントアウト:
+  # amplify_datastore: ^2.x.x
+
+  # これらを保持または追加:
+  amplify_flutter: ^2.x.x
+  amplify_api: ^2.x.x
+  amplify_auth_cognito: ^2.x.x  # 認証を使用している場合
+```
+
+`pubspec.yaml` を更新した後、以下を実行します：
+
+```bash
+flutter pub get
+```
+
+## Amplify 設定を更新する
+
+DataStore を使用する場合、`ModelProvider` は `AmplifyDataStore` プラグインに渡されていました。DataStore を削除した後、`ModelProvider.instance` を代わりに `AmplifyAPI` プラグインに渡す**必要があります**。これを行わないと、`ModelMutations` と `ModelQueries` はモデルをシリアライズおよびデシリアライズできず、API 呼び出しは実行時に失敗します。
+
+**前（DataStore を使用）:**
+
+```dart
+import 'package:amplify_datastore/amplify_datastore.dart';
+import 'package:amplify_api/amplify_api.dart';
+import 'models/ModelProvider.dart';
+
+final datastorePlugin = AmplifyDataStore(modelProvider: ModelProvider.instance);
+final api = AmplifyAPI();
+
+await Amplify.addPlugins([datastorePlugin, api]);
+await Amplify.configure(amplifyConfig);
+```
+
+**後（API のみ）:**
+
+```dart
+import 'package:amplify_api/amplify_api.dart';
+import 'package:amplify_api/model_queries.dart';
+import 'package:amplify_api/model_mutations.dart';
+import 'package:amplify_api/model_subscriptions.dart';
+import 'models/ModelProvider.dart';
+
+// ModelProvider を API プラグインに渡す
+final api = AmplifyAPI(
+  options: APIPluginOptions(modelProvider: ModelProvider.instance),
+);
+
+await Amplify.addPlugins([api]);
+await Amplify.configure(amplifyConfig);
+```
+
+<Callout warning>
+
+`ModelProvider.instance` を `AmplifyAPI` に渡すことを忘れた場合、モデルベースのクエリと変更は機能しません。これは最も一般的な移行の失敗です。
+
+</Callout>
+
+## すべての DataStore 呼び出しを削除する
+
+コードベースをチェックして、すべての DataStore 呼び出しを削除または置き換えます：
+
+| DataStore の呼び出し | API 置き換え |
+|---|---|
+| `Amplify.DataStore.save()` | `ModelMutations.create()` / `.update()` で `Amplify.API.mutate()` |
+| `Amplify.DataStore.delete()` | `ModelMutations.delete()` で `Amplify.API.mutate()` |
+| `Amplify.DataStore.query()` | `ModelQueries.get()` / `.list()` で `Amplify.API.query()` |
+| `Amplify.DataStore.observe()` | `ModelSubscriptions.onCreate/onUpdate/onDelete()` で `Amplify.API.subscribe()` |
+| `Amplify.DataStore.observeQuery()` | 初期リストクエリ + 3 つのサブスクリプション（[Amplify API への移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-to-api/#observequery)参照） |
+| `Amplify.DataStore.clear()` | 不要になりました（クリアするローカル DataStore がありません） |
+| `Amplify.DataStore.start()` / `stop()` | 不要になりました |
+
+<Callout>
+
+認証またはその他のサービスに Amplify をまだ使用している場合は、`amplify_auth_cognito`（または他の認証プラグイン）を保持してください。DataStore プラグインと依存関係のみを削除する必要があります。
+
+</Callout>
+
+<Callout>
+
+**サインアウトフローの `Amplify.DataStore.clear()`:** サインアウトフローが `Amplify.DataStore.clear()` を呼び出してサインアウト前にローカルデータをワイプしている場合、移行後にクリアするローカル DataStore がないため、その呼び出しを完全に削除してください。
+
+</Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+Apollo を追加する前に、Amplify DataStore をプロジェクトから削除します。
+
+## ターゲットから DataStore フレームワークを削除する
+
+1. Xcode の**ナビゲーターパネル**（左サイドバー）で、最上部の**青いプロジェクトアイコン**（プロジェクト名でラベル付けされたドキュメントアイコン）を選択します。これにより**プロジェクトエディター**が開きます。
+2. プロジェクトエディターでは、2 つの列が表示されます：**PROJECT** と **TARGETS**。**TARGETS** の下（PROJECT の下ではなく）のアプリ名を選択します。
+3. 上部の**「General」**タブを選択します。
+4. **「Frameworks, Libraries, and Embedded Content」**セクション（「Supported Destinations」と「Minimum Deployments」の下）まで下にスクロールします。
+5. 各フレームワークを選択し、リストの下部にある**⊖（マイナス）**ボタンを選択して、DataStore 関連フレームワークを削除します。最低限削除する必要があります：
+   - `AWSDataStorePlugin`
+   - `AWSAPIPlugin`（DataStore でのみ使用されている場合）
+
+<Callout>
+
+典型的な Amplify プロジェクトには、`AWSCloudWatchLoggingPlugin`、`AWSLocationGeoPlugin`、`AWSPinpointAnalyticsPlugin`、`AWSPinpointPushNotificationsPlugin`、`AWSPredictionsPlugin`、`AWSS3StoragePlugin` など、DataStore を超えてリンクされた多くのフレームワーク製品がある場合があります。積極的に使用していないすべてのフレームワークを削除してください。引き続き必要なフレームワークは**保持**してください。たとえば、認証に Amplify を使用している場合は、`Amplify`、`AWSCognitoAuthPlugin`、`AWSPluginsCore`、および `Authenticator`（Amplify Authenticator SwiftUI コンポーネントを使用している場合）を保持してください。
+
+</Callout>
+
+## アプリの初期化から DataStore プラグインを削除する
+
+Amplify 設定コードから DataStore と API プラグイン登録を削除します：
+
+```swift
+// これらの行を削除:
+try Amplify.add(plugin: AWSDataStorePlugin(modelRegistration: AmplifyModels()))
+try Amplify.add(plugin: AWSAPIPlugin(modelRegistration: AmplifyModels()))
+```
+
+引き続き必要な他のプラグイン（例えば、`AWSCognitoAuthPlugin`）を保持してください。
+
+## DataStore 生成モデルファイルを削除する
+
+Amplify codegen を使用していた場合、生成されたモデルクラスを削除します。これらは通常、`Models/` ディレクトリにあり、以下のようなファイルを含みます：
+- `Post.swift`
+- `Post+Schema.swift`
+- `AmplifyModels.swift`
+
+これらは Apollo の生成されたタイプで置き換えられます。
+
+## すべての `Amplify.DataStore.*` 呼び出しを削除する
+
+コードベースをチェックして、すべての DataStore 呼び出しを削除または置き換えます：
+
+| DataStore の呼び出し | Apollo 置き換え |
+|---|---|
+| `Amplify.DataStore.save()` | Apollo ミューテーション（[DataStore を Apollo に移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-datastore-to-apollo/)参照） |
+| `Amplify.DataStore.delete()` | Apollo ミューテーション（[DataStore を Apollo に移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-datastore-to-apollo/)参照） |
+| `Amplify.DataStore.query()` | Apollo クエリ（[DataStore を Apollo に移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-datastore-to-apollo/)参照） |
+| `Amplify.DataStore.observe()` | Apollo サブスクリプション（[DataStore を Apollo に移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-datastore-to-apollo/)参照） |
+| `Amplify.DataStore.observeQuery()` | Apollo キャッシュウォッチャー（[DataStore を Apollo に移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-datastore-to-apollo/#observequery)参照） |
+| `Amplify.DataStore.clear()` | `apolloClient.store.clearCache()` |
+| `Amplify.DataStore.start()` / `.stop()` | 不要になりました |
+
+<Callout>
+
+認証またはその他のサービスに Amplify をまだ使用している場合は、`AWSCognitoAuthPlugin`（または他の認証プラグイン）を保持してください。DataStore プラグインと API プラグイン（DataStore でのみ使用されている場合）のみを削除する必要があります。Amplify `Authenticator` SwiftUI ビューを使用している場合は、`Authenticator` と `AWSCognitoAuthPlugin` を保持してください。これらは DataStore とは独立して動作します。
+
+</Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={["android"]}>
+
+Apollo を追加する前に、Amplify DataStore をプロジェクトから削除します。
+
+## DataStore 依存関係を削除する
+
+`build.gradle.kts`（または `libs.versions.toml`）から `com.amplifyframework:aws-datastore`（またはそのバージョンカタログエイリアス）を削除します。
+
+## DataStore プラグインを削除する
+
+`Application` クラスから DataStore プラグインを削除します：
+
+```kotlin
+// Amplify.addPlugin() の呼び出しからこの行を削除:
+Amplify.addPlugin(AWSDataStorePlugin())
+```
+
+## DataStore 生成モデルファイルを削除する
+
+Amplify codegen を使用していた場合、生成されたモデルクラスを削除します（例えば、`com/amplifyframework/datastore/generated/model/` の下の `Post.java`、`PostStatus.java`、`AmplifyModelProvider.java`）。これらは Apollo の生成されたタイプで置き換えられます。
+
+## すべての `Amplify.DataStore.*` 呼び出しを削除する
+
+コード全体からすべての DataStore API 呼び出しを削除します：
+
+| DataStore の呼び出し | Apollo 置き換え |
+|---|---|
+| `Amplify.DataStore.save()` | Apollo ミューテーション |
+| `Amplify.DataStore.delete()` | Apollo ミューテーション |
+| `Amplify.DataStore.query()` | Apollo クエリ |
+| `Amplify.DataStore.observe()` | Apollo サブスクリプション |
+| `Amplify.DataStore.observeQuery()` | Apollo キャッシュウォッチャー（[DataStore を Apollo に移行](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/migrate-datastore-to-apollo/#observequery)参照） |
+| `Amplify.DataStore.clear()` | 不要になりました（クリアするローカル DataStore がありません） |
+| `Amplify.DataStore.start()` / `stop()` | 不要になりました |
+
+<Callout>
+
+認証またはその他のサービスに Amplify をまだ使用している場合は、`AWSApiPlugin` と `AWSCognitoAuthPlugin`（または他の認証プラグイン）を保持してください。DataStore プラグインと依存関係のみを削除する必要があります。
+
+</Callout>
+
+<Callout>
+
+**サインアウトフローの `Amplify.DataStore.clear()`:** サインアウトフローが `Amplify.DataStore.clear()` を呼び出してサインアウト前にローカルデータをワイプしている場合、移行後にクリアするローカル DataStore がないため、その呼び出しを完全に削除してください。
+
+</Callout>
+
+</InlineFilter>

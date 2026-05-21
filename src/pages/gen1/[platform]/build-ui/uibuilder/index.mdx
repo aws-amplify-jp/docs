@@ -1,0 +1,156 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Figma-to-Code',
+  description: 'Figmaのデザインファイルから、Amplify Studioを使用してクリーンなReactコードを生成します。',
+  platforms: [
+    'javascript',
+    'react', 
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+
+Amplify Studioは、Figmaとの統合を提供しており、Figmaのデザインファイルをインポートすることで、クリーンなReactコードを生成できます。[Figma](https://figma.com/)は、高忠実度のデザインを構築するために使用されるブラウザベースのUIおよびUXデザインアプリケーションです。標準的な製品開発ライフサイクルでは、UIまたはUXデザイナーがモックアップを構築し、開発者がそれをコードとして実装します。Amplify Studioは、Figmaファイル内の任意の[Figmaコンポーネント](https://help.figma.com/hc/en-us/articles/360038662654-Guide-to-components-in-Figma)を、アプリで使用可能な[Reactコンポーネント](https://reactjs.org/docs/components-and-props.html)に自動的に変換します。
+
+## ステップ1: Figmaファイルをセットアップする
+
+まず、Amplify StudioプロジェクトをFigmaファイルにリンクするだけです。任意のFigmaファイルをStudioにリンクできますが、最高のエンドツーエンド体験を得るために、提供されているFigmaファイルから始めることをお勧めします。最初から始める場合は、**[Figma UIファイルを複製してください](https://www.figma.com/community/file/1047600760128127424)**。
+
+![「Figmaで開く」をクリックしてAWS Amplify UIキットを複製](/images/console/ui-figma-file.png)
+
+このファイルには、以下のページが含まれています:
+
+- **README**: READMEページでは、Figmaファイルを使用して新しいコンポーネント、テーマプリミティブを作成し、レイアウトとスタイルをカスタマイズする方法について説明しています。
+- **Theme**: テーマページには、Amplify UIがプリミティブのスタイルを設定するために使用するテーマ値とデザイントークンが表示されます。プリミティブをテーマ化する場合は、[AWS Amplify UI Builder Figmaプラグイン](https://www.figma.com/community/plugin/1040722185526429545)を使用して、テーマに変更を加えてください。テーマページ自体に加えた変更は、生成されたコードには反映されません。
+- **Primitives**: プリミティブは、アラート、ボタン、バッジなどのビルディングブロックコンポーネントです。これらのプリミティブは、[Amplify UIプリミティブ](https://ui.docs.amplify.aws/react/components)に対応し、すべてのプリミティブプロパティを持つコードにエクスポートされます。このページは読み取り専用です。このページのプリミティブへの変更は、生成されたコードには反映されません。
+- **My components**: このページには、プリミティブを使用して構築されたすべてのカスタムコンポーネントが含まれています。Amplifyは、ニュースフィード、ソーシャルメディア、マーケティングヒーローコンポーネントなど、数十のコンポーネントを提供しており、すぐに始めることができます。これらをカスタマイズして要件に合わせるか、独自のコンポーネントを構築します。
+- **Examples**: これはデモンストレーション目的のみであり、デザイナーがコンポーネントを使用してページ全体を構築する方法を示しています。
+
+FigmaファイルのREADMEに従って、コード品質を最適化するためにコンポーネントを作成する方法を学んでください。
+
+## ステップ2: Studioでfigmaファイルをリンクする
+
+[Amplify Studio](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)で、作成（または複製）したFigmaファイルのURLを入力します。Figmaで認証するよう求められます。
+
+![FigmaファイルリンクをコピーしてStudio UIライブラリページに貼り付け](/images/console/ui-figma-to-studio.png)
+
+Figmaで認証した後、同期できるコンポーネントのリストが表示されます。**すべて許可**を選択してすべてのコンポーネントをインポートするか、1つずつ検討して、それらが視覚的に受け入れ可能であることを確認してください。同期が完了すると、インポートされたコンポーネントのリストが表示されます。すべてのコンポーネントのプレビューは、実際のコード化されたコンポーネントのライブレンダリングです。dev toolsインスペクターを開いて確認してください!
+
+![Figmaと同期するページでコンポーネントを許可](/images/console/ui-figma-sync.png)
+
+## ステップ3: プロジェクトを設定する
+
+コンポーネントとテーマをインポートして使用する前に、プロジェクトは初期セットアップが必要になります。開始するには、[新しいReact Appを作成し](/gen1/[platform]/start/project-setup/create-application/#create-a-new-react-app)、
+
+1. アプリケーションのルートディレクトリに移動して、以下のnpm依存関係をインストールします
+
+```
+npm install -g @aws-amplify/cli
+```
+
+```
+npm install aws-amplify @aws-amplify/ui-react
+```
+
+2. アプリケーションのエントリポイントファイル（例：create-react-appの場合は`src/index.js`、Viteの場合は`src/main.jsx`）に、以下のインポートと設定を追加します
+
+```jsx
+import {ThemeProvider} from "@aws-amplify/ui-react";
+import { Amplify } from 'aws-amplify';
+import amplifyconfig from './amplifyconfiguration.json';
+import "@aws-amplify/ui-react/styles.css";
+import studioTheme from './ui-components/studioTheme';
+
+Amplify.configure(amplifyconfig);
+```
+3. アプリケーションのエントリポイントファイル（例：create-react-appの場合は`src/index.js`、Viteの場合は`src/main.jsx`）で、`<App />`を以下でラップします:
+
+```jsx
+<ThemeProvider theme={studioTheme}>
+    <App />
+</ThemeProvider>
+```
+
+
+あるいは、初期プロジェクトセットアップの手順は、いつでも任意のコンポーネント内で見つけることができます。Studioで、コンポーネントを選択し、**Configure**を選択してコンポーネントエディター画面に移動します。ページの下部で**Get component code**を選択します。
+
+![編集モードのコンポーネントと、下部に表示されたGet component codeボタン](/images/studio/ui-setup1.png)
+
+**Initial project setup**タブに移動し、セットアップ手順に従います。
+
+![Amplify Studioコンポーネントを使用するために必要なコードスニペットを示す、Initial Project Setupタブが選択されたポップアップ](/images/studio/ui-setup2.png)
+
+## ステップ4: コンポーネントをインポートしてレンダリングする
+
+プロジェクトのルートディレクトリに移動します。プロジェクトのルートディレクトリで、`amplify pull`を実行して、Figmaコンポーネントから生成されたReactコードをインポートします。次に、コンポーネントをアプリケーションで使用するためにインポートします。「ComponentA」と「ComponentB」をコンポーネントの名前に置き換えます:
+```jsx
+import { ComponentA, ComponentB }  from './ui-components';
+
+```
+
+Amplify CLIは、生成されたUIコンポーネントコードをすべて`src/ui-components`ディレクトリにJSXおよびTSファイルとして配置します。生成されたコードはすべて、Amplify UIライブラリのプリミティブで構築されています。
+
+コンポーネントコードを検査することはできますが、コンポーネントコードへの変更は、次の`amplify pull`で上書きされます。代わりに、Figmaのソースコンポーネントを更新して再同期するか、オーバーライドを使用して個別のコンポーネントをインラインでカスタマイズできます。**[コードでコンポーネントを拡張する方法についてはここを参照してください](/gen1/[platform]/build-ui/uibuilder/override/)**。
+
+
+
+## Figmaファイルのアップグレード
+
+Figmaファイルをアップグレードするには、すべてのAmplify UIプリミティブの最新バージョンをカスタマイズされたFigmaファイルにインポートする必要があります。
+
+<Callout>
+アップグレード後、一部の子プロップとデータバインディングが正しくコピーされない場合があります。コンポーネントをレビューして、すべてが機能していることを確認し、コピーされなかったバインディングを再度適用してください。
+</Callout>
+
+1. 現在のFigmaファイルで、AWS Amplify UI Builder Figmaプラグインを開き、下部の**Copy Theme**ボタンをクリックします。
+1. 新しい[Figmaコミュニティファイル](https://www.figma.com/community/file/1047600760128127424)をFigmaアカウントに複製します。
+![新しいfigmaファイルを複製](/images/console/ui-figma-file.png)
+1. _新しい_Figmaファイルで、AWS Amplify UI Builder Figmaプラグインを開きます。**Theme presets/Import**タブに移動します。テーマ入力に貼り付けをクリックして、貼り付けます（ctrl/cmd + v）。これにより、新しいファイルがテーマで更新されます。
+1. _新しい_Figmaファイルで、**My Components**ページに移動して、すべてを削除します。
+1. 古いFigmaファイルに戻り、**My Components**ページからすべてをコピーします。
+1. _新しい_Figmaファイルの**My Components**ページでコンポーネントを貼り付けます。
+1. AWS Amplify Figmaプラグインを開くと、上部にメッセージが表示されます。ボタンをクリックしてコンポーネントを更新します。これにより、ファイル内のAmplify UIプリミティブのインスタンスが再リンクされます。
+1. _新しい_FigmaファイルのURLを取得して、Amplify StudioのFigmaファイルのURLを置き換えます。
+1. Figmaから同期ボタンをクリックします。
+
+
+### Figmaファイルの変更ログ
+
+#### 1.3.0: 2023年6月21日
+
+このアップデートは、Figma内でAmplify UI Reactコードを生成することができるようになったFigmaプラグインの大きな変更に伴います!
+
+Amplify UIのテーマ値とドキュメントを表示するテーマページを追加しました。デフォルトのカスタムコンポーネントと例を更新して、より現実的なユースケースを示しました。ファイルのドキュメントと組織を改善しました。プリミティブLoaderとPlaceholderを追加し、ボタンのバリエーション`warning`と`destructive`を追加しました。
+
+
+#### 1.2.0: 2022年7月25日
+
+* サポートされるAmplify UI Reactバージョンを3.1.0に更新します。
+* TextAreaFieldプリミティブコンポーネントを追加します。目的のTextFieldインスタンスを選択し、Swap Instanceドロップダウンで「TextAreaField」を選択することで、既存のTextFieldをTextAreaFieldに変更できます。
+![TextFieldをTextAreaに変換](/images/console/ui-figma-textfield-to-textarea.gif)
+
+#### 1.0.0: 2022年3月2日
+
+* プリミティブコンポーネントレイヤー名を修正して、Reactプロップに正しくマップするようにしました。
+* アイコンプリミティブを削除し、カスタムアイコンコンポーネントを追加しました。この変更により、アイコンのカスタマイズが容易になります。
+* FigmaファイルとReactコンポーネント間の視覚的な不一致を修正しました。
+* プリミティブコンポーネントのバリエーションを再構成して、デフォルトのバリエーションがより予期されるようにしました。例えば、プライマリバリエーションの代わりに、デフォルトサイズとボタンのデフォルトバリエーション。
+* Figmaファイルにバージョン番号を追加しました。
+
+### 制限事項
+
+UI Builderで作成されたコンポーネントは、現在、Next.js App Routerを含むReact Server Componentsと互換性がありません。

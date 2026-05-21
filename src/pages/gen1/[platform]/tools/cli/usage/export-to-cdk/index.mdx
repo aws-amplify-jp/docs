@@ -1,0 +1,113 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'Amplify プロジェクトを CDK にエクスポートする',
+  description: 'Amplify CLI で生成されたバックエンドを Cloud Development Kit (CDK) スタックとしてエクスポートし、既存の CDK デプロイメント パイプラインに組み込みます。この機能により、フロントエンド開発者はアプリバックエンドを迅速に構築し、シップ準備ができるたびに DevOps チームに本番環境へのデプロイを引き継ぐことができます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify CLI で生成されたバックエンドを Cloud Development Kit (CDK) スタックとしてエクスポートし、既存の CDK デプロイメント パイプラインに組み込みます。この機能により、フロントエンド開発者はアプリバックエンドを迅速に構築し、シップ準備ができるたびに DevOps チームに本番環境へのデプロイを引き継ぐことができます。
+
+```bash
+amplify export --out <your-cdk-project-location> 
+```
+
+上記のコマンドは、Amplify プロジェクトを CDK 互換の CloudFormation ファイルとアセットをエクスポートします。
+
+> 注: `notifications` カテゴリはエクスポートではサポートされていません。
+
+エクスポートされた場所に、次のようなファイル構造が表示されます:
+
+```bash
+amplify-export-myAmplifyProject/
+├── <YOUR_AMPLIFY_CATEGORIES>/
+│   ├──...
+│   ├──...
+│   └──...
+├── amplify-export-manifest.json
+├── category-stack-mapping.json
+├── export-tags.json
+└── root-stack-template.json
+```
+
+## AWS Cloud Development Kit (CDK) でエクスポートされた Amplify バックエンドを使用する
+
+`amplify export` は、Amplify バックエンドの現在の状態を使用して、CloudFormation ファイルとアセットをビルド、パッケージ化し、指定されたパスに生成します。
+
+Amplify バックエンドを CDK アプリに統合するには、`AmplifyExportedBackend` CDK コンストラクトをインストールします:
+
+```
+npm i @aws-amplify/cdk-exported-backend
+```
+
+その後、新しい `AmplifyExportedBackend` スタックをインポートして初期化します:
+
+```ts
+import { AmplifyExportedBackend } from '@aws-amplify/cdk-exported-backend'
+import * as path from 'path' // エクスポートされた Amplify バックエンド アセットへのパスを解決するため
+
+...
+
+const amplifyBackend = new AmplifyExportedBackend(this, "amplifyExportedBackend", {
+  amplifyEnvironment: "dev", // Amplify 環境を指定します
+  path: path.resolve(__dirname, 'amplify-export-<YOUR_AMPLIFY_PROJECT_NAME>')
+})
+```
+
+`amplifyEnvironment` パラメータを指定して、(`amplify env add` を通じて作成された) 対応するバックエンド環境の Amplify スタックを返します。
+
+CDK アプリをデプロイします:
+
+```bash
+npx cdk deploy
+```
+
+忘れないでください: 「export」は「eject」ワークフローの意味ではありません。「export」は、Amplify CLI の変更がシップ準備ができたときに反復的に適用できます。開発者は Amplify CLI を使用してアプリバックエンドを迅速に反復でき、本番環境への新しいデプロイの前に、「amplify export」を実行して、既存のデプロイメント システム用にエクスポートされた Amplify バックエンドを提供できます。
+
+## アカウント間またはリージョン間の Amplify バックエンド デプロイメントに CDK を使用する
+
+Amplify バックエンドをアカウント間またはリージョン間でデプロイするには、`amplifyEnvironment` パラメータが AWS 全体でグローバルに一意であることを確認する必要があります。これは、S3 バケットや IAM ロールなどの基盤となるリソースがグローバルに一意である必要があるためです。
+
+それを確認する 1 つの方法は、AWS アカウント ID またはリージョンを Amplify 環境識別子として使用することです:
+
+```ts
+const amplifyBackend = new AmplifyExportedBackend(this, "amplifyExportedBackend", {
+  amplifyEnvironment: cdk.Stack.of(this).region + cdk.Stack.of(this).account, // <---------
+  path: path.resolve(__dirname, 'amplify-export-<YOUR_AMPLIFY_PROJECT_NAME>')
+})
+```
+
+CDK でリージョンとアカウント ID の文字列を取得するには、親スタックに `env` パラメータを指定する必要があります。`amplifyEnvironment` は [CloudFormation `Ref`](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-ref.html) を含めることはできません。
+
+```ts
+const service = new MyAmplifyStack(this, 'AmplifyStack', {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT, // または例えば: "172387324923"
+    region: process.env.CDK_DEFAULT_REGION, // または "us-east-1"
+  }
+});
+```

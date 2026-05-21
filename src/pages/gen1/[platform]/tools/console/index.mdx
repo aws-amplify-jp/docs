@@ -1,0 +1,102 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Studio',
+  description: 'Amplify Studio は、フルスタック アプリを構築するためのビジュアル開発環境です。',
+  disableTOC: 'true',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+AWS Amplify Studio は、フルスタック Web およびモバイル アプリを構築するためのビジュアル開発環境です。Studio は AWS Amplify の既存のバックエンド構築機能を活用し、UI 開発も加速させることができます。Studio を使用すれば、コーディングを最小限に抑えながら、フロントエンドからバックエンドまで全体的なアプリを素早く構築でき、アプリの設計と動作を完全に制御できます。より速くデプロイし、スケールさせ、すべてのユーザーに喜びを与えましょう。
+
+<BlockSwitcher>
+
+<Block name="AWS アカウントを作成する">
+
+Amplify Studio のすべての機能を利用するには、AWS アカウントが必要です。[AWS フリーティア](https://aws.amazon.com/free)を利用して、費用をかけずに始めることができます。
+
+<ExternalLinkButton href="https://portal.aws.amazon.com/gp/aws/developer/registration/index.html?refid=78b916d7-7c94-4cab-98d9-0ce5e648dd5f">
+  <span slot="text">AWS アカウントを作成</span>
+</ExternalLinkButton>
+
+</Block>
+
+<Block name="フルスタック アプリを構築する">
+
+既に AWS アカウントをお持ちの場合は、Amplify Studio のすべての機能の使用を開始できます。[AWS コンソールにログイン](https://console.aws.amazon.com/console/home)して、下のボタンをクリックして Amplify Studio に新しいプロジェクトを作成してください。
+
+<ExternalLinkButton href="https://console.aws.amazon.com/amplify/home?#/deploy-backend">
+  <span slot="text">新しいプロジェクトを作成</span>
+</ExternalLinkButton>
+
+次に、以下の手順に従って Amplify Studio をデプロイして起動します。
+
+1. アプリの名前を入力して、**デプロイを確認**を選択します。
+1. アプリのデプロイが完了したら、**バックエンド環境**タブを選択します。
+1. **Studio を起動**を選択します。これにより、Amplify Studio が自動的に新しいタブで起動します。
+
+</Block>
+
+</BlockSwitcher>
+
+## 主な機能
+
+### ビジュアル バックエンド ビルダー - Amplify CLI と連携
+
+ビジュアル バックエンド ビルダーを使用して、アーキテクチャがしっかりしたアプリ バックエンドを構築します。すべてのバックエンド定義は、Infrastructure-as-Code のベストプラクティスに従ってデプロイされます。
+
+- データモデル デザイナーを使用して、GraphQL API とデータベース テーブルを簡単にプロビジョニングできます。
+- ソーシャル プロバイダーで認証を設定し、認可ルールを定義してデータを保護します。
+- ファイル ストレージを設定して、アプリからファイルを簡単にアップロード/ダウンロードできます。
+- Lambda 関数を作成して、カスタム ビジネス ロジックを実行します。
+
+Amplify Studio が生成したバックエンドは、`amplify pull` コマンドを実行することで Amplify CLI を使用してアクセスできます。
+
+![データ モデリングを示す GIF](/images/console/datamodel.gif)
+
+### 加速化された UI 開発と Figma から React コードへ
+
+UI 開発を加速するために、Amplify Studio は [Amplify UI ライブラリ](https://ui.docs.amplify.aws/)を使用して、ニュース フィード、お問い合わせフォーム、e コマース カード、ボタン、テキスト領域、アラートなどの多くのコンポーネントを提供します。すべての UI コンポーネントは Figma 内で完全にカスタマイズでき、デザイナーはなじみのあるツール内でコンポーネントのビジュアル スタイルを完全に制御できます。すべての Figma コンポーネントは Studio に React コンポーネントとしてインポートされ、手作成コードと同等の品質を保ちます。
+
+![Figma からコードへの変換を示すスクリーンショット](/images/console/ui-figmatocode.png)
+
+### UI をデータにバインドする
+
+開発者はコンポーネント エディターを使用して、UI コンポーネントをアプリ バックエンドのデータに視覚的に接続できます。コンポーネントと子プロパティを定義し、コンポーネントからコレクションを作成し、CMS からプレビュー データをシャッフルします。
+
+![UI からデータへのバインディングを示すスクリーンショット](/images/console/ui-front-to-back.png)
+
+### アプリ バックエンド管理
+
+Amplify Studio でアプリ バックエンド データ、ファイル、ユーザー/グループを管理します。データ ブラウザーは、バックエンド データベース内のデータにアクセス/更新するための軽量なヘッドレス CMS を提供します。
+
+![Amplify Studio のデータ マネージャーを示すスクリーンショット](/images/console/studio-manage.png)
+
+### AWS アカウント不要
+
+Amplify Studio 環境を管理するためのアクセス権をチームメイトに素早く与えることができます。フルアクセスと管理のみのアクセスから選択できます。
+
+![Amplify Studio への外部アクセスを設定する方法を示すスクリーンショット](/images/console/access.png)

@@ -1,0 +1,31 @@
+{
+  "name": "docs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "submodule:init": "git submodule update --init --recursive",
+    "submodule:update": "git submodule update --remote --merge",
+    "submodule:install": "cd upstream && yarn install",
+    "submodule:translate": "node --env-file=.env scripts/translate.mjs --concurrency 5",
+    "submodule:translate:dry": "node --env-file=.env scripts/translate.mjs --dry-run",
+    "submodule:build": "rsync -a src/pages/ upstream/src/pages/ && node scripts/patch-next-config.mjs && cd upstream && yarn build",
+    "submodule:serve": "npx serve docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aws-amplify-jp/docs.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/aws-amplify-jp/docs/issues"
+  },
+  "homepage": "https://github.com/aws-amplify-jp/docs#readme",
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.97.1"
+  }
+}

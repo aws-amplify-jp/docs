@@ -1,0 +1,204 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'DataStoreイベント',
+  description: 'DataStoreイベントのリスニング',
+  platforms: [
+    'javascript',
+    'react-native',
+    'flutter',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+DataStoreは定期的にAmplifyのHubに状態通知を発行します。Hubをサブスクライブして、DataStoreの内部状態を知ることができます。以下の場合、イベントが発行されます:
+
+- デバイスがネットワーク接続を失うか、回復する場合
+- データがクラウドと同期される場合
+- クラウドと同期されていない新しい未処理の変更がある場合
+
+以下のDataStoreイベントが定義されています:
+
+## networkStatus
+
+DataStoreの起動時およびネットワーク状態が変わるたびに発行されます
+
+HubPayload `NetworkStatusEvent`には以下が含まれます:
+
+- `active` (Bool): DataStoreがクラウドに接続可能なネットワーク上にある場合はtrue、そうでない場合はfalse
+
+## subscriptionsEstablished
+
+DataStoreがすべてのモデルへのサブスクリプション確立を終了したときに発行されます
+
+HubPayload: N/A
+
+## syncQueriesStarted
+
+DataStoreが初期同期クエリを実行しようとするときに発行されます
+
+HubPayload `syncQueriesStartedEvent`には以下が含まれます:
+
+- `models` ([String]): 各モデルの`name`の配列
+
+import js0 from '/src/fragments/lib/datastore/js/datastore-events/model-synced.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>
+
+import reactnative0 from '/src/fragments/lib/datastore/js/datastore-events/model-synced.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative0 }} />
+
+import android1 from '/src/fragments/lib/datastore/native_common/datastore-events/model-synced.mdx';
+
+<Fragments fragments={{ android: android1 }} />
+
+import flutter2 from '/src/fragments/lib/datastore/native_common/datastore-events/model-synced.mdx';
+
+<Fragments fragments={{ flutter: flutter2 }} />
+
+import ios3 from '/src/fragments/lib/datastore/native_common/datastore-events/model-synced.mdx';
+
+<Fragments fragments={{ swift: ios3 }} />
+
+## syncQueriesReady
+
+すべてのモデルがクラウドから同期されたときに発行されます
+
+HubPayload: N/A
+
+## ready
+
+DataStore全体が準備完了したときに発行されます。この時点ですべてのデータが利用可能です
+
+HubPayload: N/A
+
+import js4 from '/src/fragments/lib/datastore/js/datastore-events/outbox-mutation-enqueued.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js4,
+    angular: js4,
+    nextjs: js4,
+    react: js4,
+    vue: js4
+  }}
+/>
+
+import reactnative1 from '/src/fragments/lib/datastore/js/datastore-events/outbox-mutation-enqueued.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative1 }} />
+
+import android5 from '/src/fragments/lib/datastore/native_common/datastore-events/outbox-mutation-enqueued.mdx';
+
+<Fragments fragments={{ android: android5 }} />
+
+import flutter6 from '/src/fragments/lib/datastore/native_common/datastore-events/outbox-mutation-enqueued.mdx';
+
+<Fragments fragments={{ flutter: flutter6 }} />
+
+import ios7 from '/src/fragments/lib/datastore/native_common/datastore-events/outbox-mutation-enqueued.mdx';
+
+<Fragments fragments={{ swift: ios7 }} />
+
+import js8 from '/src/fragments/lib/datastore/js/datastore-events/outbox-mutation-processed.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js8,
+    angular: js8,
+    nextjs: js8,
+    react: js8,
+    vue: js8
+  }}
+/>
+
+import reactnative2 from '/src/fragments/lib/datastore/js/datastore-events/outbox-mutation-processed.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative2 }} />
+
+import android9 from '/src/fragments/lib/datastore/native_common/datastore-events/outbox-mutation-processed.mdx';
+
+<Fragments fragments={{ android: android9 }} />
+
+import flutter10 from '/src/fragments/lib/datastore/native_common/datastore-events/outbox-mutation-processed.mdx';
+
+<Fragments fragments={{ flutter: flutter10 }} />
+
+import ios11 from '/src/fragments/lib/datastore/native_common/datastore-events/outbox-mutation-processed.mdx';
+
+<Fragments fragments={{ swift: ios11 }} />
+
+import android12 from '/src/fragments/lib/datastore/android/datastore-events/outbox-mutation-failed.mdx';
+
+<Fragments fragments={{ android: android12 }} />
+
+## outboxStatus
+
+以下の場合に発行されます:
+
+- DataStoreが起動する場合
+- ローカルミューテーションがアウトボックスにキューイングされるたびに
+- ローカルミューテーションの処理が完了するたびに
+
+HubPayload `OutboxStatusEvent`には以下が含まれます:
+
+- `isEmpty` (Bool): クラウドへのアップロード待機中のローカル変更がないかどうかを示すブール値
+
+## 使用方法
+
+ネットワーク状態がアクティブかどうかを確認するには、以下のリスナーを設定できます:
+
+import js13 from '/src/fragments/lib/datastore/js/datastore-events.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js13,
+    angular: js13,
+    nextjs: js13,
+    react: js13,
+    vue: js13
+  }}
+/>
+
+import reactnative3 from '/src/fragments/lib/datastore/js/datastore-events.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative3 }} />
+
+import android14 from '/src/fragments/lib/datastore/android/datastore-events.mdx';
+
+<Fragments fragments={{ android: android14 }} />
+
+import ios15 from '/src/fragments/lib/datastore/ios/datastore-events.mdx';
+
+<Fragments fragments={{ swift: ios15 }} />
+
+import flutter16 from '/src/fragments/lib/datastore/flutter/datastore-events.mdx';
+
+<Fragments fragments={{ flutter: flutter16 }} />

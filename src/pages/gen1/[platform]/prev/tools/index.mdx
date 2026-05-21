@@ -1,0 +1,55 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Amplify ツール',
+  description:
+    'ツール',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'vue',
+    'swift',
+    'android',
+    'flutter',
+    'react-native'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript", "react-native", "angular", "nextjs", "react", "vue"]}>
+
+<Callout info>
+
+古いプロジェクトで作業している場合は、選択したフレームワークまたは言語の[Amplify ライブラリの以前のバージョン](/gen1/[platform]/prev/tools/libraries/)に関する情報を確認できます。また、[以前のバージョン用に Amplify カテゴリを構成するガイド](/gen1/[platform]/prev/tools/libraries/configure-categories/)も確認できます。
+
+新規プロジェクトの場合は、選択したフレームワークまたは言語の[最新バージョン](/gen1/[platform]/tools/libraries/)の Amplify ライブラリコンテンツを確認することをお勧めします。
+
+</Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={["swift", "flutter", "android"]}>
+
+<Callout info>
+
+古いプロジェクトで作業している場合は、選択したフレームワークまたは言語の[Amplify ライブラリの以前のバージョン](/gen1/[platform]/prev/tools/libraries/)に関する情報を確認できます。
+
+新規プロジェクトの場合は、選択したフレームワークまたは言語の[最新バージョン](/gen1/[platform]/tools/libraries/)の Amplify ライブラリコンテンツを確認することをお勧めします。
+
+</Callout>
+
+</InlineFilter>

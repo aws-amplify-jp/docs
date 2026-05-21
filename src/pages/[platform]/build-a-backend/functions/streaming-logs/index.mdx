@@ -1,0 +1,104 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ストリーミングログ',
+  description:
+    'Sandbox実行中に実行ログをターミナルに直接ストリーミングする',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify では、[`ampx sandbox`](/[platform]/reference/cli-commands/#npx-ampx-sandbox) を実行中に AWS Lambda 関数のログをターミナルに直接ストリーミングできます。開始するには、サンドボックスを起動するときに `--stream-function-logs` オプションを指定します：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox --stream-function-logs
+```
+
+<Callout info>
+
+**注釈**: この機能は [Sandbox](/[platform]/deploy-and-host/sandbox-environments/) でのみ利用可能です
+
+</Callout>
+
+関数ログをターミナルに直接ストリーミングすることで、デバッグイテレーションが高速化し、関数の実行についてより詳細な情報が得られます。
+
+## フィルタリング
+
+デフォルトでは、Amplify はすべての関数のログをストリーミングします。関数のサブセットのみをストリーミングしたい場合は、関数名または関数名の正規表現でフィルターを指定できます。例えば、関数名に「auth」を含む [Auth トリガー](/[platform]/build-a-backend/auth/customize-auth-lifecycle/triggers/) が複数ある場合などです。
+
+<Callout info>
+
+5 個以上の関数を使用する場合は、`--logs-filter` フラグを使用して、ログ出力を特定の関数にフィルタリングすることをお勧めします。
+
+</Callout>
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox --stream-function-logs --logs-filter auth
+```
+
+個人用クラウドサンドボックスをデプロイし、フロントエンドアプリケーションを起動して、初めてサインアップすると、サンドボックスが実行されているターミナルにトリガーの実行ログが印刷されます。
+
+```console title="Terminal"
+> npx ampx sandbox --stream-function-logs --logs-filter auth
+...
+
+✨  Total time: 158.44s
+
+[Sandbox] Watching for file changes...
+File written: amplify_outputs.json
+[auth-pre-sign-up] 3:36:34 PM INIT_START Runtime Version: nodejs:18.v30	Runtime Version ARN: arn:aws:lambda:us-east-1::runtime:f89c264158db39a1cfcbb5f9b3741413df1cfce4d550c9a475a67d923e19e2f4
+[auth-pre-sign-up] 3:36:34 PM START RequestId: 685be2bd-5df1-4dd5-9eb1-24f5f6337f91 Version: $LATEST
+[auth-pre-sign-up] 3:36:34 PM END RequestId: 685be2bd-5df1-4dd5-9eb1-24f5f6337f91
+[auth-pre-sign-up] 3:36:34 PM REPORT RequestId: 685be2bd-5df1-4dd5-9eb1-24f5f6337f91	Duration: 4.12 ms	Billed Duration: 5 ms	Memory Size: 512 MB	Max Memory Used: 67 MB	Init Duration: 173.67 ms
+[auth-post-confirmation] 3:38:40 PM INIT_START Runtime Version: nodejs:18.v30	Runtime Version ARN: arn:aws:lambda:us-east-1::runtime:f89c264158db39a1cfcbb5f9b3741413df1cfce4d550c9a475a67d923e19e2f4
+[auth-post-confirmation] 3:38:40 PM START RequestId: fce69b9f-b257-4af8-8a6e-821f84a39ce7 Version: $LATEST
+[auth-post-confirmation] 3:38:41 PM 2024-07-19T22:38:41.209Z	fce69b9f-b257-4af8-8a6e-821f84a39ce7	INFO	processed 412f8911-acfa-41c7-9605-fa0c40891ea9
+[auth-post-confirmation] 3:38:41 PM END RequestId: fce69b9f-b257-4af8-8a6e-821f84a39ce7
+[auth-post-confirmation] 3:38:41 PM REPORT RequestId: fce69b9f-b257-4af8-8a6e-821f84a39ce7	Duration: 264.38 ms	Billed Duration: 265 ms	Memory Size: 512 MB	Max Memory Used: 93 MB	Init Duration: 562.19 ms
+[auth-pre-authentication] 3:38:41 PM INIT_START Runtime Version: nodejs:18.v30	Runtime Version ARN: arn:aws:lambda:us-east-1::runtime:f89c264158db39a1cfcbb5f9b3741413df1cfce4d550c9a475a67d923e19e2f4
+[auth-pre-authentication] 3:38:41 PM START RequestId: 9210ca3a-1351-4826-8544-123684765710 Version: $LATEST
+[auth-pre-authentication] 3:38:41 PM END RequestId: 9210ca3a-1351-4826-8544-123684765710
+[auth-pre-authentication] 3:38:41 PM REPORT RequestId: 9210ca3a-1351-4826-8544-123684765710	Duration: 3.47 ms	Billed Duration: 4 ms	Memory Size: 512 MB	Max Memory Used: 67 MB	Init Duration: 180.24 ms
+[auth-post-authentication] 3:38:42 PM INIT_START Runtime Version: nodejs:18.v30	Runtime Version ARN: arn:aws:lambda:us-east-1::runtime:f89c264158db39a1cfcbb5f9b3741413df1cfce4d550c9a475a67d923e19e2f4
+[auth-post-authentication] 3:38:42 PM START RequestId: 60c1d680-ea24-4a8b-93de-02d085859140 Version: $LATEST
+[auth-post-authentication] 3:38:42 PM END RequestId: 60c1d680-ea24-4a8b-93de-02d085859140
+[auth-post-authentication] 3:38:42 PM REPORT RequestId: 60c1d680-ea24-4a8b-93de-02d085859140	Duration: 4.61 ms	Billed Duration: 5 ms	Memory Size: 512 MB	Max Memory Used: 68 MB	Init Duration: 172.66 ms
+```
+
+## ファイルへの書き込み
+
+デフォルトでは、Amplify はサンドボックスが実行されているターミナルにログを出力しますが、`--logs-out-file` を指定することで、ログをファイルに書き込むこともできます：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox --stream-function-logs --logs-out-file sandbox.log
+```
+
+これは `--logs-filter` と組み合わせて、例えば Auth 関連の関数のログファイルのみを作成できます：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox --stream-function-logs --logs-filter auth --logs-out-file sandbox-auth.log
+```
+
+ただし、複数のファイルにログを書き込むために複数回組み合わせることはできません。

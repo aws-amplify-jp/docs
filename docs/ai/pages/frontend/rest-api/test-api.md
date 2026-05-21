@@ -1,0 +1,111 @@
+---
+title: "REST API をテストする"
+section: "frontend/rest-api"
+platforms: ["angular", "javascript", "nextjs", "react", "react-native", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/rest-api/test-api/"
+---
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+## ターミナルから API をテストする
+
+認証されていないゲストユーザーが REST API にアクセスできる場合、[curl](https://github.com/curl/curl) を使用してターミナルからテストできます。curl は、様々なプロトコルを使用してサーバーとの間でデータを転送できるコマンドラインツールです。
+
+> Curl は Mac、Windows、Linux を含む多くのディストリビューションで利用可能です。[ドキュメント](https://curl.haxx.se/docs/install.html)のインストール手順に従ってください。
+
+#### [Mac と Linux]
+
+### GET メソッドの例
+
+```bash title="Terminal" showLineNumbers={false} 
+curl <your-api-endpoint>/<your-api-stage>/items
+```
+
+### POST メソッドの例
+
+```bash title="Terminal" showLineNumbers={false} 
+curl -H "Content-Type: application/json" -d '{"name":"item-1"}' <your-api-endpoint>/<your-api-stage>/items
+```
+
+#### [Windows]
+
+### GET メソッドの例
+
+```bash title="Terminal" showLineNumbers={false} 
+curl <your-api-endpoint>/<your-api-stage>/items
+```
+
+### POST メソッドの例
+
+```bash title="Terminal" showLineNumbers={false} 
+curl -H "Content-Type: application/json" -d {\"name\":\"item-1\"} <your-api-endpoint>/<your-api-stage>/items
+```
+
+## API Gateway コンソールで API をテストする
+
+以下のルートを使用して新しい REST API をテストします。HTTP メソッドは `GET`、パスは `/items?limit=10` で、`limit` クエリ文字列パラメータが含まれています。
+
+```console title="Terminal" showLineNumbers={false}
+GET /items?limit=10
+```
+
+1. [API Gateway コンソール](https://console.aws.amazon.com/apigateway)にサインインします。
+2. `myRestApi` REST API を選択します。
+3. リソースペインで、テストするメソッドを選択します。`/items` の下の `GET` を選択します。
+
+  ```console title="Terminal" showLineNumbers={false}
+  /                        
+  |_ /items               メインリソース。例：/items  
+    GET                   メソッド  
+    DELETE  
+    PUT  
+    POST  
+    OPTIONS               ブラウザの CORS プリフライトリクエストを許可  
+      |_ /{proxy+}         プロキシリソース。例：/items/、/items/id、items/object/{id}  
+      ANY                  メソッドを含む：DELETE、GET、HEAD、OPTIONS、PATCH、POST、PUT  
+      OPTIONS              ブラウザの CORS プリフライトリクエストを許可  
+  ```
+4. メソッド実行ペインで **TEST** を選択します。`GET` メソッドを選択し、クエリ文字列 `{items}` フィールドに `limit=10` を追加します。
+5. **Test** を選択して `GET /items?limit=10` のテストを実行します。以下の情報が表示されます：リクエスト、ステータス、レイテンシ、レスポンスボディ、レスポンスヘッダー、およびログ。
+
+```console title="Terminal" showLineNumbers={false} /* cSpell:disable */
+Request
+/items
+Latency
+111
+Status
+200
+Response body
+"Hello from myFunction!"
+Response headers
+{
+  "Access-Control-Allow-Headers": "*",
+  "Access-Control-Allow-Origin": "*",
+  "X-Amzn-Trace-Id": "Root=1-661eee4b-f400fbebc6cfe65c3dadebcd;Parent=189f175e8de8d3a7;Sampled=0;lineage=c22c6ce1:0"
+}
+Log
+Execution log for request 9bd9d8dc-95e2-494b-be1b-716393f83c49
+Tue Apr 16 21:31:55 UTC 2024 : Starting execution for request: 9bd9d8dc-95e2-494b-be1b-716393f83c49
+Tue Apr 16 21:31:55 UTC 2024 : HTTP Method: GET, Resource Path: /items
+Tue Apr 16 21:31:55 UTC 2024 : Method request path: {}
+Tue Apr 16 21:31:55 UTC 2024 : Method request query string: {}
+Tue Apr 16 21:31:55 UTC 2024 : Method request headers: {}
+Tue Apr 16 21:31:55 UTC 2024 : Method request body before transformations: 
+Tue Apr 16 21:31:55 UTC 2024 : Endpoint request URI: https://lambda.us-east-1.amazonaws.com/2015-03-31/functions/arn:aws:lambda:us-east-1:[TRUNCATED:function:amplify-nextamplifygen2-y-testfunctionlambdaC407E8-zttuHxtL6x0V/invocations
+Tue Apr 16 21:31:55 UTC 2024 : Endpoint request headers: {X-Amz-Date=20240416T213155Z, x-amzn-apigateway-api-id=bnyiitr69a, Accept=application/json, User-Agent=AmazonAPIGateway_bnyiitr69a, Host=lambda.us-east-1.amazonaws.com, X-Amz-Content-Sha256=246bd274ab578bc88286bd20a7371b0f08a1ec8cc2c8cacffb41e60430254c82, X-Amzn-Trace-Id=Root=1-661eee4b-f400fbebc6cfe65c3dadebcd, x-amzn-lambda-integration-tag=9bd9d8dc-95e2-494b-be1b-716393f83c49, Authorization=*********************************************************************************************************************************************************************************************************************************************************************************************************************************************bc00f2, X-Amz-Source-Arn=arn:aws:execute-api:us-east-1:[TRUNCATED]:bnyiitr69a/test-invoke-stage/GET/items, X-Amz-Security-Token= [TRUNCATED]
+Tue Apr 16 21:31:55 UTC 2024 : Endpoint request body after transformations: {"resource":"/items","path":"/items","httpMethod":"GET","headers":null,"multiValueHeaders":null,"queryStringParameters":null,"multiValueQueryStringParameters":null,"pathParameters":null,"stageVariables":null,"requestContext":{"resourceId":"1m3yhu","resourcePath":"/items","httpMethod":"GET","extendedRequestId":"WVorzEQzoAMFubg=","requestTime":"16/Apr/2024:21:31:55 +0000","path":"/items","accountId":"[TRUNCATED]
+","protocol":"HTTP/1.1","stage":"test-invoke-stage","domainPrefix":"testPrefix","requestTimeEpoch":1713303115234,"requestId":"9bd9d8dc-95e2-494b-be1b-716393f83c49","identity":{"cognitoIdentityPoolId":null,"cognitoIdentityId":null,"apiKey":"test-invoke-api-key","principalOrgId":null,"cognitoAuthenticationType":null,"userArn":"arn:aws:iam::[TRUNCATED]:user/ykethan","apiKeyId":"test-invoke-api-key-id","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36","accountId":"05364941472 [TRUNCATED]
+Tue Apr 16 21:31:55 UTC 2024 : Sending request to https://lambda.us-east-1.amazonaws.com/2015-03-31/functions/arn:aws:lambda:us-east-1:[TRUNCATED]
+:function:amplify-nextamplifygen2-y-testfunctionlambdaC407E8-zttuHxtL6x0V/invocations
+Tue Apr 16 21:31:55 UTC 2024 : Received response. Status: 200, Integration latency: 108 ms
+Tue Apr 16 21:31:55 UTC 2024 : Endpoint response headers: {Date=Tue, 16 Apr 2024 21:31:55 GMT, Content-Type=application/json, Content-Length=135, Connection=keep-alive, x-amzn-RequestId=67cfbdff-46cf-4355-8475-50a22e1f3234, x-amzn-Remapped-Content-Length=0, X-Amz-Executed-Version=$LATEST, X-Amzn-Trace-Id=root=1-661eee4b-f400fbebc6cfe65c3dadebcd;parent=189f175e8de8d3a7;sampled=0;lineage=c22c6ce1:0}
+Tue Apr 16 21:31:55 UTC 2024 : Endpoint response body before transformations: {"statusCode":200,"headers":{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"*"},"body":"\"Hello from myFunction!\""}
+Tue Apr 16 21:31:55 UTC 2024 : Method response body after transformations: "Hello from myFunction!"
+Tue Apr 16 21:31:55 UTC 2024 : Method response headers: {Access-Control-Allow-Origin=*, Access-Control-Allow-Headers=*, X-Amzn-Trace-Id=Root=1-661eee4b-f400fbebc6cfe65c3dadebcd;Parent=189f175e8de8d3a7;Sampled=0;lineage=c22c6ce1:0}
+Tue Apr 16 21:31:55 UTC 2024 : Successfully completed execution
+Tue Apr 16 21:31:55 UTC 2024 : Method completed with status: 200
+```

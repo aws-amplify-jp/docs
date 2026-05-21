@@ -1,0 +1,31 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: '通知との相互作用',
+  description: '様々なイベントを通じてプッシュ通知と相互作用します。',
+  platforms: [
+    'react-native',
+    'flutter'
+    ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+
+import interactWithNotifications from '/src/fragments/lib-v1/push-notifications/common/interact_with_notifications/interact-with-notifications.mdx';
+
+<Fragments fragments={{ 'react-native': interactWithNotifications, flutter: interactWithNotifications }} />

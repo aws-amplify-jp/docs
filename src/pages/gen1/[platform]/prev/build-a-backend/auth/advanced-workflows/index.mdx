@@ -1,0 +1,590 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '高度なワークフロー',
+  description: 'Amplify認証カテゴリの高度なワークフローについて詳しく学びます。これには、イベントへのサブスクリプション、アイデンティティプール連携、認証関連のLambdaトリガー、およびAWSサービスオブジェクトの操作が含まれます。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'flutter',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+
+<InlineFilter filters={['javascript',  'react-native', "angular", "nextjs", "react", "vue"]}>
+
+## イベントへのサブスクリプション
+
+ユーザーがサインインまたはサインアウトするときに、アプリで認証イベントをサブスクライブして特定のアクションを実行できます。詳しくは、[Hub Module Developer Guide](/gen1/[platform]/build-a-backend/utilities/hub/)を参照してください。
+
+## アイデンティティプール連携
+
+代わりに `Auth.federatedSignIn()` を使用して、Cognito Federated Identitiesから直接AWSクレデンシャルを取得し、ユーザープール連携を使用しないようにすることができます。`Auth.signIn()` でログインした場合、Amplifyがバックグラウンドでこの連携を自動的に実行するため、`Auth.federatedSignIn()` を呼び出す**ことはできません**。
+
+一般に、Cognito ユーザープールを使用してユーザーのサインアップとサインインを管理している場合、OAuth フローまたはホストされたUIを使用する場合にのみ、`Auth.federatedSignIn()` を呼び出す必要があります。
+
+```js
+import { Auth } from 'aws-amplify';
+
+// To derive necessary data from the provider
+const {
+  token, // the token you get from the provider
+  domainOrProviderName, // Either the domain of the provider(e.g. accounts.your-openid-provider.com) or the provider name, for now the library only supports 'google', 'facebook', 'amazon', 'developer'
+  expiresIn, // the time in ms which describes how long the token could live
+  user, // the user object you defined, e.g. { username, email, phone_number }
+  identity_id // Optional, the identity id specified by the provider
+} = getFromProvider(); // arbitrary function
+
+async function getCognitoCredentials() {
+  try {
+    const cred = await Auth.federatedSignIn(
+      domainOrProviderName,
+      {
+        token,
+        identity_id, // Optional
+        expires_at: expiresIn * 1000 + new Date().getTime() // the expiration timestamp
+      },
+      user
+    );
+    console.log(cred);
+
+    const authenticatedUser = await Auth.currentAuthenticatedUser();
+
+    console.log(authenticatedUser);
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+<Callout>
+  このメソッドの後に取得するユーザーはCognito ユーザープールからのユーザーではなく、*Cognito ユーザー*ではないことに注意してください。
+</Callout>
+
+### Facebook サインイン (React)
+
+```js
+import React, { useEffect } from 'react';
+import { Auth } from 'aws-amplify';
+// To federated sign in from Facebook
+const SignInWithFacebook = () => {
+  useEffect(() => {
+    if (!window.FB) createScript();
+  }, []);
+
+  const signIn = () => {
+    const fb = window.FB;
+    fb.getLoginStatus((response) => {
+      if (response.status === 'connected') {
+        getAWSCredentials(response.authResponse);
+      } else {
+        fb.login(
+          (response) => {
+            if (!response || !response.authResponse) {
+              return;
+            }
+            getAWSCredentials(response.authResponse);
+          },
+          {
+            // the authorized scopes
+            scope: 'public_profile,email'
+          }
+        );
+      }
+    });
+  };
+
+  const getAWSCredentials = (response) => {
+    const { accessToken, expiresIn } = response;
+    const date = new Date();
+    const expires_at = expiresIn * 1000 + date.getTime();
+    if (!accessToken) {
+      return;
+    }
+
+    const fb = window.FB;
+    fb.api('/me', { fields: 'name,email' }, (response) => {
+      const user = {
+        name: response.name,
+        email: response.email
+      };
+
+      getCognitoCredentials(
+        'facebook',
+        { token: accessToken, expires_at },
+        user
+      );
+    });
+  };
+
+  const getCognitoCredentials = async (providerName, federateOptions, user) => {
+    try {
+      const credentials = await Auth.federatedSignIn(
+        providerName,
+        federateOptions,
+        user
+      );
+      console.log(credentials);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const createScript = () => {
+    // load the sdk
+    window.fbAsyncInit = fbAsyncInit;
+    const script = document.createElement('script');
+    script.src = 'https://connect.facebook.net/en_US/sdk.js';
+    script.async = true;
+    script.onload = initFB;
+    document.body.appendChild(script);
+  };
+
+  const initFB = () => {
+    const fb = window.FB;
+    console.log('FB SDK initialized');
+  };
+
+  const fbAsyncInit = () => {
+    // init the fb sdk client
+    const fb = window.FB;
+    fb.init({
+      appId: 'your_facebook_app_id',
+      cookie: true,
+      xfbml: true,
+      version: 'v2.11'
+    });
+  };
+
+  return (
+    <div>
+      <button onClick={signIn}>Sign in with Facebook</button>
+    </div>
+  );
+};
+```
+
+### Facebook サインイン (React Native - Expo)
+
+```javascript
+import Expo from 'expo';
+import React from 'react';
+import { Amplify, Auth } from 'aws-amplify';
+
+const App = () => {
+  const signIn = async () => {
+    const { type, token, expires } =
+      await Expo.Facebook.logInWithReadPermissionsAsync(
+        'YOUR_FACEBOOK_APP_ID',
+        {
+          permissions: ['public_profile']
+        }
+      );
+    if (type === 'success') {
+      // sign in with federated identity
+      try {
+        const credentials = await Auth.federatedSignIn(
+          'facebook',
+          { token, expires_at: expires },
+          { name: 'USER_NAME' }
+        );
+        console.log('get aws credentials', credentials);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  };
+
+  // ...
+
+  return (
+    <View style={styles.container}>
+      <Button title="FBSignIn" onPress={signIn} />
+    </View>
+  );
+};
+```
+
+### Google サインイン (React)
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import React, { useEffect } from 'react';
+import jwt from 'jwt-decode';
+import { Auth } from 'aws-amplify';
+
+const SignInWithGoogle = () => {
+  useEffect(() => {
+  // Check for an existing Google client initialization
+    if (!window.google?.accounts) createScript();
+  }, []);
+
+  // Load the Google client
+  const createScript = () => {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = initGsi;
+    document.body.appendChild(script);
+  }
+
+  // Initialize Google client and render Google button
+  const initGsi = () => {
+    if (window.google?.accounts) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        callback: (response: any) => {
+          getAWSCredentials(response.credential)
+        },
+      });
+      window.google.accounts.id.renderButton(
+        document.getElementById("googleSignInButton"),
+        { theme: "outline", size: "large" }
+      );
+    }
+  }
+
+  // Exchange Google token for temporary AWS credentials
+  const getAWSCredentials = async (credential: string) => {
+    const token = jwt(credential) as any;
+    const user = {
+      email: token.email,
+      name: token.name
+    };
+    await Auth.federatedSignIn(
+      'google',
+      { token: credential, expires_at: token.exp },
+      user
+    );
+  }
+
+  return (
+    <div>
+      <button id="googleSignInButton"/>
+    </div>
+  );
+}
+```
+
+</Block>
+<Block name="JavaScript">
+
+```jsx
+import React, { useEffect } from 'react';
+import jwt from 'jwt-decode';
+import { Auth } from 'aws-amplify';
+
+const SignInWithGoogle = () => {
+  useEffect(() => {
+  // Check for an existing Google client initialization
+    if (!window.google?.accounts) createScript();
+  }, []);
+
+  // Load the Google client
+  const createScript = () => {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = initGsi;
+    document.body.appendChild(script);
+  }
+
+  // Initialize Google client and render Google button
+  const initGsi = () => {
+    if (window.google?.accounts) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        callback: (response: any) => {
+          getAWSCredentials(response.credential)
+        },
+      });
+      window.google.accounts.id.renderButton(
+        document.getElementById("googleSignInButton"),
+        { theme: "outline", size: "large" }
+      );
+    }
+  }
+
+  // Exchange Google token for temporary AWS credentials
+  const getAWSCredentials = async (credential) => {
+    const token = jwt(credential);
+    const user = {
+      email: token.email,
+      name: token.name
+    };
+    await Auth.federatedSignIn(
+      'google',
+      { token: credential, expires_at: token.exp },
+      user
+    );
+  }
+
+  return (
+    <div>
+      <button id="googleSignInButton"/>
+    </div>
+  );
+}
+```
+
+</Block>
+</BlockSwitcher>
+
+### JWT トークンの取得
+
+フェデレーションログイン後、_Cache_ モジュールを使用してローカルキャッシュから関連するJWTトークンを取得できます。
+
+#### ブラウザサンプル
+
+```javascript
+import { Cache } from 'aws-amplify';
+
+// Run this after the sign-in
+const federatedInfo = Cache.getItem('federatedInfo');
+const { token } = federatedInfo;
+```
+
+### React Native サンプル
+
+```javascript
+import { Cache } from 'aws-amplify';
+
+// inside an async function
+// Run this after the sign-in
+const federatedInfo = await Cache.getItem('federatedInfo');
+const { token } = federatedInfo;
+```
+
+### トークンのリフレッシュ
+
+デフォルトでは、AmplifyはGoogleとFacebookのトークンを自動的にリフレッシュするため、AWSクレデンシャルが常に有効になります。ただし、別のフェデレーション プロバイダーを使用している場合は、独自のトークン リフレッシュ方法を提供する必要があります。
+
+<Callout>
+  注意: GoogleとFacebookの自動トークンリフレッシュはReact Nativeではサポートされていません。自動トークンリフレッシュは、Cognito ユーザープールで使用する場合にサポートされています。
+</Callout>
+
+#### JWT トークン リフレッシュ サンプル
+
+```javascript
+import { Auth } from 'aws-amplify';
+
+async function refreshToken() {
+  // refresh the token here and get the new token info
+  // ......
+
+  const data = {
+    token, // the token from the provider
+    expires_at, // the timestamp for the expiration
+    identity_id // optional, the identityId for the credentials
+  };
+
+  return data;
+}
+
+Auth.configure({
+  refreshHandlers: {
+    developer: refreshToken // the property could be 'google', 'facebook', 'amazon', 'developer', OpenId domain
+  }
+});
+```
+
+### Auth0 との連携
+
+`Auth0` をCognito Identity Poolのプロバイダーの1つとして使用できます。これにより、Auth0を通じて認証されたユーザーがAWSリソースにアクセスできるようになります。
+
+ステップ 1. [Cognito Federated Identity PoolsのAuth0統合手順に従ってください](https://auth0.com/docs/customize/integrations/aws/amazon-cognito)
+
+ステップ 2. `Auth0` でログインし、返されたidトークンを使用して、`Auth.federatedSignIn` を使用して `Cognito Federated Identity Pools` からAWSクレデンシャルを取得します:
+
+```js
+const { idToken, domain, name, email, phoneNumber } = getFromAuth0(); // get the user credentials and info from auth0
+const { exp } = decodeJWTToken(idToken); // Please decode the id token in order to get the expiration time
+
+async function getCognitoCredentials() {
+  try {
+    const cred = await Auth.federatedSignIn(
+      domain, // The Auth0 Domain,
+      {
+        token: idToken, // The id token from Auth0
+        // expires_at means the timestamp when the token provided expires,
+        // here you can derive it from the expiresIn parameter provided,
+        // then convert its unit from second to millisecond, and add the current timestamp
+        expires_at: exp * 1000 // the expiration timestamp
+      },
+      {
+        // the user object, you can put whatever property you get from the Auth0
+        // for example:
+        name, // the user name
+        email, // Optional, the email address
+        phoneNumber // Optional, the phone number
+      }
+    );
+
+    console.log(cred);
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+ステップ 3. 現在のユーザーと現在のクレデンシャルを取得します:
+
+```js
+const user = await Auth.currentAuthenticatedUser();
+console.log(user);
+const creds = await Auth.currentCredentials();
+console.log(creds);
+// await Auth.currentSession() does not currently support federated identities. Please store the auth0 session info manually(for example, store tokens into the local storage).
+```
+
+ステップ 4. リフレッシュハンドラーをAuthモジュールに渡して、`Auth0` からidトークンをリフレッシュできます:
+
+```js
+async function refreshToken() {
+  // refresh the token here and get the new token info
+  // ......
+
+  const data = {
+    token, // the token from the provider
+    expires_at, // the timestamp when the token expires (in milliseconds)
+    identity_id // optional, the identityId for the credentials
+  };
+
+  return data;
+}
+
+Auth.configure({
+  refreshHandlers: {
+    your_auth0_domain: refreshToken
+  }
+});
+```
+
+## Lambda トリガー
+
+CLIを使用して、AWS Cognito User Poolの[Lambda Triggers](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html)を設定できます。これらにより、登録と認証フローにカスタム機能を追加できます。[詳細を参照](/gen1/[platform]/build-a-backend/functions/set-up-function/)
+
+### 事前認証および事前サインアップLambdaトリガー
+
+事前サインアップまたは事前認証Lambdaトリガーが有効な場合、`signUp` または `signIn` のプロパティの1つとして `validationData` を渡すことができます。このメタデータを使用して、認証の種類を制限するなど、認証に関する追加の検証を実装できます。
+
+```ts
+import { Auth } from 'aws-amplify';
+
+async function signIn() {
+  try {
+    const user = await Auth.signIn({
+      username, // Required, the username
+      password, // Optional, the password
+      validationData // Optional, an object of key-value pairs which can contain any key and will be passed to your Lambda trigger as-is.
+    });
+    console.log(user);
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+### 自動サインイン Lambda トリガー
+
+`autoSignIn` が有効な場合、`autoSignIn` パラメーターのプロパティとして `validationData` を渡すことができます。これは認証の追加検証を実装するために使用されます。例えば、ユーザーのドメインに基づいてユーザーのサインアップを許可または禁止することを選択できます。Lambdaトリガーは検証データを受け取り、それを検証プロセスで使用します。
+
+```js
+Auth.signUp({
+  username,
+  password,
+  attributes: {
+    email, // optional
+    phone_number // optional - E.164 number convention
+    // other custom attributes
+  },
+  autoSignIn: {
+    // optional - enables auto sign in after user is confirmed
+    enabled: true,
+    validationData // optional
+  }
+});
+```
+
+### 他のLambdaトリガーへのメタデータの渡し方
+
+多くのCognito Lambda Triggersは、`clientMetadata` 属性の形式で、サニタイズされていないキーと値のペアも受け入れます。静的なキー/値ペアのセットを構成するには、`Auth.configure` 関数で `clientMetadata` キーを定義できます。また、Cognito Lambda Trigger実行を引き起こすさまざまな `Auth` 関数に `clientMetadata` パラメーターを渡すこともできます。
+
+これらの関数には以下が含まれます:
+
+- `Auth.changePassword`
+- `Auth.completeNewPassword`
+- `Auth.confirmSignIn`
+- `Auth.confirmSignUp`
+- `Auth.forgotPasswordSubmit`
+- `Auth.resendSignUp`
+- `Auth.sendCustomChallengeAnswer`
+- `Auth.signIn`
+- `Auth.signUp` (関数パラメーターおよび `autoSignIn` パラメーターの一部として)
+- `Auth.updateUserAttributes`
+- `Auth.verifyUserAttribute`
+
+`validationData` 属性を受け入れるいくつかのトリガーが `clientMetadata` を `validationData` の値として使用することに注意してください。`validationData` に依存している場合は、`clientMetadata` を使用する際に注意してください。
+
+## AWS サービスオブジェクトの操作
+
+AWS _Service Interface Objects_ を使用して、認証済み状態でAWSサービスを操作できます。サービス呼び出しコンストラクターに `Auth` オブジェクトからクレデンシャルを渡すことにより、任意のAWSサービスインターフェイスオブジェクトのメソッドを呼び出すことができます:
+
+```javascript
+import { Auth } from 'aws-amplify';
+import Route53 from 'aws-sdk/clients/route53';
+
+async function changeResourceRecordSets() {
+  try {
+    const credentials = await Auth.currentCredentials();
+
+    const route53 = new Route53({
+      apiVersion: '2013-04-01',
+      credentials: Auth.essentialCredentials(credentials)
+    });
+
+    // more code working with route53 object
+    //route53.changeResourceRecordSets();
+  } catch (err) {
+    console.log(err);
+  }
+}
+```
+
+サービスインターフェイスオブジェクトの完全なAPIドキュメントは[こちら](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/_index.html)で利用可能です。
+
+<Callout warning>
+
+注意: サービスインターフェイスオブジェクトを操作するには、Amazon Cognito ユーザーの[IAM ロール](https://docs.aws.amazon.com/cognito/latest/developerguide/iam-roles.html)に、要求されたサービスを呼び出すための適切な権限が必要です。
+
+</Callout>
+
+</InlineFilter>
+
+import flutter from '/src/fragments/lib-v1/auth/flutter/advanced/advanced.mdx';
+
+<Fragments fragments={{ flutter: flutter}} />

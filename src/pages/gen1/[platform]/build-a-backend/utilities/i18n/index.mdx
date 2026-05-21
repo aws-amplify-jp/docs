@@ -1,0 +1,82 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '国際化',
+  description: 'AWS Amplify I18n モジュールは、軽量な国際化ソリューションです。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript", "react-native", "angular", "nextjs", "react", "vue"]}>
+
+AWS Amplify I18n モジュールは、軽量な国際化ソリューションです。
+
+## インストール
+
+```javascript
+import { I18n } from 'aws-amplify/utils';
+```
+
+## API の使用
+
+### setLanguage()
+
+アクティブな言語を設定します。
+
+```javascript
+I18n.setLanguage('fr');
+```
+
+ブラウザでは、Amplify は自動的にブラウザの言語を検出します。モバイルでは、別のライブラリを使用して言語を検出し、コード内で Amplify を使用して設定することをお勧めします。
+
+### putVocabularies()
+
+カスタム辞書を作成し、アプリの `vocabularies` として設定できます。辞書は、異なる用語と言語で実装できる JavaScript オブジェクトです。
+
+```javascript
+const dict = {
+  fr: {
+    'Sign In': 'Se connecter',
+    'Sign Up': "S'inscrire"
+  },
+  es: {
+    'Sign In': 'Registrarse',
+    'Sign Up': 'Regístrate'
+  }
+};
+
+I18n.putVocabularies(dict);
+```
+
+### get()
+
+アクティブな言語の辞書からフレーズを取得します。フレーズが辞書にエントリを持たない場合、元のパラメータ値が返されます。
+
+```javascript
+I18n.get('Sign In');
+```
+
+### API リファレンス
+
+i18n モジュールの完全な API ドキュメントについては、[API リファレンス](https://aws-amplify.github.io/amplify-js/api/classes/aws_amplify.utils.I18n.html) をご覧ください。
+
+</InlineFilter>

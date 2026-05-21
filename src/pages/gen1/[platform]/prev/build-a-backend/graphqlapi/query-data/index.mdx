@@ -1,0 +1,643 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'アプリケーションデータの読み取り',
+  description: "Amplifyの GraphQL API カテゴリーを使用してデータを取得する方法についてさらに詳しく学びます",
+  platforms: [
+    'flutter',
+    'swift',
+    'android',
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript", "react-native", "angular", "nextjs", "react", "vue"]}>
+
+Amplify GraphQL クライアントを使用してアプリケーションデータを読み取ることができます。このガイドでは、データの読み取りと取得の違い、必要なデータだけを取得するようにクエリ結果をフィルタリングする方法、および結果をページネーションしてデータを管理しやすくする方法を確認します。また、必要に応じてこれらのリクエストをキャンセルする方法も示します。
+
+始める前に、以下が必要です:
+
+- [API に接続されたアプリケーション](/gen1/[platform]/prev/build-a-backend/graphqlapi/connect-to-api/)
+- 表示するために既に作成されたデータ
+
+## データのリストと取得
+
+クエリは API を通じてデータを読み取るために使用され、`list` と `get` の操作が含まれます。
+
+Amplify CLI は、GraphQL API の任意の @model タイプに対して `list` クエリと `get` クエリを自動的に作成します。`list` クエリは、特定のレコードの識別子を指定する必要なく、Todo アイテムなどの複数のアイテムを取得します。これは、アイテムの概要またはサマリーを取得したり、`list` 操作を拡張して特定の条件でアイテムをフィルタリングしたりするのに最適です。識別子で単一のエントリをクエリして、特定の Todo アイテムを取得したい場合は、`get` を使用します。
+
+<Callout>
+
+**注意:** 基になるデータソースのコスト構造は、一部のクエリを実行するコストに影響を与える可能性があります。たとえば、`list` 操作は Amazon DynamoDB の「スキャン操作」を使用します。これは、`get` 操作よりも多くの読み取りリクエストユニットを使用できます。データソースのこれらの操作に関連するコストを確認する必要があります。この例では、DynamoDB を使用しています。DynamoDB コストの計算方法の詳細については、[Amazon DynamoDB の価格](https://aws.amazon.com/dynamodb/pricing/) をご覧ください。
+
+</Callout>
+
+Amplify CLI は、すべての可能な GraphQL 操作 (ミューテーション、クエリ、サブスクリプション) の GraphQL クライアントコードを自動的に生成します。JavaScript アプリケーションの場合、生成されたコードはデフォルトでは `src/graphql` フォルダーに保存されます。
+
+GraphQL クエリを実行するには、生成されたクエリをインポートして `API.graphql` で実行します:
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { API } from 'aws-amplify';
+import * as queries from './graphql/queries';
+import { GraphQLQuery } from '@aws-amplify/api';
+import { ListTodosQuery, GetTodoQuery } from './API';
+
+// Simple query
+const allTodos = await API.graphql<GraphQLQuery<ListTodosQuery>>({
+  query: queries.listTodos
+});
+console.log(allTodos); // result: { "data": { "listTodos": { "items": [/* ..... */] } } }
+
+// Fetch a single record by its identifier
+const oneTodo = await API.graphql<GraphQLQuery<GetTodoQuery>>({
+  query: queries.getTodo,
+  variables: { id: 'some id' }
+});
+```
+
+</Block>
+
+<Block name="JavaScript">
+
+```js
+import { API } from 'aws-amplify';
+import * as queries from './graphql/queries';
+
+// Simple query
+const allTodos = await API.graphql({ query: queries.listTodos });
+console.log(allTodos); // result: { "data": { "listTodos": { "items": [/* ..... */] } } }
+
+//Fetch a single record by its identifier
+const oneTodo = await API.graphql({
+  query: queries.getTodo,
+  variables: { id: 'some id' }
+});
+```
+
+</Block>
+
+</BlockSwitcher>
+
+<Accordion title='権限がないエラーをトラブルシューティングする' headingLevel='4' eyebrow='トラブルシューティング'>
+
+少なくとも 1 つの認可ルールが定義されていない場合、権限がないエラーが発生する可能性があります。
+
+`@auth` ディレクティブを使用して、パブリック、サインインユーザー、ユーザーごと、およびユーザーグループごとのデータアクセスの認可ルールを構成します。**認可ルールはデフォルトで拒否する原則に従います**。つまり、認可ルールが特に構成されていない場合、それは拒否されます。
+
+```graphql
+type Todo @model @auth(rules: [{ allow: owner }]) {
+  content: String
+}
+```
+
+前の例では、Todo の各サインインユーザー、つまり「所有者」は、自分の Todo を作成、読み取り、更新、および削除できます。
+
+Amplify では、許可されたオペレーションを制限し、複数の認可ルールを組み合わせ、細粒度のフィールドレベルの認可を適用することもできます。
+
+```graphql
+type Todo
+  @model
+  @auth(rules: [{ allow: public, operations: [read] }, { allow: owner }]) {
+  content: String
+}
+```
+
+前の例では、誰もが (`public`) すべての Todo を読み取ることができますが、`owner` (認証されたユーザー) は自分の Todo を作成、読み取り、更新、および削除できます。
+
+詳細については、GraphQL API の [認可ルール](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/) を参照してください。
+
+</Accordion>
+
+<Accordion title='カスタム認可モードでデータをクエリする' headingLevel='4' eyebrow='詳細情報'>
+
+各 AWS AppSync API は、アプリを構成するときにデフォルトの認可モードを使用します。このデフォルトをオーバーライドするには、`authMode` プロパティを渡します。たとえば、これは API キー認証を通じたパブリック読み取りと IAM 認証を通じた認証済み読み取りがある場合に便利です。次の例は、カスタム認可モードでデータをクエリする方法を示しています:
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { API } from 'aws-amplify';
+import { GraphQLQuery, GRAPHQL_AUTH_MODE } from '@aws-amplify/api';
+import * as queries from './graphql/queries';
+import { GetTodoQuery } from './API';
+
+const todos = await API.graphql<GraphQLQuery<GetTodoQuery>>({
+  query: queries.listTodos,
+  authMode: GRAPHQL_AUTH_MODE.AWS_IAM
+});
+```
+
+</Block>
+
+<Block name="JavaScript">
+
+```js
+import { API } from 'aws-amplify';
+import { GRAPHQL_AUTH_MODE } from '@aws-amplify/api';
+import * as queries from './graphql/queries';
+
+const todos = await API.graphql({
+  query: queries.listTodos,
+  authMode: GRAPHQL_AUTH_MODE.AWS_IAM
+});
+```
+
+</Block>
+</BlockSwitcher>
+
+</Accordion>
+
+## リストクエリをフィルタリングする
+
+データが増えるにつれて、リストクエリをページネーションする必要があります。幸い、これは Amplify で生成された GraphQL API にすでに組み込まれています。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { API } from 'aws-amplify';
+import { listTodos } from './graphql/queries';
+import { ListTodosQueryVariables, ListTodosQuery } from './API';
+
+const variables: ListTodosQueryVariables = {
+  filter: {
+    priority: {
+      eq: 1
+    }
+  }
+};
+
+await API.graphql<GraphQLQuery<ListTodosQuery>>({
+  query: listTodos,
+  variables: variables
+});
+```
+
+</Block>
+
+<Block name="JavaScript">
+
+```js
+import { API } from 'aws-amplify';
+import { listTodos } from './graphql/queries';
+
+const variables = {
+  filter: {
+    priority: {
+      eq: 1
+    }
+  }
+};
+
+await API.graphql({
+  query: listTodos,
+  variables: variables
+});
+```
+
+</Block>
+</BlockSwitcher>
+
+<Accordion title='フィルタはどのように機能しますか?' headingLevel='4' eyebrow='詳細情報'>
+
+入力スキーマは GraphQL エクスプローラーの **Docs** ペインまたは自動生成された `/graphql` フォルダー内で見つけることができます。以下のようになります:
+
+```graphql
+listTodos(
+  filter: ModelTodoFilterInput
+  limit: Int
+  nextToken: String): ModelTodoConnection
+
+input ModelTodoFilterInput {
+	id: ModelIDInput
+	priority: ModelIntInput
+	# ... all your other Todo fields here
+	and: [ModelTodoFilterInput]
+	or: [ModelTodoFilterInput]
+	not: ModelTodoFilterInput
+}
+```
+
+スキーマの入力タイプは、それらに対して実行できるフィルタリングの種類を示します。たとえば、`priority` などの整数フィールドは `ModelIntInput` であり、このスキーマがあります:
+
+```graphql
+input ModelIntInput {
+  ne: Int # "not equal to"
+  eq: Int # "equal to"
+  le: Int # "less than or equal to"
+  lt: Int # "less than"
+  ge: Int # "greater than or equal to"
+  gt: Int # "greater than"
+  between: [Int]
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+}
+```
+
+これらのフィルタはフィールドのタイプに基づいて異なりますが、対応する [Amazon DynamoDB クエリ](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Condition.html) にリンクされています。
+
+</Accordion>
+
+### 複合フィルタ
+
+`and`、`or`、および `not` ブール論理を使用してフィルタを組み合わせることができます。前の自動生成されたスキーマを見ると、`ModelTodoFilterInput` はそれらのフィールドに関して再帰的です。したがって、たとえば、`priority` 値が 1 **または** 2 をフィルタリングしたい場合、次のようにします:
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { API } from 'aws-amplify';
+import { listTodos } from './graphql/queries';
+import { ListTodosQueryVariables, ListTodosQuery } from './API';
+
+const variables: ListTodosQueryVariables = {
+  filter: {
+    or: [{ priority: { eq: 1 } }, { priority: { eq: 2 } }]
+  }
+};
+
+await API.graphql<GraphQLQuery<ListTodosQuery>>({
+  query: listTodos,
+  variables: variables
+});
+```
+
+</Block>
+
+<Block name="JavaScript">
+
+```js
+import { API } from 'aws-amplify';
+import { listTodos } from './graphql/queries';
+
+const variables = {
+  filter: {
+    or: [{ priority: { eq: 1 } }, { priority: { eq: 2 } }]
+  }
+};
+
+await API.graphql({
+  query: listTodos,
+  variables: variables
+});
+```
+
+</Block>
+</BlockSwitcher>
+
+自然言語ではなくブール論理であるため、1 と 2 の `priority` をクエリすると結果は返されないことに注意してください。
+
+## リストクエリをページネーションする
+
+リストクエリ結果をページネーションするには、`nextToken` と `limit` 入力変数が設定された後続のリストクエリリクエストを実行します。`limit` 変数は返される結果の数を制限します。応答には、データの次のページをリクエストするために使用できる `nextToken` が含まれます。`nextToken` は、これらのフィルタを使用した次のクエリの開始アイテムのカーソルを表す非常に長い文字列です。
+
+<BlockSwitcher>
+<Block name="TypeScript">
+
+```ts
+import { API } from 'aws-amplify';
+import { listTodos } from './graphql/queries';
+import { ListTodosQueryVariables, ListTodosQuery } from './API';
+
+// Fetch first 20 records
+const variables: ListTodosQueryVariables = {
+  limit: 20
+  // add filter as needed
+};
+
+const res =
+  (await API.graphql) <
+  GraphQLQuery<ListTodosQuery>({
+    query: listTodos,
+    variables: variables
+  });
+
+const { items: itemsPage1, nextToken } = res.data?.listTodos;
+
+// Fetch the next 20 records
+variables.nextToken = nextToken;
+
+const res =
+  (await API.graphql) <
+  GraphQLQuery<ListTodosQuery>({
+    query: listTodos,
+    variables: variables
+  });
+
+const { items: itemsPage2 } = res.data?.listTodos;
+```
+
+</Block>
+
+<Block name="JavaScript">
+
+```js
+import { API } from 'aws-amplify';
+import { listTodos } from './graphql/queries';
+
+// Fetch first 20 records
+const variables = {
+  limit: 20
+  // add filter as needed
+};
+
+const res = await API.graphql({
+  query: listTodos,
+  variables: variables
+});
+
+const { items: itemsPage1, nextToken } = res.data.listTodos;
+
+// Fetch the next 20 records
+variables.nextToken = nextToken;
+
+const res = await API.graphql({
+  query: listTodos,
+  variables: variables
+});
+
+const { items: itemsPage2 } = res.data.listTodos;
+```
+
+</Block>
+</BlockSwitcher>
+
+<Accordion title='GraphQL API でページネーションを実装する' headingLevel='3' eyebrow='チュートリアル'>
+
+このショートチュートリアルでは、ページネーション実装の追加のステップバイステップガイダンスを提供します。
+
+大量のレコードセットを使用する場合、最初の **N** 個のアイテムのみを取得したい場合があります。たとえば、Todo アプリの基本的な GraphQL スキーマから始めましょう:
+
+```graphql
+type Todo @model {
+  id: ID!
+  title: String!
+  description: String
+}
+```
+
+`@model` ディレクティブを使用して API が作成される場合、以下のクエリが自動的に作成されます:
+
+```graphql
+type Query {
+  getTodo(id: ID!): Todo
+  listTodos(
+    filter: ModelTodoFilterInput
+    limit: Int
+    nextToken: String
+  ): ModelTodoConnection
+}
+```
+
+次に、`ModelTodoConnection` タイプを見て、`listTodos` クエリが実行されたときに返されるデータを理解しましょう:
+
+```graphql
+type ModelTodoConnection {
+  items: [Todo]
+  nextToken: String
+}
+```
+
+`listTodos` クエリを使用して API をクエリする場合、戻り値の型は `ModelTodoConnection` になります。つまり、`Todos` の配列と `nextToken` の両方を返すことができます。
+
+`nextToken` はページネーションを処理します。`nextToken` が `null` の場合、API から返すデータがないことを意味します。`nextToken` が存在する場合、その値を次の `listTodos` クエリの引数として使用して、API から次の選択セットを返すことができます。
+
+これをテストするには、以下のようなミューテーションを使用して 5 つの Todo を作成してみてください:
+
+```sh
+mutation createTodo {
+  createTodo(input: {
+    title: "Todo 1"
+    description: "My first todo"
+  }) {
+    id
+    title
+    description
+  }
+}
+```
+
+次に、`limit` 引数を指定することでクエリ内の Todo の数の制限を設定できます。このクエリでは、制限を 2 アイテムに設定し、戻り値として `nextToken` をリクエストします:
+
+```graphql
+query listTodos {
+  listTodos(limit: 2) {
+    items {
+      id
+      title
+      description
+    }
+    nextToken
+  }
+}
+```
+
+次に、API から次の 2 つのアイテムをクエリするには、この `nextToken` を引数として指定します:
+
+```graphql
+query listTodos {
+  listTodos(limit: 2, nextToken: <your_token>) {
+    items {
+      id
+      title
+      description
+    }
+    nextToken
+  }
+}
+```
+
+返すアイテムが他にない場合、応答内の `nextToken` は null に設定されます。
+
+#### JavaScript アプリケーションからのクエリ
+
+`listTodos` クエリは CLI によって自動生成されます。参考までに、以下のようなものになるはずです:
+
+```js
+const listTodos = `
+  query listTodos($limit: Int) {
+    listTodos(limit: $limit) {
+      items {
+        id
+        title
+        description
+      }
+      nextToken
+    }
+  }
+`;
+```
+
+JavaScript アプリケーションからクエリで `limit` を指定するには、制限を変数として設定して以下のコードを使用できます:
+
+```js
+import { API } from 'aws-amplify';
+
+async function fetchTodos() {
+  const todoData = await API.graphql({
+    query: listTodos,
+    variables: {
+      limit: 2
+    }
+  });
+  console.log({ todoData });
+}
+```
+
+API リクエストから返されるデータは以下のようになります (items 配列には作成されたアイテムがいくつか含まれます):
+
+```graphql
+{
+  "data" {
+    "listTodos" {
+      "items": [{ id: "001", title: "Todo 1", description: "My first todo" }],
+      "nextToken": "<token-id>"
+    }
+  }
+}
+```
+
+JavaScript アプリケーションからクエリで `nextToken` を設定するには、以下のコードを使用できます:
+
+```js
+import { API } from 'aws-amplify';
+
+async function fetchTodos() {
+  const todoData = await API.graphql({
+    query: listTodos,
+    variables: {
+      limit: 2,
+      nextToken: '<token-id>'
+    }
+  });
+  console.log({ todoData });
+}
+```
+
+</Accordion>
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+<Callout>
+
+**制限事項:**
+
+- 現在、総ページ数を取得するための API はありません。すべてのアイテムをスキャンすることは [潜在的に高い操作](https://github.com/aws-amplify/amplify-js/issues/2901) になる可能性があることに注意してください。
+- ソートは [DataStore で利用可能](/gen1/[platform]/prev/build-a-backend/more-features/datastore/manipulate-data/#predicates) ですが、AWS AppSync では利用不可です。
+- AWS AppSync スキーマは [Relay 仕様](https://relay.dev/docs/guides/graphql-server-specification) のエッジ/ノードには従いませんが、精神的に似ています。
+- `page` 番号でクエリすることはできません。`nextToken` でクエリする必要があります。
+
+</Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+<Callout>
+
+**制限事項:**
+
+- 現在、総ページ数を取得するための API はありません。すべてのアイテムをスキャンすることは [潜在的に高い操作](https://github.com/aws-amplify/amplify-js/issues/2901) になる可能性があることに注意してください。
+- ソートは [DataStore で利用可能](/gen1/[platform]/prev/build-a-backend/more-features/datastore/manipulate-data/#predicates) ですが、AWS AppSync では利用不可です。
+- AWS AppSync スキーマは [Relay 仕様](https://relay.dev/docs/guides/graphql-server-specification) のエッジ/ノードには従いませんが、精神的に似ています。
+- `page` 番号でクエリすることはできません。`nextToken` でクエリする必要があります。
+
+</Callout>
+
+</InlineFilter>
+
+## 読み取りリクエストをキャンセルする
+
+API カテゴリー経由で行われたクエリまたはミューテーションリクエストをキャンセルするには、返されるプロミスへの参照を保持します。
+
+```javascript
+const promise = API.graphql({ query: "..." });
+
+try {
+  await promise;
+} catch (error) {
+  console.log(error);
+  // If the error is because the request was cancelled you can confirm here.
+  if (API.isCancel(error)) {
+    console.log(error.message); // "my message for cancellation"
+    // handle user cancellation logic
+  }
+}
+
+...
+
+// To cancel the above request
+API.cancel(promise, "my message for cancellation");
+```
+
+`API.graphql()` から返されるプロミスが変更されていないことを確認する必要があります。通常、async 関数は返されるプロミスを別のプロミスでラップします。たとえば、以下は機能しません:
+
+```javascript
+async function makeAPICall() {
+  return API.graphql({ query: '...' });
+}
+const promise = makeAPICall();
+
+// The following will NOT cancel the request.
+API.cancel(promise, 'my error message');
+```
+
+## まとめ
+
+おめでとうございます! **アプリケーションデータの読み取り** ガイドを完了しました。このガイドでは、`get` と `list` クエリを通じてデータを読み取る方法について学びました。
+
+## 次のステップ
+
+推奨される次のステップには、リアルタイムイベントをサブスクライブしてデータの変異を確認し、情報アーキテクチャを継続的に構築およびカスタマイズすることが含まれます。このワークに役立つリソースは以下のとおりです:
+
+- [リアルタイムイベントをサブスクライブする](/gen1/[platform]/prev/build-a-backend/graphqlapi/subscribe-data/)
+- [認可ルール](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/)
+- [データモデリング](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/)
+- [カスタムビジネスロジック](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/)
+
+</InlineFilter>
+
+import ios_maintenance from '/src/fragments/lib-v1/ios-maintenance.mdx';
+
+<Fragments fragments={{ swift: ios_maintenance }} />
+
+import ios0 from '/src/fragments/lib-v1/graphqlapi/ios/query-data.mdx';
+
+<Fragments fragments={{ swift: ios0 }} />
+
+import flutter_maintenance from '/src/fragments/lib-v1/flutter-maintenance.mdx';
+
+<Fragments fragments={{ flutter: flutter_maintenance }} />
+
+import android_maintenance from '/src/fragments/lib-v1/android-maintenance.mdx';
+
+<Fragments fragments={{ android: android_maintenance }} />
+
+import android1 from '/src/fragments/lib-v1/graphqlapi/android/query-data.mdx';
+
+<Fragments fragments={{ android: android1 }} />
+
+import flutter3 from '/src/fragments/lib-v1/graphqlapi/flutter/query-data.mdx';
+
+<Fragments fragments={{ flutter: flutter3 }} />

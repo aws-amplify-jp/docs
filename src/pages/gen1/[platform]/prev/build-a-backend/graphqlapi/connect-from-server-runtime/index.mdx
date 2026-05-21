@@ -1,0 +1,44 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { JS_PLATFORMS } from '@/data/platforms';
+
+export const meta = {
+  title: 'サーバーサイドランタイムからデータに接続する',
+  description: 'NodeJSアプリケーションまたはLambda関数からAppSync GraphQL APIを呼び出す方法について詳しく説明します',
+  platforms: [
+    'javascript',
+    'nextjs',
+    'vue',
+    'angular',
+    'react',
+    'react-native'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import js0 from '/src/fragments/lib-v1/graphqlapi/graphql-from-node.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>
+
+import reactnative0 from '/src/fragments/lib-v1/graphqlapi/graphql-from-node.mdx';
+
+<Fragments fragments={{ 'react-native': reactnative0 }} />

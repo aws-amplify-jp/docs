@@ -1,0 +1,315 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'DataStore を Apollo に移行',
+  description: 'すべての Amplify DataStore 操作を同等の Apollo Kotlin または Apollo iOS に置き換えます。',
+  platforms: [
+    'android',
+    'swift'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["android"]}>
+
+このページでは、すべての `Amplify.DataStore.*` 呼び出しを同等の Apollo Kotlin 操作に置き換える方法を説明します。以下の例は、[スキーマと GraphQL 操作](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/schema-and-operations/)ページで作成されたスキーマと GraphQL 操作を使用しています。
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+このページでは、すべての `Amplify.DataStore.*` 呼び出しを同等の Apollo iOS 操作に置き換える方法を説明します。以下の例は、[スキーマと GraphQL 操作](/gen1/[platform]/build-a-backend/more-features/datastore/migrate-from-datastore/schema-and-operations/)ページで作成されたスキーマと GraphQL 操作を使用しています。
+
+</InlineFilter>
+
+## 作成、更新、削除 (保存/削除)
+
+<InlineFilter filters={["android"]}>
+
+Apollo Kotlin では、スキーマで定義された[ミューテーション](https://www.apollographql.com/docs/kotlin/essentials/mutations)を使用してデータを作成、更新、削除します。
+
+```kotlin
+// Create — include all required fields from your schema
+val input = CreatePostInput(
+  title = title,
+  content = content,
+  rating = Optional.present(rating),
+  status = status
+)
+val response = apolloClient.mutation(CreatePostMutation(input)).execute()
+
+// Update — use Optional.present() for fields you want to change.
+// Pass _version from the last query/mutation response for conflict resolution.
+val input = UpdatePostInput(
+  id = post.id,
+  status = Optional.present(PostStatus.ACTIVE),
+  _version = Optional.present(post._version)
+)
+val response = apolloClient.mutation(UpdatePostMutation(input)).execute()
+
+// Delete — also requires _version for conflict resolution
+val input = DeletePostInput(
+  id = post.id,
+  _version = Optional.present(post._version)
+)
+val response = apolloClient.mutation(DeletePostMutation(input)).execute()
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+Apollo iOS では、スキーマで定義された[ミューテーション](https://www.apollographql.com/docs/ios/fetching/mutations)を使用してデータを作成、更新、削除します。
+
+```swift
+// Create — include all required fields from your schema
+let createPostInput = CreatePostInput(
+  title: "post",
+  status: .some(.case(.active)),
+  rating: .some(5),
+  content: .some("content"))
+
+apolloClient.perform(
+  mutation: CreatePostMutation(input: createPostInput)
+) { result in
+  guard let data = try? result.get().data else { return }
+  print("Post: \(String(describing: data.createPost?.fragments.postDetails))")
+}
+
+// Update — use .some() for fields you want to change
+let updatePostInput = UpdatePostInput(
+  id: "post1",
+  status: .some(.case(.inactive)))
+
+apolloClient.perform(
+  mutation: UpdatePostMutation(input: updatePostInput)
+) { result in
+  guard let data = try? result.get().data else { return }
+  print("Post updated: \(String(describing: data.updatePost?.fragments.postDetails))")
+}
+
+// Delete
+let deletePostInput = DeletePostInput(id: "post1")
+apolloClient.perform(
+  mutation: DeletePostMutation(input: deletePostInput)
+) { result in
+  guard let data = try? result.get().data else { return }
+  print("Post deleted: \(String(describing: data.deletePost?.id))")
+}
+```
+
+<Callout>
+
+**`GraphQLNullable`:** Apollo iOS はオプションの入力フィールドに `GraphQLNullable<T>` 型を使用します。この型は「未提供」(`.none`)、「明示的に null」(`.null`)、「値がある」(`.some(value)`) を区別します。ランタイム値でオプションフィールドを設定する場合、`.some(value)` を明示的に使用する必要があります — 例えば、列挙型には `.some(.case(.active))`、整数には `.some(5)` です。
+
+</Callout>
+
+</InlineFilter>
+
+<Callout warning>
+
+**作成時にすべての必須フィールドを含めます。** スキーマが `content: String!` を定義している場合、`CreatePostInput` に `content` を渡す必要があります — Apollo コード生成では、これが必須のコンストラクタパラメータになり、ミューテーションはそれなしでは失敗します。
+
+</Callout>
+
+<Callout warning>
+
+**`_version` は更新と削除に必須です。** AppSync API が DataStore 競合解決を使用する場合、項目を更新または削除するときに `_version` フィールドを渡す必要があります。`_version` はすべてのクエリとミューテーション応答から返されます (`PostDetails` フラグメント経由)。常に最新の `_version` を保存し、後続のミューテーションで渡してください。`_version` を省略すると、ミューテーションは `ConflictUnhandled` エラーで失敗します。
+
+</Callout>
+
+## クエリ
+
+<InlineFilter filters={["android"]}>
+
+Apollo Kotlin では、スキーマで定義された[クエリ](https://www.apollographql.com/docs/kotlin/essentials/queries)を使用してデータをクエリします。
+
+```kotlin
+// Single item
+val query = GetPostQuery(id = id)
+val response = apolloClient.query(query).execute()
+
+// List items
+val response = apolloClient.query(GetPostsQuery()).execute()
+```
+
+</InlineFilter>
+
+<InlineFilter filters={["swift"]}>
+
+Apollo iOS では、スキーマで定義された[クエリ](https://www.apollographql.com/docs/ios/fetching/queries)を使用してデータをクエリします。
+
+```swift
+// Single Item
+let query = GetPostQuery(id: "post1")
+apolloClient.fetch(query: query) { result in
+  guard let data = try? result.get().data else { return }
+  print("Query results: \(String(describing: data.getPost?.fragments.postDetails))")
+}
+
+// List Items
+let query = GetPostsQuery()
+apolloClient.fetch(query: query) { result in
+  guard let data = try? result.get().data else { return }
+  print("List results: \(String(describing: data.listPosts?.items))")
+}
+```
+
+</InlineFilter>
+
+<Callout warning>
+
+**ソフト削除されたアイテム:** AppSync API が DataStore 競合解決を使用する場合、`listPosts` は `_deleted: true` のソフト削除されたアイテムを返します。DataStore はこれらを自動的にフィルタリングしましたが、Apollo では結果を表示する際に**自分でフィルタリングする必要があります**:
+
+```kotlin
+val posts = response.data?.listPosts?.items
+  ?.mapNotNull { it?.postDetails }
+  ?.filter { it._deleted != true }
+  ?: emptyList()
+```
+
+`_deleted` アイテムをフィルタリングしないと、削除されたポストが UI に表示されます。
+
+</Callout>
+
+### フィルタリング
+
+DataStore は述語クエリ (例: `Post.RATING.gt(3)`) をサポートしていました。これらはローカルで実行されました。Apollo では 2 つのオプションがあります:
+
+1. **サーバー側フィルタリング** AppSync の `ModelPostFilterInput` を使用します。`GetPosts` クエリを更新してフィルタを受け入れるようにします:
+
+```graphql
+query GetPosts($filter: ModelPostFilterInput, $nextToken: String) {
+  listPosts(filter: $filter, nextToken: $nextToken) {
+    items { ... PostDetails }
+    nextToken
+  }
+}
+```
+
+その後、Kotlin でフィルタを渡します:
+
+```kotlin
+val filter = ModelPostFilterInput(
+  rating = Optional.present(ModelIntInput(gt = Optional.present(3)))
+)
+val response = apolloClient.query(
+  GetPostsQuery(filter = Optional.present(filter))
+).execute()
+```
+
+2. **クライアント側フィルタリング** クエリ結果に対して Kotlin コレクション操作を使用します:
+
+```kotlin
+val allPosts = response.data?.listPosts?.items
+  ?.mapNotNull { it?.postDetails }
+  ?: emptyList()
+val filtered = allPosts.filter { (it.rating ?: 0) > 3 }
+```
+
+### ソート
+
+DataStore の `QuerySortBy` はデフォルトの `listPosts` クエリに対して直接の Apollo 相当物がありません。クライアント側でソートを適用します:
+
+```kotlin
+val sorted = posts.sortedByDescending { it.createdAt?.toString() ?: "" }
+```
+
+### ページネーション
+
+DataStore はオフセットベースのページネーション (`Page.startingAt(n).withLimit(5)`) をサポートしていました。AppSync は `nextToken` を使用したカーソルベースのページネーションを使用します。`nextToken` を使用してすべての結果をページネーションするか、`.drop()` と `.take()` を使用してクライアント側のオフセットページネーションを適用できます:
+
+```kotlin
+val page = 0
+val pageSize = 5
+val pagedPosts = allPosts.drop(page * pageSize).take(pageSize)
+```
+
+## 監視
+
+Apollo Kotlin では、スキーマで定義された[サブスクリプション](https://www.apollographql.com/docs/kotlin/essentials/subscriptions)を使用してデータを監視します。Apollo Kotlin は組み込みの `toFlow()` メソッド経由でサブスクリプションを Kotlin `Flow` として公開します:
+
+```kotlin
+apolloClient.subscription(OnCreateSubscription()).toFlow().collect { response ->
+  // Handle created post
+}
+```
+
+<Callout>
+
+DataStore の単一の `observe()` は 1 つのストリーム経由で作成、更新、削除イベントを発行していますが、Apollo では各イベントタイプ (`onCreatePost`、`onUpdatePost`、`onDeletePost`) に対して**別々のサブスクリプション**が必要です。各サブスクリプション フローを独立して起動する必要があります。
+
+</Callout>
+
+## ObserveQuery
+
+DataStore の `observeQuery` では、クエリを送信した後、結果が変更されたときに更新を受け取ることができます。Apollo Kotlin でこの動作をレプリケートするには、[正規化キャッシュ](https://www.apollographql.com/docs/kotlin/caching/normalized-cache)と [watch](https://www.apollographql.com/docs/kotlin/caching/query-watchers) 関数を使用します。
+
+これを設定するには、以下を実行する必要があります:
+
+1. **正規化キャッシュ依存関係を追加します** `build.gradle.kts` に:
+
+```kotlin
+implementation("com.apollographql.apollo:apollo-normalized-cache:4.1.0")
+// For SQLite-backed persistent cache:
+implementation("com.apollographql.apollo:apollo-normalized-cache-sqlite:4.1.0")
+```
+
+2. **キャッシュを設定します** Apollo クライアントを構築するときに:
+
+```kotlin
+val cacheFactory = MemoryCacheFactory(maxSizeBytes = 10 * 1024 * 1024)
+// Or for SQLite: SqlNormalizedCacheFactory(context, "apollo_cache.db")
+
+val apolloClient = ApolloClient.Builder()
+  .serverUrl(endpoint.serverUrl.toString())
+  .addHttpInterceptor(AppSyncInterceptor(authorizer))
+  .normalizedCache(cacheFactory)
+  .build()
+```
+
+3. **クエリを監視します** 更新を受け取るために:
+
+```kotlin
+val query = GetPostQuery(id = id)
+apolloClient.query(query).watch().collect { post ->
+  // This re-emits whenever the cached data for this query changes
+}
+```
+
+<Callout>
+
+正規化キャッシュはデータを一意のID で追跡するため、キャッシュに書き込むミューテーションとサブスクリプション更新は自動的に `watch()` をトリガーして更新されたデータで再発行します。
+
+</Callout>
+
+<Callout>
+
+**`isSynced` 相当物がありません:** DataStore の `observeQuery()` は、ローカルストアがクラウドと完全に同期されているかどうかを示すブール値 `isSynced` を提供していました。Apollo の `watch()` は同等の同期ステータスインジケータを提供しません。アプリが同期ステータスの表示に依存している場合、これを手動で追跡する必要があります (例えば、初期クエリが完了し、サブスクリプションが確立された後にフラグを設定することで)。
+
+</Callout>
+
+## クイックリファレンステーブル
+
+| DataStore メソッド | Apollo Kotlin 相当物 | 主な違い |
+|---|---|---|
+| `Amplify.DataStore.save()` (作成) | `apolloClient.mutation(CreatePostMutation(input)).execute()` | 作成時に `_version` は不要 |
+| `Amplify.DataStore.save()` (更新) | `apolloClient.mutation(UpdatePostMutation(input)).execute()` | 最後のクエリから `_version` を渡す必要があります |
+| `Amplify.DataStore.delete()` | `apolloClient.mutation(DeletePostMutation(input)).execute()` | 最後のクエリから `_version` を渡す必要があります |
+| `Amplify.DataStore.query()` (単一) | `apolloClient.query(GetPostQuery(id)).execute()` | 見つからない場合は null を返します |
+| `Amplify.DataStore.query()` (リスト) | `apolloClient.query(GetPostsQuery()).execute()` | `_deleted` レコードをフィルタリングする必要があります |
+| `Amplify.DataStore.observe()` | `apolloClient.subscription(...).toFlow().collect {}` | イベントタイプごとに別個のサブスクリプション |
+| `Amplify.DataStore.observeQuery()` | `apolloClient.query(...).watch().collect {}` | 正規化キャッシュのセットアップが必要 |
+| `Amplify.DataStore.clear()` | 不要になりました | クリアする DataStore はありません |

@@ -1,0 +1,187 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'データ管理',
+  description: 'Amplify Studio を始める',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify Studio の **データ管理** ビューは、アプリケーションのバックエンドデータの表形式ビューを提供します。この機能を使用してモデルをテストし、技術者と非技術者の両方のチームメンバーが、admin ビューを構築する代わりに、アプリケーションのデータをリアルタイムで作成および更新できるようにします。
+
+![データ管理ページに表示されるレコード編集フォーム](/images/console/cms.png)
+
+[データモデリング](/gen1/[platform]/tools/console/data/data-model/) ドキュメントは、データモデルを作成し、それらの間の関係を設定するための複数の例を説明しています。以下のデータ管理手順は、データモデリング例で作成された *Book* および *Author* テーブルを参照し、データに対する操作を実行する方法を示しています。
+
+## データを作成するには
+1. アプリケーションの [Studio を起動](/gen1/[platform]/tools/console/adminui/start/#log-into-the-amplify-console) します。
+2. **Manage** メニューで、**Content** を選択します。
+3. **Content** ページで、**Select table** メニューから更新するテーブルを選択します。この例では、*Author* テーブルを選択します。
+4. **Create author** を選択します。
+5. **Add Author** ウィンドウで、テーブル内のフィールドにカスタム値を指定します。この例では、*firstName* フィールドに *Martha* を入力し、*lastName* フィールドに *Riviera* を入力します。
+6. **Submit** を選択します。
+
+## データをシードするには
+1. アプリケーションの [Studio を起動](/gen1/[platform]/tools/console/adminui/start/#log-into-the-amplify-console) します。
+2. **Manage** メニューで、**Content** を選択します。
+3. **Content** ページで、**Select table** メニューから更新するテーブルを選択します。この例では、*Author* テーブルを選択します。
+4. **Actions** メニューで、**Auto-generate data** を選択します。
+5. **Auto-generate data** ウィンドウで、生成するデータの行数と生成データの制約を指定します。
+6. **Generate data** を選択します。シードデータは [Faker](https://faker.readthedocs.io/en/master/) を使用して自動生成されます。
+
+<Callout warning={true}>
+
+**警告** - 次のフィールドタイプを持つテーブルに対してはシードデータを生成できません: AWSPhone、Enum、Custom Type、または Relationship
+
+</Callout>
+
+## データを編集するには
+1. アプリケーションの [Studio を起動](/gen1/[platform]/tools/console/adminui/start/#log-into-the-amplify-console) します。
+2. **Manage** メニューで、**Content** を選択します。
+3. **Content** ページで、**Select table** メニューから更新するテーブルを選択します。この例では、前の手順で使用した *Author* テーブルを選択します。
+4. レコードのリストから、更新するレコード内の任意のフィールドを選択します。
+5. **Edit Author** ウィンドウで、レコードに変更を加えて、**Submit** を選択します。
+
+## データを作成してリンクするには
+テーブル内に新しいインスタンスを作成するときに、データモデル間の関係に基づいて、別のテーブル内のインスタンスにリンクすることもできます。
+
+1. アプリケーションの [Studio を起動](/gen1/[platform]/tools/console/adminui/start/#log-into-the-amplify-console) します。
+2. **Manage** メニューで、**Content** を選択します。
+3. **Content** ページで、**Select table** メニューから更新するテーブルを選択します。この例では、新しい本のインスタンスを追加するために *Book* テーブルを選択します。
+4. **Create book** を選択します。*title* には、*All About Dogs* を入力します。
+5. この本を、前の手順で編集した *Martha Rivera* 著者インスタンスにリンクしましょう。**Link to an existing Author** を選択し、*Author* インスタンスのリストから *Martha Rivera* の ID を選択します。データモデリング プロセス中に *Book* テーブルと *Author* テーブルの間に関係が定義されたため、著者にリンクするオプションがあることに注意してください。
+6. *Book* テーブルの *All About Dogs* インスタンスの詳細を表示します。*Martha Rivera* が著者としてリンクされています。
+
+または、*All About Dogs* を保存してから Author にリンクし、代わりに Author レコードから *Martha Rivera* レコードを開いて、関連する Books から *All About Dogs* を選択することによってリンクを作成できます。
+
+## データを削除するには
+1. アプリケーションの [Studio を起動](/gen1/[platform]/tools/console/adminui/start/#log-into-the-amplify-console) します。
+2. **Manage** メニューで、**Content** を選択します。
+3. **Content** ページで、**Select table** メニューから更新するテーブルを選択します。この例では、前の手順で使用した *Author* テーブルを選択します。
+4. テーブルのレコードのリストから、削除するレコードの左側のチェックボックスを選択します。この例では、*Martha Rivera* を選択します。
+5. **Actions** メニューで、**Delete** を選択します。
+6. **Delete item** 確認ウィンドウで、**Delete** を選択します。
+
+## データをダウンロードするには
+1. アプリケーションの [Studio を起動](/gen1/[platform]/tools/console/adminui/start/#log-into-the-amplify-console) します。
+2. **Manage** メニューで、**Content** を選択します。
+3. **Actions** メニューでは、データをダウンロードするための 2 つのオプションがあります。
+  1. **Download selected items (.csv)** を選択して、選択した行のデータのみをダウンロードします。
+  2. **Download all items (.csv)** を選択して、現在選択されているモデルのすべての行のデータをダウンロードします。
+4. ダウンロード オプションを選択すると、データは CSV として直ちにダウンロードを開始する必要があります。
+
+## 制限事項
+
+### 競合解決と DataStore
+Studio のデータ マネージャーは、DataStore の有無にかかわらず Amplify GraphQL API をサポートしています。ただし、DataStore のない GraphQL API にはいくつかの軽微な制限があります:
+- 列でデータをソートできない
+- 検索バーが無効になっている
+
+これらの機能を使用するには、[競合解決設定を調整](/gen1/[platform]/tools/console/data/data-model/#datastore-and-graphql) することで、アプリに DataStore を追加できます。
+
+GraphQL API が競合解決と DataStore を使用している場合
+
+### マルチタブ制限
+
+GraphQL API が DataStore を使用している場合、Studio のデータ マネージャーは、機能するために IndexedDB (Web ブラウザー内のローカル データベース) を使用する必要があります。このため、データ マネージャーはブラウザーの複数のタブまたはウィンドウで開く場合、期待どおりに読み込まれない場合があります。
+
+この制限は、[競合解決が無効](/gen1/[platform]/tools/console/data/data-model/#datastore-and-graphql) な GraphQL API には適用されません。
+
+### Null 必須フィールド
+データマネージャーを使用する場合、次のエラー メッセージが表示される場合があります:
+
+```console
+
+Field {{fieldName}} cannot be set to null since it's a required field.
+
+```
+
+このメッセージは、選択したデータ モデル内に必須フィールドに対して null 値を持つレコードがある場合に発生します。通常、これはレコードが作成された後にフィールドが必須に変更されたために発生します。この問題を解決するには、null レコードを更新する必要があります。
+
+*Studio のレコードを更新するには...*
+1. データ タブから、必須フィールドをオプションに変更し、**Save and deploy** を選択してデータ モデルを再展開します
+1. **Content** タブで、すべてのレコードを更新して、このフィールドに null 値がないようにするか、null 値を持つレコードを削除します
+1. データ タブで、フィールドを必須に戻し、**Save and deploy** を再度選択します
+
+*DynamoDB のレコードを更新するには...*
+1. [DynamoDB コンソール](https://console.aws.amazon.com/dynamodbv2/home) にアクセスします
+1. 左側のナビゲーション バーで **Tables** の見出しを選択し、アプリのテーブルを選択します
+1. 右上隅にある "Explore table items" ボタンを選択します
+1. すべてのレコードを更新して、このフィールドに null 値がないようにするか、null 値を持つレコードを削除します
+
+### 双方向の必須フィールド
+
+双方向の必須フィールドは、2 つのデータ モデル間の関係フィールドで、両方のモデルがフィールドに対して null 以外の値を必要とします。現在、データ マネージャーは、双方向の必須フィールドを持つモデルのレコードの作成または編集をサポートしていません。これらのモデルでデータを管理するには、次の 2 つのパスのいずれかを使用します:
+1. 関連するモデルの一方または両方に対して、フィールドをオプションに変更します、または
+1. 同時レコード管理をサポートする GraphiQL を使用してレコードを作成および管理します
+
+### フィールドの型の変更
+データマネージャーを使用する場合、次のエラー メッセージが表示される場合があります:
+
+```console
+
+Field {{fieldName}} has a type mismatch. Expected {{typeName}}, but got {{typeName}}
+
+```
+
+このメッセージは、選択したデータ モデル内に、フィールドの予期される型に不一致があるレコードがある場合に発生します。通常、これはレコードが作成された後にフィールドが新しい型で更新されたために発生します。この問題を解決するには、レコードを更新する必要があります。
+
+*Studio のレコードを更新するには...*
+1. **Content** タブで、すべてのレコードを更新して、このフィールドの型と一致するようにします
+
+*DynamoDB のレコードを更新するには...*
+1. [DynamoDB コンソール](https://console.aws.amazon.com/dynamodbv2/home) にアクセスします
+1. 左側のナビゲーション バーで **Tables** の見出しを選択し、アプリのテーブルを選択します
+1. 右上隅にある "Explore table items" ボタンを選択します
+1. すべてのレコードを更新して、このフィールドの型と一致するようにします
+
+### 認証プロバイダーとして IAM が必須
+
+データ マネージャーを使用するには、アプリケーションに IAM がデフォルトまたは追加の認証プロバイダーとして設定されている必要があります。IAM が認証プロバイダーとして追加されていない場合、次のエラー メッセージが表示される場合があります:
+
+<Callout info>
+IAM はコンテンツ管理機能を使用するために認証プロバイダーとして必須です。IAM を自動的に追加してコンテンツ管理を有効にするには、「Data」に移動して「Save and Deploy」を選択してください。
+</Callout>
+
+**Studio がサポートする GraphQL スキーマの場合...**
+1. データ タブに移動します
+1. 「Save and Deploy」をクリックすると、Studio が自動的に IAM を追加の認証プロバイダーとして追加します
+
+**サポートされていない GraphQL スキーマの場合...**
+1. アプリケーションのルート ディレクトリで、`amplify update api` を実行します
+1. `GraphQL` を選択します
+1. `Authorization Modes` を選択します
+1. デフォルト認証タイプを変更するか、追加の認証タイプを追加します
+
+*デフォルト認証タイプを変更します:*
+1. IAM をデフォルト認可タイプとして選択します
+1. `amplify push` を実行します
+
+*追加の認証タイプを追加します:*
+1. 現在のデフォルト認可タイプを選択し、すべてのデフォルトを受け入れて変更しないままにします
+1. `Configure additional auth types` を選択します
+1. IAM を選択します
+1. `amplify push` を実行します

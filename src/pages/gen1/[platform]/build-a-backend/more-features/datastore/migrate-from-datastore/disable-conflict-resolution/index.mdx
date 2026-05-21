@@ -1,0 +1,247 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'コンフリクト解決の無効化',
+  description: 'AppSync コンフリクト解決を無効化し、DataStore から標準 GraphQL クライアントへの移行をダウンタイムなしで準備します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<Callout warning>
+
+**フロントエンド移行を最初に完了してください。** このページはこのガイドの**最終的なバックエンドステップ**です。これらの指示に従う前に、このガイドの前のページを使用して、すべてのフロントエンドクライアントを DataStore から移行してください。DataStore を使用しているクライアントがある状態でコンフリクト解決を無効化すると、そのクライアントは直ちに破損します。
+
+</Callout>
+
+このページでは、AppSync API のコンフリクト解決を無効化するために必要なバックエンド変更を説明します。すべてのフロントエンドクライアントが DataStore から移行された後、コンフリクト解決を無効化するとシンクインフラストラクチャ（バージョン追跡、論理削除、差分シンク）が削除され、より簡潔で標準的な GraphQL API が実現します。
+
+## 問題点
+
+DataStore が有効な場合、Amplify は AppSync をコンフリクト解決で設定します。これにより、移行に影響を与える 3 つの動作が発生します:
+
+1. **論理削除。** DataStore を通じて削除されたアイテムは DynamoDB から削除されません。代わりに、DataStore はアイテムに `_deleted: true` を設定します。アイテムはテーブルに無期限に残るか、DynamoDB TTL が期限切れになるまで残ります。
+
+2. **メタデータフィールド。** コンフリクト解決は、生成された GraphQL スキーマの各モデルに `_deleted`、`_version`、`_lastChangedAt` フィールドを追加します。DataStore はシンクプロトコル用にこれらのフィールドを内部で使用します。
+
+3. **スキーマの結合。** コンフリクト解決を無効化した場合、Amplify は GraphQL スキーマから `_deleted`、`_version`、`_lastChangedAt` を削除します。ただし、DynamoDB テーブルには引き続き `_deleted: true` の論理削除されたアイテムを含む、これらの属性を持つアイテムが含まれます。
+
+DataStore から標準 GraphQL クライアント（Apollo Client など）にフロントエンドを切り替える際に `_deleted` フィールドに対処しない場合、アプリは隠すべき論理削除されたアイテムを表示します。
+
+## 移行ステップの概要
+
+| ステップ | アクション | 目的 |
+|------|--------|---------|
+| 1 | コンフリクト解決を無効化 | AppSync が `_version` と論理削除を管理するのを停止 |
+| 2 | スキーマにメタデータフィールドを再追加 | クライアントが `_deleted`、`_version`、`_lastChangedAt` を使用できるように維持 |
+| 3 | 変更をプッシュ | 更新された設定をバックエンドに適用 |
+| 4 | クリーンアップ（オプション） | DynamoDB から論理削除されたアイテムをパージし、クライアント側の `_deleted` フィルタリングを削除 |
+
+## ステップ 1: コンフリクト解決を無効化
+
+Amplify CLI を実行して GraphQL API のコンフリクト解決を無効化します:
+
+```bash
+amplify update api
+```
+
+プロンプトが表示されたら:
+
+1. **GraphQL** を選択します
+2. コンフリクト解決設定が表示されるまでオプションを実行します
+3. **Disable DataStore for entire API**（または CLI バージョンに応じて **Disable conflict resolution**）を選択します
+
+<Callout warning>
+
+**まだ `amplify push` を実行しないでください。** ステップ 2 を最初に完了する必要があります。この時点でプッシュすると、スキーマから `_deleted`、`_version`、`_lastChangedAt` フィールドが削除されますが、DynamoDB の既存データには引き続きこれらの属性が含まれます。AppSync はスキーマに存在しなくなったフィールドをクエリまたはミューテーションで返すと `ValidationError` を返します。
+
+</Callout>
+
+## ステップ 2: GraphQL スキーマにメタデータフィールドを再追加
+
+コンフリクト解決を無効化した後、Amplify はスキーマから `_deleted`、`_version`、`_lastChangedAt` を削除します。ただし、DynamoDB テーブルはすべてのアイテムにこれらの属性を引き続き含んでいます。GraphQL スキーマファイル（`amplify/backend/api/<apiname>/schema.graphql`）の各モデルに 3 つのフィールドすべてを再追加します:
+
+```graphql
+type Todo @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  name: String!
+  description: String
+  _deleted: Boolean
+  _version: Int
+  _lastChangedAt: AWSTimestamp
+}
+```
+
+```graphql
+type Post @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  title: String!
+  content: String
+  status: String
+  _deleted: Boolean
+  _version: Int
+  _lastChangedAt: AWSTimestamp
+}
+```
+
+以前 DataStore で管理されていた**すべてのモデル**に `_deleted: Boolean`、`_version: Int`、`_lastChangedAt: AWSTimestamp` を追加します。
+
+<Callout>
+
+**一貫性のために 3 つのフィールドすべてを再追加します。** コンフリクト解決を無効化した後、AppSync はこれらのフィールドを管理しなくなりますが、DynamoDB テーブルはすべてのアイテムに `_deleted`、`_version`、`_lastChangedAt` を引き続き含んでいます。それらを再追加すると、GraphQL スキーマが DynamoDB のデータと整合し、移行期間中にクライアントがこれらの属性をクエリまたはフィルタリングできるようになります。
+
+</Callout>
+
+### これが機能する理由
+
+これらのフィールドをスキーマの通常フィールドとして追加すると:
+
+- **AppSync は各フィールドを既存の DynamoDB 属性にマップします。** DynamoDB はスキーマレスなので、`_deleted`、`_version`、`_lastChangedAt` はすべてのアイテムに既に存在しています。AppSync の自動生成リゾルバーはこれらの属性を直接読み書きします。
+- **フィールドは生成されたフィルターおよび入力型に表示されます。** これらをモデルに追加すると、`ModelTodoFilterInput`、`ModelPostFilterInput` などの生成型で利用可能になります。クライアントは `_deleted` のサーバー側フィルタリングを使用したり、移行中に必要に応じて `_version` または `_lastChangedAt` を読み取ることができます。
+- **下位互換性があります。** 既存のアイテムはこれらの属性の値を保持します。コンフリクト解決を無効化した後に作成された新規アイテムは、明示的に設定されない限り `null` になります。
+
+<Callout>
+
+**これらのフィールドは AppSync で管理されなくなります。** コンフリクト解決を無効化した後、`_version` は自動インクリメントされず、`_lastChangedAt` は自動更新されません。これらは通常フィールドになります。削除はハード削除になり、`_deleted` は自動的に設定されません。
+
+</Callout>
+
+## ステップ 3: 変更をプッシュ
+
+更新された設定をバックエンドに適用します:
+
+```bash
+amplify push
+```
+
+これによって以下が行われます:
+
+- **AppSync でコンフリクト解決を無効化**（シンクテーブル設定と差分シンクリゾルバーを削除）
+- **`_deleted`、`_version`、`_lastChangedAt` を GraphQL スキーマの通常フィールドとして維持**
+- **各フィールドをすべてのアイテムの既存 DynamoDB 属性にマップ**（データ移行は不要）
+
+<Callout>
+
+プッシュ後、AppSync は `_version` を管理しなくなり、ソフト削除を実行しません。GraphQL API を通じた新規削除は DynamoDB から**ハード削除**します（コンフリクト解決なしのデフォルト動作）。
+
+</Callout>
+
+## ステップ 4（オプション）: 論理削除されたアイテムをクリーンアップ
+
+すべてのクライアントが移行され、すべてが正しく機能していることを確認した後、DynamoDB から論理削除されたアイテムをパージし、コード内のクライアント側 `_deleted` フィルタリングを削除できます。
+
+### 4a. DynamoDB から論理削除されたアイテムをハード削除
+
+各 DynamoDB テーブルをスキャンし、`_deleted` が `true` であるすべてのアイテムを削除するスクリプトを書きます:
+
+```ts
+import {
+  DynamoDBClient,
+  ScanCommand,
+  DeleteItemCommand,
+} from '@aws-sdk/client-dynamodb';
+
+const client = new DynamoDBClient({ region: 'us-east-1' });
+
+async function purgeSoftDeletedItems(tableName: string) {
+  let lastEvaluatedKey: Record<string, any> | undefined;
+
+  do {
+    const scanResult = await client.send(
+      new ScanCommand({
+        TableName: tableName,
+        FilterExpression: '#d = :true',
+        ExpressionAttributeNames: { '#d': '_deleted' },
+        ExpressionAttributeValues: { ':true': { BOOL: true } },
+        ExclusiveStartKey: lastEvaluatedKey,
+      })
+    );
+
+    for (const item of scanResult.Items ?? []) {
+      await client.send(
+        new DeleteItemCommand({
+          TableName: tableName,
+          Key: { id: item.id },
+        })
+      );
+      console.log(`Deleted item ${item.id.S} from ${tableName}`);
+    }
+
+    lastEvaluatedKey = scanResult.LastEvaluatedKey;
+  } while (lastEvaluatedKey);
+}
+
+// 各テーブルに対して実行
+await purgeSoftDeletedItems('Todo-<apiId>-<env>');
+await purgeSoftDeletedItems('Post-<apiId>-<env>');
+```
+
+<Callout warning>
+
+**このスクリプトをまず開発環境でテストしてください。** `_deleted` が `true` であるアイテムのみを削除することを確認します。テーブルが複合キー（ソートキー）を使用する場合、`DeleteItemCommand` の `Key` オブジェクトを適切に更新します。
+
+</Callout>
+
+### 4b. クライアントコードを更新
+
+論理削除されたアイテムをパージした後、コードからクライアント側の `_deleted` フィルタリングを削除します。フロントエンド移行中に、リストクエリ結果に `.filter(item => !item._deleted)` を追加しました。DynamoDB からすべての論理削除されたアイテムが削除されたら、これは不要になります。
+
+```ts
+// クリーンアップ前: 論理削除されたアイテムをフィルタリング
+const posts = data.listPosts.items.filter((post) => !post._deleted);
+
+// クリーンアップ後: フィルターは不要
+const posts = data.listPosts.items;
+```
+
+## 重要な考慮事項
+
+### 論理削除されたアイテムを最初にパージしない理由
+
+すべてのクライアントが同時に DataStore を停止することは保証できません。ユーザーはアプリのキャッシュされたバージョンを実行している可能性があります。また、デプロイメントが段階的にロールアウトされる可能性があります。一部のクライアントがまだスキーマで `_deleted` を期待している状態でコンフリクト解決を無効化すると、`ValidationError` 例外が発生します。
+
+このガイドのアプローチは下位互換性があります。DataStore クライアント（移行中）と標準 GraphQL クライアントが共存できます。これは `_deleted` が通常フィールドとしてスキーマに残るためです。
+
+### DynamoDB TTL と論理削除されたアイテム
+
+DataStore が有効な場合、Amplify は DynamoDB の `_ttl` 属性に TTL を設定することがあります。TTL を持つ論理削除されたアイテムは、TTL の期限切れ後に DynamoDB によって自動的にハード削除されます。
+
+コンフリクト解決を無効化した後:
+- DynamoDB テーブルの TTL 設定は**引き続きアクティブ**（テーブルレベル設定であり、AppSync で管理されないため）
+- `_ttl` 値を持つ既存の論理削除されたアイテムは引き続き自動的に削除されます
+- 新規削除はハード削除になります（`_ttl` は設定されません）
+
+AWS コンソール（**テーブル → テーブル → 追加設定 → Time to Live**）で DynamoDB テーブルの TTL 設定を確認します。
+
+### メタデータフィールドは自動管理されなくなります
+
+コンフリクト解決を無効化した後、AppSync はミューテーション時に `_version` を自動インクリメントしたり、`_lastChangedAt` を自動更新しなくなります。フィールドは DynamoDB の最後の値を保持でき、クライアントが読み取ることができますが、アプリケーションコードが明示的に設定しない限り更新されません。クリーンアップステップ（ステップ 4）中に、論理削除されたアイテムをパージし、クライアント側の `_deleted` フィルタリングを削除できます。
+
+### 移行後の監視
+
+移行を完了した後、アプリケーションで以下を監視します:
+
+- **AppSync CloudWatch ログの `ValidationError`。** これはクライアントがスキーマに存在しなくなったフィールドで問い合わせまたはミューテーションを送信していることを示します。
+- **リストクエリの予期しないアイテム。** 論理削除されたアイテムが表示される場合は、すべてのリストクエリ結果がクライアント側で `.filter(item => !item._deleted)` でフィルタリングされていることを確認します。
+- **DynamoDB の `ConditionalCheckFailedException`。** コンフリクト解決を無効化した後、`_version` チェックが強制されなくなるため、これは発生しなくなります。

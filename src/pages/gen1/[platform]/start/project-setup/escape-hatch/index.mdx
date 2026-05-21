@@ -1,0 +1,26 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'エスケープハッチ',
+  description: 'Amplify Flutterの高度なユースケース',
+  platforms: ['flutter']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+
+import flutter from '/src/fragments/lib/project-setup/flutter/escape-hatch/escape-hatch.mdx';
+
+<Fragments fragments={{ flutter: flutter }} />

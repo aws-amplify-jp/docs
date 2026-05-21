@@ -1,0 +1,95 @@
+---
+title: "インタラクションイベントに応答する"
+section: "frontend/in-app-messaging"
+platforms: ["angular", "javascript", "nextjs", "react", "react-native", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/in-app-messaging/respond-interaction-events/"
+---
+
+インタラクションイベントリスナーを追加することで、ユーザーがアプリ内メッセージと対話する際に追加の動作で応答できます。
+
+## メッセージ受信
+
+イベントがシンクされたアプリ内メッセージの条件と一致した結果として、ライブラリからアプリ内メッセージが受信されることに応答するために、`onMessageReceived` リスナーを追加します。カスタムUIを実装する場合、UIがイベントトリガーのキャンペーンメッセージに応答できるようにするために必須ですが、アプリケーションが要求する他の理由でこれらのメッセージをリッスンするのに便利な場合もあります。
+
+```js title="src/index.js"
+import { onMessageReceived } from 'aws-amplify/in-app-messaging';
+
+const myMessageReceivedHandler = (message) => {
+  // 受信したメッセージで何かを実行する
+};
+
+const listener = onMessageReceived(myMessageReceivedHandler);
+
+listener.remove(); // リスナーが不要になったときは削除することを忘れないでください
+```
+
+## メッセージ表示
+
+ユーザーにアプリ内メッセージが表示されることに応答するために、`onMessageDisplayed` リスナーを追加します。
+
+```js title="src/index.js"
+import { onMessageDisplayed } from 'aws-amplify/in-app-messaging';
+
+const myMessageDisplayedHandler = (message) => {
+  // 表示されたメッセージで何かを実行する
+};
+
+const listener = onMessageDisplayed(myMessageDisplayedHandler);
+
+listener.remove(); // リスナーが不要になったときは削除することを忘れないでください
+```
+
+## メッセージ閉じる
+
+ユーザーがアプリ内メッセージを閉じることに応答するために、`onMessageDismissed` リスナーを追加します。
+
+```js title="src/index.js"
+import { onMessageDismissed } from 'aws-amplify/in-app-messaging';
+
+const myMessageDismissedHandler = (message) => {
+  // 閉じられたメッセージで何かを実行する
+};
+
+const listener = onMessageDismissed(myMessageDismissedHandler);
+
+listener.remove(); // リスナーが不要になったときは削除することを忘れないでください
+```
+
+## メッセージアクション実行
+
+アプリ内メッセージに対してアクションが実行されることに応答するために、`onMessageActionTaken` リスナーを追加します。通常、これはユーザーがアプリ内メッセージのボタンをタップまたはクリックしたことを意味します。
+
+```js title="src/index.js"
+import { onMessageActionTaken } from 'aws-amplify/in-app-messaging';
+
+const myMessageActionTakenHandler = (message) => {
+  // アクションが実行されたメッセージで何かを実行する
+};
+
+const listener = onMessageActionTaken(myMessageActionTakenHandler);
+
+listener.remove(); // リスナーが不要になったときは削除することを忘れないでください
+```
+
+## リスナーへの通知
+
+Amplify In-App Messaging UIを使用している場合、インタラクションイベント通知はすでにセットアップされています。ただし、独自のUIを実装している場合は、UIコードを通じてインタラクションイベントをリスナーに通知することを強くお勧めします。これにより、ライブラリはインストールされたプロバイダーによって規定されたさらなるアクション（例えば、対応するAnalyticsイベントを自動的に記録すること）を実行できます。
+
+```ts title="src/index.js"
+import { notifyMessageInteraction } from 'aws-amplify/in-app-messaging';
+
+const message = {
+  // インタラクションを記録したいアプリ内メッセージ
+}
+
+/**
+ * 通知できるインタラクションイベントは、それぞれのリスナーに対応します：
+ *    'messageReceived'
+ *    'messageDisplayed'
+ *    'messageDismissed'
+ *    'messageActionTaken'
+ */
+notifyMessageInteraction({ message, type: 'messageDisplayed' });
+```

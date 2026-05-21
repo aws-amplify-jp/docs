@@ -1,0 +1,106 @@
+---
+title: "フルスタック プレビュー"
+section: "deploy-and-host/fullstack-branching"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2024-10-25T16:39:44.000Z"
+url: "https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/pr-previews/"
+---
+
+フルスタック プレビューを使用すると、すべてのプルリクエストに対してエフェメラル フルスタック環境を設定できます。これにより、本番環境から分離された状態で機能をテストできます。フルスタック プレビューが有効になると、通常のワークフローは次の図のようになります。
+
+![プルリクエスト ワークフローで、Amplify がエフェメラル環境をどのようにデプロイするかを詳細に説明した図](/images/gen2/fullstack-branching/previews.png)
+
+1. `main` (本番ブランチ) と `featureA` ブランチが Amplify にデプロイされます。
+1. チーム全体が `featureA` を準備完了まで作業します。
+1. `featureA` ブランチが `main` HEAD に更新され、`main` へのプルリクエストが開きます。
+1. プルリクエスト プレビューが Amplify にデプロイされ、`pr-1.appid.amplifyapp.com` で利用可能になります。
+1. プルリクエストが `main` にマージされると、リクエストがクローズされ、フルスタック環境も自動的に削除されます。
+
+## 前提条件
+
+始める前に、以下のものがあることを確認してください。
+
+- [デプロイされたフルスタック Amplify アプリ](/[platform]/start/quickstart/)
+- git リポジトリがプライベートであることを確認してください。セキュリティ上の理由から、Amplify バックエンド テンプレートを含むパブリック リポジトリではフルスタック プレビューが無効になります。
+
+## フルスタック プレビューを有効にする
+
+Amplify アプリのフルスタック ウェブ プレビューを有効にするには、次の手順に従います。
+
+1. [Amplify コンソール](https://console.aws.amazon.com/amplify/home)にログインしてアプリを選択します。
+
+2. **Hosting > Previews** に移動します。**`main`** ブランチを選択して、**Edit settings** をクリックします。
+![Amplify コンソール ページで、プレビュー機能のブランチ リストを表示しています](/images/gen2/fullstack-branching/previews-1.png)
+
+3. **Pull request previews** トグル ボタンをクリックして、**Confirm** を選択してプレビューを有効にします。
+![Amplify コンソール ページで、プレビュー機能を有効にするためのトグル ボタンを表示しています](/images/gen2/fullstack-branching/previews-2.png)
+
+4. 完了です！本番ブランチでプレビューが正常に有効になりました。
+![Amplify コンソール ページで、プレビュー機能が有効な main ブランチを表示しています](/images/gen2/fullstack-branching/previews-3.png)
+
+5. `dev` ブランチに更新を送信します。`main` ブランチのプルリクエストを作成すると、Amplify がフルスタック PR をビルドしてデプロイし、プレビュー URL を提供します。
+![Amplify コンソール ページで、main、dev、および preview ブランチを表示しています](/images/gen2/fullstack-branching/previews-4.png)
+
+**GitHub リポジトリのみの場合**、Amplify Hosting のボット コメントからプルリクエストのプレビュー URL に直接アクセスできます。
+
+![GitHub プル リクエストで、ボット コメント内のプレビュー URL を表示しています](/images/gen2/fullstack-branching/previews-5.png)
+
+プルリクエストがマージまたはクローズされた後、プレビュー URL は削除され、エフェメラル フルスタック環境も削除されます。
+
+## プレビュー ブランチ全体でバックエンド リソースを共有する
+
+フルスタック プレビューを使用すると、チームは本番ブランチにマージする前にプルリクエストからの変更をプレビューできます。プルリクエストを使用すると、リポジトリ内のブランチにプッシュした変更について他者に通知でき、変更はプレビュー URL にアクセスしてレビューできます。git ブランチでプレビューが有効な場合、デフォルトでは git ブランチに対して作成されたすべてのプルリクエストがエフェメラル フルスタック環境を作成します。
+
+場合によっては、プレビュー ブランチごとに新しいリソースをデプロイしたくない場合があります。たとえば、すべてのプレビュー ブランチが `dev` ブランチがデプロイしたバックエンド リソースをポイントして、シード データ、ユーザー、グループを再利用できるようにしたい場合があります。
+
+これを実現するには、プレビュー ブランチ全体でバックエンド リソースを再利用するようにアプリ ビルド設定を更新できます。Amplify コンソールで、**All apps** ページでアプリを選択します。**App overview** ページから、**Hosting > Build settings** を選択してアプリのビルド仕様 YAML ファイルを表示します。
+
+![Amplify コンソールの Build settings ページにあるビルド仕様 YAML ファイル。](/images/gen2/fullstack-branching/preview-settings.png)
+
+`backend` フェーズのビルド設定を更新して、`npx ampx generate outputs --branch dev app-id $AWS_APP_ID` を実行し、すべてのプレビュー ブランチの `amplify_outputs.json` ファイルを生成します。この更新後、新しくデプロイされたプレビュー ブランチは、ビルドの一部としてバックエンド リソースをデプロイせず、代わりに `dev` ブランチからデプロイされたバックエンド リソースを使用します。
+
+```yaml title="amplify.yml"
+version: 1
+backend:
+    phases:
+        build:
+            commands:
+                - 'npm ci --cache .npm --prefer-offline'
+                - 'echo $AWS_BRANCH'
+                - |
+                  // highlight-start
+                  case "${AWS_BRANCH}" in
+                      main)
+                          echo "Deploying main branch..."
+                          npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+                          ;;
+                      dev)
+                          echo "Deploying dev branch..."
+                          npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+                          ;;
+                      pr-*)
+                          echo "Deploying pull request branch..."
+                          npx ampx generate outputs --branch dev --app-id $AWS_APP_ID 
+                          ;;
+                      *)
+                          echo "Deploying to staging branch..."
+                          npx ampx generate outputs --branch staging --app-id $AWS_APP_ID 
+                          ;;
+                  esac
+                  // highlight-end
+frontend:
+    phases:
+        build:
+            commands:
+                - 'npm run build'
+    artifacts:
+        baseDirectory: .amplify-hosting
+        files:
+            - '**/*'
+    cache:
+        paths:
+            - .next/cache/**/*
+            - .npm/**/*
+            - node_modules/**/*
+```

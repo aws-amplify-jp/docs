@@ -1,0 +1,44 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'テキスト音声変換',
+  description: 'Amplifyを使用してアプリケーションにテキスト音声変換機能を統合する方法について詳しく学びます。',
+  platforms: [
+    'javascript',
+    'swift',
+    'android',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import textSpeechJs from '/src/fragments/lib/predictions/js/text-speech.mdx';
+import textSpeechIOS from '/src/fragments/lib/predictions/ios/text-speech.mdx';
+import textSpeechAndroid from '/src/fragments/lib/predictions/android/text-speech.mdx';
+
+<Fragments
+  fragments={{
+    javascript: textSpeechJs,
+    angular: textSpeechJs,
+    nextjs: textSpeechJs,
+    react: textSpeechJs,
+    vue: textSpeechJs,
+    swift: textSpeechIOS,
+    android: textSpeechAndroid
+  }}
+/>

@@ -1,0 +1,97 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '操作の無効化',
+  description:
+    'データモデルの操作を無効化する',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+`disableOperations` メソッドを使用すると、Amplify アプリケーションのモデルに対して特定の GraphQL 操作を選択的に無効にできます。これは、特殊な API デザインを実装し、デプロイされるリソースの数を削減するのに便利です。
+
+モデル定義に `disableOperations` メソッドを追加することで、操作を無効にできます：
+
+```ts title="amplify/data/resource.ts"
+export const schema = a.schema({
+  Customer: a
+    .model({
+      name: a.string(),
+      phoneNumber: a.phone(),
+      accountRepresentativeId: a.id().required(),
+    })
+      // highlight-next-line
+    .disableOperations(["mutations", "subscriptions", "queries"])
+    .authorization(allow => [allow.publicApiKey()]),
+});
+```
+
+## 利用可能な操作タイプ
+
+`disableOperations` メソッドは、無効にしたい操作タイプの配列を受け入れます：
+
+### 一般的な操作カテゴリ
+
+- `mutations`: すべてのミューテーション操作を無効化（作成、更新、削除）
+- `subscriptions`: すべてのリアルタイムサブスクリプション操作を無効化（onCreate、onUpdate、onDelete）
+- `queries`: すべてのクエリ操作を無効化（get、list）
+
+### 特定の操作
+より詳細な操作を無効にすることもできます：
+クエリ操作
+
+- `get`: ID による単一アイテムの取得を無効化
+- `list`: 複数アイテムの取得を無効化
+
+### ミューテーション操作
+
+- `create`: 新しいアイテムの作成を無効化
+- `update`: 既存アイテムの更新を無効化
+- `delete`: アイテムの削除を無効化
+
+### サブスクリプション操作
+
+- `onCreate`: アイテムが作成されたときのリアルタイム通知を無効化
+- `onUpdate`: アイテムが更新されたときのリアルタイム通知を無効化
+- `onDelete`: アイテムが削除されたときのリアルタイム通知を無効化
+
+配列に 1 つ以上の操作タイプを指定して、それらを無効にできます：
+
+```
+// すべてのミューテーションを無効化
+disableOperations: ["mutations"]
+
+// サブスクリプションとクエリを無効化
+disableOperations: ["subscriptions", "queries"]
+
+// 特定の操作を無効化
+disableOperations: ["create", "update", "list"]
+
+// 特定のサブスクリプションタイプを無効化
+disableOperations: ["onCreate", "onUpdate"]
+
+// 一般的なカテゴリと特定の操作を混在させる
+disableOperations: ["queries", "create", "onDelete"]
+```

@@ -1,0 +1,131 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '接続されたフォーム',
+  description:
+    'Amplify データバックエンドでデータを作成および更新するための React フォームを生成します。',
+  platforms: [
+    'javascript',
+    'nextjs',
+    'react'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+
+接続されたフォームはアプリのデータスキーマ内のモデルにバインドされます。接続されたフォームが送信されるたびに、バインドされたデータモデルにレコードが自動的に作成または更新され、フォームの入力フィールドの一部またはすべてがデータモデルのフィールドにマップされます。接続されたフォームは任意の Amplify GraphQL API で自動的に機能し、`onSubmit` ハンドリングは不要です。
+
+## フォームを生成する
+まず、Amplify UI ライブラリをインストールします。
+
+```bash title="Terminal" showLineNumbers={false}
+npm add @aws-amplify/ui-react
+```
+
+接続されたフォームを使用するには、まずサンドボックス環境からデータモデルをデプロイする必要があります。「入門」の[チュートリアル](/[platform]/start/quickstart)と同じ例を使用します。
+開始するには、プロジェクトルートから次のコマンドを実行します。
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate forms
+```
+
+これにより、スキーマで定義されたモデルごとに作成フォームと更新フォームが生成され、`ui-components` フォルダに配置されます。
+
+```bash title="Terminal" showLineNumbers={false}
+File written: ui-components/graphql/subscriptions.ts
+File written: ui-components/graphql/mutations.ts
+File written: ui-components/graphql/queries.ts
+File written: ui-components/TodoCreateForm.jsx
+File written: ui-components/TodoCreateForm.d.ts
+File written: ui-components/TodoUpdateForm.jsx
+File written: ui-components/TodoUpdateForm.d.ts
+File written: ui-components/utils.js
+File written: ui-components/index.js
+```
+
+
+### フォームの再生成
+
+Gen 2 では、フォーム UI が自動的に生成され、カスタマイズして管理できます。データモデルを更新してフォームを再生成する必要がある場合は、`npx ampx generate forms` コマンドを再度実行する前に、元の `ui-components` フォルダをバックアップしてください。
+
+
+## アプリで React フォームをレンダリングする
+
+1. アプリケーションのエントリーポイントファイル（例：create-react-app の場合は `src/index.js`、Vite の場合は `src/main.jsx`）に、次のインポートと設定を追加します。
+
+```jsx
+// highlight-start
+import '@aws-amplify/ui-react/styles.css';
+import { ThemeProvider } from '@aws-amplify/ui-react';
+// highlight-end
+import { Amplify } from 'aws-amplify';
+
+import outputs from './amplify_outputs.json';
+
+Amplify.configure(outputs);
+```
+
+2. アプリケーションのエントリーポイントファイル（例：Vite の場合は `src/main.jsx`）で、`<App />` コンポーネントを次でラップします。
+
+```jsx
+<ThemeProvider>
+  <App />
+</ThemeProvider>
+```
+
+3. フォームを名前でインポートします。`TodoCreateForm` という名前のフォームの場合は、次のコードを使用します。
+
+```jsx
+import { TodoCreateForm } from './ui-components';
+```
+
+4. コードにフォームを配置します。React プロジェクトで `ProductCreateForm` という名前のフォームの場合、次の App コードを使用できます。
+
+```jsx
+function App() {
+  return <TodoCreateForm />;
+}
+
+export default App;
+```
+
+
+## フォームのタイプ
+
+接続されたフォームと接続されていないフォームはすべて、**作成**フォームまたは**更新**フォームのいずれかです。
+
+### 作成フォーム
+
+作成フォームは空の入力でフォームをレンダリングします。作成フォームがデータモデルに接続されている場合、送信時に常に新しいレコードが生成されます。
+
+### 更新フォーム
+
+更新フォームはフォームを事前にポピュレートするための入力値を必要とします。
+
+データモデルに接続されている更新フォームの場合は、`id` プロップまたはモデルプロップを使用できます。
+
+- `id` プロップ：更新するレコードの ID 文字列。例：
+
+```jsx
+<AuthorUpdateForm id="ac74af5c-3aab-4274-8f41-23e1e6576af5" />
+```
+
+- モデルプロップ：フォームが `Author` という名前のデータモデルにバインドされている場合、フォームには `author` という名前のプロップも含まれます。これはレコードを受け取ることができます。例：
+
+```jsx
+
+<AuthorUpdateForm author={authorRecord}>
+
+```

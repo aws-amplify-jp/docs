@@ -1,0 +1,75 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'SSM パラメータストア',
+  description: 'Amplify CLI バージョン 11 では AWS Systems Manager (SSM) のパラメータストアを使い始めます。パラメータストアは team-provider-info.json に保存されている様々な値のコピーを保持するために使用されます。Amplify CLI は標準パラメータを使用してこれらの値のコピーを保持します。この使用は SSM の永久無料枠に該当します。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify CLI バージョン 11 では [AWS Systems Manager (SSM) のパラメータストア](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html)を使い始めます。パラメータストアは `team-provider-info.json` に保存されている様々な値のコピーを保持するために使用されます。Amplify CLI は標準パラメータを使用してこれらの値のコピーを保持します。この使用は SSM の永久無料枠に該当します。
+
+## この機能についての詳細
+
+`team-provider-info.json` ファイル（以降、TPI ファイルと呼びます）は Amplify プロジェクト内のファイルで、主に amplify push 中にリソーステンプレートに渡される環境固有の CloudFormation パラメータが含まれています。
+
+この変更により、TPI ファイルに歴史的に保存されていた値が現在パラメータストアにコピーされています。TPI ファイルは削除していません。パラメータストアはバックアップとして使用されています。Amplify CLI が TPI ファイルに存在しない値が必要な場合、パラメータストアから値を取得します。パラメータストアの値は、Amplify デプロイメントが成功した後に更新されます。
+
+開発者は、異なる開発マシンや AWS Amplify Studio など、様々な環境間をシームレスに移動できるようになりました。
+
+<Callout>
+
+**注:**Amplify 環境が削除されると、パラメータストアのその環境名の下のすべてのパラメータが削除されます。Amplify プロジェクトが削除されると、その `appId` のすべてのパラメータが一緒に削除されます。
+
+</Callout>
+
+## パラメータの手動作成
+
+マルチ環境シナリオによっては、パラメータストアにパラメータを手動で作成すると便利です。その場合は AWS コンソールに移動し、SSM を検索してください。
+
+![「SSM」で検索した AWS コンソール](/images/cli/parameter-store/select-ssm-console.png)
+
+SSM コンソールが開いたら、パラメータストアに移動します。
+
+![「パラメータストア」が強調表示された AWS Systems Manager のサイドナビゲーション](/images/cli/parameter-store/select-parameter-store.png)
+
+パラメータストアが開いたら、「パラメータを作成」を選択します。
+
+![Amplify のパラメータのリストが表示された AWS SSM パラメータストアのランディングページ](/images/cli/parameter-store/view-parameter-store.png)
+
+Amplify パラメータキーは厳密な命名パターンに従う必要があります：
+
+```
+/amplify/<appId>/<environment-name>/AMPLIFY_<category-name>_<resource-name>_<parameter-name>
+```
+
+標準パラメータとデフォルトの String 型のみがサポートされています。
+
+![Amplify のパラメータ命名パターンが表示された AWS SSM パラメータストアの「パラメータを作成」フォーム](/images/cli/parameter-store/create-parameter.png)
+
+目的の値を入力し、必ず引用符で囲んでください。値は [JSON.parse()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse) を使用して解析されます。
+
+ページの下部で「パラメータを作成」を選択します。以上です！

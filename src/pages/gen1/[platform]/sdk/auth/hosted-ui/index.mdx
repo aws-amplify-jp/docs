@@ -1,0 +1,33 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ホステッド UI',
+  description:
+    'Amazon Cognito はホステッド UI を通じてカスタマイズ可能なユーザーエクスペリエンスを提供します。ホステッド UI は OAuth 2.0 フローであり、アプリケーションに Cognito SDK またはソーシャルプロバイダーの SDK を埋め込むことなく、ログイン画面を起動することができます。',
+  platforms: ['swift', 'android']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import all0 from '/src/fragments/sdk/library-callout.mdx';
+
+<Fragments fragments={{ all: all0 }} />
+
+import ios1 from '/src/fragments/sdk/auth/ios/hosted-ui.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import android2 from '/src/fragments/sdk/auth/android/hosted-ui.mdx';
+
+<Fragments fragments={{ android: android2 }} />

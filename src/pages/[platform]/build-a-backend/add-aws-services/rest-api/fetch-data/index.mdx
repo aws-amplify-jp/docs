@@ -1,0 +1,112 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'データの取得',
+  description: 'Amplify での GET API REST の使用',
+  platforms: [
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'vue'
+  ],
+};
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+エンドポイントを呼び出すには、必須の `apiName` オプションと、オプションの `headers`、`queryParams`、および `body` オプションを含む入力オブジェクトを設定する必要があります。API ステータスコード応答 > 299 は `ApiError` インスタンスとしてスローされます。エラーインスタンスは応答から解析された `name` および `message` プロパティを提供します。
+
+## GET リクエスト
+
+```ts
+import { get } from 'aws-amplify/api';
+
+async function getItem() {
+  try {
+    const restOperation = get({ 
+        apiName: 'myRestApi',
+        path: 'items' 
+        options: {
+          retryStrategy: {
+            strategy: 'no-retry' // Overrides default retry strategy
+          },
+        }
+    });
+    const response = await restOperation.response;
+    console.log('GET call succeeded: ', response);
+  } catch (error) {
+    console.log('GET call failed: ', JSON.parse(error.response.body));
+  }
+}
+```
+
+`retryStrategy` は以下で設定できます:
+- `no-retry`: 単一の試行、エラーで即座に失敗
+- `jittered-exponential-backoff`: デフォルト戦略で、増加する遅延で再試行し、最大 3 回の試行
+
+## レスポンス本文へのアクセス
+
+応答オブジェクトの `body` プロパティにアクセスすることで、レスポンス本文を使用できます。ユースケースと本文のコンテンツタイプに応じて、文字列、blob、または JSON として本文を使用できます。
+
+```ts
+// ...
+const { body } = await restOperation.response;
+// consume as a string:
+const str = await body.text();
+// OR consume as a blob:
+const blob = await body.blob();
+// OR consume as a JSON:
+const json = await body.json();
+```
+
+<Callout warning>
+
+レスポンス本文は複数回使用することはできません。
+
+</Callout>
+
+## エラーから HTTP レスポンスにアクセス
+
+REST API ハンドラーは `ApiError` エラーインスタンスをスローする場合があります。エラーが 2xx 以外のステータスコードを持つ HTTP レスポンスによって引き起こされた場合、エラーインスタンスは `response` プロパティを提供します。`response` プロパティには以下のプロパティが含まれます:
+* `statusCode`: HTTP ステータスコード
+* `headers`: HTTP レスポンスヘッダー
+* `body`: HTTP レスポンス本文（文字列として）
+
+次の例は、`ApiError` インスタンスから HTTP レスポンスにアクセスして、REST API エンドポイントからのエラーレスポンスを処理する方法を示しています:
+
+```ts
+import { ApiError, get } from 'aws-amplify/api';
+
+try {
+  const restOperation = get({ 
+    apiName: 'myRestApi',
+    path: 'items' 
+  });
+  await restOperation.response;
+} catch (error) {
+  if (error instanceof ApiError) {
+    if (error.response) {
+      const { 
+        statusCode, 
+        headers, 
+        body 
+      } = error.response;
+      console.error(`Received ${statusCode} error response with payload: ${body}`);
+    }
+    // Handle API errors not caused by HTTP response.
+  }
+  // Handle other errors.
+}
+```

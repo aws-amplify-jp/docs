@@ -1,0 +1,57 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'モデルデータベース',
+  description: 'データベースとGraphQL APIを作成します。',
+  platforms: [
+    'javascript',
+    'nextjs',
+    'react'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+Amplify Studioは、アプリのデータモデルを視覚的に作成し、データベースの内容を管理する方法を提供します。
+
+## データモデルを作成する
+
+1. アプリの[Studioを起動](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)します
+1. **セットアップ**メニューで**データ**を選択します
+1. **データモデリング**ページで**モデルを追加**を選択して、最初のデータモデルを作成します。
+
+モデルはデータベース内のテーブルと考えてください。この場合、`Home`モデルを作成し、`address (String)`、`price (Float)`、`image_url (String)`などのいくつかのフィールドを追加します。
+
+![「Add Model」ボタンを示すスクリーンショット](/images/studio/add-model.png)
+
+さらに、アプリに複数のデータモデルを追加し、それらの間に関係を作成することで、これをさらに進めることができます。
+
+準備ができたら、**保存してデプロイ**を選択して、データモデルをクラウドにデプロイします。
+
+![「Save and Deploy」ボタンを示すスクリーンショット](/images/studio/deploy.png)
+
+## アプリデータをブラウズして自動生成する
+
+バックエンドがデプロイされたら、**管理**メニューの**コンテンツ**を選択して、アプリデータのブラウズを開始します。Amplify Studioは、アプリをより速くテストするのに役立つ_シードデータの自動生成_機能も提供します。
+
+**アクション**メニューから**データを自動生成**を選択します。
+
+![「シードデータを自動生成」ボタンを示すスクリーンショット](/images/studio/seed-data.png)
+
+シードデータの自動生成機能を使用すると、生成されたシードデータをより意味的に正確にするための制約を設定することもできます。この場合、`address`の制約を「Street address」として設定します。
+
+![シードデータの制約を示すスクリーンショット](/images/studio/seed-constraints.png)
+
+これで5つのレコードが作成されました。このチュートリアルの残りの部分での画像サポートをより適切に示すために、各レコードを選択し、`image_url`を公開アクセス可能な画像URLに変更します。

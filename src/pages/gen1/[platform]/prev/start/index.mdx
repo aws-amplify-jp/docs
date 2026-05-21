@@ -1,0 +1,42 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+
+export const meta = {
+  title: '開始',
+  description: '開始',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ],
+  route: '/gen1/[platform]/prev/start'
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      platform: context.params.platform,
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+<Callout info>
+
+**ゲッティング スタート ガイド**をお探しの場合は、選択したフレームワークまたは言語の[最新ゲッティング スタート ガイド](/gen1/[platform]/start/getting-started/)をご覧ください。
+
+**プロジェクト セットアップ**ガイドをお探しの場合は、選択したフレームワークまたは言語の[最新バージョンのプロジェクト セットアップ](/gen1/[platform]/start/project-setup/)を使用することをお勧めします。必要に応じて、プロジェクト セットアップ ガイドの[以前のバージョン](/gen1/[platform]/prev/start/project-setup/)も利用可能です。
+
+</Callout>

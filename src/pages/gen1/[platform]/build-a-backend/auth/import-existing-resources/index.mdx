@@ -1,0 +1,111 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: '既存の Cognito ユーザープールとアイデンティティプールを使用する',
+  description: '既存の Amazon Cognito ユーザープールとアイデンティティプールリソースを認証および認可メカニズムとして使用するように Amplify CLI を設定します（API、ストレージなど、他の Amplify カテゴリ用）。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+既存の Amazon Cognito リソースを Amplify プロジェクトにインポートします。`amplify import auth` コマンドを実行して、既存の Cognito ユーザープール & アイデンティティプールを検索してインポートします。
+
+```bash
+amplify import auth
+```
+
+`amplify import auth` コマンドは以下を実行します：
+
+- Amplify ライブラリ設定ファイル（aws-exports.js、amplifyconfiguration.json）に選択した Amazon Cognito リソース情報を自動的に設定します
+- 指定した既存の Cognito リソースを、すべての認証関連カテゴリ（API、ストレージなど）の認証 & 認可メカニズムとして提供します
+- 許可する場合、Lambda 関数が選択した Cognito リソースにアクセスできるようにします
+
+`amplify push` を実行してインポートプロセスを完了し、このバックエンド変更をクラウドにデプロイします。
+
+この機能は特に以下の場合に役立ちます：
+
+- 既存のユーザーベースに対して Amplify カテゴリ（API、ストレージ、関数など）を有効にする場合
+- アプリケーションスタックに Amplify を段階的に導入する場合
+- Amplify を使用しながら Cognito リソースを独立して管理する場合
+
+> 注意: Amplify はインポートされたリソースのライフサイクルを管理しません。
+
+## 既存の Cognito ユーザープールをインポートする
+
+`amplify import auth` を実行したときに「Cognito User Pool only」オプションを選択します。ユーザープールを正常にインポートするために、ユーザープールには以下の条件を満たす少なくとも 1 つのアプリクライアントが必要です：
+
+- *「Web アプリクライアント」*: クライアントシークレット**なし**のアプリクライアント
+
+`amplify push` を実行してインポート手順を完了します。
+
+import attributesCallout from "/src/fragments/common/writable-vs-mutable-attributes.mdx";
+
+<Fragments fragments={{all: attributesCallout}} />
+
+<Callout>
+
+アプリクライアントのホステッド UI にサインアウト URL が定義されていることを確認してください。これを省略すると、Amplify CLI が `aws-exports.js` ファイルに OAuth `scopes`、`redirectSignIn`、`redirectSignOut`、`responseType` を生成しない可能性があります。
+
+Cognito ユーザープールにネイティブクライアントと Web クライアントが定義されている場合、クライアントは一致する OAuth プロパティを持っていることを確認してください。
+
+</Callout>
+
+## 既存のアイデンティティプールをインポートする
+
+`amplify import auth` を実行したときに「Cognito User Pool and Identity Pool」オプションを選択します。アイデンティティプールを正常にインポートするために、それは[これらの要件](#既存の-cognito-ユーザープールをインポートする)を満たす 2 つのユーザープールアプリクライアントを認証プロバイダーとして関連付けている必要があります。
+
+アイデンティティプールには以下が必要です：
+
+- アイデンティティプールとの信頼関係を持つ認証済みロール
+- アイデンティティプールとの信頼関係を持つ未認証ロール
+
+これらのロールは通常、新しいアイデンティティプールを作成するときに、「Unauthenticated」アクセスを有効にして Cognito ユーザープールを認証プロバイダーとして持つ際に自動的に設定されます。
+
+Amplify CLI は、ロールにアタッチされたポリシーを更新して、Amplify カテゴリが正しく機能することを確認します。たとえば、認証済みユーザーとゲストユーザーのストレージを有効にすると、S3 バケットのプライベート、保護、パブリック、読み取り、アップロードアクセス許可が未認証ロールと認証済みロールに追加されます。
+
+`amplify push` を実行してインポート手順を完了します。
+
+## マルチ環境サポート
+
+`amplify env add` を通じて新しい環境を作成すると、Amplify CLI はデフォルトで、アプリの Cognito リソースを Amplify プロジェクト外で管理していると想定します。異なる Cognito リソースをインポートするか、アプリの認証カテゴリに対して同じ Cognito リソースを維持するかを聞かれます。
+
+新しい環境で Amplify にライフサイクルを管理させたい場合は、`amplify remove auth` を実行してインポートされた Cognito リソースのリンクを解除し、`amplify add auth` を実行して新しい環境で新しい Amplify 管理認証リソースを作成します。
+
+## 既存の Cognito ユーザープールまたはアイデンティティプールをリンク解除する
+
+既存の Cognito リソースをリンク解除するには、`amplify remove auth` を実行します。これは Amplify プロジェクトから参照されている Cognito リソースのリンクのみを解除します。Cognito リソース自体は削除しません。
+
+`amplify push` を実行してリンク解除手順を完了します。
+
+## Amplify Console ビルドに環境変数を追加する
+
+Amplify Console でアプリケーションを正常にビルドするには、次の環境変数をビルド環境に追加します：
+
+|環境変数|説明|
+|-|-|
+|AMPLIFY_USERPOOL_ID|認証用にインポートされた Amazon Cognito ユーザープールの ID|
+|AMPLIFY_WEBCLIENT_ID|Web アプリケーション用に使用されるアプリクライアントの ID。アプリクライアントは、AMPLIFY_USERPOOL_ID 環境変数で指定された Amazon Cognito ユーザープールにアクセスするように設定する必要があります。|
+|AMPLIFY_NATIVECLIENT_ID|ネイティブアプリケーション用に使用されるアプリクライアントの ID。アプリクライアントは、AMPLIFY_USERPOOL_ID 環境変数で指定された Amazon Cognito ユーザープールにアクセスするように設定する必要があります。|
+|AMPLIFY_IDENTITYPOOL_ID|Amazon Cognito アイデンティティプールの ID|

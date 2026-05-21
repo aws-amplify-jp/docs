@@ -1,0 +1,97 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'コンソールロガー',
+  description: 'AWS Amplify はコンソールロガーを通じてコンソールログを書き込みます。アプリケーションで同じ目的のためにコンソールロガーを使用できます。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript", "react-native", "angular", "nextjs", "react", "vue"]}>
+
+AWS Amplify はコンソールロガーを通じてコンソールログを書き込みます。アプリケーションで同じ目的のためにコンソールロガーを使用できます。
+
+## インストール
+
+Logger をインポートします:
+
+```javascript
+import { ConsoleLogger } from 'aws-amplify/utils';
+```
+
+## API を使用する
+
+異なるコンソールメッセージモード用にロガーを呼び出すことができます:
+
+```javascript
+const logger = new ConsoleLogger('foo');
+
+logger.info('info bar');
+logger.debug('debug bar');
+logger.warn('warn bar');
+logger.error('error bar');
+```
+
+エラーを処理する場合:
+
+```javascript
+try {
+    // ...
+} catch(e) {
+    logger.error('error happened', e);
+}
+```
+
+## ロギングレベルの設定
+
+ロガーインスタンスを作成するときにログレベルを設定できます:
+
+```javascript
+const logger = new ConsoleLogger('foo', 'INFO');
+
+logger.debug('callback data', data); // this will not write the message
+```
+
+グローバルロガー構成はロガーインスタンスの構成を上書きします:
+
+```javascript
+ConsoleLogger.LOG_LEVEL = 'DEBUG';
+
+const logger = new ConsoleLogger('foo', 'INFO');
+
+logger.debug('callback data', data); //  this will write the message since the global log level is 'DEBUG'
+```
+
+Web 開発中は、ブラウザコンソールログでグローバルログレベルを設定できます:
+```javascript
+window.LOG_LEVEL = 'DEBUG';
+```
+
+サポートされているログレベル:
+
+* `ERROR`
+* `WARN`
+* `INFO`
+* `DEBUG`
+* `VERBOSE`
+
+</InlineFilter>

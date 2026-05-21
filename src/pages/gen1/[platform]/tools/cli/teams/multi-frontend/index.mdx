@@ -1,0 +1,66 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: '複数のフロントエンド',
+  description: '同じ Amplify バックエンドを複数のフロントエンド(例: React アプリと Android アプリ)で共有する方法を学びます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+`amplify pull` コマンドを使用して、同じ Amplify バックエンドを複数のフロントエンド(例: React アプリと Android アプリ)で共有できます。ユーザーはバックエンド定義全体(インフラストラクチャテンプレートとメタデータ)またはバックエンドに接続するために必要なメタデータのみ(例: `aws-exports.js` または `amplifyconfiguration.json` ファイル)をプルするオプションがあります。モバイルアプリと Web アプリを別々のリポジトリで構築している場合、推奨ワークフローはバックエンド定義(amplify フォルダ)をリポジトリの 1 つだけに保持し、メタデータ(`aws-exports.js` または `amplifyconfiguration.json` ファイル)を 2 番目のリポジトリでプルして同じバックエンドに接続することです。
+
+## ワークフロー
+
+このワークフローは、2 つ以上のフロントエンド間でバックエンドを共有するために必要な手順を説明しています。このサンプルシナリオは、Android アプリと React アプリを構築しているチーム向けです。
+
+![Image](/images/multiple-frontends.png)
+
+1. React アプリのバックエンドを初期化します。これにより、Amplify Console でアクセスできる Amplify プロジェクトとバックエンド環境が作成されます(`amplify console` を実行することで)。
+
+ ```console
+     $ cd my-react-app
+     $ amplify init
+  ? Enter a name for the project: ecommerce
+  ? Choose the type of app that you're building: react
+     $ amplify add api
+     $ amplify push
+ ```
+
+2. フロントエンドの変更を加えて、コードを Git にコミットします。Git リポジトリはインフラストラクチャの定義を含む `amplify` フォルダを保存します。
+
+3. `amplify pull` コマンドを使用して、Android アプリからバックエンドを参照します。バックエンドに新しいカテゴリを変更または追加するかどうかを尋ねられたときに「No」を選択します。これにより、`amplifyconfiguration` が src フォルダのみに配置されます。「Yes」を選択することも可能ですが、その場合、バックエンド定義が 2 つの別々のリポジトリに保存されることになり、複数の信頼できる情報源があると意図しない結果につながります。
+
+ ```console
+   cd my-android-app
+   amplify pull
+  ? Which app are you working on?
+    > ecommerce
+      mysecretproject
+  ? Choose the type of app that you're building: #android
+  ? Do you plan on modifying this backend?: #n
+   Successfully pulled backend environment dev from the cloud.
+   Run 'amplify pull' to sync upstream changes.
+ ```

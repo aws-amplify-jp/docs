@@ -1,0 +1,38 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'Google Maps から移行',
+  description: 'Google Maps から Amplify Geo へのアプリケーション移行',
+  platforms: [
+    'javascript',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import jsGoogleMigration from '/src/fragments/lib/geo/js/google-migration.mdx';
+
+<Fragments
+  fragments={{
+    javascript: jsGoogleMigration,
+    angular: jsGoogleMigration,
+    nextjs: jsGoogleMigration,
+    react: jsGoogleMigration,
+    vue: jsGoogleMigration
+  }}
+/>

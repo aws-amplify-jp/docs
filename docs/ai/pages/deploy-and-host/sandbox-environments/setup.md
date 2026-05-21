@@ -1,0 +1,69 @@
+---
+title: "開発環境でクラウドサンドボックスを使用する"
+section: "deploy-and-host/sandbox-environments"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2025-02-13T21:24:04.000Z"
+url: "https://docs.amplify.aws/react/deploy-and-host/sandbox-environments/setup/"
+---
+
+フルスタックアプリを迅速に構築、テスト、反復できる隔離された開発スペースを提供する個人用クラウドサンドボックス環境を使用できます。チームの各開発者は、クラウドリソースに接続された独自の使い捨てサンドボックス環境を使用できます。
+
+**クラウドサンドボックス環境**は開発目的で設計されており、本番ワークロード用ではありません。デプロイを高速化するために、Amplify は**CDK ホットスワップ**を使用し、AWS Lambda 関数や AWS AppSync リゾルバーテンプレートなどのリソースを完全な再デプロイなしで迅速に更新できます。
+
+ただし、特定の操作はホットスワップできず、リソースの再作成が必要です:
+
+- **Amazon DynamoDB GSI 操作:** サンドボックス環境（本番環境ではなく）では、グローバルセカンダリインデックス（GSI）を変更または削除することは時間がかかるプロセスです。これを簡単にするために、Amplify はインデックスを変更する代わりにテーブルを削除して再作成します。
+- **Amazon Cognito ユーザープール変更:** 必須フィールドの削除など、サポートされていない変更の場合、Amplify はユーザープールを削除して再作成し、一貫性のある機能的な設定を確保します。
+
+![クラウドサンドボックス環境の仕組み](/images/gen2/how-amplify-works/sandbox.png)
+
+## 新しいサンドボックス環境を作成する
+
+Amplify アプリをセットアップした後、マシン上に新しいサンドボックス環境をセットアップできます。まだ Amplify Gen 2 アプリを作成していない場合は、[クイックスタート](/[platform]/start/quickstart)を参照してください。
+
+まず、ターミナルを開いて次のコマンドを実行します:
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox
+```
+
+クラウドサンドボックスをデプロイすると、Amplify は `amplify-<app-name>-<$(whoami)>-sandbox` という命名規則に従って AWS CloudFormation スタックを AWS アカウントに作成し、`amplify/` フォルダで構成されたリソースを使用します。
+
+![クラウドサンドボックスのデプロイに成功したターミナル出力](/images/gen2/sandbox/sandbox1.png)
+
+デプロイに成功した後、`sandbox` は `amplify/` フォルダのファイル変更を監視し、関連する CloudFormation スタックにリアルタイム更新を実行します。この機能は [AWS Cloud Development Kit（CDK）のホットスワップ機能](https://docs.aws.amazon.com/cdk/v2/guide/cli.html#cli-deploy-hotswap)を活用して構築されています。
+
+![ホットスワップされたリソースによるクラウドサンドボックスのデプロイに成功したターミナル出力](/images/gen2/sandbox/sandbox2.png)
+
+### サンドボックス環境を終了する
+
+バックエンドに関連するすべての変更をテストした後、<kbd>Ctrl</kbd>+<kbd>c</kbd> でサンドボックスセッションを終了できます。
+
+サンドボックス環境内のすべてのリソースを削除するには、次のコマンドを実行します:
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox delete
+```
+
+## サンドボックス環境を管理する
+
+新しい [Amplify コンソール](https://us-east-1.console.aws.amazon.com/amplify/apps/sandboxes)でチーム全体のすべてのサンドボックス環境を表示および管理できます。これはチームリーダーがアカウント内にデプロイされたすべての Amplify サンドボックス環境を監査するのに便利です。
+
+**サンドボックスを管理**を選択して開始します:
+
+![Amplify コンソールビューと「サンドボックスを管理」ナビゲーションでデプロイされた Amplify アプリ](/images/gen2/sandbox/sandbox4.png)
+
+その後、チーム全体のサンドボックス環境の数、ステータス、最後の更新を確認できます。コンソールを使用して、不要になったサンドボックス環境を削除することもできます。
+
+![1 つのアクティブなクラウドサンドボックスを表示する「サンドボックスを管理」の Amplify コンソールビュー](/images/gen2/sandbox/sandbox5.png)
+
+## ベストプラクティス
+
+クラウドサンドボックス環境で作業する際は、以下のベストプラクティスに留意してください:
+
+- サンドボックスは本番環境と同じ忠実度です。
+- コード変更は保存するたびに継続的にサンドボックスにデプロイされ、高速反復が可能です。
+- サンドボックスを実験とテストに使用し、本番ワークロードには使用しないでください。
+- 競合を防ぐため、開発者ごとに Amplify アプリあたり 1 つのサンドボックスをデプロイします。
+- 未使用のリソースをクリアし、コストを削減するためにサンドボックスを時々リセットしてください。

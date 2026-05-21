@@ -1,0 +1,109 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'データバインディング',
+  description: 'Figma to React code with Amplify Studio',
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify Studioは、UIコンポーネントをデータにバインドして動的コンポーネントを構築するためのビジュアルデータバインディング機能を提供します。UIコンポーネントエディタを使用して、フィールドを静的値にマップするか、バックエンドデータモデルにマップします。すべてのデータバインディングは生成されたコードに自動的に含まれます。
+
+## UIコンポーネントエディタ
+
+UIコンポーネントエディタを使用すると、コンポーネント内の要素を実際のデータにバインドできます。
+
+![UIコンポーネントエディタを表示するスクリーンショット](/images/console/ui-component-editor.png)
+
+### 1. エレメントツリー
+
+エレメントツリーはFigma内のコンポーネントの構成を表示します。Figma内の各レイヤーは特定のAmplify UIプリミティブにマップされます。たとえば、FigmaのフレームはAmplify UIライブラリの[`<Flex>`](https://ui.docs.amplify.aws/react/components/flex)コンポーネントにマップされます。レイヤーをクリックすると、ライブプレビュー内の要素がハイライトされます。
+
+### 2. ライブコンポーネントプレビュー
+
+ライブプレビューはReactコンポーネントの表現です！ブラウザの開発者ツールでコンポーネントを検査すると、コンポーネント内の各要素が実際のコードにマップされていることがわかります。コンポーネント内のいずれかの要素をクリックして、特定の子コンポーネントを選択します。これにより、エレメントツリー内のレイヤーがハイライトされ、そのコンポーネントのすべての関連する子プロパティが表示されます。
+
+### 3. コンポーネントプロパティ
+
+Reactと同様に、親コンポーネントにpropsを設定できます。Reactコンポーネントはpropsを使用して相互に通信します。すべての親コンポーネントはpropsを与えることで、子コンポーネントに情報を渡すことができます。Reactのpropsについて詳しくは、[ドキュメント](https://beta.reactjs.org/learn/passing-props-to-a-component)を参照してください。Amplify Studioはスカラー型（String、Number、Boolean）とデータモデルコンポーネント型をサポートしています。
+
+### 4. 子プロパティ
+
+ライブプレビュー内の任意の子要素をクリックして、子propの値を設定できます。静的値を設定するか、親コンポーネントからprop値を渡すことができます。子propsはUIプリミティブで利用可能なpropsにマップされます。たとえば、[`<Button>`](https://ui.docs.amplify.aws/react/components/button)コンポーネントを選択すると、`variation`や`size`などのpropsを設定でき、ライブプレビューに値が反映されるのを確認できます。
+
+### 5. コンポーネントコントロール
+
+コンポーネントで次のアクションを実行できます：
+
+1. **Figmaでコンポーネントを編集**: これにより、Figmaファイルにディープリンクしてコンポーネントを編集できます。
+2. **プレビューデータをシャッフル**: UIを静的データまたはデータモデルからのデータにバインドしたときに、シャッフルプレビューを使用してコンポーネントが異なるデータでどのようにレンダリングされるかを確認します。![shuffle](/images/console/ui-shuffle.gif)
+3. **コレクションを作成**: コンポーネントからコレクションを作成します。[詳細情報](/gen1/[platform]/build-ui/uibuilder/collections/)
+4. **コンポーネントコードを取得**: このReactコンポーネントをアプリで使用します。
+
+## データモデルからのデータにUIをバインド
+
+Amplify Studioを使用すると、UIコンポーネント内の要素をデータモデル型のコンポーネントプロパティで子要素に渡すことにより、データベースから実際のバックエンドデータにバインドできます。
+
+データにバインドするには、[データモデルをデプロイ](/gen1/[platform]/tools/console/data/data-model/)する必要があります。Studioは、[DataStoreの有無を問わず](/gen1/[platform]/tools/console/data/data-model/#datastore-and-graphql)Amplifyで作成されたGraphQL APIをサポートしています。
+
+1. [Amplify Studio](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)で、UIビルダーコンポーネントに移動して、コンポーネントを選択します。
+2. `foo`という名前のコンポーネントプロパティを追加します。型としてデータモデル（例：`Home`）を参照します。
+3. UIコンポーネント内のimage子要素をクリックします。
+4. 子プロパティの**Set prop**を選択します。**Prop**ドロップダウンから`src`を選択し、値に`home.image_url`をリンクします。ライブプレビューがデータベースからの画像に更新されます。同じ手順を繰り返して、テキストフィールド、入力など、異なる子要素を続けます。
+
+![UIエレメントをデータにバインドする方法を示すGIF](/images/console/ui-databind.gif)
+
+[コレクションドキュメント](/gen1/[platform]/build-ui/uibuilder/collections/)で詳細情報を確認してください
+
+## UIを静的データにバインド
+
+テキストラベルを静的値にバインドできます。次の2つの方法のいずれかを使用して、UI要素を静的値にバインドします。
+
+### コンポーネントプロパティのデフォルト値を子propsに渡す
+
+次の例は、テキストラベルの値をコンポーネントのデフォルト値に設定する方法を示しています。
+
+1. [Amplify Studio](/gen1/[platform]/tools/console/adminui/start/#logging-in-and-creating-an-app)で、UIビルダーコンポーネントに移動して、コンポーネントを選択します。
+2. `foo`という名前のコンポーネントプロパティを追加します。型は`String`で、デフォルト値は`Hello world`です。
+3. UIコンポーネント内のテキスト子要素をクリックします。
+4. 子プロパティの**Set prop**を選択します。**Prop**ドロップダウンから`label`を選択し、値を`foo`にリンクします。ライブプレビューが「Hello world」を表示するように更新されます。
+
+![静的データバインディングを表示するスクリーンショット](/images/console/ui-staticbind.png)
+
+### 子propsを直接設定
+
+利用可能なすべてのプロパティで子propの値を直接設定できます。次の例では、`label` propを「Explore」に、`color` propを「orange」に設定しています。
+
+![静的データバインディングを表示するスクリーンショット](/images/console/ui-staticbind2.png)
+
+## モディファイアを適用
+
+モディファイアを使用すると、レンダリング子propの値にカスタムロジックを適用できます。
+
+### 条件分岐
+
+子propの値にカスタムロジックを条件付きで適用できます。次の例は、カスタムロジックに基づいて子propの値を条件付きで設定する方法を示しています。
+
+![conditional](/images/console/ui-conditional.png)
+
+### 連結
+
+子propの値に連結を適用できます。次の例は、価格を表示する前に`$`記号を追加する方法を示しています。
+
+![concatenation](/images/console/ui-concat.png)

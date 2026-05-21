@@ -1,0 +1,163 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'コンポーネントスロット',
+  description: 'Amplify生成のFigmaからコードへのコンポーネントにコンポーネントスロットを追加します。これを使用して、Reactコード内のネストされたコンポーネントまたはコレクションをサポートできます。',
+  platforms: [
+    'javascript',
+    'react',
+    'nextjs'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+コンポーネントスロットを使用すると、Studio生成のUIコンポーネント内に他のコンポーネントをReactコードとしてネストできます。コンポーネントスロットを使用して、投稿上のコメントのような動的に生成されたチャイルドコンポーネントを作成したり、チャイルド要素を完全に置き換えたりできます。
+
+## コンポーネントスロットの追加
+
+まず、コンポーネントが必要です。
+
+1. アプリの[Studio を起動](/gen1/[platform]/tools/console/adminui/start/#log-into-the-amplify-console)します。
+
+2. 左側のナビゲーションバーで、UI Library をクリックします。
+
+3. Studio にインポートした UI Library から Figma コンポーネントを選択します。_すでに Figma コンポーネントがない場合は、[Amplify の Figma UI ファイル](/gen1/[platform]/build-ui/uibuilder/)から始めることができます。_
+
+4. 右上隅の **Configure** ボタンをクリックして、そのコンポーネントを設定します。
+
+![コンポーネントを開いて、設定するギアアイコンをクリックするアニメーション画像](/images/console/slots-console1.gif)
+
+次に、このコンポーネントにコンポーネントスロットを追加します。
+
+1. 左側には、コンポーネントの要素が表示されます。コンポーネント内の Figma **Frame** (![Figma フレームアイコン](/images/console/figma-frame-icon.png)) を選択します。
+
+この例では、「Area」フレームが選択されています。
+
+2. 右側のパネルで、「Convert to a slot」ボタンをクリックします。これにより、UI コンポーネントに新しいプロップが追加されます。そのプロップに渡された JSX 要素は、生成されたコンポーネントスロットにレンダリングされます。
+
+3. 必要に応じて、プロパティ名を変更します。
+
+この例では、プロパティは「comments」に名前が変更されています。
+
+![フレームを選択して、コンポーネントスロットを追加するアニメーション画像](/images/console/slots-console2.gif)
+
+<Callout warning>
+
+コンポーネントスロットの作成を取り消したいですか？
+
+<br />
+コンポーネントスロットを **Component properties** (右上隅) で見つけて、トリプルドットメニューを選択し、**Erase property** を選択してコンポーネントスロットを削除します。
+
+</Callout>
+
+## コンポーネントスロットの使用
+
+### コンポーネントのインポート
+
+コンポーネントにコンポーネントスロットを追加したら、画面下部の **Get component code** ボタンをクリックして、次のステップの手順を確認します。
+
+1. `amplify pull` コマンドをコピーして、ターミナルで実行します。
+2. インポートコードをコピーして、React アプリコードに貼り付けます。
+3. 最後に、コンポーネントをレンダリングします。
+
+```jsx
+/*Import your component*/
+import { Ampligram } from './ui-components';
+
+function App() {
+  return (
+    /*Add your component below*/
+    <Ampligram />
+  );
+}
+export default App;
+```
+
+上記のコードがアプリでどのようにレンダリングされるかを以下に示します。_可視性を支援するため、軽微なスタイリングが追加されています。_
+
+![コンポーネントスロット付きの読み込まれたコンポーネントのスクリーンショット](/images/console/slots1.png)
+
+### コンポーネントスロットを使用して個々のチャイルドコンポーネントを置き換える
+
+コンポーネントスロットを使用するには、チャイルドコンポーネントをペアレント コンポーネントのプロパティとして渡し、前に選択したプロップ名を使用します。次に、渡したコンテンツは、コンポーネントのチャイルドとしてレンダリングされます。
+
+```jsx
+import { Ampligram } from '.ui-components';
+
+function App() {
+  return (
+    <Ampligram
+      style={styles.post}
+      comments={
+        //Pass your content into the component slot
+        <div>
+          <h1>Hi mom!</h1>
+          <p>Thanks for checking out my app</p>
+        </div>
+      }
+    />
+  );
+}
+export default App;
+```
+
+上記のコードがアプリでどのようにレンダリングされるかを以下に示します。
+
+![コンポーネントスロットに静的テキストが表示されているコンポーネントのスクリーンショット](/images/console/slots2.png)
+
+### コレクションへのコンポーネントスロットの追加
+
+任何のコンポーネントはデータにバインドして、[コレクションを生成](/gen1/[platform]/build-ui/uibuilder/collections/)するために使用できます。これはコンポーネントスロット付きのコンポーネントも含みます。Studio は Amplify で作成された GraphQL API への データ バインディング、[DataStore ありおよびなし](/gen1/[platform]/tools/console/data/data-model/#datastore-and-graphql)をサポートします。
+
+<Callout note>
+
+{' '}
+
+<strong>制限: 多対多関係のネストされたデータフェッチ</strong>
+<br />
+多対多関係の自動ネストされたデータフェッチは現在サポートされていません。コンポーネントスロットは [has One](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#has-one-relationship) および [has Many relationships](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#has-many-relationship) (1つの投稿から多くのコメントなど) のデータのみ自動でフェッチします。
+
+</Callout>
+
+ここで、Ampligram コレクションは `Post` というデータ モデルにマップされています。`Post` モデルは `Comment` モデルとの 1 対多リレーションシップを持っているため、各 `Post` は多くの `Comment` を持つことができます。以下の AmpligramCollection は、`Post` モデルの各レコードに対して Ampligram をレンダリングします。次に、関連する各 `Comment` は `comments` コンポーネント スロットにレンダリングされます。
+
+この例では、最初の投稿には 2 つのコメントがありますが、2 番目の投稿にはコメントがありません。
+
+```jsx
+import { AmpligramCollection } from './ui-components';
+
+function App() {
+  return (
+    <AmpligramCollection
+      overrideItems={({ item }) => ({
+        //Populate the "comments" slot
+        comments: (
+          <div>
+            {/*Map each related comment into a div*/}
+            {item.Comments.map((comment) => (
+              <div>{comment.content}</div>
+            ))}
+          </div>
+        )
+      })}
+    />
+  );
+}
+export default App;
+```
+
+![動的コンテンツがコンポーネント スロットに表示されているコンポーネントのスクリーンショット](/images/console/slots3.png)
+
+チャイルド コンポーネントを動的にレンダリングすることは、コンポーネント スロットが非常に便利な場所です。このコンポーネント スロットに[別のコレクションを渡す](/gen1/[platform]/build-ui/uibuilder/override/#nesting-collections)ことさえできます。

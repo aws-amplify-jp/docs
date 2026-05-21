@@ -1,0 +1,69 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ファイルストレージ',
+  description: 'Amplify Studioの始め方',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify Studio ファイルストレージは、アプリのユーザーコンテンツをパブリック、保護、またはプライベートなストレージフォルダで管理するためのシンプルなメカニズムを提供します。Studio では、個別のユーザーまたはグループのアクセスを制限する認可ルールを指定して、ファイルに対する作成、読み取り、更新、または削除操作を制御できます。ファイルストレージカテゴリには、Amazon S3 の組み込みサポートが含まれています。
+
+![Amplify Studio ストレージスタートページ](/images/console/storageStart.png)
+
+Amplify Studio にファイルストレージを追加する方法は2つあります。既存の S3 バケットをインポートするか、新しい S3 バケットを作成します。どちらの方法でも、認証カテゴリも有効にする必要があります。
+
+## 新しいファイルストレージの認可モードを設定するには
+
+アプリの新しいファイルストレージを作成するときは、認可ルールを編集できます。
+
+1. [Studio を起動](/gen1/[platform]/tools/console/adminui/start/#log-into-the-amplify-console)します。
+2. **Set up** メニューで、**Storage** を選択します。
+3. **Storage** ページで、_File storage bucket_ カードの下部にある **Authorization settings** を見つけます。
+4. **Signed-in users** または **Guest users** _(オプション)_ の希望する認可設定を選択します。
+
+認可モードは、**Set up**、**Storage** でいつでも編集できます。
+
+<Callout warning>
+  ゲストアクセス許可を設定した後にローカル開発を有効にするには、認証設定を更新して
+  未認証ログインを許可する必要があります。`amplify update
+  auth` を実行して、認証設定を更新してください。
+</Callout>
+
+## ファイルストレージをインポートするには
+
+デフォルトのファイルアクセスレベルが機能するには、バケットが次のように構成される必要があります。
+
+- **private/\{user_identity_id}/** - 個別ユーザーのみがアクセス可能
+- **protected/\{user_identity_id}/** - すべてのユーザーが読み取り可能、作成ユーザーのみが書き込み可能
+- **public/** - アプリのすべてのユーザーがアクセス可能
+
+[ファイルストレージのインポート方法について詳しく知る。](/gen1/[platform]/build-a-backend/storage/import/#connect-to-an-imported-s3-bucket-with-amplify-libraries)
+
+## インポートされたファイルストレージの認可モードを設定するには
+
+インポートされた S3 バケットとインポートされた Cognito リソースを使用している場合は、Cognito Identity Pool の認証済みロールと未認証ロールのポリシーを更新する必要があります。これらのロール用に新しいマネージドポリシー（インラインポリシーではなく）を作成する必要があります。
+
+[インポートされたファイルストレージ用に IAM ロールを構成する方法について詳しく知る](/gen1/[platform]/build-a-backend/storage/import/#configuring-iam-role-to-use-amplify-recommended-policies)

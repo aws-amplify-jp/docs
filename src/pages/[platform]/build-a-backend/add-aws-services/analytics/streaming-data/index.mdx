@@ -1,0 +1,163 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ストリーミング分析データ',
+  description: 'Amazon Kinesis分析プロバイダーを使用すると、分析データをAmazon Kinesisストリームに送信してリアルタイム処理を行うことができます。',
+  platforms: [
+    'javascript',
+    'react-native',
+    'angular',
+    'nextjs',
+    'react',
+    'vue'
+  ],
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amazon Kinesis分析プロバイダーを使用すると、分析データを[Kinesis](https://aws.amazon.com/kinesis)ストリームに送信してリアルタイム処理を行うことができます。
+
+## Kinesisストリームの設定
+
+次の例では、[AWS Cloud Development Kit (AWS CDK)](https://docs.aws.amazon.com/cdk/latest/guide/home.html)を使用して、[Amazon Kinesis](https://aws.amazon.com/kinesis)によって提供されるAnalyticsリソースを作成しています。
+
+```ts title="amplify/backend.ts"
+import { auth } from "./auth/resource";
+import { data } from "./data/resource";
+import { Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Stream } from "aws-cdk-lib/aws-kinesis";
+import { Stack } from "aws-cdk-lib/core";
+
+const backend = defineBackend({
+  auth, 
+  data,
+  // additional resources 
+});
+
+// create a new stack for the Kinesis stream
+const kinesisStack = backend.createStack("kinesis-stack");
+
+// create a new Kinesis stream with one shard
+const kinesisStream = new Stream(kinesisStack, "KinesisStream", {
+  streamName: "myKinesisStream",
+  shardCount: 1,
+});
+
+// create a new policy to allow PutRecords to the Kinesis stream
+const kinesisPolicy = new Policy(kinesisStack, "KinesisPolicy", {
+  statements: [
+    new PolicyStatement({
+      actions: ["kinesis:PutRecords"],
+      resources: [kinesisStream.streamArn],
+    }),
+  ],
+});
+
+// apply the policy to the authenticated and unauthenticated roles
+backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(kinesisPolicy);
+backend.auth.resources.unauthenticatedUserIamRole.attachInlinePolicy(kinesisPolicy);
+```
+
+## インストールと設定
+
+CLIを使用しない場合は、`kinesis:PutRecords`の[IAM権限を設定](https://docs.aws.amazon.com/streams/latest/dev/learning-kinesis-module-one-iam.html)していることを確認してください。
+
+Amazon Kinesisの例IAMポリシー:
+
+```javascript
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": "kinesis:PutRecords",
+    "Resource": "arn:aws:kinesis:<your-aws-region>:<your-aws-account-id>:stream/<your-stream-name>" // replace the template fields
+  }]
+}
+```
+
+詳細については、[Amazon Kinesis開発者ドキュメント](https://docs.aws.amazon.com/streams/latest/dev/learning-kinesis-module-one-iam.html)をご覧ください。
+
+Kinesisを設定します:
+
+```javascript title="src/index.js"
+// Configure the plugin after adding it to the Analytics module
+import { Amplify } from 'aws-amplify';
+import { parseAmplifyConfig } from "aws-amplify/utils";
+import outputs from '../amplify_outputs.json';
+
+const amplifyConfig = parseAmplifyConfig(outputs);
+
+Amplify.configure({
+  ...amplifyConfig,
+  Analytics: {
+    Kinesis: {
+      // REQUIRED -  Amazon Kinesis service region
+      region: 'us-east-1',
+
+      // OPTIONAL - The buffer size for events in number of items.
+      bufferSize: 1000,
+
+      // OPTIONAL - The number of events to be deleted from the buffer when flushed.
+      flushSize: 100,
+
+      // OPTIONAL - The interval in milliseconds to perform a buffer check and flush if necessary.
+      flushInterval: 5000, // 5s
+
+      // OPTIONAL - The limit for failed recording retries.
+      resendLimit: 5
+    }
+  }
+});
+```
+
+## データのストリーミング
+
+標準の`record()`メソッドを使用して、Kinesisストリームにデータを送信できます:
+
+```javascript title="src/index.js"
+import { record } from 'aws-amplify/analytics/kinesis';
+
+record({
+  data: {
+    // The data blob to put into the record
+  },
+  partitionKey: 'myPartitionKey',
+  streamName: 'myKinesisStream'
+});
+```
+
+## イベントのフラッシュ
+記録されたイベントはバッファに保存され、定期的にリモートサーバーに送信されます*(flushIntervalオプションでチューニングできます)*。必要に応じて、'flushEvents' APIを使用して、バッファからすべてのイベントを手動でクリアするオプションがあります。
+
+```javascript title="src/index.js"
+import { flushEvents } from 'aws-amplify/analytics/kinesis';
+
+flushEvents();
+```
+
+<InlineFilter filters={['react-native']}>
+
+## 既知の問題
+
+デフォルトのPinpointプロバイダーの代わりに、以下にリストされている代替サービスプロバイダーをインポートするとき:
+
+- Kinesis (`aws-amplify/analytics/kinesis`)
+- Kinesis Data Firehose (`aws-amplify/analytics/kinesis-firehose`)
+- Personalize Event (`aws-amplify/analytics/personalize`)
+
+バンドラーを起動するときに、次のエラーが発生する可能性があります:
+
+> Error: Unable to resolve module stream from /path/to/node_modules/@aws-sdk/... This is a [known issue](https://github.com/aws/aws-sdk-js-v3/issues/4877). Please follow [the steps](https://github.com/aws/aws-sdk-js-v3/issues/4877#issuecomment-1656007484) outlined in the issue to resolve the error.
+
+</InlineFilter>

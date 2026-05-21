@@ -1,0 +1,474 @@
+---
+title: "パスワードを管理する"
+section: "build-a-backend/auth/manage-users"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2024-10-14T15:02:39.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/auth/manage-users/manage-passwords/"
+---
+
+Amplify Authは、ユーザーがパスワードを変更したり、忘れたパスワードを回復したりするための安全な方法を提供します。
+
+## パスワードのデフォルト設定を理解する
+
+デフォルトでは、ユーザーは電話またはメールを使用してパスワードを忘れた場合にアカウントへのアクセスを回復できます。次の表は、ログインオプションとして`phone`または`email`が使用されている場合に使用されるデフォルトアカウント回復方法です。
+
+| ログインオプション  | ユーザーアカウント検証チャネル |
+| ------------------- | --------------------------------- |
+| `phone`             | 電話番号                      |
+| `email`             | メール                             |
+| `email` と `phone` | メール                             |
+
+## パスワードをリセットする
+
+ユーザーのパスワードをリセットするには、`resetPassword` APIを使用します。これにより、ユーザーの設定に基づいて宛先（メールやSMSなど）にリセットコードが送信されます。
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+```ts
+import { resetPassword } from 'aws-amplify/auth';
+
+const output = await resetPassword({
+  username: "hello@mycompany.com"
+});
+
+const { nextStep } = output;
+switch (nextStep.resetPasswordStep) {
+  case 'CONFIRM_RESET_PASSWORD_WITH_CODE':
+    const codeDeliveryDetails = nextStep.codeDeliveryDetails;
+    console.log(
+      `Confirmation code was sent to ${codeDeliveryDetails.deliveryMedium}`
+    );
+    // Collect the confirmation code from the user and pass to confirmResetPassword.
+    break;
+  case 'DONE':
+    console.log('Successfully reset password.');
+    break;
+}
+```
+<!-- /Platform -->
+<!-- Platform: flutter -->
+```dart
+Future<void> resetPassword(String username) async {
+  try {
+    final result = await Amplify.Auth.resetPassword(
+      username: username,
+    );
+    await _handleResetPasswordResult(result);
+  } on AuthException catch (e) {
+    safePrint('Error resetting password: ${e.message}');
+  }
+}
+```
+
+```dart
+Future<void> _handleResetPasswordResult(ResetPasswordResult result) async {
+  switch (result.nextStep.updateStep) {
+    case AuthResetPasswordStep.confirmResetPasswordWithCode:
+      final codeDeliveryDetails = result.nextStep.codeDeliveryDetails!;
+      _handleCodeDelivery(codeDeliveryDetails);
+      break;
+    case AuthResetPasswordStep.done:
+      safePrint('Successfully reset password');
+      break;
+  }
+}
+```
+<!-- /Platform -->
+<!-- Platform: android -->
+
+#### [Java]
+
+```java
+Amplify.Auth.resetPassword(
+   "username",
+   result -> Log.i("AuthQuickstart", result.toString()),
+   error -> Log.e("AuthQuickstart", error.toString())
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+Amplify.Auth.resetPassword("username",
+    { Log.i("AuthQuickstart", "Password reset OK: $it") },
+    { Log.e("AuthQuickstart", "Password reset failed", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    val result = Amplify.Auth.resetPassword("username")
+    Log.i("AuthQuickstart", "Password reset OK: $result")
+} catch (error: AuthException) {
+    Log.e("AuthQuickstart", "Password reset failed", error)
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.Auth.resetPassword("username")
+    .subscribe(
+        result -> Log.i("AuthQuickstart", result.toString()),
+        error -> Log.e("AuthQuickstart", error.toString())
+    );
+```
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+
+#### [Async/Await]
+
+```swift
+func resetPassword(username: String) async {
+    do {
+        let resetResult = try await Amplify.Auth.resetPassword(for: username)
+        switch resetResult.nextStep {
+            case .confirmResetPasswordWithCode(let deliveryDetails, let info):
+                print("Confirm reset password with code send to - \(deliveryDetails) \(String(describing: info))")
+            case .done:
+                print("Reset completed")
+        }
+    } catch let error as AuthError {
+        print("Reset password failed with error \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func resetPassword(username: String) -> AnyCancellable {
+    Amplify.Publisher.create {
+            try await Amplify.Auth.resetPassword(for: username)
+        }.sink {
+            if case let .failure(authError) = $0 {
+                print("Reset password failed with error \(authError)")
+            }
+        }
+        receiveValue: { resetResult in
+            switch resetResult.nextStep {
+            case .confirmResetPasswordWithCode(let deliveryDetails, let info):
+                print("Confirm reset password with code send to - \(deliveryDetails) \(String(describing: info))")
+            case .done:
+                print("Reset completed")
+            }
+        }
+}
+```
+
+通常、パスワードをリセットするにはパスワードのリセットを試みたのが実際のユーザーであることを確認する必要があります。上記の次のステップは`.confirmResetPasswordWithCode`になります。
+
+エラーが発生した場合に、より具体的なビューまたはメッセージをユーザーに表示したい場合は、`underlyingError`を`AWSCognitoAuthError`にダウンキャストして処理できます。
+
+```swift
+if let authError = error as? AuthError,
+    let cognitoAuthError = authError.underlyingError as? AWSCognitoAuthError {
+    switch cognitoAuthError {
+    case .userNotFound:
+        print("User not found")
+    case .invalidParameter:
+        print("Invalid Parameter)
+    default:
+        break
+    }
+}
+```
+<!-- /Platform -->
+
+パスワードリセットプロセスを完了するには、ユーザーが受け取ったコードと設定したい新しいパスワードを使用して`confirmResetPassword` APIを呼び出します。
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+```ts
+import { confirmResetPassword } from 'aws-amplify/auth';
+
+await confirmResetPassword({
+  username: "hello@mycompany.com",
+  confirmationCode: "123456",
+  newPassword: "hunter3",
+});
+```
+<!-- /Platform -->
+<!-- Platform: flutter -->
+```dart
+Future<void> confirmResetPassword({
+  required String username,
+  required String newPassword,
+  required String confirmationCode,
+}) async {
+  try {
+    final result = await Amplify.Auth.confirmResetPassword(
+      username: username,
+      newPassword: newPassword,
+      confirmationCode: confirmationCode,
+    );
+    safePrint('Password reset complete: ${result.isPasswordReset}');
+  } on AuthException catch (e) {
+    safePrint('Error resetting password: ${e.message}');
+  }
+}
+```
+<!-- /Platform -->
+<!-- Platform: android -->
+
+#### [Java]
+
+```java
+Amplify.Auth.confirmResetPassword(
+   "Username",
+   "NewPassword123",
+   "confirmation code you received",
+   () -> Log.i("AuthQuickstart", "New password confirmed"),
+   error -> Log.e("AuthQuickstart", error.toString())
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+Amplify.Auth.confirmResetPassword("Username", "NewPassword123", "confirmation code",
+   { Log.i("AuthQuickstart", "New password confirmed") },
+   { Log.e("AuthQuickstart", "Failed to confirm password reset", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    Amplify.Auth.confirmResetPassword("Username", "NewPassword123", "code you received")
+    Log.i("AuthQuickstart", "New password confirmed")
+} catch (error: AuthException) {
+    Log.e("AuthQuickstart", "Failed to confirm password reset", error)
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.Auth.confirmResetPassword("Username","NewPassword123", "confirmation code")
+    .subscribe(
+        () -> Log.i("AuthQuickstart", "New password confirmed"),
+        error -> Log.e("AuthQuickstart", error.toString())
+    );
+```
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+
+#### [Async/Await]
+
+```swift
+func confirmResetPassword(
+    username: String,
+    newPassword: String,
+    confirmationCode: String
+) async {
+    do {
+        try await Amplify.Auth.confirmResetPassword(
+            for: username,
+            with: newPassword,
+            confirmationCode: confirmationCode
+        )
+        print("Password reset confirmed")
+    } catch let error as AuthError {
+        print("Reset password failed with error \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func confirmResetPassword(
+    username: String,
+    newPassword: String,
+    confirmationCode: String
+) -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.confirmResetPassword(
+            for: username,
+            with: newPassword,
+            confirmationCode: confirmationCode
+        )
+    }.sink {
+        if case let .failure(authError) = $0 {
+            print("Reset password failed with error \(authError)")
+        }
+    }
+    receiveValue: {
+        print("Password reset confirmed")
+    }
+}
+```
+
+<!-- /Platform -->
+
+## パスワードを更新する
+
+`updatePassword` APIを使用して、サインインしたユーザーのパスワードを更新できます。
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+```ts
+import { updatePassword } from 'aws-amplify/auth';
+
+await updatePassword({
+  oldPassword: "hunter2",
+  newPassword: "hunter3",
+});
+```
+<!-- /Platform -->
+<!-- Platform: flutter -->
+```dart
+Future<void> updatePassword({
+  required String oldPassword,
+  required String newPassword,
+}) async {
+  try {
+    await Amplify.Auth.updatePassword(
+      oldPassword: oldPassword,
+      newPassword: newPassword,
+    );
+  } on AuthException catch (e) {
+    safePrint('Error updating password: ${e.message}');
+  }
+}
+```
+<!-- /Platform -->
+<!-- Platform: android -->
+
+#### [Java]
+
+```java
+Amplify.Auth.updatePassword(
+    "existingPassword",
+    "newPassword",
+    () -> Log.i("AuthQuickstart", "Updated password successfully"),
+    error -> Log.e("AuthQuickstart", error.toString())
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+Amplify.Auth.updatePassword("existingPassword", "newPassword",
+    { Log.i("AuthQuickstart", "Updated password successfully") },
+    { Log.e("AuthQuickstart", "Password update failed", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    Amplify.Auth.updatePassword("existingPassword", "newPassword")
+    Log.i("AuthQuickstart", "Updated password successfully")
+} catch (error: AuthException) {
+    Log.e("AuthQuickstart", "Password update failed", error)
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.Auth.updatePassword("existingPassword", "newPassword")
+    .subscribe(
+        () -> Log.i("AuthQuickstart", "Updated password successfully"),
+        error -> Log.e("AuthQuickstart", error.toString())
+    );
+```
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+
+#### [Async/Await]
+
+```swift
+func changePassword(oldPassword: String, newPassword: String) async {
+    do {
+        try await Amplify.Auth.update(oldPassword: oldPassword, to: newPassword)
+        print("Change password succeeded")
+    } catch let error as AuthError {
+        print("Change password failed with error \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func changePassword(oldPassword: String, newPassword: String) -> AnyCancellable {
+    Amplify.Publisher.create {
+            try await Amplify.Auth.update(oldPassword: oldPassword, to: newPassword)
+        }.sink {
+            if case let .failure(authError) = $0 {
+                print("Change password failed with error \(authError)")
+            }
+        }
+        receiveValue: {
+            print("Change password succeeded")
+        }
+}
+```
+
+<!-- /Platform -->
+
+### デフォルトユーザーアカウント検証チャネルをオーバーライドする
+
+認証リソースで使用されるチャネルを変更するには、常に次の設定をオーバーライドできます。
+
+```ts title="amplify/auth/resource.ts"
+import { defineAuth } from '@aws-amplify/backend';
+
+export const auth = defineAuth({
+  loginWith: {
+    email: true
+  },
+// highlight-start
+  accountRecovery: 'EMAIL_ONLY'
+// highlight-end
+});
+```
+
+## デフォルトパスワードポリシーをオーバーライドする
+
+デフォルトでは、パスワードポリシーは以下に設定されています：
+
+- `MinLength`: 8文字
+- `requireLowercase`: true
+- `requireUppercase`: true
+- `requireNumbers`: true
+- `requireSymbols`: true
+- `tempPasswordValidity`: 3日
+
+基本となる`cfnUserPool`リソースを変更することで、認証リソースで受け入れられるパスワード形式をカスタマイズできます：
+
+```ts title="amplify/backend.ts"
+import { defineBackend } from '@aws-amplify/backend';
+import { auth } from './auth/resource';
+
+const backend = defineBackend({
+  auth,
+});
+// extract L1 CfnUserPool resources
+const { cfnUserPool } = backend.auth.resources.cfnResources;
+// modify cfnUserPool policies directly
+cfnUserPool.policies = {
+  passwordPolicy: {
+    minimumLength: 32,
+    requireLowercase: true,
+    requireNumbers: true,
+    requireSymbols: true,
+    requireUppercase: true,
+    temporaryPasswordValidityDays: 20,
+  },
+};
+```

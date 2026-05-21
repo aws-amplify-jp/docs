@@ -1,0 +1,177 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: '認証イベントをリッスンする',
+  description: '様々な認証イベントをリッスンする',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<InlineFilter filters={["javascript",  "react-native", "angular", "nextjs", "react", "vue"]}>
+
+認証イベントをタップすることで、ユーザーフローをリアルタイムで反応させ、カスタムビジネスロジックをトリガーできます。例えば、データをキャプチャし、アプリの状態を同期し、ユーザーエクスペリエンスをパーソナライズしたい場合があります。サインインやサインアウトなど、認証ライフサイクル全体のイベントをリッスンして対応することができます。このガイドでは、これらの認証イベントをリッスンする方法について説明します。
+
+開始する前に、以下が必要です：
+
+- 認証カテゴリが構成されたAmplifyプロジェクト
+- インストールおよび構成されたAmplifyライブラリ
+
+## 認証アクションに応じてトリガーされるハブイベントを公開する
+
+Amplify Hubとその組み込みAmplify認証イベントを使用して、パブリッシュ-サブスクライブパターンを使用してリスナーをサブスクライブし、アプリケーションのさまざまな部分間のイベントをキャプチャできます。Amplify認証カテゴリは、アプリコードとは無関係に`signedIn`または`signedOut`などの認証イベントが発生したときに、`auth`チャネルで公開します。
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+Amplify Hubガイドで[詳細を確認](/gen1/[platform]/build-a-backend/utilities/hub/)できます。
+
+<Callout warning>
+
+チャネルは、ディスパッチとリッスンを整理するのに役立つ論理的なグループ名です。ただし、一部のチャネルは保護されており、カスタムイベントを公開するために使用することはできません。`auth`はこれらのチャネルの1つです。予期しないペイロードを保護されたチャネルに送信すると、認証フローに影響を与えるなどの望ましくない副作用が生じる可能性があります。保護されたチャネルの詳細については、[Amplify Hubガイド](/gen1/[platform]/build-a-backend/utilities/hub/)を参照してください。
+
+</Callout>
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+Amplify Hubガイドで[詳細を確認](/gen1/[platform]/build-a-backend/utilities/hub/)できます。
+
+<Callout warning>
+
+チャネルは、ディスパッチとリッスンを整理するのに役立つ論理的なグループ名です。ただし、一部のチャネルは保護されており、カスタムイベントを公開するために使用することはできません。`auth`はこれらのチャネルの1つです。予期しないペイロードを保護されたチャネルに送信すると、認証フローに影響を与えるなどの望ましくない副作用が生じる可能性があります。保護されたチャネルの詳細については、[Amplify Hubガイド](/gen1/[platform]/build-a-backend/utilities/hub/)を参照してください。
+
+</Callout>
+
+</InlineFilter>
+
+`auth`チャネルを通じて発行されたイベントをログに記録するリスナーをセットアップする基本的な例を以下に示します：
+
+```javascript
+import { Hub } from 'aws-amplify/utils';
+
+const listener = (data) => {
+  console.log(data);
+};
+
+Hub.listen('auth', listener);
+```
+
+アプリが`auth`チャネルから特定のイベントタイプをサブスクライブしてリッスンするようにセットアップされると、イベントが発生したときにリスナーは非同期で通知されます。このパターンは1対多の関係を可能にし、1つの認証イベントがサブスクライブされた多くの異なるリスナーと共有されます。これにより、情報を積極的にポーリングするのではなく、イベントに基づいてアプリが反応できます。
+
+さらに、リスナーをセットアップして、イベントペイロードからデータを抽出し、定義したコールバックを実行できます。例えば、`signedIn`または`signedOut`イベント後に、ユーザーの認証状態を反映するようにアプリのUI要素を更新したい場合があります。
+
+### 認証イベントをリッスンしてログに記録する
+
+最も一般的なワークフローの1つはイベントをログに記録することです。この例では、`switch`を使用して特定の`auth`イベントをターゲットにし、独自のメッセージをログに記録する方法を確認できます。
+
+```js
+import { Hub } from 'aws-amplify/utils';
+
+Hub.listen('auth', ({ payload }) => {
+  switch (payload.event) {
+    case 'signedIn':
+      console.log('user have been signedIn successfully.');
+      break;
+    case 'signedOut':
+      console.log('user have been signedOut successfully.');
+      break;
+    case 'tokenRefresh':
+      console.log('auth tokens have been refreshed.');
+      break;
+    case 'tokenRefresh_failure':
+      console.log('failure while refreshing auth tokens.');
+      break;
+    case 'signInWithRedirect':
+      console.log('signInWithRedirect API has successfully been resolved.');
+      break;
+    case 'signInWithRedirect_failure':
+      console.log('failure while trying to resolve signInWithRedirect API.');
+      break;
+    case 'customOAuthState':
+      logger.info('custom state returned from CognitoHosted UI');
+      break;
+  }
+});
+```
+
+### イベントのリッスンを停止する
+
+`Hub.listen()`関数の結果を呼び出してメッセージのリッスンを停止することもできます。これは、アプリケーションフロー内でメッセージを受け取る必要がなくなった場合に役立つ可能性があります。これは、複数のチャネルでAmplify Hubを通じて大量のデータを送信している場合、低電力デバイスでメモリリークを回避するのに役立ちます。
+
+特定のイベントのリッスンを停止するには、リスナー関数を変数でラップし、それが必要なくなったら呼び出します：
+
+```javascript
+/* start listening for messages */
+const hubListenerCancelToken = Hub.listen('auth', (data) => {
+  console.log('Listening for all auth events: ', data.payload.data);
+});
+
+/* later */
+hubListenerCancelToken(); // stop listening for messages
+```
+
+これで、認証イベントをリッスンして対応するためのいくつかのユースケースと例が得られました。
+
+## まとめ
+
+おめでとうございます！**認証イベントをリッスンする**ガイドを完了しました。このガイドでは、ワークフロー全体の認証イベントをリッスンする方法を学びました。
+
+## 次のステップ
+
+認証イベントをリッスンできるようになったので、追加機能を追加したい場合もあります。以下について詳しく学ぶことをお勧めします：
+
+<InlineFilter filters={["javascript", "angular", "nextjs", "react", "vue"]}>
+
+- [ユーザープロファイルを管理する](/gen1/[platform]/build-a-backend/auth/manage-user-profile/)
+- [パスワード変更と復旧をセットアップする](/gen1/[platform]/build-a-backend/auth/manage-passwords/)
+
+</InlineFilter>
+
+<InlineFilter filters={["react-native"]}>
+
+- [ユーザープロファイルを管理する](/gen1/[platform]/build-a-backend/auth/manage-user-profile/)
+- [パスワード変更と復旧をセットアップする](/gen1/[platform]/build-a-backend/auth/manage-passwords/)
+
+</InlineFilter>
+
+</InlineFilter>
+
+<InlineFilter filters={["swift","android","flutter"]}>
+
+AWS Cognito認証プラグインは、Amplify Hubを通じて重要なイベントを送信します。
+
+import ios1 from '/src/fragments/lib/auth/ios/hub_events/10_listen_events.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import android2 from '/src/fragments/lib/auth/android/hub_events/10_listen_events.mdx';
+
+<Fragments fragments={{ android: android2 }} />
+
+import flutter3 from '/src/fragments/lib/auth/flutter/hub_events/10_listen_events.mdx';
+
+<Fragments fragments={{ flutter: flutter3 }} />
+
+</InlineFilter>

@@ -1,0 +1,254 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'キーでデータをインデックス化する',
+  description: '@key ディレクティブにより、@model タイプのカスタムインデックス構造を簡単に設定できます。',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+<MigrationAlert
+  isLegacy
+  url={'/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/'}
+/>
+
+## @key
+
+`@key` ディレクティブにより、`@model` タイプのカスタムインデックス構造を簡単に設定できます。
+
+Amazon DynamoDB はキーバリュー型およびドキュメント型データベースで、任意のスケールで1桁のミリ秒のパフォーマンスを実現しますが、アクセスパターンに対応させるには、事前の計画が必要です。DynamoDB のクエリ操作は最大2つの属性を使用してデータを効率的にクエリできます。クエリに渡される最初のクエリ引数（ハッシュキー）は厳密な等値性を使用する必要があり、2番目の属性（ソートキー）は gt、ge、lt、le、eq、beginsWith、between を使用できます。DynamoDB はさまざまなアクセスパターンを効果的に実装でき、大多数のアプリケーションに十分な機能を備えています。
+
+スキーマ設計中にデータをモデル化する場合、利用する必要がある一般的なパターンがあります。[リレーショナル設計に関連する17のパターンを含む完全に機能するスキーマを提供しています](/gen1/[platform]/tools/cli-legacy/data-access-patterns/)。
+
+## 定義
+
+```graphql
+directive @key(fields: [String!]!, name: String, queryField: String) on OBJECT
+```
+
+**引数**
+
+| 引数 | 説明 |
+| --- | --- |
+| fields | @key を構成する必要があるフィールドのリスト。`@model` タイプと組み合わせて使用します。リスト内の最初のフィールドは常に **HASH** キーになります。2つのフィールドが指定される場合、2番目のフィールドは **SORT** キーになります。2つ以上のフィールドが指定される場合、`fields[1...n]` の組み合わせから単一の複合 **SORT** キーが作成されます。生成されるすべての GraphQL クエリとミューテーションは、カスタム `@key` ディレクティブと共に機能するように更新されます。 |
+| name | 指定される場合、セカンダリインデックスの名前を指定します。省略される場合、`@key` がプライマリインデックスを定義していることを指定します。テーブルごとに最大1つのプライマリキーを持つことができるため、`@model` タイプごとに **name** を指定しない `@key` を最大1つ持つことができます。 |
+| queryField | セカンダリインデックス（_name_ 引数を指定することで）を定義する場合、この引数は指定された名前でセカンダリインデックスをクエリする新しいトップレベルクエリフィールドを生成することを指定します。 |
+
+## @key の使用方法
+
+`@key` ディレクティブの概要として、`@model` ディレクティブのみを使用した基本的な `Todo` アプリのスキーマを見てみましょう。
+
+```graphql
+type Todo @model {
+  id: ID!
+  name: String!
+  status: String!
+}
+```
+
+デフォルトでは、`@model` ディレクティブは以下の2つのデータアクセスパターンを有効にします。
+
+1. `getTodo` - ID で Todo を取得
+2. `listTodos` - すべての Todo をクエリ
+
+追加のデータアクセスパターンが必要な場合が多くあります。例えば、Todo アプリでは、`status` で Todo を取得したい場合があります。`@key` ディレクティブにより、1行のコードで追加のデータアクセスパターンを追加できます。
+
+```graphql
+type Todo
+  @model
+  @key(name: "todosByStatus", fields: ["status"], queryField: "todosByStatus") {
+  id: ID!
+  name: String!
+  status: String!
+}
+```
+
+新しい `todosByStatus` クエリを使用して、`status` で todo を取得できます。
+
+```graphql
+query todosByStatus {
+  todosByStatus(status: "completed") {
+    items {
+      id
+      name
+      status
+    }
+  }
+}
+```
+
+次に、より一般的なデータアクセスパターンをいくつか見て、それらをモデル化する方法を詳しく説明します。
+
+## @key を使用したデータモデルの設計
+
+`@key` ディレクティブを使用してデータモデルを設計する場合、最初のステップはアプリケーションの予想されるアクセスパターンを書き下すことです。例えば、e コマースアプリケーションを構築していて、以下のようなアクセスパターンを実装する必要があるとします。
+
+1. メールアドレスで顧客を取得する。
+2. 顧客が作成した日時で注文を取得する。
+3. ステータスと作成日時で注文アイテムを取得する。
+4. 作成日時でステータスでアイテムを取得する。
+
+`schema.graphql` でこれらのアクセスパターンを実装するカスタムキーをどのように定義するかを見てみましょう。
+
+### 例：メールアドレスで顧客を取得
+
+```graphql
+type Customer @model @key(fields: ["email"]) {
+  email: String!
+  username: String
+}
+```
+
+_name_ のない `@key` は DynamoDB テーブルのプライマリインデックスのキーを指定します。`@model` タイプごとに _name_ なし `@key` は1つだけ指定できます。
+
+上記の例は、テーブルのプライマリインデックスがハッシュキーが _email_ である単純なキーを持つべきことを指定している最も単純なケースを示しています。これにより、メールアドレスで一意の顧客を取得できます。
+
+```graphql
+query GetCustomerById {
+  getCustomer(email: "me@email.com") {
+    email
+    username
+  }
+}
+```
+
+これは単純なルックアップ操作に適していますが、より複雑なクエリを実行する必要がある場合はどうでしょうか？
+
+### 例：顧客メールで作成日時を指定して注文を取得
+
+```graphql
+type Order @model @key(fields: ["customerEmail", "createdAt"]) {
+  customerEmail: String!
+  createdAt: AWSDateTime!
+  orderId: ID!
+}
+```
+
+上記の `@key` により、_customerEmail_ と _createdAt_ タイムスタンプの両方で _Order_ オブジェクトを効率的にクエリできます。上記の `@key` は、プライマリインデックスのハッシュキーが _customerEmail_ でソートキーが _createdAt_ である DynamoDB テーブルを作成します。これにより、次のようなクエリを記述できます。
+
+```graphql
+query ListOrdersForCustomerIn2019 {
+  listOrders(customerEmail: "me@email.com", createdAt: { beginsWith: "2019" }) {
+    items {
+      orderId
+      customerEmail
+      createdAt
+    }
+  }
+}
+```
+
+上記のクエリは、DynamoDB の上にある複合キー構造を使用してより強力なクエリパターンを実装する方法を示していますが、まだ完全ではありません。
+
+DynamoDB では最大2つの属性でクエリできるという制限があるため、`@key` ディレクティブは複合ソートキーの作成プロセスを合理化して、3つ以上の属性でクエリできるようにします。例えば、単一の `@model` でこのスキーマで「`orderId`、`status`、`createdAt` でアイテムを取得」と「`status` と `createdAt` でアイテムを取得」を実装できます。
+
+```graphql
+type Item
+  @model
+  @key(fields: ["orderId", "status", "createdAt"])
+  @key(
+    name: "ByStatus"
+    fields: ["status", "createdAt"]
+    queryField: "itemsByStatus"
+  ) {
+  orderId: ID!
+  status: Status!
+  createdAt: AWSDateTime!
+  name: String!
+}
+enum Status {
+  DELIVERED
+  IN_TRANSIT
+  PENDING
+  UNKNOWN
+}
+```
+
+3つのフィールドを持つプライマリ `@key` は、1つと2つのフィールド変数よりも多くの機能を実行します。最初のフィールド orderId は予想通り **HASH** キーになりますが、**SORT** キーは _status#createdAt_ という名前の新しい複合キーになり、これは @model の _status_ フィールドと _createdAt_ フィールドで構成されます。`@key` ディレクティブはテーブル構造を作成し、クエリとミューテーション中に複合キー値を挿入するリゾルバーも生成します。
+
+このスキーマを使用して、プライマリインデックスをクエリして、特定の注文に対して2019年に作成された IN_TRANSIT アイテムを取得できます。
+
+```graphql
+# Get items for order by status by createdAt.
+query ListInTransitItemsForOrder {
+  listItems(
+    orderId: "order1"
+    statusCreatedAt: { beginsWith: { status: IN_TRANSIT, createdAt: "2019" } }
+  ) {
+    items {
+      orderId
+      status
+      createdAt
+      name
+    }
+  }
+}
+```
+
+上記のクエリは _statusCreatedAt_ 引数を公開します。これにより、複合キーの形成方法を心配せずに DynamoDB キー条件式を設定できます。同じスキーマを使用して、`Query.itemsByStatus` フィールドを介してセカンダリインデックス「ByStatus」をクエリして、2019年に作成されたすべての PENDING アイテムを取得できます。
+
+```graphql
+query ItemsByStatus {
+  itemsByStatus(status: PENDING, createdAt: { beginsWith: "2019" }) {
+    items {
+      orderId
+      status
+      createdAt
+      name
+    }
+    nextToken
+  }
+}
+```
+
+## @key で API を進化させる
+
+`@key` を使用する API に変更を加える場合、考慮すべき重要な事項があります。新しいアクセスパターンを有効にするか、既存のアクセスパターンを変更する必要がある場合は、次の手順に従う必要があります。
+
+1. 新規または更新されたアクセスパターンを有効にする新しいインデックスを作成します。
+2. 3つ以上のフィールドを持つ `@key` を追加する場合、既存データの新しい複合ソートキーをバックフィルする必要があります。`@key(fields: ["email", "status", "date"])` を使用する場合、各オブジェクトの _status_ フィールドと _date_ フィールドを `#` で結合した複合キー値で `status#date` フィールドをバックフィルする必要があります。1つまたは2つのフィールドを持つ `@key` ディレクティブについてはデータをバックフィルする必要はありません。
+3. 追加の変更をデプロイし、ダウンストリームアプリケーションを更新して新しいアクセスパターンを使用します。
+4. 古いインデックスが不要なことを確認したら、その `@key` を削除して API をもう一度デプロイします。
+
+## 複数のセカンダリインデックス（GSI）のデプロイ
+
+1つの「amplify push」で複数のグローバルセカンダリインデックス（`name` パラメータが設定された `@key`）の更新を実行できます。内部的には、各 GSI 変更がインデックスを作成するために時間が必要なため、Amplify CLI は DynamoDB テーブルへの複数の個別デプロイをローカルで順序付ける必要があります。
+
+### トラブルシューティング
+
+複数の GSI を更新するときにローカルでデプロイが失敗する場合、以下を実行できます。
+
+- `amplify push --iterative-rollback` は最後に既知の良い状態にロールバック
+- `amplify push --force` は最後に既知の良い状態にロールバック、変更を再度デプロイしてみます。
+
+```console
+Attempting to mutate more than 1 global secondary index at the same time.
+```
+
+`amplify push` 中に上記のエラーが表示される場合は、この機能が有効になっていない可能性があります。複数の GSI 更新を有効にするには、`amplify/cli.json` の ["enableIterativeGsiUpdates" 機能フラグ](/gen1/[platform]/tools/cli/reference/feature-flags/#enableIterativeGsiUpdates) を `true` に設定します。
+
+## @key と @connection を組み合わせる
+
+`@key` ディレクティブで作成されたセカンダリインデックスを使用して、タイプ間の関係を作成するときに接続を解決できます。これがどのように機能するかを学ぶには、[@connection の documentation](/gen1/[platform]/tools/cli-legacy/connection-directive/) をチェックアウトしてください。

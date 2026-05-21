@@ -1,0 +1,1342 @@
+---
+title: "Amplify Data をセットアップする"
+section: "build-a-backend/data"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/data/set-up-data/"
+---
+
+このガイドでは、Amplify Data をセットアップする方法を学びます。これには、TypeScript を使用してデータモデルを定義してリアルタイム API とデータベースを構築し、認可ルールで API をセキュアにすることが含まれます。また、カスタムユースケースにスケーリングするために AWS Lambda を使用することも紹介します。
+
+開始する前に、以下が必要です:
+
+- [Node.js](https://nodejs.org/) v18.16.0 以上
+- [npm](https://www.npmjs.com/) v6.14.4 以上
+- [git](https://git-scm.com/) v2.14.1 以上
+
+Amplify Data を使うと、数分でデータベースによるセキュアで リアルタイム API を構築できます。TypeScript を使用してデータモデルを定義した後、Amplify はリアルタイム API をデプロイします。この API は AWS AppSync によって提供され、Amazon DynamoDB データベースに接続されています。認可ルールで API をセキュアにでき、AWS Lambda でカスタムユースケースにスケーリングできます。
+
+## データバックエンドを構築する
+
+すでに `npm create amplify@latest` を実行している場合、`amplify/data/resource.ts` ファイルが表示されます。これは、データバックエンドを構成するための中心的な場所です。最も重要な要素は `schema` オブジェクトで、バックエンドのデータモデル (`a.model()`) とカスタムクエリ (`a.query()`)、ミューテーション (`a.mutation()`)、サブスクリプション (`a.subscription()`) を定義します。
+
+```ts title="amplify/data/resource.ts"
+import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
+
+const schema = a.schema({
+  Todo: a.model({
+      content: a.string(),
+      isDone: a.boolean()
+    })
+    .authorization(allow => [allow.publicApiKey()])
+});
+
+// Used for code completion / highlighting when making requests from frontend
+export type Schema = ClientSchema<typeof schema>;
+
+// defines the data resource to be deployed
+export const data = defineData({
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: 'apiKey',
+    apiKeyAuthorizationMode: { expiresInDays: 30 }
+  }
+});
+```
+
+すべての `a.model()` は、クラウドで以下のリソースを自動的に作成します:
+
+- レコードを保存するための DynamoDB データベーステーブル
+- レコードを作成、読取 (リスト/取得)、更新、削除するためのクエリおよびミューテーション API
+- 各レコードが最初に作成されたとき、または最後に更新されたときを追跡するのに役立つ `createdAt` および `updatedAt` フィールド
+- レコードの作成、更新、削除イベントをサブスクライブするためのリアルタイム API
+
+`allow.publicApiKey()` ルールは、API キーで認証されたすべての人が、todo を作成、読取、更新、削除できることを指定します。
+
+これらのリソースをクラウドサンドボックスにデプロイするには、ターミナルで次の CLI コマンドを実行します:
+
+<!-- Platform: react, angular, javascript, vue, nextjs, react-native -->
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox --outputs-out-dir <path_to_app/src/main/res/raw/>
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox --outputs-out-dir <path_to_swift_project>
+```
+<!-- /Platform -->
+<!-- Platform: flutter -->
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox --outputs-format dart --outputs-out-dir lib
+```
+<!-- /Platform -->
+
+## アプリケーションコードをデータバックエンドに接続する
+
+クラウドサンドボックスが起動して実行されている場合、API エンドポイント URL や API キーなどのデータバックエンドへの接続情報を含む `amplify_outputs.json` ファイルも作成されます。
+
+フロントエンドコードをバックエンドに接続するには、以下を実行する必要があります:
+
+1. Amplify ライブラリを Amplify クライアント構成ファイル (`amplify_outputs.json`) で構成する
+2. Amplify ライブラリから新しい API クライアントを生成する
+3. エンドツーエンドの型安全性を備えた API リクエストを実行する
+
+<!-- Platform: react, angular, javascript, vue, nextjs, react-native -->
+まず、Amplify クライアントライブラリをプロジェクトにインストールします:
+
+```bash title="Terminal" showLineNumbers={false}
+npm add aws-amplify
+```
+<!-- /Platform -->
+
+<!-- Platform: react, angular, javascript, nextjs, react-native -->
+アプリのエントリーポイント (通常、Vite で作成された React アプリの **main.tsx**) で、次の編集を行います:
+
+```tsx title="src/main.tsx"
+import { Amplify } from 'aws-amplify';
+import outputs from '../amplify_outputs.json';
+
+Amplify.configure(outputs);
+```
+<!-- /Platform -->
+
+<!-- Platform: vue -->
+アプリのエントリーポイント (通常、Vite で作成された Vue アプリの **main.ts**) で、次の編集を行います:
+
+```tsx title="src/main.ts"
+import { Amplify } from 'aws-amplify';
+import outputs from '../amplify_outputs.json';
+
+Amplify.configure(outputs);
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+Gradle Scripts の下で、build.gradle (Module :app) を開いて、以下の行を追加します:
+
+```kotlin title="app/build.gradle.kts"
+android {
+    compileOptions {
+        // Support for modern Java features
+        isCoreLibraryDesugaringEnabled = true
+    }
+}
+
+dependencies {
+    // Amplify API dependencies
+    // highlight-start
+    implementation("com.amplifyframework:aws-api:ANDROID_VERSION")
+    // highlight-end
+    // ... other dependencies
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:ANDROID_DESUGAR_VERSION")
+}
+```
+
+ファイルエディタの上の通知バーにある **Sync Now** をクリックして、これらの依存関係を同期します。
+
+次に、生成された `amplify_outputs.json` ファイルを使用して Amplify クライアントライブラリを構成し、バックエンド API エンドポイントを認識させます。*注意: **amplify_outputs.json** ファイルが **res/raw/** フォルダに存在することを確認してください。
+
+`Application` から継承する新しい `MyAmplifyApp` クラスを次のコードで作成します:
+
+> **Warning:** `Amplify.configure` 関数を呼び出す前に、コンソールから `amplify_outputs.json` ファイルをダウンロードするか、次のコマンドで生成してください: 
+> 
+> ```bash title="Terminal" showLineNumbers={false}
+npx ampx generate outputs --app-id <app-id> --branch main --out-dir app/src/main/res/raw
+```
+> 
+> 次に、生成またはダウンロードしたファイルが、Android プロジェクト内のアプリケーションの適切なリソースディレクトリ (例: `app/src/main/res/raw`) にあることを確認してください。そうでない場合、アプリケーションをコンパイルできません。
+
+```kt
+package com.example.myapplication
+
+import android.app.Application
+import android.util.Log
+import com.amplifyframework.AmplifyException
+import com.amplifyframework.api.aws.AWSApiPlugin
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.configuration.AmplifyOutputs
+
+class MyAmplifyApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        try {
+            // Adds the API plugin that is used to issue queries and mutations
+            // to your backend.
+            Amplify.addPlugin(AWSApiPlugin())
+            // Configures the client library to be aware of your backend API
+            // endpoint and authorization modes.
+            Amplify.configure(AmplifyOutputs(R.raw.amplify_outputs), applicationContext)
+            Log.i("Tutorial", "Initialized Amplify")
+        } catch (error: AmplifyException) {
+            Log.e("Tutorial", "Could not initialize Amplify", error)
+        }
+    }
+}
+```
+
+これはアプリケーション起動時に Amplify を初期化するために `onCreate()` をオーバーライドします。
+
+次に、新しいカスタム Application クラスを使用するようにアプリケーションを構成します。**manifests** > **AndroidManifest.xml** を開いて、新しいクラス名の値を持つ `android:name` 属性を追加します:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application
+        // highlight-next-line
+        android:name=".MyAmplifyApp"
+        ...
+    >
+      <!-- ... -->
+    </application>
+</manifest>
+```
+
+アプリケーションをビルドして実行します。Logcat に、成功を示すログ行が表示されます:
+
+```console title="Logcat" showLineNumbers={false}
+com.example.MyAmplifyApp I/MyAmplifyApp: Initialized Amplify
+```
+
+最後に、Android アプリケーション用の GraphQL クライアントコードを生成します。Amplify Data は GraphQL を使用して、クエリ、ミューテーション、サブスクリプションリクエストを実行します。生成された GraphQL クライアントコードは、GraphQL リクエストを手動で作成してマップする必要なく、完全に型付きされた API リクエストを作成するのに役立ちます。
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate graphql-client-code --format modelgen --model-target java --out <path_to_app/src/main/java/>
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+Finder から **amplify_outputs.json** ファイルを Xcode にドラッグアンドドロップします。
+
+次に、Swift Package Manager を使用して Amplify Library for Swift を追加します。Xcode で **File** > **Add Packages...** を選択します。
+
+次に、Amplify Library for Swift GitHub リポジトリ URL (https://github.com/aws-amplify/amplify-swift) を検索バーに入力して **Enter** を押します。
+
+結果が読み込まれたら、**Dependency Rule** として **Next Major Version** を選択して、**Add Package** をクリックします。
+
+プロジェクトに追加するライブラリを選択します。このチュートリアルでは、**AWSAPIPlugin** と **Amplify** を選択して、**Add Package** をクリックします。
+
+次に、アプリの `init()` 関数をカスタマイズして、必要なプラグインを Swift アプリケーションに追加します:
+
+```swift title="MyAmplifyApp"
+import SwiftUI
+// highlight-start
+import Amplify
+import AWSAPIPlugin
+// highlight-end
+
+@main
+struct MyAmplifyApp: App {
+
+    // highlight-start
+    init() {
+        let awsApiPlugin = AWSAPIPlugin(modelRegistration: AmplifyModels())
+        do {
+            try Amplify.add(plugin: awsApiPlugin)
+            try Amplify.configure(with: .amplifyOutputs)
+            print("Initialized Amplify");
+        } catch {
+            // simplified error handling for the tutorial
+            print("Could not initialize Amplify: \(error)")
+        }
+    }
+    // highlight-end
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+```
+
+最後に、Swift アプリケーション用の GraphQL クライアントコードを生成します。Amplify Data は GraphQL を使用して、クエリ、ミューテーション、サブスクリプションリクエストを実行します。生成された GraphQL クライアントコードは、GraphQL リクエストを手動で作成してマップする必要なく、完全に型付きされた API リクエストを作成するのに役立ちます。
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate graphql-client-code --format modelgen --model-target swift --out <path_to_swift_project>/AmplifyModels
+```
+
+**AmplifyModels** フォルダを Xcode プロジェクトにドラッグアンドドロップして、生成されたファイルを追加します。
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+プロジェクトルートディレクトリから **pubspec.yaml** を見つけて変更し、Amplify プラグインをプロジェクト依存関係に追加します。
+
+```yaml title="pubspec.yaml"
+dependencies:
+  // highlight-start
+  amplify_api: ^2.0.0
+  amplify_flutter: ^2.0.0
+  // highlight-end
+  flutter:
+    sdk: flutter
+```
+
+次のコマンドを実行して依存関係をインストールします。開発環境によっては、この手順を IDE 経由で実行したり、自動的に実行される場合もあります。
+
+```bash title="Terminal" showLineNumbers={false}
+flutter pub get
+```
+
+次に、Flutter アプリケーション用の GraphQL クライアントコードを生成します。Amplify Data は GraphQL を使用して、クエリ、ミューテーション、サブスクリプションリクエストを実行します。生成された GraphQL クライアントコードは、GraphQL リクエストを手動で作成して Dart コードにマップする必要なく、完全に型付きされた API リクエストを作成するのに役立ちます。
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate graphql-client-code --format modelgen --model-target dart --out <path_to_flutter_project>/lib/models
+```
+
+最後に、**lib/main.dart** ファイルの `main()` 関数をカスタマイズして、必要なプラグインを Flutter アプリケーションに追加します:
+
+```dart title="lib/main.dart"
+// highlight-start
+import 'package:amplify_api/amplify_api.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
+// highlight-end
+import 'package:flutter/material.dart';
+
+// highlight-start
+import 'amplify_outputs.dart';
+import 'models/ModelProvider.dart';
+// highlight-end
+
+Future<void> main() async {
+  // highlight-start
+  try {
+    final api = AmplifyAPI(
+      options: APIPluginOptions(
+        modelProvider: ModelProvider.instance
+        )
+      );
+    await Amplify.addPlugins([api]);
+    await Amplify.configure(amplifyConfig);
+
+    safePrint('Successfully configured Amplify');
+  } on Exception catch (e) {
+    safePrint('Error configuring Amplify: $e');
+  }
+  // highlight-end
+
+  runApp(const MyApp());
+}
+```
+<!-- /Platform -->
+## バックエンドにデータを書き込む
+
+<!-- Platform: react, angular, javascript, nextjs, react-native -->
+最初に、新しい todo アイテムを作成するボタンを追加しましょう。"create Todo" API リクエストを実行するには、フロントエンドコードで `generateClient()` を使用してデータクライアントを生成し、Todo モデルの `.create()` 操作を呼び出します。Data クライアントは完全に型付きされたクライアントで、IDE 内のコード補完を提供します。IDE 内のこのコード補完機能を有効にするには、`generateClient` 関数に `Schema` タイプを渡します。
+<!-- /Platform -->
+
+<!-- Platform: react, javascript, nextjs, react-native -->
+```tsx title="src/TodoList.tsx"
+import type { Schema } from '../amplify/data/resource'
+import { generateClient } from 'aws-amplify/data'
+
+const client = generateClient<Schema>()
+
+export default function TodoList() {
+  const createTodo = async () => {
+    await client.models.Todo.create({
+      content: window.prompt("Todo content?"),
+      isDone: false
+    })
+  }
+
+  return <div>
+    <button onClick={createTodo}>Add new todo</button>
+  </div>
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: vue -->
+```html title="src/TodoList.vue"
+<script setup lang="ts">
+import type { Schema } from '../../amplify/data/resource'
+import { generateClient } from 'aws-amplify/data'
+
+const client = generateClient<Schema>()
+
+async function createTodo() {
+  await client.models.Todo.create({
+    content: window.prompt("Todo content?"),
+    isDone: false
+  })
+}
+</script>
+
+<template>
+  <div>
+    <button @click="createTodo">Add new todo</button>
+  </div>
+</template>
+```
+<!-- /Platform -->
+
+<!-- Platform: react, angular, javascript, nextjs, react-native -->
+ローカル開発モードで `npm run dev` でアプリケーションを実行して、todo を作成した後にネットワークタブを確認します。`/graphql` エンドポイントへの成功したリクエストが表示されるはずです。
+
+<Callout>
+
+`.update(...)` と `.delete(...)` のコード補完を試して、他のミューテーション操作を感じてみてください。
+
+</Callout>
+<!-- /Platform -->
+
+<!-- Platform: angular -->
+```ts title="todo-list.component.ts"
+import type { Schema } from '../amplify/data/resource';
+import { Component } from '@angular/core';
+import { generateClient } from 'aws-amplify/data';
+
+const client = generateClient<Schema>();
+
+@Component({
+  selector: 'app-todo-list',
+  template: `
+    <button (click)="createTodo()">Add new todo</button>
+  `
+})
+export class TodoListComponent {
+  async createTodo() {
+    await client.models.Todo.create({
+      content: window.prompt("Todo content?"),
+      isDone: false
+    });
+  }
+}
+```
+
+ローカル開発モードでアプリケーションを実行して、todo を作成した後にネットワークタブを確認します。`/graphql` エンドポイントへの成功したリクエストが表示されるはずです。
+
+<Callout>
+
+`.update(...)` と `.delete(...)` のコード補完を試して、他のミューテーション操作を感じてみてください。
+
+</Callout>
+<!-- /Platform -->
+
+<!-- Platform: android -->
+MainActivity で、新しい todo を作成するボタンを追加します。
+
+```kt title="MainActivity.kt"
+// imports
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            MyApplicationTheme {
+                // A surface container using the 'background' color from the theme
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    // highlight-start
+                    Column {
+                        Button(onClick = {
+                            val todo = Todo.builder()
+                                .content("My first todo")
+                                .isDone(false)
+                                .build()
+
+                            Amplify.API.mutate(ModelMutation.create(todo),
+                                { Log.i("MyAmplifyApp", "Added Todo with id: ${it.data.id}")},
+                                { Log.e("MyAmplifyApp", "Create failed", it)},
+                            )
+                        }) {
+                            Text(text = "Create Todo")
+                        }
+                    }
+                    // highlight-end
+                }
+            }
+        }
+    }
+}
+```
+
+アプリをビルドして実行します。次に、アプリの "Create Todo" をクリックします。Logcat に todo が正常に追加されたことが表示されるはずです:
+
+```console title="Logcat" showLineNumbers={false}
+com.example.MyAmplifyApp I/MyAmplifyApp: Added Todo with id: SOME_TODO_ID
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+`TodoViewModel.swift` という新しいファイルを作成して、`createTodo` 関数を次のコードで作成します:
+
+```swift title="TodoViewModel.swift"
+import Foundation
+import Amplify
+
+@MainActor
+class TodoViewModel: ObservableObject {
+    func createTodo() {
+        let todo = Todo(
+            content: "Build iOS Application",
+            isDone: false
+        )
+        Task {
+            do {
+                let result = try await Amplify.API.mutate(request: .create(todo))
+                switch result {
+                case .success(let todo):
+                    print("Successfully created todo: \(todo)")
+                case .failure(let error):
+                    print("Got failed result with \(error.errorDescription)")
+                }
+            } catch let error as APIError {
+                print("Failed to create todo: ", error)
+            } catch {
+                print("Unexpected error: \(error)")
+            }
+        }
+    }
+}
+
+```
+
+`ContentView.swift` を次のコードで更新します:
+
+```swift title="ContentView.swift"
+struct ContentView: View {
+
+    // highlight-start
+    // Create an observable object instance.
+    @StateObject var vm = TodoViewModel()
+    // highlight-end
+
+    var body: some View {
+        // highlight-start
+        VStack {
+            Button(action: {
+                vm.createTodo()
+            }) {
+                HStack {
+                    Text("Add a New Todo")
+                    Image(systemName: "plus")
+                }
+            }
+            .accessibilityLabel("New Todo")
+        }
+        // highlight-end
+    }
+}
+```
+
+アプリケーションを実行して、"Add a New Todo" ボタンをクリックすると、todo が作成されたことを示すログが表示されるはずです:
+
+```console title="Logs" showLineNumbers={false}
+Successfully created todo: Todo(id: XYZ ...)
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+ページに新しい todo を作成するフローティングアクションボタンを追加しましょう。
+
+```dart title="lib/main.dart"
+// ... main()
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      home: MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            const Text(
+              'Your todos',
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final newTodo = Todo(content: "New Flutter todo", isDone: false);
+          final request = ModelMutations.create(newTodo);
+          final response = await Amplify.API.mutate(request: request).response;
+          if (response.hasErrors) {
+            safePrint('Creating Todo failed.');
+          } else {
+            safePrint('Creating Todo successful.');
+          }
+        },
+        tooltip: 'Add todo',
+        child: const Icon(Icons.add),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
+```
+
+アプリケーションを実行してフローティングアクションボタンをクリックすると、todo が作成されたことを示すログが表示されるはずです:
+
+```console showLineNumbers={false}
+Creating Todo successful.
+```
+<!-- /Platform -->
+
+## バックエンドからデータを読み込む
+
+次に、すべての todo をリストし、todo が追加された後に todo を再度取得します:
+
+<!-- Platform: react,javascript, nextjs, react-native -->
+```tsx title="src/TodoList.tsx"
+import { useState, useEffect } from "react";
+import type { Schema } from "../amplify/data/resource";
+import { generateClient } from "aws-amplify/data";
+
+const client = generateClient<Schema>();
+
+export default function TodoList() {
+  const [todos, setTodos] = useState<Schema["Todo"]["type"][]>([]);
+
+  const fetchTodos = async () => {
+    const { data: items, errors } = await client.models.Todo.list();
+    setTodos(items);
+  };
+
+  useEffect(() => {
+    fetchTodos();
+  }, []);
+
+  const createTodo = async () => {
+    await client.models.Todo.create({
+      content: window.prompt("Todo content?"),
+      isDone: false,
+    });
+
+    fetchTodos();
+  }
+
+  return (
+    <div>
+      <button onClick={createTodo}>Add new todo</button>
+      <ul>
+        {todos.map(({ id, content }) => (
+          <li key={id}>{content}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: vue -->
+```html title="src/TodoList.vue"
+<script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import type { Schema } from '../../amplify/data/resource'
+import { generateClient } from 'aws-amplify/data'
+
+const client = generateClient<Schema>()
+
+// create a reactive reference to the array of todos
+const todos = ref<Array<Schema['Todo']['type']>>([]);
+
+function fetchTodos() {
+  const { data: items, errors } = await client.models.Todo.list();
+  todos.value = items; 
+}
+
+async function createTodo() {
+  await client.models.Todo.create({
+    content: window.prompt("Todo content?"),
+    isDone: false
+  })
+  fetchTodos();
+}
+
+ onMounted(() => {
+  fetchTodos();
+});
+
+</script>
+
+<template>
+  <div>
+    <button @click="createTodo">Add new todo</button>
+    <ul>
+     <li 
+       v-for="todo in todos" 
+       :key="todo.id">
+       {{ todo.content }}
+     </li>
+    </ul>
+  </div>
+</template>
+```
+<!-- /Platform -->
+
+<!-- Platform: angular -->
+```ts title="todo-list.component.ts"
+import type { Schema } from '../amplify/data/resource';
+import { Component, OnInit } from '@angular/core';
+import { generateClient } from 'aws-amplify/data';
+
+const client = generateClient<Schema>();
+
+@Component({
+  selector: 'app-todo-list',
+  template: `
+    <div>
+      <button (click)="createTodo()">Add new todo</button>
+      <ul>
+        <li *ngFor="let todo of todos">{{ todo.content }}</li>
+      </ul>
+    </div>
+  `
+})
+export class TodoListComponent implements OnInit {
+  todos: Schema['Todo']['type'][] = [];
+
+  async ngOnInit() {
+    await this.fetchTodos();
+  }
+
+  async fetchTodos() {
+    const { data: items } = await client.models.Todo.list();
+    this.todos = items;
+  }
+
+  async createTodo() {
+    await client.models.Todo.create({
+      content: window.prompt('Todo content?'),
+      isDone: false
+    });
+    await this.fetchTodos();
+  }
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+最初にデータを取得する新しい `TodoList` @Composable を開始します:
+
+```kt title="MainActivity.kt"
+@Composable
+fun TodoList() {
+    var todoList by remember { mutableStateOf(emptyList<Todo>()) }
+
+    LaunchedEffect(Unit) {
+        // API request to list all Todos
+        Amplify.API.query(ModelQuery.list(Todo::class.java),
+            {
+                todoList = it.data.items.toList()
+            },
+            { Log.e("MyAmplifyApp", "Failed to query.", it)})
+    }
+
+    LazyColumn {
+        items(todoList) { todo ->
+            Row {
+                // Render your activity item here
+                Checkbox(checked = todo.isDone, onCheckedChange = null)
+                Text(text = todo.content)
+            }
+        }
+    }
+}
+```
+
+アプリケーションをビルドして再実行すると、前のビルドで作成した todo が表示されるはずです。ただし、"create Todo" ボタンをクリックしても、アプリを次に起動するまで下にリストに新しい todo が追加されないことに注意してください。これを解決するために、todo リストにリアルタイム更新を追加しましょう。
+<!-- /Platform -->
+<!-- Platform: swift -->
+`TodoViewModel.swift` の `listTodos` 関数を更新して、to-do アイテムをリストします:
+
+```swift title="TodoViewModel.swift"
+@MainActor
+class TodoViewModel: ObservableObject {
+
+    // highlight-next-line
+    @Published var todos: [Todo] = []
+
+    func createTodo() {
+        /// ...
+    }
+
+    // highlight-start
+    func listTodos() {
+        Task {
+            do {
+                let result = try await Amplify.API.query(request: .list(Todo.self))
+                switch result {
+                case .success(let todos):
+                    print("Successfully retrieved list of todos: \(todos)")
+                    self.todos = todos.elements
+                case .failure(let error):
+                    print("Got failed result with \(error.errorDescription)")
+                }
+            } catch let error as APIError {
+                print("Failed to query list of todos: ", error)
+            } catch {
+                print("Unexpected error: \(error)")
+            }
+        }
+    }
+    // highlight-end
+}
+```
+
+次に、UI コードを更新して todos を観察します。 
+
+```swift title="ContentView.swift"
+import SwiftUI
+import Amplify
+
+struct ContentView: View {
+    @StateObject var vm = TodoViewModel()
+
+    var body: some View {
+        VStack {
+            // highlight-start
+            List(vm.todos, id: \.id) { todo in
+                Text(todo.content ?? "")
+            }
+            // highlight-end
+            // .. Add a new Todo button
+        }
+        // highlight-start
+        .task {
+            await vm.listTodos()
+        }
+        // highlight-end
+    }
+}
+
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+最初に、todos を追跡する新しいリストと、最初にレンダリングされる時に todo リストをフェッチする機能を追加します:
+
+```dart title="lib/main.dart"
+// ...main()
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      home: MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  List<Todo> _todos = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshTodos();
+  }
+
+  Future<void> _refreshTodos() async {
+    try {
+      final request = ModelQueries.list(Todo.classType);
+      final response = await Amplify.API.query(request: request).response;
+
+      final todos = response.data?.items;
+      if (response.hasErrors) {
+        safePrint('errors: ${response.errors}');
+        return;
+      }
+      setState(() {
+        safePrint(todos);
+        _todos = todos!.whereType<Todo>().toList();
+      });
+    } on ApiException catch (e) {
+      safePrint('Query failed: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            const Text(
+              'Your todos',
+            ),
+            _todos.isEmpty == true
+                ? const Center(
+                    child: Text(
+                      "The list is empty.\nAdd some items by clicking the floating action button.",
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                : ListView.builder(
+                    scrollDirection: Axis.vertical,
+                    shrinkWrap: true,
+                    itemCount: _todos.length,
+                    itemBuilder: (context, index) {
+                      final todo = _todos[index];
+                      return CheckboxListTile.adaptive(
+                        value: todo.isDone,
+                        title: Text(todo.content!),
+                        onChanged: (isChecked) async {},
+                      );
+                    }),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final newTodo = Todo(content: "New Flutter todo", isDone: false);
+          final request = ModelMutations.create(newTodo);
+          final response = await Amplify.API.mutate(request: request).response;
+          if (response.hasErrors) {
+            safePrint('Creating Todo failed.');
+          } else {
+            safePrint('Creating Todo successful.');
+          }
+        },
+        tooltip: 'Add todo',
+        child: const Icon(Icons.add),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
+
+```
+<!-- /Platform -->
+
+## リアルタイム更新をサブスクライブする
+
+<!-- Platform: react, javascript, nextjs, react-native -->
+`observeQuery` を使用して、バックエンドデータのライブフィードをサブスクライブすることもできます。コードをリアルタイム observeQuery を使用するようにリファクタリングしましょう。
+
+```tsx title="src/App.tsx"
+import type { Schema } from "../amplify/data/resource";
+import { useState, useEffect } from "react";
+import { generateClient } from "aws-amplify/data";
+
+const client = generateClient<Schema>();
+
+export default function TodoList() {
+  const [todos, setTodos] = useState<Schema["Todo"]["type"][]>([]);
+
+  useEffect(() => {
+    const sub = client.models.Todo.observeQuery().subscribe({
+      next: ({ items }) => {
+        setTodos([...items]);
+      },
+    });
+
+    return () => sub.unsubscribe();
+  }, []);
+
+  const createTodo = async () => {
+    await client.models.Todo.create({
+      content: window.prompt("Todo content?"),
+      isDone: false,
+    });
+    // no more manual refetchTodos required!
+    // - fetchTodos()
+  };
+
+  return (
+    <div>
+      <button onClick={createTodo}>Add new todo</button>
+      <ul>
+        {todos.map(({ id, content }) => (
+          <li key={id}>{content}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: vue -->
+`observeQuery` を使用して、バックエンドデータのライブフィードをサブスクライブすることもできます。コードをリアルタイム observeQuery を使用するようにリファクタリングしましょう。
+
+```html title="src/TodoList.vue"
+<script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import type { Schema } from '../../amplify/data/resource'
+import { generateClient } from 'aws-amplify/data'
+
+const client = generateClient<Schema>()
+
+// create a reactive reference to the array of todos
+const todos = ref<Array<Schema['Todo']["type"]>>([]);
+
+function fetchTodos() {
+  client.models.Todo.observeQuery().subscribe({
+    next: ({ items, isSynced }) => {
+      todos.value = items
+     },
+  }); 
+}
+
+async function createTodo() {
+  await client.models.Todo.create({
+    content: window.prompt("Todo content?"),
+    isDone: false
+  })
+  // no more manual refetchTodos required!
+  // - fetchTodos()
+}
+
+ onMounted(() => {
+  fetchTodos();
+});
+
+</script>
+
+<template>
+  <div>
+    <button @click="createTodo">Add new todo</button>
+    <ul>
+     <li 
+       v-for="todo in todos" 
+       :key="todo.id">
+       {{ todo.content }}
+     </li>
+    </ul>
+  </div>
+</template>
+```
+<!-- /Platform -->
+
+<!-- Platform: angular -->
+`observeQuery` を使用して、バックエンドデータのライブフィードをサブスクライブすることもできます。コードをリアルタイム observeQuery を使用するようにリファクタリングしましょう。
+
+```ts title="todo-list.component.ts"
+import type { Schema } from '../../../amplify/data/resource';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { generateClient } from 'aws-amplify/data';
+import { Subscription } from 'rxjs';
+
+const client = generateClient<Schema>();
+
+@Component({
+  selector: 'app-todos',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <main>
+      <h1>My todos</h1>
+      <button (click)="createTodo()">+ new</button>
+      <ul>
+        <li *ngFor="let todo of todos">
+          {{ todo.content }}
+        </li>
+      </ul>
+      <div>
+        🥳 App successfully hosted. Try creating a new todo.
+        <br />
+        <a href="https://docs.amplify.aws/gen2/start/quickstart/">
+          Review next steps of this tutorial.
+        </a>
+      </div>
+    </main>
+  `,
+})
+export class TodosComponent implements OnInit {
+  todos: Schema['Todo']['type'][] = [];
+  subscription?: Subscription;
+
+  ngOnInit(): void {
+    this.listTodos();
+  }
+
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
+  }
+
+  listTodos() {
+    try {
+      this.subscription = client.models.Todo.observeQuery().subscribe({
+        next: ({ items, isSynced }) => {
+          this.todos = items;
+        },
+      });
+    } catch (error) {
+      console.error('error fetching todos', error);
+    }
+  }
+
+  createTodo() {
+    try {
+      client.models.Todo.create({
+        content: window.prompt('Todo content'),
+      });
+      this.listTodos();
+    } catch (error) {
+      console.error('error creating todos', error);
+    }
+  }
+}
+```
+
+2 つのブラウザウィンドウでアプリを開いて、1 つのウィンドウで todo を作成すると、2 番目のウィンドウで自動的に todo が追加されるかどうかを確認してみてください。
+
+<Callout>
+
+`.onCreate`, `.onUpdate`, または `.onDelete` を使用して、特定のイベントをサブスクライブすることもできます。[リアルタイムイベントをサブスクライブする](/[platform]/frontend/data/subscribe-data/) を見て、特定のミューテーションイベントへのサブスクリプションの詳細をご覧ください。
+
+</Callout>
+<!-- /Platform -->
+
+<!-- Platform: android -->
+リアルタイム更新を追加するには、Amplify Data のサブスクリプション機能を使用できます。これにより、アプリケーションの `onCreate`, `onUpdate`, および `onDelete` イベントをサブスクライブできます。この例では、新しい todo が追加されるたびにリストを追加します。
+
+```kt title="MainActivity.kt"
+@Composable
+fun TodoList() {
+    var todoList by remember { mutableStateOf(emptyList<Todo>()) }
+
+    LaunchedEffect(Unit) {
+        Amplify.API.query(ModelQuery.list(Todo::class.java),
+            {
+                todoList = it.data.items.toList()
+            },
+            { Log.e("MyAmplifyApp", "Failed to query.", it)})
+        // highlight-start
+        Amplify.API.subscribe(ModelSubscription.onCreate(Todo::class.java),
+            { Log.i("ApiQuickStart", "Subscription established") },
+            { Log.i("ApiQuickStart", "Todo create subscription received: ${it.data}")
+                todoList = todoList + it.data
+            },
+            { Log.e("ApiQuickStart", "Subscription failed", it) },
+            { Log.i("ApiQuickStart", "Subscription completed") }
+
+        )
+        // highlight-end
+    }
+
+    LazyColumn {
+        items(todoList) { todo ->
+            Row {
+                // Render your activity item here
+                Checkbox(checked = todo.isDone, onCheckedChange = null)
+                Text(text = todo.content)
+            }
+        }
+    }
+}
+```
+`onCreate()` 関数から `TodoList()` を呼び出します:
+
+```kt title="MainActivity.kt"
+setContent {
+    MyAmplifyAppTheme {
+        // A surface container using the 'background' color from the theme
+        Surface(
+            modifier = Modifier.fillMaxSize(), 
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Authenticator { state ->
+                Column {
+                    Text(
+                        text = "Hello ${state.user.username}!",
+                    )
+                    ....
+                    //highlight-next-line
+                    TodoList()
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+リアルタイム更新を追加するには、Amplify Data のサブスクリプション機能を使用できます。これにより、アプリケーションの `onCreate`, `onUpdate`, および `onDelete` イベントをサブスクライブできます。この例では、新しい todo が追加されるたびにリストを追加します。
+
+最初に、サブスクリプションを保存するプライベート変数を追加します。次に、`init()` イニシャライザーでサブスクリプションを作成し、`subscribe()` および `cancel()` 関数を追加します。
+
+```swift title="TodoViewModel.swift"
+@MainActor
+class TodoViewModel: ObservableObject {
+    @Published var todos: [Todo] = []
+
+    // highlight-start
+    private var subscription: AmplifyAsyncThrowingSequence<GraphQLSubscriptionEvent<Todo>>
+
+    init() {
+       self.subscription = Amplify.API.subscribe(request: .subscription(of: Todo.self, type: .onCreate))
+    }
+
+    func subscribe() {
+        Task {
+            do {
+                for try await subscriptionEvent in subscription {
+                    handleSubscriptionEvent(subscriptionEvent)
+                }
+            } catch {
+                print("Subscription has terminated with \(error)")
+            }
+        }
+    }
+
+    private func handleSubscriptionEvent(_ subscriptionEvent: GraphQLSubscriptionEvent<Todo>) {
+        switch subscriptionEvent {
+        case .connection(let subscriptionConnectionState):
+            print("Subscription connect state is \(subscriptionConnectionState)")
+        case .data(let result):
+            switch result {
+            case .success(let createdTodo):
+                print("Successfully got todo from subscription: \(createdTodo)")
+                todos.append(createdTodo)
+            case .failure(let error):
+                print("Got failed result with \(error.errorDescription)")
+            }
+        }
+    }
+
+    func cancel() {
+        self.subscription.cancel()
+    }
+    // highlight-end
+
+    func createTodo() {
+        /// ...
+    }
+
+    func listTodos() {
+        /// ...
+    }
+}
+```
+
+次に `ContentView.swift` で、ビューが表示されるとき `vm.subscribe()` を呼び出します。表示されなくなるときに、サブスクリプションをキャンセルします。
+
+```swift title="ContentView.swift"
+struct ContentView: View {
+    @StateObject var vm = TodoViewModel()
+
+    var body: some View {
+        VStack {
+            // ...
+        }
+        // highlight-start
+        .onDisappear {
+            vm.cancel()
+        }
+        .task {
+            vm.listTodos()
+            vm.subscribe()
+        }
+        // highlight-end
+    }
+}
+```
+
+アプリを再実行すると、新しい todo を作成するたびに新しい todo がリストに追加されるはずです。
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+リアルタイム更新を追加するには、Amplify Data のサブスクリプション機能を使用できます。これにより、アプリケーションの `onCreate`, `onUpdate`, および `onDelete` イベントをサブスクライブできます。この例では、新しい todo が追加されるたびにリストを追加します。
+
+ページがレンダリングされるとき、`onCreate` イベントをサブスクライブしてから、Widget が破棄されるときにアンサブスクライブします。
+
+```dart title="lib/main.dart"
+// ...main()
+// ...MyApp
+// ...MyHomePage
+
+class _MyHomePageState extends State<MyHomePage> {
+  List<Todo> _todos = [];
+  // highlight-next-line
+  StreamSubscription<GraphQLResponse<Todo>>? subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshTodos();
+    // highlight-next-line
+    _subscribe();
+  }
+
+  // highlight-start
+  @override
+  void dispose() {
+    _unsubscribe();
+    super.dispose();
+  }
+  // highlight-end
+
+  // highlight-start
+  void _subscribe() {
+    final subscriptionRequest = ModelSubscriptions.onCreate(Todo.classType);
+    final Stream<GraphQLResponse<Todo>> operation = Amplify.API.subscribe(
+      subscriptionRequest,
+      onEstablished: () => safePrint('Subscription established'),
+    );
+    subscription = operation.listen(
+      (event) {
+        safePrint('Subscription event data received: ${event.data}');
+        setState(() {
+          _todos.add(event.data!);
+        });
+      },
+      onError: (Object e) => safePrint('Error in subscription stream: $e'),
+    );
+  }
+  // highlight-end
+
+  // highlight-start
+  void _unsubscribe() {
+    subscription?.cancel();
+    subscription = null;
+  }
+  // highlight-end
+
+  // ..._refreshTodos()
+  // ...build()
+}
+```
+<!-- /Platform -->
+
+## 結論
+
+成功しました! Amplify Data で初めてのリアルタイム API とデータベースを作成する方法を学びました。
+
+### 次のステップ
+
+Amplify Data で発見することがたくさんあります。詳細については、以下をご覧ください:
+
+- [データベーステーブルとアクセスパターンをモデル化する方法](/[platform]/build-a-backend/data/data-modeling)
+- [細かい認可ルールで API をセキュアにする](/[platform]/build-a-backend/data/customize-authz)
+- [異なるデータベースモデル間の関係を作成する](/[platform]/build-a-backend/data/data-modeling/relationships)
+- [カスタムビジネスロジックを追加する](/[platform]/build-a-backend/data/custom-business-logic)

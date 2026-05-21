@@ -1,0 +1,185 @@
+---
+title: "ログのフラッシュ"
+section: "frontend/logging"
+platforms: ["android", "swift"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/logging/flush-logs/"
+---
+
+Amplify Loggerを使用する場合、ログに記録されたすべてのメッセージはまずユーザーのデバイスにローカルに保存され、その後、[カスタマイズ](#change-automatic-log-flush-interval)可能な設定間隔でフラッシュされます。また、必要に応じてイベントを手動でフラッシュすることもできます。このセクションに記載されている手順に従ってください。
+
+## 自動ログフラッシュ間隔を変更する
+
+ログが自動的にフラッシュされてCloudWatchに送信される時間間隔をカスタマイズできます。
+
+以下は、時間間隔を120秒に設定する例です。
+
+<!-- Platform: android -->
+
+  #### [With Configuration File]
+ロギング設定ファイルの `flushIntervalInSeconds` フィールドを更新します。
+
+```json
+{
+    "awsCloudWatchLoggingPlugin": {
+        "enable": true,
+        "logGroupName": "<log-group-name>",
+        "region": "<region>",
+        "localStoreMaxSizeInMB": 1,
+        "flushIntervalInSeconds": 120,
+        "loggingConstraints": {
+            "defaultLogLevel": "ERROR"
+        }
+    }
+}
+```
+
+  
+  #### [With Code]
+`AWSCloudWatchLoggingPlugin` の初期化と設定に `flushIntervalInSeconds` パラメータを指定します。
+
+#### [Java]
+
+```java
+AWSCloudWatchLoggingPluginConfiguration config = new AWSCloudWatchLoggingPluginConfiguration (<log-group-name>, <region>, 120);
+Amplify.addPlugin(new AWSCloudWatchLoggingPlugin(config));
+```
+
+#### [Kotlin]
+
+```kotlin
+val config = AWSCloudWatchLoggingPluginConfiguration(logGroupName = <log-group-name>, region = <region>, flushIntervalInSeconds = 120)
+Amplify.addPlugin(AWSCloudWatchLoggingPlugin(config))
+```
+
+#### [RxJava]
+
+```java
+AWSCloudWatchLoggingPluginConfiguration config = new AWSCloudWatchLoggingPluginConfiguration (<log-group-name>,<region>, 120);
+Amplify.addPlugin(new AWSCloudWatchLoggingPlugin(config));
+```
+
+  
+
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+
+  #### [With Configuration File]
+ロギング設定ファイルの `flushIntervalInSeconds` フィールドを更新します。
+
+```json
+{
+    "awsCloudWatchLoggingPlugin": {
+        "enable": true,
+        "logGroupName": "<log-group-name>",
+        "region": "<region>",
+        "localStoreMaxSizeInMB": 1,
+        "flushIntervalInSeconds": 120,
+        "loggingConstraints": {
+            "defaultLogLevel": "ERROR"
+        }
+    }
+}
+```
+
+  
+  #### [With Code]
+`AWSCloudWatchLoggingPlugin` の初期化と設定に `flushIntervalInSeconds` パラメータを指定します。
+
+```swift
+do {
+    let loggingConfiguration = AWSCloudWatchLoggingPluginConfiguration(logGroupName: "<log-group-name>", region: "<region>", flushIntervalInSeconds: 120)
+    let loggingPlugin = AWSCloudWatchLoggingPlugin(loggingPluginConfiguration: loggingConfiguration)
+    try Amplify.add(plugin: loggingPlugin)
+    try Amplify.configure(with: .amplifyOutputs)
+} catch {
+    assert(false, "Error initializing Amplify: \(error)")
+}
+```
+
+  
+
+<!-- /Platform -->
+
+## ログを手動でフラッシュする
+
+ユーザーのデバイスにローカルに保存されているログメッセージをいつでもフラッシュして、Amazon CloudWatchにすぐに送信することを選択できます。
+
+<!-- Platform: android -->
+
+#### [Java]
+`AWSCloudWatchLoggingPlugin` へのインポートステートメントを追加します。
+```java
+import com.amplifyframework.logging.cloudwatch.AWSCloudWatchLoggingPlugin;
+```
+
+プラグインからフラッシュログ関数を実行します。
+
+```java
+AWSCloudWatchLoggingPlugin plugin = (AWSCloudWatchLoggingPlugin)Amplify.Logging.getPlugin("awsCloudWatchLoggingPlugin");
+plugin.flushLogs(
+    () -> {
+        // logs flushed successfully
+    }, error -> {
+        // failed to flush logs
+    }
+);
+```
+
+#### [Kotlin]
+
+`AWSCloudWatchLoggingPlugin` へのインポートステートメントを追加します。
+```kotlin
+import com.amplifyframework.logging.cloudwatch.AWSCloudWatchLoggingPlugin
+```
+
+プラグインからフラッシュログ関数を実行します。
+
+```kotlin
+val plugin = Amplify.Logging.getPlugin("awsCloudWatchLoggingPlugin") as? AWSCloudWatchLoggingPlugin
+plugin?.flushLogs(
+    {
+        // logs flushed successfully
+    },{  error ->
+        // failed to flush logs
+    }
+);
+```
+
+#### [RxJava]
+
+`AWSCloudWatchLoggingPlugin` へのインポートステートメントを追加します。
+```java
+import com.amplifyframework.logging.cloudwatch.AWSCloudWatchLoggingPlugin;
+```
+
+プラグインからフラッシュログ関数を実行します。
+
+```java
+AWSCloudWatchLoggingPlugin plugin = (AWSCloudWatchLoggingPlugin)Amplify.Logging.getPlugin("awsCloudWatchLoggingPlugin");
+plugin.flushLogs(
+    () -> {
+        // logs flushed successfully
+    }, error -> {
+        // failed to flush logs
+    }
+);
+```
+
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+`AWSCloudWatchLoggingPlugin` へのインポートステートメントを追加します。
+```swift
+import AWSCloudWatchLoggingPlugin
+```
+
+プラグインからフラッシュログ関数を実行します。
+
+```swift
+let cloudWatchPlugin = try Amplify.Logging.getPlugin(for: "awsCloudWatchLoggingPlugin") as? AWSCloudWatchLoggingPlugin
+try await cloudWatchPlugin?.flushLogs()
+```
+<!-- /Platform -->

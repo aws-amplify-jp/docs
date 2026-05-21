@@ -1,0 +1,54 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+import { getChildPageNodes } from '@/utils/getChildPageNodes';
+
+export const meta = {
+  title: 'AI/ML 予測',
+  description: '予測カテゴリーを使用すると、機械学習の経験がなくても、アプリケーションに機械学習を統合できます。予測カテゴリーは、オンラインとオフラインの両方のユースケースをネイティブでサポートしています。',
+  platforms: [
+    'android',
+    'angular',
+    'javascript',
+    'nextjs',
+    'react',
+    'swift',
+    'vue'
+  ],
+  route: '/gen1/[platform]/build-a-backend/more-features/predictions'
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  const childPageNodes = getChildPageNodes(meta.route);
+  return {
+    props: {
+      platform: context.params.platform,
+      meta,
+      childPageNodes
+    }
+  };
+}
+
+import js0 from '/src/fragments/lib/predictions/js/intro.mdx';
+
+<Fragments
+  fragments={{
+    javascript: js0,
+    angular: js0,
+    nextjs: js0,
+    react: js0,
+    vue: js0
+  }}
+/>
+
+<InlineFilter filters={["android", "swift"]}>
+
+予測カテゴリーを使用すると、機械学習の経験がなくても、アプリケーションに機械学習を統合できます。テキストを別の言語に翻訳する、テキストを音声に変換する、画像からテキストを認識する、エンティティを認識する、実世界のオブジェクトをラベル付けする、テキストを解釈する、および自動トレーニング用に画像をアップロードすることができます。この機能は、[Amazon Translate](https://docs.aws.amazon.com/translate/latest/dg/what-is.html)、[Amazon Polly](https://docs.aws.amazon.com/polly/latest/dg/what-is.html)、[Amazon Transcribe](https://docs.aws.amazon.com/transcribe/latest/dg/what-is-transcribe.html)、[Amazon Rekognition](https://docs.aws.amazon.com/rekognition/latest/dg/what-is.html)、[Amazon Textract](https://docs.aws.amazon.com/textract/latest/dg/what-is.html)、および [Amazon Comprehend](https://docs.aws.amazon.com/comprehend/latest/dg/what-is.html) を含む AWS サービスによって提供されます。
+
+</InlineFilter>
+
+## 詳細を学ぶ
+
+<Overview childPageNodes={props.childPageNodes} />

@@ -1,0 +1,48 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'ディレクティブリファレンス',
+  description: "Amplifyが提供するすべてのGraphQLディレクティブのリファレンスドキュメント。AmplifyアプリのGraphQL APIとデータベースを拡張します",
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+Amplify CLIはGraphQLディレクティブを提供しており、カスタムインデックス、認可ルール、関数トリガーなど、スキーマに追加の機能を追加できます。
+
+| ディレクティブ | 説明 |
+| --- | --- |
+| [`@model`](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/) | Amazon DynamoDBで保存される、APIの最上位オブジェクトタイプを定義します |
+| [`@primaryKey`](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#configure-a-primary-key) | @modelタイプのカスタムプライマリキーを設定します |
+| [`@index`](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#configure-a-secondary-index) | @modelタイプのカスタムセカンダリインデックス構造を設定します |
+| [`@auth`](/gen1/[platform]/build-a-backend/graphqlapi/customize-authorization-rules/) | @modelタイプとフィールドの認可ルールを定義します |
+| [`@hasOne`](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#has-one-relationship) | 2つのモデル間に一方向の一対一の関係を作成します。例えば、プロジェクトは「1つのチームを持つ」など。これにより、プロジェクトレコードからチームをクエリできます |
+| [`@hasMany`](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#has-many-relationship) | 2つのモデル間に一方向の一対多の関係を作成します。例えば、投稿は多くのコメントを持つなど。これにより、投稿レコードからすべてのコメントをクエリできます |
+| [`@belongsTo`](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#belongs-to-relationship) | 「属する」関係を使用して、「1つを持つ」または「多くを持つ」関係を双方向にします。例えば、プロジェクトは1つのチームを持ち、チームはプロジェクトに属するなど。これにより、プロジェクトレコードからチームをクエリでき、その逆も可能です |
+| [`@manyToMany`](/gen1/[platform]/build-a-backend/graphqlapi/data-modeling/#many-to-many-relationship) | 2つのモデル間の多対多の関係を容易にするために、「結合テーブル」を設定します。例えば、ブログは多くのタグを持ち、タグは多くのブログを持つなど |
+| [`@function`](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#lambda-function-resolver) | フィールドのLambda関数リゾルバーを設定します |
+| [`@http`](/gen1/[platform]/build-a-backend/graphqlapi/custom-business-logic/#http-resolver) | フィールドのHTTPリゾルバーを設定します |
+| [`@predictions`](/gen1/[platform]/build-a-backend/graphqlapi/connect-machine-learning-services/) | Amazon Rekognition、Amazon Translate、および/またはAmazon Pollyなどのai/MLサービスのオーケストレーションをクエリします |
+| [`@searchable`](/gen1/[platform]/build-a-backend/graphqlapi/search-and-result-aggregations/) | データをAmazon OpenSearchにストリーミングして、検索可能にします |
+| [`@mapsTo`](/gen1/[platform]/build-a-backend/graphqlapi/schema-evolution/) | テーブルに削除できない本番データが含まれている場合、`@mapsTo`を使用して元の名前を指定できます |

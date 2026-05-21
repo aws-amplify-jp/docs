@@ -1,0 +1,76 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+                  
+export const meta = {
+  title: 'AWS CDK v1 から v2 への移行',
+  description: '',
+  platforms: [
+    'android',
+    'angular',
+    'flutter',
+    'javascript',
+    'nextjs',
+    'react',
+    'react-native',
+    'swift',
+    'vue'
+  ]
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+          
+
+<Callout>
+AWS CDK バージョンは、`amplify/backend/custom/customResourceName/package.json` で `cli-extensibility-helper` パッケージが依存関係として使用している CDK バージョンと一致する必要があります。
+
+
+`amplify/backend/package.json` ファイルで [`@aws-amplify/cli-extensibility-helper`](https://www.npmjs.com/package/@aws-amplify/cli-extensibility-helper?activeTab=explore) が使用する `aws-cdk-lib` バージョンを確認できます。
+
+</Callout>
+
+Amplify CLI が内部で使用している [AWS Cloud Development Kit (CDK) バージョン 1](https://docs.aws.amazon.com/cdk/v1/guide/home.html) は 2022 年 6 月 1 日にメンテナンスフェーズに入り、サポート終了日は 2023 年 6 月 1 日に予定されています。
+Amplify CLI v11 以上では CDK v2 を使用して、非推奨の CDK から移行し、CDK バージョン 1 には追加されない新機能のブロックを解除できるようにします。
+AWS CDK 移行の詳細については、[V2 への移行](https://docs.aws.amazon.com/cdk/v2/guide/migrating-v2.html)を参照してください。
+
+## 移行のタイミング
+
+デプロイ中に、Amplify CLI はプロジェクト内で AWS CDK v1 の依存関係を検索し、見つかった場合は、AWS CDK v2 への移行を促すメッセージが出力されます。
+
+```console
+We detect you are using CDK v1 with custom stacks and overrides. AWS CDK v1 has entered maintenance mode on June 1, 2022 
+
+Impacted files.
+ - amplify/backend/package.json
+ Upgrade '@aws-amplify/cli-extensibility-helper' to latest version ^3.0.0
+ 
+ - amplify/backend/custom/<resource-name1>/package.json
+ - amplify/backend/custom/<resource-name2>/package.json
+
+Follow this guide here: https://docs.aws.amazon.com/cdk/v2/guide/migrating-v2.html
+```
+
+## 移行方法
+
+`amplify override <category>` または `amplify add custom` を使用している Amplify プロジェクトが 11.0.0 より前の Amplify CLI バージョンでデプロイされている場合、以下の手順に従う必要があります:
+
+1. `amplify overrides <category>` を使用しているプロジェクトの場合:
+   `amplify/backend/package.json` で `@aws-amplify/cli-extensibility-helper` をバージョン `^3.0.0` にアップグレードします
+
+2. `amplify add custom` を使用しているプロジェクトの場合:
+   `amplify/backend/custom/<custom-resource-name>/package.json` の `custom` カテゴリの `package.json` を以下のように更新します:
+
+   ![Amplify overrides warning](/images/ts-guide-cdk-package.png)
+   
+   そして、`amplify/backend/custom/<custom-resource-name>/cdk-stack.ts` の `custom` カテゴリを以下のように更新します:
+    
+   ![Amplify custom warning](/images/ts-guide-cdk.png)

@@ -1,0 +1,33 @@
+import { getCustomStaticPath } from '@/utils/getCustomStaticPath';
+
+export const meta = {
+  title: 'メッセージングキャンペーン',
+  description:
+    'AWS Mobile SDK と Amazon Pinpoint コンソールを使用して、アプリユーザーにプッシュメッセージングでターゲットを設定します。個別のメッセージを送信するか、定義したプロファイルに一致するユーザーのグループをターゲットにするキャンペーンを設定できます。',
+  platforms: ['swift', 'android']
+};
+
+export const getStaticPaths = async () => {
+  return getCustomStaticPath(meta.platforms);
+};
+
+export function getStaticProps(context) {
+  return {
+    props: {
+      platform: context.params.platform,
+      meta
+    }
+  };
+}
+
+import all0 from '/src/fragments/sdk/library-callout.mdx';
+
+<Fragments fragments={{ all: all0 }} />
+
+import ios1 from '/src/fragments/sdk/push-notifications/ios/messaging-campaign.mdx';
+
+<Fragments fragments={{ swift: ios1 }} />
+
+import android2 from '/src/fragments/sdk/push-notifications/android/messaging-campaign.mdx';
+
+<Fragments fragments={{ android: android2 }} />
