@@ -11,16 +11,13 @@ const CONFIG = path.join(ROOT, 'upstream', 'next.config.mjs');
 let content = fs.readFileSync(CONFIG, 'utf-8');
 let changed = false;
 
-// Ensure basePath: '/docs' is set
-if (!content.includes("basePath: '/docs'")) {
-  content = content.replace(
-    /(\s*output:\s*'export',)/,
-    "$1\n    basePath: '/docs',"
-  );
+// Remove basePath (GitHub Pages serves from /<repo-name>/ already)
+if (content.includes("basePath:")) {
+  content = content.replace(/\s*basePath:\s*['"][^'"]*['"],?/g, '');
   changed = true;
-  console.log('patch-next-config: added basePath /docs');
+  console.log('patch-next-config: removed basePath');
 } else {
-  console.log('patch-next-config: basePath already set, skipping');
+  console.log('patch-next-config: no basePath found, skipping');
 }
 
 // Redirect distDir to <project-root>/docs  (upstream/ is one level below root)
