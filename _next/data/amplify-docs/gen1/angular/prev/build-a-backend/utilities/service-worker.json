@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"angular","meta":{"title":"Service Worker","description":"AWS Amplify ServiceWorker クラスは、ブラウザでService Workerを登録し、postMessage イベントを通じて通信できるようにしており、Push API とアナリティクスを使用して充実したオフライン体験を構築できます。","platforms":["javascript","angular","nextjs","react","vue"]}},"__N_SSG":true}

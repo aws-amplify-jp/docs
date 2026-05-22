@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"vue","meta":{"title":"ビルドオプション","description":"Amplifyの関数カテゴリーのビルドオプションを使用して、関数がデプロイされる前にスクリプトを実行します。例えば、TypeScriptやES6をBabelまたはAWS Lambdaのnodeランタイムでサポートされている形式に変換するために使用できます。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

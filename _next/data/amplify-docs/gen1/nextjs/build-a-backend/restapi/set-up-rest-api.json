@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"nextjs","meta":{"title":"Amplify REST API のセットアップ","description":"API カテゴリは、REST および GraphQL エンドポイントへの HTTP リクエストを実行するためのソリューションを提供します。REST API カテゴリは、API Gateway の認可が AWS_IAM に設定されている場合に、Amazon API Gateway に対する署名付きリクエストを作成するために使用できます。","platforms":["javascript","react-native","flutter","swift","android","angular","nextjs","react","vue"]}},"__N_SSG":true}

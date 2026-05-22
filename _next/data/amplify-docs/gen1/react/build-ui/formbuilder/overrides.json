@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"react","meta":{"title":"コード内で入力要素を拡張する","description":"'overrides' プロパティを使用して、任意のフォーム入力のプロパティをオーバーライドします。これは Studio 内でカスタマイズできないプロパティがある場合のエスケープハッチとして使用してください。","platforms":["javascript","react","nextjs"]}},"__N_SSG":true}

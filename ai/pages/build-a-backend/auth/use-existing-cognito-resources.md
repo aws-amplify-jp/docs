@@ -1,0 +1,153 @@
+---
+title: "既存の Cognito リソースを使用する"
+section: "build-a-backend/auth"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/auth/use-existing-cognito-resources/"
+---
+
+Amplify Auth は、既存の Amazon Cognito ユーザープールと ID プールを使用するように設定できます。チーム環境にいる場合や、以前に認証リソースを作成した企業の一部である場合は、[クライアントライブラリを直接設定](#use-auth-resources-without-an-amplify-backend)するか、Amplify バックエンドで [AWS Cloud Development Kit (AWS CDK)](https://aws.amazon.com/cdk/) を使用して参照を保持することができます。
+
+> **Info:** **注:** 既存の認証リソースを使用する場合、認証済みおよび未認証の IAM ロールに対して追加のポリシーまたはアクセス許可を追加する必要がある場合があります。これらの変更は手動で実行する必要があります。
+
+## Amplify バックエンドなしで認証リソースを使用する
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+Amplify バックエンドなしで既存のリソースを使用するには、クライアントライブラリを直接設定します。
+
+```ts title="src/main.ts"
+import { Amplify } from "aws-amplify"
+
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      userPoolId: "<your-cognito-user-pool-id>",
+      userPoolClientId: "<your-cognito-user-pool-client-id>",
+      identityPoolId: "<your-cognito-identity-pool-id>",
+      loginWith: {
+        email: true,
+      },
+      signUpVerificationMethod: "code",
+      userAttributes: {
+        email: {
+          required: true,
+        },
+      },
+      allowGuestAccess: true,
+      passwordFormat: {
+        minLength: 8,
+        requireLowercase: true,
+        requireUppercase: true,
+        requireNumbers: true,
+        requireSpecialCharacters: true,
+      },
+    },
+  },
+})
+```
+<!-- /Platform -->
+<!-- Platform: android, flutter, swift -->
+モバイルクライアントライブラリを直接設定することはサポートされていませんが、次のスキーマで `amplify_outputs.json` を手動で作成できます。
+
+> **Info:** **注:** 各サンドボックスまたはブランチデプロイメント用にこのファイルを生成するために、バックエンド出力を使用することを強く推奨します。
+
+```json title="amplify_outputs.json"
+{
+  "version": "1",
+  "auth": {
+    "aws_region": "<your-cognito-aws-region>",
+    "user_pool_id": "<your-cognito-user-pool-id>",
+    "user_pool_client_id": "<your-cognito-user-pool-client-id>",
+    "identity_pool_id": "<your-cognito-identity-pool-id>",
+    "username_attributes": ["email"],
+    "standard_required_attributes": ["email"],
+    "user_verification_types": ["email"],
+    "unauthenticated_identities_enabled": true,
+    "password_policy": {
+      "min_length": 8,
+      "require_lowercase": true,
+      "require_uppercase": true,
+      "require_numbers": true,
+      "require_symbols": true
+    }
+  }
+}
+```
+<!-- /Platform -->
+
+## Amplify バックエンドで認証リソースを使用する
+
+> **Warning:** Amplify は参照されたリソースの設定を変更することはできず、参照時のリソース設定のみを取得します。参照されたリソースに対して後で加えられた変更は、Amplify バックエンドに自動的には反映されません。
+
+AWS コンソールを通じたリソースの作成や、別のチームによって作成されたリソースの使用など、Amplify アプリのコンテキスト外で Amazon Cognito リソースを作成した場合は、`referenceAuth` を使用して既存のリソースを参照できます。ユーザープール、ユーザープールクライアント、ID プール、および ID プール上に設定された認証済みおよび未認証の IAM ロールが必要です。
+
+```ts title="amplify/auth/resource.ts"
+import { referenceAuth } from '@aws-amplify/backend';
+
+export const auth = referenceAuth({
+  userPoolId: 'us-east-1_xxxx',
+  identityPoolId: 'us-east-1:b57b7c3b-9c95-43e4-9266-xxxx',
+  authRoleArn: 'arn:aws:iam::xxxx:role/amplify-xxxx-mai-amplifyAuthauthenticatedU-xxxx',
+  unauthRoleArn: 'arn:aws:iam::xxxx:role/amplify-xxxx-mai-amplifyAuthunauthenticate-xxxx',
+  userPoolClientId: 'xxxx',
+});
+```
+
+> **Info:** Amplify アプリケーション固有の IAM ポリシーが認証済みおよび未認証ロールに追加され、参照されたリソースを使用するアプリケーションは Cognito ユーザープール内にユーザーを作成し、Cognito ID プール内にアイデンティティを作成できるようになります。
+
+また、[`access` プロパティ](/[platform]/build-a-backend/auth/grant-access-to-auth-resources/)を使用して、他の Amplify バックエンドリソースから認証リソースへのアクセス許可を付与することもできます。例えば、ユーザーの詳細情報を取得する必要があるファンクションがある場合は、以下のようになります：
+
+```ts title="amplify/auth/resource.ts"
+import { referenceAuth } from '@aws-amplify/backend';
+import { getUser } from "../functions/get-user/resource";
+
+export const auth = referenceAuth({
+  userPoolId: 'us-east-1_xxxx',
+  identityPoolId: 'us-east-1:b57b7c3b-9c95-43e4-9266-xxxx',
+  authRoleArn: 'arn:aws:iam::xxxx:role/amplify-xxxx-mai-amplifyAuthauthenticatedU-xxxx',
+  unauthRoleArn: 'arn:aws:iam::xxxx:role/amplify-xxxx-mai-amplifyAuthunauthenticate-xxxx',
+  userPoolClientId: 'xxxx',
+  access: (allow) => [
+    allow.resource(getUser).to(["getUser"]),
+  ],
+});
+```
+
+さらに、`groups` プロパティを使用してユーザープール内のグループを参照することもできます。これは、アプリケーションでグループを操作し、グループメンバーシップに基づくストレージなどのリソースへのアクセスを提供したい場合に便利です。
+
+```ts title="amplify/auth/resource.ts"
+import { referenceAuth } from '@aws-amplify/backend';
+import { getUser } from "../functions/get-user/resource";
+
+export const auth = referenceAuth({
+  userPoolId: 'us-east-1_xxxx',
+  identityPoolId: 'us-east-1:b57b7c3b-9c95-43e4-9266-xxxx',
+  authRoleArn: 'arn:aws:iam::xxxx:role/amplify-xxxx-mai-amplifyAuthauthenticatedU-xxxx',
+  unauthRoleArn: 'arn:aws:iam::xxxx:role/amplify-xxxx-mai-amplifyAuthunauthenticate-xxxx',
+  userPoolClientId: 'xxxx',
+  groups: {
+    admin: "arn:aws:iam::xxxx:role/amplify-xxxx-mai-amplifyAuthadminGroupRole-xxxx",
+  },
+});
+```
+
+チーム環境では、デプロイメントコンテキストに応じて異なる認証リソースセットを参照したいかもしれません。例えば、別の「ステージング」環境からリソースを再利用するべき `staging` ブランチと、別の「本番」環境からリソースを再利用するべき `production` ブランチがある場合です。この場合は、環境変数を使用することをお勧めします。
+
+```ts title="amplify/auth/resource.ts"
+import { referenceAuth } from '@aws-amplify/backend';
+
+export const auth = referenceAuth({
+  userPoolId: process.env.MY_USER_POOL_ID,
+  identityPoolId: process.env.MY_IDENTITY_POOL_ID,
+  authRoleArn: process.env.MY_AUTH_ROLE_ARN,
+  unauthRoleArn: process.env.MY_UNAUTH_ROLE_ARN,
+  userPoolClientId: process.env.MY_USER_POOL_CLIENT_ID,
+});
+```
+
+環境変数は、サンドボックスデプロイメント用にマシン上で個別に設定し、ブランチデプロイメント用に Amplify コンソールで設定する必要があります。
+
+## 次のステップ
+
+- [フロントエンドの接続方法について学ぶ](/[platform]/frontend/auth/)

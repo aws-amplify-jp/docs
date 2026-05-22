@@ -1,0 +1,144 @@
+---
+title: "クロスアカウントデプロイメント"
+section: "deploy-and-host/fullstack-branching"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2024-08-02T20:32:56.000Z"
+url: "https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/cross-account-deployments/"
+---
+
+このガイドでは、AWS Amplify Gen 2を使用して構築されたアプリケーション用のトランクベース、マルチリージョンデプロイメントパイプラインを作成する方法について説明します。このガイドではAmazon CodeCatalystとAWS Amplify Hostingを使用しますが、任意のCI/CDプロバイダーを選択できます。
+
+> **Info:** **注記**: このカスタムパイプラインは、us-west-2またはeu-west-1リージョンのいずれかにデプロイできます。Amazon CodeCatalystは現在、これらの2つの[AWSリージョン](https://docs.aws.amazon.com/general/latest/gr/codecatalyst.html)でのみ利用可能です。
+
+## ステップ1: Amazon CodeCatalystスペースをセットアップする
+
+Amazon CodeCatalystの[ガイド](https://docs.aws.amazon.com/codecatalyst/latest/userguide/setting-up-topnode.html)を参照して、[スペース](https://docs.aws.amazon.com/codecatalyst/latest/userguide/spaces.html)をセットアップするための詳細なステップバイステップの説明をご覧ください。
+
+## ステップ2: フルスタックAmplify Gen 2アプリをデプロイする
+
+<!-- Platform: nextjs -->
+- [**Next.jsスターターテンプレート**](/[platform]/start/quickstart/nextjs-pages-router/#1-create-the-repository)を使用して、GitHubアカウントにリポジトリを作成します。
+- [AWSマネジメントコンソール](https://console.aws.amazon.com/)にサインインします。
+- Amplifyコンソールに移動し、[**新しいアプリを作成**](https://us-west-2.console.aws.amazon.com/amplify/create)を選択します。
+- **next-pages-template**リポジトリを選択し、**次へ**を選択します。
+- **Gitリポジトリを作成**ページの詳細を確認し、**保存してデプロイ**を選択します。
+- 完了です。フルスタックGen 2アプリのデプロイに成功しました。Amplifyコンソールでアプリのデプロイステータスを確認できます。
+<!-- /Platform -->
+
+<!-- Platform: angular, android, javascript, react, react-native, swift, vue, flutter -->
+- [AWSマネジメントコンソール](https://console.aws.amazon.com/)にサインインします。
+- Amplifyコンソールに移動し、[**新しいアプリを作成**](https://us-west-2.console.aws.amazon.com/amplify/create)を選択します。
+- **next-pages-template**リポジトリを選択し、**次へ**を選択します。
+- **Gitリポジトリを作成**ページの詳細を確認し、**保存してデプロイ**を選択します。
+- 完了です。フルスタックGen 2アプリのデプロイに成功しました。Amplifyコンソールでアプリのデプロイステータスを確認できます。
+<!-- /Platform -->
+
+![AWS Amplify Gen 2コンソールでの完了されたデプロイメントのスクリーンショット](images/gen2/cross-account-deployments/pipeline1.png)
+
+## ステップ3: ビルド仕様を更新する
+
+`npx ampx generate outputs --branch $AWS_BRANCH --app-id $AWS_APP_ID`コマンドをビルド仕様に追加し、`npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID`コマンドをコメントアウトします。`ampx pipeline-deploy`はバックエンド更新をデプロイするためのスクリプトを実行し、`ampx generate outputs`は指定された環境の最新の`amplify_outputs.json`を取得します。
+
+![AWS Amplify Gen 2コンソールの「ビルドイメージ設定」セクションのスクリーンショット。アプリのビルド仕様に関する詳細が表示されています](images/gen2/cross-account-deployments/pipeline10.png)
+
+## ステップ4: ブランチの自動ビルドを無効にする
+
+Amplifyを設定して、コードコミットのたびに自動ビルドを無効にできます。Amplifyコンソールでアプリに移動します。**アプリ設定**で**ブランチ設定**を選択します。**ブランチ**セクションからブランチを選択し、**アクション**ドロップダウンメニューから**自動ビルドを無効にする**を選択します。
+
+## ステップ5: 受信Webhookを作成する
+
+受信Webhookをセットアップして、Gitリポジトリへのコードコミットなしでビルドをトリガーできます。Amplify Consoleを使用して、[受信Webhook](https://docs.aws.amazon.com/amplify/latest/userguide/webhooks.html)を作成します。
+
+アプリに移動し、**ホスティング > ビルド設定**で**Webhookを作成**を選択します。Webhookの**名前**を指定し、受信Webhookリクエストでビルドするための**ターゲットブランチ**を選択します。
+
+![Amplifyコンソールの「ビルド設定」ページのスクリーンショット。受信Webhooks機能が表示されています](/images/gen2/fullstack-branching/multirepo5.png)
+
+次に、Webhookを選択し、アプリのビルドをトリガーするために使用される`curl`コマンドをコピーします。
+
+![Amplifyコンソールの「受信Webhooks」ページのスクリーンショット。新しく作成されたWebhookが表示されています](/images/gen2/fullstack-branching/multirepo6.png)
+
+## ステップ6: 新しいAmazon CodeCatalystプロジェクトを作成する
+
+Amazon CodeCatalystの[ガイド](https://docs.aws.amazon.com/codecatalyst/latest/userguide/projects-create.html#projects-create-github)を参照して、新しい[プロジェクト](https://docs.aws.amazon.com/codecatalyst/latest/userguide/projects.html)を作成するための詳細なステップバイステップの説明をご覧ください。
+
+> **Info:** **注記**: プロジェクトを作成するときに、ステップ2でアプリをデプロイするために使用した**next-pages-template** GitHubリポジトリを選択してください。
+
+![CodeCatalystコンソールのスクリーンショット。ソースリポジトリセクションが表示されています](images/gen2/cross-account-deployments/pipeline2.png)
+
+## ステップ7: 別のターゲットAWSアカウントにリソースをセットアップする
+
+クロスアカウントデプロイメントを実現するには、このガイドで前に説明したステップ1～6を別のAWSアカウント(例えば、`production`アカウント)で実装する必要があります。
+
+## ステップ8: ターゲットAWSアカウントをCodeCatalystスペースに追加する
+
+ステップ1で作成したCodeCatalystスペースに移動し、**設定**を選択してから**AWSアカウント**を選択します。ターゲット**AWSアカウントID**(ステップ7)を追加し、**AWSアカウントを関連付ける**を選択します。
+
+![CodeCatalystコンソールのスクリーンショット。「AWSアカウントを関連付ける」セクションの詳細が表示されています](images/gen2/cross-account-deployments/pipeline12.png)
+
+`staging`環境が`production`環境でアクションを実行してリソースをデプロイするために想定されるIAMロールをターゲットAWSアカウントに作成する必要があります。ベストプラクティスとして、[`AmplifyBackendDeployFullAccess`](https://docs.aws.amazon.com/amplify/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-AmplifyBackendDeployFullAccess)AWSマネージドポリシーをIAMロールにアタッチすることをお勧めします。このポリシーには、アカウントにGen 2リソースをデプロイするために必要なすべての権限が含まれています。CodeCatalystの[ドキュメント](https://docs.aws.amazon.com/codecatalyst/latest/userguide/ipa-connect-account-addroles.html)で、アカウント接続にIAMロールを追加する方法の詳細について学習できます。
+
+## ステップ9: Amazon CodeCatalystプロジェクトにワークフローを作成する
+
+ワークフローは、継続的インテグレーションと継続的デリバリー(CI/CD)システムの一部として、コードをビルド、テスト、デプロイする方法を説明する自動化手順です。ワークフローの詳細については、[Amazon CodeCatalyst User Guide](https://docs.aws.amazon.com/codecatalyst/latest/userguide/flows.html)を参照できます。
+
+- CodeCatalystプロジェクト内で、**CI/CD**機能に移動し、**ワークフロー**を選択します。
+- **ワークフローを作成**を選択します。
+- ドロップダウンメニューから**next-pages-template** GitHubリポジトリとブランチ**main**を選択します。
+- 次に、**作成**を選択します。
+
+![CodeCatalystコンソールのスクリーンショット。「ワークフローを作成」ダイアログボックスの詳細が表示されています](images/gen2/cross-account-deployments/pipeline3.png)
+
+ワークフローを作成すると、CodeCatalystコンソールに**yaml**エディターが表示されます。
+
+![CodeCatalystコンソールのyamlエディターのスクリーンショット](images/gen2/cross-account-deployments/pipeline4.png)
+
+コンソールのエクスペリエンスを**ビジュアル**エディターに切り替えます。**アクション**ボタンを選択して、ワークフローに追加できるワークフローアクションのリストを表示します。
+
+![CodeCatalystコンソールのスクリーンショット。「ワークフロー」セクションが表示され、+アクションがハイライトされています](images/gen2/cross-account-deployments/pipeline5.png)
+
+**ビルド**アクションをワークフローに追加し、**入力**セクションの**変数を追加**ボタンを選択します。以下の環境変数を追加します:
+
+- AWS_APP_ID_STAGING: `stagingアプリのamplifyアプリID`
+- AWS_APP_ID_PRODUCTION: `productionアプリのamplifyアプリID`
+- AWS_BRANCH: `gitブランチ名`
+
+![CodeCatalystコンソールのスクリーンショット。「ワークフロー」セクションが表示され、ビルドの入力にフォーカスしています](images/gen2/cross-account-deployments/pipeline13.png)
+
+別の**ビルド**アクションをワークフローに追加し、**入力**セクションの**依存先**ボタンを選択します。ドロップダウンメニューから前のビルドアクションの名前を選択して、パイプラインをセットアップします。
+
+![CodeCatalystコンソールのスクリーンショット。「ワークフロー」セクションが表示され、ビジュアルワークフローと「入力」セクションにフォーカスしています](images/gen2/cross-account-deployments/pipeline14.png)
+
+次に、**設定**セクションを選択し、各ビルドアクションに以下の情報を追加します:
+
+- 環境情報(オプション): `staging、productionなど`
+- AWSアカウント接続: `アカウント接続`
+- ロール: `アカウント接続でセットアップしたロール`
+
+![CodeCatalystコンソールのスクリーンショット。「ワークフロー」セクションが表示され、「設定」セクションにフォーカスしています](images/gen2/cross-account-deployments/pipeline8.png)
+
+次に、各ビルドアクションに以下のシェルコマンドを追加する必要があります:
+
+```bash title="Terminal" showLineNumbers={false}
+// このCIの環境以外でpipeline-deployコマンドを実行するために必要な環境変数です
+- Run: export CI=1
+
+// 依存関係のクリーンインストールを実行します
+- Run: npm ci
+
+// Amplify Gen 2アプリのバックエンドをデプロイします
+- Run: npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+
+// 受信Webhooksを使用してフロントエンドビルドをトリガーします
+- Run: if [ $AWS_BRANCH = "main" ]; then curl -X POST -d {} "`webhookUrl`&operation=startbuild" -H "Content-Type:application/json"; fi
+```
+
+**検証**を実行して、ワークフロー定義の`yaml`ファイルが有効であることを確認できます。最後に、**コミット**を選択して変更を保存します。
+
+> **Info:** **注記**: ワークフローはコミットとして保存され、このワークフローはコードプッシュトリガーが有効になっているため、ワークフローをコミットすると自動的に新しいワークフロー実行が開始されます。
+
+次に、**実行**タブからワークフロー実行の結果を確認できます:
+
+![CodeCatalystコンソールのスクリーンショット。「ワークフロー」セクションが表示され、「実行」タブにフォーカスしています](images/gen2/cross-account-deployments/pipeline11.png)
+
+完了です。Amplify Gen 2を使用して構築されたアプリ用のカスタムクロスアカウントパイプラインをセットアップして、フロントエンドとバックエンドをデプロイできるようになりました。要約すると、このカスタムパイプラインにより、CodeCatalystワークフローで`ampx pipeline-deploy`を使用して`staging`環境でバックエンドを最初にデプロイでき、`ampx generate outputs`は`main`ブランチの`amplify_outputs.json`ファイルを生成します。Amplify Hostingはビルドの一部としてバックエンドリソースをデプロイせず、代わりに`main`ブランチからデプロイされたバックエンドリソースを使用します。staging环境が正常にデプロイされると、別のAWSアカウントで`production`環境をデプロイするために、同様のプロセスが実行されます。

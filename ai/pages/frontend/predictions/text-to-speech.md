@@ -1,0 +1,37 @@
+---
+title: "テキスト音声変換"
+section: "frontend/predictions"
+platforms: ["angular", "javascript", "nextjs", "react", "react-native", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/predictions/text-to-speech/"
+---
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+<Callout informational>
+
+**注:** まず[はじめに](/[platform]/build-a-backend/add-aws-services/predictions/set-up-predictions/)セクションを完了してください。ここでは、適切なポリシーアクションを持つIAMロールをセットアップします。
+
+</Callout>
+
+## APIの使用
+
+テキスト入力から再生用のオーディオバッファを生成します。
+
+```ts
+import { Predictions } from '@aws-amplify/predictions';
+
+const result = await Predictions.convert({
+  textToSpeech: {
+    source: {
+      text: textToGenerateSpeech
+    },
+    voiceId: "Amy" 
+  }
+})
+```
+
+voiceIdオプションの完全なリストについては、[Amazon Pollyの音声](https://docs.aws.amazon.com/polly/latest/dg/voicelist.html)を参照してください。

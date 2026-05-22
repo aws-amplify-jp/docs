@@ -1,0 +1,123 @@
+---
+title: "パーソナライズされたレコメンデーション"
+section: "frontend/analytics"
+platforms: ["angular", "javascript", "nextjs", "react", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/analytics/personalize-recommendations/"
+---
+
+Amazon Personalizeは、イベントデータ、履歴データ、またはその両方の組み合わせを使用してレコメンデーションを作成できます。イベントデータは、レコメンデーションを作成するために使用できます。
+
+イベントデータを記録するには、以下が必要です：
+
+* [データセットグループ](https://docs.aws.amazon.com/personalize/latest/dg/data-prep-ds-group.html)
+* [イベントトラッカー](https://docs.aws.amazon.com/personalize/latest/dg/event-get-tracker.html)
+
+詳細については、[イベントの記録](https://docs.aws.amazon.com/personalize/latest/dg/recording-events.html)を参照してください。
+
+## インストールと設定
+
+Amazon Personalizeデータセットグループを作成した後、AWS Identity and Access Management (IAM) ユーザーロールに `personalize:PutEvents` アクセス許可を追加する必要があります。
+
+IAM ポリシーの例：
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": "personalize:PutEvents",
+    "Resource": "arn:aws:personalize:<your-aws-region>:<your-account-id>:event-tracker/<your-resource-name>"
+  }]
+}
+```
+
+イベントトラッカーのトラッキング ID が必要です。詳細については、[トラッキング ID の取得](https://docs.aws.amazon.com/personalize/latest/dg/action-interaction-tracker-id.html)を参照してください。
+
+Amazon Personalizeを設定します：
+
+```javascript title="src/index.js"
+import { Amplify } from 'aws-amplify';
+import outputs from '../amplify_outputs.json';
+
+const amplifyConfig = parseAmplifyConfig(outputs);
+
+Amplify.configure({
+  ...amplifyConfig,
+  Analytics: {
+    Personalize: {
+      // REQUIRED - The trackingId to track the events
+      trackingId: '<tracking-id>',
+      // REQUIRED -  Amazon Personalize service region
+      region: 'us-east-1',
+      // OPTIONAL - The number of events to be deleted from the buffer when flushed.
+      flushSize: 10,
+      // OPTIONAL - The interval in milliseconds to perform a buffer check and flush if necessary.
+      flushInterval: 5000 // 5s
+    }
+  }
+});
+```
+
+## API の使用
+
+`Identify` イベントタイプを使用してユーザー ID を追跡できます。これにより、ユーザーをその操作に接続し、ユーザーに関する特性を記録できます。ユーザーを識別するには、userId プロパティに一意の識別子を指定します。
+ Identify eventTypeで record を呼び出す時期と頻度を選択する際には、以下のユーザーインタラクションを考慮してください：
+
+* ユーザーが登録した後。
+* ユーザーがログインした後。
+* ユーザーが自分の情報を更新したとき (例えば、住所を変更または追加する場合)。
+* ログイン済みユーザーがアクセスできるページを読み込むとき (オプション)。
+
+```javascript
+import { record } from 'aws-amplify/analytics/personalize';
+
+record({
+  eventType: 'Identify',
+  properties: {
+    userId: '<user-id>'
+  }
+});
+```
+
+`record` 操作を呼び出すことで、Amazon Personalizeにイベントを送信できます。既に `Identify` を使用してエンドユーザーデータを追跡している場合は、userId をスキップできます。SDK は現在のブラウザセッションに基づいて userId をフェッチします。
+
+properties フィールドの詳細については、[Put Events](https://docs.aws.amazon.com/personalize/latest/dg/API_UBS_PutEvents.html)を参照してください。
+
+```javascript
+import { record } from 'aws-amplify/analytics/personalize';
+
+record({
+  eventType: '<event-type>',
+  userId: '<user-id>', // optional
+  properties: {
+    itemId: '<item-id>',
+    eventValue: '<event-value>'
+  }
+});
+```
+
+MediaAutoTrack イベントタイプを使用して、iframe と HTML5 メディアタイプを追跡できます。MediaAutoTrack は、バインドするメディア DOM 要素のすべてのメディアイベントを追跡します。`MediaAutoTracker` は自動的に `eventType` の *Play*、*Pause*、*Ended*、*TimeWatched*、および *Resume* を追跡します。イベント期間とメディアの全長の比較は、`eventValue` にパーセンテージ値として保存されます。
+
+```javascript
+import { record } from 'aws-amplify/analytics/personalize';
+
+record({
+  eventType: 'MediaAutoTrack',
+  userId: '<user-id>', // (optional)
+  properties: {
+    domElementId: 'media-dom-element-id',
+    itemId: '<item-d>'
+  }
+});
+```
+
+## イベントのフラッシュ
+
+記録されたイベントはバッファに保存され、定期的にリモートサーバーに送信されます *(flushInterval オプションでチューニングできます)*。必要に応じて、'flushEvents' API を使用してバッファからすべてのイベントを手動でクリアするオプションがあります。
+
+```javascript
+import { flushEvents } from 'aws-amplify/analytics/personalize';
+
+flushEvents();
+```

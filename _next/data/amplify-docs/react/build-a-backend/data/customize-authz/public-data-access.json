@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"react","meta":{"title":"パブリックデータアクセス","description":"パブリック認可戦略は、API キーで保護されているAPIへのアクセスをすべてのユーザーに付与します。また、認可プロバイダーをオーバーライドして、API キーの代わりに Cognito の認証されていない IAM ロールを使用してパブリックアクセスを行うこともできます。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

@@ -1,0 +1,447 @@
+---
+title: "CLIコマンド"
+section: "reference"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2025-04-28T21:41:46.000Z"
+url: "https://docs.amplify.aws/react/reference/cli-commands/"
+---
+
+このページは、[`@aws-amplify/backend-cli`](https://www.npmjs.com/package/@aws-amplify/backend-cli)パッケージに含まれるコマンドのリファレンスです。
+
+すべてのコマンドには[AWS CLI環境変数](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html#envvars-list)を前置して、Amplify Gen 2コマンドでAWSアカウント動作を変更できます。
+
+## npx ampx sandbox
+
+Sandboxを使用すると、フロントエンドの開発サーバーと並行してバックエンドを開発できます。`npx ampx sandbox`を実行して個人のクラウドサンドボックスにデプロイします。このコマンドは自動的に`amplify/`フォルダの変更を監視し、ファイルを保存するたびに再デプロイします。
+
+### ログストリーミング
+
+- `--stream-function-logs` (_boolean_) - 関数実行ログをストリーミングするかどうか。（デフォルト: false）
+- `--logs-filter` (_array_) - マッチした関数からのみログをフィルタリングする正規表現パターン。例えば、関数のログをストリーミングするためにその名前を指定し、authで始まるすべての関数からログをストリーミングするには「auth」を指定します（デフォルト: すべてのログをストリーミング）
+- `--logs-out-file` (_string_) - ストリーミングログを追加するファイル。ファイルが存在しない場合は作成されます。（デフォルト: stdout）
+
+### オプション
+
+- `--debug` (_boolean_) - コンソールにデバッグログを出力します（デフォルト: false）
+- `--dir-to-watch` (_string_) - ファイルの変更を監視するディレクトリ。すべてのサブディレクトリとファイルが含まれます。デフォルトはamplifyディレクトリです。
+- `--exclude` (_string[]_) - 無視するパスまたはグロブパターンの配列。パスは相対または絶対パスで、ファイルまたはディレクトリのいずれかです。
+- `--identifier` (_string_) - 異なるサンドボックス環境を区別するためのオプション名。デフォルトはプロセスを実行しているシステムユーザーの名前です。
+- `--once` (_boolean_) - 将来のファイル変更を監視せずに単一のサンドボックスデプロイを実行します。
+- `--outputs-out-dir` (_string_) - クライアント設定ファイルが書き込まれるディレクトリへのパス。指定されていない場合、現在のプロセスの作業ディレクトリにデフォルト設定されます。
+- `--outputs-format` (_string_) - クライアント設定ファイルが書き込まれるフォーマット（選択肢: `json`, `dart`）。
+- `--outputs-version` (_string_) - 設定のバージョン。バージョン0はクラシックamplify-cliの設定ファイルamplify-configurationを表し、1は新しい設定ファイルamplify_outputsを表します（選択肢: `0`, `1`）。
+- `--profile` (_string_) - AWSプロファイル名。
+
+### 使用方法
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox
+```
+
+#### 別のプロファイルで使用
+
+`--profile`フラグを使用して、`default`以外のAWSプロファイルでサンドボックスを実行できます：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox --profile my-other-profile
+```
+
+さらに、AWS CLI環境変数を使用して別のプロファイルを指定できます：
+
+```bash title="Terminal" showLineNumbers={false}
+AWS_PROFILE=my-other-profile ampx sandbox
+```
+
+#### 別のリージョンで使用
+
+AWS環境変数を使用して、AWSプロファイルの設定されたリージョン以外のリージョンにデプロイします：
+
+```bash title="Terminal" showLineNumbers={false}
+AWS_REGION=us-west-2 ampx sandbox
+```
+
+#### モバイルアプリケーションで使用
+
+モバイルアプリケーションの場合は、生成された設定ファイル（特に`amplify_outputs.json`）の出力ディレクトリとフォーマットを設定する必要があります：
+
+```bash title="Terminal" showLineNumbers={false}
+# Android用
+npx ampx sandbox --outputs-out-dir app/src/main/res
+```
+
+```bash title="Terminal" showLineNumbers={false}
+# Swift/iOS用
+npx ampx sandbox
+```
+
+```bash title="Terminal" showLineNumbers={false}
+# Flutter用
+npx ampx sandbox --outputs-format dart --outputs-out-dir lib
+```
+
+## npx ampx sandbox delete
+
+個人のクラウドサンドボックスを削除します。これは、`npx ampx sandbox`を終了する際に削除しないことを選択した場合の、アクティブなクラウドサンドボックスがある場合のみ使用してください。
+
+### オプション
+
+- `--name` (_string_) - 異なるサンドボックス環境を区別するためのオプション名。デフォルトはpackage.jsonの名前です。
+- `--profile` (_string_) - AWSプロファイル名。
+- `-y, --yes` (_boolean_) - サンドボックス環境を削除する前に確認を求めません。
+
+### 使用方法
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox delete
+```
+
+## npx ampx sandbox secret
+
+個人のクラウドサンドボックスで使用するバックエンドシークレットを管理します。
+
+### オプション
+
+- `--profile` (_string_) - AWSプロファイル名。
+
+### 使用方法
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox secret
+```
+
+#### 別のAWSプロファイルで使用
+
+`--profile`フラグを使用して、`default`以外のAWSプロファイルでサンドボックスを実行できます：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox secret list --profile my-other-profile
+```
+
+さらに、AWS CLI環境変数を使用して別のプロファイルを指定できます：
+
+```bash title="Terminal" showLineNumbers={false}
+AWS_PROFILE=my-other-profile ampx sandbox secret list
+```
+
+#### シークレットを作成
+
+`sandbox secret set`を使用して、個人のクラウドサンドボックスで使用するシークレットを作成します：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox secret set LOGINWITHAMAZON_CLIENT_ID
+```
+
+これはバックエンド内で`secret()`を使用してシークレットを取得および使用するように設定する方法です。
+
+#### シークレットを削除
+
+以前に設定したシークレットを削除する場合は、`sandbox secret remove`を使用します：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox secret remove LOGINWITHAMAZON_CLIENT_ID
+```
+
+#### すべてのシークレットを削除
+
+以前に設定したすべてのシークレットを削除する場合は、`sandbox secret remove --all`を使用します：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox secret remove --all
+```
+
+#### シークレットをリスト
+
+デフォルトのAWSプロファイルとリージョンで、個人のサンドボックスで利用可能なすべてのシークレットをリストアップします：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox secret list
+```
+
+#### シークレットを取得してその詳細を表示
+
+既存のシークレットとその詳細（現在のバージョンと最後の更新時刻など）を表示できます：
+
+```console title="Terminal" showLineNumbers={false}
+npx ampx sandbox secret get LOGINWITHAMAZON_CLIENT_ID
+ name: LOGINWITHAMAZON_CLIENT_ID
+ version: 1
+ value: ****
+ lastUpdated: Fri Nov 17 2023 12:00:00 GMT-0800 (Pacific Standard Time)
+```
+
+## npx ampx sandbox seed
+
+プロジェクトで定義されたシードスクリプトを使用してサンドボックス環境にデータをシードします。
+
+### オプション
+
+- `--debug` (_boolean_) - コンソールにデバッグログを出力します。[デフォルト: false]
+- `--identifier` (_string_) - 異なるサンドボックスを区別するためのオプション識別子。デフォルトはプロセスを実行しているシステムユーザーの名前です。
+- `--profile` (_string_) - AWSプロファイル名。
+- `-h, --help` (_boolean_) - ヘルプ情報を表示します。
+
+### 使用方法
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox seed
+```
+
+## npx ampx sandbox seed generate-policy
+
+シード操作に必要なIAMポリシーを生成します。
+
+### オプション
+
+- `--debug` (_boolean_) - コンソールにデバッグログを出力します。[デフォルト: false]
+- `--identifier` (_string_) - 異なるサンドボックスを区別するためのオプション識別子。デフォルトはプロセスを実行しているシステムユーザーの名前です。
+- `--profile` (_string_) - AWSプロファイル名。
+- `-h, --help` (_boolean_) - ヘルプ情報を表示します。
+
+### 使用方法
+
+ポリシーをターミナルに出力：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox seed generate-policy
+```
+
+ポリシーをファイルに保存：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox seed generate-policy > seed-policy.json
+```
+
+## npx ampx generate
+
+Generateはスタンドアロンで使用することは想定されていませんが、フロントエンド開発を補助するいくつかのサブコマンドを提供しています。
+
+以下の各`generate`サブコマンドには、CloudFormationスタック名または既存のAmplify App IDと対応するgitブランチが必要です：
+
+```bash title="Terminal" showLineNumbers={false}
+# CloudFormationスタック名で
+npx ampx generate <subcommand> --stack <cloudformation-stack-name>
+```
+
+```bash title="Terminal" showLineNumbers={false}
+# Amplify App IDとgitブランチで
+npx ampx generate <subcommand> --app-id <app-id> --branch <git-branch-name>
+```
+
+## npx ampx generate outputs
+
+バックエンド出力ファイル（例：`amplify_outputs.json`）をフロントエンドアプリケーションが使用するために生成します。これは個人のクラウドサンドボックス以外の環境の設定ファイルを手動で生成するために使用することを想定しています。例えば、同僚がクラウドサンドボックスで見ているものを確認したい場合や、事前存在する「staging」ブランチを使用してローカルでフロントエンドの変更をデモンストレーションしたい場合に使用できます。
+
+### オプション
+
+[`ampx generate`](#npx-ampx-generate)に記載されている必須オプションに加えて：
+
+- `--profile` (_string_) - AWSプロファイル名。
+- `--format` (_string_) - 設定を出力するフォーマット（選択肢: `json`, `dart`）。
+- `--out-dir` (_string_) - 設定が書き込まれるディレクトリへのパス。指定されていない場合、現在のプロセスの作業ディレクトリにデフォルト設定されます。
+- `--outputs-version` (_string_) - 設定のバージョン。バージョン0はクラシックamplify-cliの設定ファイルamplify-configurationを表し、1は新しい設定ファイルamplify_outputsを表します（選択肢: `0`, `1`）。
+
+### 使用方法
+
+上記で述べたように、チームメンバーのクラウドサンドボックスCloudFormationスタックを指定できます：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate outputs --stack amplify-nextamplifygen2-josef-sandbox-ca85e1081b
+```
+
+#### モバイルアプリケーションで使用
+
+`sandbox`と同様に、`--format`を使用して生成された設定ファイルの代替フォーマットを指定できます：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate outputs --stack amplify-nextamplifygen2-josef-sandbox-ca85e1081b --format dart
+```
+
+#### 事前存在するブランチで使用
+
+生成したい事前存在するブランチがある場合、`--app-id`フラグと共に`--branch`を使用できます：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate outputs --branch staging --app-id <your-amplify-app-id>
+```
+
+## npx ampx generate graphql-client-code
+
+フロントエンドアプリケーションが使用するGraphQLステートメントと型を生成します。
+
+### オプション
+
+`npx ampx generate graphql-client-code`で利用可能なパラメータは次のとおりです：
+
+必須パラメータ：
+- スタック識別子
+  - `--stack`(_string_) - Amplifyバックエンドを含むスタック名。
+- プロジェクト識別子
+  - `--app-id`(_string_) - プロジェクトのAmplify App ID。
+  - `--branch`(_string_) - Amplifyプロジェクトのgitブランチ。
+
+オプションパラメータ：
+- `--out`(_string_) - 設定が書き込まれるディレクトリへのパスを指定します。指定されていない場合、現在のプロセス作業ディレクトリにデフォルト設定されます。
+- `--format`(_string_) （選択肢: `modelgen`, `graphql-codegen`, `introspection`） - 生成するGraphQLクライアントコードのフォーマットを指定します。
+- `--model-target` (_string_) （選択肢: `java`, `swift`, `javascript`, `typescript`, `dart`） - modelgenエクスポートターゲットを指定します。--formatパラメータがmodelgenに設定されている場合のみ適用されます。
+- `--statement-target`(_string_) （選択肢: `javascript`, `graphql`, `flow`, `typescript`, `angular`） - graphql-codegenステートメントエクスポートターゲットを指定します。--formatパラメータがgraphql-codegenに設定されている場合のみ適用されます。
+- `--statement-max-depth`(_integer_) - 生成されるGraphQLステートメントの最大深度を指定します。--formatパラメータがgraphql-codegenに設定されている場合のみ適用されます。
+- `--type-target`(_string_) （選択肢: `json`, `swift`, `typescript`, `flow`, `scala`, `flow-modern`, `angular`） - オプションのgraphql-codegenタイプエクスポートターゲットを指定します。--formatパラメータがgraphql-codegenに設定されている場合のみ適用されます。
+- `--all`(_boolean_)- 非表示オプションを表示します。
+- `--profile`(_string_) - AWSプロファイル名を指定します。
+- `--debug` (_boolean_) - コンソールにデバッグログを出力します。
+- `--help`(_boolean_) - コマンドに関するヘルプ情報を表示します。
+
+### 使用方法
+
+#### Amplify App IDとブランチを使用してGraphQLクライアントコードを生成します。
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate graphql-client-code --app-id <your-amplify-app-id> --branch staging
+```
+
+#### Amplifyに接続されているブランチのGraphQLクライアントコードを生成
+
+場合によっては、最新のローカル変更をデプロイされた別のブランチのバックエンドでテストしたいことがあります。別のブランチの最新デプロイメントのGraphQLクライアントコードファイルを生成する場合は、次のコマンドを実行できます：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate graphql-client-code --branch staging
+```
+
+#### 結合された「AmplifyBackendStack」コンストラクトを使用してCDKアプリのコード生成を生成
+
+Amplifyプロジェクトを結合されたCDKコンストラクトでデプロイしたと仮定します。アプリのプロジェクト名（CDKコンストラクトの2番目のパラメータとして指定）とスタック名（`npx cdk deploy`コンテキストの一部として指定）を覚えておく必要があります
+
+```ts title="lib/stack.ts" showLineNumbers={false}
+import { Construct } from 'constructs';
+import { App, Backend } from 'aws-cdk-lib/aws-amplify';
+
+export class MyAmplifyStack extends cdk.Stack {
+  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    new Backend(this, "Backend", { /* ... */ });
+  }
+}
+```
+
+#### CDKプロジェクトのデプロイメントコマンド
+
+```bash title="Terminal" showLineNumbers={false}
+npx cdk deploy
+```
+
+Amplifyコード生成コマンドを実行してGraphQLコード生成を生成：
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate graphql-client-code --stack Backend --platform ts --out ./src
+```
+
+#### 特定の言語とフォーマットでコード生成を生成
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate graphql-client-code --format modelgen --type-target angular
+```
+
+#### サポートされているGraphQLクライアントコードの組み合わせ：
+
+| フォーマット | プラットフォーム | Amplify CLIでのコード生成コマンド | Amplify Gen2でのコマンド | デフォルト生成ファイル/パス |
+| -------| -------- | ------------------------------ | ----------------------- | --------------------------- |
+| イントロスペクションスキーマ | Amplify Javascript | N/A | `npx ampx generate graphql-client-code --format introspection` | `<path_to_app>/` |
+| GraphQLコード生成 | Amplify Javascript | `amplify codegen` | `npx ampx generate graphql-client-code --format graphql-codegen --statement-target javascript --out <path_to_app>/src/graphql/` | `<path_to_app>/src/graphql/` |
+| Modelgen | Amplify Javascript | `amplify codegen model` | `npx ampx generate graphql-client-code --format modelgen --model-target javascript --out <path_to_app>/src/models/` | `<path_to_app>/src/models/` |
+| Modelgen | Amplify Android | `amplify codegen model` | `npx ampx generate graphql-client-code --format modelgen --model-target java --out <path_to_app/src/main/java/>` | `<path_to_app>/src/main/java/com/amplifyframework/datastore/generated/model` |
+| Modelgen | Amplify Swift | `amplify codegen model` | `npx ampx generate graphql-client-code --format modelgen --model-target swift --out <path_to_swift_project>/AmplifyModels` | `<path_to_swift_project>/AmplifyModels` |
+| Modelgen | Amplify Flutter | `amplify codegen model` | `npx ampx generate graphql-client-code --format modelgen --model-target dart --out <path_to_flutter_project>/AmplifyModels` | `<path_to_flutter_project>/AmplifyModels` |
+
+## npx ampx generate schema-from-database
+
+SQLデータベースからTypeScript データスキーマを生成します。
+
+### オプション
+
+- `--stack`(_string_) - Amplifyバックエンドを含むスタック名。
+- `--branch` (_string_) - デプロイされるgitブランチの名前。
+- `--app-id` (_string_) - ターゲットAmplifyアプリのアプリID。
+- `--out`(_string_) - 生成されたスキーマが書き込まれるディレクトリへのパス [デフォルト: `./amplify/data/schema.sql.ts`]。
+- `--connection-uri-secret`(_string_) - データベース接続URIのAmplifyシークレット名。
+- `--ssl-cert-secret`(_string_) - データベースSSL証明書のAmplifyシークレット名。
+- `--profile`(_string_) - AWSプロファイル名。
+
+### 使用方法
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate schema-from-database --connection-uri-secret SQL_CONNECTION_STRING --out amplify/data/schema.sql.ts
+```
+
+## npx ampx generate forms
+
+バックエンドデータモデルから派生したReactフォームコンポーネントをフロントエンドアプリケーションが使用するために生成します。
+
+### オプション
+
+- `--stack`(_string_) - Amplifyバックエンドを含むスタック名。
+- `--branch` (_string_) - デプロイされるgitブランチの名前。
+- `--app-id` (_string_) - ターゲットAmplifyアプリのアプリID。
+- `--out-dir` (_string_) - 生成されたフォームが書き込まれるディレクトリへのパス。デフォルトは`./ui-components`ディレクトリです。
+- `--models` (_array_) - 生成するモデル名。
+- `--profile` (_string_) - AWSプロファイル名。
+
+### 使用方法
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate forms --branch $BRANCH_NAME --app-id $AWS_APP_ID --out-dir ./src
+```
+
+## npx ampx info
+
+Amplifyの問題をトラブルシューティングするためのシステム、バイナリ、npmパッケージ、環境変数に関する情報を生成します。
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx info
+```
+
+このコマンドは次のようにシステム情報を出力します：
+
+```bash title="Terminal" showLineNumbers={false}
+System:
+  OS: macOS 14.3.1
+  CPU: (10) arm64 Apple M1 Pro
+  Memory: 165.89 MB / 32.00 GB
+  Shell: /opt/homebrew/bin/fish
+Binaries:
+  Node: 20.12.2 - ~/Library/Caches/fnm_multishells/1063_1714573452292/bin/node
+  Yarn: 1.22.19 - ~/Library/Caches/fnm_multishells/1063_1714573452292/bin/yarn
+  npm: 10.5.0 - ~/Library/Caches/fnm_multishells/1063_1714573452292/bin/npm
+  pnpm: 9.0.5 - ~/Library/Caches/fnm_multishells/1063_1714573452292/bin/pnpm
+NPM Packages:
+  @aws-amplify/backend: 1.0.0
+  @aws-amplify/backend-cli: 1.0.1
+  aws-amplify: 6.2.0
+  aws-cdk: 2.139.1
+  aws-cdk-lib: 2.139.1
+  typescript: 5.4.5
+AWS environment variables:
+  AWS_PROFILE = amplify-admin
+  AWS_STS_REGIONAL_ENDPOINTS = regional
+  AWS_NODEJS_CONNECTION_REUSE_ENABLED = 1
+  AWS_SDK_LOAD_CONFIG = 1
+No CDK environment variables
+```
+
+## npx ampx pipeline-deploy
+
+指定されたAmplifyアプリとブランチのCI/CDパイプラインでAmplifyプロジェクトをデプロイします。
+
+### オプション
+
+- `--branch` (_string_) - デプロイされるgitブランチの名前。
+- `--app-id` (_string_) - ターゲットAmplifyアプリのアプリID。
+- `--outputs-out-dir` (_string_) - クライアント設定ファイルが書き込まれるディレクトリへのパス。指定されていない場合、現在のプロセスの作業ディレクトリにデフォルト設定されます。
+- `--outputs-version` (_string_) - 設定のバージョン。バージョン0はクラシックamplify-cliの設定ファイルamplify-configurationを表し、1は新しい設定ファイルamplify_outputsを表します（選択肢: `0`, `1`）。
+
+### 使用方法
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx pipeline-deploy --branch $BRANCH_NAME --app-id $AWS_APP_ID
+```

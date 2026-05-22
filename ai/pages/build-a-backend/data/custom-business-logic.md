@@ -1,0 +1,523 @@
+---
+title: "カスタムクエリとミューテーションを追加"
+section: "build-a-backend/data"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2025-02-25T18:57:30.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/data/custom-business-logic/"
+---
+
+`a.model()` データモデルは、データのクエリ、ミューテーション、フェッチングの確実な基盤を提供します。ただし、カスタム API リクエスト、レスポンスフォーマット、外部データソースからのフェッチングに関する特定の要件を満たすために、追加のカスタマイズが必要な場合があります。
+
+以下のセクションでは、カスタムクエリまたはミューテーションを作成するための 3 つのステップについて説明します。
+
+1. カスタムクエリまたはミューテーションを定義する
+2. カスタムビジネスロジックハンドラーコードを構成する
+3. カスタムクエリまたはミューテーションを呼び出す
+
+## ステップ 1 - カスタムクエリまたはミューテーションを定義する
+
+| タイプ | 選択する場合 |
+| --- | --- |
+| Query | リクエストがデータのみを読み取り、バックエンドデータを変更しない場合 |
+| Mutation | リクエストがバックエンドデータを変更する場合 |
+
+すべてのカスタムクエリまたはミューテーションについて、戻り値の型を設定し、オプションで引数を設定する必要があります。**amplify/data/resource.ts** ファイルで `a.query()` または `a.mutation()` を使用してカスタムクエリまたはミューテーションを定義します。
+
+#### [カスタムクエリ]
+
+```ts
+import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
+
+const schema = a.schema({
+  // 1. 戻り値の型をカスタム型として定義する
+  EchoResponse: a.customType({
+    content: a.string(),
+    executionDuration: a.float()
+  }),
+
+  // 2. 戻り値の型と、オプションで引数を指定してクエリを定義する
+  echo: a
+    .query()
+    // このクエリが受け入れる引数
+    .arguments({
+      content: a.string()
+    })
+    // クエリの戻り値の型
+    .returns(a.ref('EchoResponse'))
+    // サインインしたユーザーのみがこの API を呼び出すことを許可する
+    .authorization(allow => [allow.authenticated()])
+});
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema
+});
+```
+
+#### [カスタムミューテーション]
+
+```ts
+import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
+
+const schema = a.schema({
+  // 1. 戻り値の型をカスタム型またはモデルとして定義する
+  Post: a.model({
+    id: a.id(),
+    content: a.string(),
+    likes: a.integer()
+  }),
+
+  // 2. 戻り値の型と、オプションで引数を指定してミューテーションを定義する
+  likePost: a
+    .mutation()
+    // このクエリが受け入れる引数
+    .arguments({
+      postId: a.string()
+    })
+    // クエリの戻り値の型
+    .returns(a.ref('Post'))
+    // サインインしたユーザーのみがこの API を呼び出すことを許可する
+    .authorization(allow => [allow.authenticated()])
+});
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema
+});
+```
+
+## ステップ 2 - カスタムビジネスロジックハンドラーコードを構成する
+
+クエリまたはミューテーションを定義した後、カスタムビジネスロジックを作成する必要があります。[関数](/[platform]/build-a-backend/functions/)で定義するか、[AppSync JavaScript リゾルバーを搭載したカスタムリゾルバー](https://docs.aws.amazon.com/appsync/latest/devguide/tutorials-js.html)を使用できます。
+
+#### [関数]
+
+`amplify/data/echo-handler/` フォルダに `handler.ts` ファイルを作成します。バックエンドリソースの `Schema` 型を使用して、関数ハンドラーのユーティリティ型をインポートできます。これにより、型安全なハンドラーパラメーターと戻り値が提供されます。
+
+```ts title="amplify/data/echo-handler/handler.ts"
+import type { Schema } from '../resource'
+
+export const handler: Schema["echo"]["functionHandler"] = async (event, context) => {
+  const start = performance.now();
+  return {
+    content: `Echoing content: ${event.arguments.content}`,
+    executionDuration: performance.now() - start
+  };
+};
+```
+
+`amplify/data/resource.ts` ファイルで、`defineFunction` を使用して関数を定義し、`a.handler.function()` をハンドラーとして使用してクエリまたはミューテーションで関数を参照します。
+
+```ts title="amplify/data/resource.ts"
+import {
+  type ClientSchema,
+  a,
+  defineData,
+  defineFunction // 1. 新しい関数を作成するために「defineFunction」をインポートする
+} from '@aws-amplify/backend';
+
+// 2. 関数を定義する
+const echoHandler = defineFunction({
+  entry: './echo-handler/handler.ts'
+})
+
+const schema = a.schema({
+  EchoResponse: a.customType({
+    content: a.string(),
+    executionDuration: a.float()
+  }),
+
+  echo: a
+    .query()
+    .arguments({ content: a.string() })
+    .returns(a.ref('EchoResponse'))
+    .authorization(allow => [allow.publicApiKey()])
+    // 3. 関数をハンドラーとして設定する
+    .handler(a.handler.function(echoHandler))
+});
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: 'apiKey',
+    apiKeyAuthorizationMode: {
+      expiresInDays: 30
+    },
+  },
+});
+```
+
+既存の Lambda 関数を使用する場合は、その名前で参照できます：`a.handler.function('name-of-existing-lambda-fn')`。Amplify はこの外部 Lambda 関数またはその依存関係を更新しないことに注意してください。
+
+#### [AppSync JavaScript リゾルバーを搭載したカスタムリゾルバー]
+
+カスタムリゾルバーは「リクエスト/レスポンス」ベースで機能します。データソースを選択し、リクエストをデータソースの入力パラメーターにマップし、データソースのレスポンスをクエリ/ミューテーションの戻り値の型にマップします。カスタムリゾルバーは、コールドスタートがない、管理するインフラストラクチャが少ない、Lambda 関数呼び出しの追加料金がないという利点があります。[カスタムリゾルバーと関数の選択](https://docs.aws.amazon.com/appsync/latest/devguide/resolver-reference-overview-js.html#choosing-data-source)を確認してください。
+
+`amplify/data/resource.ts` ファイルで、`a.handler.custom` を使用してカスタムハンドラーを定義します。
+
+```ts title="amplify/data/resource.ts"
+import {
+  type ClientSchema,
+  a,
+  defineData,
+} from '@aws-amplify/backend';
+
+const schema = a.schema({
+  Post: a.model({
+    content: a.string(),
+    likes: a.integer()
+      .authorization(allow => [allow.authenticated().to(['read'])])
+  }).authorization(allow => [
+    allow.owner(),
+    allow.authenticated().to(['read'])
+  ]),
+
+  likePost: a
+    .mutation()
+    .arguments({ postId: a.id() })
+    .returns(a.ref('Post'))
+    .authorization(allow => [allow.authenticated()])
+    .handler(a.handler.custom({
+      dataSource: a.ref('Post'),
+      entry: './increment-like.js'
+    }))
+});
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: 'apiKey',
+    apiKeyAuthorizationMode: {
+      expiresInDays: 30
+    }
+  },
+});
+```
+
+```ts title="amplify/data/increment-like.js"
+import { util } from '@aws-appsync/utils';
+
+export function request(ctx) {
+  return {
+    operation: 'UpdateItem',
+    key: util.dynamodb.toMapValues({ id: ctx.args.postId}),
+    update: {
+      expression: 'ADD likes :plusOne',
+      expressionValues: { ':plusOne': { N: 1 } },
+    }
+  }
+}
+
+export function response(ctx) {
+  return ctx.result
+}
+```
+
+デフォルトでは、`a.ref('MODEL_NAME')` を使用して、既存のデータベーステーブル（Amazon DynamoDB を搭載）にアクセスできます。ただし、バックエンド定義に追加して、AWS アカウント内の他の外部データソースも参照できます。
+
+サポートされているデータソースは次のとおりです：
+- Amazon DynamoDB
+- AWS Lambda
+- Data API を使用した Amazon RDS データベース
+- Amazon EventBridge
+- OpenSearch
+- HTTP エンドポイント
+
+これらの追加データソースは、`amplify/backend.ts` ファイルを使用して追加できます：
+
+```ts title="amplify/backend.ts"
+import * as dynamoDb from 'aws-cdk-lib/aws-dynamodb'
+import { defineBackend } from '@aws-amplify/backend';
+import { auth } from './auth/resource';
+import { data } from './data/resource';
+
+export const backend = defineBackend({
+  auth,
+  data,
+});
+
+const externalDataSourcesStack = backend.createStack("MyExternalDataSources")
+
+const externalTable = dynamoDb.Table.fromTableName(externalDataSourcesStack, "MyTable", "MyExternalTable")
+
+backend.data.addDynamoDbDataSource(
+  // highlight-next-line
+  "ExternalTableDataSource",
+  externalTable)
+```
+
+スキーマでは、これらの追加データソースを名前に基づいて参照できます：
+
+```ts title="amplify/data/resource.ts"
+import {
+  type ClientSchema,
+  a,
+  defineData,
+} from '@aws-amplify/backend';
+
+const schema = a.schema({
+  Post: a.model({
+    content: a.string(),
+    likes: a.integer()
+      .authorization(allow => [allow.authenticated().to(['read'])])
+  }).authorization(allow => [
+    allow.owner(),
+    allow.authenticated().to(['read'])
+  ]),
+
+  likePost: a
+    .mutation()
+    .arguments({ postId: a.id() })
+    .returns(a.ref('Post'))
+    .authorization(allow => [allow.authenticated()])
+    .handler(a.handler.custom({
+      // highlight-next-line
+      dataSource: "ExternalTableDataSource",
+      entry: './increment-like.js'
+    }))
+});
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: 'apiKey',
+    apiKeyAuthorizationMode: {
+      expiresInDays: 30
+    }
+  },
+});
+```
+
+> **Warning:** すべてのハンドラーは同じ型である必要があります。たとえば、単一の `.handler()` 修飾子内で `a.handler.function` と `a.handler.custom` を混在させることはできません。
+
+## ステップ 3 - カスタムクエリまたはミューテーションを呼び出す
+
+<!-- Platform: javascript, angular, react-native, react, nextjs, vue -->
+生成されたデータクライアントから、カスタムクエリとミューテーションはそれぞれ `client.queries.` と `client.mutations.` API で見つけることができます。
+
+#### [カスタムクエリ]
+
+```ts
+const { data, errors } = await client.queries.echo({
+  content: 'hello world!!!'
+});
+```
+
+#### [カスタムミューテーション]
+
+```ts
+const { data, errors } = await client.mutations.likePost({
+  postId: 'hello'
+});
+```
+
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+```swift
+struct EchoResponse: Codable {
+    public let echo: Echo
+
+    struct Echo: Codable {
+        public let content: String
+        public let executionDuration: Float
+    }
+}
+
+let document = """
+    query EchoQuery($content: String!) {
+        echo(content: $content) {
+            content
+            executionDuration
+        }
+    }
+    """
+
+let result = try await Amplify.API.query(request: GraphQLRequest<EchoResponse>(
+    document: document,
+    variables: [
+        "content": "hello world!!!"
+    ],
+    responseType: EchoResponse.self
+))
+switch result {
+case .success(let response):
+    print(response.echo)
+case .failure(let error):
+    print(error)
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+```kt
+data class EchoDetails(
+    val content: String,
+    val executionDuration: Float
+)
+
+data class EchoResponse(
+    val echo: EchoDetails
+)
+
+val document = """
+    query EchoQuery(${'$'}content: String!) {
+        echo(content: ${'$'}content) {
+            content
+            executionDuration
+        }
+    }
+""".trimIndent()
+val echoQuery = SimpleGraphQLRequest<String>(
+    document,
+    mapOf("content" to "hello world!!!"),
+    String::class.java,
+    GsonVariablesSerializer())
+
+Amplify.API.query(
+    echoQuery,
+    {
+        var gson = Gson()
+        val response = gson.fromJson(it.data, EchoResponse::class.java)
+        Log.i("MyAmplifyApp", "${response.echo.content}")
+    },
+    { Log.e("MyAmplifyApp", "$it")}
+)
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+まず、レスポンスの形状に一致するクラスを定義します：
+
+```dart
+class EchoResponse {
+  final Echo echo;
+
+  EchoResponse({required this.echo});
+
+  factory EchoResponse.fromJson(Map<String, dynamic> json) {
+    return EchoResponse(
+      echo: Echo.fromJson(json['echo']),
+    );
+  }
+}
+
+class Echo {
+  final String content;
+  final double executionDuration;
+
+  Echo({required this.content, required this.executionDuration});
+
+  factory Echo.fromJson(Map<String, dynamic> json) {
+    return Echo(
+      content: json['content'],
+      executionDuration: json['executionDuration'],
+    );
+  }
+}
+```
+
+次に、リクエストを作成して、レスポンスを上記で定義したクラスにマップします：
+
+```dart
+// highlight-next-line
+import 'dart:convert';
+
+// highlight-start
+const graphQLDocument = '''
+  query Echo(\$content: String!) {
+    echo(content: \$content) {
+      content
+      executionDuration
+    }
+  }
+''';
+
+final echoRequest = GraphQLRequest<String>(
+  document: graphQLDocument,
+  variables: <String, String>{"content": "Hello world!!!"},
+);
+
+final response =
+    await Amplify.API.query(request: echoRequest).response;
+safePrint(response);
+
+Map<String, dynamic> jsonMap = json.decode(response.data!);
+EchoResponse echoResponse = EchoResponse.fromJson(jsonMap);
+safePrint(echoResponse.echo.content);
+// highlight-end
+```
+<!-- /Platform -->
+
+## カスタム操作でサポートされている引数型
+
+カスタム操作は、異なる型の引数を受け入れることができます。これらのオプションを理解することは、柔軟でよく構造化された API を定義するのに役立ちます。
+
+### カスタム操作で引数を定義する
+
+カスタム操作を定義する場合、異なる型を使用して引数を指定できます：
+
+- **スカラーフィールド**：`string`、`integer`、`float` などの基本型
+- **カスタム型**：インライン `customType` を定義する
+- **参照型**：`a.ref()` を使用してエナムとカスタム型を参照する
+
+```ts title="amplify/data/resource.ts"
+const schema = a.schema({
+  Status: a.enum(['ACCEPTED', 'REJECTED']),
+  
+  getPost: a
+    .query()
+    .arguments({
+      // スカラーフィールド
+      content: a.string(),
+      // インラインカスタム型
+      config: a.customType({
+        filter: a.string(),
+        // エナムへの参照
+        status: a.ref('Status')
+      }),
+    })
+    .returns(a.string())
+    .authorization(allow => [allow.authenticated()])
+});
+```
+
+## 非同期関数ハンドラー
+
+非同期関数ハンドラーは、長時間実行される操作を非同期で実行できるようにし、API の応答性を向上させます。これは、バッチ処理、メッセージをキューに入れる、生成 AI モデル推論を開始するなど、即座のレスポンスが不要なタスクに特に役立ちます。
+
+### 使用方法
+
+非同期関数ハンドラーを定義するには、ハンドラーを定義するときに `.async()` メソッドを使用します：
+
+```ts title="amplify/data/resource.ts"
+const signUpForNewsletter = defineFunction({
+  entry: './sign-up-for-newsletter/handler.ts'
+});
+
+const schema = a.schema({
+  someAsyncOperation: a.mutation()
+    .arguments({
+      email: a.email().required()
+    })
+    .handler(a.handler.function(signUpForNewsletter).async())
+    .authorization((allow) => allow.guest()),
+})
+```
+
+### 主な特性
+
+1. **単一の戻り値型**：非同期ハンドラーは静的な型 `EventInvocationResponse` を返し、戻り値の型の指定はサポートされていません。非同期ハンドラーを使用する操作では `.returns()` メソッドを使用できません。
+
+2. **ファイアアンドフォーゲット**：クライアントには呼び出しが正常にキューに入れられたかどうかが通知されますが、Lambda 関数実行からのデータは受け取りません。
+
+3. **パイプラインサポート**：非同期ハンドラーは関数パイプラインで使用できます。最終的なハンドラーが非同期関数の場合、クエリまたはミューテーションの戻り値の型は `EventInvocationResponse` です。

@@ -1,0 +1,142 @@
+---
+title: "ストリーミング分析データ"
+section: "frontend/analytics"
+platforms: ["angular", "javascript", "nextjs", "react", "react-native", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/analytics/streaming-data/"
+---
+
+Amazon Kinesis分析プロバイダーを使用すると、分析データを[Kinesis](https://aws.amazon.com/kinesis)ストリームに送信して、リアルタイム処理を行うことができます。
+
+## Kinesisストリームの設定
+
+以下は、[AWS Cloud Development Kit (AWS CDK)](https://docs.aws.amazon.com/cdk/latest/guide/home.html)を使用して[Amazon Kinesis](https://aws.amazon.com/kinesis)で動作するAnalyticsリソースを作成する例です。
+
+```ts title="amplify/backend.ts"
+import { auth } from "./auth/resource";
+import { data } from "./data/resource";
+import { Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Stream } from "aws-cdk-lib/aws-kinesis";
+import { Stack } from "aws-cdk-lib/core";
+
+const backend = defineBackend({
+  auth, 
+  data,
+  // additional resources 
+});
+
+// create a new stack for the Kinesis stream
+const kinesisStack = backend.createStack("kinesis-stack");
+
+// create a new Kinesis stream with one shard
+const kinesisStream = new Stream(kinesisStack, "KinesisStream", {
+  streamName: "myKinesisStream",
+  shardCount: 1,
+});
+
+// create a new policy to allow PutRecords to the Kinesis stream
+const kinesisPolicy = new Policy(kinesisStack, "KinesisPolicy", {
+  statements: [
+    new PolicyStatement({
+      actions: ["kinesis:PutRecords"],
+      resources: [kinesisStream.streamArn],
+    }),
+  ],
+});
+
+// apply the policy to the authenticated and unauthenticated roles
+backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(kinesisPolicy);
+backend.auth.resources.unauthenticatedUserIamRole.attachInlinePolicy(kinesisPolicy);
+```
+
+## インストールと設定
+
+CLIを使用しなかった場合は、`kinesis:PutRecords`の[IAM権限を設定](https://docs.aws.amazon.com/streams/latest/dev/learning-kinesis-module-one-iam.html)していることを確認してください。
+
+Amazon Kinesis用のIAMポリシーの例:
+
+```javascript
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": "kinesis:PutRecords",
+    "Resource": "arn:aws:kinesis:<your-aws-region>:<your-aws-account-id>:stream/<your-stream-name>" // replace the template fields
+  }]
+}
+```
+
+詳細は[Amazon Kinesis開発者向けドキュメント](https://docs.aws.amazon.com/streams/latest/dev/learning-kinesis-module-one-iam.html)をご覧ください。
+
+Kinesisを設定します:
+
+```javascript title="src/index.js"
+// Configure the plugin after adding it to the Analytics module
+import { Amplify } from 'aws-amplify';
+import { parseAmplifyConfig } from "aws-amplify/utils";
+import outputs from '../amplify_outputs.json';
+
+const amplifyConfig = parseAmplifyConfig(outputs);
+
+Amplify.configure({
+  ...amplifyConfig,
+  Analytics: {
+    Kinesis: {
+      // REQUIRED -  Amazon Kinesis service region
+      region: 'us-east-1',
+
+      // OPTIONAL - The buffer size for events in number of items.
+      bufferSize: 1000,
+
+      // OPTIONAL - The number of events to be deleted from the buffer when flushed.
+      flushSize: 100,
+
+      // OPTIONAL - The interval in milliseconds to perform a buffer check and flush if necessary.
+      flushInterval: 5000, // 5s
+
+      // OPTIONAL - The limit for failed recording retries.
+      resendLimit: 5
+    }
+  }
+});
+```
+
+## データのストリーミング
+
+標準の`record()`メソッドを使用して、Kinesisストリームにデータを送信できます:
+
+```javascript title="src/index.js"
+import { record } from 'aws-amplify/analytics/kinesis';
+
+record({
+  data: {
+    // The data blob to put into the record
+  },
+  partitionKey: 'myPartitionKey',
+  streamName: 'myKinesisStream'
+});
+```
+
+## イベントのフラッシュ
+記録されたイベントはバッファに保存され、定期的にリモートサーバーに送信されます*(`flushInterval`オプションで調整できます)*。必要に応じて、'flushEvents' APIを使用してバッファからすべてのイベントを手動でクリアすることができます。
+
+```javascript title="src/index.js"
+import { flushEvents } from 'aws-amplify/analytics/kinesis';
+
+flushEvents();
+```
+
+<!-- Platform: react-native -->
+## 既知の問題
+
+デフォルトのPinpointプロバイダーの代わりに、以下の代替サービスプロバイダーをインポートする場合:
+
+- Kinesis (`aws-amplify/analytics/kinesis`)
+- Kinesis Data Firehose (`aws-amplify/analytics/kinesis-firehose`)
+- Personalize Event (`aws-amplify/analytics/personalize`)
+
+バンドラーを開始する際に以下のエラーが発生する場合があります:
+
+> Error: Unable to resolve module stream from /path/to/node_modules/@aws-sdk/... これは[既知の問題](https://github.com/aws/aws-sdk-js-v3/issues/4877)です。このエラーを解決するために、この問題で説明されている[手順](https://github.com/aws/aws-sdk-js-v3/issues/4877#issuecomment-1656007484)に従ってください。
+<!-- /Platform -->

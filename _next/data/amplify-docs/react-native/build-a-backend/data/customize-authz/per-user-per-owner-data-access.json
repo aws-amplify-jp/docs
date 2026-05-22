@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"react-native","meta":{"title":"ユーザー単位/オーナー単位のデータアクセス","description":"オーナー認可戦略により、レコードに対する操作は、そのレコードのオーナーのみに制限されます。設定時には、オーナーフィールド（デフォルト：`owner`）が自動的に追加され、作成したユーザーのアイデンティティが入力されます。APIは`owner`フィールドに対して認可し、操作を許可または拒否します。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

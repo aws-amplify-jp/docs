@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"vue","meta":{"title":"チームの環境","description":"すべてのAmplifyバックエンド環境は、プロジェクトに追加されたカテゴリーのコンテナです。複数の環境では、Amplifyは標準的なGitワークフローに合わせて、よく知られたコマンドを使用して異なるブランチを切り替えられます。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

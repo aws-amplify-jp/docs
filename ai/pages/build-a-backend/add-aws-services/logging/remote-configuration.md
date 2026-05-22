@@ -1,0 +1,301 @@
+---
+title: "ログレベルをリモートで変更"
+section: "build-a-backend/add-aws-services/logging"
+platforms: ["swift", "android"]
+gen: 2
+last-updated: "2024-05-16T15:59:30.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/add-aws-services/logging/remote-configuration/"
+---
+
+Amplify Loggerをリモートで設定して、デプロイされたアプリケーションのログレベルやユーザー許可リストを変更できます。
+
+<Callout>
+  リモートで設定したログ設定は、ローカルログレベルを上書きし、今後のアプリセッションに保持されます。
+</Callout>
+
+## リモート設定バックエンドリソースをセットアップ
+
+<Callout>
+
+Amplifyを使用して[カスタムCDKリソースを追加](/[platform]/build-a-backend/add-aws-services/custom-resources/)できます。
+
+</Callout>
+
+以下は、Amazon CloudWatch、AWS API Gateway、AWS Lambda、およびAWS S3バケットをプロビジョニングするCDKコンストラクトの例です。CDKコンストラクトは、リモート設定ファイルをAWS S3バケットにデプロイします。これを更新して、設定レベルやユーザー許可リストを変更できます。
+
+### 権限
+
+CDKコンストラクトはIAMポリシーを作成し、Amplify認証済みロールと未認証ロールに割り当てます。
+
+1. API Gatewayエンドポイントは、Amplify認証済みロールまたは未認証ロールを持つユーザーのみが呼び出せます。
+2. AWS CloudWatchログは、Amplify認証済みロールまたは未認証ロールを持つユーザーのみが作成および送信できます。権限ポリシーはより制限的にすることはできず、特定のユーザーにスコープされません。
+3. Lambda呼び出しは、プロビジョニングされたAWS API Gatewayリソースからのみ許可されます。
+4. `remoteloggingconstraints.json`を含むS3バケットは、Lambda実行ロールのみが読み取れます。
+
+### プレースホルダー値を自分の値に置き換えます：
+
+- `<log-group-name>`はログが送信されるロググループです。このCDKコンストラクトサンプルには、前のステップで既に作成している可能性があるCloudWatchロググループを作成するロジックが含まれています。
+- `<s3-bucket-name>`はリモートで取得されるロギング制約jsonファイルを保持するS3バケットです。
+- `<amplify-authenticated-role-name>`と`<amplify-unauthenticated-role-name>`は、Amplify CLIを介したAmplify Auth設定の一部として作成されるAmplifyロールです。
+
+### リソース依存関係
+
+- `lambdaConfig`はS3から読み込むLambdaの場所を提供します。例は[Lambda ハンドラーサンプル](#sample-lambda-handler)セクションで提供されています。
+- `configFileName`と`loggingConfigLocation`は、S3にデプロイされるログレベル設定ファイルの場所とファイル名を提供します。例は[リモート設定ファイルの作成](#creating-remote-configuration-file)セクションで提供されています。
+
+```ts
+import * as cdk from "aws-cdk-lib"
+import { Construct } from "constructs"
+import * as apigateway from "aws-cdk-lib/aws-apigateway"
+import * as lambda from "aws-cdk-lib/aws-lambda"
+import * as s3 from "aws-cdk-lib/aws-s3"
+import * as logs from "aws-cdk-lib/aws-logs"
+import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment"
+import * as path from "path"
+import * as iam from "aws-cdk-lib/aws-iam"
+
+export class RemoteLoggingConstraintsConstruct extends Construct {
+  constructor(scope: Construct, id: string, props: RemoteLoggingConstraintProps) {
+    super(scope, id)
+
+    // ** provision CloudWatch Log Group to send logs **
+    const region = cdk.Stack.of(this).region
+    const account = cdk.Stack.of(this).account
+    const logGroupName = <log-group-name>
+    const authRoleName = <amplify-authenticated-role-name>
+    const unAuthRoleName = <amplify-unauthenticated-role-name>
+
+    new logs.LogGroup(this, 'Log Group', {
+      logGroupName: logGroupName,
+      retention: logs.RetentionDays.INFINITE
+    })
+
+    const authRole = iam.Role.fromRoleName(this, "Auth-Role", authRoleName)
+    const unAuthRole = iam.Role.fromRoleName(this, "UnAuth-Role", unAuthRoleName)
+    const logResource = `arn:aws:logs:${region}:${account}:log-group:${logGroupName}:log-stream:*`
+    const logIAMPolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [logResource],
+      actions: ["logs:PutLogEvents", "logs:DescribeLogStreams", "logs:CreateLogStream"]
+    })
+
+    authRole.addToPrincipalPolicy(logIAMPolicy)
+    unAuthRole.addToPrincipalPolicy(logIAMPolicy)
+
+    // ** provision resource to support remote configuration (API Gateway, S3 bucket, and Lambda) **
+    const <loggingConfigLocation> = 'resources/config/remoteloggingconstraints.json'
+    const <lambdaConfig> = 'resources/lambda/remoteconfig.js'
+    const <configFileName> = 'remoteloggingconstraints.json'
+
+    const remoteConfigBucket = new s3.Bucket(this, 'AmplifyRemoteLogging-Bucket', {
+        publicReadAccess: false,
+        versioned: true,
+        bucketName: <s3-bucket-name>
+      });
+
+    new BucketDeployment(this, `AmplifyRemoteLogging-BucketDeployment`, {
+        sources: [
+            Source.asset(path.dirname(path.join(<loggingConfigLocation>))),
+        ],
+        destinationBucket: remoteConfigBucket
+    });
+
+    const handler = new lambda.Function(this, "AmplifyRemoteLogging-Handler", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      code: lambda.Code.fromAsset(path.dirname(path.join(<lambdaConfig>))),
+      handler: "remotelogging.main",
+      environment: {
+        BUCKET: <s3-bucket-name>,
+        KEY: <configFileName>
+      }
+    })
+
+    remoteConfigBucket.grantRead(handler)
+
+    const api = new apigateway.RestApi(this, "AmplifyRemoteLogging-API", {
+      restApiName: "Logging API",
+      description: "API Gateway for Remote Logging"
+    })
+
+    const getRemoteLoggingIntegration = new apigateway.LambdaIntegration(handler)
+    const loggingConstraints = api.root.addResource('loggingconstraints')
+    const getLoggingConstraints = loggingConstraints.addMethod('GET', getRemoteLoggingIntegration, {
+      authorizationType: apigateway.AuthorizationType.IAM
+    })
+
+    const apiInvokePolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [ getLoggingConstraints.methodArn ],
+      actions: ['execute-api:Invoke']
+    })
+
+    authRole.addToPrincipalPolicy(apiInvokePolicy)
+    unAuthRole.addToPrincipalPolicy(apiInvokePolicy)
+
+    new cdk.CfnOutput(this, 'APIEndpoint', {
+      value: `https://${api.restApiId}.execute-api.${region}.amazonaws.com/prod/loggingconstraints`,
+    });
+    new cdk.CfnOutput(this, 'CloudWatchLogGroupName', { value: logGroupName });
+    new cdk.CfnOutput(this, 'CloudWatchRegion', { value: region });
+  }
+}
+```
+
+APIエンドポイント、CloudWatchロググループ、およびリージョンはターミナルに出力されます。この情報を使用してAmplifyライブラリをセットアップできます。
+
+### Lambda ハンドラーサンプル
+
+以下は、AWS S3から`remoteloggingconstraints.json`を読み込んで返すサンプルLambdaです。設定はこの例のETagの使用を介してバージョンでキャッシュされることに注意してください。これにより、Lambdaはより効率的になり、帯域幅を節約できます。内容が変更されていない場合は、完全な設定ファイルを再度送信する必要がないためです。
+
+```js
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+const s3 = new S3Client({});
+const bucketName = process.env.BUCKET;
+const key = process.env.KEY;
+let cachedConfig = {
+  expiresOn: 0,
+  ETag: '',
+  config: ''
+};
+
+exports.main = async function (event, context) {
+  try {
+    if (event.httpMethod === 'GET') {
+      if (!cachedConfig.config || Date.now() > cachedConfig.expiresOn) {
+        // refresh cache if cache is invalid
+        const command = new GetObjectCommand({ Bucket: bucketName, Key: key });
+        const s3Resp = await s3.send(command);
+        await setCachedConfig(s3Resp);
+      }
+
+      if (event.headers['If-None-Match'] === cachedConfig.ETag) {
+        // return 304 not modified if config has not changed
+        return {
+          statusCode: 304
+        };
+      } else {
+        // return updated/modified config with latest ETag
+        return {
+          statusCode: 200,
+          headers: { "'ETag'": cachedConfig.ETag },
+          body: cachedConfig.config
+        };
+      }
+    }
+  } catch (error) {
+    const resp = error.stack || JSON.stringify(error, null, 2);
+    return {
+      statusCode: 400,
+      headers: {},
+      body: JSON.stringify(resp)
+    };
+  }
+};
+
+const setCachedConfig = async (s3Resp) => {
+  cachedConfig = {
+    expiresOn: Date.now() + 600 * 1000, //10 minutes
+    ETag: s3Resp.ETag.replace(/\"/gi, ''), //remove \" from string
+    config: await s3Resp.Body.transformToString()
+  };
+};
+```
+
+## リモート設定ファイルの作成
+
+以下は、モバイルアプリケーションのローカルファイルを上書きするサンプルリモート設定ファイルです。このファイルはS3にデプロイされます。デプロイ後、S3のこのファイルを編集してアプリケーションログレベルを変更できます。
+
+```json
+{
+  "defaultLogLevel": "ERROR",
+  "categoryLogLevel": {
+    "API": "DEBUG",
+    "AUTH": "DEBUG"
+  },
+  "userLogLevel": {
+    "cognito-sub-xyz-123": {
+      "defaultLogLevel": "VERBOSE",
+      "categoryLogLevel": {
+        "API": "VERBOSE",
+        "AUTH": "VERBOSE"
+      }
+    }
+  }
+}
+```
+
+## アプリでリモート設定を有効にする
+
+Amplify Loggerがリモートログレベルをフェッチするようにするには、ログレベルを持つAPIエンドポイントと、ユーザーのデバイス上でリモート設定を更新するための更新間隔を提供する必要があります。
+
+  #### [設定ファイルで]
+アプリケーションで、`amplifyconfiguration_logging`ファイルを新しいjsonセクション`defaultRemoteConfiguration`を追加して更新します：
+
+```json
+{
+    "awsCloudWatchLoggingPlugin": {
+      "enable": true,
+      "logGroupName": "<log-group-name>",
+      "region": "<region>",
+      "localStoreMaxSizeInMB": 1,
+      "flushIntervalInSeconds": 60,
+      "loggingConstraints": {
+          "defaultLogLevel": "ERROR"
+      },
+      "defaultRemoteConfiguration": {
+          "endpoint": "<your-api-endpoint>",
+          "refreshIntervalInSeconds": 1200
+      }
+    }
+}
+```
+
+  
+
+  #### [コードで]
+
+<!-- Platform: android -->
+
+#### [Java]
+
+```java
+LoggingConstraints loggingConstraints = new LoggingConstraints(LogLevel.WARN);
+RemoteLoggingConstraintProvider remoteLoggingConstraintProvider = new DefaultRemoteLoggingConstraintProvider(<endpoint-url>, <region>)
+AWSCloudWatchLoggingPluginConfiguration config = new AWSCloudWatchLoggingPluginConfiguration (<log-group-name>, <region>, loggingConstraints);
+Amplify.addPlugin(new AWSCloudWatchLoggingPlugin(config, remoteLoggingConstraintProvider));
+```
+
+#### [Kotlin]
+
+```kotlin
+val loggingConstraints = LoggingConstraints(defaultLogLevel = LogLevel.WARN)
+val remoteLoggingConstraintProvider = DefaultRemoteLoggingConstraintProvider(<endpoint-url>, <region>)
+val config = AWSCloudWatchLoggingPluginConfiguration(logGroupName = <log-group-name>, region = <region>, loggingConstraints = loggingConstraints)
+Amplify.addPlugin(AWSCloudWatchLoggingPlugin(config, remoteLoggingConstraintProvider))
+```
+
+#### [RxJava]
+
+```java
+LoggingConstraints loggingConstraints = new LoggingConstraints(LogLevel.WARN);
+RemoteLoggingConstraintProvider remoteLoggingConstraintProvider = new DefaultRemoteLoggingConstraintProvider(<endpoint-url>, <region>)
+AWSCloudWatchLoggingPluginConfiguration config = new AWSCloudWatchLoggingPluginConfiguration (<log-group-name>,<region>, loggingConstraints);
+Amplify.addPlugin(new AWSCloudWatchLoggingPlugin(config, remoteLoggingConstraintProvider));
+```
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+`AWSCloudWatchLoggingPlugin`インスタンスを構築する際に、リモート設定プロバイダーをパラメーターとして指定します。
+
+```swift
+do {
+    let endpointUrl: URL = URL(string: "<your-api-endpoint>")!
+    let remoteConfigProvider = DefaultRemoteLoggingConstraintsProvider(endpoint: endpointUrl, region: "<region>")
+    let loggingPlugin = AWSCloudWatchLoggingPlugin(remoteLoggingConstraintsProvider: remoteConfigProvider)
+    try Amplify.add(plugin: loggingPlugin)
+    try Amplify.configure(with: .amplifyOutputs)
+} catch {
+    assert(false, "Error initializing Amplify: \(error)")
+}
+```
+<!-- /Platform -->

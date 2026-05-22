@@ -1,0 +1,125 @@
+---
+title: "モノレポのセットアップ"
+section: "deploy-and-host/fullstack-branching"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2024-08-02T20:32:56.000Z"
+url: "https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/monorepos/"
+---
+
+一部のチームはモノレポアプローチ、または共有ライブラリとコンポーネントのデプロイプロセスを簡素化するために複数のパッケージやコンポーネントを含む単一のリポジトリを選択します。モノレポなしでは、各パッケージを個別にデプロイし、パッケージのバージョンとパッケージ間の依存関係を追跡し、バージョンの互換性を確保する必要があります。これはパッケージの数が増えるにつれて、指数関数的に複雑になる可能性があります。モノレポを使用すると、すべてのパッケージと依存関係が単一のリポジトリ内に含まれます。
+
+Amplify Gen 2は、NxやYarn workspacesなどのモノレポツールを使用したフルスタックビルドのモノレポワークフローをサポートしています。Gen 2でビルドする場合、共有ワークスペースに`amplify/`フォルダを作成することをお勧めします。このガイドでは以下の例を使用します。
+
+```text
+├── apps/
+│   ├── admin-dashboard/
+│   │   ├── next.config.mjs
+│   │   └── package.json
+│   └── marketing-site/
+│       ├── astro.config.mjs
+│       └── package.json
+├── packages/
+│   └── my-shared-backend/
+│       ├── amplify/
+│       │   ├── auth/
+│       │   │   └── resource.ts
+│       │   ├── data/
+│       │   │   └── resource.ts
+│       │   └── backend.ts
+│       |── package.json
+        └── tsconfig.json
+└── package.json
+```
+
+モノレポには若干異なるセットアップが必要です。3つのAmplifyアプリをデプロイします。
+
+1. `my-shared-backend`
+2. `admin-dashboard`
+3. `marketing-site`
+
+## バックエンドアプリのデプロイ
+
+最初のアプリ`my-shared-backend`は、バックエンドの変更を更新する唯一のアプリになります。他のアプリは、共有バックエンドを指すフロントエンドビルドのみを実行します。
+
+1. まず、共有バックエンドAmplifyアプリをデプロイします。Gen 2では、バックエンドのみのCI/CDアプリをセットアップできるようになりました。Amplifyコンソールに移動して、**新しいアプリを作成**を選択します。
+
+1. リポジトリを接続したら、モノレポプロジェクトを選択します。**My app is a monorepo**というチェックボックスをオンにして、amplifyバックエンドへのパスを入力します。
+
+![monorepo](/images/gen2/fullstack-branching/monorepo.png)
+
+3. ビルド設定は自動的に検出されます。保存してデプロイします。
+
+## フロントエンドアプリのデプロイ
+
+1. フロントエンドアプリの場合は、フロントエンドプロジェクトをAmplifyコンソールで個別に接続し、ビルドコマンドを次のように更新してください。
+
+<!-- Platform: angular,javascript,nextjs,react,react-native,vue -->
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate outputs --branch main --app-id BACKEND-APP-ID
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate outputs --app-id <your-backend-amplify-app-id> --branch main --format dart --out-dir lib
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+> **Warning:** app/src/main/res ディレクトリに "raw" フォルダが存在しない場合は、必ず追加してください。
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate outputs --app-id <your-backend-amplify-app-id> --branch main --out-dir app/src/main/res/raw
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate outputs --app-id <your-backend-amplify-app-id> --branch main
+```
+
+サンドボックス環境が実行されると、アプリケーションの設定ファイルも生成されます。ただし、Xcodeはそれらを認識できません。ファイルを認識するには、生成されたファイルをプロジェクトにドラッグアンドドロップする必要があります。
+
+<!-- /Platform -->
+
+- バックエンドアプリケーションの`App ID`を探すには、Amplifyコンソールに移動して、**backend-app**を選択します。概要ページでは、`App ID`はプロジェクト名の下に表示されます。
+
+<!-- Platform: angular,javascript,nextjs,react,react-native,vue -->
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate outputs --branch main --app-id BACKEND-APP-ID
+```
+<!-- /Platform -->
+
+<!-- Platform: angular,javascript,nextjs,react,react-native,vue -->
+## スキーマ型定義の共有
+
+Amplify Dataを使用している場合、`amplify/data/resource.ts`ファイルを指す`tsconfig.json`ファイルに`paths`エントリを追加して、フロントエンドアプリからスキーマ型定義に簡単にアクセスできるようにすることをお勧めします。
+
+```json title="tsconfig.json" showLineNumbers={false}
+{
+  "compilerOptions": {
+    "paths": {
+      "@/data-schema": ["./packages/my-shared-backend/amplify/data/resource"]
+    }
+  }
+}
+```
+
+このパスからフロントエンドコードに`Schema`型をインポートすれば、APIコールのコード補完と強力な型付けが得られます。
+
+```ts title="apps/admin-dashboard/page.tsx"
+import { generateClient } from "aws-amplify/data";
+import type { Schema } from "@/data-schema";
+
+const client = generateClient<Schema>();
+
+const createTodo = async () => {
+  await client.models.Todo.create({
+    content: window.prompt("Todo content?"),
+    isDone: false,
+  });
+}
+
+```
+<!-- /Platform -->

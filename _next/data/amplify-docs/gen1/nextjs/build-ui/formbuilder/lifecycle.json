@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"nextjs","meta":{"title":"フォームのライフサイクルを管理する","description":"フォームのライフサイクルイベントにフックして、ユーザー入力を送信前にカスタマイズしたり、検証を実行したり、エラーを処理したり、ユーザー入力イベントを自己管理します。","platforms":["javascript","react","nextjs"]}},"__N_SSG":true}

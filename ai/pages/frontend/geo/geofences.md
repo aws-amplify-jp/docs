@@ -1,0 +1,345 @@
+---
+title: "ジオフェンスを操作する"
+section: "frontend/geo"
+platforms: ["angular", "javascript", "nextjs", "react", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/geo/geofences/"
+---
+
+## ジオフェンスリソースのプロビジョニング
+
+まず、[ジオフェンスコレクションを設定](/[platform]/build-a-backend/add-aws-services/geo/configure-geofencing/)または[既存の Amazon Location Service リソースを使用](/[platform]/build-a-backend/add-aws-services/geo/existing-resources/)の指示に従ってジオフェンスコレクションリソースをプロビジョニングし、アプリケーションを設定していることを確認してください。また、アプリケーションで[マップを表示](/[platform]/frontend/geo/maps/)するセットアップが既に完了していることを確認してください。
+
+## アプリケーションでジオフェンスを管理する
+
+マップにジオフェンス管理コンポーネントを追加するには、[amplify-geofence-control](https://github.com/aws-amplify/maplibre-gl-js-amplify/blob/geo/API.md#amplifygeofencecontrol)を使用できます。
+
+次のコマンドで必要な依存関係をインストールしてください：
+
+```bash title="Terminal" showLineNumbers={false} 
+npm add aws-amplify \
+  @aws-amplify/geo \
+  @aws-amplify/ui-react \
+  @aws-amplify/ui-react-geo
+```
+
+> **注:**`aws-amplify @aws-amplify/geo` バージョン `6.0.0` 以上がインストールされていることを確認してください。
+
+まず、ジオフェンス管理コンポーネントを追加するマップを作成します。[マップの作成と表示](/[platform]/frontend/geo/maps)に関するガイドを参照してください。
+
+次に、「maplibre-gl-js-amplify」から [AmplifyGeofenceControl](https://github.com/aws-amplify/maplibre-gl-js-amplify/blob/geo/API.md#amplifygeofencecontrol) をインポートし、このコントロールの新しいインスタンスを作成して、MapLibre マップインスタンスに追加します。
+
+> **注:** ジオフェンスコントロールを使用するには、ユーザーは作成したジオフェンスコレクションに関連付けられた管理 Cognito ユーザーで認証される必要があります。以下は React と [Amplify Authenticator](https://ui.docs.amplify.aws/react/components/authenticator) を使用した例です。
+
+  #### [Javascript]
+
+**注:** 既存の[マップ実装](/[platform]/frontend/geo/maps)を使用する場合、ジオフェンスコントロールを既存のマップに追加できます
+
+```diff
+import { useEffect, useRef } from "react";
+- import { createMap } from "maplibre-gl-js-amplify";
++ import { createMap, AmplifyGeofenceControl } from "maplibre-gl-js-amplify";
++ import { withAuthenticator } from "@aws-amplify/ui-react";
++ import "@aws-amplify/ui-react/styles.css";
++ import "maplibre-gl-js-amplify/dist/public/amplify-ctrl-geofence.css";
+import "maplibre-gl/dist/maplibre-gl.css";
+
+function Map() {
+  const mapRef = useRef(null); // Reference to the map DOM element
+
+  // Wrapping your code in a useEffect allows us to run initializeMap after the div has been rendered into the DOM
+  useEffect(() => {
+    let map;
+    async function initializeMap() {
+      // You only want to initialize the underlying maplibre map after the div has been rendered
+      if (mapRef.current != null) {
+        map = await createMap({
+          container: mapRef.current,
+          center: [-122.431297, 37.773972],
+          zoom: 11,
+        });
+      }
+
++     const control = new AmplifyGeofenceControl()
++     map.addControl(control);
+  }
+  initializeMap();
+
+    // Cleans up and maplibre DOM elements and other resources - https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#remove
+    return function cleanup() {
+      if (map != null) map.remove();
+    };
+  }, []);
+
+ return (
+   <div className="App">
+     <div ref={mapRef} id="map" />
+   </div>
+ );
+}
+
+export default withAuthenticator(Map);
+```
+
+  
+
+  #### [React]
+
+**注:** [Amplify React MapView コンポーネント](https://ui.docs.amplify.aws/react/components/geo)を使用する場合、[react-map-gl の `useControl` フック](https://visgl.github.io/react-map-gl/docs/api-reference/maplibre/use-control)を使用してジオフェンスコントロールコンポーネントをレンダリングできます。[react-map-gl](https://visgl.github.io/react-map-gl) 依存関係は既に `@aws-amplify/ui-react-geo` を通じてインストールされているため、手動でインストールする必要はありません。
+
+```javascript
+import React from 'react';
+import { Amplify } from 'aws-amplify';
+import { withAuthenticator } from '@aws-amplify/ui-react';
+import { MapView } from '@aws-amplify/ui-react-geo';
+import { useControl } from 'react-map-gl';
+import { AmplifyGeofenceControl } from 'maplibre-gl-js-amplify';
+import '@aws-amplify/ui-react/styles.css';
+import '@aws-amplify/ui-react-geo/styles.css';
+import 'maplibre-gl-js-amplify/dist/public/amplify-ctrl-geofence.css';
+import outputs from '../amplify_outputs.json';
+Amplify.configure(outputs);
+
+function Geofence() {
+  useControl(() => new AmplifyGeofenceControl());
+
+  return null;
+}
+
+function App({ signOut }) {
+  return (
+    <div className="App">
+      <MapView
+        initialViewState={{
+          latitude: 37.8,
+          longitude: -122.4,
+          zoom: 14
+        }}
+      >
+        <Geofence />
+      </MapView>
+    </div>
+  );
+}
+
+export default withAuthenticator(App);
+```
+
+  
+
+> **注:** パッケージバンドラー (webpack、rollup など) が CSS ファイルを処理するように設定されていることを確認してください。webpack のドキュメントを[ここ](https://webpack.js.org/loaders/css-loader/)で確認してください。
+
+!['ジオフェンスの作成'インターフェイスは、マップ上の複数のポイントを選択して新しいジオフェンス領域の周囲を定義するプロセスを表示しています](/images/geofence-create.png)
+
+!['ジオフェンスの編集'インターフェイスは、既存のジオフェンスの周囲の複数のポイントを調整することにより、マップ上の領域の選択を表示しています](/images/geofence-edit.png)
+
+## ジオフェンス API
+
+別のマッピングライブラリを使用している場合、またはジオフェンス管理のためにプログラムによるアプローチが必要な場合、`@aws-amplify/geo` パッケージはジオフェンス管理のメソッドを提供します（ただし、ジオフェンスコレクション管理は提供されません）。
+
+まず、`@aws-amplify/geo` パッケージから Geo をインポートする必要があります。
+
+```javascript
+import { Geo } from '@aws-amplify/geo';
+```
+
+### saveGeofences
+
+`saveGeofences` は、ジオフェンスをコレクションに保存するために使用されます。単一のジオフェンスまたはジオフェンスの配列を受け取ることができます。
+
+#### API
+
+```javascript
+Geo.saveGeofences(geofences, options) => Promise<SaveGeofenceResults>;
+```
+
+#### パラメータ
+
+- `geofences` - 単一のジオフェンスオブジェクト、またはコレクションに保存するジオフェンスオブジェクトの配列。
+- `options` - ジオフェンスを保存するためのオプションオブジェクト（省略可能）
+  - `collectionName` - ジオフェンスを保存するコレクションの名前。
+    - ジオフェンスコレクションリソースをプロビジョニングした後、`amplify_outputs.json` ファイルにリストされているデフォルトコレクションに既定値が設定されます。
+
+ジオフェンスオブジェクトは次のプロパティを持つ必要があります：
+
+- `geofenceId` - ジオフェンスの不透明で一意の識別子。
+- `geometry` - ジオフェンスを定義するジオメトリオブジェクト。
+  - `polygon` - [経度、緯度]座標の配列の配列。
+
+<Callout>
+
+注: ポリゴン配列にはいくつかの要件があります：
+
+- 最低4つの頂点（つまり4つの座標ポイント）が必要です
+- ポリゴンループを完成させるために、最初と最後のポイントが同じである必要があります
+- 頂点は反時計回りの順序である必要があります
+
+</Callout>
+
+#### 戻り値
+
+`saveGeofences` からの戻り値は、正常に作成されたまたは失敗したジオフェンスの成功とエラーの両方を含む `SaveGeofenceResults` に解決される Promise です。
+
+各成功オブジェクトは以下のプロパティを持ちます：
+
+- `geofenceId` - 保存されたジオフェンスの geofenceId。
+- `createTime` - ジオフェンスが作成された時刻。
+- `updateTime` - ジオフェンスが最後に更新された時刻。
+
+各エラーオブジェクトは以下のプロパティを持ちます：
+
+- `geofenceId` - 保存に失敗したジオフェンスの geofenceId。
+- `error` - エラーオブジェクト
+  - `code` - [エラーコード](https://docs.aws.amazon.com/location-geofences/latest/APIReference/API_BatchItemError.html)
+  - `message` - エラーメッセージ
+
+#### 例
+
+```js
+let saveGeofenceResults;
+try {
+  saveGeofenceResults = await Geo.saveGeofences({
+    geofenceId: 'my-geofence',
+    geometry: {
+      polygon: [
+        [-123.14695358276366, 49.290090146520434],
+        [-123.1358814239502, 49.294960279811974],
+        [-123.15021514892577, 49.29300108863353],
+        [-123.14909934997559, 49.29132171993048],
+        [-123.14695358276366, 49.290090146520434]
+      ]
+    }
+  });
+} catch (error) {
+  // errors thrown by input validations of `saveGeofences`
+  throw error;
+}
+
+if (saveGeofenceResults.errors.length > 0) {
+  // error handling that are from the underlying API calls
+  console.log(`Success count: ${saveGeofenceResults.successes.length}`);
+  console.log(`Error count: ${saveGeofenceResults.errors.length}`);
+}
+```
+
+### getGeofence
+
+`getGeofence` はコレクションから単一のジオフェンスを取得するために使用されます。
+
+#### API
+
+```javascript
+Geo.getGeofence(geofenceId, options) => Promise<Geofence>;
+```
+
+#### パラメータ
+
+- `geofenceId` - 取得するジオフェンスの `id`。
+- `options` - ジオフェンスを取得するためのオプションオブジェクト（省略可能）
+  - `collectionName` - ジオフェンスを取得するコレクションの名前。
+    - ジオフェンスコレクションリソースをプロビジョニングした後、`amplify_outputs.json` ファイルにリストされているデフォルトコレクションに既定値が設定されます。
+
+#### 戻り値
+
+`getGeofence` からの戻り値は、ジオフェンスオブジェクトに解決される Promise です。
+
+#### 例
+
+```javascript
+let responses;
+try {
+  response = await Geo.getGeofence('geofenceId');
+} catch (error) {
+  throw error;
+}
+```
+
+### listGeofences
+
+`listGeofences` はコレクションからジオフェンスのリストを取得するために使用されます。ページネーションが組み込まれており、ページあたり100個のジオフェンスを返します。
+
+#### API
+
+```javascript
+Geo.listGeofences(options) => Promise<ListGeofenceResults>;
+```
+
+#### パラメータ
+
+- `options` - ジオフェンスを保存するためのオプションオブジェクト（省略可能）
+  - `nextToken` - 次のジオフェンスページのページネーショントークン。
+    - トークンが与えられない場合、最初のジオフェンスページを返します。
+  - `collectionName` - ジオフェンスを保存するコレクションの名前。
+    - ジオフェンスコレクションリソースをプロビジョニングした後、`amplify_outputs.json` ファイルにリストされているデフォルトコレクションに既定値が設定されます。
+
+#### 戻り値
+
+以下のプロパティを持つオブジェクトに解決される Promise を返します：
+
+- `entries` - ジオフェンスの配列
+- `nextToken` - 次のジオフェンスページのページネーショントークン
+
+#### 例
+
+```javascript
+let response;
+try {
+  response = await Geo.listGeofences();
+  response.entries.forEach((geofence) => console.log(geofence.geofenceId));
+} catch (error) {
+  throw error;
+}
+```
+
+### deleteGeofences
+
+`deleteGeofences` はコレクションからジオフェンスを削除するために使用されます。1つまたは複数のジオフェンスを一度に削除できます。
+
+#### API
+
+```js
+Geo.deleteGeofences(geofenceIds, options) => Promise<DeleteGeofencesResults>;
+```
+
+#### パラメータ
+
+- `geofenceIds` - 削除する単一の geofenceId またはgeofenceId の配列
+- `options` - ジオフェンスを保存するためのオプションオブジェクト（省略可能）
+  - `collectionName` - ジオフェンスを保存するコレクションの名前。
+    - ジオフェンスコレクションリソースをプロビジョニングした後、`amplify_outputs.json` ファイルにリストされているデフォルトコレクションに既定値が設定されます。
+
+#### 戻り値
+
+`deleteGeofences` からの戻り値は、正常に削除されたか削除されていないジオフェンスの成功とエラーの両方を含むオブジェクトに解決される Promise です。
+
+- 成功オブジェクトは、正常に削除された geofenceId の配列です。
+- エラーオブジェクトは、以下のプロパティを含むエラーオブジェクトの配列です：
+  - `geofenceId` - 削除に失敗したジオフェンスの geofenceId。
+  - `error` - エラーオブジェクト
+    - `code` - [エラーコード](https://docs.aws.amazon.com/location-geofences/latest/APIReference/API_BatchItemError.html)
+    - `message` - エラー
+
+#### 例
+
+```js
+let response;
+try {
+  response = await Geo.deleteGeofences(
+    [
+      "geofence1",
+      "geofence2",
+      "geofence3",
+    ]
+  )
+catch (error) {
+  // error handling from logic and validation issues within `deleteGeofences`
+  throw error;
+}
+
+if(response.errors.length > 0){
+  // error handling that are from the underlying API calls
+  console.log(`Success count: ${response.successes.length}`);
+  console.log(`Error count: ${response.errors.length}`);
+}
+```

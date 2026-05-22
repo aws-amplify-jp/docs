@@ -1,0 +1,298 @@
+---
+title: "認証イベントのリスン"
+section: "frontend/auth"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/auth/listen-to-auth-events/"
+---
+
+Amplify Auth は認証フロー中にイベントを発行します。これにより、ユーザーフローをリアルタイムで監視し、カスタムビジネスロジックをトリガーできます。たとえば、データをキャプチャし、アプリの状態を同期し、ユーザーエクスペリエンスをパーソナライズしたい場合があります。サインインやサインアウトなど、Auth ライフサイクル全体のイベントをリスンして対応できます。
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+## 認証アクションに対応して発生する Hub イベントを公開する
+
+Amplify Hub とその組み込みの Amplify Auth イベントを使用して、パブリッシュ-サブスクライブパターンを使用してリスナーをサブスクライブし、アプリケーションの異なる部分間でイベントをキャプチャできます。Amplify Auth カテゴリは、`signedIn` や `signedOut` などの認証イベントがアプリコードとは独立して発生した場合に `auth` チャネルで公開します。
+
+Amplify Hub ガイドで[詳細を学習](/gen1/react/build-a-backend/utilities/hub/)できます。
+
+> **Warning:** チャネルは、ディスパッチとリスニングの整理に役立つ論理グループ名です。ただし、一部のチャネルは保護されており、カスタムイベントの公開には使用できません。`auth` はこれらの保護されたチャネルの 1 つです。保護されたチャネルに予期しないペイロードを送信すると、認証フローに影響を与えるなど、望ましくない副作用が生じる可能性があります。詳細は [Amplify Hub](/gen1/react/build-a-backend/utilities/hub/) ガイドで、保護されたチャネルの詳細をご覧ください。
+
+`auth` チャネルを通じて発行されたイベントをログするリスナーをセットアップする基本的な例を次に示します:
+
+```js
+import { Hub } from 'aws-amplify/utils';
+
+Hub.listen('auth', (data) => {
+  console.log(data)
+});
+```
+
+アプリが `auth` チャネルから特定のイベントタイプのサブスクライブとリスニングを設定すると、イベントが発生したときに、サブスクライブされたリスナーが非同期で通知されます。このパターンにより、1 対多の関係が可能になります。1 つの認証イベントが、サブスクライブされた多くの異なるリスナーと共有できます。これにより、アプリはイベントに基づいて対応でき、プロアクティブに情報をポーリングする必要がなくなります。
+
+さらに、イベントペイロードからデータを抽出し、定義したコールバックを実行するようにリスナーをセットアップできます。たとえば、`signedIn` または `signedOut` イベント後に、ユーザーの認証状態を反映するためにアプリの UI 要素を更新することができます。
+
+### 認証イベントをリスニングしてログする
+
+最も一般的なワークフローの 1 つは、イベントをログすることです。この例では、`switch` を使用して特定の `auth` イベントをターゲットにし、独自のメッセージをログする方法を確認できます。
+
+```js
+import { Hub } from 'aws-amplify/utils';
+
+Hub.listen('auth', ({ payload }) => {
+  switch (payload.event) {
+    case 'signedIn':
+      console.log('user have been signedIn successfully.');
+      break;
+    case 'signedOut':
+      console.log('user have been signedOut successfully.');
+      break;
+    case 'tokenRefresh':
+      console.log('auth tokens have been refreshed.');
+      break;
+    case 'tokenRefresh_failure':
+      console.log('failure while refreshing auth tokens.');
+      break;
+    case 'signInWithRedirect':
+      console.log('signInWithRedirect API has successfully been resolved.');
+      break;
+    case 'signInWithRedirect_failure':
+      console.log('failure while trying to resolve signInWithRedirect API.');
+      break;
+    case 'customOAuthState':
+      logger.info('custom state returned from CognitoHosted UI');
+      break;
+  }
+});
+```
+
+### イベントのリスニングを停止する
+
+`Hub.listen()` 関数の結果を呼び出すことで、メッセージのリスニングを停止することもできます。アプリケーションフロー内でメッセージを受け取る必要がなくなった場合に便利です。これは、Amplify Hub を使用して複数のチャネルで大量のデータを送信する場合に、低電力デバイスのメモリリークを回避するのに役立ちます。
+
+特定のイベントのリスニングを停止するには、リスナー関数を変数でラップし、それ以上必要がなくなったら呼び出す必要があります:
+
+```js
+/* start listening for messages */
+const hubListenerCancelToken = Hub.listen('auth', (data) => {
+  console.log('Listening for all auth events: ', data.payload.data);
+});
+
+/* later */
+hubListenerCancelToken(); // stop listening for messages
+```
+
+これで、認証イベントをリスニングして対応するためのいくつかのユースケースと例が得られました。
+<!-- /Platform -->
+<!-- Platform: flutter -->
+AWS Cognito Auth プラグインは、Amplify Hub を通じて重要なイベントを送信します。次のようにこれらのイベントをリスニングできます:
+
+```dart
+final subscription = Amplify.Hub.listen(HubChannel.Auth, (AuthHubEvent event) {
+  switch (event.type) {
+    case AuthHubEventType.signedIn:
+      safePrint('User is signed in.');
+      break;
+    case AuthHubEventType.signedOut:
+      safePrint('User is signed out.');
+      break;
+    case AuthHubEventType.sessionExpired:
+      safePrint('The session has expired.');
+      break;
+    case AuthHubEventType.userDeleted:
+      safePrint('The user has been deleted.');
+      break;
+  }
+});
+```
+<!-- /Platform -->
+<!-- Platform: android -->
+AWS Cognito Auth プラグインは、Amplify Hub を通じて重要なイベントを送信します。次のようにこれらのイベントをリスニングできます:
+
+#### [Java]
+
+```java
+Amplify.Hub.subscribe(HubChannel.AUTH,
+    hubEvent -> {
+        if (hubEvent.getName().equals(InitializationStatus.SUCCEEDED.name())) {
+            Log.i("AuthQuickstart", "Auth successfully initialized");
+        } else if (hubEvent.getName().equals(InitializationStatus.FAILED.name())){
+            Log.i("AuthQuickstart", "Auth failed to succeed");
+        } else {
+            String eventName = hubEvent.getName();
+            if (eventName.equals(SIGNED_IN.name())) {
+                Log.i("AuthQuickstart", "Auth just became signed in.");
+            }
+            else if (eventName.equals(SIGNED_OUT.name())) {
+                Log.i("AuthQuickstart", "Auth just became signed out.");
+            }
+            else if (eventName.equals(SESSION_EXPIRED.name())) {
+                Log.i("AuthQuickstart", "Auth session just expired.");
+            }
+            else if (eventName.equals(USER_DELETED.name())) {
+                Log.i("AuthQuickstart", "User has been deleted.");
+            }
+            else {
+                Log.w("AuthQuickstart", "Unhandled Auth Event: " + eventName);
+            }
+        }
+    }
+);
+
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+Amplify.Hub.subscribe(HubChannel.AUTH) { event ->
+    when (event.name) {
+        InitializationStatus.SUCCEEDED.name ->
+            Log.i("AuthQuickstart", "Auth successfully initialized")
+        InitializationStatus.FAILED.name ->
+            Log.i("AuthQuickstart", "Auth failed to succeed")
+        else -> when (event.name) {
+            AuthChannelEventName.SIGNED_IN.name ->
+                Log.i("AuthQuickstart", "Auth just became signed in")
+            AuthChannelEventName.SIGNED_OUT.name ->
+                Log.i("AuthQuickstart", "Auth just became signed out")
+            AuthChannelEventName.SESSION_EXPIRED.name ->
+                Log.i("AuthQuickstart", "Auth session just expired")
+            AuthChannelEventName.USER_DELETED.name ->
+                Log.i("AuthQuickstart", "User has been deleted")
+            else ->
+                Log.w("AuthQuickstart", "Unhandled Auth Event: ${event.name}")
+        }
+    }
+}
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+Amplify.Hub.subscribe(HubChannel.AUTH).collect {
+    when (it.name) {
+        InitializationStatus.SUCCEEDED.name ->
+            Log.i("AuthQuickstart", "Auth successfully initialized")
+        InitializationStatus.FAILED.name ->
+            Log.i("AuthQuickstart", "Auth failed to succeed")
+        else -> when (it.name) {
+            AuthChannelEventName.SIGNED_IN.name ->
+                Log.i("AuthQuickstart", "Auth just became signed in.")
+            AuthChannelEventName.SIGNED_OUT.name ->
+                Log.i("AuthQuickstart", "Auth just became signed out.")
+            AuthChannelEventName.SESSION_EXPIRED.name ->
+                Log.i("AuthQuickstart", "Auth session just expired.")
+            AuthChannelEventName.USER_DELETED.name ->
+                Log.i("AuthQuickstart", "User has been deleted.")
+            else ->
+                Log.w("AuthQuickstart", "Unhandled Auth Event: ${it.name}")
+        }
+    }
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.Hub.on(HubChannel.AUTH)
+    .map(HubEvent::getName)
+    .subscribe(name -> {
+        if (name.equals(InitializationStatus.SUCCEEDED.name())) {
+            Log.i("AuthQuickstart", "Auth successfully initialized");
+            return;
+        } else if (name.equals(InitializationStatus.FAILED.name())) {
+            Log.i("AuthQuickstart", "Auth failed to succeed");
+            return;
+        } else {
+            if (name.equals(SIGNED_IN.name())) {
+                Log.i("AuthQuickstart", "Auth just became signed in.");
+            }
+            else if (name.equals(SIGNED_OUT.name())) {
+                Log.i("AuthQuickstart", "Auth just became signed out.");
+            }
+            else if (name.equals(SESSION_EXPIRED.name())) {
+                Log.i("AuthQuickstart", "Auth session just expired.");
+            }
+            else if (name.equals(USER_DELETED.name())) {
+                Log.i("AuthQuickstart", "User has been deleted.");
+            }
+            else {
+                Log.w("AuthQuickstart", "Unhandled Auth Event: " + hubEvent.getName());
+            }
+        }
+    });
+```
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+AWS Cognito Auth プラグインは、Amplify Hub を通じて重要なイベントを送信します。次のようにこれらのイベントをリスニングできます:
+
+#### [Listener]
+
+```swift
+override func viewDidLoad() {
+    super.viewDidLoad()
+    // Do any additional setup after loading the view.
+
+    // Assumes `unsubscribeToken` is declared as an instance variable in your view
+    unsubscribeToken = Amplify.Hub.listen(to: .auth) { payload in
+        switch payload.eventName {
+        case HubPayload.EventName.Auth.signedIn:
+            print("User signed in")
+            // Update UI
+
+        case HubPayload.EventName.Auth.sessionExpired:
+            print("Session expired")
+            // Re-authenticate the user
+
+        case HubPayload.EventName.Auth.signedOut:
+            print("User signed out")
+            // Update UI
+
+        case HubPayload.EventName.Auth.userDeleted:
+            print("User deleted")
+            // Update UI
+
+        default:
+            break
+        }
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+override func viewDidLoad() {
+    super.viewDidLoad()
+    // Do any additional setup after loading the view.
+
+    // Assumes `sink` is declared as an instance variable in your view controller
+    sink = Amplify.Hub
+        .publisher(for: .auth)
+        .sink { payload in
+            switch payload.eventName {
+            case HubPayload.EventName.Auth.signedIn:
+                print("User signed in")
+                // Update UI
+
+            case HubPayload.EventName.Auth.sessionExpired:
+                print("Session expired")
+                // Re-authenticate the user
+
+            case HubPayload.EventName.Auth.signedOut:
+                print("User signed out")
+                // Update UI
+
+            case HubPayload.EventName.Auth.userDeleted:
+                print("User deleted")
+                // Update UI
+
+            default:
+                break
+            }
+        }
+}
+```
+
+<!-- /Platform -->

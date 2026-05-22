@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"android","meta":{"title":"ユーザーグループベースのデータアクセス","description":"ユーザーグループ認可戦略により、特定のユーザーグループまたは各データレコードで動的に定義されたグループへのデータアクセスを制限できます。静的および動的グループ認可オプションの両方が利用可能ですが、動的グループ認可を使用する場合、リアルタイムサブスクリプションに関する制限があります。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

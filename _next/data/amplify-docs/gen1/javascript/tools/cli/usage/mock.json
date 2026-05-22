@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"javascript","meta":{"title":"モッキングとテスト","description":"すべての変更をクラウドにプッシュすることなく、Amplifyプロジェクトを迅速にテストおよびデバッグする方法を学びます。API（AWS AppSync）、Storage（Amazon DynamoDBおよびAmazon S3）、Functions（AWS Lambda）を含む特定のカテゴリのローカルモッキングおよびテストを使用します。","platforms":["angular","javascript","nextjs","react","react-native","vue"]}},"__N_SSG":true}

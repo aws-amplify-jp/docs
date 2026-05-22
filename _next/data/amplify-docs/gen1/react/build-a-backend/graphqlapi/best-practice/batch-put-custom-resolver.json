@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"react","meta":{"title":"バッチカスタムリゾルバーの配置","description":"GraphQL ミューテーションを活用して、各オブジェクトを個別に作成するための順序付きリクエストを行う代わりに、1 つのリクエストで複数のオブジェクトを効率的に作成します。","platforms":["javascript","angular","nextjs","react","vue","swift","android","flutter","react-native"]}},"__N_SSG":true}

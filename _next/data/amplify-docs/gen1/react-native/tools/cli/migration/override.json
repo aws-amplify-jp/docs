@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"react-native","meta":{"title":"フィーチャー有効化オーバーライド移行","description":"Amplify CLI バージョン 7 以上へのアップグレード時に、Amplify CLI バージョン 7 より前に作成されたプロジェクトでは、新しい「オーバーライド」機能を有効にするための移行が必要になります。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

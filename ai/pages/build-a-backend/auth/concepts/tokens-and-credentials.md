@@ -1,0 +1,249 @@
+---
+title: "トークンと認証情報"
+section: "build-a-backend/auth/concepts"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/auth/concepts/tokens-and-credentials/"
+---
+
+Amplify Authは、基盤となる[Amazon Cognito ユーザープール](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html)とOpenID Connect（OIDC）プロバイダーとしてやり取りします。ユーザーが正常に認証されると、OIDC準拠のJSON Web Token（JWT）を受け取ります。これらのトークンはユーザーを_識別_し、リソースに_アクセス_するために使用されます。
+
+[**アクセストークン**](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-access-token.html)は、トークンのベアラー（つまりCognitoユーザー）がリソースに対するアクションを実行する権限があるかどうかを確認するために使用されます。以下はCognitoによって発行されたアクセストークンのペイロード例です：
+
+```json
+{
+  "sub": "54288468-e051-706d-a73f-03892273d7e9",
+  "iss": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_yoKn9s4Tq",
+  "client_id": "1sg675g08g6g0e9f64grv9n5sk",
+  "origin_jti": "0eadb994-a6e0-419e-b309-a7a0d522d72f",
+  "event_id": "b180897a-181c-4f73-94bb-a2946e8b4ef1",
+  "token_use": "access",
+  "scope": "aws.cognito.signin.user.admin",
+  "auth_time": 1714241873,
+  "exp": 1714245473,
+  "iat": 1714241873,
+  "jti": "57f10a4d-a1f2-453b-8672-d1cfa8187047",
+  "username": "54288468-e051-706d-a73f-03892273d7e9"
+}
+```
+
+[**IDトークン**](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-id-token.html)は、フロントエンドアプリケーション内でのみ使用することを目的としています。このトークンには個人識別情報（PII）が含まれており、リソースに対するアクセスを認可するために使用すべきではありません。以下は、デフォルトのAmplify Authの設定でメールとパスワード認証を使用したIDトークンの例です。
+
+```json
+{
+  "sub": "54288468-e051-706d-a73f-03892273d7e9",
+  "email_verified": true,
+  "iss": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_yoKn9s4Tq",
+  "cognito:username": "54288468-e051-706d-a73f-03892273d7e9",
+  "origin_jti": "0eadb994-a6e0-419e-b309-a7a0d522d72f",
+  "aud": "1sg675g08g6g0e9f64grv9n5sk",
+  "event_id": "b180897a-181c-4f73-94bb-a2946e8b4ef1",
+  "token_use": "id",
+  "auth_time": 1714241873,
+  "exp": 1714245473,
+  "iat": 1714241873,
+  "jti": "bb69af10-3ce0-47c2-8d8d-5bdc8630ab58",
+  "email": "hello@mycompany.com"
+}
+```
+
+Amplify Authに追加のユーザー属性が指定されている場合、それらの値はIDトークンに含まれます。例えば、`nickname`属性がリクエストされた場合、IDトークンで`nickname`クレームとして利用可能になります：
+
+```diff
+{
+  "sub": "54288468-e051-706d-a73f-03892273d7e9",
+  "email_verified": true,
+  "iss": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_yoKn9s4Tq",
+  "cognito:username": "54288468-e051-706d-a73f-03892273d7e9",
+  "origin_jti": "0eadb994-a6e0-419e-b309-a7a0d522d72f",
+  "aud": "1sg675g08g6g0e9f64grv9n5sk",
+  "event_id": "b180897a-181c-4f73-94bb-a2946e8b4ef1",
+  "token_use": "id",
+  "auth_time": 1714241873,
++ "nickname": "hello",
+  "exp": 1714245473,
+  "iat": 1714241873,
+  "jti": "bb69af10-3ce0-47c2-8d8d-5bdc8630ab58",
+  "email": "hello@mycompany.com"
+}
+```
+
+一方、ユーザープールグループクレームはアクセストークンとIDトークンの両方に`cognito:groups`クレームで含まれます：
+
+```json
+{
+  "sub": "54288468-e051-706d-a73f-03892273d7e9",
+  "email_verified": true,
+  "iss": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_yoKn9s4Tq",
+  "cognito:username": "54288468-e051-706d-a73f-03892273d7e9",
+  "cognito:groups": ["ADMINS"],
+  "origin_jti": "0eadb994-a6e0-419e-b309-a7a0d522d72f",
+  "aud": "1sg675g08g6g0e9f64grv9n5sk",
+  "event_id": "b180897a-181c-4f73-94bb-a2946e8b4ef1",
+  "token_use": "id",
+  "auth_time": 1714241873,
+  "nickname": "hello",
+  "exp": 1714245473,
+  "iat": 1714241873,
+  "jti": "bb69af10-3ce0-47c2-8d8d-5bdc8630ab58",
+  "email": "hello@mycompany.com"
+}
+```
+
+[Cognitoユーザープールでトークンを使用することに関するAWSドキュメント](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-with-identity-providers.html)にアクセスして、トークン、Cognitoでの使用方法、および意図された用途についてさらに詳しく学習してください。
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+## トークン管理オプションについて
+
+トークンキーはセキュリティ強化のために自動的にローテーションされますが、保存方法をカスタマイズしたり、リフレッシュレートと有効期限をカスタマイズしたり、サインアウト時にトークンを取り消したりできます。
+
+### トークン保存メカニズムの更新
+
+トークンがアプリケーション内で永続化される場所と方法を選択するために、ストレージメカニズムを更新できます。デフォルトオプションは`localStorage`です。さらに、`sessionStorage`、`sharedInMemoryStorage`、または`CookieStorage`オプションもインポートできます。
+
+独自のメカニズムをカスタマイズする場合は、`KeyValueStorageInterface`インターフェースをインポートして独自のクラスに実装できます。
+
+#### ブラウザローカルストレージ
+
+Amplifyでは、`localStorage`がデフォルトのストレージメカニズムです。ブラウザの`localStorage`にトークンを保存します。このローカルストレージはブラウザセッションとタブ全体で永続化されます。以下を呼び出すことで、このストレージに明示的に設定できます：
+
+```ts
+import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
+import { defaultStorage } from 'aws-amplify/utils';
+
+cognitoUserPoolsTokenProvider.setKeyValueStorage(defaultStorage);
+```
+
+#### クッキーストレージ
+
+`CookieStorage`はブラウザの`Cookies`にトークンを保存します。クッキーはブラウザセッションとタブ全体で永続化されます。以下を呼び出すことで、このストレージに明示的に設定できます：
+
+```ts
+import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
+import { CookieStorage } from 'aws-amplify/utils';
+
+cognitoUserPoolsTokenProvider.setKeyValueStorage(new CookieStorage());
+```
+
+#### ブラウザセッションストレージ
+
+`sessionStorage`はブラウザの`sessionStorage`にトークンを保存し、タブが閉じられるとこれらのトークンはクリアされます。このストレージメカニズムの利点は、セッションがブラウザが開いている限り続き、ユーザーがタブを閉じるときにサインアウトできることです。以下を呼び出すことでこのストレージに更新できます：
+
+```ts
+import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
+import { sessionStorage } from 'aws-amplify/utils';
+
+cognitoUserPoolsTokenProvider.setKeyValueStorage(sessionStorage);
+```
+
+#### カスタムストレージ
+
+ストレージインターフェースを実装するクラスを作成することで、独自のカスタムストレージメカニズムを実装できます。以下はメモリストレージを使用する例です：
+
+```ts
+import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
+import { KeyValueStorageInterface } from 'aws-amplify/utils';
+
+class MyCustomStorage implements KeyValueStorageInterface {
+  storageObject: Record<string, string> = {};
+  async setItem(key: string, value: string): Promise<void> {
+    this.storageObject[key] = value;
+  }
+  async getItem(key: string): Promise<string | null> {
+    return this.storageObject[key];
+  }
+  async removeItem(key: string): Promise<void> {
+    delete this.storageObject[key];
+  }
+  async clear(): Promise<void> {
+    this.storageObject = {};
+  }
+}
+
+cognitoUserPoolsTokenProvider.setKeyValueStorage(new MyCustomStorage());
+```
+
+現在のユーザーセッションを取得すると、トークンはカスタム場所に保存されます。
+<!-- /Platform -->
+<!-- Platform: flutter -->
+Amplify Authは認証関連情報を永続化して、他のAmplifyカテゴリーとアプリケーションで利用可能にします。
+
+Amplify Flutterは認証情報とユーザーID情報を安全に管理します。認証情報を自分で保存、リフレッシュ、または削除する必要はありません。Amplify Flutterは、iOSおよびmacOSの[Keychain Services](https://developer.apple.com/documentation/security/keychain_services/)やAndroidの[EncryptedSharedPreferences](https://developer.android.com/reference/androidx/security/crypto/EncryptedSharedPreferences)などのプラットフォーム機能を使用してデバイスに認証データを保存します。
+
+> **Info:** Amplifyは、[リフレッシュトークン](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-refresh-token.html)が有効である限り、[アクセストークン](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-access-token.html)と[IDトークン](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-id-token.html)をリフレッシュします。リフレッシュトークンの有効期限が切れると、ユーザーは新しいトークンを取得するために再認証する必要があります。
+
+いくつかのプラットフォーム固有オプションは、すぐに使用できるオプションでカスタマイズできます。下の例では、ブラウザストレージのデフォルト動作の代わりに、認証情報がWebでメモリ内に保存されます。
+
+```dart
+await Amplify.addPlugin(
+  AmplifyAuthCognito(
+    secureStorageFactory: AmplifySecureStorage.factoryFrom(
+      webOptions: WebSecureStorageOptions(
+        persistenceOption: WebPersistenceOption.inMemory,
+      ),
+    ),
+  ),
+);
+```
+
+さらなるカスタマイズが必要な場合は、`SecureStorageInterface`インスタンスを作成するための独自のファクトリーを`AmplifyAuthCognito`に提供できます。下の例は、すべてのプラットフォームでデータをメモリ内に保存するカスタム実装の使用を示しています。
+
+```dart
+await Amplify.addPlugin(
+  AmplifyAuthCognito(secureStorageFactory: InMemoryStorage.new),
+);
+```
+
+```dart
+class InMemoryStorage implements SecureStorageInterface {
+  InMemoryStorage(this.scope);
+
+  /// The scope of the item being stored.
+  ///
+  /// This can be used as a namespace for stored items.
+  final AmplifySecureStorageScope scope;
+
+  static final Map<String, String> _data = {};
+
+  @override
+  void write({required String key, required String value}) {
+    _data['${scope.name}.$key'] = value;
+  }
+
+  @override
+  String? read({required String key}) {
+    return _data['${scope.name}.$key'];
+  }
+
+  @override
+  void delete({required String key}) {
+    _data.remove('${scope.name}.$key');
+  }
+}
+```
+<!-- /Platform -->
+
+## トークン取り消し
+
+<!-- Platform: angular, javascript, nextjs, react, vue, android -->
+トークン取り消しはAmplify Authで自動的に有効になります。トークンを取り消すには、`signOut({ global: true })`でグローバルサインアウトを設定して、すべてのデバイスからユーザーをグローバルにサインアウトできます。
+<!-- /Platform -->
+<!-- Platform: flutter -->
+トークン取り消しはAmplify Authで自動的に有効になります。トークンを取り消すには、`await Amplify.Auth.signOut(options: const signOutOptions(globalSignOut: true))`を呼び出して、すべてのデバイスからユーザーをグローバルにサインアウトできます。
+<!-- /Platform -->
+<!-- Platform: swift -->
+トークン取り消しはAmplify Authで自動的に有効になります。トークンを取り消すには、`await Amplify.Auth.signOut(options: .init(globalSignOut: true))`を呼び出して、すべてのデバイスからユーザーをグローバルにサインアウトできます。
+<!-- /Platform -->
+
+## 次のステップ
+
+<!-- Platform: javascript,nextjs,angular,vue,react,react-native -->
+- [IDトークンのカスタマイズ方法を学習する](/[platform]/build-a-backend/functions/examples/override-token/)
+- [外部プロバイダーから独自のトークンを使用する方法を学習する](/[platform]/frontend/auth/advanced-workflows/#custom-token-providers)
+- [サーバーサイドでクッキーストレージを使用する方法を学習する](/[platform]/frontend/server-side-rendering/#configure-amplify-library-for-client-side-usage)
+<!-- /Platform -->
+<!-- Platform: android, swift, flutter -->
+- [IDトークンのカスタマイズ方法を学習する](/[platform]/build-a-backend/functions/examples/override-token/)
+- [外部プロバイダーから独自のトークンを使用する方法を学習する](/[platform]/frontend/auth/advanced-workflows/#custom-token-providers)
+<!-- /Platform -->

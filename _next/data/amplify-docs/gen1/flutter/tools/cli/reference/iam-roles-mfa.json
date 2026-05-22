@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"flutter","meta":{"title":"IAMロールとMFA","description":"共有の'~/.aws/config'ファイルでロール用のプロファイルを定義することで、Amplify CLIがIAMロールを引き受けるように設定します。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

@@ -1,0 +1,271 @@
+---
+title: "ユーザーセッションの管理"
+section: "frontend/auth"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/auth/manage-user-sessions/"
+---
+
+Amplify Authは、現在のユーザーセッションとトークンへのアクセスを提供し、ユーザー情報を取得して、有効なセッションでサインインしているかどうかを判断し、アプリケーションへのアクセスを制御するのに役立ちます。
+
+<!-- Platform: angular, javascript, nextjs, react, react-native, vue -->
+## 現在認証されているユーザーを取得する
+
+`getCurrentUser` APIを使用して、現在認証されているユーザーに関する情報を取得できます。これには `username`、`userId`、`signInDetails` が含まれます。
+
+```ts
+import { getCurrentUser } from 'aws-amplify/auth';
+
+const { username, userId, signInDetails } = await getCurrentUser();
+
+console.log("username", username);
+console.log("user id", userId);
+console.log("sign-in details", signInDetails);
+```
+
+このメソッドは、ユーザーがサインインしているかどうかを確認するために使用できます。ユーザーが認証されていない場合はエラーをスローします。
+
+> **Info:** `Hosted UI` または `signInWithRedirect` APIを使用する場合、ユーザーの `signInDetails` はサポートされていません。
+
+## ユーザーセッションを取得する
+
+ユーザーのセッションはサインイン状態であり、アプリケーションへのアクセス権を付与します。ユーザーがサインインすると、認証情報が一時的なアクセストークンと交換されます。セッション詳細を取得して、これらのトークンにアクセスし、この情報を使用してユーザーアクセスを検証したり、そのユーザーに固有のアクションを実行したりできます。
+
+セッション詳細のみが必要な場合は、JSON Web Token (JWT) を含む `tokens` オブジェクトを返す `fetchAuthSession` APIを使用できます。
+
+```ts
+import { fetchAuthSession } from 'aws-amplify/auth';
+
+const session = await fetchAuthSession();
+
+console.log("id token", session.tokens.idToken)
+console.log("access token", session.tokens.accessToken)
+```
+
+### セッションの更新
+
+`fetchAuthSession` APIは、認証トークンの有効期限が切れ、有効な `refreshToken` が存在する場合、ユーザーのセッションを自動的に更新します。さらに、`forceRefresh` フラグを有効にして `fetchAuthSession` APIを呼び出すことで、セッションを明示的に更新することもできます。
+
+```ts
+import { fetchAuthSession } from 'aws-amplify/auth';
+
+await fetchAuthSession({ forceRefresh: true });
+```
+
+> **Warning:** **警告:** デフォルトでは、外部アイデンティティプロバイダーからのセッションは更新できません。
+<!-- /Platform -->
+<!-- Platform: flutter -->
+Amplify Authの意図的な決定は、認証情報を公開したり操作したりするパブリックメソッドを避けることでした。
+
+Authを使用すると、サインインするだけで、認証情報を最新の状態に保ち、他のカテゴリに提供するために必要なすべてが処理されます。
+
+ただし、Amplify外のAPIを操作する場合や、AWS固有の識別情報 (例: IdentityId) にアクセスしたい場合は、Cognito Authプラグインで `fetchAuthSession` を呼び出すことで、これらの実装詳細にアクセスできます。これにより、`fetchAuthSession` によって通常返される `AuthSession` と比較して追加の属性を持つ `CognitoAuthSession` が返されます。以下の例を参照してください。
+
+```dart
+Future<void> fetchAuthSession() async {
+  try {
+    final result = await Amplify.Auth.fetchAuthSession();
+    safePrint('User is signed in: ${result.isSignedIn}');
+  } on AuthException catch (e) {
+    safePrint('Error retrieving auth session: ${e.message}');
+  }
+}
+```
+
+## AWSの認証情報を取得する
+
+場合によっては、より具体的な型を持つ基盤プラグインのインスタンスを取得すると便利です。Cognitoの場合、CognitoプラグインでSpeicherern `fetchAuthSession` を呼び出すと、ID、AWSの認証情報、Cognito User Poolトークンなどの AWS固有の値が返されます。
+
+```dart
+Future<void> fetchCognitoAuthSession() async {
+  try {
+    final cognitoPlugin = Amplify.Auth.getPlugin(AmplifyAuthCognito.pluginKey);
+    final result = await cognitoPlugin.fetchAuthSession();
+    final identityId = result.identityIdResult.value;
+    safePrint("Current user's identity ID: $identityId");
+  } on AuthException catch (e) {
+    safePrint('Error retrieving auth session: ${e.message}');
+  }
+}
+```
+<!-- /Platform -->
+<!-- Platform: android -->
+Amplify Authの意図的な決定は、認証情報を公開したり操作したりするパブリックメソッドを避けることでした。
+
+Authを使用すると、サインインするだけで、認証情報を最新の状態に保ち、他のカテゴリに提供するために必要なすべてが処理されます。
+
+ただし、Amplify外のAPIを操作する場合や、AWS固有の識別情報 (例: IdentityId) にアクセスしたい場合は、以下のように `fetchAuthSession` の結果をキャストすることで、これらの実装詳細にアクセスできます。
+
+#### [Java]
+
+```java
+Amplify.Auth.fetchAuthSession(
+    result -> {
+        AWSCognitoAuthSession cognitoAuthSession = (AWSCognitoAuthSession) result;
+            switch(cognitoAuthSession.getIdentityIdResult().getType()) {
+                case SUCCESS:
+                    Log.i("AuthQuickStart", "IdentityId: " + cognitoAuthSession.getIdentityIdResult().getValue());
+                    break;
+                case FAILURE:
+                    Log.i("AuthQuickStart", "IdentityId not present because: " + cognitoAuthSession.getIdentityIdResult().getError().toString());
+            }
+        },
+        error -> Log.e("AuthQuickStart", error.toString())
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+Amplify.Auth.fetchAuthSession(
+    {
+        val session = it as AWSCognitoAuthSession
+        when (session.identityIdResult.type) {
+            AuthSessionResult.Type.SUCCESS ->
+                Log.i("AuthQuickStart", "IdentityId = ${session.identityIdResult.value}")
+            AuthSessionResult.Type.FAILURE ->
+                Log.w("AuthQuickStart", "IdentityId not found", session.identityIdResult.error)
+        }
+    },
+    { Log.e("AuthQuickStart", "Failed to fetch session", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    val session = Amplify.Auth.fetchAuthSession() as AWSCognitoAuthSession
+    val id = session.identityIdResult
+    if (id.type == AuthSessionResult.Type.SUCCESS) {
+        Log.i("AuthQuickStart", "IdentityId: ${id.value}")
+    } else if (id.type == AuthSessionResult.Type.FAILURE) {
+        Log.i("AuthQuickStart", "IdentityId not present: ${id.error}")
+    }
+} catch (error: AuthException) {
+    Log.e("AuthQuickStart", "Failed to fetch session", error)
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.Auth.fetchAuthSession()
+    .subscribe(
+        result -> {
+            AWSCognitoAuthSession cognitoAuthSession = (AWSCognitoAuthSession) result;
+
+            switch (cognitoAuthSession.getIdentityIdResult().getType()) {
+                case SUCCESS:
+                    Log.i("AuthQuickStart", "IdentityId: " + cognitoAuthSession.getIdentityIdResult().getValue());
+                    break;
+                case FAILURE:
+                    Log.i("AuthQuickStart", "IdentityId not present because: " + cognitoAuthSession.getIdentityIdResult().getError().toString());
+            }
+        },
+        error -> Log.e("AuthQuickStart", error.toString())
+    );
+```
+
+## セッションの強制更新
+
+プラグインを通じて、fetchAuthSession APIを呼び出すときに `forceRefresh` オプションを設定することで、内部セッションを強制的に更新できます。
+
+#### [Java]
+
+```java
+AuthFetchSessionOptions options = AuthFetchSessionOptions.builder().forceRefresh(true).build();
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+val option = AuthFetchSessionOptions.builder().forceRefresh(true).build()
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+val option = AuthFetchSessionOptions.builder().forceRefresh(true).build()
+```
+
+#### [RxJava]
+
+```java
+AuthFetchSessionOptions options = AuthFetchSessionOptions.builder().forceRefresh(true).build();
+```
+
+<!-- /Platform -->
+<!-- Platform: swift -->
+Amplify Authの意図的な決定は、認証情報を公開したり操作したりするパブリックメソッドを避けることでした。
+
+Authを使用すると、サインインするだけで、認証情報を最新の状態に保ち、他のカテゴリに提供するために必要なすべてが処理されます。
+
+ただし、Amplify外のAPIを操作する場合や、AWS固有の識別情報 (例: IdentityId) にアクセスしたい場合は、以下のように `fetchAuthSession` の結果をキャストすることで、これらの実装詳細にアクセスできます。
+
+```swift
+import AWSPluginsCore
+
+do {
+    let session = try await Amplify.Auth.fetchAuthSession()
+
+    // ユーザーのサブまたはアイデンティティIDを取得
+    if let identityProvider = session as? AuthCognitoIdentityProvider {
+        let usersub = try identityProvider.getUserSub().get()
+        let identityId = try identityProvider.getIdentityId().get()
+        print("User sub - \(usersub) and identity id \(identityId)")
+    }
+
+    // AWSの認証情報を取得
+    if let awsCredentialsProvider = session as? AuthAWSCredentialsProvider {
+        let credentials = try awsCredentialsProvider.getAWSCredentials().get()
+        // 認証情報を使用して何かを行う
+    }
+
+    // Cognitoユーザープールトークンを取得
+    if let cognitoTokenProvider = session as? AuthCognitoTokensProvider {
+        let tokens = try cognitoTokenProvider.getCognitoTokens().get()
+        // JWTトークンを使用して何かを行う
+    }
+} catch let error as AuthError {
+    print("Fetch auth session failed with error - \(error)")
+} catch {
+}
+```
+
+Cognito Identity Poolでゲストユーザーを有効にしていて、ユーザーがサインインしていない場合、identityIDとAWSの認証情報のみにアクセスできます。他のすべてのセッション詳細はエラーを返します。
+
+```swift
+import AWSPluginsCore
+
+do {
+    let session = try await Amplify.Auth.fetchAuthSession()
+
+    // アイデンティティIDを取得
+    if let identityProvider = session as? AuthCognitoIdentityProvider {
+        let identityId = try identityProvider.getIdentityId().get()
+        print("Identity id \(identityId)")
+    }
+
+    // AWSの認証情報を取得
+    if let awsCredentialsProvider = session as? AuthAWSCredentialsProvider {
+        let credentials = try awsCredentialsProvider.getAWSCredentials().get()
+        // 認証情報を使用して何かを行う
+    }
+} catch let error as AuthError {
+    print("Fetch auth session failed with error - \(error)")
+} catch {
+    print("Unexpected error: \(error)")
+}
+```
+
+## セッションの強制更新
+
+プラグインを通じて、fetchAuthSession APIを呼び出すときにAPIオプション `forceRefresh` を渡すことで、内部セッションを強制的に更新できます。
+
+```swift
+Amplify.Auth.fetchAuthSession(options: .forceRefresh())
+
+```
+<!-- /Platform -->

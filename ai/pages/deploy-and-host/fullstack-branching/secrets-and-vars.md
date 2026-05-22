@@ -1,0 +1,129 @@
+---
+title: "シークレットと環境変数"
+section: "deploy-and-host/fullstack-branching"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2025-03-28T19:48:12.000Z"
+url: "https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/secrets-and-vars/"
+---
+
+Amplify Gen 2 は、すべてのフルスタックブランチのシークレットと環境変数を一元管理できます。シークレットを使用すると、ソーシャルサインインキー、関数環境変数、関数シークレット、およびアプリケーションが環境全体で必要とするその他の機密データなど、環境固有の値を安全に構成できます。
+
+<details><summary>これは Amplify Gen 1 とどう違うのですか？</summary>
+  Amplify Gen 1 では、CLI を使用して環境変数とシークレットを定義し、キーを AWS Parameter Store とローカル `team-provider.json` ファイルの両方に保存する必要があります。Amplify Gen 2 では、このワークフローを簡素化し、Amplify コンソールでシークレットと環境変数の管理を一元化しました。
+</details>
+
+## シークレットの設定
+
+フルスタックブランチのデプロイメントまたはローカル開発サーバーのシークレットを設定できます。
+
+### ブランチ環境
+
+Amplify コンソールでブランチデプロイメント用のシークレットを追加できます。アプリホームページから、**ホスティング > シークレット**に移動し、**シークレットを管理**ボタンを選択します。すべてのデプロイされたブランチに適用されるシークレットキーまたは値、または特定のブランチのみに適用されるシークレットを追加できます。
+
+シークレットは AWS Systems Manager Parameter Store に以下の命名規則で保存されます。
+
+- すべてのブランチに適用されるシークレット：`/amplify/shared/<app-id>/<secret-key>`
+- 特定のブランチに適用されるシークレット：`/amplify/<app-id>/<branchname>-branch-<unique-hash>/<secret-key>`
+
+### ローカル環境
+
+[comment]: <> (このセクションを編集する場合は、/gen2/deploy-and-host/sandbox-environments/features/index.md も更新してください -)
+
+> **Info:** サンドボックスで設定されたシークレットは Amplify コンソールに表示されません。AWS Parameter Store コンソールで確認できます。
+
+ローカルで機能をテストする場合、実際のシークレットを使用してテストすることをお勧めします。クラウドサンドボックスを実行中に、以下のコマンドを使用してシークレットを追加できます。
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox secret set foo
+? Enter secret value: ###
+Done!
+
+> npx ampx sandbox secret set bar
+? Enter secret value: ###
+Done!
+```
+
+## シークレットへのアクセス
+
+シークレットを設定したら、`secret()` 関数を呼び出してコード内の値にアクセスできます。次の例は、アプリケーションで認証を使用してソーシャルサインインを設定する方法を示しています。環境に応じて、Amplify は追加設定なしで正しいシークレット値を自動的に読み込みます。
+
+```ts
+import { defineAuth, secret } from '@aws-amplify/backend';
+
+export const auth = defineAuth({
+  loginWith: {
+    email: true,
+    externalProviders: {
+      facebook: {
+        clientId: secret('foo'),
+        clientSecret: secret('bar')
+      }
+    }
+  }
+});
+```
+
+## シークレットの削除
+
+> **Warning:** ブランチ環境またはサンドボックス環境を削除する場合、シークレットも手動で削除する必要があります。
+
+### ブランチ環境
+
+ブランチデプロイメントで使用されるシークレットは、Amplify コンソールで直接管理できます。**シークレット管理**で**削除**を選択して削除できます。
+
+![Amplify コンソールのシークレット管理セクションでアプリケーションシークレットを削除します。](/images/gen2/secrets-and-vars/secret-management.png)
+
+### ローカル環境
+
+ローカル環境でシークレットを削除するには、ターミナルで以下のコマンドを実行します。
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx sandbox secret remove foo
+```
+
+## 環境変数の設定
+
+> **Warning:** 注意：シークレット値を環境変数に保存しないでください。環境変数の値は、ビルド成果物にプレーンテキストでレンダリングされ、ビルド成果物またはコマンドへのアクセス権を持つ誰でもアクセスできます。[get-app](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/amplify/get-app.html)
+
+環境変数はキーバリューペアとして機能し、開発、ステージング、本番環境を含むさまざまなデプロイメント環境全体で設定可能な設定を管理するのに役立ちます。機密データを保存するシークレットとは異なり、環境変数は通常は非機密であり、異なる環境でのアプリケーション動作の制御に使用されます。もう 1 つの重要な違いは、環境変数が Amplify マネージドサービスによって保存および管理されることです。Amplify コンソールで環境変数を設定できます（詳細な手順については [AWS Amplify ホスティングユーザーガイド](https://docs.aws.amazon.com/amplify/latest/userguide/environment-variables.html#setting-env-vars)を参照してください）。
+
+## 環境変数へのアクセス
+
+フルスタックブランチデプロイメントまたはローカル開発サーバーのために環境変数へのアクセスを有効にできます。
+
+### ブランチ環境
+
+Amplify コンソールを通じてブランチ環境アクセスを管理できます。
+
+1. まず、Amplify コンソールで環境変数を作成します（この例では、`REACT_APP_TEST_VARIABLE` という名前を付けます）
+
+1. 次に、コンソールで ビルド設定に移動するか（または `amplify.yml` ファイルに移動し）、ビルド設定を更新して環境変数をファイルにパイプします。以下は `.env` ファイルに書き込む例です。
+
+```yml title="amplify.yml"
+build:
+  commands:
+    // highlight-next-line
+    - echo "REACT_APP_TEST_VARIABLE=$REACT_APP_TEST_VARIABLE" >> .env
+    - npm run build
+```
+
+> **Info:** 上記の実装では、環境変数は `.env` ファイルに書き込まれます。ただし、プラットフォームに応じて任意のファイルに書き込むことができます。
+> 
+> - Flutter の場合、外部パッケージで `.env` を引き続き使用するか、Dart または JSON 形式の構成ファイルを生成できます。
+> - Android の場合、ビルド構成または Gradle 変数を使用できます。
+> - iOS の場合、必要なコードを使用して plist ファイルを更新するか、JSON 形式の構成ファイルを作成できます。
+
+これで、`.env` はクライアントコードで `process.env` を使用して環境変数にアクセスできます。
+
+```typescript
+console.log('REACT_APP_TEST_VARIABLE', process.env.REACT_APP_TEST_VARIABLE);
+```
+
+### ローカル環境
+
+ローカルマシンで作業する場合、サンドボックスの環境変数を手動で読み込む必要があります。まず、`.env.local` ファイルに環境変数を追加します。その後、[`@dotenvx/dotenvx`](https://www.npmjs.com/package/@dotenvx/dotenvx) などのライブラリが環境変数を読み込み、`process.env` で参照できます。
+
+```bash title="Terminal" showLineNumbers={false}
+npx dotenvx run --env-file=.env.local -- ampx sandbox
+```

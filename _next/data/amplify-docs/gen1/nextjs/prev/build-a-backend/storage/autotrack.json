@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"nextjs","meta":{"title":"イベントを自動的に追跡する","description":"アップロードやダウンロードなどのストレージイベントの自動追跡を有効にできます。これを有効にすると、ストレージイベントが自動的にAmazon Pinpointに送信され、AWS Pinpointコンソールのカスタムイベント内で表示できるようになります。","platforms":["javascript","angular","nextjs","react","vue"]}},"__N_SSG":true}

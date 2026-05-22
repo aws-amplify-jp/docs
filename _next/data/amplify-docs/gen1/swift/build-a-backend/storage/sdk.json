@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"swift","meta":{"title":"AWS SDKを使用する","description":"Amplifyが機能を提供していない特殊なユースケースについて、エスケープハッチを使用してAWSS3低レベルクライアントインスタンスにアクセスできます。返されたAWSS3インスタンスは、既にアクセス認証情報で設定されています。","platforms":["swift","android"]}},"__N_SSG":true}

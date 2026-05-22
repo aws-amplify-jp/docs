@@ -1,0 +1,183 @@
+---
+title: "コンセプト"
+section: "how-amplify-works"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2025-03-21T01:04:47.000Z"
+url: "https://docs.amplify.aws/react/how-amplify-works/concepts/"
+---
+
+AWS Amplify Gen 2 では、バックエンドを定義するための TypeScript ベースのコードファースト開発者体験 (DX) を使用します。Gen 2 DX はホスティング、バックエンド、UI 構築機能を備えた統一された Amplify 開発者体験とコードファースト アプローチを提供します。Amplify はフロントエンド開発者に、アプリのデータモデル、ビジネスロジック、認証、認可ルールを完全に TypeScript で表現するだけでクラウド インフラストラクチャをデプロイする権限を与えます。Amplify は自動的に正しいクラウド リソースを構成し、基盤となる AWS サービスを統合する必要性を取り除きます。
+
+## 機能
+
+Amplify を使用して、エンド ツー エンドのフルスタック開発を行うことができます。
+
+### TypeScript を使用したフルスタック アプリの構築
+
+Gen 2 DX を使用すると、TypeScript を作成してバックエンド インフラストラクチャをプロビジョニングできます。次の図では、下部のボックス (ピンク色の枠線) が、Gen 1 と比較してインフラストラクチャをプロビジョニングする方法の主な違いを強調しています。Gen 1 では、Studio のコンソールまたは CLI を使用してインフラストラクチャをプロビジョニングします。Gen 2 では、`amplify/auth/resource.ts` や `amplify/auth/data.ts` などのファイルベースの規約に従ってファイルに TypeScript コードを作成します。リソース用の TypeScript タイプとクラスを使用して、Visual Studio Code で厳密なタイプ付けと IntelliSense を取得し、エラーを防ぎます。バックエンド コード内の重大な変更は、共存するフロントエンド コード内のタイプ エラーとして直ちに反映されます。ファイルベースの規約は「設定より規約」パラダイムに従います。リソース定義を型ごとに別のファイルにグループ化すると、リソース定義をどこで探すかが正確に分かります。
+
+![Amplify 機能を一緒に使用するか、個別に使用する方法。](/images/gen2/how-amplify-works/amplify-flow.png)
+
+### より高速なローカル開発
+
+開発者ごとのクラウド サンドボックス環境は、反復を高速化するために最適化されています。チーム内の各開発者は、変更をテストできる分離されたクラウド開発環境を取得します。これらのクラウド サンドボックス環境はローカル開発のみを目的としていますが、構築中に高忠実度の AWS バックエンドをデプロイします。ワークフローによっては、反復更新は Gen 1 デプロイメントよりも最大 8 倍高速でデプロイされます。下の図では、4 人の開発者が互いの環境を中断することなく、フルスタック機能に独立して取り組むことができます。
+
+![クラウド サンドボックス環境の仕組み。](/images/gen2/how-amplify-works/sandbox.png)
+
+### フルスタック Git ベース環境
+
+すべての共有環境 (`production`、`staging`、`gamma` など) は、リポジトリ内の Git ブランチに 1:1 でマップされます。新しい機能は、本番環境にマージされる前に、エフェメラル環境でプル リクエスト プレビュー (または機能ブランチ) でテストできます。Gen 1 の経験とは異なり、Gen 1 ではユーザーが CLI またはコンソールで複数の手順を設定してフルスタック環境をセットアップする必要がありますが、Gen 2 の経験はゼロ構成です。コードファースト アプローチのため、Git リポジトリは常にフルスタック アプリの状態の信頼できるソースです。すべてのバックエンド リソースは、ブランチ全体での再現性と移植性のためにコードとして定義されます。これは環境変数とシークレットの一元管理と共に、下位環境から上位環境への昇格ワークフローを簡素化します。
+
+![フルスタック デプロイメントの仕組み。](/images/gen2/how-amplify-works/fullstack.png)
+
+### 統一管理コンソール
+
+すべてのブランチは、新しい Amplify コンソールで管理できます。Amplify Gen 2 コンソールは、ビルド、ホスティング設定 (カスタム ドメインなど)、デプロイされたリソース (データ ブラウザやユーザー管理など)、環境変数とシークレットを管理する単一の場所を提供します。デプロイされたリソースに他の AWS サービス コンソールで直接アクセスできますが、Amplify コンソールはほぼすべてのアプリが必要とするカテゴリ (データ、認証、ストレージ、機能) の初心者向けエクスペリエンスを提供します。たとえば、Data を使用して、Amplify は API プレイグラウンドとデータ マネージャー (近日公開) を提供します。リレーションシップの構築、シード データ生成、ファイル アップロード機能が含まれています。
+
+## アプリを構築する
+
+### データ
+
+`@aws-amplify/backend` ライブラリは、完全に型指定されたリアルタイム API (AWS AppSync GraphQL API により提供) と NoSQL データベース (Amazon DynamoDB テーブルにより提供) をセットアップするための TypeScript ファースト `Data` ライブラリを提供します。Amplify バックエンドを生成した後、アプリのデータ スキーマを含む `amplify/data/resource.ts` ファイルが作成されます。`defineData` 関数は、スキーマを、すべてのボイラープレート が自動的に処理される完全に機能するデータ バックエンドに変換します。
+
+<Callout>
+  スキーマベース アプローチは、Gen 1 の Amplify GraphQL API の進化です。
+  ドット補完、IntelliSense、タイプ検証など、いくつかの利点を提供しています。
+</Callout>
+
+チャット アプリのデータ モデルは、たとえば次のようになります。
+
+```ts
+const schema = a.schema({
+  Chat: a.model({
+    name: a.string(),
+    message: a.hasMany('Message', 'chatId'),
+  }),
+  Message: a.model({
+    text: a.string(),
+    chat: a.belongsTo('Chat', 'chatId'),
+    chatId: a.id()
+  }),
+}).authorization((allow) => allow.owner());
+```
+
+アプリのフロントエンドで、`generateClient` 関数を使用できます。これにより、型指定されたクライアント インスタンスが提供され、アプリケーション コードにモデルの CRUD (作成、読み取り、更新、削除) 操作を簡単に統合できます。
+
+<Callout>
+  Gen 2 は、Gen 1 の一部であった明示的なコード生成ステップなしに、自動的に型を生成します。
+</Callout>
+
+```ts
+// generate your data client using the Schema from your backend
+const client = generateClient<Schema>();
+
+// list all messages
+const { data } = await client.models.Message.list();
+
+// create a new message
+const { errors, data: newMessage } = await client.models.Message.create({
+  text: 'My message text'
+});
+```
+
+### 認証
+
+認証はデータと同様に機能します。`amplify/auth/resource.ts` でアプリの認証設定を構成できます。検証メールの件名を変更する場合は、デフォルトで生成されたコードを以下に置き換えることができます。
+
+```ts title="amplify/auth/resource.ts"
+export const auth = defineAuth({
+  loginWith: {
+    email: {
+      verificationEmailSubject: 'Welcome 👋 Verify your email!'
+    }
+  }
+});
+```
+
+カスタマイズされたサインインおよび登録フロー、多要素認証 (MFA)、サードパーティのソーシャル プロバイダーで認証フローをカスタマイズできます。Amplify は、アプリに認証を追加するときに、AWS アカウントに Amazon Cognito インスタンスをデプロイします。
+
+次に、Amplify `Authenticator` コンポーネントまたはクライアント ライブラリを使用してユーザー フローを追加できます。
+
+```ts
+import { withAuthenticator } from '@aws-amplify/ui-react';
+
+function App({ signOut, user }) {
+  return (
+    <>
+      <h1>Hello {user.username}</h1>
+      <button onClick={signOut}>Sign out</button>
+    </>
+  );
+}
+
+export default withAuthenticator(App);
+```
+
+### UI の構築
+
+Amplify は、UI コンポーネント ライブラリ、Figma からコードへの生成、CRUD フォーム生成機能を使用して、Web アプリ ユーザー インターフェイスを迅速に構築できます。[詳細を学ぶ。](https://ui.docs.amplify.aws/react/components)
+
+![Figma からコードへを示すスクリーンショット](/images/gen2/how-amplify-works/ui.jpg)
+
+## Amplify を超えた AWS への接続
+
+### 任意の AWS リソースを追加する
+
+Gen 2 は [AWS Cloud Development Kit (CDK)](https://docs.aws.amazon.com/cdk/api/v2/) の上に階層化されています。`@aws-amplify/backend` のデータおよび認証機能は、L3 AWS CDK コンストラクトをラップします。その結果、Amplify によって生成されたリソースを拡張するには、特別な構成は不要です。次の例では、`amplify/custom/maps/resource.ts` というファイルを追加して、Amazon Location Services を追加しています。
+
+```ts
+import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib';
+import * as locations from 'aws-cdk-lib/aws-location';
+import { Construct } from 'constructs';
+
+export class LocationMapStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
+    super(scope, id, props);
+
+    // Create the map resource
+    const map = new locations.CfnMap(this, 'LocationMap', {
+      configuration: {
+        style: 'VectorEsriStreets' // map style
+      },
+      description: 'My Location Map',
+      mapName: 'MyMap'
+    });
+
+    new CfnOutput(this, 'mapArn', {
+      value: map.attrArn,
+      exportName: 'mapArn'
+    });
+  }
+}
+```
+
+これは `amplify/backend.ts` ファイルに含まれているため、Amplify アプリの一部としてデプロイされます。
+
+```ts
+import { Backend } from '@aws-amplify/backend';
+import { auth } from './auth/resource';
+import { data } from './data/resource';
+import { LocationMapStack } from './locationMapStack/resource';
+
+const backend = new Backend({
+  auth,
+  data
+});
+
+new LocationMapStack(
+  backend.getStack('LocationMapStack'),
+  'myLocationResource',
+  {}
+);
+```
+
+### 既存のリソースに接続する
+
+Amplify は、既存の AWS リソースと構成と連携するように設計されています。たとえば、別途作成および構成した既存の Amazon Cognito ユーザー プール で Amplify の事前構築認証 UI コンポーネントを使用できます。または、Amplify Storage と統合することで、既存の Amazon S3 バケットからの画像とファイルをアプリのユーザー インターフェイスに表示できます。
+
+Amplify のライブラリは、既存の AWS サービスを活用するためのインターフェイスを提供するため、既存のバックエンド インフラストラクチャを中断することなく、Amplify の機能を現在のワークフローに段階的に採用できます。
+
+## 次のステップ
+
+AWS Amplify の機能の概念的な理解ができたので、[クイックスタート チュートリアル](/[platform]/start/quickstart/)を完了して、アプリでそれを実行に移してください。

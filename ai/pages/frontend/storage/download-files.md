@@ -1,0 +1,1143 @@
+---
+title: "ファイルのダウンロード"
+section: "frontend/storage"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-04-21T15:03:11.000Z"
+url: "https://docs.amplify.aws/react/frontend/storage/download-files/"
+---
+
+<!-- Platform: react, javascript, nextjs -->
+## Storage Image React UIコンポーネント
+
+クラウド接続されたStorage Image React UIコンポーネントを使用すると、アプリ内に簡単に画像を表示できます。このコンポーネントはストレージリソースから画像を安全に取得し、Webページに表示します。
+
+```bash title="Terminal" showLineNumbers={false}
+npm add @aws-amplify/ui-react-storage aws-amplify
+```
+```tsx
+import { StorageImage } from '@aws-amplify/ui-react-storage';
+
+export const DefaultStorageImageExample = () => {
+  return <StorageImage alt="cat" path="your-path/cat.jpg" />;
+};
+```
+
+UIコンポーネントをさらにカスタマイズする方法については、[Storage Image ドキュメント](https://ui.docs.amplify.aws/react/connected-components/storage/storageimage)を参照してください。
+<!-- /Platform -->
+
+アプリ内の体験をさらにカスタマイズするには、Amplify Library for Storageから`getUrl`または`downloadData` APIを使用できます。
+
+<Callout>
+
+**注記:** ストレージAPIの転送高速化を有効にする方法については、[転送高速化ドキュメント](/[platform]/build-a-backend/storage/extend-s3-resources/#example---enable-transfer-acceleration)を参照してください。
+
+</Callout>
+
+## URLからファイルを取得またはダウンロードする
+
+`getUrl` APIを使用すると、デフォルトで900秒または15分間有効な署名付きURLを取得できます。このURLを使用して、ユーザーがクリックするためのダウンロードリンクを作成できます。`expiresAt`プロパティはURLが期限切れになる時間を表す`Date`オブジェクトです。
+
+<!-- Platform: react, angular, javascript, vue, nextjs, react-native -->
+```typescript
+import { getUrl } from 'aws-amplify/storage';
+
+const linkToStorageFile = await getUrl({
+  path: "album/2024/1.jpg",
+  // または、path: ({identityId}) => `album/${identityId}/1.jpg`
+});
+console.log('署名付きURL: ', linkToStorageFile.url);
+console.log('URLの有効期限: ', linkToStorageFile.expiresAt);
+```
+テンプレートまたはJSXコード内では、`url`プロパティを使用してファイルへのリンクを作成できます:
+
+```tsx
+<a href={linkToStorageFile.url.toString()} target="_blank" rel="noreferrer">
+  {fileName} 
+</a>
+```
+
+<Callout>
+
+この関数はデフォルトではファイルの存在をチェックしません。その結果、ダウンロードするファイルが存在しない場合、署名付きURLが失敗する可能性があります。
+  
+</Callout>
+
+### getUrlのその他のオプション
+
+`getUrl` APIの動作は、オプションを渡すことでカスタマイズできます。
+
+```typescript
+import { getUrl } from 'aws-amplify/storage';
+
+const linkToStorageFile = await getUrl({
+  path: "album/2024/1.jpg",
+  options: {
+    // Amplify Backendで割り当てられた名前を使用してターゲットバケットを指定
+    bucket: 'assignedNameInAmplifyBackend',
+    // オブジェクトが存在することを確認してからURLを取得
+    validateObjectExistence: true, 
+    // URLの有効期限(秒単位)
+    expiresIn: 300,
+    // アクセラレートエンドポイントを使用するかどうか
+    useAccelerateEndpoint: true,
+    // リクエストされたバケットを所有するアカウントID
+    expectedBucketOwner: '123456789012',
+  }
+});
+```
+
+オプション | タイプ | デフォルト | 説明 |
+| :--: | :--: | :--: | ----------- |
+| method | 'GET' \| 'PUT' | 'GET' | 署名付きURLのHTTPメソッド。`'GET'`はオブジェクトをダウンロードするためのURLを生成します。`'PUT'`はオブジェクトをアップロードするためのURLを生成します。 <br/><br/> [署名付きURLを使用したアップロード](/[platform]/frontend/storage/upload-files/#upload-using-a-presigned-url)を参照してください |
+| bucket | string \| <br />\{ bucketName: string;<br/> region: string; \} | Amplify設定のデフォルトバケットとリージョン | Amplify Backendのターゲットバケットのアサイン名を表す文字列、またはコンソールから指定されたバケット名とリージョンを指定するオブジェクト。<br/><br/>[追加ストレージバケットの構成](/[platform]/build-a-backend/storage/set-up-storage/#configure-additional-storage-buckets)を参照してください
+| validateObjectExistence | boolean | false | ダウンロード前にオブジェクトが存在することを確認するためにheadオブジェクトを実行するかどうか。 |
+| expiresIn | number | 900 | URLが期限切れになるまでの秒数。 <br/><br/> 署名付きURLの有効期限はセッションに依存し、最大1時間になります。 |
+| useAccelerateEndpoint | boolean | false | アクセラレートエンドポイントを使用するかどうか。 <br/><br/> [転送高速化](/[platform]/build-a-backend/storage/extend-s3-resources/#example---enable-transfer-acceleration)を参照してください |
+| expectedBucketOwner | string | オプション | リクエストされたバケットを所有するアカウントID。 |
+<!-- /Platform -->
+
+<!-- Platform: android -->
+
+#### [Java]
+
+```java
+Amplify.Storage.getUrl(
+    StoragePath.fromString("public/example"),
+    result -> Log.i("MyAmplifyApp", "正常に生成されました: " + result.getUrl()),
+    error -> Log.e("MyAmplifyApp", "URL生成失敗", error)
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+Amplify.Storage.getUrl(
+    StoragePath.fromString("public/example"),
+    { Log.i("MyAmplifyApp", "正常に生成されました: ${it.url}") },
+    { Log.e("MyAmplifyApp", "URL生成失敗", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    val url = Amplify.Storage.getUrl(StoragePath.fromString("public/example")).url
+    Log.i("MyAmplifyApp", "正常に生成されました: $url")
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "URL生成失敗", error)
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.Storage.getUrl(StoragePath.fromString("public/example")).subscribe(
+    result -> Log.i("MyAmplifyApp", "正常に生成されました: " + result.getUrl()),
+    error -> Log.e("MyAmplifyApp", "URL生成失敗", error)
+);
+```
+
+### ファイルの存在を確認
+
+ダウンロード可能なURLを作成する場合、`AWSS3StorageGetPresignedUrlOptions`で`validateObjectExistence`を`true`に設定することで、ファイルが存在するかどうかを確認することができます。ファイルにアクセスできないか存在しない場合、`StorageException`がスローされます。これにより、署名付きURLを生成するときにオブジェクトが存在するかどうかをチェックでき、その後、そのオブジェクトをダウンロードするために使用できます。
+
+#### [Java]
+
+```java
+AWSS3StorageGetPresignedUrlOptions options = AWSS3StorageGetPresignedUrlOptions
+  .builder()
+  .setValidateObjectExistence(true)
+  .build();
+
+Amplify.Storage.getUrl(
+    StoragePath.fromString("public/example"),
+    options,
+    result -> Log.i("MyAmplifyApp", "正常に生成されました: " + result.getUrl()),
+    error -> Log.e("MyAmplifyApp", "URL生成失敗", error)
+);
+```
+
+#### [Kotlin - Callbacks]
+```kotlin
+val options = AWSS3StorageGetPresignedUrlOptions
+  .builder()
+  .setValidateObjectExistence(true)
+  .build()
+  
+Amplify.Storage.getUrl(
+    StoragePath.fromString("public/example"),
+    options,
+    { Log.i("MyAmplifyApp", "正常に生成されました: ${it.url}") },
+    { Log.e("MyAmplifyApp", "URL生成失敗", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+```kotlin
+try {
+    val options = AWSS3StorageGetPresignedUrlOptions
+      .builder()
+      .setValidateObjectExistence(true)
+      .build()
+
+    val url = Amplify.Storage.getUrl(StoragePath.fromString("public/example"), options).url
+    Log.i("MyAmplifyApp", "正常に生成されました: $url")
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "URL生成失敗", error)
+}
+```
+
+#### [RxJava]
+```java
+AWSS3StorageGetPresignedUrlOptions options = AWSS3StorageGetPresignedUrlOptions
+  .builder()
+  .setValidateObjectExistence(true)
+  .build();
+
+RxAmplify.Storage.getUrl(StoragePath.fromString("public/example"), options).subscribe(
+    result -> Log.i("MyAmplifyApp", "正常に生成されました: " + result.getUrl()),
+    error -> Log.e("MyAmplifyApp", "URL生成失敗", error)
+);
+```
+
+### すべての`getURL`オプション
+
+オプション | タイプ | 説明 |
+| -- | -- | ----------- |
+| bucket | StorageBucket | オブジェクトが保存されているバケット。 |
+| expires | Integer | URLが期限切れになるまでの秒数。 |
+| useAccelerateEndpoint | Boolean | アクセラレートモードの使用を構成するフラグ。 |
+| validateObjectExistence | Boolean | ファイルが存在するかどうかをチェックするフラグ。 |
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+```swift
+let url = try await Amplify.Storage.getURL(
+    path: .fromString("public/example/path")
+)
+print("完了: \(url)")
+```
+
+### ファイルの存在を確認
+
+ダウンロード可能なURLを作成する場合、`AWSStorageGetURLOptions`で`validateObjectExistence`を`true`に設定することで、ファイルが存在するかどうかを確認することができます。ファイルにアクセスできないか存在しない場合、`StorageError`がスローされます。これにより、署名付きURLを生成するときにオブジェクトが存在するかどうかをチェックでき、その後、そのオブジェクトをダウンロードするために使用できます。
+
+```swift
+let url = try await Amplify.Storage.getURL(
+    path: .fromString("public/example/path"),
+    options: .init(
+        pluginOptions: AWSStorageGetURLOptions(
+            validateObjectExistence: true
+        )
+    )
+)
+```
+
+### すべての`getURL`オプション
+
+オプション | タイプ | デフォルト | 説明 |
+| -- | -- | :--: | ----------- |
+| expires | Int | 18000 | URLが期限切れになるまでの秒数 |
+| bucket | StorageBucket | Amplify設定のデフォルトバケット | オブジェクトが保存されているバケット |
+| pluginOptions.method | StorageAccessMethod | .get | `.get`はダウンロードURLを生成します。`.put`はアップロードURLを生成します。 |
+| pluginOptions.validateObjectExistence | Bool | false | URLを生成する前にオブジェクトが存在するかどうかをチェックするかどうか。メソッドが`.put`の場合はスキップされます。 |
+
+<Callout>
+
+`method: .put`で`getURL`を使用して、ファイルをS3に直接アップロードするための署名付きURLを生成することもできます。詳細は[署名付きURLを使用したアップロード](/[platform]/frontend/storage/upload-files/#upload-using-a-presigned-url)を参照してください。
+
+</Callout>
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+ダウンロード可能なURLを作成する場合、`S3GetUrlPluginOptions`で`validateObjectExistence`を`true`に設定することで、ファイルが存在するかどうかを確認することができます。ファイルにアクセスできないか存在しない場合、`StorageException`がスローされます。これにより、署名付きURLを生成するときにオブジェクトが存在するかどうかをチェックでき、その後、そのオブジェクトをダウンロードするために使用できます。また、`StorageGetUrlOptions`にバケットを渡すことで、バックエンドで選択した名前またはコンソール名とリージョンから、ターゲットバケットを指定できます。バケットが指定されていない場合、バックエンドで定義されたデフォルトバケットが使用されます。詳細は[追加ストレージバケットの構成](/[platform]/build-a-backend/storage/set-up-storage/#configure-additional-storage-buckets)を参照してください。
+
+```dart
+Future<void> getDownloadUrl() async {
+  try {
+    final result = await Amplify.Storage.getUrl(
+      path: const StoragePath.fromString('public/example.txt'),
+      /* 
+      // バックエンドで定義されたバケット名に基づいて特定のバケットをターゲット
+      options: StorageGetUrlOptions(
+        bucket: StorageBucket.fromOutputs('secondBucket'),
+      ),
+      */
+    ).result;
+    safePrint('url: ${result.url}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: react, angular, javascript, vue, nextjs, react-native -->
+## ファイルへのダウンロード
+
+`downloadData` APIを使用してファイルをローカルにダウンロードします。
+
+```javascript
+import { downloadData } from 'aws-amplify/storage';
+
+// ファイルコンテンツをメモリにダウンロード
+const { body, eTag } = await downloadData({
+  path: "album/2024/1.jpg"
+}).result;
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+## ファイルへのダウンロード
+
+`downloadFile` APIを使用してファイルをクライアント上にローカルにダウンロードします。
+
+<Callout>
+**注記:** 既存のファイルを上書きするファイルをダウンロードする場合、アプリに適切な書き込み権限があることを確認して、それを上書きしてください。別のアプリが既に寄与しているファイルに書き込もうとしている場合、ユーザーの同意をリクエストする必要があります([こちらで説明](https://developer.android.com/training/data-storage/shared/media#update-other-apps-files))。
+
+詳細は、Android の [スコープ付きストレージ](https://developer.android.com/training/data-storage#scoped-storage)に関する開発者ドキュメントを参照してください。
+
+Amplify は既存のファイルを変更できない場合、`StorageException`をスローします。
+</Callout>
+
+#### [Java]
+
+```java
+Amplify.Storage.downloadFile(
+        StoragePath.fromString("public/example"),
+        new File(getApplicationContext().getFilesDir() + "/download.txt"),
+        result -> Log.i("MyAmplifyApp", "正常にダウンロードされました: " + result.getFile().getName()),
+        error -> Log.e("MyAmplifyApp",  "ダウンロード失敗", error)
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+val file = File("${applicationContext.filesDir}/download.txt")
+Amplify.Storage.downloadFile(StoragePath.fromString("public/example"), file,
+    { Log.i("MyAmplifyApp", "正常にダウンロードされました: ${it.file.name}") },
+    { Log.e("MyAmplifyApp",  "ダウンロード失敗", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    val file = File("${applicationContext.filesDir}/download.txt")
+    val download = Amplify.Storage.downloadFile(StoragePath.fromString("public/example"), file)
+    try {
+        val fileName = download.result().file.name
+        Log.i("MyAmplifyApp", "正常にダウンロードされました: $fileName")
+    } catch (error: StorageException) {
+        Log.e("MyAmplifyApp", "ダウンロード失敗", error)
+    }
+}
+```
+
+#### [RxJava]
+
+```java
+RxProgressAwareSingleOperation<StorageDownloadFileResult> download =
+        RxAmplify.Storage.downloadFile(
+            StoragePath.fromString("public/example"),
+            new File(getApplicationContext().getFilesDir() + "/download.txt")
+        );
+
+download
+    .observeResult()
+    .subscribe(
+        result -> Log.i("MyAmplifyApp", "正常にダウンロードされました: " + result.getFile().getName()),
+        error -> Log.e("MyAmplifyApp",  "ダウンロード失敗", error)
+    );
+```
+
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+## ファイルのダウンロード
+### ローカルファイルへのダウンロード
+
+`downloadFile` APIを使用してファイルをクライアント上にローカルにダウンロードします。
+
+[URL](https://developer.apple.com/documentation/foundation/url)ファイルにダウンロードできます (via `Amplify.Storage.downloadFile`):
+
+#### [Async/Await]
+```swift
+let downloadToFileUrl = FileManager.default.urls(
+    for: .documentDirectory,
+    in: .userDomainMask
+)[0].appendingPathComponent("myFile.txt")
+
+let downloadTask = Amplify.Storage.downloadFile(
+    path: .fromString("public/example/path"),
+    local: downloadToFileUrl,
+    options: nil
+)
+Task {
+    for await progress in await downloadTask.progress {
+        print("進捗: \(progress)")
+    }
+}
+try await downloadTask.value
+print("完了")
+```
+
+#### [Combine]
+```swift
+let downloadToFileUrl = FileManager.default.urls(
+    for: .documentDirectory,
+    in: .userDomainMask
+)[0].appendingPathComponent("myFile.txt")
+
+let downloadTask = Amplify.Storage.downloadFile(
+    path: .fromString("public/example/path"),
+    local: downloadToFileUrl,
+    options: nil
+)
+let progressSink = downloadTask
+    .inProcessPublisher
+    .sink { progress in
+        print("進捗: \(progress)")
+    }
+
+let resultSink = downloadTask
+    .resultPublisher
+    .sink {
+        if case let .failure(storageError) = $0 {
+            print("失敗: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+        }
+    }
+    receiveValue: {
+        print("完了")
+    }
+```
+
+### メモリ内データへのダウンロード
+
+[Data](https://developer.apple.com/documentation/foundation/data)オブジェクトのメモリ内バッファにダウンロードできます (`Amplify.Storage.downloadData`経由):
+
+#### [Async/Await]
+
+```swift
+let downloadTask = Amplify.Storage.downloadData(
+    path: .fromString("public/example/path")
+)
+Task {
+    for await progress in await downloadTask.progress {
+        print("進捗: \(progress)")
+    }
+}
+let data = try await downloadTask.value
+print("完了: \(data)")
+```
+
+#### [Combine]
+
+```swift
+let downloadTask = Amplify.Storage.downloadData(
+    path: .fromString("public/example/path")
+)
+let progressSink = downloadTask
+    .inProcessPublisher
+    .sink { progress in
+        print("進捗: \(progress)")
+    }
+
+let resultSink = downloadTask
+    .resultPublisher
+    .sink {
+        if case let .failure(storageError) = $0 {
+            print("失敗: \(storageError.errorDescription). \(storageError.recoverySuggestion)")
+        }
+    }
+    receiveValue: { data in
+        print("完了: \(data)")
+    }
+```
+
+### 指定されたバケットからのダウンロード
+
+`bucket`オプションを指定して、特定のバケットからダウンロード操作を実行することもできます。
+
+#### [出力から]
+`.fromOutputs(name:)`を使用して、Amplify Backendで割り当てられたターゲットバケットの名前を表す文字列を指定できます。
+
+```swift
+// ファイルにダウンロード
+let downloadTask = Amplify.Storage.downloadFile(
+    path: .fromString("public/example/path"),
+    local: downloadToFileUrl,
+    options: .init(
+        bucket: .fromOutputs(name: "secondBucket")
+    )
+)
+
+// データにダウンロード
+let downloadTask = Amplify.Storage.downloadData(
+    path: .fromString("public/example/path"),
+    options: .init(
+        bucket: .fromOutputs(name: "secondBucket")
+    )
+)
+```
+
+#### [バケット情報から]
+`.fromBucketInfo(_:)`を使用して、バケット名とリージョンを直接指定することもできます。
+
+```swift
+// ファイルにダウンロード
+let downloadTask = Amplify.Storage.downloadFile(
+    path: .fromString("public/example/path"),
+    local: downloadToFileUrl,
+    options: .init(
+        bucket: .fromBucketInfo(.init(
+            bucketName: "another-bucket-name",
+            region: "another-bucket-region")
+        )    
+    )
+)
+
+// データにダウンロード
+let downloadTask = Amplify.Storage.downloadData(
+    path: .fromString("public/example/path"),
+    options: .init(
+        bucket: .fromBucketInfo(.init(
+            bucketName: "another-bucket-name",
+            region: "another-bucket-region")
+        )    
+    )
+)
+```
+
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+## ファイルへのダウンロード
+
+`Amplify.Storage.downloadFile`を使用してローカルディレクトリにファイルをダウンロードできます。
+
+[path_provider](https://pub.dev/packages/path_provider)パッケージを使用して、ダウンロードしたデータを保存できるユーザーのドキュメントディレクトリにローカルファイルを作成できます。
+
+#### [モバイル＆デスクトップ]
+
+```dart
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:path_provider/path_provider.dart';
+
+Future<void> downloadFile() async {
+  final documentsDir = await getApplicationDocumentsDirectory();
+  final filepath = '${documentsDir.path}/example.txt';
+  try {
+    final result = await Amplify.Storage.downloadFile(
+      path: const StoragePath.fromString('public/example.txt'),
+      localFile: AWSFile.fromPath(filepath),
+    ).result;
+    safePrint('ダウンロードされたファイルは次の場所にあります: ${result.localFile.path}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+
+#### [Web]
+
+Webでは、ダウンロードプロセスはブラウザによって処理されます。`AWSFile.fromPath`の`path`パラメータを指定することで、ダウンロードされたファイル名を指定できます。例えば、これはブラウザに`download.txt`ファイルをダウンロードするよう指示します。
+
+```dart
+import 'package:amplify_flutter/amplify_flutter.dart';
+
+Future<void> downloadFile() async {
+  try {
+    final result = await Amplify.Storage.downloadFile(
+      path: const StoragePath.fromString('public/example.txt'),
+      localFile: AWSFile.fromPath('download.txt'),
+    ).result;
+    safePrint('ダウンロードされたファイル: ${result.downloadedItem.path}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+
+<!-- /Platform -->
+
+<!-- Platform: react, angular, javascript, vue, nextjs, react-native -->
+### ダウンロードされたファイルのテキスト値を取得
+
+ファイルの値は、`blob`、`json`、または`text`の3つの形式で取得できます。`body`プロパティのそれぞれのメソッドを呼び出して、それぞれの形式でデータを取得できます。
+
+```javascript
+import { downloadData } from 'aws-amplify/storage';
+
+try {
+  const downloadResult = await downloadData({
+    path: "album/2024/1.jpg"
+  }).result;
+  const text = await downloadResult.body.text();
+  // または、`downloadResult.body.blob()`を使用することもできます
+  // または`downloadResult.body.json()`でボディをBlobまたはJSON形式で読み込みます。
+  console.log('成功: ', text);
+} catch (error) {
+  console.log('エラー: ', error);
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: react, angular, javascript, vue, nextjs, react-native -->
+### 指定されたバケットからダウンロード
+
+`bucket`オプションを指定して、特定のバケットにアップロード操作を実行することもできます。Amplify Backendでアサインされたターゲットバケットのアサイン名を表す文字列を渡すことができます。
+
+```ts
+import { downloadData } from 'aws-amplify/storage';
+
+const result = await downloadData({
+  path: 'album/2024/1.jpg',
+  options: {
+    // highlight-start
+    // Amplify Backendで割り当てられた名前を使用してターゲットバケットを指定
+    bucket: 'assignedNameInAmplifyBackend'
+    // highlight-end
+  }
+}).result;
+
+```
+あるいは、コンソールからバケット名とリージョンを指定してオブジェクトを渡すこともできます。
+
+```ts
+import { downloadData } from 'aws-amplify/storage';
+
+const result = await downloadData({
+  path: 'album/2024/1.jpg',
+  options: {
+    // highlight-start
+    // または、コンソールからバケット名と関連リージョンを指定
+    bucket: {
+      bucketName: 'bucket-name-from-console',
+      region: 'us-east-2'
+    }
+    // highlight-end
+  }
+}).result;
+
+```
+### ダウンロード進捗の監視
+
+```javascript
+import { downloadData } from 'aws-amplify/storage';
+
+// S3バケットからファイルをダウンロード
+const { body, eTag } = await downloadData(
+  {
+    path: 'album/2024/1.jpg',
+    options: {
+      onProgress: (progress) => {
+        console.log(`ダウンロード進捗: ${(progress.transferredBytes/progress.totalBytes) * 100}%`);
+      }
+    }
+  }
+).result;
+```
+
+### ダウンロードをキャンセル
+
+```javascript
+import { downloadData, isCancelError } from 'aws-amplify/storage';
+
+const downloadTask = downloadData({ path: 'album/2024/1.jpg' });
+downloadTask.cancel();
+try {
+  await downloadTask.result;
+} catch (error) {
+  if (isCancelError(error)) {
+    // タスクキャンセルによってスローされたエラーを処理します。
+  }
+}
+```
+<!-- /Platform -->
+<!-- Platform: android -->
+### 指定されたバケットからダウンロード
+
+`bucket`オプションを指定して、特定のバケットにダウンロード操作を実行することもできます。Amplify Backendでアサインされたターゲットバケットのアサイン名を表す文字列を渡すことができます。
+
+#### [Java]
+
+```java
+StorageBucket secondBucket = StorageBucket.fromOutputs("secondBucket");
+StorageDownloadFileOptions options = StorageDownloadFileOptions.builder().bucket(secondBucket).build();
+Amplify.Storage.downloadFile(
+        StoragePath.fromString("public/example"),
+        new File(getApplicationContext().getFilesDir() + "/download.txt"),
+        options,
+        result -> Log.i("MyAmplifyApp", "正常にダウンロードされました: " + result.getFile().getName()),
+        error -> Log.e("MyAmplifyApp",  "ダウンロード失敗", error)
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+val secondBucket = StorageBucket.fromOutputs("secondBucket")
+val options = StorageDownloadFileOptions.builder().bucket(secondBucket).build()
+val file = File("${applicationContext.filesDir}/download.txt")
+Amplify.Storage.downloadFile(StoragePath.fromString("public/example"), file, option,
+    { Log.i("MyAmplifyApp", "正常にダウンロードされました: ${it.file.name}") },
+    { Log.e("MyAmplifyApp",  "ダウンロード失敗", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+val secondBucket = StorageBucket.fromOutputs("secondBucket")
+val options = StorageDownloadFileOptions.builder().bucket(secondBucket).build()
+val file = File("${applicationContext.filesDir}/download.txt")
+val download = Amplify.Storage.downloadFile(StoragePath.fromString("public/example"), file, options)
+try {
+    val fileName = download.result().file.name
+    Log.i("MyAmplifyApp", "正常にダウンロードされました: $fileName")
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "ダウンロード失敗", error)
+}
+```
+
+#### [RxJava]
+
+```java      
+StorageBucket secondBucket = StorageBucket.fromOutputs("secondBucket");
+StorageDownloadFileOptions options = StorageDownloadFileOptions.builder().bucket(secondBucket).build();
+RxProgressAwareSingleOperation<StorageDownloadFileResult> download =
+        RxAmplify.Storage.downloadFile(
+            StoragePath.fromString("public/example"),
+            new File(getApplicationContext().getFilesDir() + "/download.txt"),
+            options
+        );
+
+download
+    .observeResult()
+    .subscribe(
+        result -> Log.i("MyAmplifyApp", "正常にダウンロードされました: " + result.getFile().getName()),
+        error -> Log.e("MyAmplifyApp",  "ダウンロード失敗", error)
+    );
+```
+
+あるいは、コンソールからバケット名とリージョンを指定してオブジェクトを渡すこともできます。
+
+#### [Java]
+
+```java
+BucketInfo bucketInfo = new BucketInfo("second-bucket-name-from-console", "us-east-2");
+StorageBucket secondBucket = StorageBucket.fromBucketInfo(bucketInfo);
+StorageDownloadFileOptions options = StorageDownloadFileOptions.builder().bucket(secondBucket).build();
+Amplify.Storage.downloadFile(
+        StoragePath.fromString("public/example"),
+        new File(getApplicationContext().getFilesDir() + "/download.txt"),
+        options,
+        result -> Log.i("MyAmplifyApp", "正常にダウンロードされました: " + result.getFile().getName()),
+        error -> Log.e("MyAmplifyApp",  "ダウンロード失敗", error)
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+val bucketInfo = BucketInfo("second-bucket-name-from-console", "us-east-2")
+val secondBucket = StorageBucket.fromBucketInfo(bucketInfo)
+val options = StorageDownloadFileOptions.builder().bucket(secondBucket).build()
+val file = File("${applicationContext.filesDir}/download.txt")
+Amplify.Storage.downloadFile(StoragePath.fromString("public/example"), file, options,
+    { Log.i("MyAmplifyApp", "正常にダウンロードされました: ${it.file.name}") },
+    { Log.e("MyAmplifyApp",  "ダウンロード失敗", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+val bucketInfo = BucketInfo("second-bucket-name-from-console", "us-east-2")
+val secondBucket = StorageBucket.fromBucketInfo(bucketInfo)
+val options = StorageDownloadFileOptions.builder().bucket(secondBucket).build()
+val file = File("${applicationContext.filesDir}/download.txt")
+val download = Amplify.Storage.downloadFile(StoragePath.fromString("public/example"), file, options)
+try {
+    val fileName = download.result().file.name
+    Log.i("MyAmplifyApp", "正常にダウンロードされました: $fileName")
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "ダウンロード失敗", error)
+}
+```
+
+#### [RxJava]
+
+```java
+BucketInfo bucketInfo = new BucketInfo("second-bucket-name-from-console", "us-east-2");
+StorageBucket secondBucket = StorageBucket.fromBucketInfo(bucketInfo);
+StorageDownloadFileOptions options = StorageDownloadFileOptions.builder().bucket(secondBucket).build();
+RxProgressAwareSingleOperation<StorageDownloadFileResult> download =
+        RxAmplify.Storage.downloadFile(
+            StoragePath.fromString("public/example"),
+            new File(getApplicationContext().getFilesDir() + "/download.txt"),
+            options,
+        );
+
+download
+    .observeResult()
+    .subscribe(
+        result -> Log.i("MyAmplifyApp", "正常にダウンロードされました: " + result.getFile().getName()),
+        error -> Log.e("MyAmplifyApp",  "ダウンロード失敗", error)
+    );
+```
+
+### ダウンロード進捗の監視
+
+#### [Java]
+
+```java
+Amplify.Storage.downloadFile(
+        StoragePath.fromString("public/example"),
+        new File(getApplicationContext().getFilesDir() + "/download.txt"),
+        StorageDownloadFileOptions.defaultInstance(),
+        progress -> Log.i("MyAmplifyApp", "完了割合: " + progress.getFractionCompleted()),
+        result -> Log.i("MyAmplifyApp", "正常にダウンロードされました: " + result.getFile().getName()),
+        error -> Log.e("MyAmplifyApp",  "ダウンロード失敗", error)
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+val file = File("${applicationContext.filesDir}/download.txt")
+val options = StorageDownloadFileOptions.defaultInstance()
+Amplify.Storage.downloadFile(StoragePath.fromString("public/example"), file, options,
+    { Log.i("MyAmplifyApp", "完了割合: ${it.fractionCompleted}") },
+    { Log.i("MyAmplifyApp", "正常にダウンロードされました: ${it.file.name}") },
+    { Log.e("MyAmplifyApp", "ダウンロード失敗", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+val file = File("${applicationContext.filesDir}/download.txt")
+val options = StorageDownloadFileOptions.defaultInstance()
+val download = Amplify.Storage.downloadFile(StoragePath.fromString("public/example"), file, options)
+val progressJob = activityScope.async {
+    download.progress().collect { progress ->
+        Log.i("MyAmplifyApp", "完了割合: ${progress.fractionCompleted}")
+    }
+}
+try {
+    val fileName = download.result().file.name
+    Log.i("MyAmplifyApp", "正常にダウンロードされました: $fileName")
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "ダウンロード失敗", error)
+}
+progressJob.cancel()
+```
+
+#### [RxJava]
+
+```java
+RxProgressAwareSingleOperation<StorageDownloadFileResult> download =
+        RxAmplify.Storage.downloadFile(StoragePath.fromString("public/example"), localFile);
+
+download
+    .observeProgress()
+    .subscribe(
+      progress -> Log.i("MyAmplifyApp", progress.getFractionCompleted())
+    );
+```
+
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+### ダウンロード進捗の監視
+
+```dart
+final operation = Amplify.Storage.downloadData(
+  path: const StoragePath.fromString('public/example.txt'),
+  onProgress: (progress) {
+    safePrint('分数totalBytes: ${progress.totalBytes}');
+    safePrint('分数transferredBytes: ${progress.transferredBytes}');
+    safePrint('分数完了: ${progress.fractionCompleted}');
+  },
+);
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+### ダウンロードを一時停止、再開、キャンセル
+
+```dart
+
+Future<void> upload() async {
+  final operation = Amplify.Storage.downloadFile(
+    localFile: AWSFile.fromPath('/path/to/local/file'),
+    path: const StoragePath.fromString('public/example.txt'),
+  );
+
+  // 操作を一時停止
+  await operation.pause();
+
+  // 操作を再開
+  await operation.resume();
+
+  // 操作をキャンセル
+  await operation.cancel();
+}
+
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+### 転送のクエリ
+
+Amplify Androidライブラリを使用してアップロードまたはダウンロード操作がリクエストされると、リクエストはまずローカルSQLiteデータベースに永続化され、その後実行のためにキューに入ります。アップロードまたはダウンロードAPIによって返された転送IDを使用して、ローカルデータベースでキューに入っている転送操作をクエリできます。Get-Transfer APIは、以前にエンキューされたペンディング転送を取得し、進捗変更、エラー、または成功に関する更新を受け取るためのリスナーをアタッチしたり、一時停止、キャンセル、または再開したりできます。
+
+#### [Java]
+
+```java
+Amplify.Storage.getTransfer("TRANSFER_ID",
+    operation -> {
+        Log.i("MyAmplifyApp", "現在の状態" + operation.getTransferState());
+        // 更新を受け取るためのリスナーを設定
+        operation.setOnProgress( progress -> {});
+        operation.setOnSuccess( result -> {});
+        operation.setOnError(error -> {});
+
+        // 可能なアクション
+        operation.pause();
+        operation.resume();
+        operation.start();
+        operation.cancel();
+    },
+    {
+        error -> Log.e("MyAmplifyApp", "転送クエリ失敗", error)
+    }
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+Amplify.Storage.getTransfer("TRANSFER_ID",
+    { operation ->
+        Log.i("MyAmplifyApp", "現在の状態" + operation.transferState)
+        // 更新を受け取るためのリスナーを設定
+        operation.setOnProgress {  }
+        operation.setOnSuccess {  }
+        operation.setOnError {  }
+
+        // 可能なアクション
+        operation.pause()
+        operation.resume()
+        operation.start()
+        operation.cancel()
+    },
+    {
+        Log.e("MyAmplifyApp", "転送クエリ失敗", it)
+    }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    val operation = Amplify.Storage.getTransfer("TRANSFER_ID")
+    Log.i("MyAmplifyApp", "現在の状態" + operation.transferState)
+    // 更新を受け取るためのリスナーを設定
+    operation.setOnProgress {  }
+    operation.setOnSuccess {  }
+    operation.setOnError {  }
+
+    // 可能なアクション
+    operation.pause()
+    operation.resume()
+    operation.start()
+    operation.cancel()
+} catch (error: StorageException) {
+    Log.e("MyAmplifyApp", "転送クエリ失敗", error)
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.Storage.getTransfer("TRANSFER_ID")
+    .subscribe(
+        operation -> {
+            Log.i("MyAmplifyApp", "現在の状態" + operation.getTransferState());
+            // 更新を受け取るためのリスナーを設定
+            operation.setOnProgress( progress -> {});
+            operation.setOnSuccess( result -> {});
+            operation.setOnError(error -> {});
+
+            // 可能なアクション
+            operation.pause();
+            operation.resume();
+            operation.start();
+            operation.cancel();
+        },
+        error -> Log.e("MyAmplifyApp", "転送クエリ失敗", error);
+    );
+```
+
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+## メモリ内のデータをダウンロードするAPI
+
+`Amplify.Storage.downloadData`でメモリ内バッファにファイルをダウンロードできます:
+
+```dart
+Future<void> download() async {
+  try {
+    final result = await Amplify.Storage.downloadData(
+      path: const StoragePath.fromString('public/example.txt'),
+    ).result;
+    safePrint('ダウンロードされたデータ: ${result.bytes}');
+  } on StorageException catch (e) {
+    safePrint(e.message);
+  }
+}
+```
+
+## その他のダウンロードオプション
+
+オプション | タイプ | 説明 |
+| -- | -- | ----------- |
+| bucket | StorageBucket | Amplify Backendで割り当てられた名前または コンソールのバケット名とリージョンからのターゲットバケット<br/><br/>このオプションが指定されていない場合、Amplify設定のデフォルトバケットとリージョンにデフォルト設定されます。<br/><br/>[追加ストレージバケットの構成](/[platform]/build-a-backend/storage/set-up-storage/#configure-additional-storage-buckets)を参照してください |
+| getProperties | boolean | 操作完了後にAmplify.Storage.getProperties()を使用してダウンロードされたオブジェクトのプロパティを取得するかどうか。true に設定すると、返されたアイテムにはメタデータやコンテンツタイプなどの追加情報が含まれます。 |
+| useAccelerateEndpoint | boolean | アクセラレートエンドポイントを使用するかどうか。 <br/><br/> [転送高速化](/[platform]/frontend/storage/upload-files/#transfer-acceleration)を参照してください |
+| bytesRange | S3DataBytesRange | オブジェクトからダウンロードするバイト範囲 |
+
+### `downloadFile`とオプションの例
+
+```dart
+final operation = Amplify.Storage.downloadFile(
+  path: const StoragePath.fromString('public/example.txt'),
+  localFile: AWSFile.fromPath('/path/to/local/file.txt'),
+  options: const StorageDownloadFileOptions(
+    pluginOptions: S3DownloadFilePluginOptions(
+      getProperties: true,
+      useAccelerateEndpoint: true,
+    ),
+    bucket: StorageBucket.fromOutputs('secondBucket'),
+  ),
+);
+```
+
+### `downloadData`とオプションの例
+
+```dart
+final operation = Amplify.Storage.downloadData(
+  path: const StoragePath.fromString('public/example.txt'),
+  options: StorageDownloadDataOptions(
+    pluginOptions: S3DownloadDataPluginOptions(
+      getProperties: true,
+      useAccelerateEndpoint: true,
+      bytesRange: S3DataBytesRange(start: 0, end: 100),
+    ),
+  ),
+);
+```
+
+`bucket`オプションを指定して、`downloadData`または`downloadFile`操作を特定のバケットに対して実行することもできます。Amplify Backendで定義されたバケット名からのターゲットバケットを表す`StorageBucket`オブジェクトを渡すことができます。
+
+```dart
+final operation = Amplify.Storage.downloadFile(
+  path: const StoragePath.fromString('public/example.txt'),
+  localFile: AWSFile.fromPath('/path/to/local/file.txt'),
+  options: const StorageDownloadFileOptions(
+    pluginOptions: S3DownloadFilePluginOptions(
+      getProperties: true,
+      useAccelerateEndpoint: true,
+    ),
+    bucket: StorageBucket.fromOutputs('secondBucket'),
+  ),
+);
+```
+
+あるいは、コンソールからバケット名とリージョンを指定してオブジェクトを渡すこともできます。
+
+```dart
+final operation = Amplify.Storage.downloadData(
+  path: const StoragePath.fromString('public/example.txt'),
+  options: StorageDownloadDataOptions(
+    pluginOptions: S3DownloadDataPluginOptions(
+      getProperties: true,
+      useAccelerateEndpoint: true,
+      bytesRange: S3DataBytesRange(start: 0, end: 100),
+    ),
+    bucket: StorageBucket.fromBucketInfo(
+      BucketInfo(
+        bucketName: 'second-bucket-name-from-console',
+        region: 'us-east-2',
+      ),
+    ),
+  ),
+);
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+### ダウンロードを一時停止、再開、キャンセル
+
+`downloadData`または`downloadFile`への呼び出しは、実際にダウンロードを実行しているタスクへの参照を返します。
+
+以下に示すように、タスクを一時停止してから再開するか、タスクをキャンセルできます。
+
+```swift
+downloadTask.pause()
+downloadTask.resume()
+downloadTask.cancel()
+```
+
+<Callout>
+
+ダウンロードタスクは内部的に`URLSessionTask`インスタンスを使用して実行されます。詳細は[Apple公式ドキュメント](https://developer.apple.com/documentation/foundation/urlsessiontask)で参照できます。
+
+</Callout>
+<!-- /Platform -->
+
+<!-- Platform: react, angular, javascript, vue, nextjs, react-native -->
+### その他のダウンロードオプション
+`downloadData` APIの動作は、オプションを渡すことでカスタマイズできます。
+
+```javascript
+import { downloadData } from 'aws-amplify/storage';
+
+// ファイルコンテンツをメモリにダウンロード
+const { body, eTag } = await downloadData({
+  path: "album/2024/1.jpg",
+  options: {
+    // オプションのバイト範囲パラメータでファイルの一部をダウンロード。この例ではファイルの2番目のMB
+    bytesRange: {
+      start: 1024,
+      end: 2048
+    },
+    useAccelerateEndpoint: true,
+  }
+}).result;
+
+```
+
+オプション | タイプ | デフォルト | 説明 |
+| :--: | :--: | :--: | ----------- |
+| bucket | string \| <br />\{ bucketName: string;<br/> region: string; \} | Amplify設定のデフォルトバケットとリージョン | Amplify Backendのターゲットバケットのアサイン名を表す文字列、またはコンソールから指定されたバケット名とリージョンを指定するオブジェクト。<br/><br/>[追加ストレージバケットの構成](/[platform]/build-a-backend/storage/set-up-storage/#configure-additional-storage-buckets)を参照してください |
+| onProgress | callback | — | アップロード/ダウンロード進捗を追跡するコールバック関数。 |
+| bytesRange |  \{ start: number; end:number; \} | — | ファイルの一部をダウンロードするバイト範囲パラメータ。 |
+| useAccelerateEndpoint | boolean | false | アクセラレートエンドポイントを使用するかどうか。<br/><br/>[転送高速化](/[platform]/build-a-backend/storage/extend-s3-resources/#example---enable-transfer-acceleration)を参照してください |
+| expectedBucketOwner | string | オプション | リクエストされたバケットを所有するアカウントID。 |
+
+## よくある質問
+
+- [画像圧縮](https://github.com/aws-amplify/amplify-js/issues/6081)またはS3バケット用のCloudFront CDNキャッシングはまだ利用できません。
+- `downloadData`はキャッシュ制御オプションを提供していません。実行時HTTPキャッシング動作に依存しています。キャッシュをバイパスする必要がある場合は、`getUrl` APIを使用してファイルをダウンロードするための署名付きURLを作成できます。
+- `downloadData`はS3オブジェクトバージョニングをサポートしていません。常に最新バージョンをダウンロードします。
+<!-- /Platform -->

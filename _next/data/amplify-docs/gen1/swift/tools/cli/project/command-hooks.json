@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"swift","meta":{"title":"コマンドフック","description":"Amplify CLIコマンド実行の前、最中、後にカスタムスクリプトを実行します(\"amplify push\"、\"amplify api gql-compile\"など)。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

@@ -1,0 +1,646 @@
+# AWS Amplify Gen 2 Documentation
+
+> AWS Amplify documentation for building fullstack apps with TypeScript.
+
+Docs: https://docs.amplify.aws
+
+## how-amplify-works
+
+- [Amplify の仕組み](https://docs.amplify.aws/react/how-amplify-works/): AWS Amplify の機能と、フルスタックアプリ開発のためにそれらを一緒に使用または独立して使用する方法について学びます。
+  Markdown: /ai/pages/how-amplify-works.md
+- [コンセプト](https://docs.amplify.aws/react/how-amplify-works/concepts/): Amplify フルスタック TypeScript DX について学習する
+  Markdown: /ai/pages/how-amplify-works/concepts.md
+- [FAQ](https://docs.amplify.aws/react/how-amplify-works/faq/): コード優先DXに関するよくある質問。
+  Markdown: /ai/pages/how-amplify-works/faq.md
+
+## start
+
+- [始める](https://docs.amplify.aws/react/start/): AWS Amplify Gen 2 を使い始める方法を学びます。
+  Markdown: /ai/pages/start.md
+- [クイックスタート](https://docs.amplify.aws/react/start/quickstart/): AWS Amplify Gen 2 と React、Next.js、Angular、Vue、Flutter、React Native、Swift、Android、JavaScript を使い始めましょう。
+  Markdown: /ai/pages/start/quickstart.md
+- [Next.js Pages Router](https://docs.amplify.aws/react/start/quickstart/nextjs-pages-router/): AWS Amplify Gen 2 を使用して Next.js Pages Router を始めましょう。
+  Markdown: /ai/pages/start/quickstart/nextjs-pages-router.md
+- [Next.js App Router](https://docs.amplify.aws/react/start/quickstart/nextjs-app-router-client-components/): AWS Amplify Gen 2 を Next.js App Router で始めましょう。
+  Markdown: /ai/pages/start/quickstart/nextjs-app-router-client-components.md
+- [ローカル開発用にAWSを設定する](https://docs.amplify.aws/react/start/account-setup/): AWSアカウントをセットアップし、Amplifyで使用するようにローカルで設定する方法を学びます。
+  Markdown: /ai/pages/start/account-setup.md
+- [手動インストール](https://docs.amplify.aws/react/start/manual-installation/): AWS Amplify Gen 2 を手動インストールして始める方法を学びます。
+  Markdown: /ai/pages/start/manual-installation.md
+- [AWS リソースに接続する](https://docs.amplify.aws/react/start/connect-to-aws-resources/): Amplify クライアント ライブラリを使用して AWS リソースに直接接続できます
+  Markdown: /ai/pages/start/connect-to-aws-resources.md
+- [Kotlinコルーチンサポート](https://docs.amplify.aws/react/start/kotlin-coroutines/): Amplify Androidは、Kotlinのコルーチンとフローに対する一流のサポートを提供しています。
+  Markdown: /ai/pages/start/kotlin-coroutines.md
+- [Gen 1 ユーザー向け Gen 2](https://docs.amplify.aws/react/start/migrate-to-gen2/): Amplify Gen 1 バックエンドを Gen 2 に移行する方法を学ぶか、Gen 1 の機能が Gen 2 にどのようにマップされるかを理解します。
+  Markdown: /ai/pages/start/migrate-to-gen2.md
+- [既存の Gen 1 環境を Gen 2 に移行する](https://docs.amplify.aws/react/start/migrate-to-gen2/migrate-existing-app/): 既存の Amplify Gen 1 バックエンド環境を Gen 2 に移行するためのステップバイステップガイド。前提条件、ツール、トラブルシューティングを含みます。
+  Markdown: /ai/pages/start/migrate-to-gen2/migrate-existing-app.md
+- [機能パリティ](https://docs.amplify.aws/react/start/migrate-to-gen2/feature-matrix/): Gen 1 と Gen 2 の機能の可用性と移行ツールサポートを比較します。
+  Markdown: /ai/pages/start/migrate-to-gen2/feature-matrix.md
+- [プラットフォーム設定](https://docs.amplify.aws/react/start/platform-setup/): amplify-Flutterに必要なプラットフォーム固有の構成手順
+  Markdown: /ai/pages/start/platform-setup.md
+
+## build-a-backend
+
+- [バックエンドを構築する](https://docs.amplify.aws/react/build-a-backend/): 認証、データ、ストレージ、関数を設定およびカスタマイズして、アプリケーション用のバックエンドを構築します。
+  Markdown: /ai/pages/build-a-backend.md
+- [認証](https://docs.amplify.aws/react/build-a-backend/auth/): AWS Amplify の認証機能について学習します。
+  Markdown: /ai/pages/build-a-backend/auth.md
+- [Amplify Auth のセットアップ](https://docs.amplify.aws/react/build-a-backend/auth/set-up-auth/): Amplify で認証用のバックエンドリソースをセットアップして接続する方法を学びます。
+  Markdown: /ai/pages/build-a-backend/auth/set-up-auth.md
+- [コンセプト](https://docs.amplify.aws/react/build-a-backend/auth/concepts/): Amplify Authがプロビジョニングおよびサポートする機能について詳しく学習します
+  Markdown: /ai/pages/build-a-backend/auth/concepts.md
+- [ユーザー名](https://docs.amplify.aws/react/build-a-backend/auth/concepts/usernames/): Amplify Authがプロビジョニングおよびサポートするものについて詳しく学ぶ
+  Markdown: /ai/pages/build-a-backend/auth/concepts/usernames.md
+- [メール](https://docs.amplify.aws/react/build-a-backend/auth/concepts/email/): Amplify Authがプロビジョニングおよびサポートする内容について詳しく学ぶ
+  Markdown: /ai/pages/build-a-backend/auth/concepts/email.md
+- [電話番号](https://docs.amplify.aws/react/build-a-backend/auth/concepts/phone/): Amplify Authがプロビジョニングおよびサポートするものについて詳しく学ぶ
+  Markdown: /ai/pages/build-a-backend/auth/concepts/phone.md
+- [パスワードレス](https://docs.amplify.aws/react/build-a-backend/auth/concepts/passwordless/): パスワードレスサインインフローの設定方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/auth/concepts/passwordless.md
+- [ユーザー属性](https://docs.amplify.aws/react/build-a-backend/auth/concepts/user-attributes/): Amplify Auth がプロビジョニングおよびサポートする内容について詳しく学ぶ
+  Markdown: /ai/pages/build-a-backend/auth/concepts/user-attributes.md
+- [ユーザーグループ](https://docs.amplify.aws/react/build-a-backend/auth/concepts/user-groups/): Amplify Authがプロビジョニングおよびサポートする内容について詳しく学習します
+  Markdown: /ai/pages/build-a-backend/auth/concepts/user-groups.md
+- [多要素認証](https://docs.amplify.aws/react/build-a-backend/auth/concepts/multi-factor-authentication/): Amplify Auth がプロビジョニングおよびサポートする内容について詳しく学ぶ
+  Markdown: /ai/pages/build-a-backend/auth/concepts/multi-factor-authentication.md
+- [外部アイデンティティプロバイダー](https://docs.amplify.aws/react/build-a-backend/auth/concepts/external-identity-providers/): Amplify Authがプロビジョニングしてサポートする内容についてさらに詳しく学ぶ
+  Markdown: /ai/pages/build-a-backend/auth/concepts/external-identity-providers.md
+- [ゲストアクセス](https://docs.amplify.aws/react/build-a-backend/auth/concepts/guest-access/): サインインなしでサービスにアクセスします。
+  Markdown: /ai/pages/build-a-backend/auth/concepts/guest-access.md
+- [トークンと認証情報](https://docs.amplify.aws/react/build-a-backend/auth/concepts/tokens-and-credentials/): Amplifyアプリケーションでトークンと認証情報がどのように使用されるかについて学習します
+  Markdown: /ai/pages/build-a-backend/auth/concepts/tokens-and-credentials.md
+- [ユーザーの管理](https://docs.amplify.aws/react/build-a-backend/auth/manage-users/): ユーザーの管理方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/auth/manage-users.md
+- [管理アクションを使用](https://docs.amplify.aws/react/build-a-backend/auth/manage-users/with-admin-actions/): 管理アクションを使用してユーザーを管理する方法を学習します
+  Markdown: /ai/pages/build-a-backend/auth/manage-users/with-admin-actions.md
+- [パスワードを管理する](https://docs.amplify.aws/react/build-a-backend/auth/manage-users/manage-passwords/): ユーザーパスワードの管理方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/auth/manage-users/manage-passwords.md
+- [WebAuthn認証器の管理](https://docs.amplify.aws/react/build-a-backend/auth/manage-users/manage-webauthn-credentials/): WebAuthn認証器の管理方法を学習します
+  Markdown: /ai/pages/build-a-backend/auth/manage-users/manage-webauthn-credentials.md
+- [デバイスの管理](https://docs.amplify.aws/react/build-a-backend/auth/manage-users/manage-devices/): ユーザーデバイスの管理方法について学ぶ
+  Markdown: /ai/pages/build-a-backend/auth/manage-users/manage-devices.md
+- [Amplify コンソールでユーザーを管理する](https://docs.amplify.aws/react/build-a-backend/auth/manage-users/with-amplify-console/): Amplify コンソールで アプリケーションの Cognito ユーザーとグループを管理する
+  Markdown: /ai/pages/build-a-backend/auth/manage-users/with-amplify-console.md
+- [認証ライフサイクルのカスタマイズ](https://docs.amplify.aws/react/build-a-backend/auth/customize-auth-lifecycle/): 認証ライフサイクルをカスタマイズする方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/auth/customize-auth-lifecycle.md
+- [カスタム認証フロー](https://docs.amplify.aws/react/build-a-backend/auth/customize-auth-lifecycle/custom-auth-flows/): Amazon Cognito Auth プラグインを使用して、ユーザーが定義したカスタムフローを使用して Amazon Cognito User Pool にサインインします
+  Markdown: /ai/pages/build-a-backend/auth/customize-auth-lifecycle/custom-auth-flows.md
+- [メールのカスタマイズ](https://docs.amplify.aws/react/build-a-backend/auth/customize-auth-lifecycle/email-customization/): ユーザーがサインアップ時に受け取るメールをカスタマイズする方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/auth/customize-auth-lifecycle/email-customization.md
+- [トリガー](https://docs.amplify.aws/react/build-a-backend/auth/customize-auth-lifecycle/triggers/): 認証ライフサイクルをカスタマイズするために Cognito Lambda トリガーを使用する方法について学習します
+  Markdown: /ai/pages/build-a-backend/auth/customize-auth-lifecycle/triggers.md
+- [データ使用ポリシー情報](https://docs.amplify.aws/react/build-a-backend/auth/data-usage-policy/): Amplifyライブラリが収集するデータ型を確認してください。App Storeにアプリを提出する際、Appleはアプリのデータ使用ポリシーでこれらを開示することを要求しています。
+  Markdown: /ai/pages/build-a-backend/auth/data-usage-policy.md
+- [例](https://docs.amplify.aws/react/build-a-backend/auth/examples/): Amplify Auth を使用して異なるビジネスユースケースに対応する方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/auth/examples.md
+- [Microsoft Entra ID (SAML)](https://docs.amplify.aws/react/build-a-backend/auth/examples/microsoft-entra-id-saml/): SAMLを使用してMicrosoft EntraIDプロバイダーを接続する方法を学習
+  Markdown: /ai/pages/build-a-backend/auth/examples/microsoft-entra-id-saml.md
+- [認証リソースへのアクセス許可](https://docs.amplify.aws/react/build-a-backend/auth/grant-access-to-auth-resources/): 認証リソースへのアクセス許可を付与する方法を学習します
+  Markdown: /ai/pages/build-a-backend/auth/grant-access-to-auth-resources.md
+- [CDKでAmplifyが生成したCognitoリソースを変更する](https://docs.amplify.aws/react/build-a-backend/auth/modify-resources-with-cdk/): Amplifyが生成したCognitoリソースを変更する方法を学びます。
+  Markdown: /ai/pages/build-a-backend/auth/modify-resources-with-cdk.md
+- [本番環境への移行](https://docs.amplify.aws/react/build-a-backend/auth/moving-to-production/): 本番環境のワークロード向けに認証リソースを設定する方法を学びます
+  Markdown: /ai/pages/build-a-backend/auth/moving-to-production.md
+- [既存の Cognito リソースを使用する](https://docs.amplify.aws/react/build-a-backend/auth/use-existing-cognito-resources/): 既存の認証リソースの使用方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/auth/use-existing-cognito-resources.md
+- [AWS SDK を使用する](https://docs.amplify.aws/react/build-a-backend/auth/use-aws-sdk/): Amplify が機能を提供していない高度なユースケースの場合、エスケープハッチを取得して、基になる Amazon Cognito クライアントにアクセスできます。
+  Markdown: /ai/pages/build-a-backend/auth/use-aws-sdk.md
+- [API References](https://docs.amplify.aws/react/build-a-backend/auth/reference/): API References - auth
+  Markdown: /ai/pages/build-a-backend/auth/reference.md
+- [データ](https://docs.amplify.aws/react/build-a-backend/data/): AWS Amplify のデータ機能について学びます。
+  Markdown: /ai/pages/build-a-backend/data.md
+- [Amplify Data をセットアップする](https://docs.amplify.aws/react/build-a-backend/data/set-up-data/): 新しいクラウド API を作成して、アプリを新規または既存のデータソースに接続します。
+  Markdown: /ai/pages/build-a-backend/data/set-up-data.md
+- [データモデルをカスタマイズする](https://docs.amplify.aws/react/build-a-backend/data/data-modeling/): データモデルをカスタマイズする方法を学びます。
+  Markdown: /ai/pages/build-a-backend/data/data-modeling.md
+- [データモデルにフィールドを追加](https://docs.amplify.aws/react/build-a-backend/data/data-modeling/add-fields/): 組み込みフィールドタイプとカスタムフィールドタイプを設定します。
+  Markdown: /ai/pages/build-a-backend/data/data-modeling/add-fields.md
+- [モデル関係の構築](https://docs.amplify.aws/react/build-a-backend/data/data-modeling/relationships/): モデル関係のタイプとモデル関係の構築について学習します。
+  Markdown: /ai/pages/build-a-backend/data/data-modeling/relationships.md
+- [データモデル識別子のカスタマイズ](https://docs.amplify.aws/react/build-a-backend/data/data-modeling/identifiers/): 単一フィールドまたは複合識別子を使用してモデルの主キーを定義します。
+  Markdown: /ai/pages/build-a-backend/data/data-modeling/identifiers.md
+- [セカンダリインデックスのカスタマイズ](https://docs.amplify.aws/react/build-a-backend/data/data-modeling/secondary-index/): データモデルのセカンダリインデックスを定義して、クエリパフォーマンスを最適化します
+  Markdown: /ai/pages/build-a-backend/data/data-modeling/secondary-index.md
+- [操作の無効化](https://docs.amplify.aws/react/build-a-backend/data/data-modeling/disable-operations/): データモデルの操作を無効化する
+  Markdown: /ai/pages/build-a-backend/data/data-modeling/disable-operations.md
+- [認可ルールをカスタマイズする](https://docs.amplify.aws/react/build-a-backend/data/customize-authz/): 認可ルールをカスタマイズして組み合わせる方法を学びます。
+  Markdown: /ai/pages/build-a-backend/data/customize-authz.md
+- [パブリックデータアクセス](https://docs.amplify.aws/react/build-a-backend/data/customize-authz/public-data-access/): パブリック認可戦略は、API キーで保護されているAPIへのアクセスをすべてのユーザーに付与します。また、認可プロバイダーをオーバーライドして、API キーの代わりに Cognito の認証されていない IAM ロールを使用してパブリックアクセスを行うこともできます。
+  Markdown: /ai/pages/build-a-backend/data/customize-authz/public-data-access.md
+- [ユーザー単位/オーナー単位のデータアクセス](https://docs.amplify.aws/react/build-a-backend/data/customize-authz/per-user-per-owner-data-access/): オーナー認可戦略により、レコードに対する操作は、そのレコードのオーナーのみに制限されます。設定時には、オーナーフィールド（デフォルト：'owner'）が自動的に追加され、作成したユーザーのアイデンティティが入力されます。APIは'owner'フィールドに対して認可し、操作を許可または拒否します。
+  Markdown: /ai/pages/build-a-backend/data/customize-authz/per-user-per-owner-data-access.md
+- [複数ユーザーのデータアクセス](https://docs.amplify.aws/react/build-a-backend/data/customize-authz/multi-user-data-access/): 'ownersDefinedIn' ルールは、'owners' フィールドを自動的に作成して許可されたレコード所有者を保存することで、ユーザーのセットにレコードへのアクセスを付与します。'inField' を指定することで、デフォルトの owners フィールド名をオーバーライドして、所有者情報を保存する目的のフィールド名を指定できます。所有者フィールドを更新することで、レコードにアクセスできるユーザーを動的に管理できます。
+  Markdown: /ai/pages/build-a-backend/data/customize-authz/multi-user-data-access.md
+- [サインイン済みユーザーのデータアクセス](https://docs.amplify.aws/react/build-a-backend/data/customize-authz/signed-in-user-data-access/): 'private' 認可戦略は、IAM、Cognito、または OpenID Connect を通じて認証されたサインイン済みユーザーのみにレコードアクセスを制限し、認可ルールをすべてのユーザーに適用します。これは、認証されたすべてのユーザーのデータをプライベートにする簡単な方法を提供します。
+  Markdown: /ai/pages/build-a-backend/data/customize-authz/signed-in-user-data-access.md
+- [ユーザーグループベースのデータアクセス](https://docs.amplify.aws/react/build-a-backend/data/customize-authz/user-group-based-data-access/): ユーザーグループ認可戦略により、特定のユーザーグループまたは各データレコードで動的に定義されたグループへのデータアクセスを制限できます。静的および動的グループ認可オプションの両方が利用可能ですが、動的グループ認可を使用する場合、リアルタイムサブスクリプションに関する制限があります。
+  Markdown: /ai/pages/build-a-backend/data/customize-authz/user-group-based-data-access.md
+- [Lambda 関数を使用したカスタムデータアクセス](https://docs.amplify.aws/react/build-a-backend/data/customize-authz/custom-data-access-patterns/): Lambda 関数を使用してカスタム認可ルールを定義します。
+  Markdown: /ai/pages/build-a-backend/data/customize-authz/custom-data-access-patterns.md
+- [OpenID Connectを認可プロバイダーとして使用する](https://docs.amplify.aws/react/build-a-backend/data/customize-authz/using-oidc-authorization-provider/): 'private'、'owner'、および'group'認可戦略でOpenID Connectを使用します。
+  Markdown: /ai/pages/build-a-backend/data/customize-authz/using-oidc-authorization-provider.md
+- [カスタム識別情報およびグループクレームの設定](https://docs.amplify.aws/react/build-a-backend/data/customize-authz/configure-custom-identity-and-group-claim/): Amplify Dataでは、デフォルトのCognitoクレームを使用する代わりに、カスタム識別情報およびグループクレームを設定できます。これは、データベースやサードパーティの認証プロバイダーなどの外部ソースからクレームを入力したい場合に便利です。この例は、カスタムの事前トークン生成Lambdaトリガーから取得できる'user_id'識別情報クレームと'user_groups'グループクレームをチェックする方法を示しています。これらのカスタムクレームを定義することで、承認ルールでより柔軟性が提供されます。
+  Markdown: /ai/pages/build-a-backend/data/customize-authz/configure-custom-identity-and-group-claim.md
+- [Lambda関数にAPIとデータへのアクセスを許可する](https://docs.amplify.aws/react/build-a-backend/data/customize-authz/grant-lambda-function-access-to-api/): Amplify Dataは「デフォルト拒否」承認モデルを使用します。関数アクセスはスキーマで明示的に定義する必要があります。
+  Markdown: /ai/pages/build-a-backend/data/customize-authz/grant-lambda-function-access-to-api.md
+- [カスタムクエリとミューテーションを追加](https://docs.amplify.aws/react/build-a-backend/data/custom-business-logic/): クエリとミューテーション用にビジネスロジックをカスタマイズします。
+  Markdown: /ai/pages/build-a-backend/data/custom-business-logic.md
+- [Amazon OpenSearchで検索およびアグリゲートクエリに接続する](https://docs.amplify.aws/react/build-a-backend/data/custom-business-logic/search-and-aggregate-queries/): Amazon OpenSearch ServiceとゼロETL DynamoDB-to-OpenSearchを使用して検索およびアグリゲートクエリを構築します。
+  Markdown: /ai/pages/build-a-backend/data/custom-business-logic/search-and-aggregate-queries.md
+- [Amazon EventBridge に接続してイベントを送受信する](https://docs.amplify.aws/react/build-a-backend/data/custom-business-logic/connect-eventbridge-datasource/): AWS Amplify でイベント駆動型アプリケーションを構築するために Amazon EventBridge データソースに接続します。
+  Markdown: /ai/pages/build-a-backend/data/custom-business-logic/connect-eventbridge-datasource.md
+- [Amazon Pollyへの接続（テキスト音声変換API）](https://docs.amplify.aws/react/build-a-backend/data/custom-business-logic/connect-amazon-polly/): Amazon Pollyに接続します。
+  Markdown: /ai/pages/build-a-backend/data/custom-business-logic/connect-amazon-polly.md
+- [Amazon Bedrockに接続して生成AIのユースケースを実現する](https://docs.amplify.aws/react/build-a-backend/data/custom-business-logic/connect-bedrock/): AWS Amplifyを使用してAmazon Bedrockに接続し、生成AIアプリケーションを構築します。
+  Markdown: /ai/pages/build-a-backend/data/custom-business-logic/connect-bedrock.md
+- [Amazon Rekognitionに接続して画像分析APIを使用する](https://docs.amplify.aws/react/build-a-backend/data/custom-business-logic/connect-amazon-rekognition/): Amazon Rekognitionに接続する。
+  Markdown: /ai/pages/build-a-backend/data/custom-business-logic/connect-amazon-rekognition.md
+- [Amazon Translateに接続して言語翻訳APIを使用する](https://docs.amplify.aws/react/build-a-backend/data/custom-business-logic/connect-amazon-translate/): Amazon Translateに接続します。
+  Markdown: /ai/pages/build-a-backend/data/custom-business-logic/connect-amazon-translate.md
+- [外部HTTPエンドポイントに接続](https://docs.amplify.aws/react/build-a-backend/data/custom-business-logic/connect-http-datasource/): HTTPデータソースに接続します。
+  Markdown: /ai/pages/build-a-backend/data/custom-business-logic/connect-http-datasource.md
+- [DynamoDBのバッチ操作](https://docs.amplify.aws/react/build-a-backend/data/custom-business-logic/batch-ddb-operations/): DynamoDBのバッチ操作
+  Markdown: /ai/pages/build-a-backend/data/custom-business-logic/batch-ddb-operations.md
+- [既存のデータソースに接続](https://docs.amplify.aws/react/build-a-backend/data/connect-to-existing-data-sources/): 既存の DynamoDB テーブル、MySQL データベース、または PostgreSQL データベースに Data API を接続する方法について説明します。
+  Markdown: /ai/pages/build-a-backend/data/connect-to-existing-data-sources.md
+- [既存のMySQL・PostgreSQLデータベースをアプリに接続する](https://docs.amplify.aws/react/build-a-backend/data/connect-to-existing-data-sources/connect-postgres-mysql-database/): 既存のMySQL・PostgreSQLデータベースをアプリに接続する方法を学びます。
+  Markdown: /ai/pages/build-a-backend/data/connect-to-existing-data-sources/connect-postgres-mysql-database.md
+- [外部 Amazon DynamoDB データソースへの接続](https://docs.amplify.aws/react/build-a-backend/data/connect-to-existing-data-sources/connect-external-ddb-table/): カスタムクエリとミューテーションを使用して外部 Amazon DynamoDB データソースに接続する
+  Markdown: /ai/pages/build-a-backend/data/connect-to-existing-data-sources/connect-external-ddb-table.md
+- [Amplify生成のAWSリソースを変更する](https://docs.amplify.aws/react/build-a-backend/data/override-resources/): Amplify GraphQL APIで生成されたAWSリソースの変更とカスタマイズ
+  Markdown: /ai/pages/build-a-backend/data/override-resources.md
+- [Amplify コンソールでデータを管理](https://docs.amplify.aws/react/build-a-backend/data/manage-with-amplify-console/): Amplify コンソールで GraphQL データを管理
+  Markdown: /ai/pages/build-a-backend/data/manage-with-amplify-console.md
+- [ロギングを有効にする](https://docs.amplify.aws/react/build-a-backend/data/enable-logging/): Amplify データリソースのロギングを有効にする方法を学習します
+  Markdown: /ai/pages/build-a-backend/data/enable-logging.md
+- [フィールドレベルの検証](https://docs.amplify.aws/react/build-a-backend/data/field-level-validation/): モデルスキーマでフィールドレベルの検証を有効にする方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/data/field-level-validation.md
+- [API References](https://docs.amplify.aws/react/build-a-backend/data/reference/): API References - api
+  Markdown: /ai/pages/build-a-backend/data/reference.md
+- [ストレージ](https://docs.amplify.aws/react/build-a-backend/storage/): ストレージをセットアップして接続します。
+  Markdown: /ai/pages/build-a-backend/storage.md
+- [ストレージの設定](https://docs.amplify.aws/react/build-a-backend/storage/set-up-storage/): プロジェクト用に Amplify Storage を設定する
+  Markdown: /ai/pages/build-a-backend/storage/set-up-storage.md
+- [ストレージバケットの認可ルールをカスタマイズ](https://docs.amplify.aws/react/build-a-backend/storage/authorization/): ストレージバケットの細粒度の認可ルールを定義
+  Markdown: /ai/pages/build-a-backend/storage/authorization.md
+- [ストレージイベントをリッスンする](https://docs.amplify.aws/react/build-a-backend/storage/lambda-triggers/): ストレージイベントのトリガーを設定する
+  Markdown: /ai/pages/build-a-backend/storage/lambda-triggers.md
+- [S3 リソースを拡張する](https://docs.amplify.aws/react/build-a-backend/storage/extend-s3-resources/): S3 リソースの設定を拡張する
+  Markdown: /ai/pages/build-a-backend/storage/extend-s3-resources.md
+- [AWS SDK for S3 APIを使用する](https://docs.amplify.aws/react/build-a-backend/storage/use-aws-sdk/): エスケープハッチを使用してS3Clientにアクセスする
+  Markdown: /ai/pages/build-a-backend/storage/use-aws-sdk.md
+- [Amplify コンソールでファイルを管理する](https://docs.amplify.aws/react/build-a-backend/storage/manage-with-amplify-console/): Amplify コンソールでアプリケーションのストレージファイルを管理する
+  Markdown: /ai/pages/build-a-backend/storage/manage-with-amplify-console.md
+- [API References](https://docs.amplify.aws/react/build-a-backend/storage/reference/): API References - storage
+  Markdown: /ai/pages/build-a-backend/storage/reference.md
+- [関数](https://docs.amplify.aws/react/build-a-backend/functions/): AWS Lambda 関数を使用してタスクを実行し、ワークフローをカスタマイズします。
+  Markdown: /ai/pages/build-a-backend/functions.md
+- [Function をセットアップする](https://docs.amplify.aws/react/build-a-backend/functions/set-up-function/): AWS Lambda 関数を使用してタスクを実行し、ワークフローをカスタマイズします。
+  Markdown: /ai/pages/build-a-backend/functions/set-up-function.md
+- [環境変数とシークレット](https://docs.amplify.aws/react/build-a-backend/functions/environment-variables-and-secrets/): 環境変数とシークレットを設定して使用する方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/functions/environment-variables-and-secrets.md
+- [関数の設定](https://docs.amplify.aws/react/build-a-backend/functions/configure-functions/): 関数を設定する方法を学びます
+  Markdown: /ai/pages/build-a-backend/functions/configure-functions.md
+- [クライアントライブラリの設定](https://docs.amplify.aws/react/build-a-backend/functions/configure-client-library/): function ハンドラーで aws-amplify クライアントライブラリを設定する方法を学習します
+  Markdown: /ai/pages/build-a-backend/functions/configure-client-library.md
+- [関数のスケジューリング](https://docs.amplify.aws/react/build-a-backend/functions/scheduling-functions/): 特定の間隔で実行するようにスケジュールされた関数の設定方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/functions/scheduling-functions.md
+- [ストリーミングログ](https://docs.amplify.aws/react/build-a-backend/functions/streaming-logs/): Sandbox実行中に実行ログをターミナルに直接ストリーミングする
+  Markdown: /ai/pages/build-a-backend/functions/streaming-logs.md
+- [Lambda レイヤー](https://docs.amplify.aws/react/build-a-backend/functions/add-lambda-layers/): 関数にレイヤーを追加する方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/functions/add-lambda-layers.md
+- [他のリソースへのアクセスを許可する](https://docs.amplify.aws/react/build-a-backend/functions/grant-access-to-other-resources/): 他のリソースへのアクセスを許可することで、Function の機能を拡張します
+  Markdown: /ai/pages/build-a-backend/functions/grant-access-to-other-resources.md
+- [例](https://docs.amplify.aws/react/build-a-backend/functions/examples/): Amplify Functionsの使用例
+  Markdown: /ai/pages/build-a-backend/functions/examples.md
+- [メールドメインフィルタリング](https://docs.amplify.aws/react/build-a-backend/functions/examples/email-domain-filtering/): Auth Pre Signup トリガーを使用してメールドメインに基づいてサインアップを許可または拒否する
+  Markdown: /ai/pages/build-a-backend/functions/examples/email-domain-filtering.md
+- [ユーザーをグループに追加](https://docs.amplify.aws/react/build-a-backend/functions/examples/add-user-to-group/): Auth Post Authentication トリガーを使用して新しいユーザーを自動的にグループに追加
+  Markdown: /ai/pages/build-a-backend/functions/examples/add-user-to-group.md
+- [ユーザープロフィールレコードを作成する](https://docs.amplify.aws/react/build-a-backend/functions/examples/create-user-profile-record/): Auth Post Authentication トリガーを使用してユーザープロフィールレコードを自動的に作成する
+  Markdown: /ai/pages/build-a-backend/functions/examples/create-user-profile-record.md
+- [IDトークンクレームのオーバーライド](https://docs.amplify.aws/react/build-a-backend/functions/examples/override-token/): Auth Pre トークン生成トリガーを使用してIDトークンクレームをオーバーライドする
+  Markdown: /ai/pages/build-a-backend/functions/examples/override-token.md
+- [ユーザー属性の検証](https://docs.amplify.aws/react/build-a-backend/functions/examples/user-attribute-validation/): Auth トリガーでユーザー属性を検証
+  Markdown: /ai/pages/build-a-backend/functions/examples/user-attribute-validation.md
+- [カスタムメッセージ](https://docs.amplify.aws/react/build-a-backend/functions/examples/custom-message/): Auth カスタムメッセージ認証トリガーを使用して、ユーザーに送信されるメッセージをカスタマイズします
+  Markdown: /ai/pages/build-a-backend/functions/examples/custom-message.md
+- [Google reCAPTCHA チャレンジ](https://docs.amplify.aws/react/build-a-backend/functions/examples/google-recaptcha-challenge/): Google reCAPTCHA を活用してスパムから保護する
+  Markdown: /ai/pages/build-a-backend/functions/examples/google-recaptcha-challenge.md
+- [Amazon Kinesis Data Streams](https://docs.amplify.aws/react/build-a-backend/functions/examples/kinesis-stream/): Lambda 関数をトリガーするための Amazon Kinesis Data Stream のイベントソースを作成して、リアルタイムイベントに応答します
+  Markdown: /ai/pages/build-a-backend/functions/examples/kinesis-stream.md
+- [DynamoDB Streams](https://docs.amplify.aws/react/build-a-backend/functions/examples/dynamo-db-stream/): Lambda イベントソースを Amazon DynamoDB Streams を使用して作成し、リアルタイムイベントに応答して Lambda 関数をトリガーします。
+  Markdown: /ai/pages/build-a-backend/functions/examples/dynamo-db-stream.md
+- [S3 アップロード確認](https://docs.amplify.aws/react/build-a-backend/functions/examples/s3-upload-confirmation/): トリガーを使用してファイルのアップロードを確認する
+  Markdown: /ai/pages/build-a-backend/functions/examples/s3-upload-confirmation.md
+- [カスタム認証チャレンジ](https://docs.amplify.aws/react/build-a-backend/functions/examples/custom-auth-flows/): SRPの有無にかかわらずカスタム認証を活用し、サインイン時にさまざまな要件を満たすようにカスタマイズできるチャレンジとレスポンスのシリーズを可能にします。
+  Markdown: /ai/pages/build-a-backend/functions/examples/custom-auth-flows.md
+- [CDKを使用してAmplify生成Lambda リソースを変更する](https://docs.amplify.aws/react/build-a-backend/functions/modify-resources-with-cdk/): 基盤となるFunction リソースを拡張する方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/functions/modify-resources-with-cdk.md
+- [カスタム関数](https://docs.amplify.aws/react/build-a-backend/functions/custom-functions/): Python、Golangなどの別のAWS Lambdaランタイムを使用してタスクを実行し、ワークフローをカスタマイズします。
+  Markdown: /ai/pages/build-a-backend/functions/custom-functions.md
+- [Analytics](https://docs.amplify.aws/react/build-a-backend/add-aws-services/analytics/): Pinpoint で実装される Analytics リソースの設定方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/add-aws-services/analytics.md
+- [Amplify Analytics のセットアップ](https://docs.amplify.aws/react/build-a-backend/add-aws-services/analytics/set-up-analytics/): Analytics カテゴリを使用すると、アプリのアナリティクスデータを収集できます。Analytics カテゴリには、Amazon Pinpoint と Amazon Kinesis の組み込みサポートが付属しています (Kinesis サポートは現在、Amplify JavaScript ライブラリでのみ利用可能です)。Analytics カテゴリは Amazon Cognito Identity プールを使用してアプリのユーザーを識別します。Cognito により、アプリの認証済みユーザーと未認証ユーザーからデータを受け取ることができます。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/analytics/set-up-analytics.md
+- [Kinesis Data Streams](https://docs.amplify.aws/react/build-a-backend/add-aws-services/analytics/kinesis/): Amazon Kinesis Data Stream をセットアップし、Amplify Kinesis Data Streams クライアントの IAM パーミッションを設定します。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/analytics/kinesis.md
+- [Amazon Data Firehose](https://docs.amplify.aws/react/build-a-backend/add-aws-services/analytics/firehose/): Amazon Data Firehose 配信ストリームを設定し、Amplify Firehose クライアントの IAM 権限を構成します。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/analytics/firehose.md
+- [既存のAWSリソースを使用する](https://docs.amplify.aws/react/build-a-backend/add-aws-services/analytics/existing-resources/): Amplify Librariesを設定して、設定内で既存のAmazon Pinpointリソースを参照することで使用します。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/analytics/existing-resources.md
+- [API References](https://docs.amplify.aws/react/build-a-backend/add-aws-services/analytics/reference/): API References - analytics
+  Markdown: /ai/pages/build-a-backend/add-aws-services/analytics/reference.md
+- [Geo](https://docs.amplify.aws/react/build-a-backend/add-aws-services/geo/): ロケーションマーカーとロケーション検索を備えたモダンでインタラクティブなマップ。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/geo.md
+- [Amplify Geo のセットアップ](https://docs.amplify.aws/react/build-a-backend/add-aws-services/geo/set-up-geo/): AWS Amplify Geo モジュールは、マップデータの取得、場所の検索、逆ジオコーディングを簡単に行える方法を提供します。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/geo/set-up-geo.md
+- [ロケーション検索の設定](https://docs.amplify.aws/react/build-a-backend/add-aws-services/geo/configure-location-search/): アプリケーションで場所を検索するために使用されるロケーション検索インデックスまたはプレイスインデックスを作成および管理します。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/geo/configure-location-search.md
+- [ジオフェンスコレクションの設定](https://docs.amplify.aws/react/build-a-backend/add-aws-services/geo/configure-geofencing/): ジオフェンスのコレクションを作成および管理する
+  Markdown: /ai/pages/build-a-backend/add-aws-services/geo/configure-geofencing.md
+- [既存の Amazon Location リソースを使用する](https://docs.amplify.aws/react/build-a-backend/add-aws-services/geo/existing-resources/): Amplify Geo を設定して、既存の Amazon Location Service リソースを参照することで、これらを使用します。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/geo/existing-resources.md
+- [アプリ内メッセージング](https://docs.amplify.aws/react/build-a-backend/add-aws-services/in-app-messaging/): Pinpointを活用したアプリ内メッセージングリソースのセットアップ方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/add-aws-services/in-app-messaging.md
+- [アプリ内メッセージングのセットアップ](https://docs.amplify.aws/react/build-a-backend/add-aws-services/in-app-messaging/set-up-in-app-messaging/): アプリ内メッセージングを始める方法を学びましょう。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/in-app-messaging/set-up-in-app-messaging.md
+- [AWS コンソールでアプリ内メッセージングキャンペーンを作成する](https://docs.amplify.aws/react/build-a-backend/add-aws-services/in-app-messaging/create-campaign/): 新しい Pinpoint キャンペーンを作成し、Amplify プロジェクトで使用するように構成します。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/in-app-messaging/create-campaign.md
+- [API References](https://docs.amplify.aws/react/build-a-backend/add-aws-services/in-app-messaging/reference/): API References - in-app-messaging
+  Markdown: /ai/pages/build-a-backend/add-aws-services/in-app-messaging/reference.md
+- [API (REST)](https://docs.amplify.aws/react/build-a-backend/add-aws-services/rest-api/): HTTP リクエストを行うための簡潔で安全なソリューション REST API を使用
+  Markdown: /ai/pages/build-a-backend/add-aws-services/rest-api.md
+- [Amplify REST APIのセットアップ](https://docs.amplify.aws/react/build-a-backend/add-aws-services/rest-api/set-up-rest-api/): APIカテゴリはREST APIエンドポイントへのHTTPリクエストを行うためのソリューションを提供します。APIライブラリは、API Gateway AuthorizationがAWS_IAMまたはCognito User Poolsに設定されている場合に、Amazon API Gatewayに対して署名付きリクエストを作成するために使用できます。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/rest-api/set-up-rest-api.md
+- [Amplify HTTP API をセットアップする](https://docs.amplify.aws/react/build-a-backend/add-aws-services/rest-api/set-up-http-api/): API カテゴリは HTTP API エンドポイントへの HTTP リクエストを送信するためのソリューションを提供します。API ライブラリは、API Gateway Authorization が AWS_IAM または Cognito User Pools に設定されている場合に Amazon API Gateway に対して署名付きリクエストを作成するために使用できます。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/rest-api/set-up-http-api.md
+- [認可ルールの定義](https://docs.amplify.aws/react/build-a-backend/add-aws-services/rest-api/customize-authz/): Amplify の REST API 機能の認可ルールを定義する方法について詳しく学びます
+  Markdown: /ai/pages/build-a-backend/add-aws-services/rest-api/customize-authz.md
+- [既存のAWSリソースを使用する](https://docs.amplify.aws/react/build-a-backend/add-aws-services/rest-api/existing-resources/): Amplify ライブラリを設定して、既存の Amazon API Gateway リソースを使用します。これは、設定でそれらを参照することで実現できます。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/rest-api/existing-resources.md
+- [API References](https://docs.amplify.aws/react/build-a-backend/add-aws-services/rest-api/reference/): API References - api
+  Markdown: /ai/pages/build-a-backend/add-aws-services/rest-api/reference.md
+- [AI/ML予測](https://docs.amplify.aws/react/build-a-backend/add-aws-services/predictions/): AI/ML予測の設定方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/add-aws-services/predictions.md
+- [Predictions の設定](https://docs.amplify.aws/react/build-a-backend/add-aws-services/predictions/set-up-predictions/): Amplify を使用してアプリケーションに ML 機能を統合する方法を紹介します
+  Markdown: /ai/pages/build-a-backend/add-aws-services/predictions/set-up-predictions.md
+- [ログ](https://docs.amplify.aws/react/build-a-backend/add-aws-services/logging/): ログ
+  Markdown: /ai/pages/build-a-backend/add-aws-services/logging.md
+- [ロギングの設定](https://docs.amplify.aws/react/build-a-backend/add-aws-services/logging/set-up-logging/): Amplify ロギングの設定方法を学ぶ
+  Markdown: /ai/pages/build-a-backend/add-aws-services/logging/set-up-logging.md
+- [ログレベルをリモートで変更](https://docs.amplify.aws/react/build-a-backend/add-aws-services/logging/remote-configuration/): リモートログレベルを取得するようにロギングを設定
+  Markdown: /ai/pages/build-a-backend/add-aws-services/logging/remote-configuration.md
+- [ログの表示](https://docs.amplify.aws/react/build-a-backend/add-aws-services/logging/view-logs/): Amazon CloudWatchでログを表示する方法を学習する
+  Markdown: /ai/pages/build-a-backend/add-aws-services/logging/view-logs.md
+- [インタラクション](https://docs.amplify.aws/react/build-a-backend/add-aws-services/interactions/): ディープラーニング技術を活用した会話型チャットボットの力を借りて、カスタマーワークフローを自動化します
+  Markdown: /ai/pages/build-a-backend/add-aws-services/interactions.md
+- [Amplify Interactionsのセットアップ](https://docs.amplify.aws/react/build-a-backend/add-aws-services/interactions/set-up-interactions/): AWS Amplify Interactionsカテゴリは、ウェブアプリやモバイルアプリでAIを活用したチャットボットを有効にします。Interactionsを使用して、バックエンドチャットボットプロバイダーを構成し、わずか1行のコードでチャットボットUIをアプリに統合できます。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/interactions/set-up-interactions.md
+- [PubSub](https://docs.amplify.aws/react/build-a-backend/add-aws-services/pubsub/): AWS Amplify PubSub カテゴリは、クラウドベースのメッセージ指向ミドルウェアとの接続を提供します。PubSub を使用して、アプリインスタンス間やそのバックエンドとメッセージを受け渡し、リアルタイムのインタラクティブなエクスペリエンスを構築できます。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/pubsub.md
+- [Amplify PubSubのセットアップ](https://docs.amplify.aws/react/build-a-backend/add-aws-services/pubsub/set-up-pubsub/): PubSubを使用してアプリインスタンス間およびアプリのバックエンド間でメッセージを送信し、リアルタイムのインタラクティブな体験を作成する方法について詳しく学びます。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/pubsub/set-up-pubsub.md
+- [削除保護とバックアップリソース](https://docs.amplify.aws/react/build-a-backend/add-aws-services/deletion-backup-resources/): リソースの削除保護とバックアップを有効にする方法を学びます。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/deletion-backup-resources.md
+- [カスタムリソース](https://docs.amplify.aws/react/build-a-backend/add-aws-services/custom-resources/): AWS CDKを使用してカスタムリソースを作成する方法を学びます。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/custom-resources.md
+- [リソースのタグ付け](https://docs.amplify.aws/react/build-a-backend/add-aws-services/tagging-resources/): リソースにタグを付けて分類する。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/tagging-resources.md
+- [リソースのオーバーライド](https://docs.amplify.aws/react/build-a-backend/add-aws-services/overriding-resources/): リソースをオーバーライドする方法を学習します。
+  Markdown: /ai/pages/build-a-backend/add-aws-services/overriding-resources.md
+- [トラブルシューティング](https://docs.amplify.aws/react/build-a-backend/troubleshooting/): 頻繁なカスタマーエラーのデバッグガイド
+  Markdown: /ai/pages/build-a-backend/troubleshooting.md
+- [設定エラーのトラブルシューティング](https://docs.amplify.aws/react/build-a-backend/troubleshooting/library-not-configured/): 設定の欠落またはNoCredentialsエラーメッセージへの対処
+  Markdown: /ai/pages/build-a-backend/troubleshooting/library-not-configured.md
+- [CDKToolkit スタックの問題をトラブルシューティング](https://docs.amplify.aws/react/build-a-backend/troubleshooting/cdktoolkit-stack/): CDKToolkit スタックの問題への対処
+  Markdown: /ai/pages/build-a-backend/troubleshooting/cdktoolkit-stack.md
+- [「Cannot find module $amplify/env/<function-name>」のトラブルシューティング](https://docs.amplify.aws/react/build-a-backend/troubleshooting/cannot-find-module-amplify-env/): 「Cannot find module $amplify/env/<function-name>」エラーメッセージへの対処
+  Markdown: /ai/pages/build-a-backend/troubleshooting/cannot-find-module-amplify-env.md
+- [循環依存の問題のトラブルシューティング](https://docs.amplify.aws/react/build-a-backend/troubleshooting/circular-dependency/): 循環依存が原因のデプロイメント失敗への対応
+  Markdown: /ai/pages/build-a-backend/troubleshooting/circular-dependency.md
+
+## ai
+
+- [AI kit](https://docs.amplify.aws/react/ai/): フルスタック開発者がチャット、会話検索、要約などのAI機能を備えたWebアプリを構築する最速の方法
+  Markdown: /ai/pages/ai.md
+- [AIのセットアップ](https://docs.amplify.aws/react/ai/set-up-ai/): Amplifyを使用して、生成AIのバックエンドをセットアップして接続する方法を学びます。
+  Markdown: /ai/pages/ai/set-up-ai.md
+- [概念](https://docs.amplify.aws/react/ai/concepts/): Amplify AIがプロビジョニングするものについて学び、生成AIの概念と用語の概要を取得します。
+  Markdown: /ai/pages/ai/concepts.md
+- [アーキテクチャ](https://docs.amplify.aws/react/ai/concepts/architecture/): Amplify AI Kit フルスタックアーキテクチャ
+  Markdown: /ai/pages/ai/concepts/architecture.md
+- [モデル](https://docs.amplify.aws/react/ai/concepts/models/): 生成AIに使用されるAmazon Bedrockが提供する基盤モデルについて学ぶ
+  Markdown: /ai/pages/ai/concepts/models.md
+- [プロンプティング](https://docs.amplify.aws/react/ai/concepts/prompting/): Amplify AI コンセプト: プロンプティング
+  Markdown: /ai/pages/ai/concepts/prompting.md
+- [推論設定](https://docs.amplify.aws/react/ai/concepts/inference-configuration/): 推論設定について学ぶ
+  Markdown: /ai/pages/ai/concepts/inference-configuration.md
+- [ストリーミング](https://docs.amplify.aws/react/ai/concepts/streaming/): LLM と Amplify AI kit でストリーミングがどのように機能するかについて学習します
+  Markdown: /ai/pages/ai/concepts/streaming.md
+- [ツール](https://docs.amplify.aws/react/ai/concepts/tools/): Amplify AI コンセプト: ツール使用
+  Markdown: /ai/pages/ai/concepts/tools.md
+
+## frontend
+
+- [フロントエンドライブラリ](https://docs.amplify.aws/react/frontend/): Amplify クライアントライブラリを使用して、アプリをバックエンドサービスに接続します。認証フロー、データクエリ、ファイル管理などを構築します。
+  Markdown: /ai/pages/frontend.md
+- [既存のAWSリソースに接続する](https://docs.amplify.aws/react/frontend/connect-to-existing-resources/): Amplifyクライアントライブラリを独自のAWSインフラストラクチャで使用します。Auth、Data、Storage、Analytics、Geo、およびNotificationsを、プログラムで、またはamplify_outputs.jsonを介して設定します — Amplifyバックエンドは不要です。
+  Markdown: /ai/pages/frontend/connect-to-existing-resources.md
+- [認証](https://docs.amplify.aws/react/frontend/auth/): Amplify Auth をアプリで使用して、サインイン、サインアップ、セッション管理、認証フローを処理します。
+  Markdown: /ai/pages/frontend/auth.md
+- [Authenticator の使用](https://docs.amplify.aws/react/frontend/auth/using-the-authenticator/): Amplify UI ライブラリの Authenticator コンポーネントの使用方法を学ぶ
+  Markdown: /ai/pages/frontend/auth/using-the-authenticator.md
+- [サインアップ](https://docs.amplify.aws/react/frontend/auth/sign-up/): サインアップの方法を学ぶ
+  Markdown: /ai/pages/frontend/auth/sign-up.md
+- [サインイン](https://docs.amplify.aws/react/frontend/auth/sign-in/): サインイン方法を学ぶ
+  Markdown: /ai/pages/frontend/auth/sign-in.md
+- [認証フローの切り替え](https://docs.amplify.aws/react/frontend/auth/switching-authentication-flows/): 異なる認証フロー間で切り替える方法について学びます
+  Markdown: /ai/pages/frontend/auth/switching-authentication-flows.md
+- [サインアウト](https://docs.amplify.aws/react/frontend/auth/sign-out/): サインアウト方法を学ぶ
+  Markdown: /ai/pages/frontend/auth/sign-out.md
+- [ユーザーセッションの管理](https://docs.amplify.aws/react/frontend/auth/manage-user-sessions/): ユーザーセッションを管理する方法を学習します
+  Markdown: /ai/pages/frontend/auth/manage-user-sessions.md
+- [ユーザー属性の管理](https://docs.amplify.aws/react/frontend/auth/manage-user-attributes/): Amplifyアプリでユーザー属性を管理する方法を学ぶ
+  Markdown: /ai/pages/frontend/auth/manage-user-attributes.md
+- [認証イベントのリスン](https://docs.amplify.aws/react/frontend/auth/listen-to-auth-events/): 認証イベントをリスンする方法について学習します
+  Markdown: /ai/pages/frontend/auth/listen-to-auth-events.md
+- [ユーザーアカウントの削除](https://docs.amplify.aws/react/frontend/auth/delete-user-account/): ユーザーが自分のアカウントを削除できるようにします。
+  Markdown: /ai/pages/frontend/auth/delete-user-account.md
+- [マルチステップサインイン](https://docs.amplify.aws/react/frontend/auth/multi-step-sign-in/): Amazon Cognito Auth プラグインを使用してマルチステップ認証フローを完了する
+  Markdown: /ai/pages/frontend/auth/multi-step-sign-in.md
+- [Web UIでサインインを有効にする](https://docs.amplify.aws/react/frontend/auth/web-ui-sign-in/): Amazon Cognito Authプラグインを使用して、構築済みのweb UIでユーザーを登録および認証します
+  Markdown: /ai/pages/frontend/auth/web-ui-sign-in.md
+- [高度なワークフロー](https://docs.amplify.aws/react/frontend/auth/advanced-workflows/): Amplify認証カテゴリの高度なワークフローについて詳しく学習してください。これには、イベントの購読、IDプール連携、認証関連のLambda トリガー、およびAWSサービスオブジェクトの操作が含まれます。
+  Markdown: /ai/pages/frontend/auth/advanced-workflows.md
+- [アプリのアンインストール](https://docs.amplify.aws/react/frontend/auth/app-uninstall/): ユーザーがアプリをアンインストールする際に、デバイスの永続データを処理する方法について理解します。
+  Markdown: /ai/pages/frontend/auth/app-uninstall.md
+- [データ](https://docs.amplify.aws/react/frontend/data/): Amplify Data を使用してアプリからリアルタイムデータをクエリ、ミューテーション、およびサブスクライブします。
+  Markdown: /ai/pages/frontend/data.md
+- [アプリコードをAPIに接続する](https://docs.amplify.aws/react/frontend/data/connect-to-API/): アプリコードをAPIに接続する方法を学びます。
+  Markdown: /ai/pages/frontend/data/connect-to-API.md
+- [アプリケーションデータの読み取り](https://docs.amplify.aws/react/frontend/data/query-data/): リストクエリとgetクエリを使用してアプリケーションデータを読み取ります。クエリ結果をフィルタリングしたり、リストクエリをページネーションしたり、必要なデータフィールドのみを指定したり、リクエストをキャンセルしたりできます。このガイドでは、アプリケーションのデータアクセスを最適化するためにこれらのタスクを実行する方法をカバーしています。
+  Markdown: /ai/pages/frontend/data/query-data.md
+- [アプリケーションデータの作成、更新、削除](https://docs.amplify.aws/react/frontend/data/mutate-data/): クライアントの生成、項目の追加、既存項目の更新、項目の削除、認可されていないエラーのトラブルシューティング、リクエストのキャンセルによって、APIのアプリケーションデータを更新します。
+  Markdown: /ai/pages/frontend/data/mutate-data.md
+- [リアルタイムイベントの購読](https://docs.amplify.aws/react/frontend/data/subscribe-data/): アプリでリアルタイムデータサブスクリプションを設定してライブ更新を取得し、サーバー側でそれらのサブスクリプションをフィルターし、不要になったときに購読を解除します。
+  Markdown: /ai/pages/frontend/data/subscribe-data.md
+- [オプティミスティックUI](https://docs.amplify.aws/react/frontend/data/optimistic-ui/): Amplify Data APIでオプティミスティックUIを実装する方法について詳しく学びます。
+  Markdown: /ai/pages/frontend/data/optimistic-ui.md
+- [ファイル/添付ファイルの操作](https://docs.amplify.aws/react/frontend/data/working-with-files/): ファイル/添付ファイルの操作。
+  Markdown: /ai/pages/frontend/data/working-with-files.md
+- [AWS AppSync Eventsに接続する](https://docs.amplify.aws/react/frontend/data/connect-event-api/): AWS AppSync Eventsに接続する
+  Markdown: /ai/pages/frontend/data/connect-event-api.md
+- [カスタムリアルタイムサブスクリプションを追加](https://docs.amplify.aws/react/frontend/data/custom-subscription/): ビジネスロジックをカスタマイズしてカスタムリアルタイムサブスクリプションを作成します。
+  Markdown: /ai/pages/frontend/data/custom-subscription.md
+- [サーバーサイドランタイムからデータに接続](https://docs.amplify.aws/react/frontend/data/connect-from-server-runtime/): Next.js および Nuxt.js サーバーサイドランタイム (SSR) から Amplify Data に接続します。
+  Markdown: /ai/pages/frontend/data/connect-from-server-runtime.md
+- [Next.js サーバーランタイム](https://docs.amplify.aws/react/frontend/data/connect-from-server-runtime/nextjs-server-runtime/): Next.js サーバーサイド ランタイム (SSR) から Amplify Data に接続します。
+  Markdown: /ai/pages/frontend/data/connect-from-server-runtime/nextjs-server-runtime.md
+- [Nuxt.js サーバーランタイム](https://docs.amplify.aws/react/frontend/data/connect-from-server-runtime/nuxtjs-server-runtime/): Nuxt.js Server-side Runtime (SSR) から Amplify Data に接続する。
+  Markdown: /ai/pages/frontend/data/connect-from-server-runtime/nuxtjs-server-runtime.md
+- [AWS AppSync Apollo Extensions](https://docs.amplify.aws/react/frontend/data/aws-appsync-apollo-extensions/): AWS AppSync Apollo Extensions
+  Markdown: /ai/pages/frontend/data/aws-appsync-apollo-extensions.md
+- [ストレージ](https://docs.amplify.aws/react/frontend/storage/): Amplify Storageを使用して、アプリからファイルのアップロード、ダウンロード、一覧表示、および管理を行います。
+  Markdown: /ai/pages/frontend/storage.md
+- [ファイルのアップロード](https://docs.amplify.aws/react/frontend/storage/upload-files/): Amplify Storageを使用してファイルをアップロードする
+  Markdown: /ai/pages/frontend/storage/upload-files.md
+- [ファイルのダウンロード](https://docs.amplify.aws/react/frontend/storage/download-files/): Amplify Storageを使用したファイルのダウンロード
+  Markdown: /ai/pages/frontend/storage/download-files.md
+- [ファイルプロパティをリストする](https://docs.amplify.aws/react/frontend/storage/list-files/): Amplify Storageを使用してファイルまたはファイルプロパティのリストを取得する
+  Markdown: /ai/pages/frontend/storage/list-files.md
+- [ファイルを削除する](https://docs.amplify.aws/react/frontend/storage/remove-files/): Amplify Storage を使用してファイルを削除する
+  Markdown: /ai/pages/frontend/storage/remove-files.md
+- [ファイルのコピー](https://docs.amplify.aws/react/frontend/storage/copy-files/): Amplify Storageを使用してファイルをコピーする
+  Markdown: /ai/pages/frontend/storage/copy-files.md
+- [任意の S3 バケットで Amplify Storage を使用する](https://docs.amplify.aws/react/frontend/storage/use-with-custom-s3/): Amplify Storage API を、あなたのアカウント内の独自の S3 バケットに対して使用できます。
+  Markdown: /ai/pages/frontend/storage/use-with-custom-s3.md
+- [データ使用ポリシー](https://docs.amplify.aws/react/frontend/storage/data-usage/): Amplifyライブラリが収集するデータタイプを確認してください。Appleでは、App Storeにアプリを提出する際、アプリのデータ使用ポリシーで開示することが必要です。
+  Markdown: /ai/pages/frontend/storage/data-usage.md
+- [AI Kit](https://docs.amplify.aws/react/frontend/ai/): アプリケーションで会話と生成機能を使用して、AI を活用した機能を構築します。
+  Markdown: /ai/pages/frontend/ai.md
+- [会話](https://docs.amplify.aws/react/frontend/ai/conversation/): 会話型AIパターンと、Amplifyでそれらを実装する方法について学びます。
+  Markdown: /ai/pages/frontend/ai/conversation.md
+- [AI Conversation](https://docs.amplify.aws/react/frontend/ai/conversation/ai-conversation/): AIConversation コンポーネントは Amplify AI kit 向けに構築されたカスタマイズ可能なチャット インターフェイスです
+  Markdown: /ai/pages/frontend/ai/conversation/ai-conversation.md
+- [フロントエンドを接続する](https://docs.amplify.aws/react/frontend/ai/conversation/connect-your-frontend/): アプリでAI会話を使用する方法について学ぶ
+  Markdown: /ai/pages/frontend/ai/conversation/connect-your-frontend.md
+- [会話履歴](https://docs.amplify.aws/react/frontend/ai/conversation/history/): Amplify AI kitが会話履歴をどのように処理するかについて学習します
+  Markdown: /ai/pages/frontend/ai/conversation/history.md
+- [ツール](https://docs.amplify.aws/react/frontend/ai/conversation/tools/): ツールにより、LLMはアクションを実行または情報をクエリして、最新の情報で応答できます。
+  Markdown: /ai/pages/frontend/ai/conversation/tools.md
+- [コンテキスト](https://docs.amplify.aws/react/frontend/ai/conversation/context/): LLMがより良い応答をするために、クライアント側のコンテキストを渡す方法。
+  Markdown: /ai/pages/frontend/ai/conversation/context.md
+- [レスポンスコンポーネント](https://docs.amplify.aws/react/frontend/ai/conversation/response-components/): カスタムUIレスポンスで豊富な会話インターフェースを作成する
+  Markdown: /ai/pages/frontend/ai/conversation/response-components.md
+- [ナレッジベース](https://docs.amplify.aws/react/frontend/ai/conversation/knowledge-base/): ナレッジベースは検索拡張生成（RAG）に使用できます
+  Markdown: /ai/pages/frontend/ai/conversation/knowledge-base.md
+- [生成](https://docs.amplify.aws/react/frontend/ai/generation/): AIを使用してアプリケーションのデータを生成する方法を学習します。
+  Markdown: /ai/pages/frontend/ai/generation.md
+- [データ抽出](https://docs.amplify.aws/react/frontend/ai/generation/data-extraction/): 非構造化テキストからデータを抽出する方法。
+  Markdown: /ai/pages/frontend/ai/generation/data-extraction.md
+- [サーバー側レンダリング](https://docs.amplify.aws/react/frontend/server-side-rendering/): Next.js のサーバー側ランタイムから Amplify Auth および Data API を使用します。
+  Markdown: /ai/pages/frontend/server-side-rendering.md
+- [Next.js App Router (サーバーコンポーネント)](https://docs.amplify.aws/react/frontend/server-side-rendering/nextjs-app-router-server-components/): AWS Amplify Gen 2 と Next.js App Router を使用してサーバーコンポーネントで始めましょう。
+  Markdown: /ai/pages/frontend/server-side-rendering/nextjs-app-router-server-components.md
+- [Nuxt 3 から Amplify カテゴリ API を使用する](https://docs.amplify.aws/react/frontend/server-side-rendering/nuxt/): Nuxt 3 から Amplify カテゴリ API を使用する
+  Markdown: /ai/pages/frontend/server-side-rendering/nuxt.md
+- [Analytics](https://docs.amplify.aws/react/frontend/analytics/): Analytics を使用してユーザーの行動とアプリイベントを追跡します。
+  Markdown: /ai/pages/frontend/analytics.md
+- [Kinesis Data Streamsクライアント](https://docs.amplify.aws/react/frontend/analytics/kinesis/): Amazon Kinesis Data Streamsにデータをストリーミングするための独立型クライアント。オフラインサポート、自動バッチ処理、構成可能なフラッシング機能を備えています。
+  Markdown: /ai/pages/frontend/analytics/kinesis.md
+- [Amazon Data Firehose クライアント](https://docs.amplify.aws/react/frontend/analytics/firehose/): Amazon Data Firehose へのデータストリーミング用スタンドアロンクライアント。オフラインサポート、自動バッチ処理、設定可能なフラッシュ機能を提供します。
+  Markdown: /ai/pages/frontend/analytics/firehose.md
+- [イベントを記録する](https://docs.amplify.aws/react/frontend/analytics/record-events/): Amplifyを使用してアナリティクスイベントを記録する方法を学びます。
+  Markdown: /ai/pages/frontend/analytics/record-events.md
+- [ユーザーの識別](https://docs.amplify.aws/react/frontend/analytics/identify-user/): Amplify分析プラグインを使用して、Pinpointにユーザー情報を通知します。
+  Markdown: /ai/pages/frontend/analytics/identify-user.md
+- [セッションの自動追跡](https://docs.amplify.aws/react/frontend/analytics/auto-track-sessions/): Amplify analytics プラグインは、アプリケーションが開いたり閉じたりしたときを記録します。このセッション情報は、ローカルコンピュータのターミナルまたは Pinpoint の AWS コンソールから表示できます。
+  Markdown: /ai/pages/frontend/analytics/auto-track-sessions.md
+- [アナリティクスの有効化と無効化](https://docs.amplify.aws/react/frontend/analytics/enable-disable/): Amplifyを使用してアナリティクスを有効/無効にする方法を学びます。
+  Markdown: /ai/pages/frontend/analytics/enable-disable.md
+- [ストリーミング分析データ](https://docs.amplify.aws/react/frontend/analytics/streaming-data/): Amazon Kinesis分析プロバイダーを使用すると、分析データをAmazon Kinesisストリームに送信して、リアルタイム処理を行うことができます。
+  Markdown: /ai/pages/frontend/analytics/streaming-data.md
+- [アナリティクスデータの保存](https://docs.amplify.aws/react/frontend/analytics/storing-data/): Amazon Data Firehose アナリティクスプロバイダーを使用すると、アナリティクスデータを Amazon Data Firehose ストリームに送信して、データを確実に保存できます。
+  Markdown: /ai/pages/frontend/analytics/storing-data.md
+- [パーソナライズされたレコメンデーション](https://docs.amplify.aws/react/frontend/analytics/personalize-recommendations/): Amazon Personalizeは、イベントデータ、履歴データ、またはその両方の組み合わせを使用してレコメンデーションを作成できます。イベントデータは、レコメンデーションを作成するために使用できます。
+  Markdown: /ai/pages/frontend/analytics/personalize-recommendations.md
+- [AWS SDKを使用する](https://docs.amplify.aws/react/frontend/analytics/sdk/): Amplifyが提供していない高度なユースケースでは、エスケープハッチを取得してAWSPinpointインスタンスにアクセスできます。
+  Markdown: /ai/pages/frontend/analytics/sdk.md
+- [データ使用ポリシー情報](https://docs.amplify.aws/react/frontend/analytics/data-usage-policy/): Amplifyライブラリが収集するデータ型を確認し、App Storeにアプリを提出する際にAppleが要求するアプリのデータ使用ポリシーで開示する必要があります。
+  Markdown: /ai/pages/frontend/analytics/data-usage-policy.md
+- [アプリのアンインストール](https://docs.amplify.aws/react/frontend/analytics/app-uninstall/): ユーザーがアプリをアンインストールするときに、デバイス上の永続データを処理する方法を理解します。
+  Markdown: /ai/pages/frontend/analytics/app-uninstall.md
+- [Geo](https://docs.amplify.aws/react/frontend/geo/): Geo を使用して、マップ、位置情報検索、ジオフェンシングを追加します。
+  Markdown: /ai/pages/frontend/geo.md
+- [マップを操作する](https://docs.amplify.aws/react/frontend/geo/maps/): マップ表示、API、その他の操作について。
+  Markdown: /ai/pages/frontend/geo/maps.md
+- [場所検索を使用する](https://docs.amplify.aws/react/frontend/geo/location-search/): Amplify Geoを使用して、場所検索と場所ベースの検索機能を追加します。
+  Markdown: /ai/pages/frontend/geo/location-search.md
+- [ジオフェンスを操作する](https://docs.amplify.aws/react/frontend/geo/geofences/): Amplify Geo を使用してアプリケーションでジオフェンスをプロビジョニングおよび管理します。
+  Markdown: /ai/pages/frontend/geo/geofences.md
+- [Google Mapsから移行](https://docs.amplify.aws/react/frontend/geo/google-migration/): Google MapsからAmplify Geoへのアプリケーション移行
+  Markdown: /ai/pages/frontend/geo/google-migration.md
+- [Amazon Location Service SDKを使用する](https://docs.amplify.aws/react/frontend/geo/amazon-location-sdk/): Amplifyが機能を提供していない特殊なユースケースでは、エスケープハッチを使用してAmazon Location Serviceの低レベルクライアントインスタンスにアクセスできます。
+  Markdown: /ai/pages/frontend/geo/amazon-location-sdk.md
+- [アプリ内メッセージング](https://docs.amplify.aws/react/frontend/in-app-messaging/): ユーザーにターゲット指定されたアプリ内メッセージを表示します。
+  Markdown: /ai/pages/frontend/in-app-messaging.md
+- [アプリケーションの統合](https://docs.amplify.aws/react/frontend/in-app-messaging/integrate-application/): アプリケーションをIn-app Messagingと統合する方法を学びます。
+  Markdown: /ai/pages/frontend/in-app-messaging/integrate-application.md
+- [メッセージの同期](https://docs.amplify.aws/react/frontend/in-app-messaging/sync-messages/): アプリ内メッセージをユーザーのローカルデバイスに同期する方法を学びます。同期されたメッセージは、マッチするイベントがトリガーされたときに表示されます。
+  Markdown: /ai/pages/frontend/in-app-messaging/sync-messages.md
+- [メッセージの表示](https://docs.amplify.aws/react/frontend/in-app-messaging/display-messages/): インアプリメッセージングまたは分析イベントが送信され、アクティブなインアプリメッセージングキャンペーンで設定された条件に一致する場合、インアプリメッセージがどのように表示されるかについて説明します。
+  Markdown: /ai/pages/frontend/in-app-messaging/display-messages.md
+- [メッセージをクリア](https://docs.amplify.aws/react/frontend/in-app-messaging/clear-messages/): ユーザーのデバイスから同期されたアプリ内メッセージをクリアする方法について詳しく学習します。
+  Markdown: /ai/pages/frontend/in-app-messaging/clear-messages.md
+- [ユーザーを特定する](https://docs.amplify.aws/react/frontend/in-app-messaging/identify-user/): In-App Messagingキャンペーンを特定のユーザーサブセットにセグメント化してターゲット設定する方法を学びます。
+  Markdown: /ai/pages/frontend/in-app-messaging/identify-user.md
+- [インタラクションイベントに応答する](https://docs.amplify.aws/react/frontend/in-app-messaging/respond-interaction-events/): インタラクションイベントリスナーを追加して、ユーザーがアプリ内メッセージと対話する際に追加の動作で応答する方法を学習します。
+  Markdown: /ai/pages/frontend/in-app-messaging/respond-interaction-events.md
+- [競合を解決する](https://docs.amplify.aws/react/frontend/in-app-messaging/resolve-conflicts/): イベントが送信され、複数のアプリ内メッセージで設定された条件を満たす場合に競合を解決する方法を学びます。
+  Markdown: /ai/pages/frontend/in-app-messaging/resolve-conflicts.md
+- [REST API](https://docs.amplify.aws/react/frontend/rest-api/): アプリからREST API呼び出しを実行します。
+  Markdown: /ai/pages/frontend/rest-api.md
+- [データの取得](https://docs.amplify.aws/react/frontend/rest-api/fetch-data/): Amplify での GET API REST の使用
+  Markdown: /ai/pages/frontend/rest-api/fetch-data.md
+- [データをPOST](https://docs.amplify.aws/react/frontend/rest-api/post-data/): AmplifyでPost、Putなどを使用する
+  Markdown: /ai/pages/frontend/rest-api/post-data.md
+- [データの更新](https://docs.amplify.aws/react/frontend/rest-api/update-data/): Amplifyでのpost、putなど
+  Markdown: /ai/pages/frontend/rest-api/update-data.md
+- [データの削除](https://docs.amplify.aws/react/frontend/rest-api/delete-data/): Amplifyでの削除API RESTの使用
+  Markdown: /ai/pages/frontend/rest-api/delete-data.md
+- [REST API をテストする](https://docs.amplify.aws/react/frontend/rest-api/test-api/): ターミナル、Amplify Mock、または API Gateway コンソールから REST API をテストする方法を学びます。
+  Markdown: /ai/pages/frontend/rest-api/test-api.md
+- [予測](https://docs.amplify.aws/react/frontend/predictions/): アプリに AI および ML 予測を追加します。
+  Markdown: /ai/pages/frontend/predictions.md
+- [テキスト音声変換](https://docs.amplify.aws/react/frontend/predictions/text-to-speech/): Amplifyを使用してアプリケーションにテキスト音声変換機能を統合する方法を学習します。
+  Markdown: /ai/pages/frontend/predictions/text-to-speech.md
+- [オーディオをテキストに変換](https://docs.amplify.aws/react/frontend/predictions/transcribe-audio/): Amplifyを使用してアプリケーションのオーディオをテキストに変換する（音声テキスト化とも呼ばれます）方法について詳しく学びます
+  Markdown: /ai/pages/frontend/predictions/transcribe-audio.md
+- [言語を翻訳する](https://docs.amplify.aws/react/frontend/predictions/translate/): Amplifyを使用してアプリケーションに翻訳機能を統合する方法について詳しく学習します
+  Markdown: /ai/pages/frontend/predictions/translate.md
+- [テキストの識別](https://docs.amplify.aws/react/frontend/predictions/identify-text/): AWS Amplifyを使用して、アプリケーション内の画像やドキュメントからテキストを識別する方法を学びます。
+  Markdown: /ai/pages/frontend/predictions/identify-text.md
+- [画像からエンティティを識別](https://docs.amplify.aws/react/frontend/predictions/identify-entity/): Amplifyを使用して画像からエンティティを識別する方法について学びます。
+  Markdown: /ai/pages/frontend/predictions/identify-entity.md
+- [画像内のラベルオブジェクト](https://docs.amplify.aws/react/frontend/predictions/label-image/): Amplifyを使用して画像内のラベルを検出する方法について詳しく説明します。例えば、椅子、机などのオブジェクトが画像に含まれているかを検出できます。
+  Markdown: /ai/pages/frontend/predictions/label-image.md
+- [センチメント分析](https://docs.amplify.aws/react/frontend/predictions/interpret-sentiment/): Amplifyを使用してテキストから主要フレーズ、センチメント、言語、構文、エンティティを判定する方法について学びます。
+  Markdown: /ai/pages/frontend/predictions/interpret-sentiment.md
+- [ログ](https://docs.amplify.aws/react/frontend/logging/): アプリからログを送信・管理します。
+  Markdown: /ai/pages/frontend/logging.md
+- [ログを送信](https://docs.amplify.aws/react/frontend/logging/send-logs/): Amplify Loggerを使用してログを書き込んで送信
+  Markdown: /ai/pages/frontend/logging/send-logs.md
+- [ログレベルの変更](https://docs.amplify.aws/react/frontend/logging/change-log-levels/): カテゴリーとユーザーごとにログレベルを変更する
+  Markdown: /ai/pages/frontend/logging/change-log-levels.md
+- [ログのフラッシュ](https://docs.amplify.aws/react/frontend/logging/flush-logs/): ログを強制的にフラッシュする方法について学ぶ
+  Markdown: /ai/pages/frontend/logging/flush-logs.md
+- [ロギングの有効化と無効化](https://docs.amplify.aws/react/frontend/logging/enable-disable/): ロギングを有効または無効にする方法について詳しく説明します
+  Markdown: /ai/pages/frontend/logging/enable-disable.md
+- [ユーザーのみを許可リストとして設定する](https://docs.amplify.aws/react/frontend/logging/configure-user/): ユーザーごとにログレベルを設定する方法を学習
+  Markdown: /ai/pages/frontend/logging/configure-user.md
+- [ローカルストレージを変更する](https://docs.amplify.aws/react/frontend/logging/change-local-storage/): デバイス上のログローカルストレージを変更する
+  Markdown: /ai/pages/frontend/logging/change-local-storage.md
+- [ログイベントをリッスンする](https://docs.amplify.aws/react/frontend/logging/hub-events/): ロギング用のHubイベントをリッスンする方法を学習します
+  Markdown: /ai/pages/frontend/logging/hub-events.md
+- [ロギング用の AWS SDK を使用](https://docs.amplify.aws/react/frontend/logging/sdk/): Amplify ロギング エスケープ ハッチを取得
+  Markdown: /ai/pages/frontend/logging/sdk.md
+- [インタラクション](https://docs.amplify.aws/react/frontend/interactions/): アプリにチャットボットインタラクションを追加します。
+  Markdown: /ai/pages/frontend/interactions.md
+- [ボットと対話する](https://docs.amplify.aws/react/frontend/interactions/chatbot/): Amplifyを使用してアプリケーションにチャットボットインタラクションを統合する方法の詳細を学習します。
+  Markdown: /ai/pages/frontend/interactions/chatbot.md
+- [PubSub](https://docs.amplify.aws/react/frontend/pubsub/): リアルタイムメッセージの公開と購読。
+  Markdown: /ai/pages/frontend/pubsub.md
+- [公開](https://docs.amplify.aws/react/frontend/pubsub/publish/): Amplifyの PubSubカテゴリを使用してメッセージを公開する方法の詳細を説明します
+  Markdown: /ai/pages/frontend/pubsub/publish.md
+- [トピックの購読と購読解除](https://docs.amplify.aws/react/frontend/pubsub/subscribe/): Amplifyの PubSub カテゴリーを使用したトピックの購読と購読解除の方法の詳細を確認します
+  Markdown: /ai/pages/frontend/pubsub/subscribe.md
+
+## build-ui
+
+- [UIを構築する](https://docs.amplify.aws/react/build-ui/): UIを構築およびカスタマイズする方法を学習します。
+  Markdown: /ai/pages/build-ui.md
+- [接続されたフォーム](https://docs.amplify.aws/react/build-ui/formbuilder/): Amplify データバックエンドでデータを作成および更新するための React フォームを生成します。
+  Markdown: /ai/pages/build-ui/formbuilder.md
+- [フォーム入力のカスタマイズ](https://docs.amplify.aws/react/build-ui/formbuilder/customize/): Amplify生成フォーム入力のカスタマイズ。新しいフォーム入力の追加、ラベルのカスタマイズ、フォームアクションボタンのカスタマイズができます。
+  Markdown: /ai/pages/build-ui/formbuilder/customize.md
+- [特別な入力を設定する](https://docs.amplify.aws/react/build-ui/formbuilder/special-inputs/): Amplify フォームビルダーの特別な入力フィールドにより、ユーザーはAmplifyの独自機能と対話できます
+  Markdown: /ai/pages/build-ui/formbuilder/special-inputs.md
+- [フォームデータの検証](https://docs.amplify.aws/react/build-ui/formbuilder/validations/): Amplify生成フォームに検証ルールを追加およびカスタマイズする
+  Markdown: /ai/pages/build-ui/formbuilder/validations.md
+- [フォームライフサイクルの管理](https://docs.amplify.aws/react/build-ui/formbuilder/lifecycle/): フォームのライフサイクルイベントにフックして、送信前のユーザー入力をカスタマイズしたり、検証を実行したり、エラーを処理したり、ユーザー入力イベントを自己管理します。
+  Markdown: /ai/pages/build-ui/formbuilder/lifecycle.md
+- [Figma-to-React](https://docs.amplify.aws/react/build-ui/figma-to-code/): Amplify UIを使用してFigma内で直接Reactコードを生成します。
+  Markdown: /ai/pages/build-ui/figma-to-code.md
+
+## develop-with-ai
+
+- [AI を使って開発する](https://docs.amplify.aws/react/develop-with-ai/): AI コーディングアシスタントを使用して Amplify 開発を加速させます。Claude Code と Cursor、Kiro、MCP Server のエージェントプラグインを設定し、プロジェクトレベルのステアリングファイルを使用します。
+  Markdown: /ai/pages/develop-with-ai.md
+- [エージェントプラグイン](https://docs.amplify.aws/react/develop-with-ai/agent-plugins/): AWS Amplifyエージェントプラグインをインストールして、Claude Code、Cursor、その他のAIコーディングアシスタントでフルスタックアプリを構築するためのガイド付きの段階的ワークフローを取得します。
+  Markdown: /ai/pages/develop-with-ai/agent-plugins.md
+- [Amplify で Kiro を使用する](https://docs.amplify.aws/react/develop-with-ai/kiro/): Powers、Specs、Hooks、Steering を備えた Kiro（エージェント型 IDE）を使用して Amplify アプリケーションを構築する方法を学びます。
+  Markdown: /ai/pages/develop-with-ai/kiro.md
+- [AWS MCP Server](https://docs.amplify.aws/react/develop-with-ai/mcp-server/): AWS MCP Server を使用して、AI コーディング アシスタントを Amplify ドキュメント、API、およびガイド付きワークフローに接続します。
+  Markdown: /ai/pages/develop-with-ai/mcp-server.md
+- [AWS MCP Server のセットアップ](https://docs.amplify.aws/react/develop-with-ai/mcp-server/set-up-mcp/): AI コーディング アシスタントで AWS MCP Server を構成する方法を学習します。
+  Markdown: /ai/pages/develop-with-ai/mcp-server/set-up-mcp.md
+- [ガイド付きワークフロー](https://docs.amplify.aws/react/develop-with-ai/mcp-server/amplify-workflows/): AWS MCP Server for Amplify で利用可能なガイド付きワークフローについて学び、Amplify アプリケーションを構築します。
+  Markdown: /ai/pages/develop-with-ai/mcp-server/amplify-workflows.md
+- [Amplify で Amazon Q Developer を使用する](https://docs.amplify.aws/react/develop-with-ai/q-developer/): Amplify でインラインコード提案を行う Amazon Q Developer の使用方法について説明します
+  Markdown: /ai/pages/develop-with-ai/q-developer.md
+- [ステアリングファイル](https://docs.amplify.aws/react/develop-with-ai/steering-files/): プロジェクトレベルのコンテキストファイルを設定して、Amplifyアプリケーションを構築する際のAIコーディングアシスタントをガイドします。
+  Markdown: /ai/pages/develop-with-ai/steering-files.md
+
+## deploy-and-host
+
+- [デプロイ](https://docs.amplify.aws/react/deploy-and-host/): アプリのデプロイとホスティング機能について学びます。
+  Markdown: /ai/pages/deploy-and-host.md
+- [フロントエンドホスティング](https://docs.amplify.aws/react/deploy-and-host/hosting/): Next.js、Vue、Reactなどの最新JavaScriptフレームワークで構築された静的およびサーバーレンダリングされたWebアプリをホストします。
+  Markdown: /ai/pages/deploy-and-host/hosting.md
+- [クラウドサンドボックス環境](https://docs.amplify.aws/react/deploy-and-host/sandbox-environments/): サンドボックス開発について学習します。
+  Markdown: /ai/pages/deploy-and-host/sandbox-environments.md
+- [開発環境でクラウドサンドボックスを使用する](https://docs.amplify.aws/react/deploy-and-host/sandbox-environments/setup/): フロントエンド開発環境で使用できるクラウドサンドボックス環境をセットアップします。
+  Markdown: /ai/pages/deploy-and-host/sandbox-environments/setup.md
+- [サンドボックス機能](https://docs.amplify.aws/react/deploy-and-host/sandbox-environments/features/): モバイル・クロスプラットフォーム向けのシークレット、クライアントコード生成、設定生成などのサンドボックス機能を探索します。
+  Markdown: /ai/pages/deploy-and-host/sandbox-environments/features.md
+- [サンドボックスシード](https://docs.amplify.aws/react/deploy-and-host/sandbox-environments/seed/): サンドボックスにデータをシードして、すぐに始めましょう。
+  Markdown: /ai/pages/deploy-and-host/sandbox-environments/seed.md
+- [フルスタックワークフロー](https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/): フルスタック分岐機能の概要。
+  Markdown: /ai/pages/deploy-and-host/fullstack-branching.md
+- [フルスタックブランチデプロイメント](https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/branch-deployments/): フルスタックブランチデプロイメントを使用して、フィーチャーブランチからの変更をテストします。
+  Markdown: /ai/pages/deploy-and-host/fullstack-branching/branch-deployments.md
+- [シークレットと環境変数](https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/secrets-and-vars/): フルスタックブランチとローカル開発環境全体でシークレットと環境変数を管理します。
+  Markdown: /ai/pages/deploy-and-host/fullstack-branching/secrets-and-vars.md
+- [ブランチ間でリソースを共有する](https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/share-resources/): アプリビルド設定を更新してブランチ間でリソースを共有します。
+  Markdown: /ai/pages/deploy-and-host/fullstack-branching/share-resources.md
+- [フロントエンドチームとバックエンドチームを分離する](https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/mono-and-multi-repos/): Amplify CI/CD パイプラインで複数のリポジトリをセットアップします。
+  Markdown: /ai/pages/deploy-and-host/fullstack-branching/mono-and-multi-repos.md
+- [モノレポのセットアップ](https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/monorepos/): Amplify CI/CDパイプラインでモノレポをセットアップします。
+  Markdown: /ai/pages/deploy-and-host/fullstack-branching/monorepos.md
+- [フルスタック プレビュー](https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/pr-previews/): プルリクエスト プレビューを使用して、エフェメラル フルスタック環境を設定します。
+  Markdown: /ai/pages/deploy-and-host/fullstack-branching/pr-previews.md
+- [カスタムパイプライン](https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/custom-pipelines/): カスタムパイプラインでフルスタック CI/CD をセットアップします。
+  Markdown: /ai/pages/deploy-and-host/fullstack-branching/custom-pipelines.md
+- [クロスアカウントデプロイメント](https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/cross-account-deployments/): Amazon CodeCatalystとAWS Amplify Hostingを使用したクロスアカウントデプロイメントパイプラインをセットアップします。
+  Markdown: /ai/pages/deploy-and-host/fullstack-branching/cross-account-deployments.md
+
+## reference
+
+- [リファレンス](https://docs.amplify.aws/react/reference/): 利用可能なリファレンスの概要。
+  Markdown: /ai/pages/reference.md
+- [プロジェクト構造](https://docs.amplify.aws/react/reference/project-structure/): Amplifyプロジェクトの構造について詳しく学びましょう。
+  Markdown: /ai/pages/reference/project-structure.md
+- [amplify_outputs.json について](https://docs.amplify.aws/react/reference/amplify_outputs/): amplify_outputs.json のリファレンス
+  Markdown: /ai/pages/reference/amplify_outputs.md
+- [CDK constructs](https://docs.amplify.aws/react/reference/cdk-constructs/): CDK constructs のリファレンス
+  Markdown: /ai/pages/reference/cdk-constructs.md
+- [CLIコマンド](https://docs.amplify.aws/react/reference/cli-commands/): CLIコマンドのリファレンス。
+  Markdown: /ai/pages/reference/cli-commands.md
+- [IAM ポリシー](https://docs.amplify.aws/react/reference/iam-policy/): Amplify に必要な IAM ポリシーについて詳しく学びます。
+  Markdown: /ai/pages/reference/iam-policy.md
+- [テレメトリー](https://docs.amplify.aws/react/reference/telemetry/): Amplify Gen 2 テレメトリーのリファレンス。
+  Markdown: /ai/pages/reference/telemetry.md
+- [API ドキュメント](https://docs.amplify.aws/react/reference/flutter-api/): Amplify Libraries for Flutter API リファレンス ドキュメントのリスト。
+  Markdown: /ai/pages/reference/flutter-api.md

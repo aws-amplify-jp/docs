@@ -1,0 +1,79 @@
+---
+title: "フルスタックブランチデプロイメント"
+section: "deploy-and-host/fullstack-branching"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2024-08-02T20:32:56.000Z"
+url: "https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/branch-deployments/"
+---
+
+Amplify code-first DX (Gen 2) は、フィーチャーブランチからインフラストラクチャとアプリケーションコードの変更を自動的にデプロイできるフルスタックブランチデプロイメントを提供しています。これにより、メインブランチにマージする前に、分離された環境で変更をテストできます。
+
+## フィーチャーブランチデプロイメントのセットアップ
+
+[初回ブランチをデプロイ](/[platform]/start/quickstart/)した後、手動で追加のブランチを接続することもできますが、推奨されるワークフローは**ブランチ自動検出**機能を使用することです。
+
+1. [Amplify コンソール](https://console.aws.amazon.com/amplify/home)にログインし、アプリを選択します。
+
+2. **App settings > Branch settings** に移動して、**Edit** を選択し、**Branch auto-detection** と **Branch auto-disconnection** を有効にします。次のビデオでは、デフォルト設定を使用して、リポジトリ内のすべてのブランチを自動的に接続します。Branch auto-disconnection により、リポジトリからブランチを削除した場合、ブランチもデプロイから削除されるようになります。
+
+<Callout>
+特定のブランチのみを接続するパターンを定義することもできます。たとえば、`dev`、`staging`、`feature/*` を設定すると、これら3つのブランチタイプがすべて自動的に接続されます。`dev` ブランチと `staging` ブランチ、および `feature/` で始まるすべてのブランチが接続されます。
+</Callout>
+
+3. パターンに一致する `feature/A` および `staging` ブランチにコミットをプッシュします。コンソールページにデプロイが表示され始めます。これで3つのフルスタックブランチがデプロイされました。
+
+![Production、feature/A、および staging ブランチが Amplify コンソールのアプリ概要ページに表示されています。](/images/gen2/fullstack-branching/branches.png)
+
+## 本番環境への変更をプロモート
+
+Gen 2 では、本番環境への変更のプロモートは、通常の Git ベースのワークフローに従います。
+
+![feature/A ブランチから main（本番）ブランチへの変更をマージするワークフロー。](/images/gen2/fullstack-branching/gitflow.png)
+
+1. `feature/A` ブランチで変更を行います。
+
+```bash title="Terminal" showLineNumbers={false}
+git checkout -b feature/A
+
+## make some edits to your code
+
+git commit --am "New data model to track comments for todos added"
+
+git push origin feature/A
+```
+
+2. `main` ブランチにプルリクエストを送信します。チームが変更を検証したら、プルリクエストを `main` にマージします。これにより、`main` ブランチでビルドが開始され、変更したフロントエンドまたはバックエンドリソースが更新されます。
+
+### クライアントコンフィグを生成
+
+以下を実行してブランチ環境のコンフィグを生成できます:
+
+<!-- Platform: angular,javascript,nextjs,react,react-native,swift,vue -->
+Web および React Native の場合、デフォルト形式と出力ディレクトリでコンフィグを生成します。
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate outputs --app-id <your-amplify-app-id> --branch <your-git-branch-name> --out-dir <path/to/config>
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+> **Warning:** app/src/main/res ディレクトリに「raw」フォルダが存在しない場合は、必ず追加してください。
+
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate outputs --app-id <your-amplify-app-id> --branch <your-git-branch-name> --out-dir app/src/main/res/raw
+```
+<!-- /Platform -->
+<!-- Platform: flutter -->
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate outputs --app-id <your-amplify-app-id> --branch <your-git-branch-name> --format dart --out-dir lib
+```
+<!-- /Platform -->
+<!-- Platform: swift -->
+```bash title="Terminal" showLineNumbers={false}
+npx ampx generate outputs --app-id <your-amplify-app-id> --branch <your-git-branch-name>
+```
+
+サンドボックス環境が実行されているら、アプリケーション用の設定ファイルも生成します。ただし、デフォルトでは Xcode がファイルを認識しません。ファイルを認識させるには、生成された設定ファイルをプロジェクトにドラッグアンドドロップする必要があります。
+
+<!-- /Platform -->

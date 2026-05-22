@@ -1,0 +1,180 @@
+---
+title: "アプリ内メッセージングのセットアップ"
+section: "build-a-backend/add-aws-services/in-app-messaging"
+platforms: ["javascript", "react-native", "angular", "nextjs", "react", "vue"]
+gen: 2
+last-updated: "2025-03-20T17:47:39.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/add-aws-services/in-app-messaging/set-up-in-app-messaging/"
+---
+
+Amplifyはアプリ内メッセージングAPIとのやり取りを可能にし、アプリユーザーにメッセージを送信できます。アプリ内メッセージングはユーザーと連携し、関連情報を提供するための強力なツールです。
+キャンペーンはメッセージング施策で、特定のオーディエンスセグメントに関与します。キャンペーンは定義したスケジュールに従って調整されたメッセージを送信します。[AWS Cloud Development Kit (AWS CDK)](https://docs.aws.amazon.com/cdk/latest/guide/home.html)を使用して、Amazon Pinpointがサポートする任意の単一チャネル（モバイルプッシュ、アプリ内、メール、SMS、またはカスタムチャネル）を通じてメッセージを送信するキャンペーンを作成できます。
+
+以下は、[Amazon Pinpoint](https://aws.amazon.com/pinpoint/)で動作するアプリ内メッセージングリソースを作成するためにAWS CDKを利用した例です。注：このサービスにはまだ公式なハンドライティング(L2)コンストラクトがありません。
+
+## セキュリティに関する考慮事項
+
+<Callout>
+
+アプリ内メッセージングを実装する際は、2つの重要なセキュリティに関する考慮事項に注意してください。
+
+まず、Amazon Pinpointで生成されるendpointIDは機密情報として扱うべきです。endpointIDに基づく組み込み認可メカニズムはないため、endpointIDが侵害された場合、他のユーザーが異なるユーザーを対象とするメッセージにアクセスできる可能性があります。アプリケーションにおいてendpointIDアクセスを保護するための適切なセキュリティ対策を実装することをお勧めします。
+
+次に、Amazon Pinpointキャンペーンから受け取るメッセージは、コンテンツのサニタイズなしで配信されます。AWS Amplifyはパススルーサービスとして機能し、これらのメッセージに対するコンテンツ検証やサニタイズを実行しません。アプリケーションセキュリティを確保するため、クロスサイトスクリプティング(XSS)攻撃などの潜在的なセキュリティ脆弱性を防ぐために、アプリケーションで描画する前に常にメッセージコンテンツをサニタイズする必要があります。
+
+</Callout>
+
+<Callout informational>
+
+**注：** キャンペーン開始時刻は少なくとも15分先である必要があります。アプリ内メッセージはキャンペーンがアクティブになると(Pinpointコンソールのキャンペーン画面のステータスが「進行中」である必要がある)ローカルデバイスに同期できます。
+
+</Callout>
+
+```ts title="amplify/backend.ts"
+import { defineBackend } from "@aws-amplify/backend";
+import { auth } from "./auth/resource";
+import { data } from "./data/resource";
+import {
+  CfnApp,
+  CfnCampaign,
+  CfnSegment,
+} from "aws-cdk-lib/aws-pinpoint";
+import { Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Stack } from "aws-cdk-lib/core";
+
+const backend = defineBackend({
+  auth, 
+  data,
+  // additional resources 
+});
+
+const inAppMessagingStack = backend.createStack("inAppMessaging-stack");
+
+// create a Pinpoint app
+const pinpoint = new CfnApp(inAppMessagingStack, "Pinpoint", {
+  name: "myPinpointApp",
+});
+
+// create a segment 
+const mySegment = new CfnSegment(inAppMessagingStack, "Segment", {
+  applicationId: pinpoint.ref,
+  name: "mySegment",
+});
+
+// create a campaign with event and in-app message template
+new CfnCampaign(inAppMessagingStack, "Campaign", {
+  applicationId: pinpoint.ref,
+  name: "MyCampaign",
+  segmentId: mySegment.attrSegmentId,
+  schedule: {
+    // ensure the start and end time are in the future
+    startTime: "2024-02-23T14:39:34Z", 
+    endTime: "2024-02-29T14:32:40Z",
+    frequency: "IN_APP_EVENT",
+    eventFilter: {
+      dimensions: {
+        eventType: {
+          dimensionType: "INCLUSIVE",
+          values: ["my_first_event"],
+        },
+      },
+      filterType: "ENDPOINT",
+    },
+  },
+
+  messageConfiguration: {
+    inAppMessage: {
+      layout: "TOP_BANNER",
+      content: [
+        {
+          // define the content of the in-app message
+          bodyConfig: {
+            alignment: "CENTER",
+            body: "This is an example in-app message.",
+            textColor: "#FFFFFF",
+          },
+          backgroundColor: "#000000",
+          headerConfig: {
+            alignment: "CENTER",
+            header: "Welcome!",
+            textColor: "#FFFFFF",
+          },
+          // optionally, define buttons, images, etc.
+        },
+      ],
+    },
+  },
+});
+
+//create an IAM policy to allow interacting with Pinpoint in-app messaging
+const pinpointPolicy = new Policy(inAppMessagingStack, "PinpointPolicy", {
+  policyName: "PinpointPolicy",
+  statements: [
+    new PolicyStatement({
+      actions: [
+        "mobiletargeting:GetInAppMessages",
+        "mobiletargeting:UpdateEndpoint",
+        "mobiletargeting:PutEvents",
+      ],
+      resources: [pinpoint.attrArn + "/*", pinpoint.attrArn],
+    }),
+  ],
+});
+
+// apply the policy to the authenticated and unauthenticated roles
+backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(pinpointPolicy);
+backend.auth.resources.unauthenticatedUserIamRole.attachInlinePolicy(pinpointPolicy);
+
+// patch the custom Pinpoint resource to the expected output configuration
+backend.addOutput({
+  notifications: {
+    amazon_pinpoint_app_id: pinpoint.ref,
+    aws_region: Stack.of(pinpoint).region,
+    channels: ["IN_APP_MESSAGING"],
+  },
+});
+```
+
+## Amplifyライブラリのインストール
+
+まず、`aws-amplify`ライブラリをインストールします：
+
+```sh title="Terminal" showLineNumbers={false}
+npm add aws-amplify
+```
+
+### アプリ内メッセージングの初期化
+
+Amplifyを使用してアプリケーションをセットアップ完了するには、`configure` APIを使用して設定する必要があります。次に、アプリ内メッセージングAPIと対話するには、`in-app-messaging`サブパスから直接インポートされる`initializeInAppMessaging` APIを呼び出してアプリ内メッセージングを初期化する必要があります。これはアプリライフサイクルの可能な限り早く呼び出すことが必須です。
+
+<!-- Platform: javascript, angular, react, vue, react-native -->
+```js title="src/index.js"
+import { Amplify } from 'aws-amplify';
+import { initializeInAppMessaging } from 'aws-amplify/in-app-messaging';
+import outputs from '../amplify_outputs.json';
+
+Amplify.configure(outputs);
+initializeInAppMessaging();
+```
+<!-- /Platform -->
+
+<!-- Platform: nextjs -->
+```js title="index.tsx"
+import { Amplify } from 'aws-amplify';
+import { initializeInAppMessaging } from 'aws-amplify/in-app-messaging';
+import outputs from '@/amplify_outputs.json';
+
+Amplify.configure(outputs);
+initializeInAppMessaging();
+```
+<!-- /Platform -->
+
+<Callout warning="true">
+
+アプリケーションのライフサイクルの可能な限り早い段階で`Amplify.configure`を呼び出してください。`Amplify.configure`が他のAmplify JavaScript APIの前に呼び出されていない場合、設定がないか`NoCredentials`エラーがスローされます。
+
+</Callout>
+
+### 参考資料
+
+[Amazon Pinpoint Construct Library](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_pinpoint-readme.html)

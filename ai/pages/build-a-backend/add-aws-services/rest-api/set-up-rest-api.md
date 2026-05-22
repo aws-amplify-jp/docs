@@ -1,0 +1,305 @@
+---
+title: "Amplify REST APIのセットアップ"
+section: "build-a-backend/add-aws-services/rest-api"
+platforms: ["angular", "javascript", "nextjs", "react", "react-native", "vue"]
+gen: 2
+last-updated: "2025-11-12T13:51:09.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/add-aws-services/rest-api/set-up-rest-api/"
+---
+
+export async function getStaticPaths() {
+  return getCustomStaticPath(meta.platforms);
+}
+
+[AWS Cloud Development Kit (AWS CDK)](https://aws.amazon.com/cdk/)を使用すると、[Amazon API Gatewayを利用したREST API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-rest-api.html)のルートのリゾルバーとしてAmplify Functionsを構成できます。
+
+## Lambda Functionを使用したREST APIのセットアップ
+
+新しいディレクトリとリソースファイル`amplify/functions/api-function/resource.ts`を作成します。次に、`defineFunction`を使用して関数を定義します：
+
+```ts title="amplify/functions/api-function/resource.ts"
+import { defineFunction } from "@aws-amplify/backend";
+
+export const myApiFunction = defineFunction({
+  name: "api-function",
+});
+```
+
+対応するハンドラーファイル`amplify/functions/api-function/handler.ts`を次の内容で作成します：
+
+```ts title="amplify/functions/api-function/handler.ts"
+import type { APIGatewayProxyHandler } from "aws-lambda";
+
+export const handler: APIGatewayProxyHandler = async (event) => {
+  console.log("event", event);
+  return {
+    statusCode: 200,
+    // 以下のCORS設定を修正して、特定の要件に合わせてください
+    headers: {
+      "Access-Control-Allow-Origin": "*", // これを信頼するドメインに制限してください
+      "Access-Control-Allow-Headers": "*", // 許可する必要なヘッダーのみを指定してください
+    },
+    body: JSON.stringify("Hello from myFunction!"),
+  };
+};
+```
+
+[AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/home.html)を使用して、[Amazon API Gateway](https://aws.amazon.com/api-gateway/)を利用するREST APIリソースを作成します。
+
+```ts title="amplify/backend.ts"
+import { defineBackend } from "@aws-amplify/backend";
+import { Stack } from "aws-cdk-lib";
+import {
+  AuthorizationType,
+  CognitoUserPoolsAuthorizer,
+  Cors,
+  LambdaIntegration,
+  RestApi,
+} from "aws-cdk-lib/aws-apigateway";
+import { Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { myApiFunction } from "./functions/api-function/resource";
+import { auth } from "./auth/resource";
+import { data } from "./data/resource";
+
+const backend = defineBackend({
+  auth,
+  data,
+  myApiFunction,
+});
+
+// 新しいAPIスタックを作成します
+const apiStack = backend.createStack("api-stack");
+
+// 新しいREST APIを作成します
+const myRestApi = new RestApi(apiStack, "RestApi", {
+  restApiName: "myRestApi",
+  deploy: true,
+  deployOptions: {
+    stageName: "dev",
+  },
+  defaultCorsPreflightOptions: {
+    allowOrigins: Cors.ALL_ORIGINS, // これを信頼するドメインに制限してください
+    allowMethods: Cors.ALL_METHODS, // 許可する必要なメソッドのみを指定してください
+    allowHeaders: Cors.DEFAULT_HEADERS, // 許可する必要なヘッダーのみを指定してください
+  },
+});
+
+// 新しいLambda統合を作成します
+const lambdaIntegration = new LambdaIntegration(
+  backend.myApiFunction.resources.lambda
+);
+
+// IAM認可を使用した新しいリソースパスを作成します
+const itemsPath = myRestApi.root.addResource("items", {
+  defaultMethodOptions: {
+    authorizationType: AuthorizationType.IAM,
+  },
+});
+
+// リソースパスに作成するメソッドを追加します
+itemsPath.addMethod("GET", lambdaIntegration);
+itemsPath.addMethod("POST", lambdaIntegration);
+itemsPath.addMethod("DELETE", lambdaIntegration);
+itemsPath.addMethod("PUT", lambdaIntegration);
+
+// APIにプロキシリソースパスを追加します
+itemsPath.addProxy({
+  anyMethod: true,
+  defaultIntegration: lambdaIntegration,
+});
+
+// 新しいCognito User Poolsオーソライザーを作成します
+const cognitoAuth = new CognitoUserPoolsAuthorizer(apiStack, "CognitoAuth", {
+  cognitoUserPools: [backend.auth.resources.userPool],
+});
+
+// Cognito認可を使用した新しいリソースパスを作成します
+const booksPath = myRestApi.root.addResource("cognito-auth-path");
+booksPath.addMethod("GET", lambdaIntegration, {
+  authorizationType: AuthorizationType.COGNITO,
+  authorizer: cognitoAuth,
+});
+
+// APIへのInvokeアクセスを許可する新しいIAMポリシーを作成します
+const apiRestPolicy = new Policy(apiStack, "RestApiPolicy", {
+  statements: [
+    new PolicyStatement({
+      actions: ["execute-api:Invoke"],
+      resources: [
+        `${myRestApi.arnForExecuteApi("*", "/items", "dev")}`,
+        `${myRestApi.arnForExecuteApi("*", "/items/*", "dev")}`,
+        `${myRestApi.arnForExecuteApi("*", "/cognito-auth-path", "dev")}`,
+      ],
+    }),
+  ],
+});
+
+// ポリシーを認証済みおよび未認証IAMロールにアタッチします
+backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(
+  apiRestPolicy
+);
+backend.auth.resources.unauthenticatedUserIamRole.attachInlinePolicy(
+  apiRestPolicy
+);
+
+// 設定ファイルに出力を追加します
+backend.addOutput({
+  custom: {
+    API: {
+      [myRestApi.restApiName]: {
+        endpoint: myRestApi.url,
+        region: Stack.of(myRestApi).region,
+        apiName: myRestApi.restApiName,
+      },
+    },
+  },
+});
+```
+
+<Callout info="true">
+
+**フロントエンド認可設定**: REST APIのセットアップ後、フロントエンドアプリケーションでも認可を構成する必要があります。IAM、Cognito User Pool、APIキー、またはカスタム認可ヘッダーの構成の詳細については、[REST API認可ガイド](/[platform]/build-a-backend/add-aws-services/rest-api/customize-authz/)を参照してください。
+
+</Callout>
+
+## Amplifyライブラリのインストール
+
+<!-- Platform: javascript, angular, react, vue, react-native, nextjs -->
+選択したパッケージマネージャーを使用してAmplify JavaScriptライブラリをインストールします。例えば、`npm`を使用する場合：
+
+```bash title="Terminal" showLineNumbers={false}
+npm add aws-amplify
+```
+<!-- /Platform -->
+
+<!-- Platform: react-native -->
+選択したパッケージマネージャーを使用してAmplify JavaScriptライブラリをインストールします。例えば、`npm`を使用する場合：
+
+<details><summary>React Native バージョン 0.72 以下の指示</summary>
+
+  `@aws-amplify/react-native`を使用する場合、`react-native`のバージョンが0.72以下の場合、最小iOSデプロイターゲットは`13.0`である必要があります。_ios_ディレクトリにある_Podfile_を開き、`target`値を更新します：
+
+  ```diff
+   - platform :ios, min_ios_version_supported
+   + platform :ios, 13.0
+   ```
+
+</details>
+
+```bash title="Terminal" showLineNumbers={false}
+npm add aws-amplify @aws-amplify/react-native
+```
+<!-- /Platform -->
+
+## Amplify APIの初期化
+
+<!-- Platform: javascript, angular, react, vue, react-native, nextjs -->
+<Callout info="true">
+
+**重要**: カスタムREST APIには明示的な構成が必要です。組み込みAmplifyリソース（Auth、Data）とは異なり、カスタムAPIは`Amplify.configure(outputs)`を呼び出すときに自動的に含まれません。
+
+</Callout>
+
+Amplify APIカテゴリを初期化するには、`Amplify.configure()`を使用してAmplifyを構成する必要があります。
+
+設定ファイルをアプリにインポートして読み込みます。Amplify設定ステップをアプリのルートエントリーポイントに追加することをお勧めします。例えば、Reactの場合は`index.js`、Angularの場合は`main.ts`です。
+
+<!-- Platform: javascript, angular, react, vue, react-native -->
+```javascript title="src/main.ts"
+import { Amplify } from 'aws-amplify';
+import { parseAmplifyConfig } from "aws-amplify/utils";
+import outputs from '../amplify_outputs.json';
+
+const amplifyConfig = parseAmplifyConfig(outputs);
+
+Amplify.configure(
+  {
+    ...amplifyConfig,
+    API: {
+      ...amplifyConfig.API,
+      REST: outputs.custom.API, // ← カスタムREST APIに必須
+    },
+  },
+  {
+    API: {
+      REST: {
+        retryStrategy: {
+          strategy: 'no-retry', // デフォルトのリトライ戦略をオーバーライドします
+        },
+      }
+    }
+  }
+);
+```
+<!-- /Platform -->
+
+<!-- Platform: nextjs -->
+```tsx title="pages/_app.tsx"
+import { Amplify } from 'aws-amplify';
+import { parseAmplifyConfig } from "aws-amplify/utils";
+import outputs from '@/amplify_outputs.json';
+
+const amplifyConfig = parseAmplifyConfig(outputs);
+
+Amplify.configure(
+  {
+    ...amplifyConfig,
+    API: {
+      ...amplifyConfig.API,
+      REST: outputs.custom.API, // ← カスタムREST APIに必須
+    },
+  }, 
+  {
+    API: {
+      REST: {
+        retryStrategy: {
+          strategy: 'no-retry' // デフォルトのリトライ戦略をオーバーライドします
+        },
+      }
+    }
+  }
+);
+```
+<!-- /Platform -->
+
+<Callout warning="true">
+
+アプリケーションのライフサイクルの早い段階で`Amplify.configure`を呼び出すようにしてください。他のAmplify JavaScript APIが呼び出される前に`Amplify.configure`が呼び出されていない場合、設定がないか`NoCredentials`エラーがスローされます。この問題の原因については、[ライブラリが構成されていないトラブルシューティングガイド](/[platform]/build-a-backend/troubleshooting/library-not-configured/)を確認してください。
+
+</Callout>
+
+<Callout warning="true">
+
+**重要な設定ステップ**: `REST: outputs.custom.API`の行はカスタムREST APIを登録するために**必須**です。これがないと、APIを呼び出すときに`API name is invalid`エラーが発生します。
+
+</Callout>
+
+## トラブルシューティング
+
+### 「API name is invalid」エラー
+
+REST APIを呼び出すときに`API name is invalid`エラーが発生した場合は、以下の点を確認してください：
+
+1. **カスタムAPI構成を追加した**: `Amplify.configure()`の呼び出しに`REST: outputs.custom.API`を含めてください
+2. **正しいAPI名を使用した**: API名は`backend.ts`ファイルで定義された`restApiName`と一致する必要があります
+3. **`Amplify.configure()`を呼び出した**: 構成がAPI呼び出しの前に行われることを確認してください
+
+**正しくない構成の例**（カスタムAPIが不足している場合）:
+```javascript
+// ❌ これは「API name is invalid」エラーを引き起こします
+Amplify.configure(outputs); // カスタムREST API構成が不足しています
+```
+
+**正しい構成**:
+```javascript
+// ✅ これはカスタムREST APIを含みます
+const amplifyConfig = parseAmplifyConfig(outputs);
+Amplify.configure({
+  ...amplifyConfig,
+  API: {
+    ...amplifyConfig.API,
+    REST: outputs.custom.API, // カスタムAPIに必須
+  },
+});
+```
+<!-- /Platform -->

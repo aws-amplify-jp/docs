@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"android","meta":{"title":"開始方法","description":"PubSubとAWS Mobile SDKを使用して、クラウドベースのメッセージ指向ミドルウェアとの接続を統合する方法を学びます。PubSubを使用して、アプリインスタンス間およびアプリのバックエンド間でメッセージを送受信し、リアルタイムのインタラクティブなエクスペリエンスを作成できます。","platforms":["swift","android"]}},"__N_SSG":true}

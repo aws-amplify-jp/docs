@@ -1,0 +1,66 @@
+---
+title: "ユーザーを特定する"
+section: "frontend/in-app-messaging"
+platforms: ["angular", "javascript", "nextjs", "react", "react-native", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/in-app-messaging/identify-user/"
+---
+
+In-App Messagingの可能性を最大限に引き出すには、In-App Messagingキャンペーンを特定のユーザーサブセットにセグメント化してターゲット設定する必要があります。デバイスの統計情報、位置情報、その他の選択属性を含む追加情報でユーザーを特定することで、適切なユーザーに対してインテリジェントでターゲット化されたアプリ内メッセージを表示できるようになります。
+
+```js title="src/index.js"
+import { identifyUser } from 'aws-amplify/in-app-messaging';
+
+await identifyUser({
+  userId: '', // E.g. user-id
+  userProfile: {
+    email: '', // E.g. example@service.com
+    name: '', // E.g. name-of-the-user
+    plan: '' // E.g. plan-they-subscribe-to
+    customProperties: {
+      // E.g. hobbies: ['cooking', 'knitting'],
+    },
+    demographic: {
+      appVersion: '',
+      locale: '', // E.g. en_US
+      make: '', // E.g. Apple
+      model: '', // E.g. iPhone
+      modelVersion: '', // E.g. 13
+      platform: '', // E.g. iOS
+      platformVersion: '', // E.g. 15
+      timezone: '' // E.g. Americas/Los_Angeles
+    },
+    location: {
+      city: '', // E.g. Seattle
+      country: '', // E.g. US,
+      postalCode: '', // E.g. 98121
+      region: '', // E.g. WA
+      latitude: 0.0,
+      longitude: 0.0
+    },
+    metrics: {
+      // E.g. logins: 157
+    },
+  },
+});
+```
+
+## Amazon Pinpointでユーザーを特定する
+
+Amazon Pinpointで `identifyUser` を使用する場合、他のユーザー情報プロパティに加えて、`options` の下に `address`、`optOut`、および `userAttributes` プロパティを設定できます。
+
+```js title="src/index.js"
+import { identifyUser } from 'aws-amplify/in-app-messaging';
+
+await identifyUser({
+  userId: '', // E.g. user-id
+  options: {
+    address: '' // E.g. A device token or email address
+    optOut: ''  // Either ALL or NONE
+    userAttributes: {
+      // E.g. interests: ['soccer', 'shoes'],
+    }
+  },
+});
+```

@@ -1,0 +1,201 @@
+---
+title: "アプリケーションの統合"
+section: "frontend/in-app-messaging"
+platforms: ["angular", "javascript", "nextjs", "react", "react-native", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/in-app-messaging/integrate-application/"
+---
+
+<!-- Platform: react-native -->
+## Amplify React Nativeパッケージと他の依存関係をインストール
+`@aws-amplify/react-native`をインストールするとReact Nativeに必要なポリフィルがもたらされます。
+
+<details><summary>React Nativeバージョン0.72以下の手順</summary>
+
+`@aws-amplify/react-native`は`react-native`バージョンが0.72以下の場合、最小iOSデプロイメント対象が`13.0`である必要があります。_ios_ディレクトリにある_Podfile_を開き、`target`値を更新します：
+
+```diff showLineNumbers={false}
+- platform :ios, min_ios_version_supported
++ platform :ios, 13.0
+```
+
+</details>
+
+```bash title="Terminal" showLineNumbers={false}
+npm add @aws-amplify/react-native @react-native-community/netinfo @react-native-async-storage/async-storage
+```
+
+## Amplify UI for React Nativeと依存関係をインストール
+
+Amplify In-App MessagingはスタンドアロンのJavaScriptライブラリとして使用できますが、このガイドではAmplify UIと一緒に使用する方法を示します。Amplify UIは現在React とReact Nativeとの統合をサポートし、すぐに開始できます。
+
+<Callout>
+
+Amplify In-App Messaging UIの詳細とその機能を完全に活用する方法について、こちらで詳しく説明しています: [Amplify UI for In-App Messaging](https://ui.docs.amplify.aws/react-native/connected-components/in-app-messaging)
+  
+</Callout>
+
+```bash title="Terminal" showLineNumbers={false}
+npm add @aws-amplify/ui-react-native react-native-safe-area-context@^4.2.5
+```
+<!-- /Platform -->
+
+<!-- Platform: javascript, angular, react, vue, react-native, nextjs -->
+
+## Amplify UI for Reactをインストール
+
+Amplify In-App MessagingはスタンドアロンのJavaScriptライブラリとして使用できますが、このガイドではAmplify UIと一緒に使用する方法を示します。Amplify UIは現在React とReact Nativeとの統合をサポートし、すぐに開始できます。
+
+<Callout>
+
+Amplify In-App Messaging UIの詳細とその機能を完全に活用する方法について、こちらで詳しく説明しています: [Amplify UI for In-App Messaging](https://ui.docs.amplify.aws/react/connected-components/in-app-messaging)
+
+</Callout>
+
+```bash title="Terminal" showLineNumbers={false}
+npm add @aws-amplify/ui-react @aws-amplify/ui-react-notifications
+```
+<!-- /Platform -->
+
+## Amplify UIを統合
+
+Amplify UIは、In-App Messaging UIをアプリケーションに統合するための高階コンポーネントを提供します。例えば`App.js`など、アプリケーションのルートコンポーネントをラップするだけです。
+
+<!-- Platform: react-native -->
+```js
+import { withInAppMessaging } from '@aws-amplify/ui-react-native';
+
+const App = () => (
+  {/* Your application code */}
+);
+
+export default withInAppMessaging(App);
+```
+<!-- /Platform -->
+
+<!-- Platform: javascript, angular, react, vue, nextjs -->
+
+```js title="src/App.js"
+import { withInAppMessaging } from '@aws-amplify/ui-react-notifications';
+
+import '@aws-amplify/ui-react/styles.css';
+
+const App = () => (
+  {/* Your application code */}
+);
+
+export default withInAppMessaging(App);
+```
+<!-- /Platform -->
+
+以下は、エントリファイルの例です：
+<!-- Platform: react-native -->
+```jsx title="src/index.js"
+import React, { useEffect } from 'react';
+import { Button, View } from 'react-native';
+import {
+  initializeInAppMessaging,
+  syncMessages,
+  dispatchEvent
+} from 'aws-amplify/in-app-messaging';
+import { withInAppMessaging } from '@aws-amplify/ui-react-native';
+import { record } from 'aws-amplify/analytics';
+import outputs from '../amplify_outputs.json';
+
+Amplify.configure(outputs);
+initializeInAppMessaging();
+
+// インアプリメッセージを表示するには、このイベント名がIn-App Messagingキャンペーンで作成したものと一致していることを確認してください！
+const myFirstEvent = { name: 'my_first_event' };
+
+const App = () => {
+  useEffect(() => {
+    // キャンペーンからのメッセージは、表示される前にバックエンドから同期する必要があります。
+    // これはアプリのどこからでもトリガーできます。ここではこのコンポーネント（アプリ）が
+    // 最初にレンダリングされるときに1回だけ同期します。
+    syncMessages();
+  }, []);
+
+  return (
+    <View>
+      {/* このボタンは分析イベントがインアプリメッセージをトリガーする例です。 */}
+      <Button
+        onPress={() => {
+          record(myFirstEvent);
+        }}
+        title="Record Analytics Event"
+      />
+
+      {/* このボタンはIn-app Messagingイベントがインアプリメッセージをトリガーする例です。*/}
+      <Button
+        onPress={() => {
+          dispatchEvent(myFirstEvent);
+        }}
+        title="Send In-App Messaging Event"
+      />
+    </View>
+  );
+};
+
+export default withInAppMessaging(App);
+```
+<!-- /Platform -->
+
+<!-- Platform: javascript, angular, react, vue, nextjs -->
+
+```jsx title="src/index.js"
+import React, { useEffect } from 'react';
+import {
+  initializeInAppMessaging,
+  syncMessages,
+  dispatchEvent
+} from 'aws-amplify/in-app-messaging';
+import { Button, View } from '@aws-amplify/ui-react';
+import { withInAppMessaging } from '@aws-amplify/ui-react-notifications';
+import { record } from 'aws-amplify/analytics';
+import '@aws-amplify/ui-react/styles.css';
+import outputs from '../amplify_outputs.json';
+
+Amplify.configure(outputs);
+initializeInAppMessaging();
+
+// インアプリメッセージを表示するには、このイベント名がIn-App Messagingキャンペーンで作成したものと一致していることを確認してください！
+const myFirstEvent = { name: 'my_first_event' };
+
+const App = () => {
+  useEffect(() => {
+    // キャンペーンからのメッセージは、表示される前にバックエンドから同期する必要があります。
+    // これはアプリのどこからでもトリガーできます。ここではこのコンポーネント（アプリ）が
+    // 最初にレンダリングされるときに1回だけ同期します。
+    syncMessages();
+  }, []);
+
+  return (
+    <View>
+      {/* このボタンは分析イベントがインアプリメッセージをトリガーする例です。 */}
+      <Button
+        onClick={() => {
+          record(myFirstEvent);
+        }}
+      >
+        Record Analytics Event
+      </Button>
+
+      {/* このボタンはIn-app Messagingイベントがインアプリメッセージをトリガーする例です。*/}
+      <Button
+        onClick={() => {
+          dispatchEvent(myFirstEvent);
+        }}
+      >
+        Send In-App Messaging Event
+      </Button>
+    </View>
+  );
+};
+
+export default withInAppMessaging(App);
+```
+<!-- /Platform -->
+
+ターミナルでアプリをビルドして実行できるようになりました。上記の例で示されているボタンの1つをクリックすると、Pinpointコンソールで定義したインアプリメッセージがアプリに表示されます。

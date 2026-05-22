@@ -1,0 +1,234 @@
+---
+title: "モデル"
+section: "ai/concepts"
+platforms: ["javascript", "react-native", "angular", "nextjs", "react", "vue"]
+gen: 2
+last-updated: "2026-03-30T13:46:05.000Z"
+url: "https://docs.amplify.aws/react/ai/concepts/models/"
+---
+
+基盤モデルは、膨大な量のデータで事前学習された大規模な汎用機械学習モデルです。これらのモデルは教師なし学習または自己教師あり学習の方法で学習され、特定の指示やラベルを与えられることなく、ラベルなしの学習データからパターンと表現を学習します。
+
+基盤モデルは汎用目的であり、モデルを自分で学習する必要がありませんが、幅広いアプリケーションに対応できるほど強力です。
+
+Large Language Modelsが一部を占める基盤モデルは、本質的にステートレスです。テキストまたは画像の形式で入力を受け取り、テキストまたは画像を生成します。また、本質的に非決定的です。同じ入力を提供しても、異なる出力が生成される可能性があります。
+
+## モデルアクセスの取得
+
+Bedrockで基盤モデルを呼び出す前に、[AWSコンソールでモデルへのアクセスをリクエスト](https://console.aws.amazon.com/bedrock/home#/modelaccess)する必要があります。
+
+Amplifyアプリを構築しているリージョンを確認してください。
+
+## 価格と制限
+
+Amazon Bedrockの各基盤モデルには、オンデマンド使用のための独自の価格設定とスループット制限があります。オンデマンド使用はサーバーレスであり、AWSリソースをプロビジョニングする必要がなく、使用した分だけ支払います。Amplify AIキットはBedrockのオンデマンド使用を使用します。
+
+基盤モデルを使用するコストはトークン使用量によって計算されます。生成AIのトークンとは、入力として送信されたデータのチャンクと、生成されたデータ量を指します。トークンはおおよそ単語と同じですが、使用されるモデルによって異なります。Bedrockの各基盤モデルには、入力トークンと出力トークンの使用量に基づいた独自の価格があります。
+
+Amplify AIキットを使用する場合、推論リクエストはBedrockの価格に基づいてAWSアカウントに請求されます。Amplifyのマークアップはありません。あなたのアカウント内のAWSリソースを使用しているだけです。
+
+Amplify AIキットで生成AIを実行するための最新の情報については、常に[Bedrockの価格](https://aws.amazon.com/bedrock/pricing/)を参照してください。
+
+<Callout type="info">
+  Amplifyプロジェクトは、指定した基盤モデルが利用可能なリージョンにデプロイする必要があります。モデルごとのサポートされているリージョンについては、[Bedrockモデルサポート](https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html)を参照してください。
+</Callout>
+
+## サポートされているプロバイダーとモデル
+
+Amplify AIキットはBedrockの[Converse API](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html)を使用して、モデル全体で統一されたAPIを活用します。
+
+<Table
+  caption="Table with supported models for Amplify AI kit"
+  highlightOnHover={false}
+  style={{ border: '1.5px solid' }}>
+  <TableHead>
+    <TableRow>
+      <TableCell as="th">プロバイダー</TableCell>
+      <TableCell as="th">モデル</TableCell>
+      <TableCell as="th">会話</TableCell>
+      <TableCell as="th">生成</TableCell>
+    </TableRow>
+  </TableHead>
+  <TableBody>
+    <TableRow>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-ai21.html">AI21 Labs</a></strong></TableCell>
+      <TableCell>Jurassic-2 Large</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>❌</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-ai21.html">AI21 Labs</a></strong></TableCell>
+      <TableCell>Jurassic-2 Mini</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>❌</TableCell>
+    </TableRow>
+    <TableRow style={{ borderTop: '1.5px solid' }}>
+      <TableCell><strong><a href="https://aws.amazon.com/ai/generative-ai/nova/">Amazon</a></strong></TableCell>
+      <TableCell>Amazon Nova Pro</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>❌</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://aws.amazon.com/ai/generative-ai/nova/">Amazon</a></strong></TableCell>
+      <TableCell>Amazon Nova Lite</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>❌</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://aws.amazon.com/ai/generative-ai/nova/">Amazon</a></strong></TableCell>
+      <TableCell>Amazon Nova Micro</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>❌</TableCell>
+    </TableRow>
+    <TableRow style={{ borderTop: '1.5px solid' }}>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-claude.html">Anthropic</a></strong></TableCell>
+      <TableCell>Claude 3 Haiku</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-claude.html">Anthropic</a></strong></TableCell>
+      <TableCell>Claude 3.5 Haiku</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-claude.html">Anthropic</a></strong></TableCell>
+      <TableCell>Claude 3 Sonnet</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-claude.html">Anthropic</a></strong></TableCell>
+      <TableCell>Claude 3.5 Sonnet</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-claude.html">Anthropic</a></strong></TableCell>
+      <TableCell>Claude 3.5 Sonnet v2</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-claude.html">Anthropic</a></strong></TableCell>
+      <TableCell>Claude 3 Opus</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-claude.html">Anthropic</a></strong></TableCell>
+      <TableCell>Claude 4.5 Haiku</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-claude.html">Anthropic</a></strong></TableCell>
+      <TableCell>Claude 4.5 Sonnet</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-claude.html">Anthropic</a></strong></TableCell>
+      <TableCell>Claude 4.5 Opus</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-claude.html">Anthropic</a></strong></TableCell>
+      <TableCell>Claude 4.6 Sonnet</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-claude.html">Anthropic</a></strong></TableCell>
+      <TableCell>Claude 4.6 Opus</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+    </TableRow>
+    <TableRow style={{ borderTop: '1.5px solid' }}>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-cohere.html">Cohere</a></strong></TableCell>
+      <TableCell>Command R</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>❌</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-cohere.html">Cohere</a></strong></TableCell>
+      <TableCell>Command R+</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>❌</TableCell>
+    </TableRow>
+    <TableRow style={{ borderTop: '1.5px solid' }}>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-meta.html">Meta</a></strong></TableCell>
+      <TableCell>Llama 3.1</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>❌</TableCell>
+    </TableRow>
+    <TableRow style={{ borderTop: '1.5px solid' }}>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-mistral.html">Mistral AI</a></strong></TableCell>
+      <TableCell>Large</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>❌</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell><strong><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-mistral.html">Mistral AI</a></strong></TableCell>
+      <TableCell>Large 2</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>❌</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+
+<Callout type="info">
+  Claude 4.5および4.6モデル（Haiku、Sonnet、Opus）は、自動クロスリージョンルーティングにより可用性とパフォーマンスを向上させるための[AWSBedrockグローバル推論プロファイル](https://docs.aws.amazon.com/bedrock/latest/userguide/global-cross-region-inference.html)を使用します。これらのモデルは、クロスリージョンフェイルオーバーとロードバランシングを可能にするグローバル推論プロファイルモデルIDを使用してアクセスされます。
+</Callout>
+
+Amplify AIキットは、生成ルートと会話ルートの両方に対して[「ツール」](/[platform]/ai/concepts/tools)を利用します。[使用されるモデルはConverse APIでのツール使用をサポートしている必要があります](https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference-supported-models-features.html)。
+
+ほとんどのモデルは、入力との最適な動作方法と出力のフォーマット方法が異なります。Converse APIを使用することで、アプリケーションとの相互作用方法を大きく変更することなく、異なるモデルを簡単に切り替えることができます。
+
+## モデルの選択
+
+各モデルとモデルプロバイダーには、それぞれの強みと弱みがあります。異なるユースケースに対して異なるモデルを試して、最適なものを見つけることをお勧めします。モデルを選択する際に考慮すべき事項：
+
+### コンテキストウィンドウ
+
+各モデルは独自のコンテキストウィンドウサイズを持っています。コンテキストウィンドウは、モデルに送信できる情報量です。FMはステートレスですが、会話ルートはメッセージ履歴を管理しているため、コンテキストウィンドウはモデルとの「チャット」を続けるにつれて増加し続けることができます。モデルのコンテキストウィンドウは、受信できるトークン数によって定義されます。
+
+### レイテンシ
+
+小規模なモデルは大規模なモデルよりもレイテンシが低い傾向がありますが、パフォーマンスが低い場合もあります。
+
+### コスト
+
+各モデルには独自の価格とスループットがあります。
+
+### ユースケースへの適合
+
+一部のモデルは特定のタスクまたは特定の言語に適するように学習されています。
+
+ユースケースに適したモデルを選択することは、レイテンシ、コスト、およびパフォーマンスのバランスを取ることです。
+
+## 異なるモデルの使用
+
+Amplify AIキットを使用して、アプリケーション内の異なる機能に対して異なるモデルを簡単に使用できます。各AIルート定義には、スキーマで定義する`aiModel`属性があります。Amplify AIバックエンドで異なる基盤モデルを使用するには、`a.ai.model()`を使用して`aiModel`を更新します：
+
+```ts
+const schema = a.schema({
+  summarizer: a.generation({
+    aiModel: a.ai.model("Claude 3.5 Haiku")
+  })
+})
+```
+
+`a.ai.model()`関数は、Bedrockモデルのフレンドリーな名前にアクセスできます。新しいモデルがBedrockに追加されると、この関数を最新の状態に保ちます。まだ追加されていない新しいモデルがある場合は、常にBedrockコンソールまたはドキュメントにあるモデルIDを使用できます：
+
+```ts
+const schema = a.schema({
+  summarizer: a.generation({
+    aiModel: {
+      resourcePath: 'meta.llama3-1-405b-instruct-v1:0'
+    }
+  })
+})
+```

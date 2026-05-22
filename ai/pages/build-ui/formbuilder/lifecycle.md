@@ -1,0 +1,141 @@
+---
+title: "フォームライフサイクルの管理"
+section: "build-ui/formbuilder"
+platforms: ["javascript", "react", "nextjs"]
+gen: 2
+last-updated: "2024-05-02T18:37:31.000Z"
+url: "https://docs.amplify.aws/react/build-ui/formbuilder/lifecycle/"
+---
+
+フォームのライフサイクルイベントにフックして、送信前のユーザー入力をカスタマイズしたり、検証を実行したり、エラーを処理したりします。
+
+![Amplify Formsのライフサイクルダイアグラム](/images/console/formbuilder/lifecycle-diagram.png)
+
+1. **初期状態** - 入力フィールドは空であるか、提供されたデフォルト値に基づいて事前入力されます。
+
+  **ユースケース:** ユーザーが**クリア**または**リセット**ボタンをクリックすると、この状態に戻ります。
+
+2. [`onChange`](#ユーザーがデータを入力するときのフォームデータの取得---onchange) - フォームデータがユーザーによって変更されたときのイベント。
+
+  **ユースケース:** これを使用して、ユーザーの各入力後のフォームデータを取得します。
+
+3. [`onValidate`](#コードで検証ルールを拡張する---onvalidate) - カスタム検証のためのイベントフック。このイベントは`onChange`の後にトリガーされます。
+
+  **ユースケース:** これを使用してコードを通じて検証ルールを拡張します。`onValidate`は非同期検証ルールもサポートしており、外部APIに対してフォーム入力を検証できます。
+
+4. [`onSubmit`](#フォームデータ送信を処理する---onsubmit) - ユーザーが**送信**ボタンをクリックしたときのイベント。
+
+  **ユースケース:** フォームが**データモデルに接続されていない**場合、このイベントハンドラーを設定してフォームデータを取得します。フォームが**データモデルに接続されている**場合、これを使用してクラウドに保存される前に提供されたフォームデータをカスタマイズします。
+
+5. [`onSuccess`](#フォームデータがクラウドに正常に保存されたときを処理する---onsuccess) - フォームデータをクラウドに保存することが成功したときのイベント。
+
+  **ユースケース:** これを使用してフォームを閉じたり、フォーム送信が成功した後にユーザーを別のルートに移動させたりします。フォームがデータモデルに接続されている場合にのみ使用します。
+
+6. [`onError`](#フォーム送信エラーを処理する---onerror) - フォームデータをクラウドに保存することが失敗したときのイベント。
+
+  **ユースケース:** これを使用してエラーをログに記録し、検証ルールを改善する必要があるかどうかをさらに調査します。フォームがデータモデルに接続されている場合にのみ使用します。
+
+7. [`onCancel`](#ユーザーが「キャンセル」アクションボタンをクリックしたときを処理する---oncancel) - ユーザーが**キャンセル**ボタンをクリックしたときのイベント。
+
+  **ユースケース:** これを使用してフォームを閉じ、フォームデータを保存しないようにします。
+
+## ユーザーがデータを入力するときのフォームデータの取得 - onChange
+
+場合によっては、ユーザーがフォームを記入しているときにリアルタイムでフォームデータを取得したいことがあります。`onChange`イベントは`fields`パラメータでフォームデータを提供します。
+
+```jsx
+import { useState } from 'react'
+import { HomeCreateForm } from './ui-components'
+
+function App() {
+  const [formData, setFormData] = useState()
+
+  return (
+    <HomeCreateForm onChange={fields => setFormData(fields)}/>
+  )
+}
+```
+
+## コードで検証ルールを拡張する - onValidate
+
+`onValidate`イベントを使用して、コード内で検証ルールを拡張できます。詳細については、[検証ルールを追加する方法](/[platform]/build-ui/formbuilder/validations/)をご覧ください。
+
+## フォームデータ送信を処理する - onSubmit
+
+`onSubmit`はフォーム送信を処理するデフォルトの方法です。ユーザーが**送信**アクションボタンをクリックするたびにトリガーされます。
+
+`onSubmit`ハンドラーを使用して、フォームデータをクラウドに保存する前にカスタマイズできます。`onSubmit`ハンドラーから返されたフォームデータがクラウドに保存されます。
+
+たとえば、保存前にすべての文字列データをトリムする場合：
+
+```jsx
+<HomeCreateForm
+    onSubmit={(fields) => {
+        const updatedFields = {}
+        Object.keys(fields).forEach(key => {
+            if (typeof fields[key] === 'string') {
+                updatedFields[key] = fields[key].trim()
+            } else {
+                updatedFields[key] = fields[key]
+            }
+        })
+        return updatedFields
+    }}
+/>
+```
+
+### フォームデータがクラウドに正常に保存されたときを処理する - onSuccess
+
+`onSuccess`ハンドラーを使用して、フォームデータが正常に送信された後にアクションを実行できます。以下の例は、フォームが正常に送信された後にフォームを非表示にします。
+
+```jsx
+import { useState } from 'react'
+import { HomeCreateForm } from './ui-components'
+
+function App() {
+  const [showForm, setShowForm] = useState(true)
+
+  return (
+    {showForm &&
+      <HomeCreateForm onSuccess={() => {
+        setShowForm(false) // フォームを非表示にする
+      }}/>}
+  )
+}
+```
+
+### フォーム送信エラーを処理する - onError
+
+送信プロセス中に追加のエラーが発生する可能性があります。`onError`ハンドラーを使用してこれらのエラーをログに記録し、顧客にアラートを表示できます。
+
+```jsx
+import { HomeCreateForm } from './ui-components'
+
+function App() {
+  return (
+    <HomeCreateForm onError={(error) => {
+      console.log(error)
+    }}/>
+  )
+}
+```
+
+## ユーザーが**キャンセル**アクションボタンをクリックしたときを処理する - onCancel
+
+ユーザーが**キャンセル**アクションボタンをクリックした場合、`onCancel`イベントを使用してフォームを非表示にするか、顧客を別のページにルートできます。
+
+```jsx
+import { useState } from 'react'
+import { HomeCreateForm } from './ui-components'
+
+function App() {
+  const [showForm, setShowForm] = useState(true)
+
+  return (
+    {showForm &&
+      <HomeCreateForm onCancel={() => {
+        setShowForm(false) // フォームを非表示にする
+      }}/>}
+  )
+}
+```

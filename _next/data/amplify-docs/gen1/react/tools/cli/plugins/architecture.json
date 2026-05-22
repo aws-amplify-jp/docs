@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"react","meta":{"title":"アーキテクチャ","description":"Amplify CLIはプラグイン可能なアーキテクチャを持っています。CLIコアはプラグイン可能なプラットフォームを提供し、ほとんどのCLIカテゴリ機能はプラグインとして実装されています。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}

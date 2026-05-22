@@ -1,0 +1,65 @@
+---
+title: "Kinesis Data Streams"
+section: "build-a-backend/add-aws-services/analytics"
+platforms: ["android", "flutter", "swift"]
+gen: 2
+last-updated: "2026-04-22T07:59:56.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/add-aws-services/analytics/kinesis/"
+---
+
+[AWS Cloud Development Kit (AWS CDK)](https://docs.aws.amazon.com/cdk/latest/guide/home.html) を使用して [Amazon Kinesis Data Stream](https://aws.amazon.com/kinesis/data-streams/) を作成し、アプリに必要なパーミッションを付与します。Amplify バックエンドにカスタム AWS リソースを追加する方法の詳細については、[カスタムリソース](/[platform]/build-a-backend/add-aws-services/custom-resources/)をご覧ください。
+
+## Kinesis ストリームのセットアップ
+
+```ts title="amplify/backend.ts"
+import { defineBackend } from "@aws-amplify/backend";
+import { auth } from "./auth/resource";
+import { data } from "./data/resource";
+import { Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Stream } from "aws-cdk-lib/aws-kinesis";
+import { Stack } from "aws-cdk-lib/core";
+
+const backend = defineBackend({
+  auth,
+  data,
+});
+
+const kinesisStack = backend.createStack("kinesis-stack");
+
+// Create a Kinesis stream
+const kinesisStream = new Stream(kinesisStack, "KinesisStream", {
+  streamName: "myKinesisStream",
+  shardCount: 1,
+});
+
+// Grant PutRecords permission to authenticated users
+const kinesisPolicy = new Policy(kinesisStack, "KinesisPolicy", {
+  statements: [
+    new PolicyStatement({
+      actions: ["kinesis:PutRecords"],
+      resources: [kinesisStream.streamArn],
+    }),
+  ],
+});
+
+backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(kinesisPolicy);
+```
+
+CDK を使用していない場合は、認証済み IAM ロールに対象ストリームの `kinesis:PutRecords` パーミッションがあることを確認してください。
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": "kinesis:PutRecords",
+    "Resource": "arn:aws:kinesis:<region>:<account-id>:stream/<stream-name>"
+  }]
+}
+```
+
+詳細については、[Amazon Kinesis Developer Documentation](https://docs.aws.amazon.com/streams/latest/dev/controlling-access.html) をご覧ください。
+
+## 次のステップ
+
+[Kinesis Data Streams クライアント](/[platform]/frontend/analytics/kinesis/)を使用してアプリからデータをストリーミングします。

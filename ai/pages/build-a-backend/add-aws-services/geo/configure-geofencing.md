@@ -1,0 +1,140 @@
+---
+title: "ジオフェンスコレクションの設定"
+section: "build-a-backend/add-aws-services/geo"
+platforms: ["angular", "javascript", "nextjs", "react", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/build-a-backend/add-aws-services/geo/configure-geofencing/"
+---
+
+ジオフェンスは、実世界の地理的領域の仮想的な周囲です。ジオフェンスには、閉じた境界を形成する点または頂点が含まれており、関心のある領域を定義します。ジオフェンスコレクションは、1つ以上のジオフェンスを保存します。
+
+## 新しいジオフェンスコレクションをセットアップする
+
+```ts title="amplify/backend.ts"
+import { defineBackend } from "@aws-amplify/backend";
+import { Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { CfnGeofenceCollection } from "aws-cdk-lib/aws-location";
+import { auth } from "./auth/resource";
+import { data } from "./data/resource";
+
+const backend = defineBackend({
+  auth,
+  data,
+  // additional resources
+});
+
+const geoStack = backend.createStack("geo-stack");
+
+// create a location services geofence collection
+const myGeofenceCollection = new CfnGeofenceCollection(
+  geoStack,
+  "GeofenceCollection",
+  {
+    collectionName: "myGeofenceCollection",
+    pricingPlan: "RequestBasedUsage",
+    tags: [
+      {
+        key: "name",
+        value: "myGeofenceCollection",
+      },
+    ],
+  }
+);
+
+// create an IAM policy to allow interacting with geofence collection resource
+const myGeofenceCollectionPolicy = new Policy(
+  geoStack,
+  "GeofenceCollectionPolicy",
+  {
+    policyName: "myGeofenceCollectionPolicy",
+    statements: [
+      new PolicyStatement({
+        actions: [
+          "geo:GetGeofence",
+          "geo:PutGeofence",
+          "geo:BatchPutGeofence",
+          "geo:BatchDeleteGeofence",
+          "geo:ListGeofences",
+        ],
+        resources: [myGeofenceCollection.attrArn],
+      }),
+    ],
+  }
+);
+
+// apply the policy to the authenticated and unauthenticated roles
+backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(myGeofenceCollectionPolicy);
+backend.auth.resources.unauthenticatedUserIamRole.attachInlinePolicy(myGeofenceCollectionPolicy);
+
+// patch the geofence collection resource to the expected output configuration
+backend.addOutput({
+  geo: {
+    geofence_collections: {
+      default: myGeofenceCollection.collectionName,
+      items: [myGeofenceCollection.collectionName],
+    },
+  },
+});
+```
+
+## ジオフェンスコレクションの料金プラン
+
+ジオフェンスコレクションの料金プランは `RequestBasedUsage` に設定されます。料金プランの詳細については、[ロケーションサービスの料金](https://aws.amazon.com/location/pricing/)および[ロケーションサービスの利用規約](https://aws.amazon.com/service-terms/)(_82.5 セクション_)をご確認いただくことをお勧めします。
+
+#### グループアクセス
+
+[Cognito ユーザーグループ](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-user-groups.html)に基づいてアクセス権限を制限するには
+
+1. Cognito ユーザープールグループを作成する
+
+```ts title="amplify/auth/resource.ts"
+import { defineAuth } from '@aws-amplify/backend';
+
+export const auth = defineAuth({
+  loginWith: {
+    email: true,
+  },
+  groups: ["User"],
+});
+```
+
+2. Cognito ユーザープールグループロールに権限を追加する
+
+```ts title="amplify/backend.ts"
+const myGeofenceCollectionPolicy = new Policy(
+  geoStack,
+  "GeofenceCollectionPolicy",
+  {
+    policyName: "myGeofenceCollectionPolicy",
+    statements: [
+      new PolicyStatement({
+        actions: [
+          "geo:GetGeofence",
+          "geo:PutGeofence",
+          "geo:BatchPutGeofence",
+          "geo:BatchDeleteGeofence",
+          "geo:ListGeofences",
+        ],
+        resources: [myGeofenceCollection.attrArn],
+      }),
+    ],
+  }
+);
+
+backend.auth.resources.groups["User"].role.attachInlinePolicy(myGeofenceCollectionPolicy);
+```
+
+> 注: `認証/ゲストユーザーアクセス`と`個別グループアクセス`を組み合わせた場合、グループのメンバーであるユーザーには、認証ユーザーの権限ではなく、グループの権限のみが付与されます。権限はコレクション内のすべてのジオフェンスに適用されます。例えば、`User` Cognito グループに `ListGeofences` や `GetGeofence` などの`読み取り`権限を追加した場合、そのグループに追加されたすべてのユーザーは、そのジオフェンスコレクション内のすべてのジオフェンスのプロパティを読み取ることができます。
+
+#### AWS SDK for JavaScript を使用する
+
+または、AWS SDK for JavaScript を使用してプログラムで既存の Cognito ユーザープールグループにユーザーを追加したい場合は、[API ドキュメント](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentityServiceProvider.html#adminAddUserToGroup)を参照してください。
+
+<!-- Platform: javascript, react, angular, nextjs, vue -->
+<Callout>
+
+**注:** ジオフェンスコレクションをプロビジョニングした後、アプリケーションのユースケースに応じて、プログラムでジオフェンスをプロビジョニング済みのジオフェンスコレクションに追加することもできます。詳細については、この[API ドキュメント](/[platform]/frontend/geo/geofences/#savegeofences)を参照してください。
+
+</Callout>
+<!-- /Platform -->

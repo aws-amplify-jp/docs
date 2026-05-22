@@ -1,0 +1,421 @@
+---
+title: "Web UIでサインインを有効にする"
+section: "frontend/auth"
+platforms: ["android", "flutter", "swift"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/auth/web-ui-sign-in/"
+---
+
+<!-- Platform: android -->
+## 前提条件
+* [スタートガイド](/[platform]/build-a-backend/auth/set-up-auth/)に従ってセットアップされたアプリ
+
+> **Warning:** ソーシャルサインインを設定する場合、属性を「必須」として指定する際は注意が必要です。異なるソーシャルアイデンティティプロバイダーは、Cognitoに返す情報の範囲が異なります。最初に「必須」として設定されたユーザープール属性は後で変更できず、ユーザーの移行または新しいユーザープールの作成が必要になる可能性があります。
+
+## Auth カテゴリを設定
+
+<Callout>
+
+このライブラリのCognitoプラグインは現在、[Authorization Code Grant](https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html) OAuthフローをサポートしています。
+
+</Callout>
+
+`auth/resource.ts` ファイルで、次のように更新します。
+```ts
+export const auth = defineAuth({
+  loginWith: {
+    email: true,
+    externalProviders: {
+      callbackUrls: ["myapp://callback/"],
+      logoutUrls: ["myapp://signout/"],
+    },
+  },
+});
+```
+
+## AndroidManifest.xmlを更新
+
+アプリの `AndroidManifest.xml` ファイルに以下のactivityとqueriesタグを追加します。必要に応じて `myapp` をリダイレクトURI接頭辞に置き換えます：
+
+```xml
+<application ...>
+  ...
+  <activity
+      android:name="com.amplifyframework.auth.cognito.activities.HostedUIRedirectActivity"
+      android:exported="true">
+      <intent-filter>
+          <action android:name="android.intent.action.VIEW" />
+          <category android:name="android.intent.category.DEFAULT" />
+          <category android:name="android.intent.category.BROWSABLE" />
+          <data android:scheme="myapp" />
+      </intent-filter>
+  </activity>
+  ...
+</application>
+```
+
+## Web UI サインインを起動
+
+準備ができました。Web UIでサインインを起動する準備ができました。今は、このメソッドをMainActivityの `onCreate` メソッドに追加してください：
+
+#### [Java]
+
+```java
+Amplify.Auth.signInWithWebUI(
+    this,
+    result -> Log.i("AuthQuickStart", result.toString()),
+    error -> Log.e("AuthQuickStart", error.toString())
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+Amplify.Auth.signInWithWebUI(
+    this,
+    { Log.i("AuthQuickStart", "Signin OK = $it") },
+    { Log.e("AuthQuickStart", "Signin failed", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    val result = Amplify.Auth.signInWithWebUI(this)
+    Log.i("AuthQuickStart", "Signin OK: $result")
+} catch (error: AuthException) {
+    Log.e("AuthQuickStart", "Signin failed", error)
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.Auth.signInWithWebUI(this)
+    .subscribe(
+        result -> Log.i("AuthQuickStart", result.toString()),
+        error -> Log.e("AuthQuickStart", error.toString())
+    );
+```
+
+### サインイン中の追加オプション
+
+`Amplify.Auth.signInWithWebUI` に追加のパラメータを渡すことができます。これらは [Cognitoの認可エンドポイント](https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html) へのリクエストでクエリパラメータとして追加されます。
+
+```kotlin
+val options = AWSCognitoAuthWebUISignInOptions.builder()
+        .nonce("randomUUID")
+        .language("en")
+        .loginHint("username")
+        .prompt(AuthWebUIPrompt.LOGIN, AuthWebUIPrompt.CONSENT)
+        .resource("https://localhost")
+        .build()
+
+Amplify.Auth.signInWithWebUI(
+    this,
+    options,
+    result -> Log.i("AuthQuickStart", result.toString()),
+    error -> Log.e("AuthQuickStart", error.toString())
+);
+```
+<!-- /Platform -->
+<!-- Platform: swift -->
+## 前提条件
+
+> **Warning:** **注意：** ソーシャルサインイン（OAuth）機能は **iOS**、**macOS**、**visionOS** でのみ利用可能です。
+> 
+>  ソーシャルサインインを設定する場合、属性を「必須」として指定する際は注意が必要です。異なるソーシャルアイデンティティプロバイダーは、Cognitoに返す情報の範囲が異なります。最初に「必須」として設定されたユーザープール属性は後で変更できず、ユーザーの移行または新しいユーザープールの作成が必要になる可能性があります。
+
+完全な例については、[プロジェクトセットアップのウォークスルー](/[platform]/start/quickstart/)に従ってください。
+
+<Callout>
+
+macOSプロジェクトでAuthを使用するには、Keychain Sharing機能を有効にする必要があります。Xcodeで、**アプリケーションターゲット** > **署名と機能** > **+ 機能**に移動し、**Keychain Sharing** を選択します。
+
+この機能が必要な理由は、AuthがmacOSでプラットフォームのベストプラクティスとしてData Protection Keychainを使用するためです。
+macOSでKeychainがどのように機能し、Keychain Sharing権利の詳細については、[TN3137: macOS keychain APIs and implementations](https://developer.apple.com/documentation/technotes/tn3137-on-mac-keychains)を参照してください。
+
+アプリケーションに機能を追加する方法の詳細については、[Xcodeの機能](https://developer.apple.com/documentation/xcode/capabilities)を参照してください。
+
+</Callout>
+
+## Auth カテゴリを設定
+
+<Callout>
+
+このライブラリのCognitoプラグインは現在、[Authorization Code Grant](https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html) OAuthフローをサポートしています。
+
+</Callout>
+
+以下のように `auth/resource.ts` ファイルを更新して、web UIでのサインインとサインアウト機能を有効にします。
+
+```ts
+export const auth = defineAuth({
+  loginWith: {
+    email: true,
+    externalProviders: {
+      callbackUrls: ["myapp://callback/"],
+      logoutUrls: ["myapp://signout/"],
+    },
+  },
+});
+```
+## Info.plistを更新
+
+Web UIでのサインインには、Amplifyプラグインが、サインイン UIをwebview内に表示する必要があります。サインインプロセスが完了すると、サインイン UIはアプリにリダイレクトされます。
+アプリの `Info.plist` でこれを有効にする必要があります。Info.plistを右クリックして、Open As > Source Codeを選択します。URL スキームに以下のエントリを追加します：
+
+```xml
+
+ <plist version="1.0">
+
+     <dict>
+     <!-- YOUR OTHER PLIST ENTRIES HERE -->
+
+     <!-- ADD AN ENTRY TO CFBundleURLTypes for Cognito Auth -->
+     <!-- IF YOU DO NOT HAVE CFBundleURLTypes, YOU CAN COPY THE WHOLE BLOCK BELOW -->
+     <key>CFBundleURLTypes</key>
+     <array>
+         <dict>
+             <key>CFBundleURLSchemes</key>
+             <array>
+                 <string>myapp</string>
+             </array>
+         </dict>
+     </array>
+
+     <!-- ... -->
+     </dict>
+```
+
+Xcode 13を使用して新しいSwiftUIアプリを作成する場合、Info.plistなどの設定ファイルは不要です。このファイルが見当たらない場合は、プロジェクトターゲットをクリックし、Info、Url Types の下で、「+」をクリックして新しいURL Typeを追加します。URL Schemsに `myapp` を追加します。CFBundleURLSchemesのエントリを含むInfo.plistファイルが表示されます。
+
+## Web UI サインインを起動
+
+Web UIでサインインを起動する準備ができました。`signInWithWebUI` APIはpresentationAnchorを必要とし、iOSアプリの場合、アプリのメインUIWindowになります。以下のコード例は、UIViewControllerにいて、`self.view.window` でUIWindowインスタンスを取得できることを前提としています。
+
+#### [Async/Await]
+
+```swift
+func signInWithWebUI() async {
+    do {
+        let signInResult = try await Amplify.Auth.signInWithWebUI(presentationAnchor: self.view.window!)
+        if signInResult.isSignedIn {
+            print("Sign in succeeded")
+        }
+    } catch let error as AuthError {
+        print("Sign in failed \(error)")
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func signInWithWebUI() -> AnyCancellable {
+    Amplify.Publisher.create {
+        try await Amplify.Auth.signInWithWebUI(presentationAnchor: self.view.window!)
+        }.sink {
+            if case let .failure(authError) = $0 {
+                print("Sign in failed \(authError)")
+            }
+        }
+        receiveValue: { signInResult in
+            if signInResult.isSignedIn {
+                print("Sign in succeeded")
+            }
+        }
+}
+```
+
+### サインイン中にプライベートセッションを優先
+
+Amplify 1.6.0以降、`Amplify.Auth.signInWithWebUI` はiOS 13.0以上では内部で [ASWebAuthenticationSession](https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession) を自動的に使用します。古いiOSバージョンの場合は、[SFAuthenticationSession](https://developer.apple.com/documentation/safariservices/sfauthenticationsession) にフォールバックします。
+このリリースでは、サインインフロー中に `AWSAuthWebUISignInOptions` に新しい `preferPrivateSession` フラグも導入されています。サインイン中に `preferPrivateSession` が `true` に設定されている場合、ユーザーはサインアウト時にweb ビューが表示されません。`preferPrivateSession` は内部で [ASWebAuthenticationSession.prefersEphemeralWebBrowserSession](https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession/3237231-prefersephemeralwebbrowsersessio) を設定し、ユーザーの優先ブラウザがサポートしている場合、認証セッションはプライベートになります。
+
+```swift
+try await Amplify.Auth.signInWithWebUI(
+    presentationAnchor: self.view.window!,
+    options: .preferPrivateSession()
+) {
+    ...
+}
+```
+
+### サインイン中の追加オプション
+
+`Amplify.Auth.signInWithWebUI` に追加のパラメータを渡すことができます。これらは [Cognitoの認可エンドポイント](https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html) へのリクエストでクエリパラメータとして追加されます。
+
+```swift
+let options = AuthWebUISignInRequest.Options(
+    pluginOptions: AWSAuthWebUISignInOptions.init(
+        nonce: "randomUUID",
+        language: "en",
+        loginHint: "username",
+        prompt: [.login, .consent],
+        resource: "http://localhost"))
+
+let signInResult = try await Amplify.Auth.signInWithWebUI(
+    presentationAnchor: self.view.window!,
+    options: options)
+```
+<!-- /Platform -->
+<!-- Platform: flutter -->
+## 前提条件
+
+* [スタートガイド](/[platform]/build-a-backend/auth/set-up-auth/)に従ってセットアップされたアプリ
+
+> **Warning:** ソーシャルサインインを設定する場合、属性を「必須」として指定する際は注意が必要です。異なるソーシャルアイデンティティプロバイダーは、Cognitoに返す情報の範囲が異なります。最初に「必須」として設定されたユーザープール属性は後で変更できず、ユーザーの移行または新しいユーザープールの作成が必要になる可能性があります。
+
+## Auth カテゴリを設定
+
+<Callout>
+
+このライブラリのCognitoプラグインは現在、[Authorization Code Grant](https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html) OAuthフローをサポートしています。
+
+</Callout>
+
+以下のように `auth/resource.ts` ファイルを更新して、web UIでのサインインとサインアウト機能を有効にします。
+
+```ts
+export const auth = defineAuth({
+  loginWith: {
+    email: true,
+    externalProviders: {
+      callbackUrls: ["myapp://callback/"],
+      logoutUrls: ["myapp://signout/"],
+    },
+  },
+});
+```
+
+## 動作の仕組み
+
+Web UIでのサインインは、webview内にサインイン UIを表示します。サインインプロセスが完了すると、サインイン UIはアプリにリダイレクトされます。
+
+## プラットフォームセットアップ
+
+### Web
+
+Flutter webアプリケーションでHosted UIをローカルで使用するには、`--web-port=3000` 引数でアプリを実行する必要があります（リダイレクトURIを設定する際にlocalhostホストに割り当てたポート番号）。
+
+### Android
+
+アプリの `android/app/src/main` ディレクトリの `AndroidManifest.xml` ファイルに以下の `queries` 要素を、同じファイルの `MainActivity` に以下の `intent-filter` を追加します。
+
+必要に応じて `myapp` をリダイレクトURI スキームに置き換えます：
+
+```xml
+<queries>
+    <intent>
+        <action android:name=
+            "android.support.customtabs.action.CustomTabsService" />
+    </intent>
+</queries>
+<application>
+  ...
+  <activity
+        android:name=".MainActivity" android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="myapp" />
+        </intent-filter>
+  </activity>
+  ...
+</application>
+```
+
+### macOS
+
+XCodeを開き、App Sandbox機能を有効にし、「ネットワーク」の下で「受信接続（サーバー）」を選択します。
+
+![ランナーの署名と機能タブのApp Sandboxセクションで選択された受信接続設定。](/images/project-setup/flutter/mac/xcode-entitlements.png)
+
+### iOS、Windows、Linux
+
+特定のプラットフォーム設定は不要です。
+
+## Web UI サインインを起動
+
+Web UIでサインインを起動する準備ができました。
+
+```dart
+Future<void> signInWithWebUI() async {
+  try {
+    final result = await Amplify.Auth.signInWithWebUI();
+    safePrint('Sign in result: $result');
+  } on AuthException catch (e) {
+    safePrint('Error signing in: ${e.message}');
+  }
+}
+```
+
+`provider` 属性を使用してプロバイダーを指定することもできます：
+
+```dart
+Future<void> signInWithWebUIProvider() async {
+  try {
+    final result = await Amplify.Auth.signInWithWebUI(
+      provider: AuthProvider.google,
+    );
+    safePrint('Result: $result');
+  } on AuthException catch (e) {
+    safePrint('Error signing in: ${e.message}');
+  }
+}
+```
+
+Amplify Flutterは現在、以下のソーシャルサインインプロバイダーをサポートしています：
+  * Google
+  * Facebook
+  * Login With Amazon
+  * Apple
+
+### iOS でのサインイン中にプライベートセッションを優先
+
+Amplify.Auth.signInWithWebUI は内部でiOS用 [ASWebAuthenticationSession](https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession) を使用します。ASWebAuthenticationSessionには [prefersEphemeralWebBrowserSession](https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession/3237231-prefersephemeralwebbrowsersessio) プロパティがあります。このプロパティは、セッションがプライベート認証セッションをブラウザに要求すべきかどうかを示すために使用できます。このフラグを true に設定するには、`CognitoSignInWithWebUIPluginOptions` を使用して `preferPrivateSession` を true に設定します。
+
+これにより、サインイン中およびサインアウト中にエンドユーザーに表示される権限ダイアログがバイパスされます。ただし、ユーザーのブラウザから既存のセッションの再利用も防ぎます。例えば、ユーザーがブラウザでGoogleにログインしており、アプリでGoogleを使用してサインインしようとする場合、再度認証情報を入力する必要があります。
+
+```dart
+Future<void> signInWithWebUIAndPrivateSession() async {
+  await Amplify.Auth.signInWithWebUI(
+    options: const SignInWithWebUIOptions(
+      pluginOptions: CognitoSignInWithWebUIPluginOptions(
+        isPreferPrivateSession: true,
+      ),
+    ),
+  );
+}
+```
+
+### サインイン中の追加オプション
+
+`Amplify.Auth.signInWithWebUI` に追加のパラメータを渡すことができます。これらは [Cognitoの認可エンドポイント](https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html) へのリクエストでクエリパラメータとして追加されます。
+
+```dart
+Future<void> signInWithWebUIAndOptions() async {
+  try {
+    final result = await Amplify.Auth.Amplify.Auth.signInWithWebUI(
+        options: SignInWithWebUIOptions(pluginOptions: CognitoSignInWithWebUIPluginOptions(
+          nonce: 'randomUUID',
+          language: 'en',
+          loginHint: 'username',
+          prompt: List.from([CognitoSignInWithWebUIPrompt.login, CognitoSignInWithWebUIPrompt.consent]),
+          resource: 'http://localhost'
+        )
+      )
+    );
+    safePrint('Sign in result: $result');
+  } on AuthException catch (e) {
+    safePrint('Error signing in: ${e.message}');
+  }
+}
+```
+<!-- /Platform -->

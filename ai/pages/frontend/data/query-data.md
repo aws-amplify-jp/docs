@@ -1,0 +1,935 @@
+---
+title: "アプリケーションデータの読み取り"
+section: "frontend/data"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-03-25T17:40:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/data/query-data/"
+---
+
+<!-- Platform: javascript,  react-native, angular, nextjs, react, vue -->
+Amplify Dataクライアントを使用してアプリケーションデータを読み取ることができます。このガイドでは、データの読み取りとデータの取得の違い、必要なデータだけを取得するためにクエリ結果をフィルタリングする方法、および結果をページネーションしてデータをより管理しやすくする方法を確認します。また、必要に応じてこれらのリクエストをキャンセルする方法も説明します。
+
+開始する前に、以下が必要です:
+
+- [APIに接続されたアプリケーション](/[platform]/frontend/data/connect-to-API/)
+- 表示するために既に作成されたデータ
+
+## データをリストして取得する
+
+クエリはAPIを通じてデータを読み取るために使用され、`list`および`get`操作が含まれます。Amplify Dataは、スキーマ内の任意の`a.model()`タイプに対して`list`および`get`クエリを自動的に作成します。`list`クエリは、特定のレコードの識別子を指定する必要なく、Todoアイテムなどの複数のアイテムを取得します。これは、アイテムの概要または要約を取得したり、`list`操作を拡張して特定の条件でアイテムをフィルタリングしたりするのに最適です。識別子で単一エントリをクエリしたい場合は、`get`を使用して特定のTodoアイテムを取得します。
+
+<Callout>
+
+**注:** 基礎となるデータソースのコスト構造は、一部のクエリを実行するコストに影響を与える可能性があります。たとえば、`list`操作はAmazon DynamoDB「スキャン操作」を使用しており、これは`get`操作よりも多くの読み取りリクエストユニットを使用する可能性があります。データソースのこれらの操作に関連するコストを確認することをお勧めします。この例では、DynamoDBを使用しています。DynamoDBのコストがどのように計算されるかの詳細については、[Amazon DynamoDBの価格](https://aws.amazon.com/dynamodb/pricing/)にアクセスしてください。
+
+</Callout>
+
+バックエンドデータスキーマを使用してDataクライアントを生成することで、アイテムをリストできます。その後、目的のモデルのアイテムをリストできます:
+
+```ts
+import { generateClient } from 'aws-amplify/data';
+import { type Schema } from '@/amplify/data/resource';
+
+const client = generateClient<Schema>();
+
+// list items
+const { data: todos, errors } = await client.models.Todo.list();
+
+// get a specific item
+const { data: todo, errors } = await client.models.Todo.get({
+  id: '...',
+});
+```
+
+<Accordion title='認可されていないエラーのトラブルシューティング' headingLevel='4' eyebrow='トラブルシューティング'>
+
+各APIリクエストは認可モードを使用します。認可されていないエラーが発生した場合、認可モードを更新する必要があります。**amplify/data/resource.ts**ファイルで定義されたデフォルト認可モードをオーバーライドするには、`authMode`プロパティをリクエストまたはクライアントに渡します。次の例は、カスタム認可モードでデータを変更する方法を示しています:
+
+```ts
+import { generateClient } from 'aws-amplify/data';
+import { type Schema } from '@/amplify/data/resource';
+
+const client = generateClient<Schema>();
+
+const { errors, data: todos } = await client.models.Todo.list({
+  authMode: 'apiKey',
+});
+```
+
+</details>
+
+## リストクエリをフィルタリングする
+
+データが増えるにつれて、リストクエリをページネーションする必要があります。幸い、これはAmplify Dataに既に組み込まれています。
+
+```ts
+import { generateClient } from 'aws-amplify/data';
+import { type Schema } from '@/amplify/data/resource';
+
+const client = generateClient<Schema>();
+
+const { data: todos, errors } = await client.models.Todo.list({
+  filter: {
+    content: {
+      beginsWith: 'hello'
+    }
+  }
+});
+```
+
+### 複合フィルタ
+
+`and`、`or`、および`not`ブール論理でフィルタを組み合わせることができます。`filter`は、これらのフィールドに関して再帰的であることに注意してください。たとえば、`priority`の値が1_または_2のフィルタリングが必要な場合、以下のようにします:
+
+```ts
+import { generateClient } from 'aws-amplify/data';
+import { type Schema } from '@/amplify/data/resource';
+
+const client = generateClient<Schema>();
+
+const { data: todos, errors } = await client.models.Todo.list({
+  filter: {
+    or: [
+      {
+        priority: { eq: '1' }
+      },
+      {
+        priority: { eq: '2' }
+      }
+    ]
+  }
+});
+```
+
+`priority`が1と2のクエリはブール論理であり、自然言語ではないため、結果が返されないことに注意してください。
+
+## リストクエリをページネーションする
+
+リストクエリの結果をページネーションするには、`nextToken`および`limit`入力変数を設定した後続のリストクエリリクエストを作成します。`limit`変数は、返される結果の数を制限します。レスポンスには、データの次のページをリクエストするために使用できる`nextToken`が含まれます。`nextToken`は、これらのフィルタで作成された次のクエリの開始アイテムのカーソルを表す非常に長い文字列です。
+
+```ts
+import { generateClient } from 'aws-amplify/data';
+import { type Schema } from '@/amplify/data/resource';
+
+const client = generateClient<Schema>();
+
+const {
+  data: todos,
+  nextToken, // 返された nextToken が `null` になるまで、このAPI呼び出しを nextToken で繰り返します
+  errors
+} = await client.models.Todo.list({
+  limit: 100, // デフォルト値は100です
+  nextToken: 'eyJ2ZXJzaW9uejE1a2...' // 前の nextToken
+});
+```
+
+<!-- Platform: react, javascript, nextjs, react-native -->
+Reactアプリケーションを構築している場合、Amplify UIの`usePagination`フックを使用して、ページネーションのユーザーエクスペリエンス管理を支援できます。
+
+```js
+import * as React from 'react';
+import { Pagination } from '@aws-amplify/ui-react';
+
+export const PaginationHasMorePagesExample = () => {
+  const [pageTokens, setPageTokens] = React.useState([null]);
+  const [currentPageIndex, setCurrentPageIndex] = React.useState(1);
+  const [hasMorePages, setHasMorePages] = React.useState(true);
+
+  const handleNextPage = async () => {
+    if (hasMorePages && currentPageIndex === pageTokens.length) {
+      const { data: todos, nextToken } = await client.models.Todo.list({
+        nextToken: pageTokens[pageTokens.length - 1]
+      });
+
+      if (!nextToken) {
+        setHasMorePages(false);
+      }
+
+      setPageTokens([...pageTokens, nextToken]);
+    }
+
+    setCurrentPageIndex(currentPageIndex + 1);
+  };
+
+  return (
+    <Pagination
+      currentPage={currentPageIndex}
+      totalPages={pageTokens.length}
+      hasMorePages={hasMorePages}
+      onNext={handleNextPage}
+      onPrevious={() => setCurrentPageIndex(currentPageIndex - 1)}
+      onChange={(pageIndex) => setCurrentPageIndex(pageIndex)}
+    />
+  );
+};
+```
+<!-- /Platform -->
+
+<Callout>
+
+**制限事項:**
+
+- 現在のところ、ページ総数を取得するAPIはありません。すべてのアイテムをスキャンすることは[潜在的にコストが高い操作](https://github.com/aws-amplify/amplify-js/issues/2901)であることに注意してください。
+- [`page`番号でクエリすることはできません](https://github.com/aws-amplify/amplify-cli/issues/5086)。`nextToken`でクエリする必要があります。
+
+</Callout>
+
+## カスタム選択セットで必要なデータのみを取得する
+
+ビジネスドメインモデルには、多くのフィールドを持つ多くのモデルが含まれている可能性があります。ただし、アプリケーションは通常、異なるコンポーネントまたは画面の要件を満たすためにデータまたはフィールドのサブセットのみを必要とします。モデルとその関係のサブセットを取得するメカニズムが必要です。このメカニズムは、必要なデータのみを転送することで、画面とコンポーネントのデータ使用を最適化するのに役立ちます。この機能を備えることで、アプリケーションのデータ効率、レイテンシ、およびエンドユーザーの認識されたパフォーマンスが向上します。
+
+**カスタム選択セット**を使用すると、消費者がコール単位で取得したいフィールドを指定できます。これは、データを返すすべての操作(CRUDL +`observeQuery`)で可能です。目的のフィールドは「ドット表記」を使用して、強く型付けされた方法(IntelliSenseで発見可能)で指定されます。
+
+```ts
+// CRUDL: .create, .get, .update, .delete, .list, .observeQuery の全てで同じやり方
+const { data: blogWithSubsetOfData, errors } = await client.models.Blog.get(
+  { id: blog.id },
+  {
+    selectionSet: ['author.email', 'posts.*'],
+  }
+);
+```
+
+## Amplify DataのTypeScriptタイプヘルパー
+
+TypeScriptを使用する場合、タイプジェネリックのためにデータモデルタイプを指定する必要があることが頻繁にあります。
+
+<!-- Platform: react, javascript, nextjs, react-native -->
+たとえば、Reactの`useState`では、コンポーネントコード内でステートを使用したタイプセーフティを確保するためにTypeScriptで型を指定します。`Schema["MODEL_NAME"]["type"]`パターンを使用して、バックエンドAPIから返されるデータモデルの形状のTypeScriptタイプを取得します。
+
+```ts
+import { type Schema } from '@/amplify/data/resource';
+
+type Post = Schema['Post']['type'];
+
+const [posts, setPosts] = useState<Post[]>([]);
+```
+<!-- /Platform -->
+
+<!-- Platform: angular, vue -->
+```ts
+import { type Schema } from '../../../amplify/data/resource';
+
+type Post = Schema['Post']['type'];
+```
+<!-- /Platform -->
+
+`Schema["MODEL_NAME"]["type"]`タイプを`SelectionSet`ヘルパータイプと組み合わせて、`selectionSet`パラメータを使用するAPIリクエストの戻り型を記述できます:
+
+<!-- Platform: react, javascript, nextjs, react-native -->
+```ts
+import type { SelectionSet } from 'aws-amplify/data';
+import type { Schema } from '../amplify/data/resource';
+
+const selectionSet = ['content', 'blog.author.*', 'comments.*'] as const;
+type PostWithComments = SelectionSet<Schema['Post']['type'], typeof selectionSet>;
+
+// ...
+const [posts, setPosts] = useState<PostWithComments[]>([]);
+
+const fetchPosts = async () => {
+  const { data: postsWithComments } = await client.models.Post.list({
+    selectionSet,
+  });
+  setPosts(postsWithComments);
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: vue -->
+```ts
+<script setup lang="ts">
+import type { Schema } from '../../../amplify/data/resource';
+import { ref, onMounted } from 'vue';
+import { generateClient, type SelectionSet } from 'aws-amplify/data';
+
+const client = generateClient<Schema>();
+
+const selectionSet = ['content', 'blog.author.*', 'comments.*'] as const;
+
+type PostWithComments = SelectionSet<
+  Schema['Post']['type'], 
+  typeof selectionSet
+>;
+
+const posts = ref<PostWithComments[]>([]);
+
+const fetchPosts = async (): Promise<void> => {
+  const { data: postsWithComments } = await client.models.Post.list({
+    selectionSet,
+  });
+  posts.value = postsWithComments;
+};
+
+onMounted(() => {
+  fetchPosts();
+});
+</script>
+
+<template v-for="post in posts" :key="post.id">
+  <li>{{ post.content }}</li>
+</template>
+```
+<!-- /Platform -->
+
+<!-- Platform: angular -->
+```ts
+import type { Schema } from '../../../amplify/data/resource';
+import { Component, OnInit } from '@angular/core';
+import { generateClient, type SelectionSet } from 'aws-amplify/data';
+import { CommonModule } from '@angular/common';
+
+const client = generateClient<Schema>();
+
+const selectionSet = ['content', 'blog.author.*', 'comments.*'] as const;
+
+type PostWithComments = SelectionSet<
+  Schema['Post']['type'],
+  typeof selectionSet
+>;
+
+@Component({
+  selector: 'app-todos',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './todos.component.html',
+  styleUrls: ['./todos.component.css'],
+})
+export class TodosComponent implements OnInit {
+  posts: PostWithComments[] = [];
+
+  constructor() {}
+
+  ngOnInit(): void {
+    this.fetchPosts();
+  }
+
+  async fetchPosts(): Promise<void> {
+    const { data: postsWithComments } = await client.models.Post.list({
+      selectionSet,
+    });
+    this.posts = postsWithComments;
+  }
+}
+```
+<!-- /Platform -->
+
+## リクエストの読み取りをキャンセルする
+
+`.list(...)`または`.get(...)`によって返されるクエリリクエストプロミスで`.cancel`を呼び出すことで、任意のクエリAPIリクエストをキャンセルできます。
+
+```javascript
+const promise = client.models.Todo.list();
+//  ^ 注: リクエストをawaitしていなく、プロミスを返しています
+
+try {
+  await promise;
+} catch (error) {
+  console.log(error);
+  // リクエストがキャンセルされたことが原因であるエラーの場合、ここで確認できます。
+  if (client.isCancelError(error)) {
+    console.log(error.message); // "my message for cancellation"
+    // ユーザーキャンセルロジックを処理します
+  }
+}
+...
+
+// 上記のリクエストをキャンセルするには
+client.cancel(promise, "my message for cancellation");
+```
+
+`.list()`または`.get()`から返されるプロミスが変更されていないことを確認する必要があります。通常、非同期関数は返されるプロミスを別のプロミスにラップします。たとえば、以下は**機能しません**:
+
+```javascript
+async function makeAPICall() {
+  return client.models.Todo.list();
+}
+const promise = makeAPICall();
+
+// 以下はリクエストをキャンセルしません。
+client.cancel(promise, 'my error message');
+```
+
+## 結論
+
+おめでとうございます! **アプリケーションデータの読み取り**ガイドを完了しました。このガイドでは、`get`および`list`クエリを通じてデータを読み取る方法を学びました。
+
+### 次のステップ
+
+推奨される次のステップには、データの変更を監視するためにリアルタイムイベントをサブスクライブしたり、さらなるデータの情報アーキテクチャを構築および定をカスタマイズしたりすることが含まれます。この作業に役立つリソースには以下が含まれます:
+
+- [リアルタイムイベントをサブスクライブする](/[platform]/frontend/data/subscribe-data/)
+- [認可ルールをカスタマイズする](/[platform]/build-a-backend/data/customize-authz/)
+- [データモデルをカスタマイズする](/[platform]/build-a-backend/data/data-modeling/)
+- [カスタムビジネスロジックを追加する](/[platform]/build-a-backend/data/custom-business-logic/)
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+## IDでクエリする
+
+変更を実行できたので、出力されたIDを使用してクエリを実行してデータを取得します。
+
+#### [Async/Await]
+
+```swift
+func getTodo() async {
+    do {
+        let result = try await Amplify.API.query(
+           request: .get(Todo.self, byId: "9FCF5DD5-1D65-4A82-BE76-42CB438607A0")
+        )
+
+        switch result {
+        case .success(let todo):
+            guard let todo = todo else {
+                print("Could not find todo")
+                return
+            }
+            print("Successfully retrieved todo: \(todo)")
+        case .failure(let error):
+            print("Got failed result with \(error.errorDescription)")
+        }
+    } catch let error as APIError {
+        print("Failed to query todo: ", error)
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func getTodo() -> AnyCancellable {
+    let sink = Amplify.Publisher.create {
+        try await Amplify.API.query(
+            request: .get(Todo.self, byId: "9FCF5DD5-1D65-4A82-BE76-42CB438607A0")
+        )
+    }
+    .sink {
+        if case let .failure(error) = $0 {
+            print("Got failed event with error \(error)")
+        }
+    }
+    receiveValue: { result in
+        switch result {
+        case .success(let todo):
+            guard let todo = todo else {
+                print("Could not find todo")
+                return
+            }
+            print("Successfully retrieved todo: \(todo)")
+        case .failure(let error):
+            print("Got failed result with \(error.errorDescription)")
+        }
+    }
+    return sink
+}
+```
+
+## リストクエリ
+
+オプションのパラメータ`limit`と`where`を使用して`.list`でアイテムのリストを取得し、ページサイズと条件を指定できます。デフォルトのページサイズは1000です。
+
+#### [Async/Await]
+
+```swift
+func listTodos() async {
+    let todo = Todo.keys
+    let predicate = todo.name == "my first todo" && todo.description == "todo description"
+    let request = GraphQLRequest<Todo>.list(Todo.self, where: predicate, limit: 1000)
+    do {
+        let result = try await Amplify.API.query(request: request)
+        switch result {
+        case .success(let todos):
+            print("Successfully retrieved list of todos: \(todos)")
+        case .failure(let error):
+            print("Got failed result with \(error.errorDescription)")
+        }
+    } catch let error as APIError {
+        print("Failed to query list of todos: ", error)
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+#### [Combine]
+
+```swift
+func listTodos() -> AnyCancellable {
+    let todo = Todo.keys
+    let predicate = todo.name == "my first todo" && todo.description == "todo description"
+    let request = GraphQLRequest<Todo>.list(Todo.self, where: predicate, limit: 1000)
+    let sink = Amplify.Publisher.create {
+        try await Amplify.API.query(request: request)
+    }
+    .sink {
+        if case let .failure(error) = $0 {
+            print("Got failed event with error \(error)")
+        }
+    }
+    receiveValue: { result in
+    switch result {
+        case .success(let todos):
+            print("Successfully retrieved list of todos: \(todos)")
+        case .failure(let error):
+            print("Got failed result with \(error.errorDescription)")
+        }
+    }
+    return sink
+}
+```
+
+### 後続ページのアイテムをリストする
+
+SwiftUIを使用していてSwiftUIが同じコードファイルにインポートされている場合、`SwiftUI.List`との名前の衝突を解決するために、クラス`Amplify.List`をインポートする必要があります:
+
+```swift
+import SwiftUI
+import Amplify
+import class Amplify.List
+```
+
+大規模なデータセットの場合、結果をページネーションする必要があります。最初のページの結果を受け取った後、後続のページがあるかどうかを確認し、次のページを取得できます。
+
+```swift
+var todos: [Todo] = []
+var currentPage: List<Todo>?
+
+func listFirstPage() async {
+    let todo = Todo.keys
+    let predicate = todo.name == "my first todo" && todo.description == "todo description"
+    let request = GraphQLRequest<Todo>.list(Todo.self, where: predicate, limit: 1000)
+    do {
+        let result = try await Amplify.API.query(request: request)
+        switch result {
+        case .success(let todos):
+            print("Successfully retrieved list of todos: \(todos)")
+            self.currentPage = todos
+            self.todos.append(contentsOf: todos)
+        case .failure(let error):
+            print("Got failed result with \(error.errorDescription)")
+        }
+    } catch let error as APIError {
+        print("Failed to query list of todos: ", error)
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+
+func listNextPage() async {
+    if let current = self.currentPage, current.hasNextPage() {
+        do {
+            let todos = try await current.getNextPage()
+            self.todos.append(contentsOf: todos)
+            self.currentPage = todos
+        } catch {
+            print("Failed to get next page \(error)")
+        }
+    }
+}
+```
+
+## すべてのページをリストする
+
+すべてのページを取得したい場合は、最初または次のページを正常に取得したときに後続のページを取得します。
+
+1. 上記のメソッド`listFirstPage()`を`listAllPages()`に更新します
+2. `listAllPages()`のクエリの成功ブロックで`listNextPageRecursively()`を呼び出します
+2. `listNextPage()`を`listNextPageRecursively()`に更新します
+3. `listNextPageRecursively()`のクエリの成功ブロックで`listNextPageRecursively()`を呼び出します
+
+完成した変更は次のようになります:
+
+```swift
+var todos: [Todo] = []
+var currentPage: List<Todo>?
+
+func listAllPages() async { // 1. `listFirstPage()`から更新
+    let todo = Todo.keys
+    let predicate = todo.name == "my first todo" && todo.description == "todo description"
+    let request = GraphQLRequest<Todo>.list(Todo.self, where: predicate, limit: 1000)
+    do {
+        let result = try await Amplify.API.query(request: request)
+        switch result {
+        case .success(let todos):
+            print("Successfully retrieved list of todos: \(todos)")
+            self.currentPage = todos
+            self.todos.append(contentsOf: todos)
+            await self.listNextPageRecursively() // 2. 追加
+        case .failure(let error):
+            print("Got failed result with \(error.errorDescription)")
+        }
+    } catch let error as APIError {
+        print("Failed to query list of todos: ", error)
+    } catch {
+        print("Unexpected error: \(error)")
+    }
+}
+
+func listNextPageRecursively() async { // 3. `listNextPage()`から更新
+    if let current = currentPage, current.hasNextPage() {
+        do {
+            let todos = try await current.getNextPage()
+            self.todos.append(contentsOf: todos)
+            self.currentPage = todos
+            await self.listNextPageRecursively() // 4. 追加
+        } catch {
+            print("Failed to get next page \(error)")
+        }
+    }
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+## アイテムをクエリする
+
+変更を実行できたので、出力されたIDを使用してクエリを実行してデータを取得します。
+
+#### [Java]
+
+```java
+private void getTodo(String id) {
+    Amplify.API.query(
+        ModelQuery.get(Todo.class, id),
+        response -> Log.i("MyAmplifyApp", ((Todo) response.getData()).getName()),
+        error -> Log.e("MyAmplifyApp", error.toString(), error)
+    );
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+private fun getTodo(id: String) {
+    Amplify.API.query(ModelQuery.get(Todo::class.java, id),
+        { Log.i("MyAmplifyApp", "Query results = ${(it.data as Todo).name}") },
+        { Log.e("MyAmplifyApp", "Query failed", it) }
+    );
+}
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+suspend fun getTodo(id: String) {
+   try {
+       val response = Amplify.API.query(ModelQuery.get(Todo::class.java, id))
+       Log.i("MyAmplifyApp", response.data.name)
+   } catch (error: ApiException) {
+       Log.e("MyAmplifyApp", "Query failed", error)
+   }
+}
+```
+
+#### [RxJava]
+
+```java
+private void getTodo(String id) {
+  RxAmplify.API.query(ModelQuery.get(Todo.class, id))
+          .subscribe(
+              response -> Log.i("MyAmplifyApp", ((Todo) response.getData()).getName()),
+              error -> Log.e("MyAmplifyApp", error.toString(), error)
+          );
+}
+```
+
+## アイテムをリストする
+
+`Amplify.API.query`で指定した条件に一致するアイテムのリストを取得できます:
+
+#### [Java]
+
+```java
+Amplify.API.query(
+    ModelQuery.list(Todo.class, Todo.NAME.contains("first")),
+    response -> {
+        for (Todo todo : response.getData()) {
+            Log.i("MyAmplifyApp", todo.getName());
+        }
+    },
+    error -> Log.e("MyAmplifyApp", "Query failure", error)
+);
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+Amplify.API.query(
+    ModelQuery.list(Todo::class.java, Todo.NAME.contains("first")),
+    { response ->
+        response.data.forEach { todo ->
+            Log.i("MyAmplifyApp", todo.name)
+        }
+    },
+    { Log.e("MyAmplifyApp", "Query failure", it) }
+)
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+try {
+    Amplify.API
+        .query(ModelQuery.list(Todo::class.java, Todo.NAME.contains("first")))
+        .response.data
+        .items.forEach { todo -> Log.i("MyAmplifyApp", todo.name) }
+} catch (error: ApiException) {
+    Log.e("MyAmplifyApp", "Query failure", error)
+}
+```
+
+#### [RxJava]
+
+```java
+RxAmplify.API.query(ModelQuery.list(Todo.class, Todo.NAME.contains("first"))
+    .subscribe(
+        response -> {
+            for (Todo todo : response.getData()) {
+                Log.i("MyAmplifyApp", todo.getName());
+            }
+        },
+        error -> Log.e("MyAmplifyApp", "Query failure", error)
+    ));
+```
+
+> **注**: このアプローチは最初の1,000アイテムまでしか返しません。この制限を変更するか、この制限を超える追加結果のリクエストを行うには、以下で説明されている*ページネーション*を使用してください。
+
+## 後続ページのアイテムをリストする
+
+リストクエリはデフォルトで最初の1,000アイテムのみを返すため、大規模なデータセットの場合、結果をページネーションする必要があります。ページの結果を受け取った後、さらに結果が利用可能な場合は、次のページをリクエストするための`GraphQLRequest`を取得できます。ページサイズも設定可能です。以下の例をご覧ください。
+
+#### [Java]
+
+```java
+public void queryFirstPage() {
+    query(ModelQuery.list(Todo.class, ModelPagination.limit(1_000)));
+}
+
+private static void query(GraphQLRequest<PaginatedResult<Todo>> request) {
+    Amplify.API.query(
+        request,
+        response -> {
+            if (response.hasData()) {
+                for (Todo todo : response.getData()) {
+                    Log.d("MyAmplifyApp", todo.getName());
+                }
+                if (response.getData().hasNextResult()) {
+                    query(response.getData().getRequestForNextResult());
+                }
+            }
+        },
+        failure -> Log.e("MyAmplifyApp", "Query failed.", failure)
+    );
+}
+```
+
+#### [Kotlin - Callbacks]
+
+```kotlin
+fun queryFirstPage() {
+    query(ModelQuery.list(Todo::class.java, ModelPagination.limit(1_000)))
+}
+
+fun query(request: GraphQLRequest<PaginatedResult<Todo>>) {
+    Amplify.API.query(request,
+        { response ->
+            if (response.hasData()) {
+                response.data.items.forEach { todo ->
+                    Log.d("MyAmplifyApp", todo.name)
+                }
+                if (response.data.hasNextResult()) {
+                    query(response.data.requestForNextResult)
+                }
+            }
+        },
+        { Log.e("MyAmplifyApp", "Query failed", it) }
+    )
+}
+```
+
+#### [Kotlin - Coroutines]
+
+```kotlin
+suspend fun queryFirstPage() {
+    query(ModelQuery.list(Todo::class.java,
+        ModelPagination.firstPage().withLimit(1_000)))
+}
+
+suspend fun query(request: GraphQLRequest<PaginatedResult<Todo>>) {
+    try {
+        val response = Amplify.API.query(request)
+        response.data.items.forEach { todo ->
+            Log.d("MyAmplifyApp", todo.name)
+        }
+        if (response.data.hasNextResult()) {
+            query(response.data.requestForNextResult)
+        }
+    } catch (error: ApiException) {
+        Log.e("MyAmplifyApp", "Query failed.", error)
+    }
+}
+```
+
+#### [RxJava]
+
+```java
+BehaviorSubject<GraphQLRequest<PaginatedResult<Todo>>> subject =
+        BehaviorSubject.createDefault(ModelQuery.list(Todo.class, ModelPagination.limit(1_000)));
+subject.concatMap(request -> RxAmplify.API.query(request).toObservable())
+    .doOnNext(response -> {
+        if (response.hasErrors()) {
+            subject.onError(new Exception(String.format("Query failed: %s", response.getErrors())));
+        } else if (!response.hasData()) {
+            subject.onError(new Exception("Empty response from AppSync."));
+        } else if(response.getData().hasNextResult()) {
+            subject.onNext(response.getData().getRequestForNextResult());
+        } else {
+            subject.onComplete();
+        }
+    })
+    .concatMapIterable(GraphQLResponse::getData)
+    .subscribe(
+        todo -> Log.d(TAG, "Todo: " + todo),
+        error -> Log.e(TAG, "Error: " + error)
+    );
+```
+
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+## アイテムをクエリする
+
+変更を実行できたので、作成されたインスタンスから`id`を取得し、それを使用してデータを取得します。
+
+```dart
+Future<Todo?> queryItem(Todo queriedTodo) async {
+  try {
+    final request = ModelQueries.get(
+      Todo.classType,
+      queriedTodo.modelIdentifier,
+    );
+    final response = await Amplify.API.query(request: request).response;
+    final todo = response.data;
+    if (todo == null) {
+      safePrint('errors: ${response.errors}');
+    }
+    return todo;
+  } on ApiException catch (e) {
+    safePrint('Query failed: $e');
+    return null;
+  }
+}
+```
+
+## アイテムをリストする
+
+`Amplify.API.query`でアイテムのリストを取得できます:
+
+```dart
+Future<List<Todo?>> queryListItems() async {
+  try {
+    final request = ModelQueries.list(Todo.classType);
+    final response = await Amplify.API.query(request: request).response;
+
+    final todos = response.data?.items;
+    if (todos == null) {
+      safePrint('errors: ${response.errors}');
+      return const [];
+    }
+    return todos;
+  } on ApiException catch (e) {
+    safePrint('Query failed: $e');
+    return const [];
+  }
+}
+```
+
+### 後続ページのアイテムをリストする
+
+大規模なデータセットの場合、結果をページネーションする必要があります。最初のページの結果を受け取った後、後続のページがあるかどうかを確認し、次のページを取得できます。
+
+```dart
+const limit = 100;
+
+Future<List<Todo?>> queryPaginatedListItems() async {
+  final firstRequest = ModelQueries.list<Todo>(Todo.classType, limit: limit);
+  final firstResult = await Amplify.API.query(request: firstRequest).response;
+  final firstPageData = firstResult.data;
+
+  // 100個以上のtodosがあることを示しており、次のセットのリクエストを取得できます。
+  if (firstPageData?.hasNextResult ?? false) {
+    final secondRequest = firstPageData!.requestForNextResult;
+    final secondResult =
+        await Amplify.API.query(request: secondRequest!).response;
+    return secondResult.data?.items ?? <Todo?>[];
+  } else {
+    return firstPageData?.items ?? <Todo?>[];
+  }
+}
+```
+
+## クエリ述語
+
+モデルはまた、比較のためのクエリ述語の使用をサポートしています。これらはモデルの属性からアクセスでき、たとえば`Blog["attribute"]["operator"]`です。
+
+サポートされている演算子:
+- `eq` - 等しい
+- `ne` - 等しくない
+- `gt` - より大きい
+- `ge` - 以上
+- `lt` - より小さい
+- `le` - 以下
+- `beginsWith` - 指定されたフィールドが提供された値で始まるモデルに一致します。
+- `between` - 指定されたフィールドが提供された開始値と終了値の間にあるモデルに一致します。
+- `contains` - 指定されたフィールドが提供された値を含むモデルに一致します。
+
+### 基本的な等号演算子
+
+モデルの属性の等号性についてクエリします。
+
+```dart
+const blogTitle = 'Test Blog 1';
+final queryPredicate = Blog.NAME.eq(blogTitle);
+
+final request = ModelQueries.list<Blog>(
+  Blog.classType,
+  where: queryPredicate,
+);
+final response = await Amplify.API.query(request: request).response;
+final blogFromResponse = response.data?.items.first;
+```
+
+### 親IDでフェッチする
+
+親IDですべてのPostを取得します
+
+```dart
+final blogId = blog.id;
+
+final request = ModelQueries.list(
+  Post.classType,
+  where: Post.BLOG.eq(blogId),
+);
+final response = await Amplify.API.query(request: request).response;
+final data = response.data?.items ?? <Post?>[];
+```
+
+### より小さい
+
+評価が5未満のPostを返します。
+
+```dart
+const rating = 5;
+
+final request = ModelQueries.list(
+  Post.classType,
+  where: Post.RATING.lt(rating),
+);
+final response = await Amplify.API.query(request: request).response;
+
+final data = response.data?.items ?? <Post?>[];
+```
+<!-- /Platform -->

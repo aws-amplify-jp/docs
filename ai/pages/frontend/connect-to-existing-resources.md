@@ -1,0 +1,1106 @@
+---
+title: "既存のAWSリソースに接続する"
+section: "frontend"
+platforms: ["android", "angular", "flutter", "javascript", "nextjs", "react", "react-native", "swift", "vue"]
+gen: 2
+last-updated: "2026-04-23T15:56:00.000Z"
+url: "https://docs.amplify.aws/react/frontend/connect-to-existing-resources/"
+---
+
+Amplifyクライアントライブラリは、Amplifyバックエンドワークフローなしで**独立して**使用できます。CDK、Terraform、CloudFormation、またはAWSコンソールでAWSリソースをプロビジョニングした場合、Amplifyライブラリをそれらのリソースに直接接続できます。
+
+これは、Amplifyのクライアントライブラリを認証、データ、ストレージなどに採用しながら、インフラストラクチャを完全に制御できることを意味します。
+
+## このアプローチを使用する場合
+
+- **CDK**、**Terraform**、または**CloudFormation**でAWSリソースがすでにプロビジョニングされている
+- Amplifyバックエンドワークフロー（`ampx`）を採用せずにAmplifyクライアントライブラリを使用したい
+- プラットフォームチームによって管理されている共有インフラストラクチャに接続する必要がある
+- テストまたは環境の切り替え用に**プログラマティック制御**が必要
+
+## その仕組み
+
+<!-- Platform: javascript, angular, nextjs, react, react-native, vue -->
+独自のリソースでAmplifyクライアントライブラリを設定する方法は2つあります。
+
+### オプション1: 手動の`amplify_outputs.json`
+
+プロジェクトに`amplify_outputs.json`ファイルを作成し、リソースの設定を指定します。サポートされているすべてのフィールドについては、[完全な`amplify_outputs.json`仕様](/[platform]/reference/amplify_outputs/)を参照してください。
+
+```json title="amplify_outputs.json"
+{
+  "version": "1",
+  "auth": {
+    "aws_region": "us-east-1",
+    "user_pool_id": "us-east-1_abc123",
+    "user_pool_client_id": "abcdef123456"
+  },
+  "storage": {
+    "aws_region": "us-east-1",
+    "bucket_name": "my-app-bucket"
+  }
+}
+```
+
+次に、アプリでAmplifyを設定します：
+
+```typescript
+import { Amplify } from 'aws-amplify';
+import outputs from './amplify_outputs.json';
+
+Amplify.configure(outputs);
+```
+
+### オプション2: `ResourcesConfig`オブジェクトで直接`Amplify.configure()`を実行
+
+JSONファイルなしで設定を直接渡します：
+
+```typescript
+import { Amplify } from 'aws-amplify';
+
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      userPoolId: 'us-east-1_abc123',
+      userPoolClientId: 'abcdef123456',
+      identityPoolId: 'us-east-1:11111111-2222-3333-4444-555555555555',
+      loginWith: {
+        email: true
+      }
+    }
+  },
+  Storage: {
+    S3: {
+      bucket: 'my-app-bucket',
+      region: 'us-east-1'
+    }
+  }
+});
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+独自のリソースでAmplifyクライアントライブラリを設定する方法は2つあります。
+
+### オプション1: 手動の`amplify_outputs.json`
+
+Xcodeプロジェクトに`amplify_outputs.json`ファイルを作成します。サポートされているすべてのフィールドについては、[完全な仕様](/[platform]/reference/amplify_outputs/)を参照してください。
+
+```json title="amplify_outputs.json"
+{
+  "version": "1",
+  "auth": {
+    "aws_region": "us-east-1",
+    "user_pool_id": "us-east-1_abc123",
+    "user_pool_client_id": "abcdef123456",
+    "identity_pool_id": "us-east-1:11111111-2222-3333-4444-555555555555"
+  }
+}
+```
+
+次に、いつものようにAmplifyを設定します：
+
+```swift
+try Amplify.add(plugin: AWSCognitoAuthPlugin())
+try Amplify.configure(with: .amplifyOutputs)
+```
+
+### オプション2: `AmplifyOutputsData`でのプログラマティック設定
+
+JSONファイルなしでコードで設定を構築します：
+
+```swift
+import Amplify
+import AWSCognitoAuthPlugin
+
+let config = AmplifyOutputsData(
+    auth: .init(
+        awsRegion: "us-east-1",
+        userPoolId: "us-east-1_abc123",
+        userPoolClientId: "abcdef123456"
+    )
+)
+
+try Amplify.add(plugin: AWSCognitoAuthPlugin())
+try Amplify.configure(config)
+```
+
+このアプローチは次の場合に理想的です：
+- **ユニットテスト** — JSONファイルをバンドルせずにAmplifyを設定
+- **環境の切り替え** — dev/staging/prodに異なる設定を構築
+- **動的設定** — ランタイムでリモートソースから設定を取得
+<!-- /Platform -->
+
+<!-- Platform: android -->
+独自のリソースでAmplifyクライアントライブラリを設定する方法は2つあります。
+
+### オプション1: 手動の`amplify_outputs.json`
+
+`app/src/main/res/raw/`ディレクトリに`amplify_outputs.json`ファイルを作成します。サポートされているすべてのフィールドについては、[完全な仕様](/[platform]/reference/amplify_outputs/)を参照してください。
+
+```json title="amplify_outputs.json"
+{
+  "version": "1",
+  "auth": {
+    "aws_region": "us-east-1",
+    "user_pool_id": "us-east-1_abc123",
+    "user_pool_client_id": "abcdef123456",
+    "identity_pool_id": "us-east-1:11111111-2222-3333-4444-555555555555"
+  }
+}
+```
+
+次に、いつものようにAmplifyを設定します：
+
+```kotlin
+Amplify.addPlugin(AWSCognitoAuthPlugin())
+Amplify.configure(applicationContext)
+```
+
+### オプション2: `AmplifyOutputsData`でのプログラマティック設定
+
+JSONファイルなしでコードで設定を構築します：
+
+```kotlin
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.configuration.AmplifyOutputsData
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+
+val config = AmplifyOutputsData(
+    auth = Auth(
+        awsRegion = "us-east-1",
+        userPoolId = "us-east-1_abc123",
+        userPoolClientId = "abcdef123456"
+    )
+)
+
+Amplify.addPlugin(AWSCognitoAuthPlugin())
+Amplify.configure(config, applicationContext)
+```
+
+このアプローチは次の場合に理想的です：
+- **ユニットテスト** — JSONファイルをバンドルせずにAmplifyを設定
+- **環境の切り替え** — dev/staging/prodに異なる設定を構築
+- **動的設定** — ランタイムでリモートソースから設定を取得
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+独自のリソースでAmplifyクライアントライブラリを設定する方法は2つあります。
+
+### オプション1: 手動の`amplify_outputs.json`
+
+リソース設定を使用して`amplify_outputs.json`ファイルを作成します。サポートされているすべてのフィールドについては、[完全な仕様](/[platform]/reference/amplify_outputs/)を参照してください。
+
+```json title="amplify_outputs.json"
+{
+  "version": "1",
+  "auth": {
+    "aws_region": "us-east-1",
+    "user_pool_id": "us-east-1_abc123",
+    "user_pool_client_id": "abcdef123456",
+    "identity_pool_id": "us-east-1:11111111-2222-3333-4444-555555555555"
+  }
+}
+```
+
+次に、Dart設定を生成してAmplifyを設定します：
+
+```bash
+npx ampx generate outputs --outputs-format dart --outputs-out-dir lib
+```
+
+```dart
+import 'amplify_outputs.dart';
+
+await Amplify.addPlugin(AmplifyAuthCognito());
+await Amplify.configure(amplifyConfig);
+```
+
+### オプション2: `AmplifyOutputs`でのプログラマティック設定
+
+ファイルなしでコードで設定を構築します：
+
+```dart
+import 'package:amplify_core/amplify_core.dart';
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+
+final config = AmplifyOutputs(
+  auth: AuthOutputs(
+    awsRegion: 'us-east-1',
+    userPoolId: 'us-east-1_abc123',
+    userPoolClientId: 'abcdef123456',
+  ),
+);
+
+await Amplify.addPlugin(AmplifyAuthCognito());
+await Amplify.configure(config);
+```
+
+このアプローチは次の場合に理想的です：
+- **ユニットテスト** — ファイルをバンドルせずにAmplifyを設定
+- **環境の切り替え** — dev/staging/prodに異なる設定を構築
+- **動的設定** — ランタイムでリモートソースから設定を取得
+<!-- /Platform -->
+
+## Auth（Amazon Cognito）を設定する
+
+既存のCognito User PoolおよびIdentity Poolに接続します。
+
+<!-- Platform: javascript, angular, nextjs, react, react-native, vue -->
+```typescript
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      userPoolId: 'us-east-1_abc123',
+      userPoolClientId: 'abcdef123456',
+      identityPoolId: 'us-east-1:11111111-2222-3333-4444-555555555555',
+      loginWith: {
+        email: true
+      },
+      signUpVerificationMethod: 'code',
+      userAttributes: {
+        email: { required: true }
+      },
+      allowGuestAccess: true,
+      passwordFormat: {
+        minLength: 8,
+        requireLowercase: true,
+        requireUppercase: true,
+        requireNumbers: true,
+        requireSpecialCharacters: true
+      }
+    }
+  }
+});
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+```swift
+let config = AmplifyOutputsData(
+    auth: .init(
+        awsRegion: "us-east-1",
+        userPoolId: "us-east-1_abc123",
+        userPoolClientId: "abcdef123456",
+        identityPoolId: "us-east-1:11111111-2222-3333-4444-555555555555",
+        passwordPolicy: .init(
+            minLength: 8,
+            requireNumbers: true,
+            requireLowercase: true,
+            requireUppercase: true,
+            requireSymbols: false
+        ),
+        oauth: .init(
+            identityProviders: ["GOOGLE", "SIGN_IN_WITH_APPLE"],
+            domain: "myapp.auth.us-east-1.amazoncognito.com",
+            scopes: ["openid", "email", "profile"],
+            redirectSignInUri: ["myapp://callback"],
+            redirectSignOutUri: ["myapp://signout"],
+            responseType: "code"
+        ),
+        standardRequiredAttributes: [.email],
+        usernameAttributes: [.email],
+        userVerificationTypes: [.email],
+        unauthenticatedIdentitiesEnabled: true,
+        mfaConfiguration: "OPTIONAL",
+        mfaMethods: ["SMS", "TOTP"]
+    )
+)
+
+try Amplify.add(plugin: AWSCognitoAuthPlugin())
+try Amplify.configure(config)
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+```kotlin
+val config = AmplifyOutputsData(
+    auth = Auth(
+        awsRegion = "us-east-1",
+        userPoolId = "us-east-1_abc123",
+        userPoolClientId = "abcdef123456",
+        identityPoolId = "us-east-1:11111111-2222-3333-4444-555555555555",
+        passwordPolicy = Auth.PasswordPolicy(
+            minLength = 8,
+            requireNumbers = true,
+            requireLowercase = true,
+            requireUppercase = true,
+            requireSymbols = false
+        ),
+        oauth = Auth.Oauth(
+            identityProviders = listOf(
+                IdentityProviders.GOOGLE,
+                IdentityProviders.SIGN_IN_WITH_APPLE
+            ),
+            domain = "myapp.auth.us-east-1.amazoncognito.com",
+            scopes = listOf("openid", "email", "profile"),
+            redirectSignInUri = listOf("myapp://callback"),
+            redirectSignOutUri = listOf("myapp://signout"),
+            responseType = ResponseType.Code
+        ),
+        standardRequiredAttributes = listOf(
+            AmazonCognitoStandardAttributes.EMAIL
+        ),
+        usernameAttributes = listOf(
+            UsernameAttributes.EMAIL
+        ),
+        userVerificationTypes = listOf(
+            VerificationMechanism.EMAIL
+        ),
+        unauthenticatedIdentitiesEnabled = true,
+        mfaConfiguration = MfaConfiguration.OPTIONAL,
+        mfaMethods = listOf(
+            MfaMethods.SMS,
+            MfaMethods.TOTP
+        )
+    )
+)
+
+Amplify.addPlugin(AWSCognitoAuthPlugin())
+Amplify.configure(config, applicationContext)
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+```dart
+final config = AmplifyOutputs(
+  auth: AuthOutputs(
+    awsRegion: 'us-east-1',
+    userPoolId: 'us-east-1_abc123',
+    userPoolClientId: 'abcdef123456',
+    identityPoolId: 'us-east-1:11111111-2222-3333-4444-555555555555',
+    passwordPolicy: PasswordPolicy(
+      minLength: 8,
+      requireNumbers: true,
+      requireLowercase: true,
+      requireUppercase: true,
+      requireSymbols: false,
+    ),
+    oauth: OAuthOutputs(
+      identityProviders: [IdentityProvider.google, IdentityProvider.apple],
+      domain: 'myapp.auth.us-east-1.amazoncognito.com',
+      scopes: ['openid', 'email', 'profile'],
+      redirectSignInUri: ['myapp://callback'],
+      redirectSignOutUri: ['myapp://signout'],
+      responseType: 'code',
+    ),
+    standardRequiredAttributes: [CognitoStandardAttribute.email],
+    usernameAttributes: [UsernameAttribute.email],
+    userVerificationTypes: [VerificationType.email],
+    unauthenticatedIdentitiesEnabled: true,
+    mfaConfiguration: MfaEnforcement.optional,
+    mfaMethods: [MfaMethod.sms, MfaMethod.totp],
+  ),
+);
+
+await Amplify.addPlugin(AmplifyAuthCognito());
+await Amplify.configure(config);
+```
+<!-- /Platform -->
+
+### Auth必須フィールド
+
+| フィールド | 必須 | 説明 |
+|-------|----------|-------------|
+| `awsRegion` | はい | AWSリージョン（例：`us-east-1`） |
+| `userPoolId` | はい | Cognito User Pool ID |
+| `userPoolClientId` | はい | Cognitoアプリクライアント ID |
+| `identityPoolId` | いいえ | Cognito Identity Pool ID（ゲストアクセスとIAMベースの認証に必要） |
+| `passwordPolicy` | いいえ | パスワード要件（最小長、文字型） |
+| `oauth` | いいえ | OAuth/Hosted UI設定（ソーシャルサインイン） |
+| `mfaConfiguration` | いいえ | MFAモード：`NONE`、`OPTIONAL`、または`REQUIRED` |
+| `mfaMethods` | いいえ | MFAタイプ：`SMS`、`TOTP` |
+
+## Data（AWS AppSync）を設定する
+
+既存のAppSync GraphQL APIに接続します。
+
+<!-- Platform: javascript, angular, nextjs, react, react-native, vue -->
+```json title="amplify_outputs.json"
+{
+  "version": "1",
+  "data": {
+    "aws_region": "us-east-1",
+    "url": "https://abc123.appsync-api.us-east-1.amazonaws.com/graphql",
+    "api_key": "da2-abcdefghijklmno",
+    "default_authorization_type": "API_KEY",
+    "authorization_types": ["API_KEY"]
+  }
+}
+```
+
+```typescript
+import { Amplify } from 'aws-amplify';
+import outputs from './amplify_outputs.json';
+
+Amplify.configure(outputs);
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+```swift
+let config = AmplifyOutputsData(
+    data: .init(
+        awsRegion: "us-east-1",
+        url: "https://abc123.appsync-api.us-east-1.amazonaws.com/graphql",
+        apiKey: "da2-abcdefghijklmno",
+        defaultAuthorizationType: .apiKey,
+        authorizationTypes: [.apiKey, .amazonCognitoUserPools]
+    )
+)
+
+try Amplify.add(plugin: AWSAPIPlugin())
+try Amplify.configure(config)
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+```kotlin
+val config = AmplifyOutputsData(
+    data = Data(
+        awsRegion = "us-east-1",
+        url = "https://abc123.appsync-api.us-east-1.amazonaws.com/graphql",
+        apiKey = "da2-abcdefghijklmno",
+        defaultAuthorizationType = AwsAppsyncAuthorizationType.API_KEY,
+        authorizationTypes = listOf(
+            AwsAppsyncAuthorizationType.API_KEY,
+            AwsAppsyncAuthorizationType.AMAZON_COGNITO_USER_POOLS
+        )
+    )
+)
+
+Amplify.addPlugin(AWSApiPlugin())
+Amplify.configure(config, applicationContext)
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+```dart
+final config = AmplifyOutputs(
+  data: DataOutputs(
+    awsRegion: 'us-east-1',
+    url: 'https://abc123.appsync-api.us-east-1.amazonaws.com/graphql',
+    apiKey: 'da2-abcdefghijklmno',
+    defaultAuthorizationType: AuthorizationType.apiKey,
+    authorizationTypes: [AuthorizationType.apiKey, AuthorizationType.userPools],
+  ),
+);
+
+await Amplify.addPlugin(AmplifyAPI());
+await Amplify.configure(config);
+```
+<!-- /Platform -->
+
+### Data必須フィールド
+
+| フィールド | 必須 | 説明 |
+|-------|----------|-------------|
+| `awsRegion` | はい | AWSリージョン |
+| `url` | はい | AppSync GraphQLエンドポイントURL |
+| `defaultAuthorizationType` | はい | デフォルト認可モード：`API_KEY`、`AMAZON_COGNITO_USER_POOLS`、`AWS_IAM`、または`OPENID_CONNECT` |
+| `authorizationTypes` | はい | サポートされているすべての認可モード |
+| `apiKey` | いいえ | `API_KEY`認証を使用する場合は必須 |
+
+## Storage（Amazon S3）を設定する
+
+既存のS3バケットに接続します。
+
+<!-- Platform: javascript, angular, nextjs, react, react-native, vue -->
+```typescript
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      userPoolId: 'us-east-1_abc123',
+      userPoolClientId: 'abcdef123456',
+      identityPoolId: 'us-east-1:11111111-2222-3333-4444-555555555555'
+    }
+  },
+  Storage: {
+    S3: {
+      bucket: 'my-app-bucket',
+      region: 'us-east-1'
+    }
+  }
+});
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+```swift
+let config = AmplifyOutputsData(
+    auth: .init(
+        awsRegion: "us-east-1",
+        userPoolId: "us-east-1_abc123",
+        userPoolClientId: "abcdef123456",
+        identityPoolId: "us-east-1:11111111-2222-3333-4444-555555555555"
+    ),
+    storage: .init(
+        awsRegion: "us-east-1",
+        bucketName: "my-app-bucket"
+    )
+)
+
+try Amplify.add(plugin: AWSCognitoAuthPlugin())
+try Amplify.add(plugin: AWSS3StoragePlugin())
+try Amplify.configure(config)
+```
+
+### 複数のバケット
+
+```swift
+let config = AmplifyOutputsData(
+    storage: .init(
+        awsRegion: "us-east-1",
+        bucketName: "primary-bucket",
+        buckets: [
+            .init(name: "media", bucketName: "my-media-bucket", awsRegion: "us-east-1"),
+            .init(name: "logs", bucketName: "my-logs-bucket", awsRegion: "us-west-2")
+        ]
+    )
+)
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+```kotlin
+val config = AmplifyOutputsData(
+    auth = Auth(
+        awsRegion = "us-east-1",
+        userPoolId = "us-east-1_abc123",
+        userPoolClientId = "abcdef123456",
+        identityPoolId = "us-east-1:11111111-2222-3333-4444-555555555555"
+    ),
+    storage = Storage(
+        awsRegion = "us-east-1",
+        bucketName = "my-app-bucket"
+    )
+)
+
+Amplify.addPlugin(AWSCognitoAuthPlugin())
+Amplify.addPlugin(AWSS3StoragePlugin())
+Amplify.configure(config, applicationContext)
+```
+
+### 複数のバケット
+
+```kotlin
+val config = AmplifyOutputsData(
+    storage = Storage(
+        awsRegion = "us-east-1",
+        bucketName = "primary-bucket",
+        buckets = listOf(
+            Storage.Bucket(
+                name = "media",
+                bucketName = "my-media-bucket",
+                awsRegion = "us-east-1"
+            ),
+            Storage.Bucket(
+                name = "logs",
+                bucketName = "my-logs-bucket",
+                awsRegion = "us-west-2"
+            )
+        )
+    )
+)
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+```dart
+final config = AmplifyOutputs(
+  auth: AuthOutputs(
+    awsRegion: 'us-east-1',
+    userPoolId: 'us-east-1_abc123',
+    userPoolClientId: 'abcdef123456',
+    identityPoolId: 'us-east-1:11111111-2222-3333-4444-555555555555',
+  ),
+  storage: StorageOutputs(
+    awsRegion: 'us-east-1',
+    bucketName: 'my-app-bucket',
+  ),
+);
+
+await Amplify.addPlugin(AmplifyAuthCognito());
+await Amplify.addPlugin(AmplifyStorageS3());
+await Amplify.configure(config);
+```
+
+### 複数のバケット
+
+```dart
+final config = AmplifyOutputs(
+  storage: StorageOutputs(
+    awsRegion: 'us-east-1',
+    bucketName: 'primary-bucket',
+    buckets: [
+      BucketOutputs(name: 'media', bucketName: 'my-media-bucket', awsRegion: 'us-east-1'),
+      BucketOutputs(name: 'logs', bucketName: 'my-logs-bucket', awsRegion: 'us-west-2'),
+    ],
+  ),
+);
+```
+<!-- /Platform -->
+
+<Callout informational>
+
+ストレージは認可用にAuth（Cognito Identity Pool）を必要とします。常にStorageと一緒にAuthを設定してください。
+
+</Callout>
+
+### Storage必須フィールド
+
+| フィールド | 必須 | 説明 |
+|-------|----------|-------------|
+| `awsRegion` | はい | AWSリージョン |
+| `bucketName` | はい | デフォルトのS3バケット名 |
+| `buckets` | いいえ | マルチバケットセットアップ用の追加の名前付きバケット |
+
+## Analytics（Amazon Pinpoint）を設定する
+
+既存のPinpointアプリケーションに接続します。
+
+<!-- Platform: javascript, angular, nextjs, react, react-native, vue -->
+```json title="amplify_outputs.json"
+{
+  "version": "1",
+  "analytics": {
+    "amazon_pinpoint": {
+      "aws_region": "us-east-1",
+      "app_id": "abc123def456"
+    }
+  }
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+```swift
+let config = AmplifyOutputsData(
+    analytics: .init(
+        amazonPinpoint: .init(
+            awsRegion: "us-east-1",
+            appId: "abc123def456"
+        )
+    )
+)
+
+try Amplify.add(plugin: AWSPinpointAnalyticsPlugin())
+try Amplify.configure(config)
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+```kotlin
+val config = AmplifyOutputsData(
+    analytics = Analytics(
+        amazonPinpoint = Analytics.AmazonPinpoint(
+            awsRegion = "us-east-1",
+            appId = "abc123def456"
+        )
+    )
+)
+
+Amplify.addPlugin(AWSPinpointAnalyticsPlugin())
+Amplify.configure(config, applicationContext)
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+```dart
+final config = AmplifyOutputs(
+  analytics: AnalyticsOutputs(
+    amazonPinpoint: AmazonPinpointOutputs(
+      awsRegion: 'us-east-1',
+      appId: 'abc123def456',
+    ),
+  ),
+);
+
+await Amplify.addPlugin(AmplifyAnalyticsPinpoint());
+await Amplify.configure(config);
+```
+<!-- /Platform -->
+
+## Geo（Amazon Location Service）を設定する
+
+既存のLocation Serviceリソースに接続します。
+
+<!-- Platform: javascript, angular, nextjs, react, react-native, vue -->
+```json title="amplify_outputs.json"
+{
+  "version": "1",
+  "geo": {
+    "aws_region": "us-east-1",
+    "maps": {
+      "items": {
+        "myMap": { "style": "VectorEsriStreets" }
+      },
+      "default": "myMap"
+    },
+    "search_indices": {
+      "items": ["myPlaceIndex"],
+      "default": "myPlaceIndex"
+    },
+    "geofence_collections": {
+      "items": ["myGeofenceCollection"],
+      "default": "myGeofenceCollection"
+    }
+  }
+}
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+```swift
+let config = AmplifyOutputsData(
+    geo: .init(
+        awsRegion: "us-east-1",
+        maps: .init(
+            items: ["myMap": .init(style: "VectorEsriStreets")],
+            default: "myMap"
+        ),
+        searchIndices: .init(
+            items: ["myPlaceIndex"],
+            default: "myPlaceIndex"
+        ),
+        geofenceCollections: .init(
+            items: ["myGeofenceCollection"],
+            default: "myGeofenceCollection"
+        )
+    )
+)
+
+try Amplify.add(plugin: AWSLocationGeoPlugin())
+try Amplify.configure(config)
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+```kotlin
+val config = AmplifyOutputsData(
+    geo = Geo(
+        awsRegion = "us-east-1",
+        maps = Geo.Maps(
+            items = mapOf(
+                "myMap" to AmazonLocationServiceConfig(
+                    style = "VectorEsriStreets"
+                )
+            ),
+            default = "myMap"
+        ),
+        searchIndices = Geo.SearchIndices(
+            items = listOf("myPlaceIndex"),
+            default = "myPlaceIndex"
+        ),
+        geofenceCollections = Geo.GeofenceCollections(
+            items = listOf("myGeofenceCollection"),
+            default = "myGeofenceCollection"
+        )
+    )
+)
+
+Amplify.addPlugin(AWSLocationGeoPlugin())
+Amplify.configure(config, applicationContext)
+```
+<!-- /Platform -->
+
+## Notifications（プッシュ）を設定する
+
+プッシュ通知用に既存のPinpointアプリケーションに接続します。
+
+<!-- Platform: swift -->
+```swift
+let config = AmplifyOutputsData(
+    notifications: .init(
+        awsRegion: "us-east-1",
+        amazonPinpointAppId: "abc123def456",
+        channels: [.apns, .fcm, .inAppMessaging]
+    )
+)
+
+try Amplify.add(plugin: AWSPinpointPushNotificationsPlugin())
+try Amplify.configure(config)
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+```kotlin
+val config = AmplifyOutputsData(
+    notifications = Notifications(
+        awsRegion = "us-east-1",
+        amazonPinpointAppId = "abc123def456",
+        channels = listOf(
+            AmazonPinpointChannels.FCM,
+            AmazonPinpointChannels.IN_APP_MESSAGING
+        )
+    )
+)
+
+Amplify.addPlugin(AWSPinpointPushNotificationsPlugin())
+Amplify.configure(config, applicationContext)
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter, javascript, angular, nextjs, react, react-native, vue -->
+```json title="amplify_outputs.json"
+{
+  "version": "1",
+  "notifications": {
+    "aws_region": "us-east-1",
+    "amazon_pinpoint_app_id": "abc123def456",
+    "channels": ["APNS", "FCM", "IN_APP_MESSAGING"]
+  }
+}
+```
+<!-- /Platform -->
+
+## マルチカテゴリ設定
+
+複数のサービスを一緒に設定できます。この例では、Auth、Data、およびStorageを単一の設定でセットアップしています。
+
+<!-- Platform: swift -->
+```swift
+let config = AmplifyOutputsData(
+    auth: .init(
+        awsRegion: "us-east-1",
+        userPoolId: "us-east-1_abc123",
+        userPoolClientId: "abcdef123456",
+        identityPoolId: "us-east-1:11111111-2222-3333-4444-555555555555"
+    ),
+    data: .init(
+        awsRegion: "us-east-1",
+        url: "https://abc123.appsync-api.us-east-1.amazonaws.com/graphql",
+        defaultAuthorizationType: .amazonCognitoUserPools,
+        authorizationTypes: [.amazonCognitoUserPools, .awsIAM]
+    ),
+    storage: .init(
+        awsRegion: "us-east-1",
+        bucketName: "my-app-bucket"
+    )
+)
+
+try Amplify.add(plugin: AWSCognitoAuthPlugin())
+try Amplify.add(plugin: AWSAPIPlugin())
+try Amplify.add(plugin: AWSS3StoragePlugin())
+try Amplify.configure(config)
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+```kotlin
+val config = AmplifyOutputsData(
+    auth = Auth(
+        awsRegion = "us-east-1",
+        userPoolId = "us-east-1_abc123",
+        userPoolClientId = "abcdef123456",
+        identityPoolId = "us-east-1:11111111-2222-3333-4444-555555555555"
+    ),
+    data = Data(
+        awsRegion = "us-east-1",
+        url = "https://abc123.appsync-api.us-east-1.amazonaws.com/graphql",
+        defaultAuthorizationType = AwsAppsyncAuthorizationType.AMAZON_COGNITO_USER_POOLS,
+        authorizationTypes = listOf(
+            AwsAppsyncAuthorizationType.AMAZON_COGNITO_USER_POOLS,
+            AwsAppsyncAuthorizationType.AWS_IAM
+        )
+    ),
+    storage = Storage(
+        awsRegion = "us-east-1",
+        bucketName = "my-app-bucket"
+    )
+)
+
+Amplify.addPlugin(AWSCognitoAuthPlugin())
+Amplify.addPlugin(AWSApiPlugin())
+Amplify.addPlugin(AWSS3StoragePlugin())
+Amplify.configure(config, applicationContext)
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+```dart
+final config = AmplifyOutputs(
+  auth: AuthOutputs(
+    awsRegion: 'us-east-1',
+    userPoolId: 'us-east-1_abc123',
+    userPoolClientId: 'abcdef123456',
+    identityPoolId: 'us-east-1:11111111-2222-3333-4444-555555555555',
+  ),
+  data: DataOutputs(
+    awsRegion: 'us-east-1',
+    url: 'https://abc123.appsync-api.us-east-1.amazonaws.com/graphql',
+    defaultAuthorizationType: AuthorizationType.userPools,
+    authorizationTypes: [AuthorizationType.userPools, AuthorizationType.iam],
+  ),
+  storage: StorageOutputs(
+    awsRegion: 'us-east-1',
+    bucketName: 'my-app-bucket',
+  ),
+);
+
+await Amplify.addPlugin(AmplifyAuthCognito());
+await Amplify.addPlugin(AmplifyAPI());
+await Amplify.addPlugin(AmplifyStorageS3());
+await Amplify.configure(config);
+```
+<!-- /Platform -->
+
+<!-- Platform: javascript, angular, nextjs, react, react-native, vue -->
+```typescript
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      userPoolId: 'us-east-1_abc123',
+      userPoolClientId: 'abcdef123456',
+      identityPoolId: 'us-east-1:11111111-2222-3333-4444-555555555555'
+    }
+  },
+  API: {
+    GraphQL: {
+      endpoint: 'https://abc123.appsync-api.us-east-1.amazonaws.com/graphql',
+      defaultAuthMode: 'userPool'
+    }
+  },
+  Storage: {
+    S3: {
+      bucket: 'my-app-bucket',
+      region: 'us-east-1'
+    }
+  }
+});
+```
+<!-- /Platform -->
+
+<!-- Platform: swift -->
+## 解決済み設定の検査
+
+`amplify_outputs.json`から解決された設定を検査できます：
+
+```swift
+let outputs = try AmplifyOutputs.amplifyOutputs.resolveConfiguration()
+
+if let auth = outputs.auth {
+    print("User Pool ID: \(auth.userPoolId)")
+    print("Region: \(auth.awsRegion)")
+    print("Identity Pool: \(auth.identityPoolId ?? "none")")
+}
+
+if let storage = outputs.storage {
+    print("Bucket: \(storage.bucketName)")
+    print("Additional buckets: \(storage.buckets?.count ?? 0)")
+}
+
+if let data = outputs.data {
+    print("GraphQL endpoint: \(data.url)")
+    print("Default auth: \(data.defaultAuthorizationType)")
+}
+```
+<!-- /Platform -->
+
+## 環境固有の設定
+
+<!-- Platform: swift -->
+別のJSONファイルなしでdev、staging、productionを切り替えます：
+
+```swift
+let region: String
+let userPoolId: String
+let clientId: String
+
+switch environment {
+case .dev:
+    region = "us-east-1"
+    userPoolId = "us-east-1_dev123"
+    clientId = "devClient123"
+case .staging:
+    region = "us-west-2"
+    userPoolId = "us-west-2_staging456"
+    clientId = "stagingClient456"
+case .prod:
+    region = "us-east-1"
+    userPoolId = "us-east-1_prod789"
+    clientId = "prodClient789"
+}
+
+let config = AmplifyOutputsData(
+    auth: .init(
+        awsRegion: region,
+        userPoolId: userPoolId,
+        userPoolClientId: clientId
+    )
+)
+
+try Amplify.configure(config)
+```
+<!-- /Platform -->
+
+<!-- Platform: android -->
+別のJSONファイルなしでdev、staging、productionを切り替えます：
+
+```kotlin
+val (region, userPoolId, clientId) = when (BuildConfig.BUILD_TYPE) {
+    "debug" -> Triple("us-east-1", "us-east-1_dev123", "devClient123")
+    "staging" -> Triple("us-west-2", "us-west-2_staging456", "stagingClient456")
+    else -> Triple("us-east-1", "us-east-1_prod789", "prodClient789")
+}
+
+val config = AmplifyOutputsData(
+    auth = Auth(
+        awsRegion = region,
+        userPoolId = userPoolId,
+        userPoolClientId = clientId
+    )
+)
+
+Amplify.configure(config, applicationContext)
+```
+<!-- /Platform -->
+
+<!-- Platform: flutter -->
+別のファイルなしでdev、staging、productionを切り替えます：
+
+```dart
+final environment = const String.fromEnvironment('ENV', defaultValue: 'dev');
+
+final AuthOutputs authConfig;
+switch (environment) {
+  case 'prod':
+    authConfig = AuthOutputs(
+      awsRegion: 'us-east-1',
+      userPoolId: 'us-east-1_prod789',
+      userPoolClientId: 'prodClient789',
+    );
+  case 'staging':
+    authConfig = AuthOutputs(
+      awsRegion: 'us-west-2',
+      userPoolId: 'us-west-2_staging456',
+      userPoolClientId: 'stagingClient456',
+    );
+  default:
+    authConfig = AuthOutputs(
+      awsRegion: 'us-east-1',
+      userPoolId: 'us-east-1_dev123',
+      userPoolClientId: 'devClient123',
+    );
+}
+
+final config = AmplifyOutputs(auth: authConfig);
+await Amplify.configure(config);
+```
+<!-- /Platform -->
+
+<!-- Platform: javascript, angular, nextjs, react, react-native, vue -->
+環境ごとに個別の`amplify_outputs.json`ファイルを保守できます：
+
+```typescript
+import devOutputs from './amplify_outputs.dev.json';
+import prodOutputs from './amplify_outputs.prod.json';
+
+const outputs = process.env.NODE_ENV === 'production' ? prodOutputs : devOutputs;
+Amplify.configure(outputs);
+```
+<!-- /Platform -->
+
+## `amplify_outputs.json`スキーマリファレンス
+
+サポートされているすべての設定フィールドの完全なスキーマについては、[amplify_outputs.jsonリファレンス](/[platform]/reference/amplify_outputs/)を参照してください。

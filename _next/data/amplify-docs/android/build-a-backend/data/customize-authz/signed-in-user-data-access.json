@@ -1,0 +1,1 @@
+{"pageProps":{"platform":"android","meta":{"title":"サインイン済みユーザーのデータアクセス","description":"`private` 認可戦略は、IAM、Cognito、または OpenID Connect を通じて認証されたサインイン済みユーザーのみにレコードアクセスを制限し、認可ルールをすべてのユーザーに適用します。これは、認証されたすべてのユーザーのデータをプライベートにする簡単な方法を提供します。","platforms":["android","angular","flutter","javascript","nextjs","react","react-native","swift","vue"]}},"__N_SSG":true}
