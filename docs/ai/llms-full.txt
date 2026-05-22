@@ -1,7 +1,7 @@
 # AWS Amplify Gen 2 Documentation (Full)
 
 > Complete documentation export for AI coding assistants.
-> Generated: 2026-05-21
+> Generated: 2026-05-22
 
 ## Table of Contents
 

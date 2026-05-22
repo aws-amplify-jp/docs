@@ -10,8 +10,9 @@
     "submodule:install": "cd upstream && yarn install",
     "submodule:translate": "node --env-file=.env scripts/translate.mjs --concurrency 5",
     "submodule:translate:dry": "node --env-file=.env scripts/translate.mjs --dry-run",
-    "submodule:build": "rsync -a src/pages/ upstream/src/pages/ && node scripts/patch-next-config.mjs && cd upstream && yarn build",
-    "submodule:serve": "npx serve docs"
+    "submodule:build": "rsync -a src/pages/ upstream/src/pages/ && rsync -a src/components/ upstream/src/components/ && node scripts/patch-next-config.mjs && cd upstream && yarn build",
+    "submodule:serve": "npx serve .",
+    "serve": "npx serve ."
   },
   "repository": {
     "type": "git",
