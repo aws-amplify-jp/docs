@@ -19,8 +19,8 @@
     "url": "git+https://github.com/aws-amplify-jp/docs.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Daijiro Wachi",
+  "license": "MIT",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/aws-amplify-jp/docs/issues"
