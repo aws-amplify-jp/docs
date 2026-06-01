@@ -52,8 +52,9 @@ ls upstream
 
 重要: `docs/index.html` は `/docs/_next/...` のようなパスでアセットを参照します。そのため `docs/` ディレクトリ単体ではなく、リポジトリ root を静的配信して `/docs/` にアクセスします。
 
+リポジトリ root でサーバーを起動します。
+
 ```sh
-cd docs
 python3 -m http.server 4173 --bind 127.0.0.1
 ```
 
