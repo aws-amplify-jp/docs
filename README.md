@@ -107,11 +107,13 @@ cp .env.example .env
 ANTHROPIC_API_KEY=your-api-key-here
 ```
 
-見積もりだけ行う場合:
+翻訳 API の概算費用を確認する場合:
 
 ```sh
 npm run submodule:translate:dry
 ```
+
+この dry-run は翻訳ファイルを書き込まず、推定 input/output tokens と `Est. cost (Haiku)` を出力します。実際の費用は使用モデルやキャッシュ状況で変わるため、あくまで目安として確認してください。
 
 翻訳を実行する場合:
 
@@ -205,7 +207,7 @@ corepack enable
 | `npm run submodule:init` | `upstream` submodule を取得 |
 | `npm run submodule:update` | `upstream` を本家の最新に更新 |
 | `npm run submodule:install` | `upstream` の依存関係を install |
-| `npm run submodule:translate:dry` | 翻訳対象の見積もり |
+| `npm run submodule:translate:dry` | 翻訳 API の概算費用を確認 |
 | `npm run submodule:translate` | 翻訳を実行 |
 | `npm run submodule:build` | 日本語差分を反映して静的サイトを build |
 | `npm run serve` | 生成済み `docs/` を静的配信 |
